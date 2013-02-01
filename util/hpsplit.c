@@ -371,6 +371,9 @@ int main(int argc, char *argv[]) {
 
 				if (cols) {
 				  if (!flipped) {
+				    //
+				    // !!! Need to write an endian-flip that works on OUTPUT;
+				    // or add a "noflip" option to fitstable_write_struct.
 				    fitstable_endian_flip_row_data(outtables[hp], rowdata);
 				    flipped = TRUE;
 				  }
