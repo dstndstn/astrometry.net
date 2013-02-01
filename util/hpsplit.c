@@ -68,14 +68,6 @@ void printHelp(char* progname) {
 extern char *optarg;
 extern int optind, opterr, optopt;
 
-/*
- struct rd_s {
- double ra;
- double dec;
- };
- typedef rd_s radec;
- */
-
 struct cap_s {
 	double xyz[3];
 	double r2;

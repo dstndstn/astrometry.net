@@ -219,7 +219,7 @@ typedef struct qfits_table
     int                tab_w;            
     /** Number of columns */
     int                nc;            
-    /** Number of raws */
+    /** Number of rows */
     int                nr;
     /** Array of qfits_col objects */
     qfits_col    *    col;            

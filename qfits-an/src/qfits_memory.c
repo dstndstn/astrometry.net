@@ -43,6 +43,8 @@
 #include <sys/resource.h>
 #include <errno.h>
 
+#include "qfits_error.h"
+
 /*-----------------------------------------------------------------------------
                                 Defines
  -----------------------------------------------------------------------------*/
@@ -478,6 +480,7 @@ char * qfits_memory_falloc(
     int             fd;
     int             nptrs;
     int             i;
+	int eno;
 
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
     if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) {
@@ -486,29 +489,23 @@ char * qfits_memory_falloc(
 
         /* Check file's existence and compute its size */
         if (stat(name, &sta)==-1) {
-            qfits_mem_debug(
-                fprintf(stderr, "qfits_mem: cannot stat file %s - %s (%d)\n",
-                        name, srcname, srclin);
-            );
+			qfits_warning("qfits_memory_falloc(%s:%i): cannot stat file \"%s\"\n",
+						  srcname, srclin, name);
             if (QFITS_MEMORY_MODE == 0) return NULL;
             else exit(1);
         }
         /* Check offset request does not go past end of file */
         if (offs>=(size_t)sta.st_size) {
-            qfits_mem_debug(
-                fprintf(stderr,
-                    "qfits_mem: falloc offsets larger than file size");
-            );
+			qfits_warning("qfits_memory_falloc(%s:%i): offset request exceeds file size (%zu > %zu) for file \"%s\"\n",
+						  srcname, srclin, offs, (size_t)sta.st_size);
             if (QFITS_MEMORY_MODE == 0) return NULL;
             else exit(1);
         }
 
         /* Open file */
         if ((fd=open(name, O_RDONLY))==-1) {
-            qfits_mem_debug(
-                fprintf(stderr, "qfits_mem: cannot open file %s - (%s:%d): %s\n",
-                        name, srcname, srclin, strerror(errno));
-            );
+			qfits_warning("qfits_memory_falloc(%s:%i): failed to open file \"%s\": %s\n",
+						  srcname, srclin, name, strerror(errno));
             if (QFITS_MEMORY_MODE == 0) return NULL;
             else exit(1);
         }
@@ -516,14 +513,13 @@ char * qfits_memory_falloc(
         /* Memory-map input file */
         ptr = (char*)mmap(0, sta.st_size, 
                 PROT_READ | PROT_WRITE, MAP_PRIVATE,fd,0);
+		eno = errno;
         
         /* Close file */
         close(fd);
         if (ptr == (char*)-1 || ptr==NULL) {
-            qfits_mem_debug(
-                perror("mmap");
-                fprintf(stderr, "qfits_mem: falloc cannot mmap file %s", name);
-            );
+			qfits_warning("qfits_memory_falloc(%s:%i): failed to mmap file \"%s\": %s\n",
+						  srcname, srclin, name, strerror(eno));
             if (QFITS_MEMORY_MODE == 0) return NULL;
             else exit(1);
         }

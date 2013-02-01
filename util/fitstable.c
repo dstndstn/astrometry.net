@@ -85,7 +85,7 @@ static off_t get_row_offset(const fitstable_t* table, int row) {
 	assert(table->end_table_offset);
 	assert(table->table);
 	assert(table->table->tab_w);
-	return (off_t)table->end_table_offset + (off_t)table->table->tab_w * (off_t)row;
+	return table->end_table_offset + (off_t)(table->table->tab_w) * (off_t)(row);
 }
 
 int fitstable_n_extensions(const fitstable_t* t) {
