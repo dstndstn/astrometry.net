@@ -458,6 +458,81 @@ static void get_mmap_size(int start, int size, off_t* mapstart, size_t* mapsize,
 	*pgap = gap;
 }
 
+void qfits_memory_fdealloc2(
+        void        *   ptr, 
+		size_t len,
+        const char  *   filename, 
+        int             lineno) {
+	if (munmap(ptr, len)) {
+		qfits_error("qfits_memory_fdealloc2(%s:%i): Failed to munmap(): %s\n",
+					filename, lineno, strerror(errno));
+	}
+}
+
+
+void* qfits_memory_falloc2(
+	const char* name,
+	size_t      offs,
+	size_t      size,
+	char** freeaddr,
+	size_t* freesize,
+	const char  *   srcname,
+	int             srclin) {
+
+    char        *   ptr;
+    struct stat     sta;
+    int             fd;
+	int eno;
+	size_t maplen;
+	off_t mapstart;
+	int mapoff;
+
+	/* Check file's existence and compute its size */
+	if (stat(name, &sta)==-1) {
+		qfits_warning("qfits_memory_falloc2(%s:%i): cannot stat file \"%s\"\n",
+					  srcname, srclin, name);
+		if (QFITS_MEMORY_MODE == 0) return NULL;
+		else exit(1);
+	}
+	/* Check offset request does not go past end of file */
+	if ((offs + size) >= (size_t)sta.st_size) {
+		qfits_warning("qfits_memory_falloc2(%s:%i): offset request exceeds file size (%zu + %zu > %zu) for file \"%s\"\n",
+					  srcname, srclin, offs, size, (size_t)sta.st_size);
+		if (QFITS_MEMORY_MODE == 0) return NULL;
+		else exit(1);
+	}
+	/* Open file */
+	if ((fd=open(name, O_RDONLY))==-1) {
+		qfits_warning("qfits_memory_falloc2(%s:%i): failed to open file \"%s\": %s\n",
+					  srcname, srclin, name, strerror(errno));
+		if (QFITS_MEMORY_MODE == 0) return NULL;
+		else exit(1);
+	}
+
+	/* Memory-map input file */
+	// mmap requires page-aligned offsets.
+	get_mmap_size(offs, size, &mapstart, &maplen, &mapoff);
+	ptr = (char*)mmap(0, maplen, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd,
+					  mapstart);
+	eno = errno;
+        
+	/* Close file */
+	close(fd);
+	if (ptr == MAP_FAILED || ptr==NULL) {
+		qfits_warning("qfits_memory_falloc2(%s:%i): failed to mmap file \"%s\": %s\n",
+					  srcname, srclin, name, strerror(eno));
+		if (QFITS_MEMORY_MODE == 0) return NULL;
+		else exit(1);
+	}
+	if (freeaddr) {
+		*freeaddr = ptr;
+	}
+	if (freesize) {
+		*freesize = maplen;
+	}
+	return ptr + mapoff;
+}
+
 
 
 /*----------------------------------------------------------------------------*/
@@ -468,7 +543,7 @@ static void get_mmap_size(int start, int size, off_t* mapstart, size_t* mapsize,
   @param    size        Returned size of the mapped file in bytes.
   @param    srcname     Name of the source file making the call.
   @param    srclin      Line # where the call was made.
-  @return   A pointer to char, to be freed using qfits_memory_free().
+  @return   A pointer to char, to be freed using qfits_memory_fdealloc().
 
   This function takes in input the name of a file. It tries to map the file 
   into memory and if it succeeds, returns the file's contents as a char pointer.
@@ -496,7 +571,6 @@ char * qfits_memory_falloc(
     int             nptrs;
     int             i;
 	int eno;
-	size_t len;
 
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
     if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) {

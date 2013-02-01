@@ -51,6 +51,10 @@
 #define qfits_falloc(f,o,s)     qfits_memory_falloc(f,o,s,  __FILE__,__LINE__)
 #define qfits_fdealloc(f,o,s)   qfits_memory_fdealloc(f,o,s,__FILE__,__LINE__)
 
+#define qfits_falloc2(f,o,s,fa,fs)     qfits_memory_falloc2(f,o,s,fa,fs,  __FILE__,__LINE__)
+#define qfits_fdealloc2(p,s)   qfits_memory_fdealloc2(p,s,__FILE__,__LINE__)
+
+
 /*-----------------------------------------------------------------------------
                                Function prototypes
  -----------------------------------------------------------------------------*/
@@ -65,6 +69,21 @@ char * qfits_memory_strdup(const char *, const char *, int);
 char * qfits_memory_falloc(const char *, size_t, size_t *, const char *, int);
 void qfits_memory_fdealloc(void *, size_t, size_t, const char *, int);
 /* *********************************************************************** */
+
+void* qfits_memory_falloc2(
+	const char* name,
+	size_t      offs,
+	size_t      size,
+	char** freeaddr,
+	size_t* freesize,
+	const char  *   srcname,
+	int             srclin);
+void qfits_memory_fdealloc2(
+        void        *   ptr, 
+		size_t len,
+        const char  *   filename, 
+        int             lineno);
+
 
 void qfits_memory_status(void);
 int qfits_memory_is_empty(void);

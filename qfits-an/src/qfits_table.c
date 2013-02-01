@@ -40,6 +40,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <math.h>
+#include <sys/param.h>
 
 #include "config.h"
 
@@ -940,15 +941,21 @@ static int qfits_query_column_seq_to_array_endian(
 												  int                 dest_stride,
 												  int swap_endian)
 {
-	char			*	start;
     qfits_col       *   col;
 	int					field_size;
 	unsigned char   *   r;
     unsigned char   *   inbuf;
     int                 table_width;
-    size_t              size;
 	int                 i;
 	int do_swap;
+
+	int maxind;
+
+	char* freeaddr;
+	size_t freesize;
+
+	size_t mapoffset;
+	size_t maplen;
    
     if (th->tab_w == -1) {
         /* Compute the table width in bytes */
@@ -978,14 +985,32 @@ static int qfits_query_column_seq_to_array_endian(
 		return -1;
 	
 	/* Load input file */
-    if ((start=qfits_falloc(th->filename, 0, &size))==NULL) {
-        qfits_error("cannot open table for query [%s]", th->filename);
+	if (indices) {
+		maxind = 0;
+		for (i=0; i<nb_rows; i++)
+			maxind = MAX(maxind, indices[i]);
+	} else
+		maxind = nb_rows - 1;
+
+	mapoffset = col->off_beg + table_width * start_ind;
+	maplen = (maxind + 1) * table_width;
+
+	if ((inbuf = qfits_falloc2(th->filename, mapoffset, maplen,
+							   &freeaddr, &freesize)) == NULL) {
+        qfits_error("cannot open table for reading column data [%s]", th->filename);
         return -1;
-    }
-   
+	}
+
+	/*
+	 if ((start=qfits_falloc(th->filename, 0, &size))==NULL) {
+	 qfits_error("cannot open table for query [%s]", th->filename);
+	 return -1;
+	 }
+	 inbuf = (unsigned char*)start + col->off_beg + table_width * start_ind;
+	 */
+
     /* Position the input pointer at the begining of the column data */
     r = destination;
-    inbuf = (unsigned char*)start + col->off_beg + table_width * start_ind;
 
 	do_swap = 0;
 #ifndef WORDS_BIGENDIAN
@@ -1019,7 +1044,9 @@ static int qfits_query_column_seq_to_array_endian(
 
         r += dest_stride;
 	}
-    qfits_fdealloc(start, 0, size);
+
+    //qfits_fdealloc(start, 0, size);
+	qfits_fdealloc2(freeaddr, freesize);
 
 	return 0;
 }
