@@ -48,7 +48,7 @@
  rows that are within (or within range) of the healpix.
  */
 
-const char* OPTIONS = "hvn:r:d:m:o:g";
+const char* OPTIONS = "hvn:r:d:m:o:gc:";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -59,6 +59,7 @@ void printHelp(char* progname) {
 		   "    [-n <healpix Nside>]: default is 1\n"
 		   "    [-m <margin in deg>]: add a margin of this many degrees around the healpixes; default 0\n"
 		   "    [-g]: gzip'd inputs\n"
+		   "    [-c <name>]: copy given column name to the output files\n"
 		   "    [-v]: +verbose\n"
 		   "\n", progname);
 }
@@ -95,6 +96,7 @@ int main(int argc, char *argv[]) {
 	char* racol = "RA";
 	char* deccol = "DEC";
 	bool gzip = FALSE;
+	sl* cols = sl_new(16);
 	int loglvl = LOG_MSG;
 	int nside = 1;
 	double margin = 0.0;
@@ -110,6 +112,9 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'c':
+			sl_append(cols, optarg);
+			break;
 		case 'g':
 			gzip = TRUE;
 			break;
@@ -139,6 +144,11 @@ int main(int argc, char *argv[]) {
         default:
             return -1;
         }
+
+	if (sl_size(cols) == 0) {
+		sl_free2(cols);
+		cols = NULL;
+	}
 
 	nmyargs = argc - optind;
 	myargs = argv + optind;
@@ -343,7 +353,10 @@ int main(int argc, char *argv[]) {
 						exit(-1);
 					}
 					// Set the output table structure.
-					fitstable_add_fits_columns_as_struct2(intable, out);
+					if (cols)
+						fitstable_add_fits_columns_as_struct3(intable, out, cols);
+					else
+						fitstable_add_fits_columns_as_struct2(intable, out);
 					if (fitstable_write_primary_header(out) ||
 						fitstable_write_header(out)) {
 						ERROR("Failed to write output file headers for \"%s\"", outfn);
@@ -375,7 +388,7 @@ int main(int argc, char *argv[]) {
 		if (tempfn) {
 			logverb("Removing temp file %s\n", tempfn);
 			if (unlink(tempfn)) {
-				SYSERROR("Failed to unlink() temp file \"%s\"");
+				SYSERROR("Failed to unlink() temp file \"%s\"", tempfn);
 			}
 			tempfn = NULL;
 		}
@@ -394,6 +407,7 @@ int main(int argc, char *argv[]) {
 
 	free(outtables);
 	sl_free2(infns);
+	sl_free2(cols);
 
 	free(mincaps);
 	free(maxcaps);
