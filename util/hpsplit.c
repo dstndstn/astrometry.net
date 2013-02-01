@@ -230,6 +230,7 @@ int main(int argc, char *argv[]) {
 			int rtn;
 			tempfn = create_temp_file("hpsplit", "/tmp");
 			asprintf_safe(&cmd, "gunzip -cd %s > %s", infn, tempfn);
+			logverb("Running command: \"%s\"\n", cmd);
 			rtn = run_command_get_outputs(cmd, NULL, NULL);
 			if (rtn) {
 				ERROR("Failed to run command: \"%s\"", cmd);
@@ -363,7 +364,8 @@ int main(int argc, char *argv[]) {
 
 		}
 		buffered_read_free(rowbuf);
-		// wack... buffered_read_free() just frees the buffer
+		// wack... buffered_read_free() just frees its internal buffer,
+		// not the "rowbuf" struct itself.
 		// who wrote this crazy code?  Oh, me of 5 years ago.  Jerk.
 		free(rowbuf);
 
@@ -371,6 +373,7 @@ int main(int argc, char *argv[]) {
 		il_free(hps);
 
 		if (tempfn) {
+			logverb("Removing temp file %s\n", tempfn);
 			if (unlink(tempfn)) {
 				SYSERROR("Failed to unlink() temp file \"%s\"");
 			}
