@@ -498,10 +498,6 @@ char * qfits_memory_falloc(
 	int eno;
 	size_t len;
 
-	off_t mapstart;
-	size_t maplen;
-	int mapoff;
-
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
     if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) {
 
@@ -531,12 +527,7 @@ char * qfits_memory_falloc(
         }
 
         /* Memory-map input file */
-		assert(offs >= 0);
-		// mmap requires page-aligned offsets.
-		len = sta.st_size - offs;
-		get_mmap_size(offs, len, &mapstart, &maplen, &mapoff);
-        ptr = (char*)mmap(0, maplen, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd,
-						  mapstart);
+        ptr = (char*)mmap(0, sta.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 		eno = errno;
         
         /* Close file */
@@ -556,7 +547,7 @@ char * qfits_memory_falloc(
 
         if (size!=NULL) (*size) = sta.st_size;
         
-        return ptr + mapoff;
+        return ptr + offs;
     }
 
     /* Protect the call */
