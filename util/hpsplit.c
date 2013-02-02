@@ -278,6 +278,10 @@ int main(int argc, char *argv[]) {
 			double* rd;
 			void* rowdata;
 
+			if (r && ((r % 100000) == 0)) {
+			  logmsg("Reading row %i of %i\n", r, NR);
+			}
+
 			rd = fitstable_next_struct(intable);
 			ra = rd[0];
 			dec = rd[1];
