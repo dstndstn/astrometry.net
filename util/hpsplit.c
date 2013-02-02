@@ -48,7 +48,7 @@
  rows that are within (or within range) of the healpix.
  */
 
-const char* OPTIONS = "hvn:r:d:m:o:gc:t:";
+const char* OPTIONS = "hvn:r:d:m:o:gc:t:b:";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -61,6 +61,7 @@ void printHelp(char* progname) {
 		   "    [-g]: gzip'd inputs\n"
 		   "    [-c <name>]: copy given column name to the output files\n"
 		   "    [-t <temp-dir>]: use the given temp dir; default is /tmp\n"
+		   "    [-b <backref-file>]: save the filenumber->filename map in this file; enables writing backreferences too\n"
 		   "    [-v]: +verbose\n"
 		   "\n", progname);
 }
@@ -96,6 +97,7 @@ int main(int argc, char *argv[]) {
 	double margin = 0.0;
 	int NHP;
 	double md;
+	char* backref = NULL;
 	
 	fitstable_t* intable;
 	fitstable_t** outtables;
@@ -106,6 +108,9 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'b':
+			backref = optarg;
+			break;
 		case 't':
 			tempdir = optarg;
 			break;
@@ -219,6 +224,44 @@ int main(int argc, char *argv[]) {
 		assert(r2a >= r2b);
 	}
 
+	if (backref) {
+		fitstable_t* tab = fitstable_open_for_writing(backref);
+		int maxlen = 0;
+		char* buf;
+		for (i=0; i<sl_size(infns); i++) {
+			char* infn = sl_get(infns, i);
+			maxlen = MAX(maxlen, strlen(infn));
+		}
+		fitstable_add_write_column_array(tab, fitscolumn_char_type(), maxlen,
+										 "filename", NULL);
+		fitstable_add_write_column(tab, fitscolumn_i16_type(), "index", NULL);
+		if (fitstable_write_primary_header(tab) ||
+			fitstable_write_header(tab)) {
+			ERROR("Failed to write header of backref table \"%s\"", backref);
+			exit(-1);
+		}
+		buf = malloc(maxlen+1);
+		assert(buf);
+
+		for (i=0; i<sl_size(infns); i++) {
+			char* infn = sl_get(infns, i);
+			int16_t ind;
+			memset(buf, 0, maxlen);
+			strcpy(buf, infn);
+			ind = i;
+			if (fitstable_write_row(tab, buf, &ind)) {
+				ERROR("Failed to write row %i of backref table: %s = %i",
+					  i, buf, ind);
+				exit(-1);
+			}
+		}
+		if (fitstable_fix_header(tab) ||
+			fitstable_close(tab)) {
+			ERROR("Failed to fix header & close backref table");
+			exit(-1);
+		}
+		logmsg("Wrote backref table %s\n", backref);
+	}
 
 
 	for (i=0; i<sl_size(infns); i++) {
