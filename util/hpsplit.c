@@ -261,8 +261,8 @@ int main(int argc, char *argv[]) {
 			exit(-1);
 		}
 		logmsg("Wrote backref table %s\n", backref);
+		free(buf);
 	}
-
 
 	for (i=0; i<sl_size(infns); i++) {
 		char* infn = sl_get(infns, i);
@@ -272,6 +272,7 @@ int main(int argc, char *argv[]) {
 		bread_t* rowbuf;
 		int R;
 		char* tempfn = NULL;
+		char* padrowdata = NULL;
 
 		logmsg("Reading input \"%s\"...\n", infn);
 
@@ -320,6 +321,7 @@ int main(int argc, char *argv[]) {
 			int j;
 			double* rd;
 			void* rowdata;
+			void* rdata;
 
 			if (r && ((r % 100000) == 0)) {
 			  logmsg("Reading row %i of %i\n", r, NR);
@@ -389,6 +391,7 @@ int main(int argc, char *argv[]) {
 				if (!outtables[hp]) {
 					char* outfn;
 					fitstable_t* out;
+
 					// MEMLEAK the output filename.  You'll live.
 					asprintf_safe(&outfn, outfnpat, hp);
 					logmsg("Opening output file \"%s\"...\n", outfn);
@@ -404,6 +407,21 @@ int main(int argc, char *argv[]) {
 						fitstable_print_columns(out);
 					} else
 						fitstable_add_fits_columns_as_struct2(intable, out);
+
+					if (backref) {
+						tfits_type i16type;
+						tfits_type i32type;
+						// R = fitstable_row_size(intable);
+						int off = R;
+						i16type = fitscolumn_i16_type();
+						i32type = fitscolumn_i32_type();
+						fitstable_add_read_column_struct(out, i16type, 1, off,
+														 i16type, "backref_file", TRUE);
+						off += sizeof(int16_t);
+						fitstable_add_read_column_struct(out, i32type, 1, off,
+														 i32type, "backref_index", TRUE);
+					}
+
 					if (fitstable_write_primary_header(out) ||
 						fitstable_write_header(out)) {
 						ERROR("Failed to write output file headers for \"%s\"", outfn);
@@ -412,12 +430,31 @@ int main(int argc, char *argv[]) {
 					outtables[hp] = out;
 				}
 
+				if (backref) {
+					int16_t brfile;
+					int32_t brind;
+					if (!padrowdata) {
+						padrowdata = malloc(R + sizeof(int16_t) + sizeof(int32_t));
+						assert(padrowdata);
+					}
+					// convert to FITS endian
+					brfile = htons(i);
+					brind  = htonl(r);
+					// add backref data to rowdata
+					memcpy(padrowdata, rowdata, R);
+					memcpy(padrowdata + R, &brfile, sizeof(int16_t));
+					memcpy(padrowdata + R + sizeof(int16_t), &brind, sizeof(int32_t));
+					rdata = padrowdata;
+				} else {
+					rdata = rowdata;
+				}
+
 				if (cols) {
-				  if (fitstable_write_struct_noflip(outtables[hp], rowdata)) {
+				  if (fitstable_write_struct_noflip(outtables[hp], rdata)) {
 				    ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
 				  }
 				} else {
-				  if (fitstable_write_row_data(outtables[hp], rowdata)) {
+				  if (fitstable_write_row_data(outtables[hp], rdata)) {
 				    ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
 				  }
 				}
@@ -444,6 +481,10 @@ int main(int argc, char *argv[]) {
 				SYSERROR("Failed to unlink() temp file \"%s\"", tempfn);
 			}
 			tempfn = NULL;
+		}
+		if (padrowdata) {
+			free(padrowdata);
+			padrowdata = NULL;
 		}
 	}
 

@@ -21,8 +21,7 @@
 #include "qfits_rw.h"
 #include "qfits_card.h"
 
-//#if 0
-#if 1
+#if 0
 #define qdebug( code ) { code }
 #define debug printf
 #else
@@ -281,7 +280,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
     xtend = qfits_header_getboolean(hdr, "EXTEND", 0);
 	data_bytes = get_data_bytes(hdr);
 
-	printf("primary header: data_bytes %zu\n", data_bytes);
+	debug("primary header: data_bytes %zu\n", data_bytes);
 
     qf = calloc(1, sizeof(anqfits_t));
     qf->filename = strdup(filename);
@@ -331,7 +330,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
                     goto bailout;
                 }
 
-		printf("hdu %i, data_bytes %zu, skip_blocks %zu, off %zu, n_blocks %zu\n",
+				debug("hdu %i, data_bytes %zu, skip_blocks %zu, off %zu, n_blocks %zu\n",
 		       qf->Nexts-1, data_bytes, skip_blocks, off, n_blocks);
                 /* Increase counter of current seen blocks. */
                 n_blocks += skip_blocks;
@@ -350,12 +349,13 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
 
                 /* Search for XTENSION at block top */
                 if (starts_with(buf, "XTENSION=")) {
-		  printf("Found XTENSION\n");
+					debug("Found XTENSION\n");
                     /* Got an extension */
                     found_it = 1;
                     qf->exts[qf->Nexts].hdr_start = n_blocks-1;
                 } else {
-		  printf("Didn't find XTENSION -- whaddup?\n");
+					qfits_warning("Failed to find XTENSION in the FITS block following the previous data block -- whaddup?  Filename %s, block %i, hdu %i",
+								  filename, n_blocks, qf->Nexts-1);
 		}
 				// FIXME -- should we really just skip the block if we don't find the "XTENSION=" header?
             }
@@ -424,12 +424,12 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
     for (i=0; i<qf->Nexts; i++) {
       qf->exts[i].hdr_size = qf->exts[i].data_start - qf->exts[i].hdr_start;
       if (i == qf->Nexts-1) {
-	printf("st_size %zu, /block_size = %zu\n", sta.st_size, sta.st_size / (size_t)FITS_BLOCK_SIZE);
-	qf->exts[i].data_size = (sta.st_size/FITS_BLOCK_SIZE) - qf->exts[i].data_start;
+		  debug("st_size %zu, /block_size = %zu\n", (off_t)sta.st_size, (off_t)(sta.st_size / (size_t)FITS_BLOCK_SIZE));
+		  qf->exts[i].data_size = (sta.st_size/FITS_BLOCK_SIZE) - qf->exts[i].data_start;
       } else
-	qf->exts[i].data_size = qf->exts[i+1].hdr_start - qf->exts[i].data_start;
+		  qf->exts[i].data_size = qf->exts[i+1].hdr_start - qf->exts[i].data_start;
       debug("  Ext %i: header size %i, data size %i; hdr=%p\n", i, qf->exts[i].hdr_size, qf->exts[i].data_size, qf->exts[i].header);
-      printf("ext %i: hdr_start %i, hdr_size %i, data_start %i, data_size %i, blocks\n",
+      debug("ext %i: hdr_start %i, hdr_size %i, data_start %i, data_size %i, blocks\n",
 	     i,
 	     qf->exts[i].hdr_start, qf->exts[i].hdr_size,
 	     qf->exts[i].data_start, qf->exts[i].data_size);
