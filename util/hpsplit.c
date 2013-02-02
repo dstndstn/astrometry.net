@@ -22,6 +22,7 @@
 #include <math.h>
 #include <string.h>
 #include <sys/param.h>
+#include <arpa/inet.h>
 #include <assert.h>
 
 #include "healpix.h"
@@ -274,6 +275,7 @@ int main(int argc, char *argv[]) {
 		int R;
 		char* tempfn = NULL;
 		char* padrowdata = NULL;
+		int ii;
 
 		logmsg("Reading input \"%s\"...\n", infn);
 
@@ -485,15 +487,15 @@ int main(int argc, char *argv[]) {
 		}
 
 		// fix headers so that the files are valid at this point.
-		for (i=0; i<NHP; i++) {
-		  if (!outtables[i])
+		for (ii=0; ii<NHP; ii++) {
+		  if (!outtables[ii])
 		    continue;
-		  off_t offset = ftello(outtables[i]->fid);
-		  if (fitstable_fix_header(outtables[i])) {
-		    ERROR("Failed to fix header for healpix %i after reading input file \"%s\"", i, originfn);
+		  off_t offset = ftello(outtables[ii]->fid);
+		  if (fitstable_fix_header(outtables[ii])) {
+		    ERROR("Failed to fix header for healpix %i after reading input file \"%s\"", ii, originfn);
 		    exit(-1);
 		  }
-		  fseeko(outtables[i]->fid, offset, SEEK_SET);
+		  fseeko(outtables[ii]->fid, offset, SEEK_SET);
 		}
 
 		if (padrowdata) {
