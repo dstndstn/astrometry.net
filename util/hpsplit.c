@@ -79,6 +79,7 @@ typedef struct cap_s cap_t;
 static int refill_rowbuffer(void* baton, void* buffer,
 							unsigned int offset, unsigned int nelems) {
 	fitstable_t* table = baton;
+	//printf("refill_rowbuffer: offset %i, n %i\n", offset, nelems);
 	return fitstable_read_nrows_data(table, offset, nelems, buffer);
 }
 
@@ -284,7 +285,7 @@ int main(int argc, char *argv[]) {
 			int rtn;
 			tempfn = create_temp_file("hpsplit", tempdir);
 			asprintf_safe(&cmd, "gunzip -cd %s > %s", infn, tempfn);
-			logverb("Running command: \"%s\"\n", cmd);
+			logmsg("Running: \"%s\"\n", cmd);
 			rtn = run_command_get_outputs(cmd, NULL, NULL);
 			if (rtn) {
 				ERROR("Failed to run command: \"%s\"", cmd);
@@ -330,6 +331,7 @@ int main(int argc, char *argv[]) {
 			  logmsg("Reading row %i of %i\n", r, NR);
 			}
 
+			//printf("reading RA,Dec for row %i\n", r);
 			rd = fitstable_next_struct(intable);
 			ra = rd[0];
 			dec = rd[1];
@@ -376,6 +378,7 @@ int main(int argc, char *argv[]) {
 				logverb(" ]\n");
 			}
 
+			//printf("Reading rowdata for row %i\n", r);
 			rowdata = buffered_read(rowbuf);
 			assert(rowdata);
 
@@ -406,8 +409,6 @@ int main(int argc, char *argv[]) {
 					// Set the output table structure.
 					if (cols) {
 						fitstable_add_fits_columns_as_struct3(intable, out, cols);
-						printf("Output table:\n");
-						fitstable_print_columns(out);
 					} else
 						fitstable_add_fits_columns_as_struct2(intable, out);
 
@@ -424,6 +425,9 @@ int main(int argc, char *argv[]) {
 						fitstable_add_read_column_struct(out, i32type, 1, off,
 														 i32type, "backref_index", TRUE);
 					}
+
+					//printf("Output table:\n");
+					//fitstable_print_columns(out);
 
 					if (fitstable_write_primary_header(out) ||
 						fitstable_write_header(out)) {

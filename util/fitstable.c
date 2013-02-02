@@ -593,7 +593,7 @@ int fitstable_read_structs(fitstable_t* tab, void* struc,
     void* tempdata = NULL;
     int highwater = 0;
 
-    //logverb("fitstable_read_structs: stride %i, offset %i, N %i\n",strucstride, offset, N);
+    //printf("fitstable_read_structs: stride %i, offset %i, N %i\n",strucstride, offset, N);
 
     for (i=0; i<ncols(tab); i++) {
         void* dest;
@@ -1599,6 +1599,7 @@ static void fitstable_create_table(fitstable_t* tab) {
 
 static int refill_buffer(void* userdata, void* buffer, unsigned int offset, unsigned int n) {
     fitstable_t* tab = userdata;
+    //logverb("fitstable.c:refill_buffer: offset %i, n %i\n", offset, n);
     if (fitstable_read_structs(tab, buffer, tab->br->elementsize, offset, n)) {
         ERROR("Error refilling FITS table read buffer");
         return -1;

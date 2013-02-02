@@ -994,7 +994,11 @@ static int qfits_query_column_seq_to_array_endian(
 
 	// these size_t casts are *essential* to avoid overflow in > 2GB files!
 	mapoffset = col->off_beg + (size_t)table_width * (size_t)start_ind;
-	maplen = (size_t)(maxind + 1) * (size_t)table_width;
+	// NOTE that this *isn't* (table_width * N) -- that can lead to trying to map
+	// beyond the end of the file!
+	maplen = (size_t)maxind * (size_t)table_width + (size_t)field_size;
+
+	//printf("opening %s: %zu + %zu (column offset = %i, width=%i, start_index=%i)\n", th->filename, mapoffset, maplen, col->off_beg, table_width, start_ind);
 
 	if ((inbuf = qfits_falloc2(th->filename, mapoffset, maplen,
 							   &freeaddr, &freesize)) == NULL) {
