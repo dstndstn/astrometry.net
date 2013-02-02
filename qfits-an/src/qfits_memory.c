@@ -449,7 +449,7 @@ void * qfits_memory_calloc(
 
 // copied from ioutils.c
 
-static void get_mmap_size(int start, int size, off_t* mapstart, size_t* mapsize, int* pgap) {
+static void get_mmap_size(size_t start, size_t size, off_t* mapstart, size_t* mapsize, int* pgap) {
 	int ps = getpagesize();
 	int gap = start % ps;
 	// start must be a multiple of pagesize.

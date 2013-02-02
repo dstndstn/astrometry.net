@@ -56,7 +56,7 @@
                             Global variables
  -----------------------------------------------------------------------------*/
 
-int qfits_blocks_needed(int size) {
+size_t qfits_blocks_needed(size_t size) {
 	return (size + FITS_BLOCK_SIZE - 1) / FITS_BLOCK_SIZE;
 }
 

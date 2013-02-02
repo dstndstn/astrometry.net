@@ -34,7 +34,7 @@ void test_big_table(CuTest* ct) {
 	offset = 2000000;
 	nelems = 1000;
 	buffer = malloc(nelems * sizeof(double) * 2);
-
+	CuAssertPtrNotNull(ct, buffer);
 	//fitstable_read_nrows_data(table, offset, nelems, buffer);
 
 	any = fitscolumn_any_type();
@@ -42,6 +42,11 @@ void test_big_table(CuTest* ct) {
 
 	fitstable_add_read_column_struct(tab, dubl, 1, 0, any, racol, TRUE);
 	fitstable_add_read_column_struct(tab, dubl, 1, sizeof(double), any, deccol, TRUE);
+
+	if (fitstable_read_extension(tab, 1)) {
+	  ERROR("Failed to find RA and DEC columns (called \"%s\" and \"%s\" in the FITS file)", racol, deccol);
+	  CuFail(ct, "Failde to find RA,Dec\n");
+	}
 
     if (fitstable_read_structs(tab, buffer, 2 * sizeof(double), offset, nelems)) {
 		CuFail(ct, "Failed to fitstable_read_structs");

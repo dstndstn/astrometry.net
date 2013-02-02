@@ -21,7 +21,8 @@
 #include "qfits_rw.h"
 #include "qfits_card.h"
 
-#if 0
+//#if 0
+#if 1
 #define qdebug( code ) { code }
 #define debug printf
 #else
@@ -179,9 +180,9 @@ static int parse_header_block(const char* buf, qfits_header* hdr, int* found_it)
 	return 0;
 }
 
-static int get_data_bytes(const qfits_header* hdr) {
+static size_t get_data_bytes(const qfits_header* hdr) {
 	int naxis;
-	int data_bytes;
+	size_t data_bytes;
 	int i;
     data_bytes = abs(qfits_header_getint(hdr, "BITPIX", 0) / 8);
     naxis = qfits_header_getint(hdr, "NAXIS", 0);
@@ -190,7 +191,7 @@ static int get_data_bytes(const qfits_header* hdr) {
 	for (i=0; i<naxis; i++) {
 		char key[32];
 		sprintf(key, "NAXIS%i", i+1);
-		data_bytes *= qfits_header_getint(hdr, key, 0);
+		data_bytes *= (size_t)qfits_header_getint(hdr, key, 0);
 	}
 	return data_bytes;
 }
@@ -204,12 +205,12 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
 	// copied from qfits_cache.c: qfits_cache_add()
     FILE* in = NULL;
     struct stat sta;
-    int n_blocks;
+    size_t n_blocks;
     int found_it;
     int xtend;
-    int data_bytes;
+    size_t data_bytes;
     int end_of_file;
-    int skip_blocks;
+    size_t skip_blocks;
     char buf[FITS_BLOCK_SIZE];
     int seeked;
 	int firsttime;
@@ -280,6 +281,8 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
     xtend = qfits_header_getboolean(hdr, "EXTEND", 0);
 	data_bytes = get_data_bytes(hdr);
 
+	printf("primary header: data_bytes %zu\n", data_bytes);
+
     qf = calloc(1, sizeof(anqfits_t));
     qf->filename = strdup(filename);
 	qf->exts = calloc(off_size, sizeof(anqfits_ext_t));
@@ -318,15 +321,18 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
              */
             if (data_bytes > 0) {
                 /* Skip as many blocks as there are declared pixels */
-				long off;
+	      size_t off;
                 skip_blocks = qfits_blocks_needed(data_bytes);
 				off = skip_blocks;
-				off *= FITS_BLOCK_SIZE;
+				off *= (size_t)FITS_BLOCK_SIZE;
                 seeked = fseek(in, off, SEEK_CUR);
                 if (seeked == -1) {
                     qdebug(printf("anqfits: error seeking file %s\n", filename););
                     goto bailout;
                 }
+
+		printf("hdu %i, data_bytes %zu, skip_blocks %zu, off %zu, n_blocks %zu\n",
+		       qf->Nexts-1, data_bytes, skip_blocks, off, n_blocks);
                 /* Increase counter of current seen blocks. */
                 n_blocks += skip_blocks;
 				data_bytes = 0;
@@ -344,10 +350,13 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
 
                 /* Search for XTENSION at block top */
                 if (starts_with(buf, "XTENSION=")) {
+		  printf("Found XTENSION\n");
                     /* Got an extension */
                     found_it = 1;
                     qf->exts[qf->Nexts].hdr_start = n_blocks-1;
-                }
+                } else {
+		  printf("Didn't find XTENSION -- whaddup?\n");
+		}
 				// FIXME -- should we really just skip the block if we don't find the "XTENSION=" header?
             }
             if (end_of_file)
@@ -364,7 +373,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
             while (!found_it && !end_of_file) {
 				if (!firsttime) {
 					if (fread(buf, 1, FITS_BLOCK_SIZE, in) != FITS_BLOCK_SIZE) {
-						qdebug(printf("anqfits: XTENSION without END in %s\n", filename););
+					  qdebug(printf("anqfits: XTENSION without END in %s\n", filename););
 						end_of_file = 1;
 						break;
 					}
@@ -380,7 +389,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
 			}
 			if (found_it) {
 				data_bytes = get_data_bytes(hdr);
-				debug("This data block will have %i bytes\n", data_bytes);
+				debug("This data block will have %zu bytes\n", data_bytes);
 
 				qf->exts[qf->Nexts].data_start = n_blocks;
 				qf->exts[qf->Nexts].header = hdr;
@@ -413,12 +422,17 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
 		goto bailout;
 
     for (i=0; i<qf->Nexts; i++) {
-        qf->exts[i].hdr_size = qf->exts[i].data_start - qf->exts[i].hdr_start;
-        if (i == qf->Nexts-1)
-            qf->exts[i].data_size = (sta.st_size/FITS_BLOCK_SIZE) - qf->exts[i].data_start;
-		else
-			qf->exts[i].data_size = qf->exts[i+1].hdr_start - qf->exts[i].data_start;
-		debug("  Ext %i: header size %i, data size %i; hdr=%p\n", i, qf->exts[i].hdr_size, qf->exts[i].data_size, qf->exts[i].header);
+      qf->exts[i].hdr_size = qf->exts[i].data_start - qf->exts[i].hdr_start;
+      if (i == qf->Nexts-1) {
+	printf("st_size %zu, /block_size = %zu\n", sta.st_size, sta.st_size / (size_t)FITS_BLOCK_SIZE);
+	qf->exts[i].data_size = (sta.st_size/FITS_BLOCK_SIZE) - qf->exts[i].data_start;
+      } else
+	qf->exts[i].data_size = qf->exts[i+1].hdr_start - qf->exts[i].data_start;
+      debug("  Ext %i: header size %i, data size %i; hdr=%p\n", i, qf->exts[i].hdr_size, qf->exts[i].data_size, qf->exts[i].header);
+      printf("ext %i: hdr_start %i, hdr_size %i, data_start %i, data_size %i, blocks\n",
+	     i,
+	     qf->exts[i].hdr_start, qf->exts[i].hdr_size,
+	     qf->exts[i].data_start, qf->exts[i].data_size);
     }
     qf->filesize = sta.st_size / FITS_BLOCK_SIZE;
 

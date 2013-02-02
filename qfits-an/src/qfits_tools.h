@@ -55,7 +55,7 @@
 
 #include "qfits_std.h"
 
-int qfits_blocks_needed(int size);
+size_t qfits_blocks_needed(size_t size);
 
 /*-----------------------------------------------------------------------------
                               Function codes
