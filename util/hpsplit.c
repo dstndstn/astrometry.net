@@ -266,6 +266,7 @@ int main(int argc, char *argv[]) {
 
 	for (i=0; i<sl_size(infns); i++) {
 		char* infn = sl_get(infns, i);
+		char* originfn = infn;
 		int r, NR;
 		tfits_type any, dubl;
 		il* hps = NULL;
@@ -482,10 +483,24 @@ int main(int argc, char *argv[]) {
 			}
 			tempfn = NULL;
 		}
+
+		// fix headers so that the files are valid at this point.
+		for (i=0; i<NHP; i++) {
+		  if (!outtables[i])
+		    continue;
+		  off_t offset = ftello(outtables[i]->fid);
+		  if (fitstable_fix_header(outtables[i])) {
+		    ERROR("Failed to fix header for healpix %i after reading input file \"%s\"", i, originfn);
+		    exit(-1);
+		  }
+		  fseeko(outtables[i]->fid, offset, SEEK_SET);
+		}
+
 		if (padrowdata) {
 			free(padrowdata);
 			padrowdata = NULL;
 		}
+
 	}
 
 	for (i=0; i<NHP; i++) {

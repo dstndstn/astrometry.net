@@ -499,6 +499,9 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 		data = pf[hdunum].data
 		if header == 'default':
 			hdr = pf[hdunum].header
+		# FIXME -- havoc?
+		del pf
+		pf = None
 	else:
 		data = dataorfn
 
