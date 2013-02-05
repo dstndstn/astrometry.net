@@ -117,23 +117,17 @@ int main(int argc, char *argv[]) {
   log_init(LOG_MSG);
 
   if (infn) {
-    Next = qfits_query_n_ext(infn);
-    if (Next == -1) {
-      fprintf(stderr, "Couldn't determine how many extensions are in file %s.\n", infn);
-      exit(-1);
-    } else {
-      fprintf(stderr, "File %s contains %i FITS extensions.\n", infn, Next);
-    }
-  }
-
-  if (infn && !outfn) {
     anq = anqfits_open(infn);
     if (!anq) {
       ERROR("Failed to open input file \"%s\"", infn);
       exit(-1);
     }
-    
-    for (i=0; i<=Next; i++) {
+    Next = anqfits_n_ext(anq);
+    fprintf(stderr, "File %s contains %i FITS extensions.\n", infn, Next);
+  }
+
+  if (infn && !outfn) {
+    for (i=0; i<Next; i++) {
       off_t hdrstart, hdrlen, datastart, datalen;
 
       hdrstart  = anqfits_header_start(anq, i);
@@ -183,7 +177,7 @@ int main(int argc, char *argv[]) {
     fout = stdout;
   else {
     if (allexts)
-      for (i=0; i<=Next; i++)
+      for (i=0; i<Next; i++)
 	il_append(exts, i);
     else {
       // open the (single) output file.
@@ -207,12 +201,6 @@ int main(int argc, char *argv[]) {
 	fprintf(stderr, "Failed to open output file %s: %s\n", fn, strerror(errno));
 	exit(-1);
       }
-    }
-
-    anq = anqfits_open(infn);
-    if (!anq) {
-      ERROR("Failed to open input file \"%s\"", infn);
-      exit(-1);
     }
 
     hdrstart  = anqfits_header_start(anq, ext);

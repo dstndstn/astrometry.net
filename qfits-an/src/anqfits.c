@@ -324,9 +324,9 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
 	skip_blocks = qfits_blocks_needed(data_bytes);
 	off = skip_blocks;
 	off *= (size_t)FITS_BLOCK_SIZE;
-	seeked = fseek(in, off, SEEK_CUR);
+	seeked = fseeko(in, off, SEEK_CUR);
 	if (seeked == -1) {
-	  qdebug(printf("anqfits: error seeking file %s\n", filename););
+	  qfits_error("anqfits: failed to fseeko in file %s: %s", filename, strerror(errno));
 	  goto bailout;
 	}
 
