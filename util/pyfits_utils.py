@@ -392,7 +392,7 @@ class tabledata(object):
 		if columns is None and hasattr(self, '_columns'):
 			columns = self._columns
 		fc = self.to_fits_columns(columns)
-		print 'FITS columns:', fc
+		#print 'FITS columns:', fc
 		T = pyfits.new_table(fc)
 		if header == 'default':
 			header = self._header
@@ -513,6 +513,7 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 
 	fields._columns = []
 	for c in columns:
+		#print 'reading column "%s"' % c
 		col = data.field(c)
 		if rows is not None:
 			col = col[rows]
