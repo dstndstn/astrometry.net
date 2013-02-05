@@ -78,7 +78,7 @@ bool strcaseeq(const char* s1, const char* s2);
  (from the beginning of "fin"), and length "length".
  Returns 0 on success.
  */
-int pipe_file_offset(FILE* fin, int offset, int length, FILE* fout);
+int pipe_file_offset(FILE* fin, off_t offset, off_t length, FILE* fout);
 
 int write_file(const char* fn, const char* data, int len);
 

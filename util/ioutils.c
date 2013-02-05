@@ -298,11 +298,11 @@ bool strcaseeq(const char* s1, const char* s2) {
     return !strcasecmp(s1, s2);
 }
 
-int pipe_file_offset(FILE* fin, int offset, int length, FILE* fout) {
+int pipe_file_offset(FILE* fin, off_t offset, off_t length, FILE* fout) {
     char buf[1024];
-    int i;
+    off_t i;
     if (fseeko(fin, offset, SEEK_SET)) {
-        SYSERROR("Failed to seek to offset %i", offset);
+        SYSERROR("Failed to seek to offset %zu", offset);
         return -1;
     }
     for (i=0; i<length; i+=sizeof(buf)) {

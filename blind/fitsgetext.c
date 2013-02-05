@@ -26,6 +26,9 @@
 #include "anqfits.h"
 #include "bl.h"
 #include "ioutils.h"
+#include "log.h"
+#include "fitsioutils.h"
+#include "errors.h"
 
 char* OPTIONS = "he:i:o:baDHM";
 
@@ -62,6 +65,7 @@ int main(int argc, char *argv[]) {
   int Next = -1;
   bool dataonly = FALSE;
   bool headeronly = FALSE;
+  anqfits_t* anq = NULL;
 
   exts = il_new(16);
 
@@ -109,6 +113,9 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
+  fits_use_error_system();
+  log_init(LOG_MSG);
+
   if (infn) {
     Next = qfits_query_n_ext(infn);
     if (Next == -1) {
@@ -120,27 +127,34 @@ int main(int argc, char *argv[]) {
   }
 
   if (infn && !outfn) {
+    anq = anqfits_open(infn);
+    if (!anq) {
+      ERROR("Failed to open input file \"%s\"", infn);
+      exit(-1);
+    }
+    
     for (i=0; i<=Next; i++) {
-      int hdrstart, hdrlen, datastart, datalen;
-      if (qfits_get_hdrinfo(infn, i, &hdrstart,  &hdrlen ) ||
-	  qfits_get_datinfo(infn, i, &datastart, &datalen)) {
-	fprintf(stderr, "Error getting extents of extension %i.\n", i);
-	exit(-1);
-      }
+      off_t hdrstart, hdrlen, datastart, datalen;
+
+      hdrstart  = anqfits_header_start(anq, i);
+      hdrlen    = anqfits_header_size(anq, i);
+      datastart = anqfits_data_start(anq, i);
+      datalen   = anqfits_data_size(anq, i);
+
       if (inblocks) {
-	fprintf(stderr, "Extension %i : header start %i , length %i ; data start %i , length %i blocks.\n",
-		i, hdrstart/FITS_BLOCK_SIZE, hdrlen/FITS_BLOCK_SIZE,
-		datastart/FITS_BLOCK_SIZE, datalen/FITS_BLOCK_SIZE);
+	off_t block = (off_t)FITS_BLOCK_SIZE;
+	fprintf(stderr, "Extension %i : header start %zu , length %zu ; data start %zu , length %zu blocks.\n",
+		i, hdrstart / block, hdrlen / block, datastart / block, datalen / block);
       } else if (inmegs) {
-	int meg = 1024*1024;
-	fprintf(stderr, "Extension %i : header start %i , length %i ; data start %i , length %i megabytes.\n",
-		i, hdrstart/meg, hdrlen/meg,
-		datastart/meg, datalen/meg);
+	off_t meg = 1024*1024;
+	fprintf(stderr, "Extension %i : header start %zu , length %zu ; data start %zu , length %zu megabytes.\n",
+		i, hdrstart/meg, hdrlen/meg, datastart/meg, datalen/meg);
       } else {
-	fprintf(stderr, "Extension %i : header start %i , length %i ; data start %i , length %i .\n",
+	fprintf(stderr, "Extension %i : header start %zu , length %zu ; data start %zu , length %zu .\n",
 		i, hdrstart, hdrlen, datastart, datalen);
       }
     }
+    anqfits_close(anq);
     exit(0);
   }
 
@@ -182,7 +196,7 @@ int main(int argc, char *argv[]) {
   }
 
   for (i=0; i<il_size(exts); i++) {
-    int hdrstart, hdrlen, datastart, datalen;
+    off_t hdrstart, hdrlen, datastart, datalen;
     int ext = il_get(exts, i);
 
     if (allexts) {
@@ -195,21 +209,29 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (qfits_get_hdrinfo(infn, ext, &hdrstart,  &hdrlen ) ||
-	qfits_get_datinfo(infn, ext, &datastart, &datalen)) {
-      fprintf(stderr, "Error getting extents of extension %i.\n", ext);
+    anq = anqfits_open(infn);
+    if (!anq) {
+      ERROR("Failed to open input file \"%s\"", infn);
       exit(-1);
     }
-    if (inblocks)
-      fprintf(stderr, "Writing extension %i: header start %i, length %i, data start %i, length %i blocks.\n",
-	      ext, hdrstart/FITS_BLOCK_SIZE, hdrlen/FITS_BLOCK_SIZE, datastart/FITS_BLOCK_SIZE, datalen/FITS_BLOCK_SIZE);
-    else if (inmegs) {
-      int meg = 1024*1024;
-      fprintf(stderr, "Writing extension %i: header start %i, length %i, data start %i, length %i megabytes.\n",
+
+    hdrstart  = anqfits_header_start(anq, ext);
+    hdrlen    = anqfits_header_size(anq, ext);
+    datastart = anqfits_data_start(anq, ext);
+    datalen   = anqfits_data_size(anq, ext);
+
+    if (inblocks) {
+      off_t block = (off_t)FITS_BLOCK_SIZE;
+      fprintf(stderr, "Writing extension %i : header start %zu , length %zu ; data start %zu , length %zu blocks.\n",
+	      ext, hdrstart / block, hdrlen / block, datastart / block, datalen / block);
+    } else if (inmegs) {
+      off_t meg = 1024*1024;
+      fprintf(stderr, "Writing extension %i : header start %zu , length %zu ; data start %zu , length %zu megabytes.\n",
 	      ext, hdrstart/meg, hdrlen/meg, datastart/meg, datalen/meg);
-    } else
-      fprintf(stderr, "Writing extension %i: header start %i, length %i, data start %i, length %i.\n",
+    } else {
+      fprintf(stderr, "Writing extension %i : header start %zu , length %zu ; data start %zu , length %zu .\n",
 	      ext, hdrstart, hdrlen, datastart, datalen);
+    }
 
     if (hdrlen && !dataonly) {
       if (pipe_file_offset(fin, hdrstart, hdrlen, fout)) {
@@ -235,5 +257,6 @@ int main(int argc, char *argv[]) {
   if (!allexts && !tostdout)
     fclose(fout);
   il_free(exts);
+  anqfits_close(anq);
   return 0;
 }
