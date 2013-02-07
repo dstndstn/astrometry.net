@@ -2,6 +2,7 @@
 
 from astrometry.util.run_command import run_command
 from astrometry.util.sdss_filenames import *
+from astrometry.sdss import *
 
 def get_urls(urls, outfn, curl=False):
 	for url in urls:
@@ -87,7 +88,8 @@ if __name__ == '__main__':
 	import sys
 
 	parser = OptionParser(usage=('%prog <options> <file types>\n\n' +
-								 'file types include: fpC, fpM, fpObjc, psField, tsObj, tsField'))
+								 'file types include: fpC, fpM, fpObjc, psField, tsObj, tsField\n'
+								 'and for DR8 and above: frame'))
 
 	parser.add_option('-r', '--run', dest='run', type='int')
 	parser.add_option('-f', '--field', dest='field', type='int')
@@ -95,9 +97,10 @@ if __name__ == '__main__':
 	parser.add_option('-R', '--rerun', dest='rerun', type='int')
 	parser.add_option('-b', '--band', dest='band')
 	parser.add_option('-C', '--curl', dest='curl', action='store_true', default=False)
-
+	parser.add_option('--dr9', dest='dr9', action='store_true',
+					  help='Grab DR9 data')
+	
 	parser.set_defaults(run=None, field=None, camcol=None, band=None, rerun=None)
-
 	(opt, args) = parser.parse_args()
 	if not len(args):
 		parser.print_help()
@@ -122,7 +125,13 @@ if __name__ == '__main__':
 	if opt.rerun is not None:
 		argdict['reruns'] = [opt.rerun]
 
+	if opt.dr9:
+		sdss = DR9()
+	else:
+		sdss = DR7()
+		
 	for filetype in args:
 		print 'Retrieving', filetype, '...'
-		sdss_das_get(filetype, None, run, camcol, field, curl=opt.curl, **argdict)
+		fn = sdss.retrieve(filetype, run, camcol, field, **argdict)
+		#sdss_das_get(filetype, None, run, camcol, field, curl=opt.curl, **argdict)
 
