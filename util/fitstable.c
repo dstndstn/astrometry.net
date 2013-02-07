@@ -443,9 +443,11 @@ int fitstable_n_fits_columns(const fitstable_t* tab) {
 }
 
 int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
-										  fitstable_t* outtab,
-										  const sl* colnames) {
+					  fitstable_t* outtab,
+					  const sl* colnames,
+					  int c_offset) {
 	int i, NC;
+	int noc = ncols(outtab);
 	NC = sl_size(colnames);
 	for (i=0; i<NC; i++) {
 		const qfits_col* qcol;
@@ -462,10 +464,10 @@ int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
 		// the resulting "outtab" can handle raw data from the "intab".
 		off = fits_offset_of_column(intab->table, j);
 		fitstable_add_read_column_struct(outtab, qcol->atom_type, qcol->atom_nb,
-						 off, qcol->atom_type, qcol->tlabel, TRUE);
+						 c_offset + off, qcol->atom_type, qcol->tlabel, TRUE);
 		// set the FITS column number.
 		col = getcol(outtab, ncols(outtab)-1);
-		col->col = i;
+		col->col = noc + i;
 	}
 	return 0;
 }
@@ -474,6 +476,7 @@ void fitstable_add_fits_columns_as_struct2(const fitstable_t* intab,
 										   fitstable_t* outtab) {
 	int i, NC;
 	int off = 0;
+	int noc = ncols(outtab);
 	NC = fitstable_get_N_fits_columns(intab);
 	for (i=0; i<NC; i++) {
 		const qfits_col* qcol = qfits_table_get_col(intab->table, i);
@@ -486,7 +489,7 @@ void fitstable_add_fits_columns_as_struct2(const fitstable_t* intab,
 										 off, qcol->atom_type, qcol->tlabel, TRUE);
 		// set the FITS column number.
 		col = getcol(outtab, ncols(outtab)-1);
-		col->col = i;
+		col->col = noc + i;
 		off += fitscolumn_get_size(col); //getcol(tab, ncols(tab)-1));
 	}
 }

@@ -510,7 +510,7 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 	if ext is not None:
 		hdunum = ext
 	if isinstance(dataorfn, str):
-		pf = pyfits.open(dataorfn, mmap=mmap)
+		pf = pyfits.open(dataorfn, memmap=mmap)
 		data = pf[hdunum].data
 		if header == 'default':
 			hdr = pf[hdunum].header

@@ -408,7 +408,7 @@ int main(int argc, char *argv[]) {
 					}
 					// Set the output table structure.
 					if (cols) {
-						fitstable_add_fits_columns_as_struct3(intable, out, cols);
+					  fitstable_add_fits_columns_as_struct3(intable, out, cols, 0);
 					} else
 						fitstable_add_fits_columns_as_struct2(intable, out);
 

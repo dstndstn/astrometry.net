@@ -225,7 +225,7 @@ void fitstable_add_fits_columns_as_struct2(const fitstable_t* intab,
 
 int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
 										  fitstable_t* outtab,
-										  const sl* columns);
+					  const sl* columns, int c_offset);
 
 
 // reading:
