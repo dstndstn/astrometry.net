@@ -407,6 +407,20 @@ class tabledata(object):
 
 	writeto = write_to
 
+	def normalize(self, columns=None):
+		if columns is None:
+			columns = self.get_columns()
+		for c in columns:
+			X = self.get(c)
+			try:
+				dt = X.dtype
+			except:
+				continue
+			if dt.byteorder in ['>','<']:
+				# go native
+				X = X.astype(dt.newbyteorder('N'))
+			self.set(c, X)
+
 	def to_fits_columns(self, columns=None):
 		cols = []
 
@@ -482,7 +496,8 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 			   header='default',
 			   columns=None,
 			   column_map=None,
-			   lower=True):
+			   lower=True,
+	       mmap=True):
 	'''
 	If 'columns' (a list of strings) is passed, only those columns
 	will be read; otherwise all columns will be read.
@@ -495,7 +510,7 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 	if ext is not None:
 		hdunum = ext
 	if isinstance(dataorfn, str):
-		pf = pyfits.open(dataorfn)
+		pf = pyfits.open(dataorfn, mmap=mmap)
 		data = pf[hdunum].data
 		if header == 'default':
 			hdr = pf[hdunum].header
