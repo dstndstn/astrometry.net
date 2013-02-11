@@ -215,6 +215,7 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     double rad;
 	bool notself;
 	int* tempinds;
+	PyObject* rtn;
 
 	// So that ParseTuple("b") with a C "bool" works
 	assert(sizeof(bool) == sizeof(unsigned char));
@@ -269,7 +270,10 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
 	free(tempinds);
 	free(tempdists);
 
-    return Py_BuildValue("(OO)", inds, dist2s);
+	rtn = Py_BuildValue("(OO)", inds, dist2s);
+	Py_DECREF(inds);
+	Py_DECREF(dist2s);
+	return rtn;
 }
 
 static PyMethodDef spherematchMethods[] = {
