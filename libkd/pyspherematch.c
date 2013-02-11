@@ -157,7 +157,8 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     npy_intp dims[2];
     PyArrayObject* dists;
 	bool notself;
-
+	PyObject* rtn;
+	
 	// So that ParseTuple("b") with a C "bool" works
 	assert(sizeof(bool) == sizeof(unsigned char));
 
@@ -199,7 +200,10 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     il_free(dtresults.inds2);
     dl_free(dtresults.dists);
 
-    return Py_BuildValue("(OO)", inds, dists);
+    rtn = Py_BuildValue("(OO)", inds, dists);
+    Py_DECREF(inds);
+    Py_DECREF(dists);
+    return rtn;
 }
 
 
