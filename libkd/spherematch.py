@@ -258,24 +258,12 @@ def tree_close(kd):
 	
 def trees_match(kd1, kd2, radius, nearest=False, notself=False):
 	if nearest:
-		(inds,dists2) = spherematch_c.nearest(kd1, kd2, radius, notself)
-		I1 = np.flatnonzero(inds >= 0)
-		J1 = inds[I1]
-		d1 = distsq2deg(dists2[I1])
-		J,I,d = spherematch_c.nearest2(kd1, kd2, radius, notself)
+		# (inds,dists2) = spherematch_c.nearest(kd1, kd2, radius, notself)
+		# I1 = np.flatnonzero(inds >= 0)
+		# J1 = inds[I1]
+		# d1 = distsq2deg(dists2[I1])
+		I,J,d = spherematch_c.nearest2(kd1, kd2, radius, notself)
 		d = distsq2deg(d)
-                print 'N1', len(I1), len(J1), len(d1)
-                print 'N2', len(I), len(J), len(d)
-                print 'I,J,d (1):', I1[:10], J1[:10], d1[:10]
-                print 'I,J,d (2):', I[:10], J[:10], d[:10]
-
-                sI1 = set(I1)
-                sI2 = set(I)
-                print 'I difference:', sI1.symmetric_difference(sI2)
-                sJ1 = set(J1)
-                sJ2 = set(J)
-                print 'J difference:', sJ1.symmetric_difference(sJ2)
-
 	else:
 		(inds,dists) = spherematch_c.match(kd1, kd2, radius)
 		d = dist2deg(dists[:,0])

@@ -358,12 +358,8 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
   // count number of matches
   N = 0;
   for (i=0; i<NY; i++)
-    if (tempinds[i] != -1) {
+    if (tempinds[i] != -1)
       N++;
-      //if (N < 100) {
-      //printf("i=%i, N=%i, ind %i, d2 %g\n", i, N, tempinds[i], tempd2[i]);
-      //}
-    }
 
   // allocate return arrays
   dims[0] = N;
@@ -379,8 +375,9 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
   for (i=0; i<NY; i++) {
     if (tempinds[i] == -1)
       continue;
-    pi[j] = kdtree_permute(kd1, tempinds[i]);
-    pj[j] = kdtree_permute(kd2, i);
+    // to match return order in spherematch.py
+    pj[j] = kdtree_permute(kd1, tempinds[i]);
+    pi[j] = kdtree_permute(kd2, i);
     pd[j] = tempd2[i];
     j++;
   }
