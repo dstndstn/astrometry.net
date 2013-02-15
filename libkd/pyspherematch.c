@@ -206,7 +206,6 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     return rtn;
 }
 
-
 static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     int i, NY;
     long p1, p2;
@@ -280,6 +279,125 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
 	return rtn;
 }
 
+static PyObject* kdtree_bbox(PyObject* self, PyObject* args) {
+  PyArrayObject* bbox;
+  PyObject* rtn;
+  npy_intp dims[2];
+  long i;
+  double *bb;
+  bool ok;
+  kdtree_t* kd;
+
+  if (!PyArg_ParseTuple(args, "l", &i)) {
+    PyErr_SetString(PyExc_ValueError, "need one arg: kdtree identifier (int)");
+    return NULL;
+  }
+  // Nasty!
+  kd = (kdtree_t*)i;
+  dims[0] = kd->ndim;
+  dims[1] = 2;
+  bbox = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
+  bb = PyArray_DATA(bbox);
+  ok = kdtree_get_bboxes(kd, 0, bb, bb+kd->ndim);
+  assert(ok);
+  rtn = Py_BuildValue("O", bbox);
+  Py_DECREF(bbox);
+  return rtn;
+}
+
+
+static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
+  int i, j, NY, N;
+  long p1, p2;
+  kdtree_t *kd1, *kd2;
+  npy_intp dims[1];
+  PyArrayObject* I;
+  PyArrayObject* J;
+  PyArrayObject* dist2s;
+  int *pi;
+  int *pj;
+  double *pd;
+  double rad;
+  bool notself;
+  int* tempinds;
+  double* tempd2;
+  PyObject* rtn;
+
+  // So that ParseTuple("b") with a C "bool" works
+  assert(sizeof(bool) == sizeof(unsigned char));
+
+  if (!PyArg_ParseTuple(args, "lldb", &p1, &p2, &rad, &notself)) {
+    PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");
+    return NULL;
+  }
+  // Nasty!
+  kd1 = (kdtree_t*)p1;
+  kd2 = (kdtree_t*)p2;
+
+  // quick check for no-overlap case
+  if (kdtree_node_node_mindist2_exceeds(kd1, 0, kd2, 0, rad*rad)) {
+    // allocate empty return arrays
+    dims[0] = 0;
+    I = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
+    J = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
+    dist2s = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_DOUBLE);
+    rtn = Py_BuildValue("(OOO)", I, J, dist2s);
+    Py_DECREF(I);
+    Py_DECREF(J);
+    Py_DECREF(dist2s);
+    return rtn;
+  }
+
+  NY = kdtree_n(kd2);
+
+  tempinds = (int*)malloc(NY * sizeof(int));
+  tempd2 = (double*)malloc(NY * sizeof(double));
+
+  dualtree_nearestneighbour(kd1, kd2, rad*rad, &tempd2, &tempinds, notself);
+
+  // count number of matches
+  N = 0;
+  for (i=0; i<NY; i++)
+    if (tempinds[i] != -1) {
+      N++;
+      //if (N < 100) {
+      //printf("i=%i, N=%i, ind %i, d2 %g\n", i, N, tempinds[i], tempd2[i]);
+      //}
+    }
+
+  // allocate return arrays
+  dims[0] = N;
+  I = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
+  J = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
+  dist2s = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_DOUBLE);
+
+  pi = PyArray_DATA(I);
+  pj = PyArray_DATA(J);
+  pd = PyArray_DATA(dist2s);
+
+  j = 0;
+  for (i=0; i<NY; i++) {
+    if (tempinds[i] == -1)
+      continue;
+    pi[j] = kdtree_permute(kd1, tempinds[i]);
+    pj[j] = kdtree_permute(kd2, i);
+    pd[j] = tempd2[i];
+    j++;
+  }
+
+  free(tempinds);
+  free(tempd2);
+
+  rtn = Py_BuildValue("(OOO)", I, J, dist2s);
+  Py_DECREF(I);
+  Py_DECREF(J);
+  Py_DECREF(dist2s);
+  return rtn;
+}
+
+
+
+
 static PyMethodDef spherematchMethods[] = {
     { "kdtree_build", spherematch_kdtree_build, METH_VARARGS,
       "build kdtree" },
@@ -291,10 +409,18 @@ static PyMethodDef spherematchMethods[] = {
       "close kdtree opened with kdtree_open" },
     { "kdtree_free", spherematch_kdtree_free, METH_VARARGS,
       "free kdtree" },
+
+      { "kdtree_bbox", kdtree_bbox, METH_VARARGS,
+      "get bounding-box of this tree" },
+
     { "match", spherematch_match, METH_VARARGS,
       "find matching data points" },
     { "nearest", spherematch_nn, METH_VARARGS,
       "find nearest neighbours" },
+
+    { "nearest2", spherematch_nn2, METH_VARARGS,
+      "find nearest neighbours (different return values)" },
+
     {NULL, NULL, 0, NULL}
 };
 

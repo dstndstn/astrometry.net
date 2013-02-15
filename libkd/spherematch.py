@@ -8,18 +8,18 @@ except:
     from astrometry.util.starutil_numpy import radectoxyz, rad2distsq
 
     def rad2dist(r):
-        return np.sqrt(rad2distsq(r))
+	return np.sqrt(rad2distsq(r))
 
     def distsq2rad(dist2):
-        return np.arccos(1. - dist2 / 2.)
+	return np.arccos(1. - dist2 / 2.)
     def distsq2deg(dist2):
-        return np.rad2deg(distsq2rad(dist2))
+	return np.rad2deg(distsq2rad(dist2))
 
     # deg2dist, dist2deg
     def deg2dist(deg):
-        return rad2dist(np.deg2rad(deg))
+	return rad2dist(np.deg2rad(deg))
     def dist2deg(dist):
-        return distsq2deg(dist**2)
+	return distsq2deg(dist**2)
 
 
 # Copied from "celestial.py" by Sjoert van Velzen.
@@ -235,14 +235,16 @@ _nearest_func = nearest
 def tree_build(ra=None, dec=None, xyz=None):
 	if ra is not None:
 		(N,) = ra.shape
-		print 'dec shape', dec.shape
-		xyz = zeros((N,3)).astype(float)
-		xyz[:,2] = sin(deg2rad(dec))
-		cosd = cos(deg2rad(dec))
-		xyz[:,0] = cosd * cos(deg2rad(ra))
-		xyz[:,1] = cosd * sin(deg2rad(ra))
+		xyz = np.zeros((N,3)).astype(float)
+		xyz[:,2] = np.sin(np.deg2rad(dec))
+		cosd = np.cos(np.deg2rad(dec))
+		xyz[:,0] = cosd * np.cos(np.deg2rad(ra))
+		xyz[:,1] = cosd * np.sin(np.deg2rad(ra))
 	kd = spherematch_c.kdtree_build(xyz)
 	return kd
+
+def tree_free(kd):
+	spherematch_c.kdtree_free(kd)
 
 def tree_save(kd, fn):
 	rtn = spherematch_c.kdtree_write(kd, fn)
@@ -254,10 +256,31 @@ def tree_open(fn):
 def tree_close(kd):
 	return spherematch_c.kdtree_close(kd)
 	
-def trees_match(kd1, kd2, radius):
-	(inds,dists) = spherematch_c.match(kd1, kd2, radius)
-	return (inds,dists)
+def trees_match(kd1, kd2, radius, nearest=False, notself=False):
+	if nearest:
+		(inds,dists2) = spherematch_c.nearest(kd1, kd2, radius, notself)
+		I1 = np.flatnonzero(inds >= 0)
+		J1 = inds[I1]
+		d1 = distsq2deg(dists2[I1])
+		J,I,d = spherematch_c.nearest2(kd1, kd2, radius, notself)
+		d = distsq2deg(d)
+                print 'N1', len(I1), len(J1), len(d1)
+                print 'N2', len(I), len(J), len(d)
+                print 'I,J,d (1):', I1[:10], J1[:10], d1[:10]
+                print 'I,J,d (2):', I[:10], J[:10], d[:10]
 
+                sI1 = set(I1)
+                sI2 = set(I)
+                print 'I difference:', sI1.symmetric_difference(sI2)
+                sJ1 = set(J1)
+                sJ2 = set(J)
+                print 'J difference:', sJ1.symmetric_difference(sJ2)
+
+	else:
+		(inds,dists) = spherematch_c.match(kd1, kd2, radius)
+		d = dist2deg(dists[:,0])
+		I,J = inds[:,0], inds[:,1]
+	return I,J,d
 
 if __name__ == '__main__':
 	import doctest
