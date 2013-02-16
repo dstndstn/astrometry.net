@@ -287,6 +287,7 @@ static PyObject* kdtree_bbox(PyObject* self, PyObject* args) {
   double *bb;
   bool ok;
   kdtree_t* kd;
+  int j, D;
 
   if (!PyArg_ParseTuple(args, "l", &i)) {
     PyErr_SetString(PyExc_ValueError, "need one arg: kdtree identifier (int)");
@@ -294,12 +295,21 @@ static PyObject* kdtree_bbox(PyObject* self, PyObject* args) {
   }
   // Nasty!
   kd = (kdtree_t*)i;
-  dims[0] = kd->ndim;
+  D = kd->ndim;
+  dims[0] = D;
   dims[1] = 2;
   bbox = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
-  bb = PyArray_DATA(bbox);
-  ok = kdtree_get_bboxes(kd, 0, bb, bb+kd->ndim);
-  assert(ok);
+  {
+    double bblo[D];
+    double bbhi[D];
+    ok = kdtree_get_bboxes(kd, 0, bblo, bbhi);
+    assert(ok);
+    bb = PyArray_DATA(bbox);
+    for (j=0; j<D; j++) {
+      bb[j*2 + 0] = bblo[j];
+      bb[j*2 + 1] = bbhi[j];
+    }
+  }
   rtn = Py_BuildValue("O", bbox);
   Py_DECREF(bbox);
   return rtn;

@@ -270,6 +270,8 @@ def trees_match(kd1, kd2, radius, nearest=False, notself=False):
 		I,J = inds[:,0], inds[:,1]
 	return I,J,d
 
+tree_bbox = spherematch_c.kdtree_bbox
+
 if __name__ == '__main__':
 	import doctest
 	doctest.testmod()
