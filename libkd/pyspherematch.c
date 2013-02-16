@@ -134,6 +134,18 @@ static PyObject* spherematch_kdtree_close(PyObject* self, PyObject* args) {
     return Py_BuildValue("");
 }
 
+static PyObject* spherematch_kdtree_n(PyObject* self, PyObject* args) {
+    long i;
+    kdtree_t* kd;
+    if (!PyArg_ParseTuple(args, "l", &i)) {
+        PyErr_SetString(PyExc_ValueError, "need one arg: kdtree identifier (int)");
+        return NULL;
+    }
+    // Nasty!
+    kd = (kdtree_t*)i;
+    return PyInt_FromLong(kdtree_n(kd));
+}
+
 struct dualtree_results {
     il* inds1;
     il* inds2;
@@ -279,7 +291,7 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
 	return rtn;
 }
 
-static PyObject* kdtree_bbox(PyObject* self, PyObject* args) {
+static PyObject* spherematch_kdtree_bbox(PyObject* self, PyObject* args) {
   PyArrayObject* bbox;
   PyObject* rtn;
   npy_intp dims[2];
@@ -385,9 +397,8 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
   for (i=0; i<NY; i++) {
     if (tempinds[i] == -1)
       continue;
-    // to match return order in spherematch.py
-    pj[j] = kdtree_permute(kd1, tempinds[i]);
-    pi[j] = kdtree_permute(kd2, i);
+    pi[j] = kdtree_permute(kd1, tempinds[i]);
+    pj[j] = kdtree_permute(kd2, i);
     pd[j] = tempd2[i];
     j++;
   }
@@ -417,8 +428,10 @@ static PyMethodDef spherematchMethods[] = {
     { "kdtree_free", spherematch_kdtree_free, METH_VARARGS,
       "free kdtree" },
 
-      { "kdtree_bbox", kdtree_bbox, METH_VARARGS,
+    { "kdtree_bbox", spherematch_kdtree_bbox, METH_VARARGS,
       "get bounding-box of this tree" },
+    { "kdtree_n", spherematch_kdtree_n, METH_VARARGS,
+      "N pts in tree" },
 
     { "match", spherematch_match, METH_VARARGS,
       "find matching data points" },

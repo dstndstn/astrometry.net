@@ -271,6 +271,7 @@ def trees_match(kd1, kd2, radius, nearest=False, notself=False):
 	return I,J,d
 
 tree_bbox = spherematch_c.kdtree_bbox
+tree_n = spherematch_c.kdtree_n
 
 if __name__ == '__main__':
 	import doctest
