@@ -269,6 +269,9 @@ def trees_match(kd1, kd2, radius, nearest=False, notself=False):
 
     'radius' is Euclidean distance.
 
+	If nearest=True, returns the nearest neighbour of each point in "kd1";
+	ie, "I" will NOT contain duplicates, but "J" may.
+	
     Returns (I, J, d), where
       I are indices into kd1
       J are indices into kd2
