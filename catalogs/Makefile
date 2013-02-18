@@ -111,7 +111,7 @@ install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS)
 .PHONY: install
 
 clean:
-	rm -f $(LIBCAT) $(OBJS) $(DEPS) deps \
+	rm -f $(LIBCAT) $(OBJS) $(DEPS) *.dep deps \
 		grab-stellarium-constellations
 
 test:

@@ -70,12 +70,8 @@ include $(COMMON)/makefile.wcslib
 include $(COMMON)/makefile.netpbm
 # D'oh
 ifneq ($(MAKECMDGOALS),clean)
-  ifneq ($(MAKECMDGOALS),realclean)
-    ifneq ($(MAKECMDGOALS),alllclean)
-      ifneq ($(MAKECMDGOALS),reconfig)
-        include $(COMMON)/makefile.os-features
-      endif
-    endif
+  ifneq ($(MAKECMDGOALS),reconfig)
+    include $(COMMON)/makefile.os-features
   endif
 endif
 
@@ -189,7 +185,7 @@ resample: resample-main.o \
 ALL_OBJ += resampe.o
 
 tycho2tofits: tycho2tofits.o \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += tycho2tofits.o
 
 tycho2tostellarium: tycho2tostellarium.o $(ANUTILS_LIB) $(QFITS_LIB)
@@ -553,19 +549,15 @@ include cairoutils.dep
 
 endif
 
-.PHONY: allclean realclean clean
-
-allclean: clean
-	rm -f *.o *~ *.dep *.so
-
-realclean: allclean
+.PHONY: clean
 
 clean:
 	rm -f $(ANUTILS_LIB) $(ANFILES_LIB) $(ALL_OBJ) \
 		$(DEPS) deps cairoutils.o $(PYTHON_LIBS) \
 		grab-stellarium-constellations \
 		$(PROGS) $(MAIN_PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
-		cairoutils.dep makefile.os-features
+		cairoutils.dep makefile.os-features *.o *~ *.dep *.so deps
+	rm -Rf build
 
 
 # Try to compensate for clang's lack of -MG to handle generated header
@@ -580,13 +572,9 @@ os-features.h: | os-features-config.h
 $(DEP_OBJ): os-features-config.h
 
 ifneq ($(MAKECMDGOALS),clean)
-  ifneq ($(MAKECMDGOALS),realclean)
-    ifneq ($(MAKECMDGOALS),alllclean)
-      ifneq ($(MAKECMDGOALS),reconfig)
-        ifneq ($(MAKECMDGOALS),makefile.os-features)
-          include $(COMMON)/makefile.deps
-        endif
-      endif
+  ifneq ($(MAKECMDGOALS),reconfig)
+    ifneq ($(MAKECMDGOALS),makefile.os-features)
+      include $(COMMON)/makefile.deps
     endif
   endif
 endif

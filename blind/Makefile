@@ -40,9 +40,7 @@ include $(COMMON)/makefile.wcslib
 include $(COMMON)/makefile.netpbm
 
 ifneq ($(MAKECMDGOALS),clean)
-  ifneq ($(MAKECMDGOALS),realclean)
     include $(COMMON)/makefile.os-features
-  endif
 endif
 
 $(COMMON)/makefile.os-features:
@@ -735,19 +733,15 @@ DEP_PREREQS := $(QFITS_LIB)
 CFLAGS += $(CAIRO_INC)
 include $(COMMON)/makefile.deps
 
-.PHONY: allclean realclean clean
-
-allclean: clean
-	rm -f *.o *~ *.dep 
-
-realclean: allclean
+.PHONY: clean
 
 clean:
 	rm -f $(EXECS) $(EXTRA_EXECS) $(SOLVER_EXECS) $(MISC_EXECS) $(PROGS) \
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) deps $(FITS_UTILS) $(ALL_OBJ) $(IMAGE2XY) \
 		$(NODEP_OBJS) plot-constellations fitsverify plotquad plotxy \
 		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
-		$(BACKEND_LIB) $(BACKEND_SO) _plotstuff_c.so
+		$(BACKEND_LIB) $(BACKEND_SO) _plotstuff_c.so *.o *~ *.dep deps
+	rm -Rf build
 
 
 

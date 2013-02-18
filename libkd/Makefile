@@ -159,18 +159,15 @@ DEP_OBJ += $(ALL_TEST_FILES_O) $(ALL_TEST_FILES_MAIN_O)
 
 ### /TESTS
 
-.PHONY: realclean clean
+.PHONY: clean
 clean:
 	-rm -f $(LIBKD) $(KD) $(KD_FITS) deps $(DEPS) \
 		checktree checktree.o \
 		fix-bb fix-bb.o \
-		$(INTERNALS) $(INTERNALS_NOIO) $(LIBKD_NOIO) \
+		$(INTERNALS) $(INTERNALS_NOIO) $(LIBKD_NOIO) $(DT) \
 		$(ALL_TESTS_CLEAN) \
-		$(PYSPHEREMATCH_OBJ) spherematch_c.so
+		$(PYSPHEREMATCH_OBJ) spherematch_c.so *~ *.dep deps
 	-rm -Rf build
-
-realclean: clean
-	-rm *~ *.dep
 
 .PHONY: tags
 tags:

@@ -236,18 +236,11 @@ clean:
 	-$(MAKE) -C qfits-an clean
 	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean
+	-rm gsl-an/config.h
 	$(MAKE) -C libkd clean
 	$(MAKE) -C blind clean
 
-realclean:
-	$(MAKE) -C util realclean
-	$(MAKE) -C catalogs clean
-	-$(MAKE) -C qfits-an clean
-	-rm __init__.pyc
-	$(MAKE) -C gsl-an clean
-	-rm gsl-an/config.h
-	$(MAKE) -C libkd realclean
-	$(MAKE) -C blind realclean
+realclean: clean
 
 TAGS:
 	etags -I `find . -name "*.c" -o -name "*.h"`
