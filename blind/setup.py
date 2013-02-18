@@ -2,11 +2,13 @@ import os
 import sys
 # add .. to pythonpath
 path = os.path.abspath(__file__)
-sys.path.append(os.path.dirname(os.path.dirname(path)))
-
+dotdot = os.path.dirname(os.path.dirname(path))
+sys.path.append(dotdot)
+#sys.path.append(os.path.dirname(dotdot))
+#print 'sys.path is', sys.path
 from distutils.core import setup, Extension
-
-from astrometry.util.setuputils import *
+#from astrometry.util.setuputils import *
+from util.setuputils import *
 
 import numpy
 numpy_inc = numpy.get_include()

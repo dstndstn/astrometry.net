@@ -232,7 +232,7 @@ wcs-resample: wcs-resample-main.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_L
 	$(CC) -o $@ $^ $(LDFLAGS) $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += wcs-resample-main.o
 
-fit-wcs: fit-wcs-main.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+fit-wcs: fit-wcs-main.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
 	$(CC) -o $@ $^ $(LDFLAGS) $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += fit-wcs-main.o
 
