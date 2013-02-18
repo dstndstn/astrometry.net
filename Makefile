@@ -101,6 +101,7 @@ install: report.txt
 	mkdir -p '$(INSTALL_DIR)/python/astrometry/sdss'
 	mkdir -p '$(INSTALL_DIR)/ups'
 	cp ups/astrometry_net.table-dist '$(INSTALL_DIR)/ups/astrometry_net.table'
+	cp ups/astrometry_net.cfg '$(INSTALL_DIR)/ups'
 	cp __init__.py '$(INSTALL_DIR)/python/astrometry'
 	cp CREDITS LICENSE README '$(INSTALL_DIR)/doc'
 	cp report.txt '$(INSTALL_DIR)/doc'
