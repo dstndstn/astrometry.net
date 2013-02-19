@@ -16,8 +16,8 @@
 
 # WCSLIB is (supposed to be) optional.
 
-WCSLIB_INC := $(shell pkg-config --cflags wcslib 2>/dev/null)
-WCSLIB_LIB := $(shell pkg-config --libs wcslib 2>/dev/null)
+WCSLIB_INC ?= $(shell pkg-config --cflags wcslib 2>/dev/null)
+WCSLIB_LIB ?= $(shell pkg-config --libs wcslib 2>/dev/null)
 #WCSLIB_LIB := $(shell pkg-config --static wcslib 2>/dev/null)
 
 X := $(shell pkg-config --exists wcslib && echo yes || echo no)

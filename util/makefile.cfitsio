@@ -14,8 +14,8 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-CFITS_INC := $(shell pkg-config --cflags cfitsio 2>/dev/null)
-CFITS_LIB := $(shell pkg-config --libs cfitsio 2>/dev/null)
+CFITS_INC ?= $(shell pkg-config --cflags cfitsio 2>/dev/null)
+CFITS_LIB ?= $(shell pkg-config --libs cfitsio 2>/dev/null)
 CFITS_DEP :=
 
 X := $(shell pkg-config --exists cfitsio && echo yes || echo no)

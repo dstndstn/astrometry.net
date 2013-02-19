@@ -14,5 +14,5 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-CAIRO_INC := $(shell pkg-config --cflags cairo 2>/dev/null)
-CAIRO_LIB := $(shell pkg-config --libs cairo 2>/dev/null)
+CAIRO_INC ?= $(shell pkg-config --cflags cairo 2>/dev/null)
+CAIRO_LIB ?= $(shell pkg-config --libs cairo 2>/dev/null)
