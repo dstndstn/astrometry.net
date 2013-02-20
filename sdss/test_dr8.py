@@ -4,6 +4,7 @@ import pylab as plt
 
 import sys
 from astrometry.sdss.dr8 import *
+import numpy as np
 
 def test_astrans(sdss, r,c,f,b):
 	bandnum = band_index(b)
@@ -16,6 +17,21 @@ def test_astrans(sdss, r,c,f,b):
 	#tab.about()
 	x,y = tab.colc[:,bandnum], tab.rowc[:,bandnum]
 	ra,dec = tab.ra, tab.dec
+
+
+	for r,d in zip(ra,dec):
+		print 'ra,dec', r,d
+		#print 'py:'
+		x1,y1 = astrans.radec_to_pixel_single_py(r, d)
+		print '  py', x1,y1
+		#print 'c:'
+		x2,y2 = astrans.radec_to_pixel_single_c(r, d)
+		print '  c', x2,y2
+		assert(np.abs(x1 - x2) < 1e-6)
+		assert(np.abs(y1 - y2) < 1e-6)
+
+
+
 
 	r2,d2 = astrans.pixel_to_radec(x, y)
 	plt.clf()

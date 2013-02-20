@@ -333,9 +333,26 @@ class AsTrans(SdssFile):
 					traceback.print_exc()
 					pass
 
+		self._cache_vals()
+
 	def __str__(self):
 		return (SdssFile.__str__(self) +
 				' (node=%g, incl=%g)' % (self.node, self.incl))
+
+	def _cache_vals(self):
+		a, b, c, d, e, f = self._get_abcdef()
+		determinant = b * f - c * e
+		B =  f / determinant
+		C = -c / determinant
+		E = -e / determinant
+		F =  b / determinant
+		py,px, qy,qx = self._get_cscc()
+		g0, g1, g2, g3 = self._get_drow()
+		h0, h1, h2, h3 = self._get_dcol()
+		color0 = self._get_ricut()
+		self._cached = [self.node, self.incl,
+						a,b,c,d,e,f, B,C,E,F, px,py,qx,qy, g0,g1,g2,g3,
+						h0,h1,h2,h3, color0]
 
 	def _get_abcdef(self):
 		return tuple(self.trans[x] for x in 'abcdef')
@@ -377,11 +394,15 @@ class AsTrans(SdssFile):
 		mu, nu = self.pixel_to_munu(x, y, color)
 		return self.munu_to_radec(mu, nu)
 
-	def radec_to_pixel_single(self, ra, dec, color=0):
+	def radec_to_pixel_single_py(self, ra, dec, color=0):
 		'''RA,Dec -> x,y for scalar RA,Dec.'''
 		# RA,Dec -> mu,nu -> prime -> pixel
 		mu, nu = self.radec_to_munu_single(ra, dec)
+		#print 'py; mu,nu', mu,nu
 		return self.munu_to_pixel_single(mu, nu, color)
+
+	def radec_to_pixel_single_c(self, ra, dec):
+		return cutils.radec_to_pixel(ra, dec, self._cached)
 
 	def radec_to_pixel(self, ra, dec, color=0):
 		mu, nu = self.radec_to_munu(ra, dec)
@@ -389,6 +410,7 @@ class AsTrans(SdssFile):
 	
 	def munu_to_pixel(self, mu, nu, color=0):
 		xprime, yprime = self.munu_to_prime(mu, nu, color)
+		#print 'py: xprime,yprime', xprime,yprime
 		return self.prime_to_pixel(xprime, yprime)
 
 	munu_to_pixel_single = munu_to_pixel
@@ -541,8 +563,10 @@ class AsTrans(SdssFile):
 
 if cutils is not None:
 	AsTrans.radec_to_munu_single = AsTrans.radec_to_munu_single_c
+	AsTrans.radec_to_pixel_single = AsTrans.radec_to_pixel_single_c
 else:
 	AsTrans.radec_to_munu_single = AsTrans.radec_to_munu
+	AsTrans.radec_to_pixel_single = AsTrans.radec_to_pixel_single_py
 
 
 class TsField(SdssFile):
