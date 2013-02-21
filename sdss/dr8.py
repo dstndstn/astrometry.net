@@ -49,13 +49,13 @@ class Frame(SdssFile):
 		    fpM.setMaskedPixels(plane, invvar, 0, roi=roi)
 		
 		'''
-		image = self.getImage()
 		calibvec = self.getCalibVec()
 		bigsky = self.getSky()
-		assert(bigsky.shape == image.shape)
 		if ignoreSourceFlux:
 			dn = bigsky
 		else:
+			image = self.getImage()
+			assert(bigsky.shape == image.shape)
 			dn = (image / calibvec) + bigsky
 		gain = psfield.getGain(bandnum)
 		# Note, "darkvar" includes dark current *and* read noise.
