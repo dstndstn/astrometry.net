@@ -40,7 +40,7 @@ class Frame(SdssFile):
 		bigsky = skyim[YI,XI]
 		return bigsky
 
-	def getInvvar(self, psfield, bandnum):
+	def getInvvar(self, psfield, bandnum, ignoreSourceFlux=False):
 		'''
 		NOTE that this does NOT blank out masked pixels; use, eg,
 
@@ -53,7 +53,10 @@ class Frame(SdssFile):
 		calibvec = self.getCalibVec()
 		bigsky = self.getSky()
 		assert(bigsky.shape == image.shape)
-		dn = (image / calibvec) + bigsky
+		if ignoreSourceFlux:
+			dn = bigsky
+		else:
+			dn = (image / calibvec) + bigsky
 		gain = psfield.getGain(bandnum)
 		# Note, "darkvar" includes dark current *and* read noise.
 		darkvar = psfield.getDarkVariance(bandnum)
