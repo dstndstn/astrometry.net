@@ -138,14 +138,14 @@ int main(int argc, char *argv[]) {
       if (inblocks) {
 	off_t block = (off_t)FITS_BLOCK_SIZE;
 	fprintf(stderr, "Extension %i : header start %zu , length %zu ; data start %zu , length %zu blocks.\n",
-		i, hdrstart / block, hdrlen / block, datastart / block, datalen / block);
+			i, (size_t)(hdrstart / block), (size_t)(hdrlen / block), (size_t)(datastart / block), (size_t)(datalen / block));
       } else if (inmegs) {
 	off_t meg = 1024*1024;
 	fprintf(stderr, "Extension %i : header start %zu , length %zu ; data start %zu , length %zu megabytes.\n",
-		i, hdrstart/meg, hdrlen/meg, datastart/meg, datalen/meg);
+			i, (size_t)(hdrstart/meg), (size_t)(hdrlen/meg), (size_t)(datastart/meg), (size_t)(datalen/meg));
       } else {
 	fprintf(stderr, "Extension %i : header start %zu , length %zu ; data start %zu , length %zu .\n",
-		i, hdrstart, hdrlen, datastart, datalen);
+			i, (size_t)hdrstart, (size_t)hdrlen, (size_t)datastart, (size_t)datalen);
       }
     }
     anqfits_close(anq);
@@ -211,14 +211,14 @@ int main(int argc, char *argv[]) {
     if (inblocks) {
       off_t block = (off_t)FITS_BLOCK_SIZE;
       fprintf(stderr, "Writing extension %i : header start %zu , length %zu ; data start %zu , length %zu blocks.\n",
-	      ext, hdrstart / block, hdrlen / block, datastart / block, datalen / block);
+			  ext, (size_t)(hdrstart / block), (size_t)(hdrlen / block), (size_t)(datastart / block), (size_t)(datalen / block));
     } else if (inmegs) {
       off_t meg = 1024*1024;
       fprintf(stderr, "Writing extension %i : header start %zu , length %zu ; data start %zu , length %zu megabytes.\n",
-	      ext, hdrstart/meg, hdrlen/meg, datastart/meg, datalen/meg);
+			  ext, (size_t)(hdrstart/meg), (size_t)(hdrlen/meg), (size_t)(datastart/meg), (size_t)(datalen/meg));
     } else {
       fprintf(stderr, "Writing extension %i : header start %zu , length %zu ; data start %zu , length %zu .\n",
-	      ext, hdrstart, hdrlen, datastart, datalen);
+	      ext, (size_t)hdrstart, (size_t)hdrlen, (size_t)datastart, (size_t)datalen);
     }
 
     if (hdrlen && !dataonly) {

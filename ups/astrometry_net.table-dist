@@ -3,13 +3,7 @@
 #
 # This is copied to INSTALL_DIR/ups/astrometry_net.table
 #
-
-# It seems to be the convention to "prepend" rather than "append"...
-
 envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
-# You're welcome, Craig
-#envPrepend(CFLAGS, -I${PRODUCT_DIR}/include)
-#envPrepend(LDFLAGS, -L${PRODUCT_DIR}/lib)
 envPrepend(PATH, ${PRODUCT_DIR}/bin)
