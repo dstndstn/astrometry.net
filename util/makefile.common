@@ -41,9 +41,9 @@ Makefile: ;
 %: SCCS/s.%
 
 # sh shell
-AN_SHELL = /bin/sh
+AN_SHELL ?= /bin/sh
 
-RANLIB := ranlib
+RANLIB ?= ranlib
 
 AWK := LC_ALL=C LC_NUMERIC=EN_US awk
 

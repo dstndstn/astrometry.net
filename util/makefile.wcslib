@@ -16,12 +16,18 @@
 
 # WCSLIB is (supposed to be) optional.
 
+# if WCSLIB_INC environment variable is set, assume WCSLIB_EXISTS
+ifeq ($(origin WCSLIB_INC), environment)
+  WCSLIB_EXISTS := 1
+else
+  X := $(shell pkg-config --exists wcslib && echo yes || echo no)
+  ifeq ($(X), yes)
+    WCSLIB_EXISTS ?= 1
+  endif
+endif
+
 WCSLIB_INC ?= $(shell pkg-config --cflags wcslib 2>/dev/null)
 WCSLIB_LIB ?= $(shell pkg-config --libs wcslib 2>/dev/null)
 #WCSLIB_LIB := $(shell pkg-config --static wcslib 2>/dev/null)
 
-X := $(shell pkg-config --exists wcslib && echo yes || echo no)
-ifeq ($(X), yes)
-  WCSLIB_EXISTS := 1
-endif
 

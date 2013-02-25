@@ -36,7 +36,10 @@ include $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.cfitsio
 
 .PHONY: all
-all: README pkgconfig subdirs
+all: README subdirs
+
+check: pkgconfig
+.PHONY: check
 
 # Just check that we have pkg-config, since it's needed to get
 # wcslib, cfitsio, cairo, etc config information.
@@ -84,6 +87,7 @@ py:
 	$(MAKE) -C util cairoutils.o
 	$(MAKE) -C blind pyplotstuff
 	$(MAKE) -C libkd pyspherematch
+	$(MAKE) -C sdss
 
 pyutil:
 	$(MAKE) -C qfits-an
@@ -91,6 +95,15 @@ pyutil:
 	$(MAKE) -C util pyutil
 
 install: report.txt
+	$(MAKE) install-core
+	@echo
+	@echo The following command may fail if you don\'t have the cairo, netpbm, and
+	@echo png libraries and headers installed.  You will lose out on some eye-candy
+	@echo but will still be able to solve images.
+	@echo
+	-$(MAKE) -C blind install-extra
+
+install-core:
 	mkdir -p '$(INSTALL_DIR)/data'
 	mkdir -p '$(INSTALL_DIR)/bin'
 	mkdir -p '$(INSTALL_DIR)/doc'
@@ -101,7 +114,7 @@ install: report.txt
 	mkdir -p '$(INSTALL_DIR)/python/astrometry/sdss'
 	mkdir -p '$(INSTALL_DIR)/ups'
 	cp ups/astrometry_net.table-dist '$(INSTALL_DIR)/ups/astrometry_net.table'
-	cp ups/astrometry_net.cfg '$(INSTALL_DIR)/ups'
+	cp ups/astrometry_net.cfg.template '$(INSTALL_DIR)/ups'
 	cp __init__.py '$(INSTALL_DIR)/python/astrometry'
 	cp CREDITS LICENSE README '$(INSTALL_DIR)/doc'
 	cp report.txt '$(INSTALL_DIR)/doc'
@@ -111,17 +124,7 @@ install: report.txt
 	$(MAKE) -C libkd install
 	$(MAKE) -C qfits-an install
 	$(MAKE) -C blind install
-	@echo
-	@echo The following command may fail if you don\'t have "swig" installed.
-	@echo This is not required for normal astrometric solutions.
-	@echo
-	-$(MAKE) -C sdss install
-	@echo
-	@echo The following command may fail if you don\'t have the cairo, netpbm, and
-	@echo png libraries and headers installed.  You will lose out on some eye-candy
-	@echo but will still be able to solve images.
-	@echo
-	-$(MAKE) -C blind install-extra
+	$(MAKE) -C sdss install
 
 install-indexes:
 	mkdir -p '$(INSTALL_DIR)/data'
@@ -165,12 +168,14 @@ release:
 	for x in $(RELEASE_SUBDIRS); do \
 		svn export $(RELEASE_SVN)/$$x $(RELEASE_DIR)/$$x; \
 	done
-	(cd util && swig -python -I. util.i)
-	(cd util && swig -python -I. index.i)
-	(cd blind && swig -python -I. -I../util -I../qfits-an/include plotstuff.i)
+	(cd $(RELEASE_DIR)/util && swig -python -I. util.i)
+	(cd $(RELEASE_DIR)/util && swig -python -I. index.i)
+	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../qfits-an/src plotstuff.i)
+	(cd $(RELEASE_DIR)/sdss && swig -python -I. cutils.i)
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
 	bzip2 --best $(RELEASE_DIR).tar
+# about plotstuff.i build above: qfits-an/include  doesn't contain headers until after the build...
 
 # spherematch-only release
 SP_RELEASE_DIR := pyspherematch-$(SP_RELEASE_VER)
