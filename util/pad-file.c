@@ -22,7 +22,6 @@
 #include <string.h>
 
 #include "ioutils.h"
-#include "an-bool.h"
 #include "errors.h"
 
 const char* OPTIONS = "hv:c:";

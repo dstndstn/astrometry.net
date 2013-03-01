@@ -28,15 +28,15 @@ struct rs_params {
 	kdtree_t* xtree;
 	kdtree_t* ytree;
 
-	bool notself;
+	anbool notself;
 
     // radius-squared of the search range.
     double mindistsq;
     double maxdistsq;
 
     // are we using the min/max limit?
-	bool usemin;
-	bool usemax;
+	anbool usemin;
+	anbool usemax;
 
 	// for "search"
     result_callback user_callback;
@@ -53,7 +53,7 @@ struct rs_params {
 };
 typedef struct rs_params rs_params;
 
-static bool rs_within_range(void* params, kdtree_t* searchtree, int searchnode,
+static anbool rs_within_range(void* params, kdtree_t* searchtree, int searchnode,
 							kdtree_t* querytree, int querynode);
 static void rs_handle_result(void* extra, kdtree_t* searchtree, int searchnode,
 							 kdtree_t* querytree, int querynode);
@@ -65,7 +65,7 @@ static double mydistsq(void* v1, void* v2, int D) {
 
 void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 						  double mindist, double maxdist,
-						  bool notself,
+						  anbool notself,
 						  dist2_function distsquared,
 						  result_callback callback,
 						  void* param,
@@ -134,7 +134,7 @@ static void rs_start_results(void* vparams,
 		p->user_progress(p->user_progress_param, p->ydone);
 }
 
-static bool rs_within_range(void* vparams,
+static anbool rs_within_range(void* vparams,
 							kdtree_t* xtree, int xnode,
 							kdtree_t* ytree, int ynode) {
     rs_params* p = (rs_params*)vparams;
@@ -209,10 +209,10 @@ void dualtree_rangecount(kdtree_t* x, kdtree_t* y,
 	printf("HACK - implement dualtree_rangecount.\n");
 }
 
-  bool rc_should_recurse(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode);
+  anbool rc_should_recurse(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode);
   void rc_handle_result(void* params, kdtree_node_t* search, kdtree_node_t* query);
   void rc_self_handle_result(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode);
-  bool rc_self_should_recurse(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode);
+  anbool rc_self_should_recurse(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode);
   void dualtree_rangecount(kdtree_t* xtree, kdtree_t* ytree,
   double mindist, double maxdist,
   int* counts) {
@@ -253,7 +253,7 @@ void dualtree_rangecount(kdtree_t* x, kdtree_t* y,
 */
 
 /*
-  bool rc_should_recurse(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode) {
+  anbool rc_should_recurse(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode) {
   rs_params* p = (rs_params*)vparams;
   // does the bounding box partly overlap the desired range?
   if (p->usemax) {
@@ -312,7 +312,7 @@ int xl, xr, yl, yr;
 int x, y;
 rs_params* p = (rs_params*)vparams;
 int D = p->ytree->ndim;
-bool allinrange = TRUE;
+anbool allinrange = TRUE;
 	
 // is the bounding box fully within the desired range?
 if (p->usemin) {
@@ -374,7 +374,7 @@ p->counts[y]++;
 
 
 
-bool rc_self_should_recurse(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode) {
+anbool rc_self_should_recurse(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode) {
 if (xnode > ynode)
 return FALSE;
 return rc_should_recurse(vparams, xnode, ynode);

@@ -22,7 +22,6 @@
 #include "codekd.h"
 #include "codefile.h"
 #include "fitstable.h"
-#include "an-bool.h"
 
 /**
  */

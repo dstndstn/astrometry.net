@@ -58,8 +58,8 @@ int main(int argc, char **args) {
     char* skdtinfn = NULL;
     char* quadoutfn = NULL;
     char* skdtoutfn = NULL;
-	bool dosweeps = FALSE;
-	bool check = FALSE;
+	anbool dosweeps = FALSE;
+	anbool check = FALSE;
 	int loglvl = LOG_MSG;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)

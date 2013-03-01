@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 
-#include "an-bool.h"
 #include "simplexy.h"
 
 int image2xy_run(simplexy_t* s,

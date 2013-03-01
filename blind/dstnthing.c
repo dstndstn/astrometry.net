@@ -222,7 +222,7 @@ int main(int argc, char** args) {
 
 	int loglvl = LOG_MSG;
 	double crpix[] = { HUGE_VAL, HUGE_VAL };
-	bool do_crpix = FALSE;
+	anbool do_crpix = FALSE;
 
 	//FILE* logstream = stderr;
 	//fits_use_error_system();

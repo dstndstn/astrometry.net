@@ -40,9 +40,9 @@ void sparsematrix_free(sparsematrix_t* sp);
 // make each row sum to 1.
 void sparsematrix_normalize_rows(sparsematrix_t* sp);
 
-void sparsematrix_mult_vec(const sparsematrix_t* sp, const double* vec, double* out, bool addto);
+void sparsematrix_mult_vec(const sparsematrix_t* sp, const double* vec, double* out, anbool addto);
 
-void sparsematrix_transpose_mult_vec(const sparsematrix_t* sp, const double* vec, double* out, bool addto);
+void sparsematrix_transpose_mult_vec(const sparsematrix_t* sp, const double* vec, double* out, anbool addto);
 
 void sparsematrix_set(sparsematrix_t* sp, int r, int c, double val);
 

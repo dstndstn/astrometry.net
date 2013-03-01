@@ -36,7 +36,7 @@
  first extension, etc.
  */
 int image2xy_files(const char* infn, const char* outfn,
-				   bool do_u8, int downsample,
+				   anbool do_u8, int downsample,
 				   int downsample_as_required,
                    int extension, int plane,
 				   simplexy_t* params);

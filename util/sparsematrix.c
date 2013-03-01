@@ -128,7 +128,7 @@ void sparsematrix_normalize_rows(sparsematrix_t* sp) {
 	}
 }
 
-void sparsematrix_mult_vec(const sparsematrix_t* sp, const double* vec, double* out, bool addto) {
+void sparsematrix_mult_vec(const sparsematrix_t* sp, const double* vec, double* out, anbool addto) {
 	int i;
 	for (i=0; i<sp->R; i++) {
 		int j, N;
@@ -148,7 +148,7 @@ void sparsematrix_mult_vec(const sparsematrix_t* sp, const double* vec, double* 
 	}
 }
 
-void sparsematrix_transpose_mult_vec(const sparsematrix_t* sp, const double* vec, double* out, bool addto) {
+void sparsematrix_transpose_mult_vec(const sparsematrix_t* sp, const double* vec, double* out, anbool addto) {
 	int i;
 	if (!addto)
 		for (i=0; i<sp->C; i++)

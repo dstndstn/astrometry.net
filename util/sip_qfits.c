@@ -43,7 +43,7 @@ sip_t* sip_from_string(const char* str, int slen, sip_t* dest) {
 	return rtn;
 }
 
-sip_t* sip_read_tan_or_sip_header_file_ext(const char* wcsfn, int ext, sip_t* dest, bool forcetan) {
+sip_t* sip_read_tan_or_sip_header_file_ext(const char* wcsfn, int ext, sip_t* dest, anbool forcetan) {
 	sip_t* rtn;
 	if (forcetan) {
 		sip_t sip;
@@ -182,7 +182,7 @@ int sip_get_image_size(const qfits_header* hdr, int* pW, int* pH) {
 
 static void add_polynomial(qfits_header* hdr, const char* format,
 						   int order, const double* data, int datastride,
-						   bool drop_linear) {
+						   anbool drop_linear) {
 	int i, j;
 	char key[64];
 	for (i=0; i<=order; i++)
@@ -243,7 +243,7 @@ qfits_header* tan_create_header(const tan_t* tan) {
 	return hdr;
 }
 
-static void* read_header_file(const char* fn, int ext, bool only, void* dest,
+static void* read_header_file(const char* fn, int ext, anbool only, void* dest,
 							  void* (*readfunc)(const qfits_header*, void*)) {
 	qfits_header* hdr;
 	void* result;
@@ -289,9 +289,9 @@ tan_t* tan_read_header_file_ext_only(const char* fn, int ext, tan_t* dest) {
 }
 
 
-static bool read_polynomial(const qfits_header* hdr, const char* format,
+static anbool read_polynomial(const qfits_header* hdr, const char* format,
 							int order, double* data, int datastride,
-							bool skip_linear) {
+							anbool skip_linear) {
 	int i, j;
 	char key[64];
 	double nil = -HUGE_VAL;
@@ -324,8 +324,8 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	const char* key;
 	const char* expect;
 	const char* expect2;
-	bool is_sin;
-	bool is_tan;
+	anbool is_sin;
+	anbool is_tan;
 
 	memset(&sip, 0, sizeof(sip_t));
 
@@ -408,7 +408,7 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	return dest;
 }
 
-static int check_tan_ctypes(char* ct1, char* ct2, bool* is_sin) {
+static int check_tan_ctypes(char* ct1, char* ct2, anbool* is_sin) {
 	const char* ra  = "RA---TAN";
 	const char* dec = "DEC--TAN";
 	const char* ra2  = "RA---SIN";
@@ -442,7 +442,7 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
 	char* ct2;
 	int swap;
 	int W, H;
-	bool is_sin;
+	anbool is_sin;
 
 	memset(&tan, 0, sizeof(tan_t));
 

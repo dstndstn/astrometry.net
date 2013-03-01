@@ -53,18 +53,18 @@ int main(int argc, char *argv[]) {
 
   char* infn = NULL;
   char* outfn = NULL;
-  bool tostdout = FALSE;
+  anbool tostdout = FALSE;
   FILE* fin = NULL;
   FILE* fout = NULL;
   il* exts;
   int i;
   char* progname = argv[0];
-  bool inblocks = FALSE;
-  bool inmegs = FALSE;
+  anbool inblocks = FALSE;
+  anbool inmegs = FALSE;
   int allexts = 0;
   int Next = -1;
-  bool dataonly = FALSE;
-  bool headeronly = FALSE;
+  anbool dataonly = FALSE;
+  anbool headeronly = FALSE;
   anqfits_t* anq = NULL;
 
   exts = il_new(16);

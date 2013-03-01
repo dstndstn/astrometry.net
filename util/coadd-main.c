@@ -61,8 +61,8 @@ int main(int argc, char** args) {
 	lanczos_args_t largs;
 
 	double sigma = 0.0;
-	bool nearest = FALSE;
-	bool divweight = FALSE;
+	anbool nearest = FALSE;
+	anbool divweight = FALSE;
 
 	int plane = 0;
 

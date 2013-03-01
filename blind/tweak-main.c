@@ -196,7 +196,7 @@ int main(int argc, char** args) {
 		logmsg("Found %i indx objects\n", Nindex);
 		indexpix = malloc(2 * Nindex * sizeof(double));
 		for (i=0; i<Nindex; i++) {
-			bool ok;
+			anbool ok;
 			double ra = rd_getra(rd, i);
 			double dec = rd_getdec(rd, i);
 			ok = sip_radec2pixelxy(&sip, ra, dec, indexpix + i*2, indexpix + i*2 + 1);

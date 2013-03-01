@@ -49,9 +49,9 @@ int main(int argc, char** args) {
     int i, Next;
     FILE* fout;
     FILE* fin;
-    bool verbose = FALSE;
+    anbool verbose = FALSE;
     char* err;
-    bool force_quad = FALSE;
+    anbool force_quad = FALSE;
 
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {

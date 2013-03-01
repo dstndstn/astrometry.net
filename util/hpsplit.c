@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 	char* racol = "RA";
 	char* deccol = "DEC";
 	char* tempdir = "/tmp";
-	bool gzip = FALSE;
+	anbool gzip = FALSE;
 	sl* cols = sl_new(16);
 	int loglvl = LOG_MSG;
 	int nside = 1;
@@ -343,7 +343,7 @@ int main(int argc, char *argv[]) {
 			} else {
 
 				double xyz[3];
-				bool gotit = FALSE;
+				anbool gotit = FALSE;
 				double d2;
 				if (!hps)
 					hps = il_new(4);

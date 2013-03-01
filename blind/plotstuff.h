@@ -26,6 +26,7 @@
 #include "sip.h"
 #include "bl.h"
 #include "anwcs.h"
+#include "an-bool.h"
 
 #define PLOTSTUFF_FORMAT_JPG 1
 #define PLOTSTUFF_FORMAT_PNG 2
@@ -191,7 +192,7 @@ int plotstuff_set_wcs_sip(plot_args_t* pargs, sip_t* wcs);
 void plotstuff_builtin_apply(cairo_t* cairo, plot_args_t* args);
 
 // Would a marker plotted with the current markersize at x,y appear in the image?
-bool plotstuff_marker_in_bounds(plot_args_t* pargs, double x, double y);
+anbool plotstuff_marker_in_bounds(plot_args_t* pargs, double x, double y);
 
 int
 ATTRIB_FORMAT(printf,2,3)
@@ -219,7 +220,7 @@ double plotstuff_pixel_scale(plot_args_t* pargs);
 // RA,Dec in degrees
 // x,y in pixels (cairo coordinates)
 // Returns TRUE on success.
-bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
+anbool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 						double* p_x, double* p_y);
 
 // RA,Dec,radius in deg.
@@ -229,10 +230,10 @@ void plotstuff_get_radec_bounds(const plot_args_t* pargs, int stepsize,
 								double* pramin, double* pramax,
 								double* pdecmin, double* pdecmax);
 
-bool plotstuff_radec_is_inside_image(plot_args_t* pargs, double ra, double dec);
+anbool plotstuff_radec_is_inside_image(plot_args_t* pargs, double ra, double dec);
 
 int plotstuff_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2,
-							   bool startwithmove);
+							   anbool startwithmove);
 int plotstuff_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra2);
 int plotstuff_line_constant_dec2(plot_args_t* pargs, double dec,
 								 double ra1, double ra2, double stepra);

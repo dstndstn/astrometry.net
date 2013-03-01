@@ -22,7 +22,7 @@
 
 int resort_xylist(const char* infn, const char* outfn,
                   const char* fluxcol, const char* backcol,
-                  bool ascending);
+                  anbool ascending);
 
 #endif
 

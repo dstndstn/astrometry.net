@@ -119,7 +119,7 @@ static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	return 0;
 }
 
-static codefile* new_codefile(const char* fn, bool writing, bool inmem) {
+static codefile* new_codefile(const char* fn, anbool writing, anbool inmem) {
 	fitsbin_chunk_t chunk;
 	codefile* cf = calloc(1, sizeof(codefile));
 	if (!cf) {

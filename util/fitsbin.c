@@ -122,7 +122,7 @@ static fitsbin_t* new_fitsbin(const char* fn) {
 	return fb;
 }
 
-static bool in_memory(fitsbin_t* fb) {
+static anbool in_memory(fitsbin_t* fb) {
 	return fb->inmemory;
 }
 
@@ -441,7 +441,7 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 
 	if (in_memory(fb)) {
 		int i;
-		bool gotit = FALSE;
+		anbool gotit = FALSE;
 		for (i=0; i<bl_size(fb->extensions); i++) {
 			inmemext = bl_access(fb->extensions, i);
 			if (strcasecmp(inmemext->tablename, chunk->tablename))

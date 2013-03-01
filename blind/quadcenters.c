@@ -60,7 +60,7 @@ int main(int argc, char** args) {
 	quadfile* qf;
     rdlist_t* rdls;
 	startree_t* skdt = NULL;
-    bool addradius = FALSE;
+    anbool addradius = FALSE;
 	int i;
     int radcolumn = -1;
 

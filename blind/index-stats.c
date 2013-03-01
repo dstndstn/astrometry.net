@@ -51,7 +51,7 @@ void print_help(char* progname) {
 
 int main(int argc, char** args) {
     int argchar;
-	bool measmags = FALSE;
+	anbool measmags = FALSE;
 	char* magcol = "mag";
 	int loglvl = LOG_MSG;
 

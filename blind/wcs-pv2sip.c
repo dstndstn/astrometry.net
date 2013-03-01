@@ -89,7 +89,7 @@ PV2_10  =  -4.717653697970E-04 /      + PV2_10* x**3
 
 int wcs_pv2sip(const char* wcsinfn, int ext,
 			   const char* wcsoutfn,
-			   bool scamp_head_file,
+			   anbool scamp_head_file,
 			   double* xy, int Nxy,
 			   int imageW, int imageH) {
 	qfits_header* hdr = NULL;
@@ -328,7 +328,7 @@ int main(int argc, char** args) {
 	char* wcsinfn = NULL;
 	char* wcsoutfn = NULL;
 	int ext = 0;
-	bool scamp = FALSE;
+	anbool scamp = FALSE;
 	double xlo = 1;
 	double xhi = 1000;
 	double xstep = 0;

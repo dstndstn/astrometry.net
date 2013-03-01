@@ -33,6 +33,7 @@
 #include "index.h"
 #include "verify.h"
 #include "sip.h"
+#include "an-bool.h"
 
 enum {
 	PARITY_NORMAL,
@@ -74,19 +75,19 @@ struct solver_t {
 
 	// Callback; called for each match found whose log-odds ratio is above
 	// "logratio_record_threshold".  The second parameter is "userdata".
-	bool (*record_match_callback)(MatchObj*, void*);
+	anbool (*record_match_callback)(MatchObj*, void*);
 
 	// User data passed to the callbacks
 	void* userdata;
 
 	// Assume that stars far from the matched quad will have larger positional
 	// variance?
-	bool distance_from_quad_bonus;
+	anbool distance_from_quad_bonus;
 
-	bool verify_uniformize;
-	bool verify_dedup;
+	anbool verify_uniformize;
+	anbool verify_dedup;
 
-	bool do_tweak;
+	anbool do_tweak;
 
 	int tweak_aborder;
 	int tweak_abporder;
@@ -118,7 +119,7 @@ struct solver_t {
 	int parity;
 
 	// Only accept matches within a radius of a given RA,Dec position?
-	bool use_radec;
+	anbool use_radec;
 	double centerxyz[3];
 	double r2;
 	
@@ -137,8 +138,8 @@ struct solver_t {
 	int maxmatches;
 
 	// Force CRPIX to be the given point "crpix", or the center of the image?
-	bool set_crpix;
-	bool set_crpix_center;
+	anbool set_crpix;
+	anbool set_crpix_center;
 	double crpix[2];
 
 	// MatchObj template: if non-NULL, whenever a match is found, we first memcpy()
@@ -153,7 +154,7 @@ struct solver_t {
 	// =================================================
 
 	// Bail out ASAP.
-	bool quit_now;
+	anbool quit_now;
 
 	// SOLVER OUTPUTS
 	// ==============
@@ -212,8 +213,8 @@ struct solver_t {
 	double   best_logodds;
 	MatchObj best_match;
 	index_t* best_index;
-	bool     best_match_solves;
-	bool     have_best_match;
+	anbool     best_match_solves;
+	anbool     have_best_match;
 
 	// Cached data about this field, for verify_hit().
 	verify_field_t* vf;
@@ -282,7 +283,7 @@ MatchObj* solver_get_best_match(solver_t* solver);
 
  Returns solver->best_match_solved.
  */
-bool solver_did_solve(const solver_t* solver);
+anbool solver_did_solve(const solver_t* solver);
 
 /**
  Returns solver->best_index->indexname.

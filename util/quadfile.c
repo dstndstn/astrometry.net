@@ -63,7 +63,7 @@ static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	return 0;
 }
 
-static quadfile* new_quadfile(const char* fn, anqfits_t* fits, bool writing) {
+static quadfile* new_quadfile(const char* fn, anqfits_t* fits, anbool writing) {
 	quadfile* qf;
 	fitsbin_chunk_t chunk;
 	qf = calloc(1, sizeof(quadfile));

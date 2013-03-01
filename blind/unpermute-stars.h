@@ -37,12 +37,12 @@
 */
 int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
 						  const char* skdtoutfn, const char* quadoutfn,
-						  bool sweep, bool check,
+						  anbool sweep, anbool check,
 						  char** args, int argc);
 
 int unpermute_stars(startree_t* starkdin, quadfile* quadin,
 					startree_t** starkdout, quadfile* quadout,
-					bool sweep, bool check,
+					anbool sweep, anbool check,
 					char** args, int argc);
 
 int unpermute_stars_tagalong(startree_t* starkdin,

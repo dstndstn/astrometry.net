@@ -44,7 +44,7 @@ int unpermute_quads(quadfile* quadin, codetree* treein,
 	qfits_header* qouthdr;
 	qfits_header* qinhdr;
 	codetree* treeout;
-	bool allsky;
+	anbool allsky;
 
 	codehdr = codetree_header(treein);
 	healpix = quadin->healpix;

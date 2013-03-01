@@ -46,7 +46,7 @@ static int outside_healpix(int hp, void* vtoken) {
 	return (bighp == token->hp ? 0 : 1);
 }
 
-static bool is_duplicate(int hp, double ra, double dec, int Nside,
+static anbool is_duplicate(int hp, double ra, double dec, int Nside,
 						 intmap_t* starlists,
 						 double* ras, double* decs, double dedupr2) {
 	double xyz[3];
@@ -77,7 +77,7 @@ static bool is_duplicate(int hp, double ra, double dec, int Nside,
 
 int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 					   const char* racol, const char* deccol,
-					   const char* sortcol, bool sort_ascending,
+					   const char* sortcol, anbool sort_ascending,
 					   double sort_min_cut,
 					   // ?  Or do this cut in a separate process?
 					   int bighp, int bignside,
@@ -87,10 +87,10 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 					   double dedup_radius,
 					   int nsweeps,
 					   char** args, int argc) {
-	bool allsky;
+	anbool allsky;
 	intmap_t* starlists;
 	int NHP;
-	bool dense = FALSE;
+	anbool dense = FALSE;
 	double dedupr2 = 0.0;
 	tfits_type dubl;
 	int N;
@@ -243,7 +243,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		int hp;
 		bl* lst;
 		int32_t j32;
-		bool oob;
+		anbool oob;
 		if (inorder) {
 			j = inorder[i];
 			//printf("Placing star %i (%i): sort value %s = %g, RA,Dec=%g,%g\n", i, j, sortcol, sortval[j], ra[j], dec[j]);

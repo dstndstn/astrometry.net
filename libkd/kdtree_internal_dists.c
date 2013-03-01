@@ -18,7 +18,7 @@
 
 #include "keywords.h"
 
-static bool DIST_FUNC_MANGLE(bb_point_mindist2_exceeds, FUNC_SUFFIX)
+static anbool DIST_FUNC_MANGLE(bb_point_mindist2_exceeds, FUNC_SUFFIX)
 	 (const PTYPE* lo, const PTYPE* hi, const PTYPE* point, int dim, DISTTYPE maxd2)
 {
 	DISTTYPE d2 = 0;
@@ -53,7 +53,7 @@ static bool DIST_FUNC_MANGLE(bb_point_mindist2_exceeds, FUNC_SUFFIX)
 Unused // don't warn if unused.
 static void DIST_FUNC_MANGLE(bb_point_mindist2_bailout, FUNC_SUFFIX)
 	 (const PTYPE* lo, const PTYPE* hi, const PTYPE* point, int dim, DISTTYPE maxd2,
-	  bool* bailedout, DISTTYPE* p_d2)
+	  anbool* bailedout, DISTTYPE* p_d2)
 {
 	DISTTYPE d2 = 0;
 	DISTTYPE newd2;
@@ -90,7 +90,7 @@ static void DIST_FUNC_MANGLE(bb_point_mindist2_bailout, FUNC_SUFFIX)
 	*p_d2 = d2;
 }
 
-static bool DIST_FUNC_MANGLE(bb_point_maxdist2_exceeds, FUNC_SUFFIX)
+static anbool DIST_FUNC_MANGLE(bb_point_maxdist2_exceeds, FUNC_SUFFIX)
 	 (const PTYPE* lo, const PTYPE* hi, const PTYPE* point, int dim, DISTTYPE maxd2) {
 	DISTTYPE d2 = 0;
 	DISTTYPE newd2;

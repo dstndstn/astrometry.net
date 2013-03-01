@@ -110,7 +110,7 @@ static starxy_t* field1() {
 }
 
 void testit(int* wanted, int Nwanted, int dimquads, int (*compar)(const void *, const void *),
-			bool cxdx) {
+			anbool cxdx) {
 	int i;
     solver_t* solver;
     index_t index;

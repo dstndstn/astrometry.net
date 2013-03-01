@@ -28,10 +28,10 @@
 #include "an-bool.h"
 #include "keywords.h"
 
-static bool is_writing(xylist_t* ls) {
+static anbool is_writing(xylist_t* ls) {
     return (ls->table && ls->table->fid) ? TRUE : FALSE;
 }
-static bool is_reading(xylist_t* ls) {
+static anbool is_reading(xylist_t* ls) {
 	return !is_writing(ls);
 }
 
@@ -59,7 +59,7 @@ int xylist_get_imageh(xylist_t* ls) {
 	return H;
 }
 
-bool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* ycolumn,
+anbool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* ycolumn,
                            char** reason) {
     int rtn;
     xylist_t* xyls;
@@ -230,11 +230,11 @@ void xylist_set_yunits(xylist_t* ls, const char* units) {
     ls->yunits = units;
 }
 
-void xylist_set_include_flux(xylist_t* ls, bool inc) {
+void xylist_set_include_flux(xylist_t* ls, anbool inc) {
     ls->include_flux = inc;
 }
 
-void xylist_set_include_background(xylist_t* ls, bool inc) {
+void xylist_set_include_background(xylist_t* ls, anbool inc) {
     ls->include_background = inc;
 }
 
@@ -272,7 +272,7 @@ int xylist_write_field(xylist_t* ls, starxy_t* fld) {
 }
 
 starxy_t* xylist_read_field(xylist_t* ls, starxy_t* fld) {
-    bool freeit = FALSE;
+    anbool freeit = FALSE;
     tfits_type dubl = fitscolumn_double_type();
 	assert(is_reading(ls));
 

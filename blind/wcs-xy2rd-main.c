@@ -62,9 +62,9 @@ int main(int argc, char** args) {
 	char* xylsfn = NULL;
 	char* xcol = NULL;
 	char* ycol = NULL;
-	bool forcetan = FALSE;
-	bool forcewcslib = FALSE;
-	bool forcewcstools = FALSE;
+	anbool forcetan = FALSE;
+	anbool forcewcslib = FALSE;
+	anbool forcewcstools = FALSE;
 	il* fields;
 	int ext = 0;
 	double x, y;

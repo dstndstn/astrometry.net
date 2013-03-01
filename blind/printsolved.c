@@ -51,15 +51,15 @@ int main(int argc, char** args) {
 	char** inputfiles = NULL;
 	int ninputfiles = 0;
 	int i;
-	bool unsolved = FALSE;
+	anbool unsolved = FALSE;
 	int maxfield = 0;
-	bool wiki = FALSE;
+	anbool wiki = FALSE;
 	char* matlab = NULL;
-	bool justnums = FALSE;
-	bool percent = FALSE;
-	bool printinfo = FALSE;
-	bool printnums = FALSE;
-	bool summary = FALSE;
+	anbool justnums = FALSE;
+	anbool percent = FALSE;
+	anbool printinfo = FALSE;
+	anbool printnums = FALSE;
+	anbool summary = FALSE;
 	int ncounted = 0;
 	int ntotal = 0;
 

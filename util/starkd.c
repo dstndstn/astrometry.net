@@ -338,7 +338,7 @@ int startree_close(startree_t* s) {
 	return 0;
 }
 
-static fitstable_t* get_tagalong(startree_t* s, bool report_errs) {
+static fitstable_t* get_tagalong(startree_t* s, anbool report_errs) {
 	char* fn;
 	int next;
 	int i;
@@ -362,7 +362,7 @@ static fitstable_t* get_tagalong(startree_t* s, bool report_errs) {
 	next = qfits_query_n_ext(fn);
 	for (i=1; i<=next; i++) {
 		char* type;
-		bool eq;
+		anbool eq;
 		qfits_header* hdr;
 		hdr = qfits_header_readext(fn, i);
 		if (!hdr) {
@@ -395,7 +395,7 @@ fitstable_t* startree_get_tagalong(startree_t* s) {
 	return s->tagalong;
 }
 
-bool startree_has_tagalong(startree_t* s) {
+anbool startree_has_tagalong(startree_t* s) {
 	return (startree_get_tagalong(s) != NULL);
 }
 
@@ -535,7 +535,7 @@ startree_t* startree_new() {
 	return s;
 }
 
-static int write_to_file(startree_t* s, const char* fn, bool flipped,
+static int write_to_file(startree_t* s, const char* fn, anbool flipped,
 						 FILE* fid) {
     bl* chunks;
     il* wordsizes = NULL;

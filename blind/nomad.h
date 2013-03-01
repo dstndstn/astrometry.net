@@ -72,25 +72,25 @@ struct nomad_entry {
 	uint8_t visual_src;
 	uint8_t red_src;
 
-	bool usnob_fail;       // UBBIT   "Fails Blaise's test for USNO-B1.0 star"
-	bool twomass_fail;     // TMBIT   "Fails Roc's test for clean 2MASS star"
-	bool tycho_astrometry; // TYBIT   "Astrometry comes from Tycho2"
-	bool alt_radec;        // XRBIT   "Alt correlations for same (RA,Dec)"
+	anbool usnob_fail;       // UBBIT   "Fails Blaise's test for USNO-B1.0 star"
+	anbool twomass_fail;     // TMBIT   "Fails Roc's test for clean 2MASS star"
+	anbool tycho_astrometry; // TYBIT   "Astrometry comes from Tycho2"
+	anbool alt_radec;        // XRBIT   "Alt correlations for same (RA,Dec)"
 	// This bit is NEVER set in NOMAD.
-	//bool alt_2mass;        // ITMBIT  "Alt correlations for same 2MASS ID"
-	bool alt_ucac;         // IUCBIT  "Alt correlations for same UCAC-2 ID"
-	bool alt_tycho;        // ITYBIT  "Alt correlations for same Tycho2 ID"
-	bool blue_o;           // OMAGBIT "Blue magnitude from O (not J) plate"
-	bool red_e;            // EMAGBIT "Red magnitude from E (not F) plate"
-	bool twomass_only;     // TMONLY  "Object found only in 2MASS cat"
-	bool hipp_astrometry;  // HIPAST  "Ast from Hipparcos (not Tycho2) cat"
-	bool diffraction;      // SPIKE   "USNO-B1.0 diffraction spike bit set"
-	bool confusion;        // TYCONF  "Tycho2 confusion flag"
-	bool bright_confusion; // BSCONF  "Bright star has nearby faint source"
-	bool bright_artifact;  // BSART   "Faint source is bright star artifact"
-	bool standard;         // USEME   "Recommended astrometric standard"
+	//anbool alt_2mass;        // ITMBIT  "Alt correlations for same 2MASS ID"
+	anbool alt_ucac;         // IUCBIT  "Alt correlations for same UCAC-2 ID"
+	anbool alt_tycho;        // ITYBIT  "Alt correlations for same Tycho2 ID"
+	anbool blue_o;           // OMAGBIT "Blue magnitude from O (not J) plate"
+	anbool red_e;            // EMAGBIT "Red magnitude from E (not F) plate"
+	anbool twomass_only;     // TMONLY  "Object found only in 2MASS cat"
+	anbool hipp_astrometry;  // HIPAST  "Ast from Hipparcos (not Tycho2) cat"
+	anbool diffraction;      // SPIKE   "USNO-B1.0 diffraction spike bit set"
+	anbool confusion;        // TYCONF  "Tycho2 confusion flag"
+	anbool bright_confusion; // BSCONF  "Bright star has nearby faint source"
+	anbool bright_artifact;  // BSART   "Faint source is bright star artifact"
+	anbool standard;         // USEME   "Recommended astrometric standard"
 	// This bit is NEVER set in NOMAD.
-	//bool external;         // EXCAT   "External, non-astrometric object"
+	//anbool external;         // EXCAT   "External, non-astrometric object"
 
     // this is a staging area for FITS i/o.
     uint8_t flags[2];

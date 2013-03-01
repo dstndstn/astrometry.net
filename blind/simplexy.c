@@ -382,7 +382,7 @@ int simplexy_run(simplexy_t* s) {
 		memset(blobimg, 0, sizeof(uint8_t) * nx*ny);
 		for (j=0; j<ny; j++) {
 			for (i=0; i<nx; i++) {
-				bool edge = FALSE;
+				anbool edge = FALSE;
 				int ii = j * nx + i;
 				if (i > 0 && (ccimg[ii] != ccimg[ii - 1]))
 					edge = TRUE;
@@ -430,7 +430,7 @@ int simplexy_run(simplexy_t* s) {
 		// round
         int ix = (int)(s->x[i] + 0.5);
         int iy = (int)(s->y[i] + 0.5);
-        Unused bool finite;
+        Unused anbool finite;
         finite = isfinite(s->x[i]);
         assert(finite);
         finite = isfinite(s->y[i]);

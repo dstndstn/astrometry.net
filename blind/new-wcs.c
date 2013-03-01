@@ -61,7 +61,7 @@ static char* exclude_wcs[] = {
 };
 static int NE2 = sizeof(exclude_wcs) / sizeof(char*);
 
-static bool key_matches(char* key, regex_t* res, char** re_strings, int NE, int* rematched) {
+static anbool key_matches(char* key, regex_t* res, char** re_strings, int NE, int* rematched) {
 	int e;
 	for (e=0; e<NE; e++) {
 		regmatch_t match[1];
@@ -83,7 +83,7 @@ static bool key_matches(char* key, regex_t* res, char** re_strings, int NE, int*
 }
 
 int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
-            bool copydata) {
+            anbool copydata) {
 	FILE* outfid = NULL;
 	int i, N;
 	int e;

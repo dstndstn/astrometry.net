@@ -117,7 +117,7 @@ static void print_help(const char* progname, bl* opts) {
     printf("\n\n");
 }
 
-static int run_command(const char* cmd, bool* ctrlc) {
+static int run_command(const char* cmd, anbool* ctrlc) {
 	int rtn;
     logverb("Running: %s\n", cmd);
     fflush(NULL);
@@ -261,7 +261,7 @@ static int plot_source_overlay(augment_xylist_t* axy, const char* me,
     // plotxy -i harvard.axy -I /tmp/pnm -C red -P -w 2 -N 50 | plotxy -w 2 -r 3 -I - -i harvard.axy -C red -n 50 > harvard-objs.png
     sl* cmdline = sl_new(16);
     char* cmd;
-    bool ctrlc;
+    anbool ctrlc;
 	char* imgfn;
 
 	if (bgfn) {
@@ -349,7 +349,7 @@ static int plot_index_overlay(augment_xylist_t* axy, const char* me,
     matchfile* mf;
     MatchObj* mo;
     int i;
-    bool ctrlc;
+    anbool ctrlc;
 	char* imgfn;
 
 	assert(axy->matchfn);
@@ -448,7 +448,7 @@ static int plot_index_overlay(augment_xylist_t* axy, const char* me,
     return 0;
 }
 
-static int plot_annotations(augment_xylist_t* axy, const char* me, bool verbose,
+static int plot_annotations(augment_xylist_t* axy, const char* me, anbool verbose,
                             const char* annfn, double plotscale, const char* bgfn) {
     sl* cmdline = sl_new(16);
     char* cmd;
@@ -542,9 +542,9 @@ typedef struct solve_field_args solve_field_args_t;
 // This runs after "backend" is run on the file.
 static void after_solved(augment_xylist_t* axy,
 						 solve_field_args_t* sf,
-						 bool makeplots,
+						 anbool makeplots,
 						 const char* me,
-						 bool verbose,
+						 anbool verbose,
 						 const char* tempdir,
 						 sl* tempdirs,
 						 sl* tempfiles,
@@ -701,7 +701,7 @@ static void delete_temp_files(sl* tempfiles, sl* tempdirs) {
 
 int main(int argc, char** args) {
 	int c;
-	bool help = FALSE;
+	anbool help = FALSE;
 	char* outdir = NULL;
 	char* cmd;
 	int i, j, f;
@@ -709,18 +709,18 @@ int main(int argc, char** args) {
 	int rtn;
 	sl* backendargs;
 	int nbeargs;
-	bool fromstdin = FALSE;
-	bool overwrite = FALSE;
-	bool cont = FALSE;
-    bool skip_solved = FALSE;
-    bool makeplots = TRUE;
+	anbool fromstdin = FALSE;
+	anbool overwrite = FALSE;
+	anbool cont = FALSE;
+    anbool skip_solved = FALSE;
+    anbool makeplots = TRUE;
 	double plotscale = 1.0;
 	char* bgfn = NULL;
     char* me;
-    bool verbose = FALSE;
+    anbool verbose = FALSE;
     int loglvl = LOG_MSG;
     char* outbase = NULL;
-	bool usecurl = TRUE;
+	anbool usecurl = TRUE;
     bl* opts;
     augment_xylist_t theallaxy;
     augment_xylist_t* allaxy = &theallaxy;
@@ -731,14 +731,14 @@ int main(int argc, char** args) {
     char* scamp = NULL;
     char* scampconfig = NULL;
     char* index_xyls;
-	bool just_augment = FALSE;
-	bool backend_batch = FALSE;
+	anbool just_augment = FALSE;
+	anbool backend_batch = FALSE;
 	bl* batchaxy = NULL;
 	bl* batchsf = NULL;
 	sl* outfiles;
 	sl* tempfiles;
 	sl* tempdirs;
-	bool timestamp = FALSE;
+	anbool timestamp = FALSE;
 
     errors_print_on_exit(stderr);
     fits_use_error_system();
@@ -945,7 +945,7 @@ int main(int argc, char** args) {
     inputnum = 0;
 	while (1) {
 		char* infile = NULL;
-		bool isxyls;
+		anbool isxyls;
 		char* reason;
 		int len;
 		char* base;
@@ -956,14 +956,14 @@ int main(int argc, char** args) {
         char* downloadfn = NULL;
         char* suffix = NULL;
 		sl* cmdline;
-        bool ctrlc;
-        bool isurl;
+        anbool ctrlc;
+        anbool isurl;
         augment_xylist_t theaxy;
         augment_xylist_t* axy = &theaxy;
         int j;
 		solve_field_args_t thesf;
 		solve_field_args_t* sf = &thesf;
-		bool want_pnm = FALSE;
+		anbool want_pnm = FALSE;
 
         // reset augment-xylist args.
         memcpy(axy, allaxy, sizeof(augment_xylist_t));

@@ -113,25 +113,25 @@ int main(int argc, char *argv[]) {
 	char* outfn = NULL;
 	FILE* fout = NULL;
 	char* progname = argv[0];
-	bool ordinal = FALSE;
+	anbool ordinal = FALSE;
 	int ext = 0;
 	int plane = 0;
 	int margin = 0;
 	qfitsloader ldr;
 	float* img;
 	int nx, ny;
-    bool invert = FALSE;
+    anbool invert = FALSE;
 
-	bool minval_set = FALSE;
-	bool maxval_set = FALSE;
+	anbool minval_set = FALSE;
+	anbool maxval_set = FALSE;
 	float maxval, minval;
-	bool find_min = FALSE;
-	bool find_max = FALSE;
+	anbool find_min = FALSE;
+	anbool find_max = FALSE;
 
-	bool sixteenbit = FALSE;
+	anbool sixteenbit = FALSE;
 	int maxpix;
 	int loglvl = LOG_MSG;
-	bool median = FALSE;
+	anbool median = FALSE;
 	double lop = 0.25;
 	double hip = 0.95;
 

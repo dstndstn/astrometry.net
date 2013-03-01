@@ -41,7 +41,7 @@ static double lanczos(double x, int order) {
 static void resample_image(const double* img, int W, int H, anwcs_t* inwcs,
 						   double* outimg, int outW, int outH, anwcs_t* outwcs,
 						   double* weightimg, double imgweight,
-						   bool set_or_add, int order) {
+						   anbool set_or_add, int order) {
 	//
 	double support;
 

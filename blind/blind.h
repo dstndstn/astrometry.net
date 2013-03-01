@@ -32,7 +32,7 @@
 struct blind_params {
 	solver_t solver;
 
-	bool indexes_inparallel;
+	anbool indexes_inparallel;
 
 	double logratio_tosolve;
 
@@ -100,44 +100,44 @@ struct blind_params {
 
 	// extra fields to add to index rdls file:
 	sl* rdls_tagalong;
-	bool rdls_tagalong_all;
+	anbool rdls_tagalong_all;
 
 	// internal use only: have I grabbed "all" rdls fields already?
-	//bool done_rdls_tagalong_all;
+	//anbool done_rdls_tagalong_all;
 
 	// field to sort RDLS file by; prefix by "-" for descending order.
 	char* sort_rdls;
 
 	// extra fields to add from the xyls file:
 	sl* xyls_tagalong;
-	bool xyls_tagalong_all;
+	anbool xyls_tagalong_all;
 
     // List of MatchObjs with logodds >= logodds_tokeep
     bl* solutions;
 
 	float cpulimit;
 	float cpu_start;
-	bool hit_cpulimit;
+	anbool hit_cpulimit;
 
 	int timelimit;
 	time_t time_start;
-	bool hit_timelimit;
+	anbool hit_timelimit;
 
 	float total_cpulimit;
 	float cpu_total_start;
-	bool hit_total_cpulimit;
+	anbool hit_total_cpulimit;
 
 	double total_timelimit;
 	double time_total_start;
-	bool hit_total_timelimit;
+	anbool hit_total_timelimit;
 
-	bool single_field_solved;
+	anbool single_field_solved;
 
 	// filename for cancelling
 	char* cancelfname;
-	bool cancelled;
+	anbool cancelled;
 
-	bool best_hit_only;
+	anbool best_hit_only;
 };
 typedef struct blind_params blind_t;
 

@@ -37,11 +37,11 @@ struct verify_field_t {
     kdtree_t* ftree;
 
 	// should this field be spatially uniformized at the index's scale?
-	bool do_uniformize;
+	anbool do_uniformize;
 	// should this field be de-duplicated (have nearby sources removed)?
-	bool do_dedup;
+	anbool do_dedup;
 	// apply radius-of-relevance filtering
-	bool do_ror;
+	anbool do_ror;
 };
 typedef struct verify_field_t verify_field_t;
 
@@ -116,8 +116,8 @@ void verify_hit(const startree_t* skdt,
                 double logratio_tobail,
                 double logratio_toaccept,
                 double logratio_tostoplooking,
-                bool distance_from_quad_bonus,
-                bool fake_match);
+                anbool distance_from_quad_bonus,
+                anbool fake_match);
 
 // Distractor
 #define THETA_DISTRACTOR -1
@@ -139,7 +139,7 @@ void verify_hit(const startree_t* skdt,
  double distractors,
  double fieldW,
  double fieldH,
- bool do_gamma, bool fake_match,
+ anbool do_gamma, anbool fake_match,
  double** p_testxy, double** p_sigma2s,
  int* p_NT, int** p_perm, double* p_effA,
  int* p_uninw, int* p_uninh);
@@ -175,8 +175,8 @@ void verify_get_quad_center(const verify_field_t* vf, const MatchObj* mo, double
 
 /*
  int verify_get_test_stars(const verify_field_t* vf, MatchObj* mo,
- double pix2, bool do_gamma,
- bool fake_match,
+ double pix2, anbool do_gamma,
+ anbool fake_match,
  double** p_sigma2s, int** p_perm);
  */
 
@@ -187,12 +187,12 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 							double** p_indexpix, int** p_starids, int* p_nindex);
 
 /*
- bool* verify_deduplicate_field_stars(const verify_field_t* vf, double* sigma2s, double nsigmas);
+ anbool* verify_deduplicate_field_stars(const verify_field_t* vf, double* sigma2s, double nsigmas);
  */
 /*
  double* verify_compute_sigma2s_arr(const double* xy, int NF,
  const double* qc, double Q2,
- double verify_pix2, bool do_gamma);
+ double verify_pix2, anbool do_gamma);
  */
 
 // For use with matchobj.h : matchodds

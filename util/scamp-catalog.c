@@ -26,7 +26,7 @@
 #include "errors.h"
 #include "log.h"
 
-scamp_cat_t* scamp_catalog_open_for_writing(const char* filename, bool ref) {
+scamp_cat_t* scamp_catalog_open_for_writing(const char* filename, anbool ref) {
     scamp_cat_t* scamp;
     scamp = calloc(1, sizeof(scamp_cat_t));
     scamp->table = fitstable_open_for_writing(filename);

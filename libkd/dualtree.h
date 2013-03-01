@@ -39,7 +39,7 @@
 #include "starutil.h"
 #include "kdtree.h"
 
-typedef bool (*decision_function)(void* extra, kdtree_t* searchtree, int searchnode,
+typedef anbool (*decision_function)(void* extra, kdtree_t* searchtree, int searchnode,
 								  kdtree_t* querytree, int querynode);
 typedef void (*start_of_results_function)(void* extra, kdtree_t* querytree, int querynode);
 typedef void (*result_function)(void* extra, kdtree_t* searchtree, int searchnode,

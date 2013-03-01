@@ -81,7 +81,7 @@ qfits_header* catalog_get_header(catalog* cat);
 
 int catalog_fix_header(catalog* cat);
 
-bool catalog_has_mag(const catalog* cat);
+anbool catalog_has_mag(const catalog* cat);
 
 void catalog_add_mag(catalog* cat, float mag);
 void catalog_add_mag_err(catalog* cat, float magerr);

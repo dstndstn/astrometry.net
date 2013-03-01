@@ -66,8 +66,8 @@ float* convolve_separable_weighted_f(const float* img, int W, int H,
 
 	for (i=0; i<H; i++) {
 		/* // DEBUG
-		 bool touchedleft = FALSE;
-		 bool touchedright = FALSE;
+		 anbool touchedleft = FALSE;
+		 anbool touchedright = FALSE;
 		 */
 		for (j=0; j<W; j++) {
 			float sum = 0;

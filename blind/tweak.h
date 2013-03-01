@@ -94,11 +94,11 @@ typedef struct tweak_s {
 	double jitterd2;
 
 	// Weighted or unweighted fit?
-    bool weighted_fit;
+    anbool weighted_fit;
 
 	// push SIP shift term onto CRPIX, or CRVAL?
 	// traditional behavior is CRPIX; ie push_crval = FALSE.
-	//bool push_crval;
+	//anbool push_crval;
 
 
 } tweak_t;
@@ -133,7 +133,7 @@ sip_t* tweak_just_do_it(const tan_t* wcs, const starxy_t* imagexy,
                         const double* star_radec,
                         int nstars, double jitter_arcsec,
                         int order, int inverse_order, int iterations,
-                        bool weighted, bool skip_shift);
+                        anbool weighted, anbool skip_shift);
 
 
 // TEST

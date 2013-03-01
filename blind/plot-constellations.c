@@ -204,10 +204,10 @@ int main(int argc, char** args) {
     char* infn = NULL;
     sip_t sip;
     double scale = 1.0;
-    bool pngformat = TRUE;
+    anbool pngformat = TRUE;
 
     char* hdpath = NULL;
-    bool HD = FALSE;
+    anbool HD = FALSE;
 
     cairos_t thecairos;
     cairos_t* cairos = &thecairos;
@@ -248,17 +248,17 @@ int main(int argc, char** args) {
     int W = 0, H = 0;
     unsigned char* img = NULL;
 
-    bool NGC = FALSE, constell = FALSE;
-    bool bright = FALSE;
-    bool common_only = FALSE;
-    bool print_common_only = FALSE;
+    anbool NGC = FALSE, constell = FALSE;
+    anbool bright = FALSE;
+    anbool common_only = FALSE;
+    anbool print_common_only = FALSE;
     int Nbright = 0;
     double ra, dec, px, py;
     int i, N;
-    bool justlist = FALSE;
-    bool only_messier = FALSE;
+    anbool justlist = FALSE;
+    anbool only_messier = FALSE;
 
-    bool grid = FALSE;
+    anbool grid = FALSE;
     double gridspacing = 0.0;
 
     int loglvl = LOG_MSG;

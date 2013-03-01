@@ -64,7 +64,7 @@ void intmap_free(intmap_t* it);
  Finds the list of objects for the given "key".  Creates a new list if
  "create" is TRUE and the list didn't already exist.
  */
-bl* intmap_find(intmap_t* it, int key, bool create);
+bl* intmap_find(intmap_t* it, int key, anbool create);
 
 void intmap_append(intmap_t* it, int key, void* pval);
 
@@ -77,7 +77,7 @@ void intmap_append(intmap_t* it, int key, void* pval);
 
  The iteration proceeds in a random order.
  */
-bool intmap_get_entry(intmap_t* it, int index, int* key, bl** list);
+anbool intmap_get_entry(intmap_t* it, int index, int* key, bl** list);
 
 #endif
 

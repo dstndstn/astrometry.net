@@ -844,7 +844,7 @@ struct ts3 {
 };
 typedef struct ts3 ts3;
 
-static void add_columns(fitstable_t* tab, bool writing) {
+static void add_columns(fitstable_t* tab, anbool writing) {
     tfits_type i16 = TFITS_BIN_TYPE_I;
     tfits_type itype = fitscolumn_int_type();
     tfits_type dubl = fitscolumn_double_type();

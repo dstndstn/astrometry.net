@@ -95,7 +95,7 @@ qfits_table* fits_copy_table(qfits_table* tbl) {
 int fits_pixdump(const qfitsdumper * qd) {
     FILE* f_out;
 	const void* vbuf;
-	bool tostdout;
+	anbool tostdout;
 	int i;
 	int isize;
 	int osize;
@@ -317,7 +317,7 @@ int fits_convert_data(void* vdest, int deststride, tfits_type desttype,
         const char* asrc = src;
         int64_t ival = 0;
         double  dval = 0;
-        bool src_is_int = TRUE;
+        anbool src_is_int = TRUE;
 
         // this loop is over elements of the array, if the column contains an array.
         // (ie, for scalar columns, arraysize is 1.)
@@ -525,11 +525,11 @@ void fits_header_addf_longstring(qfits_header* hdr, const char* key,
         char line[FITS_LINESZ + 1];
         char* linebuf;
         char* buf;
-        bool addquotes = FALSE;
-        bool escapequotes = FALSE;
+        anbool addquotes = FALSE;
+        anbool escapequotes = FALSE;
         buf = str;
         while (len > 0) {
-            bool amp = TRUE;
+            anbool amp = TRUE;
             int maxlen;
 
             //printf("String: \"%s\"\n", buf);
@@ -617,7 +617,7 @@ static void trim_trailing_spaces(char* s) {
 }
 
 // modifies s in-place.
-static bool pretty_continue_string(char* s) {
+static anbool pretty_continue_string(char* s) {
     char* out = s;
     int i, iout, N;
     N = strlen(s);
@@ -636,7 +636,7 @@ static bool pretty_continue_string(char* s) {
 
 // modifies s in-place.
 // removes leading and trailing spaces.
-static bool trim_valid_string(char* s) {
+static anbool trim_valid_string(char* s) {
     int i, N, end;
     trim_leading_spaces(s);
     if (s[0] != '\'')
@@ -908,7 +908,7 @@ int fits_copy_header(const qfits_header* src, qfits_header* dest, char* key) {
 }
 
 static int copy_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey,
-                            bool append) {
+                            anbool append) {
 	int i, N;
 	char key[FITS_LINESZ+1];
 	char val[FITS_LINESZ+1];
@@ -1031,7 +1031,7 @@ int fits_offset_of_column(qfits_table* table, int colnum) {
 	return off;
 }
 
-int fits_write_data_D(FILE* fid, double value, bool flip) {
+int fits_write_data_D(FILE* fid, double value, anbool flip) {
 	assert(sizeof(double) == 8);
 	if (flip)
 		v64_hton(&value);
@@ -1042,7 +1042,7 @@ int fits_write_data_D(FILE* fid, double value, bool flip) {
 	return 0;
 }
 
-int fits_write_data_E(FILE* fid, float value, bool flip) {
+int fits_write_data_E(FILE* fid, float value, anbool flip) {
 	assert(sizeof(float) == 4);
 	if (flip)
 		v32_hton(&value);
@@ -1073,7 +1073,7 @@ int fits_write_data_X(FILE* fid, unsigned char value) {
 	return fits_write_data_B(fid, value);
 }
 
-int fits_write_data_I(FILE* fid, int16_t value, bool flip) {
+int fits_write_data_I(FILE* fid, int16_t value, anbool flip) {
 	if (flip)
 		v16_hton(&value);
 	if (fwrite(&value, 2, 1, fid) != 1) {
@@ -1083,7 +1083,7 @@ int fits_write_data_I(FILE* fid, int16_t value, bool flip) {
 	return 0;
 }
 
-int fits_write_data_J(FILE* fid, int32_t value, bool flip) {
+int fits_write_data_J(FILE* fid, int32_t value, anbool flip) {
 	if (flip)
 		v32_hton(&value);
 	if (fwrite(&value, 4, 1, fid) != 1) {
@@ -1093,7 +1093,7 @@ int fits_write_data_J(FILE* fid, int32_t value, bool flip) {
 	return 0;
 }
 
-int fits_write_data_K(FILE* fid, int64_t value, bool flip) {
+int fits_write_data_K(FILE* fid, int64_t value, anbool flip) {
 	if (flip)
 		v64_hton(&value);
 	if (fwrite(&value, 8, 1, fid) != 1) {
@@ -1104,7 +1104,7 @@ int fits_write_data_K(FILE* fid, int64_t value, bool flip) {
 }
 
 int fits_write_data_array(FILE* fid, const void* vvalue, tfits_type type,
-                          int N, bool flip) {
+                          int N, anbool flip) {
     int i;
     int rtn = 0;
     const char* pvalue = (const char*)vvalue;
@@ -1129,8 +1129,8 @@ int fits_write_data_array(FILE* fid, const void* vvalue, tfits_type type,
             pvalue += sizeof(unsigned char);
             break;
         case TFITS_BIN_TYPE_L:
-            rtn = fits_write_data_L(fid, *(bool*)pvalue);
-            pvalue += sizeof(bool);
+            rtn = fits_write_data_L(fid, *(anbool*)pvalue);
+            pvalue += sizeof(anbool);
             break;
         case TFITS_BIN_TYPE_D:
             rtn = fits_write_data_D(fid, *(double*)pvalue, flip);
@@ -1167,7 +1167,7 @@ int fits_write_data_array(FILE* fid, const void* vvalue, tfits_type type,
     return rtn;
 }
 
-int fits_write_data(FILE* fid, void* pvalue, tfits_type type, bool flip) {
+int fits_write_data(FILE* fid, void* pvalue, tfits_type type, anbool flip) {
     return fits_write_data_array(fid, pvalue, type, 1, flip);
 }
 

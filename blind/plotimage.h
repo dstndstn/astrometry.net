@@ -10,7 +10,7 @@ struct plotimage_args {
 
 	// Use slow but correct resampling?
 	// default is to use faster but approximate Cairo rendering.
-	bool resample;
+	anbool resample;
 
 	int downsample;
 
@@ -48,7 +48,7 @@ struct plotimage_args {
 	// FITS image plane
 	int fitsplane;
 
-	bool auto_scale;
+	anbool auto_scale;
 
 	unsigned char* img;
 	int W;

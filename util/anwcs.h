@@ -95,7 +95,7 @@ int anwcs_pixelxy2xyz(const anwcs_t* wcs, double px, double py, double* p_xyz);
 
 int anwcs_xyz2pixelxy(const anwcs_t* wcs, const double* xyz, double *px, double *py);
 
-bool anwcs_radec_is_inside_image(const anwcs_t* wcs, double ra, double dec);
+anbool anwcs_radec_is_inside_image(const anwcs_t* wcs, double ra, double dec);
 
 /**
  The SIP implementation guarantees:
@@ -121,12 +121,12 @@ void anwcs_walk_image_boundary(const anwcs_t* wcs, double stepsize,
 							   void (*callback)(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token),
 							   void* token);
 
-bool anwcs_find_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
+anbool anwcs_find_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
 							  double ra2, double dec2,
 							  double* pra3, double* pdec3,
 							  double* pra4, double* pdec4);
 
-bool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
+anbool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
 							double ra2, double dec2);
 
 /*
@@ -142,7 +142,7 @@ dl* anwcs_walk_discontinuity(const anwcs_t* wcs,
 							 double stepsize,
 							 dl* radecs);
 
-bool anwcs_overlaps(const anwcs_t* wcs1, const anwcs_t* wcs2, int stepsize);
+anbool anwcs_overlaps(const anwcs_t* wcs1, const anwcs_t* wcs2, int stepsize);
 
 double anwcs_imagew(const anwcs_t* anwcs);
 double anwcs_imageh(const anwcs_t* anwcs);

@@ -60,7 +60,7 @@ int main(int argc, char** args) {
 	double* radecs;
 	double markersize = 20.0;
 	double fontsize = 10.0;
-	bool do_neighbours = FALSE;
+	anbool do_neighbours = FALSE;
 
 	int mode = MODE_XY;
 

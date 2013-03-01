@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 	char* racol = NULL;
 	char* deccol = NULL;
 	char* sortcol = NULL;
-	bool sortasc = TRUE;
+	anbool sortasc = TRUE;
 	int loglvl = LOG_MSG;
 	int bighp = -1;
 	int bignside = 1;

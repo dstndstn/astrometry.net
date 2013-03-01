@@ -45,7 +45,7 @@ int main(int argc, char** args) {
 	int i;
 	char* outfile = NULL;
 	int N;
-	bool* solved;
+	anbool* solved;
 	int noerr = 0;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1) {
@@ -82,7 +82,7 @@ int main(int argc, char** args) {
 		if (n > N) N = n;
 	}
 
-	solved = calloc(N, sizeof(bool));
+	solved = calloc(N, sizeof(anbool));
 	for (i=0; i<ninputfiles; i++) {
 		il* slist;
 		int j;

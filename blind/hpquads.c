@@ -72,8 +72,8 @@ struct hpquads {
 	int sort_size;
 
 	// for create_quad():
-	bool quad_created;
-	bool count_uses;
+	anbool quad_created;
+	anbool count_uses;
 	int hp;
 
 	// for build_quads():
@@ -96,7 +96,7 @@ static int compare_quads(const void* v1, const void* v2, void* token) {
 	return 0;
 }
 
-static bool find_stars(hpquads_t* me, double radius2, int R) {
+static anbool find_stars(hpquads_t* me, double radius2, int R) {
 	int d, j, N;
 	int destind;
 	double centre[3];
@@ -176,14 +176,14 @@ static bool find_stars(hpquads_t* me, double radius2, int R) {
 }
 
 
-static bool check_midpoint(quadbuilder_t* qb, pquad_t* pq, void* vtoken) {
+static anbool check_midpoint(quadbuilder_t* qb, pquad_t* pq, void* vtoken) {
 	hpquads_t* me = vtoken;
 	return (xyzarrtohealpix(pq->midAB, me->Nside) == me->hp);
 }
 
-static bool check_full_quad(quadbuilder_t* qb, unsigned int* quad, int nstars, void* vtoken) {
+static anbool check_full_quad(quadbuilder_t* qb, unsigned int* quad, int nstars, void* vtoken) {
 	hpquads_t* me = vtoken;
-	bool dup;
+	anbool dup;
 	if (!me->bigquadlist)
 		return TRUE;
 	dup = bt_contains2(me->bigquadlist, quad, compare_quads, &me->dimquads);
@@ -202,7 +202,7 @@ static void add_quad(quadbuilder_t* qb, unsigned int* stars, void* vtoken) {
 	me->quad_created = TRUE;
 }
 
-static bool create_quad(hpquads_t* me, bool count_uses) {
+static anbool create_quad(hpquads_t* me, anbool count_uses) {
 	quadbuilder_t* qb;
 
 	qb = quadbuilder_init();
@@ -231,7 +231,7 @@ static bool create_quad(hpquads_t* me, bool count_uses) {
 
 
 static void add_headers(qfits_header* hdr, char** argv, int argc,
-						qfits_header* startreehdr, bool circle,
+						qfits_header* startreehdr, anbool circle,
 						int npasses) {
 	int i;
 	boilerplate_add_fits_headers(hdr);
@@ -268,7 +268,7 @@ static int build_quads(hpquads_t* me, int Nhptotry, il* hptotry, int R) {
 	int i;
 
 	for (i=0; i<Nhptotry; i++) {
-		bool ok;
+		anbool ok;
 		int hp;
 		if ((i * 80 / Nhptotry) != lastgrass) {
 			printf(".");
@@ -312,7 +312,7 @@ int hpquads(startree_t* starkd,
 			int Nreuses,
 			int Nloosen,
 			int id,
-			bool scanoccupied,
+			anbool scanoccupied,
 
 			void* sort_data,
 			int (*sort_func)(const void*, const void*),
@@ -324,7 +324,7 @@ int hpquads(startree_t* starkd,
 
 	int i;
 	int pass;
-	bool circle = TRUE;
+	anbool circle = TRUE;
 	double radius2;
 	il* hptotry;
 	int Nhptotry = 0;
@@ -614,7 +614,7 @@ int hpquads_files(const char* skdtfn,
 				  int Nreuses,
 				  int Nloosen,
 				  int id,
-				  bool scanoccupied,
+				  anbool scanoccupied,
 
 				  void* sort_data,
 				  int (*sort_func)(const void*, const void*),

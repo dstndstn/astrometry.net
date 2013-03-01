@@ -168,11 +168,11 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     PyArrayObject* inds;
     npy_intp dims[2];
     PyArrayObject* dists;
-	bool notself;
+	anbool notself;
 	PyObject* rtn;
 	
-	// So that ParseTuple("b") with a C "bool" works
-	assert(sizeof(bool) == sizeof(unsigned char));
+	// So that ParseTuple("b") with a C "anbool" works
+	assert(sizeof(anbool) == sizeof(unsigned char));
 
     if (!PyArg_ParseTuple(args, "lldb", &p1, &p2, &rad, &notself)) {
         PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");
@@ -228,12 +228,12 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     int *pinds;
     double *pdist2s;
     double rad;
-	bool notself;
+	anbool notself;
 	int* tempinds;
 	PyObject* rtn;
 
-	// So that ParseTuple("b") with a C "bool" works
-	assert(sizeof(bool) == sizeof(unsigned char));
+	// So that ParseTuple("b") with a C "anbool" works
+	assert(sizeof(anbool) == sizeof(unsigned char));
 
     if (!PyArg_ParseTuple(args, "lldb", &p1, &p2, &rad, &notself)) {
         PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");
@@ -297,7 +297,7 @@ static PyObject* spherematch_kdtree_bbox(PyObject* self, PyObject* args) {
   npy_intp dims[2];
   long i;
   double *bb;
-  bool ok;
+  anbool ok;
   kdtree_t* kd;
   int j, D;
 
@@ -340,13 +340,13 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
   int *pj;
   double *pd;
   double rad;
-  bool notself;
+  anbool notself;
   int* tempinds;
   double* tempd2;
   PyObject* rtn;
 
-  // So that ParseTuple("b") with a C "bool" works
-  assert(sizeof(bool) == sizeof(unsigned char));
+  // So that ParseTuple("b") with a C "anbool" works
+  assert(sizeof(anbool) == sizeof(unsigned char));
 
   if (!PyArg_ParseTuple(args, "lldb", &p1, &p2, &rad, &notself)) {
     PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");

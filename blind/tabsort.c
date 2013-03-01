@@ -31,7 +31,7 @@
 #include "errors.h"
 
 int tabsort(const char* infn, const char* outfn, const char* colname,
-            bool descending) {
+            anbool descending) {
 	FILE* fin;
 	FILE* fout;
 	int ext, nextens;

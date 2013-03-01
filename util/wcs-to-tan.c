@@ -38,8 +38,8 @@ int main(int argc, char** args) {
 	char* wcsfn = NULL;
 	char* outfn = NULL;
     int ext = 0;
-	bool forcetan = FALSE;
-	bool forcewcslib = FALSE;
+	anbool forcetan = FALSE;
+	anbool forcewcslib = FALSE;
 	double xlo = 1;
 	double ylo = 1;
 	double xhi = HUGE_VAL;

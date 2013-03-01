@@ -145,7 +145,7 @@ struct fitsbin_t {
     FILE* fid;
 
 	// only used for in_memory():
-	bool inmemory;
+	anbool inmemory;
 	bl* items;
 	bl* extensions;
 

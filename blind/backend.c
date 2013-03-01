@@ -100,7 +100,7 @@ int backend_autoindex_search_paths(backend_t* backend) {
             char* name;
             char* fullpath;
             char* err;
-            bool ok;
+            anbool ok;
             errno = 0;
             de = readdir(dir);
             if (!de) {
@@ -193,7 +193,7 @@ int backend_add_index(backend_t* backend, char* path) {
 		ind = pl_get(backend->indexes, k);
         // ind->indexname is a path to the quad filename; strip off directory component.
         char* mbase = basename_safe(ind->indexname);
-        bool eq = streq(base, mbase);
+        anbool eq = streq(base, mbase);
         free(mbase);
         if (eq) {
             logmsg("Warning: we've already seen an index with the same name: \"%s\".  Adding it anyway...\n", ind->indexname);
@@ -245,7 +245,7 @@ int backend_parse_config_file(backend_t* backend, const char* fn) {
 int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
     sl* indices = sl_new(16);
     sl* mindices = sl_new(16);
-    bool auto_index = FALSE;
+    anbool auto_index = FALSE;
     int i;
     int rtn = 0;
 
@@ -427,7 +427,7 @@ int backend_run_job(backend_t* backend, job_t* job) {
     int i;
     double app_min_default;
     double app_max_default;
-    bool solved = FALSE;
+    anbool solved = FALSE;
 
     if (blind_is_run_obsolete(bp, sp)) {
         goto finish;
@@ -517,7 +517,7 @@ int backend_run_job(backend_t* backend, job_t* job) {
             for (k=0; k<il_size(indexlist); k++) {
                 int ii = il_get(indexlist, k);
 				index_t* index = pl_get(backend->indexes, ii);
-                bool inrange = TRUE;
+                anbool inrange = TRUE;
 				if (job->use_radec_center)
 					inrange = index_is_within_range(index, job->ra_center, job->dec_center, job->search_radius);
                 if (!inrange) {
@@ -603,16 +603,16 @@ static void parse_sip_coeffs(const qfits_header* hdr, const char* prefix, sip_t*
 	}
 }
 
-static bool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
+static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
     blind_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
 
 	double dnil = -HUGE_VAL;
 	char *pstr;
 	int n;
-    bool run;
+    anbool run;
 
-    bool default_tweak = TRUE;
+    anbool default_tweak = TRUE;
     int default_tweakorder = 2;
     double default_odds_toprint = 1e6;
     double default_odds_tokeep = 1e9;

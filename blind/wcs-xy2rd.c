@@ -35,15 +35,15 @@
 int wcs_xy2rd(const char* wcsfn, int ext,
 			  const char* xylsfn, const char* rdlsfn,
               const char* xcol, const char* ycol,
-			  bool forcetan,
-			  bool forcewcslib,
+			  anbool forcetan,
+			  anbool forcewcslib,
               il* fields) {
 	rdlist_t* rdls = NULL;
 	xylist_t* xyls = NULL;
 	anwcs_t* wcs = NULL;
 	int i;
     int rtn = -1;
-    bool alloced_fields = FALSE;
+    anbool alloced_fields = FALSE;
 
 	// read WCS.
 	if (forcewcslib) {

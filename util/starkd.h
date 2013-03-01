@@ -130,7 +130,7 @@ void startree_free_data_column(startree_t* s, double* d);
 
 
 
-bool startree_has_tagalong(startree_t* s);
+anbool startree_has_tagalong(startree_t* s);
 
 fitstable_t* startree_get_tagalong(startree_t* s);
 

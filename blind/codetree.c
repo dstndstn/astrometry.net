@@ -111,7 +111,7 @@ codetree* codetree_build(codefile* codes,
 		double low[D];
 		double high[D];
 		int d;
-		bool circ;
+		anbool circ;
         circ = qfits_header_getboolean(chdr, "CIRCLE", 0);
 		for (d=0; d<D; d++) {
 			if (circ) {

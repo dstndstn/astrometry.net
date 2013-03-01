@@ -89,7 +89,7 @@ void radecrange2xyzrange(double ralo, double declo, double rahi, double dechi,
 
 static int parse_hms_string(const char* str,
                             int* sign, int* term1, int* term2, double* term3) {
-    bool matched;
+    anbool matched;
     regmatch_t matches[6];
     int nmatches = 6;
     regex_t re;

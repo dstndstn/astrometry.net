@@ -66,7 +66,7 @@ void intmap_free(intmap_t* im) {
 	free(im);
 }
 
-bl* intmap_find(intmap_t* im, key_t key, bool create) {
+bl* intmap_find(intmap_t* im, key_t key, anbool create) {
 	key_t ind;
 	assert(key >= 0);
 	assert(im);
@@ -103,7 +103,7 @@ void intmap_append(intmap_t* it, int key, void* pval) {
 	bl_append(lst, pval);
 }
 
-bool intmap_get_entry(intmap_t* im, int index,
+anbool intmap_get_entry(intmap_t* im, int index,
 					  key_t* p_key, bl** p_list) {
 	assert(im);
 	assert(index >= 0);

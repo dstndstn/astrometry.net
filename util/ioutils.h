@@ -56,7 +56,7 @@ float get_cpu_usage(void);
  Returns a newly allocated string "dir/filename", or NULL if none of
  the paths exists and is readable.
  */
-char* find_file_in_dirs(const char** dirs, int ndirs, const char* filename, bool allow_absolute);
+char* find_file_in_dirs(const char** dirs, int ndirs, const char* filename, anbool allow_absolute);
 
 /*
  Removes '.' and '..' references from a path.
@@ -70,8 +70,8 @@ char* find_file_in_dirs(const char** dirs, int ndirs, const char* filename, bool
 char* an_canonicalize_file_name(const char* fn);
 
 // Are strings s1 and s2 equal?
-bool streq(const char* s1, const char* s2);
-bool strcaseeq(const char* s1, const char* s2);
+anbool streq(const char* s1, const char* s2);
+anbool strcaseeq(const char* s1, const char* s2);
 
 /*
  Copy data from "fin" to "fout", starting at offset "offset"
@@ -108,28 +108,28 @@ int mkdir_p(const char* path);
 // Returns 0 on error.
 time_t file_get_last_modified_time(const char* fn);
 
-bool file_exists(const char* fn);
+anbool file_exists(const char* fn);
 
-bool file_readable(const char* fn);
+anbool file_readable(const char* fn);
 
-bool file_executable(const char* fn);
+anbool file_executable(const char* fn);
 
-bool path_is_dir(const char* path);
+anbool path_is_dir(const char* path);
 
-void* file_get_contents(const char* fn, size_t* len, bool addzero);
+void* file_get_contents(const char* fn, size_t* len, anbool addzero);
 
 char* file_get_contents_offset(const char* fn, int offset, int length);
 
-sl* fid_add_lines(FILE* fid, bool include_newlines, sl* list);
+sl* fid_add_lines(FILE* fid, anbool include_newlines, sl* list);
 
-sl* file_get_lines(const char* fn, bool include_newlines);
+sl* file_get_lines(const char* fn, anbool include_newlines);
 
-sl* fid_get_lines(FILE* fid, bool include_newlines);
+sl* fid_get_lines(FILE* fid, anbool include_newlines);
 
-sl* dir_get_contents(const char* path, sl* result, bool filesonly, bool recursive);
+sl* dir_get_contents(const char* path, sl* result, anbool filesonly, anbool recursive);
 
 int file_get_last_modified_string(const char* fn, const char* timeformat,
-                                  bool utc, char* output, size_t outsize);
+                                  anbool utc, char* output, size_t outsize);
 
 /**
  Splits the given "str" into words, so that the first line is at most
@@ -178,7 +178,7 @@ int read_double(FILE* fin, double* val);
 int read_fixed_length_string(FILE* fin, char* s, int length);
 char* read_string(FILE* fin);
 char* read_string_terminated(FILE* fin, const char* terminators, int nterminators,
-							 bool include_terminator);
+							 anbool include_terminator);
 
 int read_u32_portable(FILE* fin, unsigned int* val);
 int read_u32s_portable(FILE* fin, unsigned int* val, int n);

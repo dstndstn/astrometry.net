@@ -5,7 +5,6 @@
 #include "cutest.h"
 #include "tycho2.h"
 #include "tycho2-fits.h"
-#include "an-bool.h"
 #include "starutil.h"
 
 static double deg2mas(double x) {

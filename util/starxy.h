@@ -33,7 +33,7 @@ struct starxy_t {
 };
 typedef struct starxy_t starxy_t;
 
-starxy_t* starxy_new(int N, bool flux, bool back);
+starxy_t* starxy_new(int N, anbool flux, anbool back);
 
 void starxy_compute_range(starxy_t* xy);
 
@@ -82,9 +82,9 @@ double* starxy_to_xy_array(starxy_t* xy, double* arr);
 // Like starxy_to_xy_array, but also includes "flux" and "background" if they're set.
 double* starxy_to_flat_array(starxy_t* xy, double* arr);
 
-void starxy_alloc_data(starxy_t* f, int N, bool flux, bool back);
+void starxy_alloc_data(starxy_t* f, int N, anbool flux, anbool back);
 
-void starxy_from_dl(starxy_t* xy, dl* l, bool flux, bool back);
+void starxy_from_dl(starxy_t* xy, dl* l, anbool flux, anbool back);
 
 // Just free the data, not the field itself.
 void starxy_free_data(starxy_t* f);

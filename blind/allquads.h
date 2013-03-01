@@ -34,8 +34,8 @@ struct allquads {
 
 	double quad_d2_lower;
 	double quad_d2_upper;
-	bool use_d2_lower;
-	bool use_d2_upper;
+	anbool use_d2_lower;
+	anbool use_d2_upper;
 
 	int starA;
 };

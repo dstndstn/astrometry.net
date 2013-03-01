@@ -943,7 +943,7 @@ int main(int argc, char** args) {
 				double xyz[2];
 				double sxy[2];
 				double d;
-				bool ok;
+				anbool ok;
 
 				startree_get(indx->starkd, star, xyz);
 				ok = tan_xyzarr2pixelxy(&wcs, xyz, sxy, sxy+1);
@@ -1128,7 +1128,7 @@ int main(int argc, char** args) {
 				// All quads incident on index stars near field stars we've looked at (cumulative)
 				for (k=0; k<il_size(uniqquadlist); k++) {
 					int nclose = 0;
-					bool thistime = FALSE;
+					anbool thistime = FALSE;
 					quad = il_get(uniqquadlist, k);
 					quadfile_get_stars(indx->quads, quad, stars);
 					for (m=0; m<dimquads; m++) {

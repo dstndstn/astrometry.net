@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 	char* outfn = NULL;
 	char* wcsfn = NULL;
 	char* progname = argv[0];
-    bool copydata = FALSE;
+    anbool copydata = FALSE;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {

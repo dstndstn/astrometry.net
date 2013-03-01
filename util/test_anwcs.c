@@ -31,7 +31,7 @@
 
 void test_discontinuity(CuTest* tc) {
 	double ra3,dec3,ra4,dec4;
-	bool isit;
+	anbool isit;
 	anwcs_t* wcs = anwcs_create_allsky_hammer_aitoff(0., 0., 400, 200);
 	isit = anwcs_find_discontinuity(wcs, 3., 15., 346, 15.,
 									&ra3, &dec3, &ra4, &dec4);

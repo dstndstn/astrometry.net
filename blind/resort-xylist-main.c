@@ -50,7 +50,7 @@ int main(int argc, char** args) {
 	char* progname = args[0];
     char* fluxcol = NULL;
     char* backcol = NULL;
-    bool ascending = TRUE;
+    anbool ascending = TRUE;
 	int loglvl = LOG_MSG;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)

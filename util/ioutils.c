@@ -215,7 +215,7 @@ char* basename_safe(const char* path) {
 	return res;
 }
 
-char* find_file_in_dirs(const char** dirs, int ndirs, const char* filename, bool allow_absolute) {
+char* find_file_in_dirs(const char** dirs, int ndirs, const char* filename, anbool allow_absolute) {
     int i;
     if (!filename) return NULL;
     if (allow_absolute && filename[0] == '/') {
@@ -286,13 +286,13 @@ char* an_canonicalize_file_name(const char* fn) {
     return result;
 }
 
-bool streq(const char* s1, const char* s2) {
+anbool streq(const char* s1, const char* s2) {
     if (s1 == NULL || s2 == NULL)
         return (s1 == s2);
     return (strcmp(s1, s2) == 0) ? TRUE : FALSE;
 }
 
-bool strcaseeq(const char* s1, const char* s2) {
+anbool strcaseeq(const char* s1, const char* s2) {
     if (s1 == NULL || s2 == NULL)
         return (s1 == s2);
     return !strcasecmp(s1, s2);
@@ -302,7 +302,7 @@ int pipe_file_offset(FILE* fin, off_t offset, off_t length, FILE* fout) {
     char buf[1024];
     off_t i;
     if (fseeko(fin, offset, SEEK_SET)) {
-        SYSERROR("Failed to seek to offset %zu", offset);
+        SYSERROR("Failed to seek to offset %zu", (size_t)offset);
         return -1;
     }
     for (i=0; i<length; i+=sizeof(buf)) {
@@ -336,7 +336,7 @@ void asprintf_safe(char** strp, const char* format, ...) {
 	va_end(lst);
 }
 
-sl* dir_get_contents(const char* path, sl* list, bool filesonly, bool recurse) {
+sl* dir_get_contents(const char* path, sl* list, anbool filesonly, anbool recurse) {
     DIR* dir = opendir(path);
     if (!dir) {
         fprintf(stderr, "Failed to open directory \"%s\": %s\n", path, strerror(errno));
@@ -349,7 +349,7 @@ sl* dir_get_contents(const char* path, sl* list, bool filesonly, bool recurse) {
         struct stat st;
         char* name;
         char* fullpath;
-        bool freeit = FALSE;
+        anbool freeit = FALSE;
         errno = 0;
         de = readdir(dir);
         if (!de) {
@@ -468,7 +468,7 @@ char* find_executable(const char* progname, const char* sibling) {
 }
 
 static int readfd(int fd, char* buf, int NB, char** pcursor,
-				  sl* lines, bool* pdone) {
+				  sl* lines, anbool* pdone) {
 	int nr;
 	int i, nleft;
 	char* cursor = *pcursor;
@@ -573,7 +573,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 		char outbuf[1024];
 		char errbuf[1024];
 		int status;
-		bool outdone=TRUE, errdone=TRUE;
+		anbool outdone=TRUE, errdone=TRUE;
 		int outfd = -1;
 		int errfd = -1;
 		char* outcursor = outbuf;
@@ -754,7 +754,7 @@ char* create_temp_dir(const char* name, const char* dir) {
     return tempdir;
 }
 
-sl* file_get_lines(const char* fn, bool include_newlines) {
+sl* file_get_lines(const char* fn, anbool include_newlines) {
     FILE* fid;
 	sl* list;
     fid = fopen(fn, "r");
@@ -767,7 +767,7 @@ sl* file_get_lines(const char* fn, bool include_newlines) {
 	return list;
 }
 
-sl* fid_add_lines(FILE* fid, bool include_newlines, sl* list) {
+sl* fid_add_lines(FILE* fid, anbool include_newlines, sl* list) {
 	if (!list)
 		list = sl_new(256);
 	while (1) {
@@ -789,7 +789,7 @@ sl* fid_add_lines(FILE* fid, bool include_newlines, sl* list) {
 	return list;
 }
 
-sl* fid_get_lines(FILE* fid, bool include_newlines) {
+sl* fid_get_lines(FILE* fid, anbool include_newlines) {
 	return fid_add_lines(fid, include_newlines, NULL);
 }
 
@@ -821,7 +821,7 @@ char* file_get_contents_offset(const char* fn, int offset, int size) {
     return buf;
 }
 
-void* file_get_contents(const char* fn, size_t* len, bool addzero) {
+void* file_get_contents(const char* fn, size_t* len, anbool addzero) {
     struct stat st;
     char* buf;
     FILE* fid;
@@ -872,7 +872,7 @@ time_t file_get_last_modified_time(const char* fn) {
 }
 
 int file_get_last_modified_string(const char* fn, const char* timeformat,
-                                  bool utc, char* output, size_t outsize) {
+                                  anbool utc, char* output, size_t outsize) {
     struct tm tym;
 	time_t t;
 
@@ -895,19 +895,19 @@ int file_get_last_modified_string(const char* fn, const char* timeformat,
     return 0;
 }
 
-bool file_exists(const char* fn) {
+anbool file_exists(const char* fn) {
     return fn && (access(fn, F_OK) == 0);
 }
 
-bool file_readable(const char* fn) {
+anbool file_readable(const char* fn) {
     return fn && (access(fn, R_OK) == 0);
 }
 
-bool file_executable(const char* fn) {
+anbool file_executable(const char* fn) {
     return fn && (access(fn, X_OK) == 0);
 }
 
-bool path_is_dir(const char* path) {
+anbool path_is_dir(const char* path) {
     struct stat st;
     if (stat(path, &st)) {
         SYSERROR("Couldn't stat path %s", path);
@@ -1095,7 +1095,7 @@ static char* growable_buffer_add(char* buf, int index, char c, int* size, int* s
 }
 
 char* read_string_terminated(FILE* fin, const char* terminators, int nterminators,
-							 bool include_terminator) {
+							 anbool include_terminator) {
 	int step = 1024;
 	int maxstep = 1024*1024;
 	int i = 0;

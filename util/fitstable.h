@@ -135,10 +135,10 @@ struct fitstable_t {
 	char* fn;
 
 	// Writing or reading?
-	//bool writing;
+	//anbool writing;
 
 	// when working in-memory:
-	bool inmemory;
+	anbool inmemory;
 	// rows of the current table, in FITS format but un-endian-flipped
 	bl* rows;
 	// other extensions that are available.
@@ -291,7 +291,7 @@ void fitstable_add_read_column_struct(fitstable_t* tab,
                                       int structoffset,
                                       tfits_type fits_type,
                                       const char* name,
-                                      bool required);
+                                      anbool required);
 
 void fitstable_add_write_column_struct(fitstable_t* tab,
                                        tfits_type c_type,
@@ -308,7 +308,7 @@ void fitstable_add_column_struct(fitstable_t* tab,
                                  tfits_type fits_type,
                                  const char* name,
                                  const char* units,
-                                 bool required);
+                                 anbool required);
 
 void fitstable_add_write_column(fitstable_t* tab, tfits_type t,
                                 const char* name, const char* units);

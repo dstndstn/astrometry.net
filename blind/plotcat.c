@@ -135,8 +135,8 @@ int main(int argc, char *argv[]) {
 	int imgmax = 255;
 	int squish = 0;
 
-    bool fitsformat = FALSE;
-    bool tostdout = TRUE;
+    anbool fitsformat = FALSE;
+    anbool tostdout = TRUE;
     char* outfn = NULL;
     FILE* fout;
 

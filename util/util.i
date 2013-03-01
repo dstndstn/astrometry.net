@@ -395,7 +395,7 @@ char* anwcs_wcslib_to_string(const anwcs_t* wcs,
 		anwcs_get_radec_center_and_radius($self, p_ra, p_dec, NULL);
 	}
 
-	bool is_inside(double ra, double dec) {
+	anbool is_inside(double ra, double dec) {
 		return anwcs_radec_is_inside_image($self, ra, dec);
 	}
 	double get_width() {
@@ -713,7 +713,7 @@ Sip = sip_t
 		$self->imageh = imageh;
 	}
 
-	bool is_inside(double ra, double dec) {
+	anbool is_inside(double ra, double dec) {
 		return tan_is_inside_image($self, ra, dec);
 	}
 
@@ -945,7 +945,7 @@ Sip = sip_t
 		y = PyArray_GETPTR1(npy, 0);
 		for (i=0; i<N; i++) {
 			double xyz[3];
-			bool ok;
+			anbool ok;
 			xyz[0] = *((double*)PyArray_GETPTR2(npxyz, i, 0));
 			xyz[1] = *((double*)PyArray_GETPTR2(npxyz, i, 1));
 			xyz[2] = *((double*)PyArray_GETPTR2(npxyz, i, 2));

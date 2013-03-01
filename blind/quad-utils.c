@@ -33,7 +33,7 @@ void quad_compute_star_code(const double* starxyz, double* code, int dimquads) {
 	double scale, invscale;
 	double costheta, sintheta;
 	double midAB[3];
-	Unused bool ok;
+	Unused anbool ok;
 	int i;
 	const double *sA, *sB;
 
@@ -94,7 +94,7 @@ int quad_compute_code(const unsigned int* quad, int dimquads, startree_t* starkd
 	return 0;
 }
 
-bool quad_obeys_invariants(unsigned int* quad, double* code,
+anbool quad_obeys_invariants(unsigned int* quad, double* code,
 						   int dimquads, int dimcodes) {
 	double sum;
 	int i;

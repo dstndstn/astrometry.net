@@ -19,9 +19,7 @@
 #ifndef UCAC3_H
 #define UCAC3_H
 
-#include "an-bool.h"
 #include <stdint.h>
-//#include "starutil.h"
 
 #define UCAC3_RECORD_SIZE 84
 

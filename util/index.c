@@ -26,9 +26,9 @@
 #include "anqfits.h"
 #include "starutil.h"
 
-bool index_overlaps_scale_range(index_t* meta,
+anbool index_overlaps_scale_range(index_t* meta,
                                      double quadlo, double quadhi) {
-	bool rtn = 
+	anbool rtn = 
 		!((quadlo > meta->index_scale_upper) ||
 		  (quadhi < meta->index_scale_lower));
 	debug("index_overlaps_scale_range: index %s has quads [%g, %g] arcsec; image has quads [%g, %g] arcsec.  In range? %s\n",
@@ -36,7 +36,7 @@ bool index_overlaps_scale_range(index_t* meta,
 	return rtn;
 }
 
-bool index_is_within_range(index_t* meta, double ra, double dec, double radius_deg) {
+anbool index_is_within_range(index_t* meta, double ra, double dec, double radius_deg) {
 	if (meta->healpix == -1) {
 		// allsky; tautology
 		return TRUE;
@@ -65,7 +65,7 @@ static void get_filenames(const char* indexname,
                           char** quadfn,
                           char** ckdtfn,
                           char** skdtfn,
-                          bool* singlefile) {
+                          anbool* singlefile) {
     char* basename;
     if (ends_with(indexname, ".quad.fits")) {
         basename = strdup(indexname);
@@ -104,7 +104,7 @@ static void get_filenames(const char* indexname,
 
 char* index_get_quad_filename(const char* indexname) {
     char* quadfn;
-    bool singlefile;
+    anbool singlefile;
     if (!index_is_file_index(indexname))
         return NULL;
     get_filenames(indexname, &quadfn, NULL, NULL, &singlefile);
@@ -114,7 +114,7 @@ char* index_get_quad_filename(const char* indexname) {
 char* index_get_qidx_filename(const char* indexname) {
     char* quadfn;
     char* qidxfn = NULL;
-    bool singlefile;
+    anbool singlefile;
     if (!index_is_file_index(indexname))
         return NULL;
     get_filenames(indexname, &quadfn, NULL, NULL, &singlefile);
@@ -135,11 +135,11 @@ char* index_get_qidx_filename(const char* indexname) {
     return qidxfn;
 }
 
-bool index_is_file_index(const char* filename) {
+anbool index_is_file_index(const char* filename) {
     char* ckdtfn, *skdtfn, *quadfn;
-    bool singlefile;
+    anbool singlefile;
     //index_t meta;
-    bool rtn = TRUE;
+    anbool rtn = TRUE;
 
     get_filenames(filename, &quadfn, &ckdtfn, &skdtfn, &singlefile);
     if (!file_readable(quadfn)) {
@@ -385,7 +385,7 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 
 int index_reload(index_t* index) {
 	char *codetreefname=NULL, *quadfname=NULL, *startreefname=NULL;
-	bool singlefile;
+	anbool singlefile;
 	get_filenames(index->indexname, &quadfname, &codetreefname, &startreefname, &singlefile);
 	if (!index->fits) {
 		if (singlefile) {

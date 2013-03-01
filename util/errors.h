@@ -44,7 +44,7 @@ typedef struct errentry errentry_t;
 
 struct errors {
     FILE* print;
-    bool save;
+    anbool save;
 	bl* errstack;
 
 	errfunc_t* errfunc;

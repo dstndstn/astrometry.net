@@ -80,7 +80,7 @@ void data_log_to(FILE* fid) {
 	log->f = fid;
 }
 
-bool data_log_passes(data_mask_t mask, int level) {
+anbool data_log_passes(data_mask_t mask, int level) {
 	data_log_t* log = get_logger();
 	if (level > log->level)
 		return FALSE;

@@ -26,7 +26,7 @@ il* healpix_region_search(int seed, il* seeds, int Nside,
 						  int (*accept)(int hp, void* token),
 						  void* token, int depth) {
 	il* frontier;
-	bool allocd_rej = FALSE;
+	anbool allocd_rej = FALSE;
 	int d;
 
 	if (!accepted)
@@ -78,7 +78,7 @@ il* healpix_region_search(int seed, il* seeds, int Nside,
 }
 
 
-static il* hp_rangesearch(const double* xyz, double radius, int Nside, il* hps, bool approx) {
+static il* hp_rangesearch(const double* xyz, double radius, int Nside, il* hps, anbool approx) {
 	int hp;
 	double hprad = arcmin2dist(healpix_side_length_arcmin(Nside)) * sqrt(2);
 	il* frontier = il_new(256);
@@ -95,7 +95,7 @@ static il* hp_rangesearch(const double* xyz, double radius, int Nside, il* hps, 
 		hp = il_pop(frontier);
 		nn = healpix_get_neighbours(hp, neighbours, Nside);
 		for (i=0; i<nn; i++) {
-			bool tst;
+			anbool tst;
 			double nxyz[3];
 			if (il_contains(frontier, neighbours[i]))
 				continue;

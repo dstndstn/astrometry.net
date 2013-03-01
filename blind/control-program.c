@@ -293,7 +293,7 @@ int main(int argc, char** args) {
 		double *starx, *stary, *starflux;
 		int nstars;
 		double imagecx, imagecy;
-		bool solved = FALSE;
+		anbool solved = FALSE;
         char* img;
         double t0, t1;
 

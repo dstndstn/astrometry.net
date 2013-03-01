@@ -188,8 +188,8 @@ InlineDefine void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int 
 }
 
 WarnUnusedResult InlineDefine
-bool star_coords(const double *s, const double *r,
-	 bool tangent, double *x, double *y) {
+anbool star_coords(const double *s, const double *r,
+	 anbool tangent, double *x, double *y) {
 	// As used by the sip.c code, this does the TAN projection
 	// (if "tangent" is TRUE; SIN projection other)
 	// r: CRVAL

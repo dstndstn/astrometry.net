@@ -60,7 +60,7 @@ int main(int argc, char** args) {
     int nside;
     int i;
     scamp_cat_t* scamp;
-    bool red, blue, infrared;
+    anbool red, blue, infrared;
     int loglvl = LOG_MSG;
 
     red = blue = infrared = FALSE;

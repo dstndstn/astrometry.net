@@ -26,7 +26,7 @@
 #include "ioutils.h"
 
 struct ngc_name {
-	bool is_ngc;
+	anbool is_ngc;
 	int id;
 	char* name;
 };
@@ -66,7 +66,7 @@ ngc_entry* ngc_get_entry(int i) {
 	return ngc_entries + i;
 }
 
-ngc_entry* ngc_get_ngcic_num(bool is_ngc, int num) {
+ngc_entry* ngc_get_ngcic_num(anbool is_ngc, int num) {
 	int i, N;
 	N = ngc_num_entries();
 	for (i=0; i<N; i++) {
@@ -81,7 +81,7 @@ ngc_entry* ngc_get_entry_named(const char* name) {
 	if (starts_with(name, "NGC ") || starts_with(name, "IC ")) {
 		int num;
 		const char* cptr;
-		bool isngc;
+		anbool isngc;
 		isngc = starts_with(name, "NGC ");
 		cptr = name + (isngc ? 4 : 3);
 		num = atoi(cptr);

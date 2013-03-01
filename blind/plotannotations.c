@@ -64,7 +64,7 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 		double ex,ey;
 		double ly, ry, tx, bx;
 		double distdeg;
-		bool okquadrant;
+		anbool okquadrant;
 		char* txt;
 
 		logverb("Target: \"%s\" at (%g,%g)\n", tar->name, tar->ra, tar->dec);

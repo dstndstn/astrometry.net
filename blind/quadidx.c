@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 	qfits_header* quadhdr;
 	qfits_header* qidxhdr;
 	int dimquads;
-	bool check = FALSE;
+	anbool check = FALSE;
 	int loglvl = LOG_MSG;
 	
 	if (argc <= 2) {

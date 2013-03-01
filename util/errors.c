@@ -26,7 +26,7 @@
 #include "an-bool.h"
 
 static pl* estack = NULL;
-static bool atexit_registered = FALSE;
+static anbool atexit_registered = FALSE;
 
 static err_t* error_copy(err_t* e) {
 	int i, N;
@@ -205,7 +205,7 @@ void error_reportv(err_t* e, const char* module, int line,
 
 void error_print_stack(err_t* e, FILE* f) {
     int i;
-	bool first=TRUE;
+	anbool first=TRUE;
     for (i=error_stack_N_entries(e)-1; i>=0; i--) {
 		errentry_t* ee = error_stack_get_entry(e, i);
 		if (!first)

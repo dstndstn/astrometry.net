@@ -27,11 +27,11 @@
 #include "starutil.h"
 #include "mathutil.h"
 
-static bool has_distortions(const sip_t* sip) {
+static anbool has_distortions(const sip_t* sip) {
 	return (sip->a_order >= 0);
 }
 
-bool sip_xyz2pixelxy(const sip_t* sip, double x, double y, double z, double *px, double *py) {
+anbool sip_xyz2pixelxy(const sip_t* sip, double x, double y, double z, double *px, double *py) {
 	double xyz[3];
 	xyz[0] = x;
 	xyz[1] = y;
@@ -233,7 +233,7 @@ void tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz)
 }
 
 // RA,Dec in degrees to Pixels.
-bool sip_radec2pixelxy(const sip_t* sip, double ra, double dec, double *px, double *py)
+anbool sip_radec2pixelxy(const sip_t* sip, double ra, double dec, double *px, double *py)
 {
 	double u, v;
 	double U, V;
@@ -264,7 +264,7 @@ bool sip_radec2pixelxy(const sip_t* sip, double ra, double dec, double *px, doub
 }
 
 // RA,Dec in degrees to Pixels.
-bool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *px, double *py) {
+anbool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *px, double *py) {
 	double u, v;
 	double U, V;
 	double U2, V2;
@@ -292,23 +292,23 @@ bool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *px
 	return TRUE;
 }
 
-bool sip_xyzarr2pixelxy(const sip_t* sip, const double* xyz, double *px, double *py) {
+anbool sip_xyzarr2pixelxy(const sip_t* sip, const double* xyz, double *px, double *py) {
 	double ra, dec;
 	xyzarr2radecdeg(xyz, &ra, &dec);
 	return sip_radec2pixelxy(sip, ra, dec, px, py);
 }
 
 
-bool sip_xyzarr2iwc(const sip_t* sip, const double* xyz,
+anbool sip_xyzarr2iwc(const sip_t* sip, const double* xyz,
 					double* iwcx, double* iwcy) {
 	return tan_xyzarr2iwc(&(sip->wcstan), xyz, iwcx, iwcy);
 }
-bool sip_radec2iwc(const sip_t* sip, double ra, double dec,
+anbool sip_radec2iwc(const sip_t* sip, double ra, double dec,
 				   double* iwcx, double* iwcy) {
 	return tan_radec2iwc(&(sip->wcstan), ra, dec, iwcx, iwcy);
 }
 
-bool tan_xyzarr2iwc(const tan_t* tan, const double* xyz,
+anbool tan_xyzarr2iwc(const tan_t* tan, const double* xyz,
 					double* iwcx, double* iwcy) {
 	double xyzcrval[3];
 
@@ -324,7 +324,7 @@ bool tan_xyzarr2iwc(const tan_t* tan, const double* xyz,
 	return TRUE;
 }
 
-bool tan_radec2iwc(const tan_t* tan, double ra, double dec,
+anbool tan_radec2iwc(const tan_t* tan, double ra, double dec,
 				   double* iwcx, double* iwcy) {
 	double xyz[3];
 	radecdeg2xyzarr(ra, dec, xyz);
@@ -332,7 +332,7 @@ bool tan_radec2iwc(const tan_t* tan, double ra, double dec,
 }
 
 // xyz unit vector to Pixels.
-bool tan_xyzarr2pixelxy(const tan_t* tan, const double* xyzpt, double *px, double *py) {
+anbool tan_xyzarr2pixelxy(const tan_t* tan, const double* xyzpt, double *px, double *py) {
 	double iwx=0, iwy=0;
 	if (!tan_xyzarr2iwc(tan, xyzpt, &iwx, &iwy)) {
 		return FALSE;
@@ -342,7 +342,7 @@ bool tan_xyzarr2pixelxy(const tan_t* tan, const double* xyzpt, double *px, doubl
 }
 
 // RA,Dec in degrees to Pixels.
-bool tan_radec2pixelxy(const tan_t* tan, double a, double d, double *px, double *py)
+anbool tan_radec2pixelxy(const tan_t* tan, double a, double d, double *px, double *py)
 {
 	double xyzpt[3];
 	radecdeg2xyzarr(a,d,xyzpt);

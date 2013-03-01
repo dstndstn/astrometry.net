@@ -89,15 +89,15 @@ int main(int argc, char *argv[]) {
 	int firstfieldfile=1, lastfieldfile=INT_MAX-1;
 	matchfile** mfs;
 	MatchObj** mos;
-	bool* eofs;
-	bool* eofieldfile;
+	anbool* eofs;
+	anbool* eofieldfile;
 	int nread = 0;
 	int f;
 	int fieldfile;
 	int totalsolved, totalunsolved;
 	int mode = MODE_BEST;
 	double logodds_tosolve = -HUGE_VAL;
-	bool agree = FALSE;
+	anbool agree = FALSE;
 
 	MatchObj* bestmo;
 	bl* keepers;
@@ -204,8 +204,8 @@ int main(int argc, char *argv[]) {
 	totalsolved = totalunsolved = 0;
 
 	mos =  calloc(ninputfiles, sizeof(MatchObj*));
-	eofs = calloc(ninputfiles, sizeof(bool));
-	eofieldfile = malloc(ninputfiles * sizeof(bool));
+	eofs = calloc(ninputfiles, sizeof(anbool));
+	eofieldfile = malloc(ninputfiles * sizeof(anbool));
 	mfs = malloc(ninputfiles * sizeof(matchfile*));
 
 	for (i=0; i<ninputfiles; i++) {
@@ -219,14 +219,14 @@ int main(int argc, char *argv[]) {
 
 	// we assume the matchfiles are sorted by field id and number.
 	for (fieldfile=firstfieldfile; fieldfile<=lastfieldfile; fieldfile++) {
-		bool alldone = TRUE;
+		anbool alldone = TRUE;
 
-		memset(eofieldfile, 0, ninputfiles * sizeof(bool));
+		memset(eofieldfile, 0, ninputfiles * sizeof(anbool));
 
 		for (f=firstfield; f<=lastfield; f++) {
 			int fieldnum = f;
-			bool donefieldfile;
-			bool solved_it;
+			anbool donefieldfile;
+			anbool solved_it;
 			bl* writematches = NULL;
 
 			// quit if we've reached the end of all the input files.

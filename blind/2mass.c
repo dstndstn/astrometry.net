@@ -350,7 +350,7 @@ int twomass_parse_entry(struct twomass_entry* e, const char* line) {
 		fprintf(stderr, "Failed to parse 'minor_planet' entry in 2MASS line.\n");
 		return -1;
 	}
-	e->minor_planet = (bool)(*cursor - '0');
+	e->minor_planet = (anbool)(*cursor - '0');
 	cursor++;
 	printval("minor planet %i\n", e->minor_planet);
 
@@ -489,7 +489,7 @@ int twomass_parse_entry(struct twomass_entry* e, const char* line) {
 	cursor++;
 
 	if ((*cursor == '1') || (*cursor == '0')) {
-		e->use_src = (bool)(*cursor - '0');
+		e->use_src = (anbool)(*cursor - '0');
 		cursor++;
 	} else {
 		fprintf(stderr, "Failed to parse 'use_src' entry in 2MASS line.\n");

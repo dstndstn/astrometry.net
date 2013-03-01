@@ -122,10 +122,10 @@ struct usnob_entry {
 	// M>=2 means it's a valid USNOB star.
 	uint8_t ndetections;
 
-	bool diffraction_spike;
-	bool motion_catalog;
+	anbool diffraction_spike;
+	anbool motion_catalog;
 	// YS4.0 correlation
-	bool ys4;
+	anbool ys4;
 
 	// astrometry.net diffraction detection: 0, 1=spike, 2=halo
 	uint8_t an_diffraction_spike;
@@ -174,36 +174,36 @@ int unsob_get_survey_epoch(int survey, int obsnum);
   Returns TRUE if this entry is a true USNOB star, not a Tycho-2 or reject.
   (This doesn't check diffraction flags, just the "M" / "ndetection" field).
  */
-bool usnob_is_usnob_star(usnob_entry* entry);
+anbool usnob_is_usnob_star(usnob_entry* entry);
 
 /*
   Returns TRUE if the given observation contains real data.
   (Note that "usnob_is_usnob_star" must pass for this to be valid)
 */
-bool usnob_is_observation_valid(struct observation* obs);
+anbool usnob_is_observation_valid(struct observation* obs);
 
 /*
   Returns TRUE if the given bandpass (emulsion) is "blue" (band is 'O' or 'J').
 */
-bool usnob_is_band_blue(unsigned char band);
+anbool usnob_is_band_blue(unsigned char band);
 
 /* Returns TRUE if the given observation comes from a blue emulsion. */
-bool usnob_is_observation_blue(struct observation* obs);
+anbool usnob_is_observation_blue(struct observation* obs);
 
 /*
   Returns TRUE if the given bandpass (emulsion) is "red" (band is 'E' or 'F').
 */
-bool usnob_is_band_red(unsigned char band);
+anbool usnob_is_band_red(unsigned char band);
 
 /* Returns TRUE if the given observation comes from a red emulsion. */
-bool usnob_is_observation_red(struct observation* obs);
+anbool usnob_is_observation_red(struct observation* obs);
 
 /*
   Returns TRUE if the given bandpass (emulsion) is "infrared" (band is 'N')
 */
-bool usnob_is_band_ir(unsigned char band);
+anbool usnob_is_band_ir(unsigned char band);
 
 /* Returns TRUE if the given observation comes from an infrared emulsion. */
-bool usnob_is_observation_ir(struct observation* obs);
+anbool usnob_is_observation_ir(struct observation* obs);
 
 #endif

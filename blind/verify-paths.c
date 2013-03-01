@@ -52,7 +52,7 @@ int Npaths = 0;
 
 static void explore_path(il** reflists, dl** problists, int i, int NT, int NR,
 						 int* theta, double* logprobs, 
-						 bool* refused, int mu,
+						 anbool* refused, int mu,
 						 double distractor, double logbg) {
 	int j;
 	double logprob;
@@ -211,10 +211,10 @@ int main(int argc, char** args) {
 	double logbail = log(1e-100);
 	double logkeep = log(1e12);
 	double logaccept = HUGE_VAL;
-	bool growvariance = TRUE;
-	bool fake = FALSE;
+	anbool growvariance = TRUE;
+	anbool fake = FALSE;
 	double logodds;
-	bool do_paths = FALSE;
+	anbool do_paths = FALSE;
 
 	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
 		switch (argchar) {
@@ -621,7 +621,7 @@ int main(int argc, char** args) {
 
 			int theta[NT];
 			double logprobs[NT];
-			bool refused[NR];
+			anbool refused[NR];
 			for (i=0; i<NR; i++)
 				refused[i] = FALSE;
 

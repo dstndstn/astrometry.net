@@ -21,7 +21,7 @@
 #include "plotstuff.h"
 
 struct plotgrid_args {
-	bool dolabel;
+	anbool dolabel;
 
 	double rastep;
 	double decstep;

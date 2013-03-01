@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 	int datatype = 0;
 	int treetype = 0;
 	int buildopts = 0;
-	bool checktree = FALSE;
+	anbool checktree = FALSE;
 
     if (argc <= 2) {
 		printHelp(progname);

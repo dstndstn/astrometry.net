@@ -75,7 +75,7 @@ struct verify_s {
 };
 typedef struct verify_s verify_t;
 
-static bool* verify_deduplicate_field_stars(verify_t* v, const verify_field_t* vf, double nsigmas);
+static anbool* verify_deduplicate_field_stars(verify_t* v, const verify_field_t* vf, double nsigmas);
 
 verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
     verify_field_t* vf;
@@ -124,7 +124,7 @@ static double get_sigma2_at_radius(double verify_pix2, double r2, double quadr2)
 static double* compute_sigma2s(const verify_field_t* vf,
 							   const double* xy, int NF,
 							   const double* qc, double Q2,
-							   double verify_pix2, bool do_gamma) {
+							   double verify_pix2, anbool do_gamma) {
 	double* sigma2s;
     int i;
 	double R2;
@@ -153,7 +153,7 @@ static double* compute_sigma2s(const verify_field_t* vf,
 }
 
 double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
-							   double verify_pix2, bool do_gamma) {
+							   double verify_pix2, anbool do_gamma) {
 	int NF;
 	double qc[2];
 	double Q2=0;
@@ -167,7 +167,7 @@ double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
 
 double* verify_compute_sigma2s_arr(const double* xy, int NF,
 								   const double* qc, double Q2,
-								   double verify_pix2, bool do_gamma) {
+								   double verify_pix2, anbool do_gamma) {
 	return compute_sigma2s(NULL, xy, NF, qc, Q2, verify_pix2, do_gamma);
 }
 
@@ -196,8 +196,8 @@ static void print_test_perm(verify_t* v) {
 }
 
 static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchObj* mo,
-								 double pix2, bool do_gamma, bool fake_match) {
-	bool* keepers = NULL;
+								 double pix2, anbool do_gamma, anbool fake_match) {
+	anbool* keepers = NULL;
 	int i;
 	int ibad=0, igood=0;
 
@@ -254,7 +254,7 @@ static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchOb
 			ibad = igood = 0;
 			for (i=0; i<v->NT; i++) {
 				int ti = v->testperm[i];
-				bool isquad = FALSE;
+				anbool isquad = FALSE;
 				for (j=0; j<mo->dimquads; j++) {
 					if (ti == mo->field[j]) {
 						isquad = TRUE;
@@ -300,7 +300,7 @@ static void verify_apply_ror(verify_t* v,
 							 double distractors,
 							 double fieldW,
 							 double fieldH,
-							 bool do_gamma, bool fake_match,
+							 anbool do_gamma, anbool fake_match,
 							 double* p_effA,
 							 int* p_uninw, int* p_uninh) {
 	int i;
@@ -343,7 +343,7 @@ static void verify_apply_ror(verify_t* v,
 		}
 	}
 	if (vf->do_ror && !fake_match) {
-		bool* goodbins = NULL;
+		anbool* goodbins = NULL;
 		int Ngoodbins;
 		double ror2;
 
@@ -353,7 +353,7 @@ static void verify_apply_ror(verify_t* v,
 
 		if (binids) {
 			assert(uni_nw);
-			goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
+			goodbins = malloc(uni_nw * uni_nh * sizeof(anbool));
 			Ngoodbins = 0;
 			for (i=0; i<(uni_nw * uni_nh); i++) {
 				double binr2 = distsq(bincenters + 2*i, qc, 2);
@@ -869,15 +869,15 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 
  Returns an array indicating which field stars should be kept.
  */
-static bool* verify_deduplicate_field_stars(verify_t* v, const verify_field_t* vf, double nsigmas) {
-    bool* keepers = NULL;
+static anbool* verify_deduplicate_field_stars(verify_t* v, const verify_field_t* vf, double nsigmas) {
+    anbool* keepers = NULL;
     int i, j, ti;
     kdtree_qres_t* res = NULL;
 	double nsig2 = nsigmas*nsigmas;
 	int options = KD_OPTIONS_NO_RESIZE_RESULTS | KD_OPTIONS_SMALL_RADIUS;
 
 	// default to FALSE
-    keepers = calloc(v->NTall, sizeof(bool));
+    keepers = calloc(v->NTall, sizeof(anbool));
     for (i=0; i<v->NT; i++) {
 		ti = v->testperm[i];
 		keepers[ti] = TRUE;
@@ -1235,7 +1235,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
                 double pix2, double distractors,
                 double fieldW, double fieldH,
                 double logbail, double logaccept, double logstoplooking,
-                bool do_gamma, bool fake_match) {
+                anbool do_gamma, anbool fake_match) {
 	int i,j;
 	double* fieldcenter;
 	double fieldr2;
@@ -1358,7 +1358,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		ibad = 0;
 		igood = 0;
 		for (i=0; i<v->NR; i++) {
-			bool inquad = FALSE;
+			anbool inquad = FALSE;
 			int ri = v->refperm[i];
 			for (j=0; j<mo->dimquads; j++) {
 				if (v->refstarid[ri] == mo->star[j]) {

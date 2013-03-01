@@ -19,7 +19,7 @@ typedef void (*logfunc_t)(void* baton, enum log_level, const char* file, int lin
 struct log_t {
 	enum log_level level;
     FILE* f;
-	bool timestamp;
+	anbool timestamp;
 	double t0;
 	// User-specified logging functions
 	logfunc_t logfunc;
@@ -39,7 +39,7 @@ void log_use_function(logfunc_t func, void* baton);
  */
 void log_set_thread_specific(void);
 
-void log_set_timestamp(bool b);
+void log_set_timestamp(anbool b);
 
 /**
  * Initialize global logging object. Must be called before any of the other

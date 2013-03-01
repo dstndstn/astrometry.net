@@ -47,15 +47,15 @@ void print_help(char* progname) {
 int main(int argc, char** args) {
     int healpix = -1;
     int i;
-    bool degrees = TRUE;
+    anbool degrees = TRUE;
 	double radius = HUGE_VAL;
     int nargs;
     int c;
 	int Nside = 1;
-	bool neighbours = FALSE;
-	bool project = FALSE;
+	anbool neighbours = FALSE;
+	anbool project = FALSE;
 	double xyz[3];
-	bool fromhp = FALSE;
+	anbool fromhp = FALSE;
 
     if (argc == 1) {
 		print_help(args[0]);

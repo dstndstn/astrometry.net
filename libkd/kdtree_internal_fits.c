@@ -186,7 +186,7 @@ do { \
 } while (0)
 
 int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd, 
-                              const qfits_header* inhdr, bool flip_endian,
+                              const qfits_header* inhdr, anbool flip_endian,
 							  FILE* fid) {
     fitsbin_chunk_t chunk;
     fitsbin_t* fb = kdtree_fits_get_fitsbin(io);

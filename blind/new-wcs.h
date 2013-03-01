@@ -21,7 +21,7 @@
 #include "an-bool.h"
 
 int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
-            bool include_data);
+            anbool include_data);
 
 #endif
 

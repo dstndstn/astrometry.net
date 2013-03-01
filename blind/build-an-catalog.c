@@ -191,9 +191,9 @@ int main(int argc, char** args) {
 		tycho2_fits* tycho = NULL;
 		twomass_fits* twomass = NULL;
 		qfits_header* hdr;
-		bool is_usnob = FALSE;
-		bool is_tycho = FALSE;
-		bool is_2mass = FALSE;
+		anbool is_usnob = FALSE;
+		anbool is_tycho = FALSE;
+		anbool is_2mass = FALSE;
 		an_entry an;
 		int hp;
 

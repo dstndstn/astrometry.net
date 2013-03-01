@@ -81,13 +81,13 @@ void bt_free(bt* tree);
 Pure //Inline
 int bt_size(bt* tree);
 
-bool bt_insert(bt* tree, void* data, bool unique, compare_func compare);
+anbool bt_insert(bt* tree, void* data, anbool unique, compare_func compare);
 
-bool bt_insert2(bt* tree, void* data, bool unique, compare_func_2 compare, void* token);
+anbool bt_insert2(bt* tree, void* data, anbool unique, compare_func_2 compare, void* token);
 
-bool bt_contains(bt* tree, void* data, compare_func compare);
+anbool bt_contains(bt* tree, void* data, compare_func compare);
 
-bool bt_contains2(bt* tree, void* data, compare_func_2 compare, void* token);
+anbool bt_contains2(bt* tree, void* data, compare_func_2 compare, void* token);
 
 void* bt_access(bt* tree, int index);
 

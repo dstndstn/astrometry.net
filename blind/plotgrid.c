@@ -105,7 +105,7 @@ int plot_grid_find_dec_label_location(plot_args_t* pargs, double dec, double cra
 	double out;
 	double in = cra;
 	int i, N;
-	bool gotit;
+	anbool gotit;
 	int dirs[2];
 	int j, Ndir=0;
 	logverb("Labelling Dec=%g\n", dec);
@@ -150,7 +150,7 @@ int plot_grid_find_dec_label_location(plot_args_t* pargs, double dec, double cra
 	while (fabs(out - in) > 1e-6) {
 		// hahaha
 		double half;
-		bool isin;
+		anbool isin;
 		half = (out + in) / 2.0;
 		isin = plotstuff_radec_is_inside_image(pargs, half, dec);
 		if (isin)
@@ -166,7 +166,7 @@ int plot_grid_find_ra_label_location(plot_args_t* pargs, double ra, double cdec,
 	double out;
 	double in = cdec;
 	int i, N;
-	bool gotit;
+	anbool gotit;
 	int dirs[2];
 	int j, Ndir=0;
 	logverb("Labelling RA=%g\n", ra);
@@ -218,7 +218,7 @@ int plot_grid_find_ra_label_location(plot_args_t* pargs, double ra, double cdec,
 	while (fabs(out - in) > 1e-6) {
 		// hahaha
 		double half;
-		bool isin;
+		anbool isin;
 		half = (out + in) / 2.0;
 		isin = plotstuff_radec_is_inside_image(pargs, ra, half);
 		if (isin)
@@ -298,7 +298,7 @@ void plot_grid_add_label(plot_args_t* pargs, double ra, double dec,
 						 double lval, const char* format) {
 	char label[32];
 	double x,y;
-	bool ok;
+	anbool ok;
 	cairo_t* cairo = pargs->cairo;
 	pretty_label(format, lval, label);
 	ok = plotstuff_radec2xy(pargs, ra, dec, &x, &y);

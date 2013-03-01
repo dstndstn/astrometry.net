@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     int argchar;
     char* infn = NULL;
     char* outfn = NULL;
-    bool tostdout = FALSE;
+    anbool tostdout = FALSE;
     FILE* fin = NULL;
     FILE* fout = NULL;
     il* exts;

@@ -68,11 +68,11 @@ typedef struct {
 	int cutmargin;
 
 	// Does the index have the CIRCLE header - (codes live in the circle, not the box)?
-	bool circle;
+	anbool circle;
 	// Does the index have the CX <= DX property
-	bool cx_less_than_dx;
+	anbool cx_less_than_dx;
 	// Does the index have the CX + DX <= 1/2 property
-	bool meanx_less_than_half;
+	anbool meanx_less_than_half;
 
 	// Limits of the size of quads in the index, in arcseconds.
 	double index_scale_upper;
@@ -93,14 +93,14 @@ int index_dimquads(index_t* indx);
  Returns TRUE if the given index contains quads of sizes that overlap
  the given range of quad sizes, [quadlo, quadhi], in arcseconds.
  */
-bool index_overlaps_scale_range(index_t* indx, double quadlo, double quadhi);
+anbool index_overlaps_scale_range(index_t* indx, double quadlo, double quadhi);
 
 /**
  Returns TRUE if the given index covers a part of the sky that is
  within "radius_deg" degrees of the given "ra","dec" position (in
  degrees).
  */
-bool index_is_within_range(index_t* indx, double ra, double dec, double radius_deg);
+anbool index_is_within_range(index_t* indx, double ra, double dec, double radius_deg);
 
 /**
  Reads index metadata from the given 'filename' into the given 'indx' struct.
@@ -112,7 +112,7 @@ bool index_is_within_range(index_t* indx, double ra, double dec, double radius_d
  */
 int index_get_meta(const char* filename, index_t* indx);
 
-bool index_is_file_index(const char* filename);
+anbool index_is_file_index(const char* filename);
 
 char* index_get_quad_filename(const char* indexname);
 

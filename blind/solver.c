@@ -81,7 +81,7 @@ int solver_set_parity(solver_t* solver, int parity) {
 	return 0;
 }
 
-bool solver_did_solve(const solver_t* solver) {
+anbool solver_did_solve(const solver_t* solver) {
 	return solver->best_match_solves;
 }
 
@@ -450,7 +450,7 @@ void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) { //, MatchObj* pmo) {
     int i, nindexes;
     MatchObj mo;
 	MatchObj* pmo;
-	bool olddqb;
+	anbool olddqb;
 
 	pmo = &mo;
 
@@ -535,21 +535,21 @@ static void try_all_codes(const pquad* pq,
 
 static void try_all_codes_2(const int* fieldstars, int dimquad,
                             const double* code, solver_t* solver,
-                            bool current_parity, double tol2);
+                            anbool current_parity, double tol2);
 
 static void try_permutations(const int* origstars, int dimquad,
 							 const double* origcode,
-							 solver_t* solver, bool current_parity,
+							 solver_t* solver, anbool current_parity,
 							 double tol2,
 							 int* stars, double* code,
-							 int slot, bool* placed,
+							 int slot, anbool* placed,
 							 kdtree_qres_t** presult);
 
 static void resolve_matches(kdtree_qres_t* krez, const double *field,
                             const int* fstars, int dimquads,
-                            solver_t* solver, bool current_parity);
+                            solver_t* solver, anbool current_parity);
 
-static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match);
+static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, anbool fake_match);
 
 static void check_scale(pquad* pq, solver_t* s) {
 	double dx, dy;
@@ -828,7 +828,7 @@ void solver_run(solver_t* solver) {
 						continue;
 					}
 					pq->xy = malloc(numxy * 2 * sizeof(double));
-					pq->inbox = malloc(numxy * sizeof(bool));
+					pq->inbox = malloc(numxy * sizeof(anbool));
 					memset(pq->inbox, TRUE, solver->startobj);
 					pq->ninbox = solver->startobj;
 					pq->inbox[field[A]] = FALSE;
@@ -887,10 +887,10 @@ void solver_run(solver_t* solver) {
 					continue;
 				}
 				// initialize the "inbox" array:
-				pq->inbox = malloc(numxy * sizeof(bool));
+				pq->inbox = malloc(numxy * sizeof(anbool));
 				pq->xy = malloc(numxy * 2 * sizeof(double));
 				// -try all stars up to "newpoint"...
-				assert(sizeof(bool) == 1);
+				assert(sizeof(anbool) == 1);
 				memset(pq->inbox, TRUE, newpoint + 1);
 				pq->ninbox = newpoint + 1;
 				// -except A and B.
@@ -1052,7 +1052,7 @@ static void try_all_codes(const pquad* pq,
  */
 static void try_all_codes_2(const int* fieldstars, int dimquad,
                             const double* code, solver_t* solver,
-                            bool current_parity, double tol2) {
+                            anbool current_parity, double tol2) {
 	int i;
 	kdtree_qres_t* result = NULL;
     int dimcode = (dimquad - 2) * 2;
@@ -1060,7 +1060,7 @@ static void try_all_codes_2(const int* fieldstars, int dimquad,
 	double flipcode[DCMAX];
 
 	// We actually only use elements up to dimquads-2.
-	bool placed[DQMAX];
+	anbool placed[DQMAX];
 
 	// Un-flipped:
 	stars[0] = fieldstars[0];
@@ -1096,10 +1096,10 @@ bailout:
  */
 static void try_permutations(const int* origstars, int dimquad,
 							 const double* origcode,
-							 solver_t* solver, bool current_parity,
+							 solver_t* solver, anbool current_parity,
 							 double tol2,
 							 int* stars, double* code,
-							 int slot, bool* placed,
+							 int slot, anbool* placed,
 							 kdtree_qres_t** presult) {
 	int i;
 	int options = KD_OPTIONS_SMALL_RADIUS | KD_OPTIONS_COMPUTE_DISTS |
@@ -1212,7 +1212,7 @@ static void try_permutations(const int* origstars, int dimquad,
 // "field" contains the xy pixel coordinates of stars A,B,C,D.
 static void resolve_matches(kdtree_qres_t* krez, const double *field,
                             const int* fieldstars, int dimquads,
-                            solver_t* solver, bool current_parity) {
+                            solver_t* solver, anbool current_parity) {
 	int jj, thisquadno;
 	MatchObj mo;
 	unsigned int star[dimquads];
@@ -1225,7 +1225,7 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
 		double arcsecperpix;
 		tan_t wcs;
         int i;
-		bool outofbounds = FALSE;
+		anbool outofbounds = FALSE;
 		double abscale;
 
 		solver->nummatches++;
@@ -1314,9 +1314,9 @@ void solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip) {
 	solver_handle_hit(solver, mo, sip, TRUE);
 }
 
-static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match) {
+static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, anbool fake_match) {
 	double match_distance_in_pixels2;
-    bool solved;
+    anbool solved;
 	double logaccept;
 
 	mo->indexid = sp->index->indexid;
@@ -1419,7 +1419,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 			weights[Ngood] = verify_logodds_to_weight(mo->matchodds[i]);
 
 			double xx,yy;
-			Unused bool ok;
+			Unused anbool ok;
 			ok = tan_xyzarr2pixelxy(&mo->wcstan, matchxyz+3*Ngood, &xx, &yy);
 			assert(ok);
 			logverb("match: ref(%.1f, %.1f) -- img(%.1f, %.1f) --> dist(%.1f, %.1f)\n",
@@ -1456,7 +1456,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 			for (i=0; i<Ngood; i++) {
 				double xx,yy;
-				Unused bool ok;
+				Unused anbool ok;
 				ok = sip_xyzarr2pixelxy(&sip, matchxyz+3*i, &xx, &yy);
 				assert(ok);
 				logverb("match: ref(%.1f, %.1f) -- dist(%.1f, %.1f)\n",

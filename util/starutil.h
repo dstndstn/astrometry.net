@@ -220,8 +220,8 @@ void make_rand_star(double* star, double ramin, double ramax,
  to have length 1).
 */
 WarnUnusedResult InlineDeclare
-bool star_coords(const double *s, const double *r, 
-				 bool tangent, double *x, double *y);
+anbool star_coords(const double *s, const double *r, 
+				 anbool tangent, double *x, double *y);
 
 InlineDeclare void star_midpoint(double* mid, const double* A, const double* B);
 

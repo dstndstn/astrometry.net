@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 	int passes = 1;
 	int Nreuse = 3;
 	int Nloosen = 0;
-	bool scanoccupied = FALSE;
+	anbool scanoccupied = FALSE;
 	int dimquads = 4;
 	double scale_min_arcmin = 0.0;
 	double scale_max_arcmin = 0.0;

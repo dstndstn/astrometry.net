@@ -56,7 +56,7 @@ void fits_guess_scale_hdr(const qfits_header* hdr,
                           sl** p_methods, dl** p_scales) {
 	sip_t sip;
 	double val;
-	bool gotsip = FALSE;
+	anbool gotsip = FALSE;
     char* errstr;
 
     sl* methods = NULL;

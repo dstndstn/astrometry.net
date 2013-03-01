@@ -58,14 +58,14 @@
 #include "scamp-catalog.h"
 #include "permutedsort.h"
 
-static bool record_match_callback(MatchObj* mo, void* userdata);
+static anbool record_match_callback(MatchObj* mo, void* userdata);
 static time_t timer_callback(void* user_data);
 static void add_blind_params(blind_t* bp, qfits_header* hdr);
 static void get_fields_from_solvedserver(blind_t* bp, solver_t* sp);
 static void load_and_parse_wcsfiles(blind_t* bp);
 static void solve_fields(blind_t* bp, sip_t* verify_wcs);
 static void remove_invalid_fields(il* fieldlist, int maxfield);
-static bool is_field_solved(blind_t* bp, int fieldnum);
+static anbool is_field_solved(blind_t* bp, int fieldnum);
 static int write_solutions(blind_t* bp);
 static void solved_field(blind_t* bp, int fieldnum);
 static int compare_matchobjs(const void* v1, const void* v2);
@@ -86,7 +86,7 @@ struct tagalong {
 };
 typedef struct tagalong tagalong_t;
 
-static bool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
+static anbool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
 							   const int* starinds, int N) {
 	fitstable_t* tagalong;
 	int i;
@@ -132,7 +132,7 @@ static bool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
 	return TRUE;
 }
 
-static bool grab_field_tagalong_data(MatchObj* mo, xylist_t* xy, int N) {
+static anbool grab_field_tagalong_data(MatchObj* mo, xylist_t* xy, int N) {
 	fitstable_t* tagalong;
 	int i;
 	sl* lst;
@@ -712,7 +712,7 @@ void blind_cleanup(blind_t* bp) {
 
 static int sort_rdls(MatchObj* mymo, blind_t* bp) {
 	const solver_t* sp = &(bp->solver);
-	bool asc = TRUE;
+	anbool asc = TRUE;
 	char* colname = bp->sort_rdls;
 	double* sortdata;
 	fitstable_t* tagalong;
@@ -758,7 +758,7 @@ static int sort_rdls(MatchObj* mymo, blind_t* bp) {
 	return 0;
 }
 
-static bool record_match_callback(MatchObj* mo, void* userdata) {
+static anbool record_match_callback(MatchObj* mo, void* userdata) {
 	blind_t* bp = userdata;
 	solver_t* sp = &(bp->solver);
     MatchObj* mymo;
@@ -1065,8 +1065,8 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 
 }
 
-static bool is_field_solved(blind_t* bp, int fieldnum) {
-  bool solved = FALSE;
+static anbool is_field_solved(blind_t* bp, int fieldnum) {
+  anbool solved = FALSE;
     if (bp->solved_in) {
       solved = solvedfile_get(bp->solved_in, fieldnum);
       logverb("Checking %s file %i to see if the field is solved: %s.\n",
@@ -1565,7 +1565,7 @@ static int write_corr_file(blind_t* bp) {
 }
 
 static int write_solutions(blind_t* bp) {
-	bool got_solutions = (bl_size(bp->solutions) > 0);
+	anbool got_solutions = (bl_size(bp->solutions) > 0);
 
 	// If we found no solution, don't write empty output files!
 	if (!got_solutions)

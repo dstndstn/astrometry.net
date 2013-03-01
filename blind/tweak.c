@@ -64,7 +64,7 @@ sip_t* tweak_just_do_it(const tan_t* wcs, const starxy_t* imagexy,
                         const double* star_radec,
                         int nstars, double jitter_arcsec,
                         int order, int inverse_order, int iterations,
-                        bool weighted, bool skip_shift) {
+                        anbool weighted, anbool skip_shift) {
 	tweak_t* twee = NULL;
 	sip_t* sip = NULL;
 
@@ -624,7 +624,7 @@ static double figure_of_merit2(tweak_t* t) {
 	int i;
 	for (i = 0; i < il_size(t->image); i++) {
 		double x, y, dx, dy;
-		Unused bool ok;
+		Unused anbool ok;
 		ok = sip_radec2pixelxy(t->sip, t->a_ref[il_get(t->ref, i)], t->d_ref[il_get(t->ref, i)], &x, &y);
 		assert(ok);
 		dx = t->x[il_get(t->image, i)] - x;
@@ -724,7 +724,7 @@ void tchebyshev_tweak(tweak_t* t, int W, int H) {
         double weight = 1.0;
         double u;
         double v;
-        Unused bool ok;
+        Unused anbool ok;
 
 		// convert to Tchebyshev domain: [-1,1]
         u = (t->x[il_get(t->image, i)] - t->sip->wcstan.crpix[0]) / (double)W;
@@ -1062,7 +1062,7 @@ static void do_sip_tweak(tweak_t* t) {
         double weight = 1.0;
         double u;
         double v;
-        Unused bool ok;
+        Unused anbool ok;
 
         u = t->x[il_get(t->image, i)] - t->sip->wcstan.crpix[0];
         v = t->y[il_get(t->image, i)] - t->sip->wcstan.crpix[1];
@@ -1195,7 +1195,7 @@ static void do_sip_tweak(tweak_t* t) {
 			double xyzpt[3];
 			double bx, by;
 			double axx, axy;
-			bool ok;
+			anbool ok;
 			double weight = 1.0;
 			refi = il_get(t->ref, i);
 			if (t->weighted_fit)
@@ -1270,7 +1270,7 @@ static void do_sip_tweak(tweak_t* t) {
 			double xyzpt[3];
 			double bx, by;
 			double axx, axy;
-			bool ok;
+			anbool ok;
 			double weight = 1.0;
 
 			refi = il_get(t->ref, i);
@@ -1364,7 +1364,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 		t->x_ref = malloc(sizeof(double) * t->n_ref);
 		t->y_ref = malloc(sizeof(double) * t->n_ref);
 		for (jj = 0; jj < t->n_ref; jj++) {
-			Unused bool ok;
+			Unused anbool ok;
 			ok = sip_radec2pixelxy(t->sip, t->a_ref[jj], t->d_ref[jj],
 								   t->x_ref + jj, t->y_ref + jj);
 			assert(ok);

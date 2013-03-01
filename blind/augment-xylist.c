@@ -578,7 +578,7 @@ static void append_executable(sl* list, const char* fn, const char* me) {
     free(exec);
 }
 
-static sl* backtick(sl* cmd, bool verbose) {
+static sl* backtick(sl* cmd, anbool verbose) {
     char* cmdstr = sl_implode(cmd, " ");
     sl* lines;
     logverb("Running: %s\n", cmdstr);
@@ -592,7 +592,7 @@ static sl* backtick(sl* cmd, bool verbose) {
     return lines;
 }
 
-static void run(sl* cmd, bool verbose) {
+static void run(sl* cmd, anbool verbose) {
 	if (verbose) {
 		char* cmdstr = sl_implode(cmd, " ");
 		logverb("Running: %s\n", cmdstr);
@@ -655,14 +655,14 @@ int augment_xylist(augment_xylist_t* axy,
 	// tempfiles to delete when we finish
     sl* tempfiles;
     sl* cmd;
-    bool verbose = axy->verbosity > 0;
+    anbool verbose = axy->verbosity > 0;
     int i, I;
-	//bool guessed_scale = FALSE;
-    bool dosort = FALSE;
+	//anbool guessed_scale = FALSE;
+    anbool dosort = FALSE;
     char* xylsfn;
 	qfits_header* hdr = NULL;
     int orig_nheaders;
-    bool addwh = TRUE;
+    anbool addwh = TRUE;
     FILE* fout = NULL;
     char *fitsimgfn = NULL;
 	dl* scales;
@@ -686,12 +686,12 @@ int augment_xylist(augment_xylist_t* axy,
 		char *sanitizedfn;
 		char *pnmfn = NULL;
 		sl* lines;
-        bool iscompressed = FALSE;
+        anbool iscompressed = FALSE;
 		char* line;
 		char pnmtype;
 		int maxval;
 		char typestr[256];
-		bool want_pnm = TRUE;
+		anbool want_pnm = TRUE;
 
         uncompressedfn = create_temp_file("uncompressed", axy->tempdir);
 		sanitizedfn = create_temp_file("sanitized", axy->tempdir);
@@ -799,7 +799,7 @@ int augment_xylist(augment_xylist_t* axy,
             if (axy->try_verify) {
                 char* errstr;
                 sip_t sip;
-                bool ok;
+                anbool ok;
                 // Try to read WCS header from FITS image; if successful,
                 // add it to the list of WCS headers to verify.
                 logverb("Looking for a WCS header in FITS input image %s\n", fitsimgfn);
@@ -1019,7 +1019,7 @@ int augment_xylist(augment_xylist_t* axy,
 	}
 
     if (dosort) {
-        bool do_tabsort = FALSE;
+        anbool do_tabsort = FALSE;
 
         if (!axy->sortcol)
             axy->sortcol = "FLUX";

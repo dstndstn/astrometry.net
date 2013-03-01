@@ -101,7 +101,7 @@ int main(int argc, char** args) {
 	for (; optind<argc; optind++) {
 		tycho2_fits* tycho = NULL;
 		qfits_header* hdr;
-		bool is_tycho = FALSE;
+		anbool is_tycho = FALSE;
 		int i, N;
 		uint32_t ui;
 		char* infn;

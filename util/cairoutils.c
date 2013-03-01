@@ -29,7 +29,6 @@
 #include <jpeglib.h>
 #include <zlib.h>
 
-#include "an-bool.h"
 #include "os-features.h"
 
 #if HAVE_NETPBM

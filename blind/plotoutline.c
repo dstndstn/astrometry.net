@@ -56,7 +56,7 @@ static void walk_callback2(const anwcs_t* wcs, double ix, double iy, double ra, 
 // Otherwise, returns the index of the point on the far side of the
 // break.
 static int trace_line(anwcs_t* wcs, cairo_t* cairo, dl* rd, int istart, int idir, int iend,
-					  bool firstmove) {
+					  anbool firstmove) {
 	int i;
 	double lastra=0, lastdec=0;
 	double first = TRUE;
@@ -263,7 +263,7 @@ int plot_outline_set_wcs(plotoutline_t* args, sip_t* wcs) {
 	return 0;
 }
 
-int plot_outline_set_fill(plotoutline_t* args, bool fill) {
+int plot_outline_set_fill(plotoutline_t* args, anbool fill) {
 	args->fill = fill;
 	return 0;
 }

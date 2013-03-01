@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
     char* outfn = NULL;
     sip_t* wcs;
 	int ext = 0;
-	bool forcetan = FALSE;
+	anbool forcetan = FALSE;
 	tan_t* tan;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 
     if (outfn) {
         FILE* fout;
-        bool tostdout;
+        anbool tostdout;
         tostdout = streq(outfn, "-");
         if (tostdout)
             fout = stdout;

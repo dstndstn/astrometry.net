@@ -49,10 +49,10 @@ extern int optind, opterr, optopt;
 int main(int argc, char** args) {
     int argchar;
 	char* infn = NULL;
-    bool modify = FALSE;
-    bool first = FALSE;
-    bool last = FALSE;
-    bool blankout = FALSE;
+    anbool modify = FALSE;
+    anbool first = FALSE;
+    anbool last = FALSE;
+    anbool blankout = FALSE;
     char* keyword = NULL;
     int i, Next;
 
@@ -101,7 +101,7 @@ int main(int argc, char** args) {
         int j, Ncards;
         sl* keylist;
         il* indlist;
-        bool modified = FALSE;
+        anbool modified = FALSE;
 
         hdr = qfits_header_readext(infn, i);
         Ncards = qfits_header_n(hdr);

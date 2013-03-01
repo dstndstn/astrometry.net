@@ -28,10 +28,10 @@ struct potential_quad {
 	int staridA, staridB;
 	int* inbox;
 	int ninbox;
-	bool scale_ok;
+	anbool scale_ok;
 
 	// user-defined check passed?
-	bool check_ok;
+	anbool check_ok;
 };
 typedef struct potential_quad pquad_t;
 
@@ -55,22 +55,22 @@ struct quadbuilder {
 	double quadd2_low;
 	double quadd2_high;
 	// enable scale checks?
-	bool check_scale_low;
-	bool check_scale_high;
+	anbool check_scale_low;
+	anbool check_scale_high;
 
 	// FIXME -- could add a method to find potential B stars given an A star.
 	// (eg, allquads)
 
 	// called to check whether a choice of stars A,B is acceptable.
-	bool (*check_AB_stars)(quadbuilder_t* qb, pquad_t* pq, void* token);
+	anbool (*check_AB_stars)(quadbuilder_t* qb, pquad_t* pq, void* token);
 	void* check_AB_stars_token;
 
 	// called when the third, fourth, ... stars are added.
-	bool (*check_partial_quad)(quadbuilder_t* qb, unsigned int* quad, int nstars, void* token);
+	anbool (*check_partial_quad)(quadbuilder_t* qb, unsigned int* quad, int nstars, void* token);
 	void* check_partial_quad_token;
 
 	// called when all the stars have been added.
-	bool (*check_full_quad)(quadbuilder_t* qb, unsigned int* quad, int nstars, void* token);
+	anbool (*check_full_quad)(quadbuilder_t* qb, unsigned int* quad, int nstars, void* token);
 	void* check_full_quad_token;
 
 	// called to decide which of the given stars are accetable.
@@ -85,7 +85,7 @@ struct quadbuilder {
 
 
 	// set this to stop a qb_create() call.
-	bool stop_creating;
+	anbool stop_creating;
 
 	//
 	int nbadscale;

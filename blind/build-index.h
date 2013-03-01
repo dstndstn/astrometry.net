@@ -32,7 +32,7 @@ struct index_params {
 
 	// uniformization:
 	const char* sortcol;
-	bool sortasc;
+	anbool sortasc;
 
 	double brightcut;
 	int bighp;
@@ -53,13 +53,13 @@ struct index_params {
 	double qlo; double qhi;
 	int passes;
 	int Nreuse; int Nloosen;
-	bool scanoccupied;
+	anbool scanoccupied;
 	int dimquads;
 	int indexid;
 
 	// general options
-	bool inmemory;
-	bool delete_tempfiles;
+	anbool inmemory;
+	anbool delete_tempfiles;
 	char* tempdir;
 	char** args;
 	int argc;

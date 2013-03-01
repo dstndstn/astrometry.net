@@ -61,7 +61,7 @@ void data_log_set_level(int level);
  */
 void data_log_to(FILE* fid);
 
-bool data_log_passes(data_mask_t mask, int level);
+anbool data_log_passes(data_mask_t mask, int level);
 
 void
 ATTRIB_FORMAT(printf, 3, 4)

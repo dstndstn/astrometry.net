@@ -34,7 +34,7 @@ struct augment_xylist_s {
     char* tempdir;
 
     int verbosity;
-    bool no_delete_temp;
+    anbool no_delete_temp;
 
     // contains ranges of depths as pairs of ints.
     il* depths;
@@ -49,7 +49,7 @@ struct augment_xylist_s {
 
 	// FITS columns copied from index to RDLS output
 	sl* tagalong;
-	bool tagalong_all;
+	anbool tagalong_all;
 
 	// column to sort RDLS output by; prefix with "-" for descending order.
 	char* sort_rdls;
@@ -59,7 +59,7 @@ struct augment_xylist_s {
     char* xylsfn;
     char* solvedinfn;
 
-	bool assume_fits_image;
+	anbool assume_fits_image;
 
     // output files
     char* outfn;
@@ -76,20 +76,20 @@ struct augment_xylist_s {
 
 	time_t wcs_last_mod;
 
-    bool keep_fitsimg;
+    anbool keep_fitsimg;
     char* fitsimgfn;
 
     // FITS extension to read image from
     int extension;
 
     // set during augment_xylist: is the input image or xyls FITS?
-    bool isfits;
+    anbool isfits;
 
-    bool guess_scale;
-    bool pnm;
-    bool force_ppm;
+    anbool guess_scale;
+    anbool pnm;
+    anbool force_ppm;
 
-	bool use_sextractor;
+	anbool use_sextractor;
 	char* sextractor_path;
 	char* sextractor_config;
 
@@ -105,17 +105,17 @@ struct augment_xylist_s {
 
     float cpulimit;
 
-    bool tweak;
+    anbool tweak;
     int tweakorder;
 
-    bool no_fits2fits;
-	bool no_removelines;
-	bool no_fix_sdss;
-	bool no_bg_subtraction;
+    anbool no_fits2fits;
+	anbool no_removelines;
+	anbool no_fix_sdss;
+	anbool no_bg_subtraction;
 
 	int uniformize;
 
-	bool invert_image;
+	anbool invert_image;
 
 	float image_sigma;
 
@@ -125,12 +125,12 @@ struct augment_xylist_s {
 	char* bgcol;
 
 	// WCS reference point
-	bool set_crpix;
-	bool set_crpix_center;
+	anbool set_crpix;
+	anbool set_crpix_center;
 	double crpix[2];
 
-    bool sort_ascending;
-    bool resort;
+    anbool sort_ascending;
+    anbool resort;
 
     double codetol;
     double pixelerr;
@@ -142,13 +142,13 @@ struct augment_xylist_s {
 
     int downsample;
 
-    bool dont_augment;
+    anbool dont_augment;
 
-	bool verify_uniformize;
-	bool verify_dedup;
+	anbool verify_uniformize;
+	anbool verify_dedup;
 
     // try to verify FITS input images?
-    bool try_verify;
+    anbool try_verify;
 
     // fractions
     double quadsize_min;

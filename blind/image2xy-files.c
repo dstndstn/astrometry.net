@@ -38,7 +38,7 @@
 #include "cfitsutils.h"
 
 int image2xy_files(const char* infn, const char* outfn,
-				   bool do_u8, int downsample, int downsample_as_required,
+				   anbool do_u8, int downsample, int downsample_as_required,
                    int extension, int plane,
 				   simplexy_t* params) {
 	fitsfile *fptr = NULL;

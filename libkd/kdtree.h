@@ -155,7 +155,7 @@ struct kdtree_funcs {
 	void* (*get_data)(const kdtree_t* kd, int i);
 	void  (*copy_data_double)(const kdtree_t* kd, int start, int N, double* dest);
     double (*get_splitval)(const kdtree_t* kd, int nodeid);
-    bool (*get_bboxes)(const kdtree_t* kd, int node, void* bblo, void* bbhi);
+    anbool (*get_bboxes)(const kdtree_t* kd, int node, void* bblo, void* bbhi);
 
     int (*check)(const kdtree_t* kd);
     void (*fix_bounding_boxes)(kdtree_t* kd);
@@ -169,7 +169,7 @@ struct kdtree_funcs {
                             void (*callback_overlap)(const kdtree_t* kd, int node, void* extra),
                             void* cb_extra);
 
-    //bool (*node_node_mindist2_exceeds)(const kdtree_t* kd1, int node1, const kdtree_t* kd2, int node2, double maxd2);
+    //anbool (*node_node_mindist2_exceeds)(const kdtree_t* kd1, int node1, const kdtree_t* kd2, int node2, double maxd2);
 
     // instrumentation functions - set these to get callbacks about
     // the progress of the algorithm.
@@ -244,7 +244,7 @@ struct kdtree {
 		void* any;
 	} data;
 
-	bool converted_data;
+	anbool converted_data;
 
 	double* minval;
 	double* maxval;
@@ -258,7 +258,7 @@ struct kdtree {
 	int ninterior; /* Number of internal nodes */
 	int nlevels;
 
-    bool has_linear_lr;
+    anbool has_linear_lr;
 
     // For i/o: the name of this tree in the file.
     char* name;
@@ -288,7 +288,7 @@ int kdtree_n(const kdtree_t* kd);
 // Returns the number of nodes in this kdtree.
 int kdtree_nnodes(const kdtree_t* kd);
 
-bool kdtree_has_old_bb(const kdtree_t* kd);
+anbool kdtree_has_old_bb(const kdtree_t* kd);
 
 double kdtree_get_conservative_query_radius(const kdtree_t* kd, double radius);
 
@@ -451,7 +451,7 @@ void kdtree_nodes_contained(const kdtree_t* kd,
  *
  * Returns FALSE if the tree does not have bounding boxes.
  */
-bool kdtree_get_bboxes(const kdtree_t* kd, int node, void* bblo, void* bbhi);
+anbool kdtree_get_bboxes(const kdtree_t* kd, int node, void* bblo, void* bbhi);
 
 double kdtree_get_splitval(const kdtree_t* kd, int nodeid);
 
@@ -463,11 +463,11 @@ double kdtree_node_node_mindist2(const kdtree_t* kd1, int node1,
 double kdtree_node_node_maxdist2(const kdtree_t* kd1, int node1,
                                  const kdtree_t* kd2, int node2);
 
-bool kdtree_node_node_mindist2_exceeds(const kdtree_t* kd1, int node1,
+anbool kdtree_node_node_mindist2_exceeds(const kdtree_t* kd1, int node1,
 									   const kdtree_t* kd2, int node2,
 									   double dist2);
 
-bool kdtree_node_node_maxdist2_exceeds(const kdtree_t* kd1, int node1,
+anbool kdtree_node_node_maxdist2_exceeds(const kdtree_t* kd1, int node1,
 									   const kdtree_t* kd2, int node2,
 									   double dist2);
 
@@ -475,10 +475,10 @@ double kdtree_node_point_mindist2(const kdtree_t* kd, int node, const void* pt);
 
 double kdtree_node_point_maxdist2(const kdtree_t* kd, int node, const void* pt);
 
-bool kdtree_node_point_mindist2_exceeds(const kdtree_t* kd, int node,
+anbool kdtree_node_point_mindist2_exceeds(const kdtree_t* kd, int node,
                                         const void* pt, double dist2);
 
-bool kdtree_node_point_maxdist2_exceeds(const kdtree_t* kd, int node,
+anbool kdtree_node_point_maxdist2_exceeds(const kdtree_t* kd, int node,
                                         const void* pt, double dist2);
 
 

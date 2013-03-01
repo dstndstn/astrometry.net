@@ -35,7 +35,7 @@ static void check_scale(quadbuilder_t* qb, pquad_t* pq) {
 	double Bx=0, By=0;
 	double invscale;
 	double ABx, ABy;
-	Unused bool ok;
+	Unused anbool ok;
 	if (!(qb->check_scale_low || qb->check_scale_high))
 		return;
 	sA = qb->starxyz + pq->iA * 3;
@@ -75,7 +75,7 @@ check_inbox(pquad_t* pq, int* inds, int ninds, double* stars) {
 	double ADx, ADy;
 	double x, y;
 	int destind = 0;
-	bool ok;
+	anbool ok;
 	for (i=0; i<ninds; i++) {
 		double r;
 		ind = inds[i];

@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 	char* infn;
 	int overwrite = 0;
     int loglvl = LOG_MSG;
-    bool do_u8 = TRUE;
+    anbool do_u8 = TRUE;
     int downsample = 0;
     int downsample_as_reqd = 0;
     int extension = 0;

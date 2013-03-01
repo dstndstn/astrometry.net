@@ -79,7 +79,7 @@ struct cairocmd {
 	double markersize;
 	// POLYGON
 	dl* xy;
-	bool fill;
+	anbool fill;
 };
 typedef struct cairocmd cairocmd_t;
 
@@ -143,12 +143,12 @@ int plotstuff_append_doubles(const char* str, dl* lst) {
 }
 
 int plotstuff_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2,
-							   bool startwithmove) {
+							   anbool startwithmove) {
 	double decstep;
 	double dec;
 	double s;
 	double pixscale;
-	bool lastok = FALSE;
+	anbool lastok = FALSE;
 	if (!startwithmove)
 		lastok = TRUE;
 	assert(pargs->wcs);
@@ -265,7 +265,7 @@ int plotstuff_text_xy(plot_args_t* pargs, double x, double y, const char* label)
 	return 0;
 }
 
-static int moveto_lineto_radec(plot_args_t* pargs, double ra, double dec, bool move) {
+static int moveto_lineto_radec(plot_args_t* pargs, double ra, double dec, anbool move) {
 	double x,y;
 	if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y)) {
 		ERROR("Failed to convert RA,Dec (%g,%g) to pixel position in plot_text_radec\n", ra, dec);
@@ -569,7 +569,7 @@ static void set_cmd_args(plot_args_t* pargs, cairocmd_t* cmd) {
 	memcpy(cmd->rgba, pargs->rgba, sizeof(cmd->rgba));
 }
 
-bool plotstuff_marker_in_bounds(plot_args_t* pargs, double x, double y) {
+anbool plotstuff_marker_in_bounds(plot_args_t* pargs, double x, double y) {
 	double margin = pargs->markersize;
 	return (x >= -margin && x <= (pargs->W + margin) &&
 			y >= -margin && y <= (pargs->H + margin));
@@ -730,7 +730,7 @@ int plotstuff_marker_radec(plot_args_t* pargs, double ra, double dec) {
 int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 	int i, j;
 	int layer;
-	bool morelayers;
+	anbool morelayers;
 
 	logverb("Plotting %i stacked plot commands.\n", bl_size(pargs->cairocmds));
 	morelayers = TRUE;
@@ -1024,7 +1024,7 @@ double plotstuff_pixel_scale(plot_args_t* pargs) {
 	return anwcs_pixel_scale(pargs->wcs);
 }
 
-bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
+anbool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 						double* x, double* y) {
 	if (!pargs->wcs) {
 		ERROR("No WCS defined!");
@@ -1033,7 +1033,7 @@ bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 	return (anwcs_radec2pixelxy(pargs->wcs, ra, dec, x, y) ? FALSE : TRUE);
 }
 
-bool plotstuff_radec_is_inside_image(plot_args_t* pargs, double ra, double dec) {
+anbool plotstuff_radec_is_inside_image(plot_args_t* pargs, double ra, double dec) {
 	if (!pargs->wcs) {
 		ERROR("No WCS defined!");
 		return FALSE;
@@ -1090,7 +1090,7 @@ int plotstuff_plot_layer(plot_args_t* pargs, const char* layer) {
 
 int plotstuff_run_command(plot_args_t* pargs, const char* cmd) {
 	int i;
-	bool matched = FALSE;
+	anbool matched = FALSE;
 	if (!cmd || (strlen(cmd) == 0) || (cmd[0] == '#')) {
 		return 0;
 	}

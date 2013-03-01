@@ -82,7 +82,7 @@ int main(int argc, char *args[]) {
 	dl* coords;
 	int loglvl = LOG_MSG;
 	double sx, sy;
-	bool eps = FALSE;
+	anbool eps = FALSE;
 
 	/*
 	 #	| plotxy -i m88.xy -I - -x 1 -y 1 -b white -C black -N 100 -r 10 -w 2 -P \

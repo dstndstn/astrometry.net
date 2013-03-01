@@ -60,11 +60,11 @@ int main(int argc, char** args) {
 	char* xylsfn = NULL;
 	char* rcol = NULL;
 	char* dcol = NULL;
-	bool forcetan = FALSE;
+	anbool forcetan = FALSE;
 	il* fields;
 	int ext = 0;
 	double ra=HUGE_VAL, dec=HUGE_VAL;
-	bool wcslib = FALSE;
+	anbool wcslib = FALSE;
 	int loglvl = LOG_MSG;
 
 	fields = il_new(16);

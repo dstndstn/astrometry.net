@@ -25,7 +25,7 @@
 
 struct scamp_catalog {
     fitstable_t* table;
-    bool ref;
+    anbool ref;
 };
 typedef struct scamp_catalog scamp_cat_t;
 
@@ -75,7 +75,7 @@ struct scamp_reference_object {
 typedef struct scamp_reference_object scamp_ref_t;
 
 scamp_cat_t* scamp_catalog_open_for_writing(const char* filename,
-                                            bool reference);
+                                            anbool reference);
 
 int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr);
 

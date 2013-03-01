@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 	char* infn = NULL;
 	char* outfn = NULL;
 	FILE* fout;
-	bool tostdout = FALSE;
+	anbool tostdout = FALSE;
 	qfitsloader load;
 	qfitsdumper dump;
 	qfits_header* hdr;

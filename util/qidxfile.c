@@ -49,7 +49,7 @@ static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	return 0;
 }
 
-static qidxfile* new_qidxfile(const char* fn, bool writing) {
+static qidxfile* new_qidxfile(const char* fn, anbool writing) {
 	qidxfile* qf;
 	fitsbin_chunk_t chunk;
 

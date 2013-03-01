@@ -26,7 +26,7 @@
 #include "boilerplate.h"
 #include "fitstable.h"
 
-bool startree_has_tagalong_data(const fitstable_t* intab) {
+anbool startree_has_tagalong_data(const fitstable_t* intab) {
 	// don't include RA,Dec.
 	return fitstable_n_fits_columns(intab) > 2;
 }
@@ -83,7 +83,7 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
 startree_t* startree_build(fitstable_t* intable,
 						   const char* racol, const char* deccol,
 						   // keep RA,Dec in the tag-along table?
-						   //bool keep_radec,
+						   //anbool keep_radec,
 						   // KDT_DATA_*, KDT_TREE_*
 						   int datatype, int treetype,
 						   // KD_BUILD_*

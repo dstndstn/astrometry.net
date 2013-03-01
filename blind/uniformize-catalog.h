@@ -19,6 +19,7 @@
 #define UNIFORMIZE_CATALOG_H
 
 #include "fitstable.h"
+#include "an-bool.h"
 
 /**
 
@@ -47,7 +48,7 @@
 int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 					   const char* racol, const char* deccol,
 					   // ? Or do this sorting in a separate step?
-					   const char* sortcol, bool sort_ascending,
+					   const char* sortcol, anbool sort_ascending,
 					   double sort_min_cut,
 					   // ?  Or do this cut in a separate step?
 					   int healpix, int hpnside,

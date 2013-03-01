@@ -77,7 +77,7 @@ static int callback_read_tagalong(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	return 0;
 }
 
-static catalog* new_catalog(const char* fn, bool writing) {
+static catalog* new_catalog(const char* fn, anbool writing) {
 	catalog* cat;
 	fitsbin_chunk_t chunk;
 
@@ -167,7 +167,7 @@ static catalog* new_catalog(const char* fn, bool writing) {
     return cat;
 }
 
-bool catalog_has_mag(const catalog* cat) {
+anbool catalog_has_mag(const catalog* cat) {
     return (cat->mag != NULL);
 }
 

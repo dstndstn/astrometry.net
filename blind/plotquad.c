@@ -69,12 +69,12 @@ int main(int argc, char *args[]) {
 	int i;
 	dl* coords;
     char* infn = NULL;
-    bool pngoutput = TRUE;
-    bool pnginput = FALSE;
-	bool fromstdin = FALSE;
-	bool randomcolor = FALSE;
+    anbool pngoutput = TRUE;
+    anbool pnginput = FALSE;
+	anbool fromstdin = FALSE;
+	anbool randomcolor = FALSE;
 	float a = 1.0;
-    bool plotmarker = FALSE;
+    anbool plotmarker = FALSE;
 
     unsigned char* img;
 	cairo_t* cairo;
@@ -84,7 +84,7 @@ int main(int argc, char *args[]) {
     double scale = 1.0;
     char* matchfn = NULL;
 
-    bool background = FALSE;
+    anbool background = FALSE;
     float br=0.0, bg=0.0, bb=0.0;
 
 	int loglvl = LOG_MSG;

@@ -58,7 +58,7 @@ typedef struct {
     double imageh;
 
 	// SIP projection rather than TAN.
-	bool sin;
+	anbool sin;
 
 } tan_t;
 
@@ -151,16 +151,16 @@ void   sip_pixelxy2xyzarr(const sip_t* sip, double px, double py, double *xyz);
 // Returns FALSE if the point is on the opposite side of the sphere (and hence the point
 // does not project onto the tangent plane)
 WarnUnusedResult
-bool sip_radec2pixelxy(const sip_t* sip, double a, double d, double *px, double *py);
+anbool sip_radec2pixelxy(const sip_t* sip, double a, double d, double *px, double *py);
 
 WarnUnusedResult
-bool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *px, double *py);
+anbool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *px, double *py);
 
 WarnUnusedResult
-bool sip_xyzarr2pixelxy(const sip_t* sip, const double* xyz, double *px, double *py);
+anbool sip_xyzarr2pixelxy(const sip_t* sip, const double* xyz, double *px, double *py);
 
 WarnUnusedResult
-bool sip_xyz2pixelxy(const sip_t* sip, double x, double y, double z, double *px, double *py);
+anbool sip_xyz2pixelxy(const sip_t* sip, double x, double y, double z, double *px, double *py);
 
 // Pixels to Intermediate World Coordinates in degrees.
 void sip_pixelxy2iwc(const sip_t* sip, double px, double py,
@@ -201,12 +201,12 @@ void   tan_pixelxy2radecarr(const tan_t* wcs_tan, double px, double py, double *
 // RA,Dec in degrees to Pixels.
 // Returns FALSE if the point is on the opposite side of the sphere.
 WarnUnusedResult
-bool   tan_radec2pixelxy(const tan_t* wcs_tan, double ra, double dec, double *px, double *py);
+anbool   tan_radec2pixelxy(const tan_t* wcs_tan, double ra, double dec, double *px, double *py);
 
 // xyz unit vector to Pixels.
 // Returns TRUE if all is good.
 WarnUnusedResult
-bool   tan_xyzarr2pixelxy(const tan_t* wcs_tan, const double* xyz, double *px, double *py);
+anbool   tan_xyzarr2pixelxy(const tan_t* wcs_tan, const double* xyz, double *px, double *py);
 
 void tan_iwc2pixelxy(const tan_t* tan, double iwcx, double iwcy,
 					 double *px, double* py);
@@ -218,14 +218,14 @@ void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz);
  */
 void tan_pixelxy2iwc(const tan_t* tan, double px, double py, double *iwcx, double* iwcy);
 
-bool tan_xyzarr2iwc(const tan_t* tan, const double* xyz,
+anbool tan_xyzarr2iwc(const tan_t* tan, const double* xyz,
 					double* iwcx, double* iwcy);
-bool tan_radec2iwc(const tan_t* tan, double ra, double dec,
+anbool tan_radec2iwc(const tan_t* tan, double ra, double dec,
 				   double* iwcx, double* iwcy);
 
-bool sip_xyzarr2iwc(const sip_t* sip, const double* xyz,
+anbool sip_xyzarr2iwc(const sip_t* sip, const double* xyz,
 					double* iwcx, double* iwcy);
-bool sip_radec2iwc(const sip_t* sip, double ra, double dec,
+anbool sip_radec2iwc(const sip_t* sip, double ra, double dec,
 				   double* iwcx, double* iwcy);
 
 void   sip_print(const sip_t*);

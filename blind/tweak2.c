@@ -117,7 +117,7 @@ static void makeplot(const char* plotfn, char* bgimgfn, int W, int H,
 
 	//for (i=0; i<=besti; i++) {
 	for (ti=0; ti<Nfield; ti++) {
-		bool mark = TRUE;
+		anbool mark = TRUE;
 		if (testperm)
 			i = testperm[ti];
 		else
@@ -360,7 +360,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			// Project reference sources into pixel space; keep the ones inside image bounds.
 			Nin = 0;
 			for (i=0; i<Nindex; i++) {
-				bool ok;
+				anbool ok;
 				double x,y;
 				ra  = indexradec[2*i + 0];
 				dec = indexradec[2*i + 1];
@@ -518,7 +518,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 					char name[32];
 					double* ixy;
 					int i;
-					Unused bool ok;
+					Unused anbool ok;
 					ixy = malloc(2*Nin*sizeof(double));
 					for (i=0; i<Nin; i++) {
 						int ii = indexin[refperm[i]];
@@ -554,7 +554,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 						char name[32];
 						double* ixy;
 						int i;
-						Unused bool ok;
+						Unused anbool ok;
 						ixy = malloc(2*Nin*sizeof(double));
 						for (i=0; i<Nin; i++) {
 							int ii = indexin[refperm[i]];
@@ -618,7 +618,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 		// Project reference sources into pixel space; keep the ones inside image bounds.
 		Nin = 0;
 		for (i=0; i<Nindex; i++) {
-			bool ok;
+			anbool ok;
 			double x,y;
 			ra  = indexradec[2*i + 0];
 			dec = indexradec[2*i + 1];

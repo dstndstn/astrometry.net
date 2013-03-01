@@ -30,7 +30,7 @@ struct rs_params {
 	kdtree_t* xtree;
 	kdtree_t* ytree;
 
-	bool notself;
+	anbool notself;
 
     double* node_nearest_d2;
 
@@ -39,13 +39,13 @@ struct rs_params {
 };
 typedef struct rs_params rs_params;
 
-static bool rs_within_range(void* params, kdtree_t* searchtree, int searchnode,
+static anbool rs_within_range(void* params, kdtree_t* searchtree, int searchnode,
 							kdtree_t* querytree, int querynode);
 static void rs_handle_result(void* extra, kdtree_t* searchtree, int searchnode,
 							 kdtree_t* querytree, int querynode);
 
 void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2,
-                               double** nearest_d2, int** nearest_ind, bool notself) {
+                               double** nearest_d2, int** nearest_ind, anbool notself) {
     int i, NY, NNY;
 
     // dual-tree search callback functions
@@ -103,7 +103,7 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2
     free(params.node_nearest_d2);
 }
 
-static bool rs_within_range(void* vparams,
+static anbool rs_within_range(void* vparams,
 							kdtree_t* xtree, int xnode,
 							kdtree_t* ytree, int ynode) {
     rs_params* p = (rs_params*)vparams;

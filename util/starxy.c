@@ -200,13 +200,13 @@ void starxy_set_bg_array(starxy_t* s, const double* f) {
 	memcpy(s->background, f, s->N * sizeof(double));
 }
 
-starxy_t* starxy_new(int N, bool flux, bool back) {
+starxy_t* starxy_new(int N, anbool flux, anbool back) {
     starxy_t* xy = calloc(1, sizeof(starxy_t));
     starxy_alloc_data(xy, N, flux, back);
     return xy;
 }
 
-void starxy_alloc_data(starxy_t* f, int N, bool flux, bool back) {
+void starxy_alloc_data(starxy_t* f, int N, anbool flux, anbool back) {
     f->x = malloc(N * sizeof(double));
     f->y = malloc(N * sizeof(double));
     if (flux)
@@ -260,7 +260,7 @@ double* starxy_to_xy_array(starxy_t* xy, double* arr) {
     return arr;
 }
 
-void starxy_from_dl(starxy_t* xy, dl* l, bool flux, bool back) {
+void starxy_from_dl(starxy_t* xy, dl* l, anbool flux, anbool back) {
     int i;
     int nr = 2;
     int ind;

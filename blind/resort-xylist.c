@@ -36,12 +36,12 @@
 
 int resort_xylist(const char* infn, const char* outfn,
                   const char* fluxcol, const char* backcol,
-                  bool ascending) {
+                  anbool ascending) {
 	FILE* fin = NULL;
 	FILE* fout = NULL;
     double *flux = NULL, *back = NULL;
     int *perm1 = NULL, *perm2 = NULL;
-    bool *used = NULL;
+    anbool *used = NULL;
     int start, size, nextens, ext;
     int (*compare)(const void*, const void*);
     fitstable_t* tab = NULL;
@@ -142,8 +142,8 @@ int resort_xylist(const char* infn, const char* outfn,
         // Sort by non-background-subtracted flux...
 		perm2 = permuted_sort(back, sizeof(double), compare, NULL, N);
 
-        used = malloc(N * sizeof(bool));
-        memset(used, 0, N * sizeof(bool));
+        used = malloc(N * sizeof(anbool));
+        memset(used, 0, N * sizeof(anbool));
 
 		// Check sort...
         for (i=0; i<N-1; i++) {

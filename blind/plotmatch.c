@@ -43,7 +43,7 @@ int plot_match_plot(const char* command,
 					cairo_t* cairo, plot_args_t* pargs, void* baton) {
 	plotmatch_t* args = (plotmatch_t*)baton;
 	int i;
-	bool failed = FALSE;
+	anbool failed = FALSE;
 
 	plotstuff_builtin_apply(cairo, pargs);
 

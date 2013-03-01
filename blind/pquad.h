@@ -25,14 +25,14 @@
 
 struct potential_quad
 {
-	bool scale_ok;
+	anbool scale_ok;
 	int fieldA, fieldB;
 	// distance-squared between A and B, in pixels^2.
 	double scale;
 	double costheta, sintheta;
 	// (field pixel noise / quad scale in pixels)^2
 	double rel_field_noise2;
-	bool* inbox;
+	anbool* inbox;
 	int ninbox;
 	double* xy;
 };

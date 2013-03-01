@@ -30,8 +30,7 @@
 #ifndef __cplusplus
 #ifndef HAVE_BOOL
 #define HAVE_BOOL 1
-//typedef unsigned char bool;
-typedef uint8_t bool;
+typedef uint8_t anbool;
 #endif
 #endif
 

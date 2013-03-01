@@ -60,7 +60,7 @@ int main(int argc, char** args) {
     char* yname = NULL;
     char* antype = NULL;
     qfits_header* hdr;
-    bool verbose = TRUE;
+    anbool verbose = TRUE;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {

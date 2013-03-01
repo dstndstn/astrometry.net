@@ -45,7 +45,7 @@ struct ll_node {
  * this file won't need it anymore anyway if the healpix code is rewritten
  * to abandon the current behaviour of using hierarchical numbering for 
  * powers of 4. */
-static Inline bool ispowerof4(unsigned int x) {
+static Inline anbool ispowerof4(unsigned int x) {
 	if (x >= 0x40000)
 		return (					x == 0x40000   ||
 				 x == 0x100000   || x == 0x400000  ||
@@ -270,7 +270,7 @@ void fill_maps(char *minmap, char *maxmap, uint hpx, uint Nside,
 
 {
 	/* Gotta love "are we done" switch variables */
-	bool done = FALSE;
+	anbool done = FALSE;
 	
 	/* Bitmap we'll use to keep from revisiting the same healpixes */ 
 	char *visited = malloc(2 * Nside * Nside * sizeof(char));
@@ -288,7 +288,7 @@ void fill_maps(char *minmap, char *maxmap, uint hpx, uint Nside,
 	do {
 		/* nn = "number of neighbours */
 		uint nn;
-		bool found_neighbour_outside = FALSE;
+		anbool found_neighbour_outside = FALSE;
 		
 		/* always need room for at least 8 neighbours; actual number
 		 * gets stored in nn */

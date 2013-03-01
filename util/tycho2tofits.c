@@ -107,7 +107,7 @@ int main(int argc, char** args) {
 		char* map;
 		size_t map_size;
 		int i;
-		bool supplement;
+		anbool supplement;
 		int recsize;
 
 		infn = args[optind];

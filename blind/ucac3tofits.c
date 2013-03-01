@@ -137,7 +137,7 @@ int main(int argc, char** args) {
 			int hp;
 			char buf[UCAC3_RECORD_SIZE];
 			int nr;
-			bool eof = 0;
+			anbool eof = 0;
 
 			nr = BZ2_bzRead(&bzerr, bzfid, buf, UCAC3_RECORD_SIZE);
 			if ((bzerr == BZ_STREAM_END) && (nr == UCAC3_RECORD_SIZE))

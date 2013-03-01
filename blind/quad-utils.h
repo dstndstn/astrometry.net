@@ -21,6 +21,7 @@
 #include "starkd.h"
 #include "codefile.h"
 #include "quadfile.h"
+#include "an-bool.h"
 
 void quad_compute_star_code(const double* starxyz, double* code, int dimquads);
 
@@ -32,7 +33,7 @@ int quad_compute_code(const unsigned int* quad, int dimquads, startree_t* starkd
 void quad_enforce_invariants(unsigned int* quad, double* code,
 							 int dimquads, int dimcodes);
 
-bool quad_obeys_invariants(unsigned int* quad, double* code,
+anbool quad_obeys_invariants(unsigned int* quad, double* code,
 						   int dimquads, int dimcodes);
 
 #endif

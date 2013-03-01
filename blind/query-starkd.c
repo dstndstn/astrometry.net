@@ -51,12 +51,12 @@ int main(int argc, char **argv) {
 	startree_t* starkd;
 	double ra=0.0, dec=0.0, radius=0.0;
 	sl* tag = sl_new(4);
-	bool tagall = FALSE;
+	anbool tagall = FALSE;
 	char* starfn = NULL;
 	int loglvl = LOG_MSG;
 	char** myargs;
 	int nmyargs;
-	bool getinds = FALSE;
+	anbool getinds = FALSE;
 	double* radec;
 	int* inds;
 	int N;

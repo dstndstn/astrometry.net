@@ -67,7 +67,7 @@ void log_set_level(enum log_level level) {
     get_logger()->level = level;
 }
 
-void log_set_timestamp(bool b) {
+void log_set_timestamp(anbool b) {
 	get_logger()->timestamp = b;
 }
 

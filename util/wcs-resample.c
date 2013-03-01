@@ -163,17 +163,17 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
 
 // Check whether output pixels overlap with input pixels,
 // on a grid of output pixel positions.
-static bool* find_overlap_grid(int B, int outW, int outH,
+static anbool* find_overlap_grid(int B, int outW, int outH,
 							   const anwcs_t* outwcs, const anwcs_t* inwcs,
 							   int* pBW, int* pBH) {
 	int BW, BH;
-	bool* bib = NULL;
-	bool* bib2 = NULL;
+	anbool* bib = NULL;
+	anbool* bib2 = NULL;
 	int i,j;
 
 	BW = (int)ceil(outW / (float)B);
 	BH = (int)ceil(outH / (float)B);
-	bib = calloc(BW*BH, sizeof(bool));
+	bib = calloc(BW*BH, sizeof(anbool));
 	for (i=0; i<BH; i++) {
 		for (j=0; j<BW; j++) {
 			int x,y;
@@ -194,7 +194,7 @@ static bool* find_overlap_grid(int B, int outW, int outH,
 		}
 	}
 	// Grow the in-bounds area:
-	bib2 = calloc(BW*BH, sizeof(bool));
+	bib2 = calloc(BW*BH, sizeof(anbool));
 	for (i=0; i<BH; i++)
 		for (j=0; j<BW; j++) {
 			int di,dj;
@@ -325,7 +325,7 @@ int resample_wcs_rgba(const anwcs_t* inwcs, const unsigned char* inimg,
 	int i,j;
 	int B = 20;
 	int BW, BH;
-	bool* bib;
+	anbool* bib;
 	int bi,bj;
 
 	bib = find_overlap_grid(B, outW, outH, outwcs, inwcs, &BW, &BH);

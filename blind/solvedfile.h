@@ -53,12 +53,12 @@ int solvedfile_set(char* fn, int fieldnum);
  This *only sets* elements, it does *not* reset (clear) values in
  the file.
  */
-int solvedfile_set_array(char* fn, bool* vals, int N);
+int solvedfile_set_array(char* fn, anbool* vals, int N);
 
 /**
  Sets the file to the given values and size (possibly truncating it!)
  */
-int solvedfile_set_file(char* fn, bool* vals, int N);
+int solvedfile_set_file(char* fn, anbool* vals, int N);
 
 int solvedfile_setsize(char* fn, int fieldnum);
 

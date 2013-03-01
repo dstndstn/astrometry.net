@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 	char* outfn = NULL;
 	char* colname = NULL;
 	char* progname = argv[0];
-	bool descending = FALSE;
+	anbool descending = FALSE;
 
     while ((argchar = getopt(argc, argv, OPTIONS)) != -1)
         switch (argchar) {

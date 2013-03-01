@@ -65,7 +65,7 @@ static int max_gaussian(float* image, int W, int H, float sigma,
 
 	for (;;) {
 		float xdir=0, ydir=0;
-		bool xflipped = FALSE, yflipped = FALSE;
+		anbool xflipped = FALSE, yflipped = FALSE;
 
 		for (step=0; step<100; step++) {
 			float dx, dy;

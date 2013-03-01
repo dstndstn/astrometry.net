@@ -48,7 +48,7 @@ int main(int argc, char** args) {
 	int Nside = 1;
 	int HP;
 	int optstart;
-	bool margin = FALSE;
+	anbool margin = FALSE;
 	int* owned;
 	int i;
 	double hparea;

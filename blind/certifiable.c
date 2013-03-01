@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
                 int nrd;
                 rd_t* rd;
                 int k;
-                bool err = FALSE;
+                anbool err = FALSE;
 
                 mo = matchfile_read_match(mf);
                 filenum = mo->fieldfile;

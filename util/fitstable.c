@@ -39,7 +39,7 @@ struct fitscol_t {
     char* units;
     int arraysize;
 
-    bool required;
+    anbool required;
 
     // size of one data item
     // computed: fits_sizeof({fits,c}type)
@@ -47,7 +47,7 @@ struct fitscol_t {
     int csize;
 
     // When being used to write to a C struct, the offset in the struct.
-    bool in_struct;
+    anbool in_struct;
     int coffset;
 
     // column number of the FITS table.
@@ -66,7 +66,7 @@ typedef struct fitsext fitsext_t;
 
 
 
-static bool need_endian_flip() {
+static anbool need_endian_flip() {
 	return IS_BIG_ENDIAN == 0;
 }
 
@@ -113,7 +113,7 @@ int fitstable_get_struct_size(const fitstable_t* table) {
 	return rowsize;
 }
 
-static bool is_writing(const fitstable_t* t) {
+static anbool is_writing(const fitstable_t* t) {
     return t->fid ? TRUE : FALSE;
 	//return t->writing;
 }
@@ -126,7 +126,7 @@ static void ensure_row_list_exists(fitstable_t* table) {
 	}
 }
 
-static bool in_memory(const fitstable_t* t) {
+static anbool in_memory(const fitstable_t* t) {
 	return t->inmemory;
 }
 
@@ -298,7 +298,7 @@ int fitstable_copy_rows_data(fitstable_t* intable, int* rows, int N, fitstable_t
 	char* buf = NULL;
 	int i;
 	// We need to endian-flip if we're going from FITS file <--> memory.
-	bool flip = need_endian_flip() && (in_memory(intable) != in_memory(outtable));
+	anbool flip = need_endian_flip() && (in_memory(intable) != in_memory(outtable));
 	R = fitstable_row_size(intable);
 	buf = malloc(R);
 	for (i=0; i<N; i++) {
@@ -540,7 +540,7 @@ void fitstable_add_read_column_struct(fitstable_t* tab,
                                       int structoffset,
                                       tfits_type fits_type,
                                       const char* name,
-                                      bool required) {
+                                      anbool required) {
     fitstable_add_column_struct(tab, c_type, arraysize, structoffset,
                                 fits_type, name, NULL, required);
 }
@@ -552,7 +552,7 @@ void fitstable_add_column_struct(fitstable_t* tab,
                                  tfits_type fits_type,
                                  const char* name,
                                  const char* units,
-                                 bool required) {
+                                 anbool required) {
     fitscol_t col;
     memset(&col, 0, sizeof(fitscol_t));
     col.colname = strdup_safe(name);
@@ -668,7 +668,7 @@ int fitstable_read_struct(fitstable_t* tab, int offset, void* struc) {
 }
 
 // One of "struc" or "ap" should be non-null.
-static int write_one(fitstable_t* table, const void* struc, bool flip,
+static int write_one(fitstable_t* table, const void* struc, anbool flip,
 					 va_list* ap) {
     int i;
     char* buf = NULL;
@@ -785,7 +785,7 @@ int fitstable_write_row_noflip(fitstable_t* table, ...) {
 int fitstable_write_one_column(fitstable_t* table, int colnum,
                                int rowoffset, int nrows,
                                const void* src, int src_stride) {
-	bool flip = TRUE;
+	anbool flip = TRUE;
     off_t foffset = 0;
     off_t start = 0;
     int i;
@@ -857,7 +857,7 @@ void fitstable_clear_table(fitstable_t* tab) {
  */
 static void* read_array_into(const fitstable_t* tab,
 							 const char* colname, tfits_type ctype,
-							 bool array_ok,
+							 anbool array_ok,
 							 int offset, const int* inds, int Nread,
 							 void* dest, int deststride,
 							 int desired_arraysize,
@@ -988,7 +988,7 @@ static void* read_array_into(const fitstable_t* tab,
 
 static void* read_array(const fitstable_t* tab,
                         const char* colname, tfits_type ctype,
-                        bool array_ok, int offset, int Nread) {
+                        anbool array_ok, int offset, int Nread) {
 	return read_array_into(tab, colname, ctype, array_ok, offset, NULL, Nread, NULL, 0, 0, NULL);
 }
 

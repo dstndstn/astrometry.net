@@ -163,7 +163,7 @@ int main(int argc, char** args) {
 	qfits_header* hdr;
 	unsigned int plane;
 	off_t datastart;
-	bool onepass = FALSE;
+	anbool onepass = FALSE;
 	bl* pixcache = NULL;
 
 #if HAVE_NETPBM

@@ -45,17 +45,17 @@ struct tycho2_entry {
 	uint8_t tyc3;  // [1, 3] main, [1, 4] suppl.
 
 	// flag "P": photo-center of two stars was used for position
-	bool photo_center;
+	anbool photo_center;
 	// flag "X": no mean position, no proper motion
-	bool no_motion;
+	anbool no_motion;
 	// flag "T"
-	bool tycho1_star;
+	anbool tycho1_star;
 	// flag "D"
-	bool double_star;
+	anbool double_star;
 	// flag "P" ( DP)
-	bool photo_center_treatment;
+	anbool photo_center_treatment;
 	// flag "H" (in supplements)
-	bool hipparcos_star;
+	anbool hipparcos_star;
 
 	// [degrees]
 	double ra;         // RAdeg

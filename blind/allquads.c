@@ -64,7 +64,7 @@ static void add_quad(quadbuilder_t* qb, unsigned int* quad, void* token) {
 	quad_write_const(aq->codes, aq->quads, quad, aq->starkd, qb->dimquads, aq->dimcodes);
 }
 
-static bool check_AB(quadbuilder_t* qb, pquad_t* pq, void* token) {
+static anbool check_AB(quadbuilder_t* qb, pquad_t* pq, void* token) {
 	allquads_t* aq = token;
 	debug("check_AB: iA=%i, iB=%i, aq->starA=%i\n", pq->iA, pq->iB, aq->starA);
 	return (pq->iA == aq->starA);

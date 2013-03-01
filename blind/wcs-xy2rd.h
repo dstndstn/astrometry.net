@@ -24,8 +24,8 @@
 int wcs_xy2rd(const char* wcsfn, int wcsext,
 			  const char* xylsfn, const char* rdlsfn,
               const char* xcol, const char* ycol,
-			  bool forcetan,
-			  bool forcewcslib,
+			  anbool forcetan,
+			  anbool forcewcslib,
               il* fields);
 
 #endif

@@ -33,13 +33,13 @@
 int wcs_rd2xy(const char* wcsfn, int wcsext,
 			  const char* rdlsfn, const char* xylsfn,
               const char* racol, const char* deccol,
-			  bool forcetan, bool forcewcslib,
+			  anbool forcetan, anbool forcewcslib,
               il* fields) {
 	xylist_t* xyls = NULL;
 	rdlist_t* rdls = NULL;
 	anwcs_t* wcs = NULL;
 	int i;
-    bool alloced_fields = FALSE;
+    anbool alloced_fields = FALSE;
     int rtn = -1;
 
 	// read WCS.

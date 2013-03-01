@@ -24,7 +24,7 @@
 struct plotoutline_args {
 	anwcs_t* wcs;
 	double stepsize;
-	bool fill;
+	anbool fill;
 };
 typedef struct plotoutline_args plotoutline_t;
 
@@ -46,7 +46,7 @@ int plot_outline_set_wcs_size(plotoutline_t* args, int W, int H);
 
 int plot_outline_set_wcs(plotoutline_t* args, sip_t* wcs);
 
-int plot_outline_set_fill(plotoutline_t* args, bool fill);
+int plot_outline_set_fill(plotoutline_t* args, anbool fill);
 
 //extern const plotter_t plotter_outline;
 DECLARE_PLOTTER(outline);

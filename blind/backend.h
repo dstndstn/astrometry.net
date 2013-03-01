@@ -45,7 +45,7 @@ struct backend {
     il* default_depths;
 	double sizesmallest;
 	double sizebiggest;
-	bool inparallel;
+	anbool inparallel;
 	double minwidth;
 	double maxwidth;
     float cpulimit;
@@ -57,11 +57,11 @@ typedef struct backend backend_t;
 struct job_t {
 	dl* scales;
 	il* depths;
-    bool include_default_scales;
+    anbool include_default_scales;
     double ra_center;
     double dec_center;
     double search_radius;
-    bool use_radec_center;
+    anbool use_radec_center;
     blind_t bp;
 };
 typedef struct job_t job_t;

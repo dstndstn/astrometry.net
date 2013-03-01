@@ -89,9 +89,9 @@ struct stardata {
 typedef struct stardata stardata;
 
 // globals used by get_magnitude().
-static bool cutred = FALSE;
-static bool cutblue = FALSE;
-static bool cutj = FALSE;
+static anbool cutred = FALSE;
+static anbool cutblue = FALSE;
+static anbool cutj = FALSE;
 
 
 static int sort_stardata_mag(const void* v1, const void* v2) {
@@ -116,7 +116,7 @@ struct starlists {
 };
 typedef struct starlists starlists_t;
 
-starlists_t* starlists_new(int nside, int size, bool dense) {
+starlists_t* starlists_new(int nside, int size, anbool dense) {
 	starlists_t* sl = calloc(1, sizeof(starlists_t));
 	if (dense) {
 		sl->NHP = 12 * nside * nside;
@@ -156,7 +156,7 @@ void starlists_free(starlists_t* sl) {
 	free(sl);
 }
 
-bl* starlists_get(starlists_t* sl, int64_t hp, bool create) {
+bl* starlists_get(starlists_t* sl, int64_t hp, anbool create) {
 	int ind = -1;
 	if (!sl->dlists) {
 		if (sl->ihps)
@@ -196,7 +196,7 @@ int starlists_N_nonempty(starlists_t* sl) {
 	return sl->NHP;
 }
 
-bool starlists_get_nonempty(starlists_t* sl, int i,
+anbool starlists_get_nonempty(starlists_t* sl, int i,
 							int64_t* php, bl** plist) {
 	if (sl->dlists) {
 		if (i >= sl->NHP)
@@ -221,7 +221,7 @@ bool starlists_get_nonempty(starlists_t* sl, int i,
 	return TRUE;
 }
 
-static bool find_duplicate(stardata* sd, int64_t hp, int Nside,
+static anbool find_duplicate(stardata* sd, int64_t hp, int Nside,
 						   starlists_t* starlists, double dedupr2,
 						   int64_t* duphp, int* dupindex) {
 	double xyz[3];
@@ -270,7 +270,7 @@ static int get_magnitude(an_entry* an,
 	float mag = 1e6;
     float sig = 1e6;
 
-    bool blue, red, jband;
+    anbool blue, red, jband;
 
     float s, m;
     // accumulators.
@@ -370,7 +370,7 @@ static int get_magnitude(an_entry* an,
 
 // Used for debugging / drawing nice pictures.
 #include "rdlist.h"
-void write_radeclist(bool* owned, int Nside, char* fn) {
+void write_radeclist(anbool* owned, int Nside, char* fn) {
 	int HP = 12 * Nside * Nside;
     int i;
     rdlist_t* rd = rdlist_open_for_writing(fn);
@@ -407,20 +407,20 @@ int main(int argc, char** args) {
 	int BLOCK = 100000;
 	double deduprad = 0.0;
 	double dedupr2 = 0.0;
-	bool allsky = FALSE;
+	anbool allsky = FALSE;
 	stardata* sweeplist;
 	int npix;
 	int nmargin = 1;
-	bool domags = FALSE;
-	bool domagerrs = FALSE;
-    bool domotion = FALSE;
-    bool doid = FALSE;
+	anbool domags = FALSE;
+	anbool domagerrs = FALSE;
+    anbool domotion = FALSE;
+    anbool doid = FALSE;
 	double jitter = 1.0;
     qfits_header* catheader;
     int loglvl = LOG_MSG;
 	ll* owned = NULL;
 	char* cutband = NULL;
-	bool dense = FALSE;
+	anbool dense = FALSE;
 
 	// Where is "bighp" in the "bignside" healpixelization?
 	int bigbighp; // one of 12

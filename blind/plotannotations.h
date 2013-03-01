@@ -4,16 +4,16 @@
 #include "plotstuff.h"
 
 struct annotation_args {
-	bool NGC;
+	anbool NGC;
 
-	bool constellations;
-	bool constellation_lines;
-	bool constellation_markers;
-	bool constellation_labels;
-	bool constellation_labels_long;
+	anbool constellations;
+	anbool constellation_lines;
+	anbool constellation_markers;
+	anbool constellation_labels;
+	anbool constellation_labels_long;
 
-	bool bright;
-	bool HD;
+	anbool bright;
+	anbool HD;
 	float ngc_fraction;
 	bl* targets;
 	char* hd_catalog;

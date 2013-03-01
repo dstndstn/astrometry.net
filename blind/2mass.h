@@ -50,7 +50,7 @@ struct twomass_entry {
 
 	// is this in the northern hemisphere?
 	// TRUE=northern, FALSE=southern.
-	bool northern_hemisphere;
+	anbool northern_hemisphere;
 
 	// [mag] - J magnitude
 	float j_m;
@@ -128,7 +128,7 @@ struct twomass_entry {
 	// nightly scan number
 	uint16_t scan;
 	// may be a minor planet, comet, asteroid, etc.
-	bool minor_planet;
+	anbool minor_planet;
 
 	// [degrees] - angle east of north to optical counterpart
     float phi_opt;
@@ -174,12 +174,12 @@ struct twomass_entry {
     // [degrees]
 	float dist_edge_ew;
 	// TRUE=north
-	bool dist_flag_ns;
+	anbool dist_flag_ns;
 	// TRUE=east
-	bool dist_flag_ew;
+	anbool dist_flag_ew;
 
 	uint8_t dup_src;
-	bool use_src;
+	anbool use_src;
 
     // [code: twomass_association_val]
     char association;

@@ -105,7 +105,7 @@ kdtree_t* kdtree_fits_read(const char* fn, const char* treename,
 }
 
 static int write_convenience(const kdtree_t* kd, const char* fn,
-                              const qfits_header* hdr, bool flipped) {
+                              const qfits_header* hdr, anbool flipped) {
     kdtree_fits_t* io;
     int rtn;
     io = kdtree_fits_open_for_writing(fn);
@@ -187,7 +187,7 @@ int kdtree_fits_read_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
 // declarations
 KD_DECLARE(kdtree_read_fits, int, (kdtree_fits_t* io, kdtree_t* kd));
 KD_DECLARE(kdtree_write_fits, int, (kdtree_fits_t* io, const kdtree_t* kd,
-                                    const qfits_header* inhdr, bool flip_endian,
+                                    const qfits_header* inhdr, anbool flip_endian,
 									FILE* fid));
 /*
  sl* kdtree_fits_list_trees(kdtree_fits_t* io) {

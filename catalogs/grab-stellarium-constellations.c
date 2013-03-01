@@ -25,7 +25,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "an-bool.h"
 #include "starutil.h"
 #include "bl.h"
 #include "mathutil.h"

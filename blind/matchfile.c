@@ -47,7 +47,7 @@
 #define ADDCOL(ctype, ftype, col, units, member) \
 ADDARR(ctype, ftype, col, units, member, 1)
 
-static void add_columns(fitstable_t* tab, bool write) {
+static void add_columns(fitstable_t* tab, anbool write) {
     tfits_type any = fitscolumn_any_type();
     tfits_type d = fitscolumn_double_type();
     tfits_type f = fitscolumn_float_type();

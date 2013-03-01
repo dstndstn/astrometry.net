@@ -22,6 +22,6 @@
 #include "an-bool.h"
 
 int tabsort(const char* infn, const char* outfn, const char* colname,
-            bool descending);
+            anbool descending);
 
 #endif

@@ -26,6 +26,7 @@
 #include "sip.h"
 #include "bl.h"
 #include "index.h"
+#include "an-bool.h"
 
 struct match_struct {
     unsigned int quadno;
@@ -50,7 +51,7 @@ struct match_struct {
     double radius_deg;
 
 	// WCS params
-	bool wcs_valid;
+	anbool wcs_valid;
 	tan_t wcstan;
 
 	// arcseconds per pixel; computed: scale=3600*sqrt(abs(det(wcstan.cd)))
@@ -84,7 +85,7 @@ struct match_struct {
 
 	char fieldname[32];
 
-	bool parity;
+	anbool parity;
 
 	// how many field quads did we try before finding this one?
 	int quads_tried;

@@ -60,13 +60,13 @@ struct simplexy_t {
     int halfbox;
 
 	// don't do background subtraction.
-	bool nobgsub;
+	anbool nobgsub;
 
 	// global background.
 	float globalbg;
 
 	// invert the image before processing (for black-on-white images)
-	bool invert;
+	anbool invert;
 
 	// If set to non-zero, the given sigma value will be used;
 	// otherwise a value will be estimated.

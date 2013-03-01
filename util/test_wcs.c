@@ -46,7 +46,7 @@ static void parse(const char* hdr, sip_t** sip, anwcs_t** anwcs, CuTest* tc) {
 static void tst_rd2xy(double ra, double dec, double xtrue, double ytrue,
 					  anwcs_t* an1, sip_t* sip1, tan_t* tan1, CuTest* tc) {
 	double x, y;
-	bool ok;
+	anbool ok;
 	int err;
 
 	if (an1) {
@@ -79,7 +79,7 @@ static void tst_rd2xy(double ra, double dec, double xtrue, double ytrue,
 static void tst_xy2rd(double x, double y, double ratrue, double dectrue,
 					  anwcs_t* an1, sip_t* sip1, tan_t* tan1, CuTest* tc) {
 	double ra, dec;
-	bool ok;
+	anbool ok;
 	int err;
 
 	if (an1) {
@@ -194,7 +194,7 @@ void test_tan1(CuTest* tc) {
 	// SIP round-trips
 
 	double x, y, ra, dec, x2, y2;
-	bool ok;
+	anbool ok;
 
 	x = y = 100.0;
 

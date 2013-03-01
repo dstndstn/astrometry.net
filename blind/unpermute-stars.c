@@ -36,7 +36,7 @@
 
 int unpermute_stars(startree_t* treein, quadfile* qfin,
 					startree_t** p_treeout, quadfile* qfout,
-					bool dosweeps, bool check,
+					anbool dosweeps, anbool check,
 					char** args, int argc) {
 	startree_t* treeout;
 	int i;
@@ -47,7 +47,7 @@ int unpermute_stars(startree_t* treein, quadfile* qfin,
 	int lastgrass;
 	qfits_header* qouthdr;
 	qfits_header* qinhdr;
-	bool allsky;
+	anbool allsky;
 
 	assert(p_treeout);
 	N = startree_N(treein);
@@ -237,7 +237,7 @@ int unpermute_stars_tagalong(startree_t* treein,
 
 int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
 						  const char* skdtoutfn, const char* quadoutfn,
-						  bool dosweeps, bool check,
+						  anbool dosweeps, anbool check,
 						  char** args, int argc) {
     quadfile* qfin;
 	quadfile* qfout;

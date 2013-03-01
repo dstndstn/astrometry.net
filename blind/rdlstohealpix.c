@@ -49,7 +49,7 @@ int main(int argc, char** args) {
   int argchar;
   char* progname = args[0];
   il** lists;
-  bool quiet = FALSE;
+  anbool quiet = FALSE;
   rdlist* rdls;
   int Nside = 1;
   int N;

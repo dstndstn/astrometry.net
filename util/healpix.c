@@ -361,26 +361,26 @@ static Inline void swap_double(double* i1, double* i2) {
 	*i2 = tmp;
 }
 
-static Inline bool ispolar(int healpix)
+static Inline anbool ispolar(int healpix)
 {
 	// the north polar healpixes are 0,1,2,3
 	// the south polar healpixes are 8,9,10,11
 	return (healpix <= 3) || (healpix >= 8);
 }
 
-static Inline bool isequatorial(int healpix)
+static Inline anbool isequatorial(int healpix)
 {
 	// the north polar healpixes are 0,1,2,3
 	// the south polar healpixes are 8,9,10,11
 	return (healpix >= 4) && (healpix <= 7);
 }
 
-static Inline bool isnorthpolar(int healpix)
+static Inline anbool isnorthpolar(int healpix)
 {
 	return (healpix <= 3);
 }
 
-static Inline bool issouthpolar(int healpix)
+static Inline anbool issouthpolar(int healpix)
 {
 	return (healpix >= 8);
 }
@@ -800,7 +800,7 @@ static hp_t xyztohp(double vx, double vy, double vz, int Nside,
 	// North or south polar cap.
 	if ((vz >= twothirds) || (vz <= -twothirds)) {
 		double zfactor;
-		bool north;
+		anbool north;
 		int column;
 		double root;
 		double xx, yy, kx, ky;
@@ -1009,7 +1009,7 @@ static void hp_to_xyz(hp_t* hp, int Nside,
 					  double dx, double dy, 
 					  double* rx, double *ry, double *rz) {
 	int chp;
-	bool equatorial = TRUE;
+	anbool equatorial = TRUE;
 	double zfactor = 1.0;
 	int xp, yp;
 	double x, y, z;

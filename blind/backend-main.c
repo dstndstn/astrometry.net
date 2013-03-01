@@ -105,15 +105,15 @@ int main(int argc, char** args) {
     char* mydir = NULL;
     char* basedir = NULL;
     char* me;
-    bool help = FALSE;
+    anbool help = FALSE;
     sl* strings = sl_new(4);
     char* cancelfn = NULL;
     char* solvedfn = NULL;
     int loglvl = LOG_MSG;
-    bool tostderr = FALSE;
+    anbool tostderr = FALSE;
     char* infn = NULL;
     FILE* fin = NULL;
-    bool fromstdin = FALSE;
+    anbool fromstdin = FALSE;
 
 	bl* opts = opts_from_array(myopts, sizeof(myopts)/sizeof(an_option_t), NULL);
 	sl* inds = sl_new(4);

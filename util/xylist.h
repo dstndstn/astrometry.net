@@ -82,8 +82,8 @@ struct xylist_t {
     tfits_type xtype;
     tfits_type ytype;
 
-    bool include_flux;
-    bool include_background;
+    anbool include_flux;
+    anbool include_background;
 
     // When reading: total number of fields in this file.
     int nfields;
@@ -103,8 +103,8 @@ void xylist_set_ytype(xylist_t* ls, tfits_type type);
 void xylist_set_xunits(xylist_t* ls, const char* units);
 void xylist_set_yunits(xylist_t* ls, const char* units);
 
-void xylist_set_include_flux(xylist_t* ls, bool inc);
-void xylist_set_include_background(xylist_t* ls, bool inc);
+void xylist_set_include_flux(xylist_t* ls, anbool inc);
+void xylist_set_include_background(xylist_t* ls, anbool inc);
 
 
 // when writing.
@@ -163,7 +163,7 @@ int xylist_get_imageh(xylist_t* ls);
 int xylist_n_fields(xylist_t* ls);
 
 // Is the given filename an xylist?
-bool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* ycolumn,
+anbool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* ycolumn,
                            char** reason);
 
 #endif

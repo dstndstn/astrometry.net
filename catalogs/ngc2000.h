@@ -50,7 +50,7 @@
 
 struct ngc_entry {
 	// true: NGC.  false: IC.
-	bool is_ngc;
+	anbool is_ngc;
 
 	// NGC/IC number
 	int id;
@@ -67,9 +67,9 @@ struct ngc_entry {
 	float size;
 
 	//char source;
-	// bool sizelimit;
+	// anbool sizelimit;
 	float mag;
-	// bool photo_mag;
+	// anbool photo_mag;
 	// char[51] description;
 };
 typedef struct ngc_entry ngc_entry;
@@ -79,7 +79,7 @@ extern ngc_entry ngc_entries[];
 // convenience accessors:
 
 // Find an entry by NGC/IC number.
-ngc_entry* ngc_get_ngcic_num(bool is_ngc, int num);
+ngc_entry* ngc_get_ngcic_num(anbool is_ngc, int num);
 
 int ngc_num_entries();
 

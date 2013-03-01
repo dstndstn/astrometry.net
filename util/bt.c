@@ -43,7 +43,7 @@ static Const char* NODE_CHARDATA(bt_leaf* leaf) {
 	return (char*)(leaf+1);
 }
 
-static Pure bool isleaf(bt_node* node) {
+static Pure anbool isleaf(bt_node* node) {
 	return node->leaf.isleaf;
 }
 
@@ -211,7 +211,7 @@ static Malloc bt_node* bt_new_leaf(bt* tree) {
 	return n;
 }
 
-static bool bt_leaf_insert(bt* tree, bt_leaf* leaf, void* data, bool unique,
+static anbool bt_leaf_insert(bt* tree, bt_leaf* leaf, void* data, anbool unique,
 						   compare_func_2 compare, void* token, void* overflow) {
 	int lower, upper;
 	int nshift;
@@ -296,7 +296,7 @@ static bt_node* next_node(bt_node** ancestors, int nancestors,
 }
 
 // Pure?
-static bool bt_leaf_contains(bt* tree, bt_leaf* leaf, void* data,
+static anbool bt_leaf_contains(bt* tree, bt_leaf* leaf, void* data,
 							 compare_func_2 compare, void* token) {
 	int lower, upper;
 	lower = -1;
@@ -320,11 +320,11 @@ static bool bt_leaf_contains(bt* tree, bt_leaf* leaf, void* data,
 }
 
 // Pure?
-bool bt_contains(bt* tree, void* data, compare_func compare) {
+anbool bt_contains(bt* tree, void* data, compare_func compare) {
 	return bt_contains2(tree, data, compare_helper, compare);
 }
 
-bool bt_contains2(bt* tree, void* data, compare_func_2 compare, void* token) {
+anbool bt_contains2(bt* tree, void* data, compare_func_2 compare, void* token) {
 	bt_node *n;
 	int cmp;
 	int dir;
@@ -353,11 +353,11 @@ static void update_firstleaf(bt_node** ancestors, int nancestors,
 	}
 }
 
-bool bt_insert(bt* tree, void* data, bool unique, compare_func compare) {
+anbool bt_insert(bt* tree, void* data, anbool unique, compare_func compare) {
 	return bt_insert2(tree, data, unique, compare_helper, compare);
 }
 
-bool bt_insert2(bt* tree, void* data, bool unique, compare_func_2 compare, void* token) {
+anbool bt_insert2(bt* tree, void* data, anbool unique, compare_func_2 compare, void* token) {
 	bt_node *y, *z; /* Top node to update balance factor, and parent. */
 	bt_node *p, *q; /* Iterator, and parent. */
 	bt_node *n;     /* Newly inserted node. */
@@ -370,8 +370,8 @@ bool bt_insert2(bt* tree, void* data, bool unique, compare_func_2 compare, void*
 	unsigned char da[AVL_MAX_HEIGHT]; /* Cached comparison results. */
 	int k = 0;              /* Number of cached results. */
 	unsigned char overflow[tree->datasize];
-	bool rtn;
-	bool willfit;
+	anbool rtn;
+	anbool willfit;
 	int cmp;
 	int i;
 

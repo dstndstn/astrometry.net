@@ -206,7 +206,7 @@ int solvedfile_setsize(char* fn, int sz) {
 	return 0;
 }
 
-int solvedfile_set_array(char* fn, bool* vals, int N) {
+int solvedfile_set_array(char* fn, anbool* vals, int N) {
 	int f;
 	unsigned char val;
 	int i;
@@ -239,7 +239,7 @@ int solvedfile_set_array(char* fn, bool* vals, int N) {
 	return 0;
 }
 
-int solvedfile_set_file(char* fn, bool* vals, int N) {
+int solvedfile_set_file(char* fn, anbool* vals, int N) {
 	FILE* f;
 	int i;
 

@@ -25,9 +25,9 @@
 struct plotindex_args {
 	pl* indexes;
 	pl* qidxes;
-	bool stars;
-	bool quads;
-	bool fill;
+	anbool stars;
+	anbool quads;
+	anbool fill;
 };
 typedef struct plotindex_args plotindex_t;
 

@@ -201,7 +201,7 @@ static int wcstools_add_to_header(struct WorldCoor* wcs, qfits_header* hdr) {
 static void wcstools_set_size(struct WorldCoor* wcs, int w, int h) {
 	logerr("UNIMPLEMENTED");
 }
-static bool wcstools_radec_is_inside_image(struct WorldCoor* wcs, double ra, double dec) {
+static anbool wcstools_radec_is_inside_image(struct WorldCoor* wcs, double ra, double dec) {
 	logerr("UNIMPLEMENTED");
 	return FALSE;
 }
@@ -293,7 +293,7 @@ static int wcslib_radec2pixelxy(const anwcslib_t* anwcslib, double ra, double de
 	return 0;
 }
 
-static bool wcslib_radec_is_inside_image(anwcslib_t* wcslib, double ra, double dec) {
+static anbool wcslib_radec_is_inside_image(anwcslib_t* wcslib, double ra, double dec) {
 	double px, py;
 	if (wcslib_radec2pixelxy(wcslib, ra, dec, &px, &py))
 		return FALSE;
@@ -541,7 +541,7 @@ void anwcs_free(anwcs_t* anwcs) {
 	free(anwcs);
 }
 
-bool anwcs_radec_is_inside_image(const anwcs_t* wcs, double ra, double dec) {
+anbool anwcs_radec_is_inside_image(const anwcs_t* wcs, double ra, double dec) {
 	ANWCS_DISPATCH(wcs, return, return FALSE, radec_is_inside_image, ra, dec);
 }
 
@@ -590,7 +590,7 @@ int anwcs_add_to_header(const anwcs_t* wcs, qfits_header* hdr) {
 
 struct overlap_token {
 	const anwcs_t* wcs;
-	bool inside;
+	anbool inside;
 };
 static void overlap_callback(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token) {
 	struct overlap_token* t = token;
@@ -600,7 +600,7 @@ static void overlap_callback(const anwcs_t* wcs, double x, double y, double ra, 
 		t->inside = TRUE;
 }
 
-bool anwcs_overlaps(const anwcs_t* wcs1, const anwcs_t* wcs2, int stepsize) {
+anbool anwcs_overlaps(const anwcs_t* wcs1, const anwcs_t* wcs2, int stepsize) {
 	// check for definitely do or don't overlap via bounds:
 	double ralo1, rahi1, ralo2, rahi2;
 	double declo1, dechi1, declo2, dechi2;
@@ -806,7 +806,7 @@ anwcs_t* anwcs_open(const char* filename, int ext) {
 	return NULL;
 }
 
-static anwcs_t* open_tansip(const char* filename, int ext, bool forcetan) {
+static anwcs_t* open_tansip(const char* filename, int ext, anbool forcetan) {
 	anwcs_t* anwcs = NULL;
 	sip_t* sip = NULL;
 	sip = sip_read_tan_or_sip_header_file_ext(filename, ext, NULL, forcetan);
@@ -1033,7 +1033,7 @@ int anwcs_radec2pixelxy(const anwcs_t* anwcs, double ra, double dec, double* px,
 	case ANWCS_TYPE_SIP:
 		{
 			sip_t* sip;
-			bool ok;
+			anbool ok;
 			sip = anwcs->data;
 			ok = sip_radec2pixelxy(sip, ra, dec, px, py);
 			if (!ok)
@@ -1048,7 +1048,7 @@ int anwcs_radec2pixelxy(const anwcs_t* anwcs, double ra, double dec, double* px,
 	return 0;
 }
 
-bool anwcs_find_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
+anbool anwcs_find_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
 							  double ra2, double dec2,
 							  double* pra3, double* pdec3,
 							  double* pra4, double* pdec4) {
@@ -1098,7 +1098,7 @@ bool anwcs_find_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
 }
 
 
-bool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
+anbool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
 							double ra2, double dec2) {
 	return anwcs_find_discontinuity(wcs, ra1, dec1, ra2, dec2,
 									NULL, NULL, NULL, NULL);

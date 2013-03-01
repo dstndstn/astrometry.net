@@ -249,7 +249,7 @@ typedef u32 bigint;
 
 void MANGLE(kdtree_update_funcs)(kdtree_t* kd);
 
-static bool bboxes(const kdtree_t* kd, int node,
+static anbool bboxes(const kdtree_t* kd, int node,
 				   ttype** p_tlo, ttype** p_thi, int D) {
 	if (kd->bb.any) {
 		// bb trees
@@ -289,7 +289,7 @@ static inline double dist2(const kdtree_t* kd, const etype* q, const dtype* p, i
 }
 
 static inline void dist2_bailout(const kdtree_t* kd, const etype* q, const dtype* p,
-                                 int D, double maxd2, bool* bailedout, double* d2res) {
+                                 int D, double maxd2, anbool* bailedout, double* d2res) {
 	int d;
 	double d2 = 0.0;
 #if defined(KD_DIM)
@@ -321,7 +321,7 @@ static inline void dist2_bailout(const kdtree_t* kd, const etype* q, const dtype
 
 static inline void ddist2_bailout(const kdtree_t* kd,
                                   const dtype* q, const dtype* p,
-                                  int D, bigttype maxd2, bool* bailedout,
+                                  int D, bigttype maxd2, anbool* bailedout,
                                   bigttype* d2res) {
 	int d;
 	bigttype d2 = 0;
@@ -345,7 +345,7 @@ static inline void ddist2_bailout(const kdtree_t* kd,
 }
 
 
-static inline bool dist2_exceeds(const kdtree_t* kd, const etype* q, const dtype* p, int D, double maxd2) {
+static inline anbool dist2_exceeds(const kdtree_t* kd, const etype* q, const dtype* p, int D, double maxd2) {
 	int d;
 	double d2 = 0.0;
 #if defined(KD_DIM)
@@ -369,7 +369,7 @@ static inline bool dist2_exceeds(const kdtree_t* kd, const etype* q, const dtype
 	return 0;
 }
 
-static bool bb_point_l1mindist_exceeds_ttype(ttype* lo, ttype* hi,
+static anbool bb_point_l1mindist_exceeds_ttype(ttype* lo, ttype* hi,
 											  ttype* query, int D,
 											  ttype maxl1, ttype maxlinf) {
 	ttype dist = 0;
@@ -493,8 +493,8 @@ static void print_results(kdtree_qres_t* res, int D) {
 }
 
 static
-bool resize_results(kdtree_qres_t* res, int newsize, int D,
-					bool do_dists, bool do_points) {
+anbool resize_results(kdtree_qres_t* res, int newsize, int D,
+					anbool do_dists, anbool do_points) {
 
     if (FALSE) {
         printf("resize results: before:\n");
@@ -519,9 +519,9 @@ bool resize_results(kdtree_qres_t* res, int newsize, int D,
 }
 
 static
-bool add_result(const kdtree_t* kd, kdtree_qres_t* res, double sdist,
+anbool add_result(const kdtree_t* kd, kdtree_qres_t* res, double sdist,
                 unsigned int ind, const dtype* pt,
-				int D, bool do_dists, bool do_points) {
+				int D, anbool do_dists, anbool do_points) {
 
     if (FALSE) {
         printf("Before adding new result:\n");
@@ -555,7 +555,7 @@ bool add_result(const kdtree_t* kd, kdtree_qres_t* res, double sdist,
 
  If so, place the converted value in "tquery".
 */
-static bool ttype_query(const kdtree_t* kd, const etype* query, ttype* tquery) {
+static anbool ttype_query(const kdtree_t* kd, const etype* query, ttype* tquery) {
    etype val;
 	int d, D=kd->ndim;
 	for (d=0; d<D; d++) {
@@ -590,9 +590,9 @@ static void kdtree_nn_bb(const kdtree_t* kd, const etype* query,
 	double dist2stack[100];
 	int stackpos = 0;
 	int D = (kd ? kd->ndim : 0);
-	bool use_tquery = FALSE;
-	bool use_tmath = FALSE;
-	bool use_bigtmath = FALSE;
+	anbool use_tquery = FALSE;
+	anbool use_tmath = FALSE;
+	anbool use_bigtmath = FALSE;
 	ttype tquery[D];
 	double bestd2 = *p_bestd2;
 	int ibest = *p_ibest;
@@ -655,7 +655,7 @@ static void kdtree_nn_bb(const kdtree_t* kd, const etype* query,
 			L = kdtree_left(kd, nodeid);
 			R = kdtree_right(kd, nodeid);
 			for (i=L; i<=R; i++) {
-				bool bailedout = FALSE;
+				anbool bailedout = FALSE;
 				double dsqd;
                 if (kd->fun.nn_point)
                     kd->fun.nn_point(kd, nodeid, i);
@@ -674,7 +674,7 @@ static void kdtree_nn_bb(const kdtree_t* kd, const etype* query,
 
         childd2[0] = childd2[1] = HUGE_VAL;
         for (child=0; child<2; child++) {
-            bool bailed;
+            anbool bailed;
             double dist2;
             int childid = (child ? KD_CHILD_RIGHT(nodeid) : KD_CHILD_LEFT(nodeid));
 
@@ -821,7 +821,7 @@ static void kdtree_nn_int_split(const kdtree_t* kd, const etype* query,
 			L = kdtree_left(kd, nodeid);
 			R = kdtree_right(kd, nodeid);
 			for (i=L; i<=R; i++) {
-				bool bailedout = FALSE;
+				anbool bailedout = FALSE;
 				bigttype dsqd;
 				data = KD_DATA(kd, D, i);
 				ddist2_bailout(kd, dquery, data, D, closest2, &bailedout, &dsqd);
@@ -973,7 +973,7 @@ void MANGLE(kdtree_nn)(const kdtree_t* kd, const void* vquery,
 			L = kdtree_left(kd, nodeid);
 			R = kdtree_right(kd, nodeid);
 			for (i=L; i<=R; i++) {
-				bool bailedout = FALSE;
+				anbool bailedout = FALSE;
 				double dsqd;
 
                 if (kd->fun.nn_point)
@@ -1045,25 +1045,25 @@ kdtree_qres_t* MANGLE(kdtree_rangesearch_options)
 	int nodestack[100];
 	int stackpos = 0;
 	int D = (kd ? kd->ndim : 0);
-	bool do_dists;
-	bool do_points = TRUE;
-	bool do_wholenode_check;
+	anbool do_dists;
+	anbool do_points = TRUE;
+	anbool do_wholenode_check;
 	double maxdist = 0.0;
 	ttype tlinf = 0;
 	ttype tl1 = 0;
 	ttype tl2 = 0;
 	bigttype bigtl2 = 0;
 
-	bool use_tquery = FALSE;
-	bool use_tsplit = FALSE;
-	bool use_tmath = FALSE;
-	bool use_bigtmath = FALSE;
+	anbool use_tquery = FALSE;
+	anbool use_tsplit = FALSE;
+	anbool use_tmath = FALSE;
+	anbool use_bigtmath = FALSE;
 
-	bool do_precheck = FALSE;
-	bool do_l1precheck = FALSE;
+	anbool do_precheck = FALSE;
+	anbool do_l1precheck = FALSE;
 
-    bool use_bboxes = FALSE;
-    Unused bool use_splits = FALSE;
+    anbool use_bboxes = FALSE;
+    Unused anbool use_splits = FALSE;
 
 	double dtl1=0.0, dtl2=0.0, dtlinf=0.0;
 
@@ -1209,7 +1209,7 @@ kdtree_qres_t* MANGLE(kdtree_rangesearch_options)
 
 			if (do_dists) {
 				for (i=L; i<=R; i++) {
-					bool bailedout = FALSE;
+					anbool bailedout = FALSE;
 					double dsqd;
 					data = KD_DATA(kd, D, i);
 					// FIXME benchmark dist2 vs dist2_bailout.
@@ -1240,16 +1240,16 @@ kdtree_qres_t* MANGLE(kdtree_rangesearch_options)
 			dim = kd->splitdim[nodeid];
 
 		if (use_bboxes) {
-			bool wholenode = FALSE;
+			anbool wholenode = FALSE;
 
             bboxes(kd, nodeid, &tlo, &thi, D);
             assert(tlo && thi);
 
 			if (do_precheck && nodeid) {
-				bool isleftchild = KD_IS_LEFT_CHILD(nodeid);
+				anbool isleftchild = KD_IS_LEFT_CHILD(nodeid);
 				// we need to use the dimension our _parent_ split on, not ours!
 				int pdim;
-				bool cut;
+				anbool cut;
 				if (kd->splitdim)
 					pdim = kd->splitdim[KD_PARENT(nodeid)];
 				else {
@@ -1842,7 +1842,7 @@ static int kdtree_check_node(const kdtree_t* kd, int nodeid) {
 	if (kd->bb.any) {
 		ttype* bb;
 		ttype *plo, *phi;
-		bool ok = FALSE;
+		anbool ok = FALSE;
 		plo = LOW_HR( kd, D, nodeid);
 		phi = HIGH_HR(kd, D, nodeid);
 
@@ -2569,7 +2569,7 @@ double MANGLE(kdtree_node_point_maxdist2)
 	return d2;
 }
 
-bool MANGLE(kdtree_node_point_mindist2_exceeds)
+anbool MANGLE(kdtree_node_point_mindist2_exceeds)
 	 (const kdtree_t* kd, int node, const etype* query, double maxd2) {
 	int D = kd->ndim;
 	int d;
@@ -2599,7 +2599,7 @@ bool MANGLE(kdtree_node_point_mindist2_exceeds)
 	return FALSE;
 }
 
-bool MANGLE(kdtree_node_point_maxdist2_exceeds)
+anbool MANGLE(kdtree_node_point_maxdist2_exceeds)
 	 (const kdtree_t* kd, int node, const etype* query, double maxd2) {
 	int D = kd->ndim;
 	int d;
@@ -2702,7 +2702,7 @@ double MANGLE(kdtree_node_node_mindist2)
 	return d2;
 }
 
-bool MANGLE(kdtree_node_node_maxdist2_exceeds)
+anbool MANGLE(kdtree_node_node_maxdist2_exceeds)
 	 (const kdtree_t* kd1, int node1,
 	  const kdtree_t* kd2, int node2,
 	  double maxd2) {
@@ -2743,7 +2743,7 @@ bool MANGLE(kdtree_node_node_maxdist2_exceeds)
 	return FALSE;
 }
 
-bool MANGLE(kdtree_node_node_mindist2_exceeds)
+anbool MANGLE(kdtree_node_node_mindist2_exceeds)
 	 (const kdtree_t* kd1, int node1,
 	  const kdtree_t* kd2, int node2,
 	  double maxd2) {
@@ -2786,7 +2786,7 @@ bool MANGLE(kdtree_node_node_mindist2_exceeds)
 	return FALSE;
 }
 
-static bool do_boxes_overlap(const ttype* lo1, const ttype* hi1,
+static anbool do_boxes_overlap(const ttype* lo1, const ttype* hi1,
 							 const ttype* lo2, const ttype* hi2, int D) {
 	int d;
 	for (d=0; d<D; d++) {
@@ -2799,7 +2799,7 @@ static bool do_boxes_overlap(const ttype* lo1, const ttype* hi1,
 }
 
 /* Is the first box contained within the second? */
-static bool is_box_contained(const ttype* lo1, const ttype* hi1,
+static anbool is_box_contained(const ttype* lo1, const ttype* hi1,
 							 const ttype* lo2, const ttype* hi2, int D) {
 	int d;
 	for (d=0; d<D; d++) {
@@ -2880,7 +2880,7 @@ void MANGLE(kdtree_nodes_contained)
 	nodes_contained_rec(kd, 0, qlo, qhi, cb_contained, cb_overlap, cb_extra);
 }
 
-bool MANGLE(kdtree_get_bboxes)(const kdtree_t* kd, int node,
+anbool MANGLE(kdtree_get_bboxes)(const kdtree_t* kd, int node,
 							   void* vbblo, void* vbbhi) {
 	etype* bblo = vbblo;
 	etype* bbhi = vbbhi;

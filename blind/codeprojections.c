@@ -66,7 +66,7 @@ int* single = NULL;
 double* dsingle = NULL;
 int Nsingle = 100;
 
-bool do_density = FALSE;
+anbool do_density = FALSE;
 
 double minvalue;
 double scale;
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 	int argchar;
 	char *ckdtfname = NULL;
 	int i, j, d, e;
-	bool circle;
+	anbool circle;
     codetree* ct = NULL;
 	kdtree_t* ckdt = NULL;
 	int Ncodes;
