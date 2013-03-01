@@ -289,6 +289,18 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 </tr> 
 <tr> 
     <td class="leftcolumn">
+        <div class="setting_title">Tweak:</div>
+        <div class="setting_description">By default we try to compute a SIP polynomial distortion correction with order 2.
+          You can disable this by changing the order to "0", or change the polynomial order.</div> 
+    </td> 
+    <td>
+        <table>
+        <tr><td>Order:</td><td>{{ form.tweak_order }} {{ form.tweak_order.errors }}</td></tr>
+        </table>
+    </td>
+</tr> 
+<tr> 
+    <td class="leftcolumn">
         <div class="setting_title">Downsample:</div>
         <div class="setting_description">We can downsample your image by a given factor before performing the source extraction.</div> 
     </td> 

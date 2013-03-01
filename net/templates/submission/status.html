@@ -155,6 +155,12 @@ Submission {{ sub.id }}
     <td>{{ sub.downsample_factor }}</td>
 </tr>
 {% endif %}
+{% if sub.tweak_order != 2 %}
+<tr>
+    <td class="leftcolumn">Tweak Order:</td>
+    <td>{{ sub.tweak_order }}</td>
+</tr>
+{% endif %}
 </table>
 </div>
 <div style="clear:both"></div>

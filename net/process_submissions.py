@@ -185,6 +185,7 @@ def dojob(job, userimage, log=None):
     slo,shi = sub.get_scale_bounds()
     # Note, this must match Job.get_wcs_file().
     wcsfile = 'wcs.fits'
+    axyflags = []
     axyargs = {
         '--out': axypath,
         '--scale-low': slo,
@@ -227,10 +228,17 @@ def dojob(job, userimage, log=None):
     elif sub.parity == 1:
         axyargs['--parity'] = 'neg'
 
+    if sub.tweak_order == 0:
+        axyflags.append('--no-tweak')
+    else:
+        axyargs['--tweak-order'] = '%i' % sub.tweak_order
+
     cmd = 'augment-xylist '
     for (k,v) in axyargs.items():
         if v:
             cmd += k + ' ' + str(v) + ' '
+    for k in axyflags:
+        cmd += k + ' '
 
     log.msg('running: ' + cmd)
     (rtn, out, err) = run_command(cmd)

@@ -126,6 +126,7 @@ def upload_common(request, url=None, file=None):
                     ('center_ra', float),
                     ('center_dec', float),
                     ('radius', float),
+                    ('tweak_order', int),
                     ('downsample_factor', int),
                     ('parity', int),
                     ]:

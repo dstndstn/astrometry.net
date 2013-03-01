@@ -98,7 +98,7 @@ class SubmissionForm(forms.ModelForm):
             #'allow_commercial_use', 'allow_modifications',
             'parity','scale_units','scale_type','scale_lower',
             'scale_upper','scale_est','scale_err','positional_error',
-            'center_ra','center_dec','radius','downsample_factor',
+            'center_ra','center_dec','radius', 'tweak_order', 'downsample_factor',
             #'source_type'
             )
         widgets = {
@@ -111,6 +111,7 @@ class SubmissionForm(forms.ModelForm):
             'center_ra': forms.TextInput(attrs={'size':'5'}),
             'center_dec': forms.TextInput(attrs={'size':'5'}),
             'radius': forms.TextInput(attrs={'size':'5'}),
+            'tweak_order': forms.TextInput(attrs={'size':5}),
             'downsample_factor': forms.TextInput(attrs={'size':'5'}),
             'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
             #'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
@@ -157,6 +158,8 @@ class SubmissionForm(forms.ModelForm):
                 self._errors['center_dec'] = self.error_class([number_message])
             if not radius:
                 self._errors['radius'] = self.error_class([number_message])
+
+        #tweak_order = self.cleaned_data.get('tweak_order')
 
         upload_type = self.cleaned_data.get('upload_type','')
         if upload_type == 'file':

@@ -1049,6 +1049,9 @@ class Submission(Hideable):
     center_ra = models.FloatField(blank=True, null=True)
     center_dec = models.FloatField(blank=True, null=True)
     radius = models.FloatField(blank=True, null=True)
+
+    tweak_order = models.IntegerField(blank=True, null=True, default=2)
+
     downsample_factor = models.PositiveIntegerField(blank=True, null=True)
 
     #source_type = models.CharField(max_length=5, choices=SOURCE_TYPE_CHOICES, default='image')
