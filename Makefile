@@ -94,7 +94,7 @@ pyutil:
 	$(MAKE) -C gsl-an
 	$(MAKE) -C util pyutil
 
-install: report.txt
+install: all report.txt
 	$(MAKE) install-core
 	@echo
 	@echo The following command may fail if you don\'t have the cairo, netpbm, and
