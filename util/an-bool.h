@@ -30,7 +30,9 @@
 #ifndef __cplusplus
 #ifndef HAVE_BOOL
 #define HAVE_BOOL 1
-typedef uint8_t anbool;
+//typedef uint8_t anbool;
+// This helps unconfuse SWIG; it doesn't seem to like uint8_t
+typedef unsigned char anbool;
 #endif
 #endif
 
