@@ -238,16 +238,30 @@ def annotated_image(req, jobid=None, size='full'):
     pnmfn = img.get_pnm_path()
     annfn = get_temp_file()
 
-    datadir = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)), 'data')
-    uzcfn = os.path.join(datadir, 'uzc2000.fits')
-    abellfn = os.path.join(datadir, 'abell-all.fits')
+    #datadir = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)), 'data')
+    catdir = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)),
+                          'catalogs')
+    
+    uzcfn = os.path.join(catdir, 'uzc2000.fits')
+    abellfn = os.path.join(catdir, 'abell-all.fits')
+
+    hdfn = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)),
+                        'net', 'hd.fits')
+
+    rad = job.calibration.get_radius()
 
     #logmsg('pnm file: %s' % pnmfn)
-    cmd = ' '.join(['plotann.py --no-grid',
-                    '--scale %s' % (str(scale)),
-                    '--uzccat %s' % uzcfn,
-                    '--abellcat %s' % abellfn,
-                    '%s %s %s' % (wcsfn, pnmfn, annfn)])
+
+    args = ['plotann.py --no-grid',
+            '--scale %s' % (str(scale)),]
+    #if rad < 10.:
+    if rad < 1.:
+        args.extend(['--uzccat %s' % uzcfn,
+                     '--abellcat %s' % abellfn,
+                     '--hdcat %s' % hdfn
+                     ])
+            
+    cmd = ' '.join(args + ['%s %s %s' % (wcsfn, pnmfn, annfn)])
 
     #cmd = 'plot-constellations -w %s -i %s -o %s -s %s -N -C -B -c' % (wcsfn, pnmfn, annfn, str(scale))
     logmsg('Running: ' + cmd)

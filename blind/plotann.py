@@ -116,7 +116,7 @@ if __name__ == '__main__':
 		for i in range(len(T)):
 			if not plot.wcs.is_inside(T.ra[i], T.dec[i]):
 				continue
-			ann.add_target(T.ra[i], T.dec[i], 'UZC %s' % T.zname)
+			ann.add_target(T.ra[i], T.dec[i], 'UZC %s' % T.zname[i])
 	if opt.abellcat:
 		T = fits_table(opt.abellcat)
 		for i in range(len(T)):

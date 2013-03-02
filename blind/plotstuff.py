@@ -102,8 +102,8 @@ class Plotstuff(object):
 	def line_constant_dec2(self, dec, ralo, rahi, rastep):
 		return plotstuff_line_constant_dec2(self.pargs, dec, ralo, rahi, rastep)
 	def fill(self):
-		#return plotstuff_fill(self.pargs)
-		return self.plot('fill')
+		return plotstuff_fill(self.pargs)
+		#return self.plot('fill')
 	def stroke(self):
 		return plotstuff_stroke(self.pargs)
 	def fill_preserve(self):

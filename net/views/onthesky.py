@@ -34,24 +34,28 @@ def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
     ann.constellation_labels = 1
     ann.constellation_labels_long = 1
     plot.plot('annotations')
-    #plot.stroke()
+    plot.stroke()
     ann.constellation_labels = 0
+    ann.constellation_labels_long = 0
     ann.constellation_lines = 0
+
     ann.constellation_markers = 1
     plot.markersize = 3
+    plot.rgb = (0.4, 0.6, 0.4)
     plot.plot('annotations')
     plot.fill()
+    ann.constellation_markers = 0
 
     if hd:
-        ann.constellations=0
         ann.HD = 1
         ps.plot_annotations_set_hd_catalog(ann, settings.HENRY_DRAPER_CAT)
         plot.plot('annotations')
         plot.stroke()
+        ann.HD = 0
 
-    ann.constellations = 0
     ann.NGC = 1
     plot.plot('annotations')
+    ann.NGC = 0
 
     plot.color = 'white'
     plot.lw = 3

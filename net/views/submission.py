@@ -159,7 +159,9 @@ class SubmissionForm(forms.ModelForm):
             if not radius:
                 self._errors['radius'] = self.error_class([number_message])
 
-        #tweak_order = self.cleaned_data.get('tweak_order')
+        tweak_order = self.cleaned_data.get('tweak_order')
+        if tweak_order < 0 or tweak_order > 9:
+            self._errors['tweak_order'] = self.error_class(['Tweak order must be between 0 and 9'])
 
         upload_type = self.cleaned_data.get('upload_type','')
         if upload_type == 'file':
