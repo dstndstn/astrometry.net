@@ -2,8 +2,8 @@
 # This ups file can be used for an svn "live" installation
 #
 #
+setupRequired(cfitsio)
 setupOptional(wcslib)
-setupOptional(cfitsio)
 #
 # the symlink   "astrometry -> ." allows this to work.
 envPrepend(PYTHONPATH, ${PRODUCT_DIR})
