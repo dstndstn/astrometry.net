@@ -7,6 +7,7 @@
 %{
 // numpy.
 #include <numpy/arrayobject.h>
+#include <stdint.h>
 
 #include "log.h"
 #include "healpix.h"
@@ -21,6 +22,7 @@
 #include "codekd.h"
 #include "starkd.h"
 #include "starutil.h"
+#include "an-bool.h"
 
 #include "coadd.h"
 #include "wcs-resample.h"
@@ -28,7 +30,6 @@
 
 #define true 1
 #define false 0
-
 
 // For sip.h
 static void checkorder(int i, int j) {
@@ -60,6 +61,7 @@ void log_set_level(int lvl);
 
 %include "coadd.h"
 %include "resample.h"
+%include "an-bool.h"
 
 %inline %{
 #define ERR(x, ...)								\

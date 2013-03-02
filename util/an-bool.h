@@ -24,16 +24,18 @@
 #ifndef TRUE
 #define TRUE 1
 #endif
+
 #ifndef FALSE
 #define FALSE 0
 #endif
+
 #ifndef __cplusplus
-#ifndef HAVE_BOOL
-#define HAVE_BOOL 1
+//#ifndef HAVE_BOOL
+//#define HAVE_BOOL 1
 //typedef uint8_t anbool;
 // This helps unconfuse SWIG; it doesn't seem to like uint8_t
 typedef unsigned char anbool;
-#endif
+//#endif
 #endif
 
 #endif

@@ -3,7 +3,6 @@
 
 %include <typemaps.i>
 
- //%include "util.i"
 %import "util.i"
 
 #undef ATTRIB_FORMAT
@@ -37,6 +36,7 @@
 #include "convolve-image.h"
 #include "resample.h"
 #include "cairoutils.h"
+#include "an-bool.h"
 
 #define true 1
 #define false 0
