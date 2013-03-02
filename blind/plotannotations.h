@@ -13,6 +13,8 @@ struct annotation_args {
 	anbool constellation_labels_long;
 
 	anbool bright;
+    anbool bright_labels;
+
 	anbool HD;
 	float ngc_fraction;
 	bl* targets;

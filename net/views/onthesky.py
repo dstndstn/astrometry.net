@@ -46,6 +46,16 @@ def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
     plot.fill()
     ann.constellation_markers = 0
 
+    ann.bright_labels = False
+    ann.bright = True
+    plot.markersize = 2
+    if zoom >= 2:
+        ann.bright_labels = True
+    plot.plot('annotations')
+    ann.bright = False
+    ann.bright_labels = False
+    plot.fill()
+
     if hd:
         ann.HD = 1
         ps.plot_annotations_set_hd_catalog(ann, settings.HENRY_DRAPER_CAT)

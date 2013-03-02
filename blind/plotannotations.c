@@ -274,9 +274,11 @@ static void plot_brightstars(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann)
 		if (!strlen(bs->name) && !strlen(bs->common_name))
 			continue;
 
-		label = (strlen(bs->common_name) ? bs->common_name : bs->name);
 		plotstuff_stack_marker(pargs, px, py);
-		plotstuff_stack_text(pargs, cairo, label, px, py);
+        if (ann->bright_labels) {
+          label = (strlen(bs->common_name) ? bs->common_name : bs->name);
+          plotstuff_stack_text(pargs, cairo, label, px, py);
+        }
 	}
 }
 
@@ -406,6 +408,7 @@ void* plot_annotations_init(plot_args_t* args) {
 	ann->targets = bl_new(4, sizeof(target_t));
 	ann->NGC = TRUE;
 	ann->bright = TRUE;
+	ann->bright_labels = TRUE;
 	ann->constellation_lines = TRUE;
 	return ann;
 }
