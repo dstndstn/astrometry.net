@@ -423,6 +423,7 @@ def red_green_image(req, job_id=None, size='full'):
 def extraction_image(req, job_id=None, size='full'):
     job = get_object_or_404(Job, pk=job_id)
     ui = job.user_image
+    sub = ui.submission
     img = ui.image
     if size == 'display':
         scale = float(img.get_display_image().width)/img.width
@@ -453,6 +454,11 @@ def extraction_image(req, job_id=None, size='full'):
             fits = img.sourcelist.get_fits_table()
             xy.xoff = int(fits.x.min())
             xy.yoff = int(fits.y.min())
+
+        if sub.use_sextractor:
+            xy.xcol = 'X_IMAGE'
+            xy.ycol = 'Y_IMAGE'
+
         plot_xy_set_filename(xy, str(axyfn))
         xy.scale = scale
         plot.color = 'red'

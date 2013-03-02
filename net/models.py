@@ -1054,6 +1054,8 @@ class Submission(Hideable):
 
     downsample_factor = models.PositiveIntegerField(blank=True, null=True)
 
+    use_sextractor = models.BooleanField(default=False)
+
     #source_type = models.CharField(max_length=5, choices=SOURCE_TYPE_CHOICES, default='image')
     original_filename = models.CharField(max_length=256)
     album = models.ForeignKey('Album', blank=True, null=True)

@@ -306,6 +306,18 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         {{ form.downsample_factor }} (factor) {{ form.downsample_factor.errors }}<br />
     </td>
 </tr> 
+<tr> 
+    <td class="leftcolumn">
+        <div class="setting_title">SourceExtractor:</div>
+        <div class="setting_description">We can detect stars using 
+          <a href="http://www.astromatic.net/software/sextractor">SExtractor</a>,
+          or our own built-in star detector "simplexy".  If the built-in one fails,
+          give this a try.</div>
+    </td> 
+    <td>
+      {{ form.use_sextractor }} use SExtractor  {{ form.use_sextractor.errors }}<br />
+    </td>
+</tr> 
 </tbody>
 </table>
 <div style="text-align: center"><input type="submit" value="Upload" class="bigbutton" /></div>

@@ -233,6 +233,9 @@ def dojob(job, userimage, log=None):
     else:
         axyargs['--tweak-order'] = '%i' % sub.tweak_order
 
+    if sub.use_sextractor:
+        axyflags.append('--use-sextractor')
+
     cmd = 'augment-xylist '
     for (k,v) in axyargs.items():
         if v:
