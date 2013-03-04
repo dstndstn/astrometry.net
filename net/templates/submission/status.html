@@ -161,6 +161,18 @@ Submission {{ sub.id }}
     <td>{{ sub.tweak_order }}</td>
 </tr>
 {% endif %}
+{% if sub.use_sextractor %}
+<tr>
+    <td class="leftcolumn">Source detection:</td>
+    <td>SExtractor</td>
+</tr>
+{% endif %}
+{% if sub.crpix_center %}
+<tr>
+    <td class="leftcolumn">CRPIX:</td>
+    <td>center</td>
+</tr>
+{% endif %}
 </table>
 </div>
 <div style="clear:both"></div>

@@ -299,6 +299,16 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 </tr> 
 <tr> 
     <td class="leftcolumn">
+        <div class="setting_title">CRPIX center:</div>
+        <div class="setting_description">By default the reference point (CRPIX) of the WCS we compute can be anywhere
+          in your image, but often it's convenient to force it to be the center of the image.</div>
+    </td> 
+    <td>
+      {{ form.crpix_center }} CRPIX in center {{ form.crpix_center.errors }}
+    </td>
+</tr> 
+<tr> 
+    <td class="leftcolumn">
         <div class="setting_title">Downsample:</div>
         <div class="setting_description">We can downsample your image by a given factor before performing the source extraction.</div> 
     </td> 
