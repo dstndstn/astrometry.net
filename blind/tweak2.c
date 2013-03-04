@@ -479,7 +479,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			}
 			debug("\n");
 
-			if (Nmatch == 0) {
+			if (Nmatch < 2) {
 				logverb("No matches -- aborting tweak attempt\n");
 				free(theta);
 				sip_free(sipout);
