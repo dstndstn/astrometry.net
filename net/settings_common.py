@@ -260,7 +260,8 @@ LOGGING = {
     'loggers': {
         'django.request': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            #'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
         },
         'astrometry': {

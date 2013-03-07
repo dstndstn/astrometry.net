@@ -263,12 +263,18 @@ def api_login(request):
 @csrf_exempt
 def submission_status(req, sub_id):
     sub = get_object_or_404(Submission, pk=sub_id)
+    jobs = []
+    for job in sub.get_best_jobs():
+        if job is None:
+            jobs.append(None)
+        else:
+            jobs.append(job.id)
     json_response = {
         'user':sub.user.id,
         'processing_started':str(sub.processing_started),
         'processing_finished':str(sub.processing_finished),
         'user_images':[image.id for image in sub.user_images.all()],
-        'jobs':[job.id for job in sub.get_best_jobs()],
+        'jobs':jobs,
     }
 
     if sub.error_message:

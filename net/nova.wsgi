@@ -27,9 +27,12 @@ logfn = os.path.join(path, 'nova.log')
 print >> sys.stderr, 'Logging to', logfn
 logging.basicConfig(filename=logfn, level=logging.DEBUG)
 
-import django.core.handlers.wsgi
-application = django.core.handlers.wsgi.WSGIHandler()
-
+try:
+    import django.core.handlers.wsgi
+    application = django.core.handlers.wsgi.WSGIHandler()
+except:
+    import traceback
+    logging.error('Exception in WSGI handler:\n' + traceback.format_exc())
 
 if False:
     # Copied from:http://code.google.com/p/modwsgi/wiki/DebuggingTechniques

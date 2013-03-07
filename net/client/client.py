@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import base64
 from urllib2 import urlopen
 from urllib2 import Request
@@ -130,6 +131,7 @@ class Client(object):
             print 'HTTPError', e
             txt = e.read()
             open('err.html', 'wb').write(txt)
+            print 'Wrote error text to err.html'
 
     def login(self, apikey):
         args = { 'apikey' : apikey }
@@ -208,8 +210,10 @@ class Client(object):
         return self.overlay_plot('galex_image_for_wcs', outfn,
                                  wcsfn, wcsext)
 
-    def job_status(self, job_id):
+    def job_status(self, job_id, justdict=False):
         result = self.send_request('jobs/%s' % job_id, {})
+        if justdict:
+            return result
         stat = result.get('status')
         if stat == 'success':
             result = self.send_request('jobs/%s/calibration' % job_id, {})
@@ -222,8 +226,10 @@ class Client(object):
             print 'Objects in field:', result
         return stat
 
-    def sub_status(self, sub_id):
+    def sub_status(self, sub_id, justdict=False):
         result = self.send_request('submissions/%s' % sub_id, {})
+        if justdict:
+            return result
         return result.get('status')
 
     def jobs_by_tag(self, tag, exact):
@@ -242,6 +248,7 @@ if __name__ == '__main__':
     parser.add_option('--apikey', '-k', dest='apikey',
                       help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
     parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
+    parser.add_option('--wait', '-w', dest='wait', action='store_true', help='After submitting, monitor job status')
     parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
     parser.add_option('--scale-units', dest='scale_units',
                       choices=('arcsecperpix', 'arcminwidth', 'degwidth', 'focalmm'), help='Units for scale estimate')
@@ -323,9 +330,59 @@ if __name__ == '__main__':
             kwargs.update(parity=int(opt.parity))
 
         if opt.upload:
-            c.upload(opt.upload, **kwargs)
+            upres = c.upload(opt.upload, **kwargs)
         if opt.upload_url:
-            c.url_upload(opt.upload_url, **kwargs)
+            upres = c.url_upload(opt.upload_url, **kwargs)
+
+        stat = upres['status']
+        if stat != 'success':
+            print 'Upload failed: status', stat
+            print upres
+            sys.exit(-1)
+
+        opt.sub_id = upres['subid']
+
+    if opt.wait:
+        if opt.job_id is None:
+            if opt.sub_id is None:
+                print "Can't --wait without a submission id or job id!"
+                sys.exit(-1)
+
+            while True:
+                stat = c.sub_status(opt.sub_id, justdict=True)
+                print 'Got status:', stat
+                jobs = stat.get('jobs', [])
+                if len(jobs):
+                    for j in jobs:
+                        if j is not None:
+                            break
+                    if j is not None:
+                        print 'Selecting job id', j
+                        opt.job_id = j
+                        break
+                time.sleep(5)
+
+        success = False
+        while True:
+            stat = c.job_status(opt.job_id, justdict=True)
+            print 'Got job status:', stat
+            if stat.get('status','') in ['success']:
+                success = (stat['status'] == 'success')
+                break
+            time.sleep(5)
+
+        if success:
+            result = c.send_request('jobs/%s/calibration' % opt.job_id, {})
+            print 'Calibration:', result
+            result = c.send_request('jobs/%s/tags' % opt.job_id, {})
+            print 'Tags:', result
+            result = c.send_request('jobs/%s/machine_tags' % opt.job_id, {})
+            print 'Machine Tags:', result
+            result = c.send_request('jobs/%s/objects_in_field' % opt.job_id, {})
+            print 'Objects in field:', result
+
+        opt.job_id = None
+        opt.sub_id = None
 
     if opt.sdss_wcs:
         (wcsfn, outfn) = opt.sdss_wcs
