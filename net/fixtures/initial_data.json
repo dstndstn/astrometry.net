@@ -10,6 +10,16 @@
     }
 },
 {
+    "model"     :   "net.userprofile",
+    "pk"        :   0,
+    "fields"    :   {
+        "display_name"      :   "an-machine",
+        "user"              :   0,
+        "apikey"            :   "0jdajkdajkdfffae",
+        "default_license"   :   1
+    }
+},
+{
     "model"     :   "auth.user",
     "pk"        :   1,
     "fields"    :   {
@@ -21,21 +31,31 @@
 },
 {
     "model"     :   "net.userprofile",
-    "pk"        :   0,
-    "fields"    :   {
-        "display_name"      :   "an-machine",
-        "user"              :   0,
-        "apikey"            :   "0jdajkdajkdfffae",
-        "default_license"   :   1
-    }
-},
-{
-    "model"     :   "net.userprofile",
     "pk"        :   1,
     "fields"    :   {
         "display_name"      :   "anonymous",
         "user"              :   1,
         "apikey"            :   "1jcrmadfnxngxscd",
+        "default_license"   :   1
+    }
+},
+{
+    "model"     :   "auth.user",
+    "pk"        :   1000,
+    "fields"    :   {
+        "first_name"    :   "API tester",
+        "last_name"     :   "",
+        "username"      :   "apitester",
+        "password"      :   "0"
+    }
+},
+{
+    "model"     :   "net.userprofile",
+    "pk"        :   1000,
+    "fields"    :   {
+        "display_name"      :   "API tester",
+        "user"              :   1000,
+        "apikey"            :   "XXXXXXXX",
         "default_license"   :   1
     }
 },

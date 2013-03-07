@@ -98,14 +98,14 @@ def upload_common(request, url=None, file=None):
     submittor = request.user if request.user.is_authenticated() else None
 
     json = request.json
-    allow_commercial_use = json.get('allow_commercial_use')
-    allow_modifications = json.get('allow_modifications')
+    allow_commercial_use = json.get('allow_commercial_use', 'd')
+    allow_modifications = json.get('allow_modifications', 'd')
     license,created = License.objects.get_or_create(
         default_license=submittor.get_profile().default_license,
         allow_commercial_use=allow_commercial_use,
         allow_modifications=allow_modifications,
     )
-    publicly_visible = json.get('publicly_visible')
+    publicly_visible = json.get('publicly_visible', 'y')
 
     subargs = dict(
         user=submittor,
