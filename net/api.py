@@ -228,10 +228,15 @@ def api_login(request):
     loginfo('Got API key:', apikey)
     try:
         profile = UserProfile.objects.all().get(apikey=apikey)
-        loginfo('Matched API key:', profile)
+        loginfo('Matched API key: ' + str(profile))
     except ObjectDoesNotExist:
         loginfo('Bad API key')
         return HttpResponseErrorJson('bad apikey')
+    except:
+        import traceback
+        loginfo('Error matching API key: ' + traceback.format_exc())
+        raise
+        
 
     # Successful API login.  Register on the django side.
 

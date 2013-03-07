@@ -1179,7 +1179,7 @@ class UserProfile(models.Model):
     default_license = models.ForeignKey('License', default=DEFAULT_LICENSE_ID)
 
     def __str__(self):
-        s = ('UserProfile: user %s, API key %s' % (self.user.get_full_name(), self.apikey))
+        s = ('UserProfile: user %s, API key %s' % (self.user.get_full_name().encode('ascii','replace'), self.apikey))
         return s
 
     def create_api_key(self):
