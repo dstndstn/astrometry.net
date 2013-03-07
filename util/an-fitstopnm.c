@@ -291,15 +291,21 @@ int main(int argc, char *argv[]) {
 
 		if (find_min) {
 			minval = HUGE_VALF;
-			for (i=0; i<(nx*ny); i++)
-				minval = MIN(minval, img[i]);
+			for (i=0; i<(nx*ny); i++) {
+                if (isfinite(img[i])) {
+                    minval = MIN(minval, img[i]);
+                }
+            }
 			minval_set = TRUE;
 			logverb("Minimum pixel value: %g\n", minval);
 		}
 		if (find_max) {
 			maxval = -HUGE_VALF;
-			for (i=0; i<(nx*ny); i++)
-				maxval = MAX(maxval, img[i]);
+			for (i=0; i<(nx*ny); i++) {
+                if (isfinite(img[i])) {
+                    maxval = MAX(maxval, img[i]);
+                }
+            }
 			maxval_set = TRUE;
 			logverb("Maximum pixel value: %g\n", maxval);
 		}
