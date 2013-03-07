@@ -126,8 +126,10 @@ InlineDefine Const double xy2ra(double x, double y) {
 }
 
 InlineDefine Flatten void xyz2radec(double x, double y, double z, double *ra, double *dec) {
-	*ra = xy2ra(x, y);
-	*dec = z2dec(z);
+    if (ra)
+    	*ra = xy2ra(x, y);
+	if (dec)
+        *dec = z2dec(z);
 }
 
 InlineDefine Flatten void xyzarr2radec(const double* xyz, double *ra, double *dec) {
@@ -136,8 +138,10 @@ InlineDefine Flatten void xyzarr2radec(const double* xyz, double *ra, double *de
 
 InlineDefine Flatten void xyzarr2radecdeg(const double* xyz, double *ra, double *dec) {
 	xyzarr2radec(xyz, ra, dec);
-    *ra  = rad2deg(*ra);
-    *dec = rad2deg(*dec);
+    if (ra)
+        *ra  = rad2deg(*ra);
+    if (dec)
+        *dec = rad2deg(*dec);
 }
 
 InlineDefine Flatten void xyzarr2radecdegarr(double* xyz, double *radec) {

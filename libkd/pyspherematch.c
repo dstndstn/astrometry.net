@@ -169,13 +169,14 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     npy_intp dims[2];
     PyArrayObject* dists;
 	anbool notself;
+	anbool permute;
 	PyObject* rtn;
 	
 	// So that ParseTuple("b") with a C "anbool" works
 	assert(sizeof(anbool) == sizeof(unsigned char));
 
-    if (!PyArg_ParseTuple(args, "lldb", &p1, &p2, &rad, &notself)) {
-        PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");
+    if (!PyArg_ParseTuple(args, "lldbb", &p1, &p2, &rad, &notself, &permute)) {
+        PyErr_SetString(PyExc_ValueError, "spherematch_c.match: need five args: two kdtree identifiers (ints), search radius (float), notself (boolean), permuted (boolean)");
         return NULL;
     }
 	//printf("Notself = %i\n", (int)notself);
@@ -198,14 +199,21 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     dims[1] = 1;
     dists = (PyArrayObject*)PyArray_SimpleNew(2, dims, PyArray_DOUBLE);
     for (i=0; i<N; i++) {
-        int* iptr;
-        double* dptr;
-        iptr = PyArray_GETPTR2(inds, i, 0);
-        *iptr = kdtree_permute(kd1, il_get(dtresults.inds1, i));
-        iptr = PyArray_GETPTR2(inds, i, 1);
-        *iptr = kdtree_permute(kd2, il_get(dtresults.inds2, i));
-        dptr = PyArray_GETPTR2(dists, i, 0);
-        *dptr = dl_get(dtresults.dists, i);
+      int index;
+      int* iptr;
+      double* dptr;
+      iptr = PyArray_GETPTR2(inds, i, 0);
+      index = il_get(dtresults.inds1, i);
+      if (permute)
+        index = kdtree_permute(kd1, index);
+      *iptr = index;
+      iptr = PyArray_GETPTR2(inds, i, 1);
+      index = il_get(dtresults.inds2, i);
+      if (permute)
+        index = kdtree_permute(kd2, index);
+      *iptr = index;
+      dptr = PyArray_GETPTR2(dists, i, 0);
+      *dptr = dl_get(dtresults.dists, i);
     }
 
     il_free(dtresults.inds1);
@@ -328,6 +336,61 @@ static PyObject* spherematch_kdtree_bbox(PyObject* self, PyObject* args) {
 }
 
 
+static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
+  PyArrayObject* pyX;
+  double* X;
+  PyObject* rtn;
+  npy_intp dims[2];
+  long i;
+  kdtree_t* kd;
+  int k, D, N;
+  long* I;
+  PyObject* pyO;
+  PyObject* pyI;
+  PyArray_Descr* dtype = PyArray_DescrFromType(NPY_INT);
+  int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+
+  if (!PyArg_ParseTuple(args, "lO", &i, &pyO)) {
+    PyErr_SetString(PyExc_ValueError, "need two args: kdtree identifier (int), index array (numpy array of ints)");
+    return NULL;
+  }
+  // Nasty!
+  kd = (kdtree_t*)i;
+  D = kd->ndim;
+
+  Py_INCREF(dtype);
+  pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
+  if (!pyI) {
+    PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
+    Py_XDECREF(dtype);
+  }
+  N = PyArray_DIM(pyI, 0);
+
+  dims[0] = N;
+  dims[1] = D;
+
+  pyX = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
+  X = PyArray_DATA(pyX);
+  I = PyArray_DATA(pyI);
+
+  //kdtree_inverse_permutation(kd, 
+
+  for (k=0; k<N; k++) {
+    int ii = I[k];
+    // ?
+    //ii = kdtree_permute(kd, ii);
+    kdtree_copy_data_double(kd, ii, 1, X);
+    X += D;
+  }
+  Py_DECREF(pyI);
+  Py_DECREF(dtype);
+  rtn = Py_BuildValue("O", pyX);
+  Py_DECREF(pyX);
+  return rtn;
+}
+
+
+
 static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
   int i, j, NY, N;
   long p1, p2;
@@ -432,6 +495,9 @@ static PyMethodDef spherematchMethods[] = {
       "get bounding-box of this tree" },
     { "kdtree_n", spherematch_kdtree_n, METH_VARARGS,
       "N pts in tree" },
+
+    {"kdtree_get_positions", spherematch_kdtree_get_data, METH_VARARGS,
+     "Retrieve the positions of given indices in this tree (np array of ints)" },
 
     { "match", spherematch_match, METH_VARARGS,
       "find matching data points" },

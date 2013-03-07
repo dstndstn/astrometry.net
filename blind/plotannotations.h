@@ -16,6 +16,7 @@ struct annotation_args {
     anbool bright_labels;
 
 	anbool HD;
+	anbool HD_labels;
 	float ngc_fraction;
 	bl* targets;
 	char* hd_catalog;

@@ -142,7 +142,7 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 		plotstuff_stack_arrow(pargs, px, py, ex, ey);
 		logverb("Arrow from (%g,%g) to (%g,%g)\n", px, py, ex, ey);
 		distdeg = deg_between_radecdeg(cra, cdec, tar->ra, tar->dec);
-		asprintf(&txt, "%s: %.1f deg", tar->name, distdeg);
+		asprintf_safe(&txt, "%s: %.1f deg", tar->name, distdeg);
 		plotstuff_stack_text(pargs, cairo, txt, px, py);
 	}
 }
@@ -169,6 +169,7 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 		double maxr2 = 0;
 		dl* rds;
 		xyzc[0] = xyzc[1] = xyzc[2] = 0.0;
+		xyzj[0] = xyzj[1] = xyzj[2] = 0.0;
 		for (j=0; j<il_size(stars); j++) {
 			constellations_get_star_radec(il_get(stars, j), &ra, &dec);
 			radecdeg2xyzarr(ra, dec, xyzj);
@@ -320,9 +321,11 @@ static void plot_hd(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 			continue;
 		logverb("HD %i at RA,Dec (%g,%g) -> xy (%g, %g)\n", entry->hd, entry->ra, entry->dec, px, py);
 
-		sprintf(label, "HD %i", entry->hd);
 		plotstuff_stack_marker(pargs, px, py);
-		plotstuff_stack_text(pargs, cairo, label, px, py);
+        if (ann->HD_labels) {
+          sprintf(label, "HD %i", entry->hd);
+          plotstuff_stack_text(pargs, cairo, label, px, py);
+        }
 	}
 	bl_free(hdlist);
 	henry_draper_close(hdcat);

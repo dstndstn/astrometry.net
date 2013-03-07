@@ -36,6 +36,8 @@ if __name__ == '__main__':
 					  help='Path to Henry Draper catalog hd.fits')
 	parser.add_option('--uzccat', dest='uzccat',
 					  help='Path to Updated Zwicky Catalog uzc2000.fits')
+	parser.add_option('--tycho2cat', dest='t2cat',
+					  help='Path to Tycho-2 KD-tree file')
 	parser.add_option('--abellcat', dest='abellcat',
 					  help='Path to Abell catalog abell-all.fits')
 	parser.add_option('--target', '-t', dest='target', action='append',
@@ -123,6 +125,30 @@ if __name__ == '__main__':
 			if not plot.wcs.is_inside(T.ra[i], T.dec[i]):
 				continue
 			ann.add_target(T.ra[i], T.dec[i], 'Abell %i' % T.aco[i])
+
+	if opt.t2cat:
+		from astrometry.libkd.spherematch import tree_open, tree_close, tree_build_radec, tree_free, trees_match
+		from astrometry.libkd import spherematch_c
+		from astrometry.util.starutil_numpy import deg2dist, xyztoradec
+		import numpy as np
+		import sys
+		wcs = plot.wcs
+		rc,dc = wcs.get_center()
+		rr = wcs.get_radius()
+		kd = tree_open(opt.t2cat)
+		kd2 = tree_build_radec(np.array([rc]), np.array([dc]))
+		r = deg2dist(rr)
+		I,J,d = trees_match(kd, kd2, r, permuted=False)
+		# HACK
+		I2,J,d = trees_match(kd, kd2, r)
+		xyz = spherematch_c.kdtree_get_positions(kd, I)
+		tree_free(kd2)
+		tree_close(kd)
+		tra,tdec = xyztoradec(xyz)
+		T = fits_table(opt.t2cat, hdu=6)
+		for r,d,t1,t2,t3 in zip(tra,tdec, T.tyc1[I2], T.tyc2[I2], T.tyc3[I2]):
+			ann.add_target(r, d, 'Tycho-2 %i-%i-%i' % (t1,t2,t3))
+
 			
 	plot.color = opt.textcolor
 	plot.fontsize = opt.textsize

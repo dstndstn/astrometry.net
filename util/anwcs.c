@@ -705,15 +705,14 @@ int anwcs_get_radec_center_and_radius(const anwcs_t* anwcs,
 	case ANWCS_TYPE_WCSLIB:
 		{
 			anwcslib_t* anwcslib = anwcs->data;
-			double x,y;
-			double ra1, dec1, ra2, dec2;
-			x = anwcslib->imagew/2. + 0.5;
-			y = anwcslib->imageh/2. + 0.5;
-			if (anwcs_pixelxy2radec(anwcs, x, y, &ra1, &dec1))
-				return -1;
-			if (p_ra) *p_ra = ra1;
-			if (p_dec) *p_dec = dec1;
-
+            double x,y;
+            double ra1, dec1, ra2, dec2;
+            x = anwcslib->imagew/2. + 0.5;
+            y = anwcslib->imageh/2. + 0.5;
+            if (anwcs_pixelxy2radec(anwcs, x, y, &ra1, &dec1))
+              return -1;
+            if (p_ra) *p_ra = ra1;
+            if (p_dec) *p_dec = dec1;
 			// FIXME -- this is certainly not right in general....
 			/*
 			 if (p_radius) {
@@ -737,7 +736,8 @@ int anwcs_get_radec_center_and_radius(const anwcs_t* anwcs,
 		{
 			sip_t* sip;
 			sip = anwcs->data;
-			sip_get_radec_center(sip, p_ra, p_dec);
+            if (p_ra || p_dec)
+              sip_get_radec_center(sip, p_ra, p_dec);
 			if (p_radius)
 				*p_radius = sip_get_radius_deg(sip);
 		}

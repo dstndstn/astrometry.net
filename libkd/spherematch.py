@@ -263,7 +263,8 @@ def tree_open(fn):
 def tree_close(kd):
     return spherematch_c.kdtree_close(kd)
     
-def trees_match(kd1, kd2, radius, nearest=False, notself=False):
+def trees_match(kd1, kd2, radius, nearest=False, notself=False,
+                permuted=True):
     '''
     Runs rangesearch or nearest-neighbour matching on given kdtrees.
 
@@ -295,7 +296,7 @@ def trees_match(kd1, kd2, radius, nearest=False, notself=False):
         J,I,d = spherematch_c.nearest2(kd2, kd1, radius, notself)
         d = distsq2deg(d)
     else:
-        (inds,dists) = spherematch_c.match(kd1, kd2, radius)
+        (inds,dists) = spherematch_c.match(kd1, kd2, radius, notself, permuted)
         d = dist2deg(dists[:,0])
         I,J = inds[:,0], inds[:,1]
     return I,J,d

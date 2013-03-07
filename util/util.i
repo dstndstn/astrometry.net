@@ -396,6 +396,9 @@ char* anwcs_wcslib_to_string(const anwcs_t* wcs,
 	void get_center(double *p_ra, double *p_dec) {
 		anwcs_get_radec_center_and_radius($self, p_ra, p_dec, NULL);
 	}
+	void get_radius(double *p_radius) {
+      anwcs_get_radec_center_and_radius($self, NULL, NULL, p_radius);
+	}
 
 	anbool is_inside(double ra, double dec) {
 		return anwcs_radec_is_inside_image($self, ra, dec);

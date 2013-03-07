@@ -36,8 +36,7 @@ or:
 
 (4.) Backup the nova database and data:
 
-    cd ~/staging/net
-    ./backup-nova.sh
+     become nova@broiler, run the cron jobs that do the rsync and database dump
 
 (5.) Prepare the staging data area.  We use the "unionfs-fuse" union
 filesystem for this.  Staging has a read-only view of nova's data,
@@ -48,7 +47,7 @@ data and database inconsistent.  (Ditto for the "jobs" directory.)
     cd ~/staging/net
     ./remake-data-dir.sh
 
-(6.) Migrate the nova database and data:
+(6.) Copy the nova database:
 
 The exact details will depend on whether you have to run any elaborate
 schema migration scripts.  In the simplest case, copy the database.
@@ -69,28 +68,28 @@ schema migration scripts.  In the simplest case, copy the database.
     # restart process_submissions.py on nova
     screen -R nova
     cd ~/nova/net
-    python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
+    (for ((;;)); do python -u process_submissions.py -j 8 -s 4 > dj.log 2>&1; sleep 10; done) &
     [ctrl-A d]
 
     # recreate the an-staging database from an-staging-source
     dropdb an-staging
     createdb -O nova -T an-staging-source an-staging
 
-    # restart process_submissions.py on staging
+(7.) Migrate the staging database:
+
+     python manage.py migrate
+
+(8.) Restart process_submissions.py on staging:
+    
     screen -R staging
     cd ~/staging/net
-    python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
+    (for ((;;)); do python -u process_submissions.py -j 4 -s 4 > dj.log 2>&1; sleep 10; done) &
     [ctrl-A d]
 
+(9.) Test it out.
 
-############
-python manage.py migrate
+(10.) Decide to launch!
 
-
-
-(7.) Test it out, email the group when it's ready for review.
-
-(8.) Decide to launch!
 
 
 

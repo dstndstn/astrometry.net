@@ -245,14 +245,18 @@ def annotated_image(req, jobid=None, size='full'):
     uzcfn = os.path.join(catdir, 'uzc2000.fits')
     abellfn = os.path.join(catdir, 'abell-all.fits')
 
-    hdfn = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)),
-                        'net', 'hd.fits')
+    #hdfn = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)),
+    #'net', 'hd.fits')
+
+    hdfn = settings.HENRY_DRAPER_CAT
+
+    tycho2fn = settings.TYCHO2_KD
 
     rad = job.calibration.get_radius()
 
     #logmsg('pnm file: %s' % pnmfn)
 
-    args = ['plotann.py --no-grid',
+    args = ['plotann.py --no-grid --toy -10',
             '--scale %s' % (str(scale)),]
     #if rad < 10.:
     if rad < 1.:
@@ -260,6 +264,9 @@ def annotated_image(req, jobid=None, size='full'):
                      '--abellcat %s' % abellfn,
                      '--hdcat %s' % hdfn
                      ])
+
+    if rad < 0.25:
+        args.append('--tycho2cat %s' % tycho2fn)
             
     cmd = ' '.join(args + ['%s %s %s' % (wcsfn, pnmfn, annfn)])
 
@@ -295,11 +302,12 @@ def onthesky_image(req, zoom=None, calid=None):
     elif zoom == 2:
         zoom = wcs.radius() < 0.15
         plot_wcs_outline(wcsfn, plotfn, width=3.6, grid=1, zoom=zoom,
-                         zoomwidth=0.36)
+                         zoomwidth=0.36, hd=True, hd_labels=False,
+                         tycho2=False)
         # hd=True is too cluttered at this level
     elif zoom == 3:
         plot_wcs_outline(wcsfn, plotfn, width=0.36, grid=0.1, zoom=False,
-                         hd=False)
+                         hd=True, hd_labels=True, tycho2=True)
     else:
         return HttpResponse('invalid zoom')
     f = open(plotfn)

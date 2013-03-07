@@ -8,7 +8,8 @@ from astrometry.util import util as anutil
 from astrometry.blind import plotstuff as ps
 
 def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
-                     zoomwidth=3.6, grid=10, hd=False):
+                     zoomwidth=3.6, grid=10, hd=False, hd_labels=False,
+                     tycho2=False):
     anutil.log_init(3)
     #anutil.log_set_level(3)
 
@@ -57,11 +58,40 @@ def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
     plot.fill()
 
     if hd:
-        ann.HD = 1
+        ann.HD = True
+        ann.HD_labels = hd_labels
         ps.plot_annotations_set_hd_catalog(ann, settings.HENRY_DRAPER_CAT)
         plot.plot('annotations')
         plot.stroke()
-        ann.HD = 0
+        ann.HD = False
+        ann.HD_labels = False
+
+    if tycho2:
+        from astrometry.libkd.spherematch import tree_open, tree_close, tree_build_radec, tree_free, trees_match
+        from astrometry.libkd import spherematch_c
+        from astrometry.util.starutil_numpy import deg2dist, xyztoradec
+        import numpy as np
+        import sys
+        kd = tree_open(settings.TYCHO2_KD)
+        # this is a bit silly: build a tree with a single point, then do match()
+        kd2 = tree_build_radec(np.array([ra]), np.array([dec]))
+        r = deg2dist(width * np.sqrt(2.) / 2.)
+        #r = deg2dist(wcs.radius())
+        I,J,d = trees_match(kd, kd2, r, permuted=False)
+        del J
+        del d
+        #print 'Matched', len(I)
+        xyz = spherematch_c.kdtree_get_positions(kd, I)
+        del I
+        tree_free(kd2)
+        tree_close(kd)
+        #print >>sys.stderr, 'Got', xyz.shape, xyz
+        tra,tdec = xyztoradec(xyz)
+        #print >>sys.stderr, 'RA,Dec', ra,dec
+        plot.apply_settings()
+        for r,d in zip(tra,tdec):
+            plot.marker_radec(r,d)
+        plot.fill()
 
     ann.NGC = 1
     plot.plot('annotations')
