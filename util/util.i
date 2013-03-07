@@ -1,8 +1,8 @@
-
 %module(package="astrometry.util") util
 
 %include <typemaps.i>
 %include <cstring.i>
+%include <exception.i>
 
 %{
 // numpy.
@@ -666,14 +666,22 @@ Sip = sip_t
 
 %extend tan_t {
 	tan_t(char* fn=NULL, int ext=0, int only=0) {
+		tan_t* t = NULL;
 		if (fn) {
 			if (only) {
-				return tan_read_header_file_ext_only(fn, ext, NULL);
+				t = tan_read_header_file_ext_only(fn, ext, NULL);
 			} else {
-				return tan_read_header_file_ext(fn, ext, NULL);
+				t = tan_read_header_file_ext(fn, ext, NULL);
 			}
+		} else {
+	        t = (tan_t*)calloc(1, sizeof(tan_t));
+	    }
+	    printf("tan_t: %p\n", t);
+		if (!t) {
+	        // SWIG_exception(SWIG_RuntimeError, "Failed to read TAN WCS header");
+			PyErr_SetString(PyExc_RuntimeError, "Failed to read TAN WCS header");
+			return NULL;
 		}
-		tan_t* t = (tan_t*)calloc(1, sizeof(tan_t));
 		return t;
 	}
 	tan_t(double crval1, double crval2, double crpix1, double crpix2,

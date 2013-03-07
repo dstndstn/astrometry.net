@@ -5,7 +5,7 @@ import numpy as np
 def point_in_poly(x, y, poly):
 	'''
 	Performs a point-in-polygon test for numpy arrays of *x* and *y*
-	values, and a polygon described as 2-d numpy array.
+	values, and a polygon described as 2-d numpy array (with shape (N,2))
 
 	poly: N x 2 array
 
