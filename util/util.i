@@ -687,15 +687,6 @@ Sip = sip_t
 		return t;
 	}
 
-/*
-    %pythoncode %{
-    def __swig_hates_me__(self, *args):
-        this = _util.new_tan_t(*args)
-        if (this is None):
-            raise RuntimeError("The duck got punched!")
-        self.this = this
-    %}
- */
 	tan_t(double crval1, double crval2, double crpix1, double crpix2,
 		  double cd11, double cd12, double cd21, double cd22,
 		  double imagew, double imageh) {
@@ -1100,8 +1091,6 @@ def tan_t_xyz2pixelxy_any(self, xyz):
 		return x,y
 tan_t.xyz2pixelxy_single = tan_t.xyz2pixelxy
 tan_t.xyz2pixelxy = tan_t_xyz2pixelxy_any
-
-#tan_t.__init__ = tan_t.__swig_hates_me__
 
 _real_tan_t_init = tan_t.__init__
 def my_tan_t_init(self, *args, **kwargs):
