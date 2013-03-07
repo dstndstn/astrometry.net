@@ -128,6 +128,8 @@ def upload_common(request, url=None, file=None):
                     ('radius', float),
                     ('tweak_order', int),
                     ('downsample_factor', int),
+                    ('use_sextractor', bool),
+                    ('crpix_center', bool),
                     ('parity', int),
                     ]:
         if key in json:
@@ -285,11 +287,16 @@ def job_status(req, job_id):
 def calibration(req, job_id):
     job = get_object_or_404(Job, pk=job_id)
     if job.calibration:
-        (ra, dec, radius) = job.calibration.get_center_radecradius()
+        cal = job.calibration
+        (ra, dec, radius) = cal.get_center_radecradius()
+        pixscale = cal.raw_tan.get_pixscale()
+        orient = cal.raw_tan.get_orientation()
         return HttpResponseJson({
             'ra':ra,
             'dec':dec,
             'radius':radius,
+            'pixscale':pixscale,
+            'orientation':orient,
         })
     else:
         return HttpResponseJson({
