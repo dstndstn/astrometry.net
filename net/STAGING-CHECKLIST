@@ -94,10 +94,8 @@ schema migration scripts.  In the simplest case, copy the database.
 
 
 
-THE INSTRUCTIONS BELOW STILL NEED TO BE UPDATED (as of 2012-05-31) --dstn
-
 -----------------------------------------------
-     So you decided to launch.  Now what?
+     So you decided to launch.  Updating Nova:
 -----------------------------------------------
 
 (1.) Get dstn to take down the apache2-nova server.
@@ -106,7 +104,9 @@ sudo /etc/apache2-nova/stop-apache
 
 (2.) Become nova@oven .
 
-(3.) Update the code and build.
+(3.) Stop nova's process_submissions.py (as described above)
+
+(4.) Update the code and build.
 
 cd ~/nova
 svn switch ^/tags/nova/2011-06-29-1
@@ -114,24 +114,12 @@ make
 make py
 make extra
 
-(4.) Stop nova's process_submissions.py (as described above)
-     Stop staging's process_submissions.py
+(5.) Migrate the database:
 
-(5.) Migrate the database and data (as above)
-
-Simplest case:
-
-dropdb an-staging-source
-createdb -O nova -T an-staging an-staging-source
-dropdb an-nova
-createdb -O nova -T an-staging-source an-nova
-mv data data-tmp
-mv jobs jobs-tmp
-mv ~/staging/net/data .
-mv ~/staging/net/jobs .
+cd net
+python manage.py migrate
 
 (6.) Restart nova's process_submissions.py (as described above)
-     Restart staging's process_submissions.py
 
 (7.) Get dstn to bring up the apache2-nova server again.
 
