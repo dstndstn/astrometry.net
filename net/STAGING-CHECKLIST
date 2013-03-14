@@ -7,8 +7,8 @@
 
 (1.) Tag the code:
 
-cd ~/supernova
-svn copy -m "tag" . ^/tags/nova/2011-06-29-1 
+    cd ~/supernova
+    svn copy -m "tag" . ^/tags/nova/2011-06-29-1 
 
 (with today's date, and an appropriate release number)
 
@@ -107,10 +107,7 @@ schema migration scripts.  In the simplest case, copy the database.
 
 (1.) Get dstn to take down the apache2-nova server.
 
-    sudo bash
-    source ~nova/.bashrc
-    /etc/apache2-nova/stop-apache
-    /etc/apache2-nova/start-apache
+    sudo /etc/apache2-nova/stop-apache
 
 (2.) Become nova@oven .
 
@@ -118,20 +115,23 @@ schema migration scripts.  In the simplest case, copy the database.
 
 (4.) Update the code and build.
 
-cd ~/nova
-svn switch ^/tags/nova/2011-06-29-1
-make
-make py
-make extra
+    cd ~/nova
+    svn switch ^/tags/nova/2011-06-29-1
+    make
+    make py
+    make extra
 
 (5.) Migrate the database:
 
-cd net
-python manage.py migrate
+    cd net
+    python manage.py migrate
 
 (6.) Restart nova's process_submissions.py (as described above)
 
 (7.) Get dstn to bring up the apache2-nova server again.
 
-sudo /etc/apache2-nova/start-apache
+    sudo bash
+    source ~nova/.bashrc
+    /etc/apache2-nova/start-apache
+
 
