@@ -549,10 +549,12 @@ def create_source_list(df):
     if fits:
         try:
             img = SourceList(disk_file=df, source_type=source_type)
-            w = fits.x.max()-fits.x.min()
-            h = fits.y.max()-fits.y.min()
-            w = int(w)
-            h = int(h)
+            # w = fits.x.max()-fits.x.min()
+            # h = fits.y.max()-fits.y.min()
+            # w = int(w)
+            # h = int(h)
+            w = int(math.ceil(fits.x.max()))
+            h = int(math.ceil(fits.y.max()))
             logmsg('w %i, h %i' % (w, h))
             img.width = w
             img.height = h

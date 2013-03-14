@@ -413,9 +413,11 @@ def red_green_image(req, job_id=None, size='full'):
         if hasattr(img, 'sourcelist'):
             # set xy offsets for source lists
             fits = img.sourcelist.get_fits_table()
-            xy.xoff = int(fits.x.min())
-            xy.yoff = int(fits.y.min())
-
+            #xy.xoff = int(fits.x.min())
+            #xy.yoff = int(fits.y.min())
+            xy.xoff = 0.
+            xy.yoff = 0.
+            
         plot_xy_set_filename(xy, str(axyfn))
         xy.scale = scale
         plot.color = 'red'
@@ -472,8 +474,9 @@ def extraction_image(req, job_id=None, size='full'):
         if hasattr(img, 'sourcelist'):
             # set xy offsets for source lists
             fits = img.sourcelist.get_fits_table()
-            xy.xoff = int(fits.x.min())
-            xy.yoff = int(fits.y.min())
+            #xy.xoff = int(fits.x.min())
+            #xy.yoff = int(fits.y.min())
+            xy.xoff = xy.yoff = 1.
 
         if sub.use_sextractor:
             xy.xcol = 'X_IMAGE'

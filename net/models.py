@@ -6,6 +6,8 @@ import shutil
 import tempfile
 from datetime import datetime
 
+import numpy as np
+
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -560,11 +562,14 @@ class SourceList(Image):
     
     def render(self, f):
         fits = self.get_fits_table()
-        w = int(fits.x.max()-fits.x.min())
-        h = int(fits.y.max()-fits.y.min())
+        #w = int(fits.x.max()-fits.x.min())
+        #h = int(fits.y.max()-fits.y.min())
+        w = int(np.ceil(fits.x.max()))
+        h = int(np.ceil(fits.y.max()))
         scale = float(self.width)/w
-        xmin = int(fits.x.min())
-        ymin = int(fits.y.min())
+        #xmin = int(fits.x.min())
+        #ymin = int(fits.y.min())
+        xmin = ymin = 1.
         
         img = PIL.Image.new('RGB',(self.width,self.height))
         draw = PIL.ImageDraw.Draw(img)
