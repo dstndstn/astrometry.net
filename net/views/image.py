@@ -271,12 +271,24 @@ def annotated_image(req, jobid=None, size='full'):
     cmd = ' '.join(args + ['%s %s %s' % (wcsfn, pnmfn, annfn)])
 
     #cmd = 'plot-constellations -w %s -i %s -o %s -s %s -N -C -B -c' % (wcsfn, pnmfn, annfn, str(scale))
+
+    import sys
+
+    # (rtn,out,err) = run_command('which plotann.py; echo pyp $PYTHONPATH; echo path $PATH; echo llp $LD_LIBRARY_PATH; echo "set"; set')
+    # return HttpResponse('which: ' + out + err + '<br>sys.path<br>' + '<br>'.join(sys.path) +
+    #                     "<br>PATH " + os.environ['PATH'] +
+    #                     "<br>LLP " + os.environ['LD_LIBRARY_PATH'] +
+    #                     "<br>sys.path " + ':'.join(sys.path) +
+    #                     "<br>cmd " + cmd)
+
+    os.environ['PYTHONPATH'] = ':'.join(sys.path)
+
     logmsg('Running: ' + cmd)
     (rtn, out, err) = run_command(cmd)
     if rtn:
         logmsg('out: ' + out)
         logmsg('err: ' + err)
-        return HttpResponse('plot failed' + err)
+        return HttpResponse('plot failed: ' + err + "<br><pre>" + out + "</pre><br><pre>" + err + "</pre>")
     f = open(annfn)
     res = HttpResponse(f)
     res['Content-Type'] = 'image/png'

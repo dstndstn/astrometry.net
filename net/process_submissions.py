@@ -475,6 +475,7 @@ def get_or_create_image(df):
     except Image.DoesNotExist:
         # try to create image assume disk file is an image file (png, jpg, etc)
         img = create_image(df)
+        logmsg('img = ' + str(img))
         if img is None:
             # try to create sourcelist image
             img = create_source_list(df)
@@ -539,6 +540,9 @@ def create_source_list(df):
             fits = fits_table(fitsfn)
             source_type = 'text'
         except Exception as e:
+            import traceback
+            logmsg('Traceback:\n' + traceback.format_exc())
+            logmsg('fitsfn: %s' % fitsfn)
             logmsg(e)
             logmsg('file is not a text list')
             

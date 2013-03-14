@@ -187,12 +187,20 @@ Submission {{ sub.id }}
     <img src="{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}" />
     </a>
 </td>
-<td>    
+<td>
+    <a href="{% url astrometry.net.views.image.user_image image.id %}">Go to results page</a>
+    <br/>
     {% for job in image.jobs.all %}
     Job {{ job.id }}: {% include "job/status.html" with job=job %}<br />
 
+    {% if image.image.is_source_list %}
+    {% else %}
+
     <a href="{% url astrometry.net.views.image.extraction_image job_id=job.id size='display' %}">Source extraction image</a> 
     <a href="{% url astrometry.net.views.image.extraction_image job_id=job.id size='full' %}">(fullsize)</a><br />
+
+    {% endif %}
+
     <a href="" class="log_tail_link">Log file tail <span>[-]</span><br /></a>
     <div class="log_tail">
 	<a href={% url astrometry.net.views.submission.job_log_file jobid=job.id %}>(full)</a><br />

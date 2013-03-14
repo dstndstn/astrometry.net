@@ -147,6 +147,8 @@ if __name__ == '__main__':
 		tra,tdec = xyztoradec(xyz)
 		T = fits_table(opt.t2cat, hdu=6)
 		for r,d,t1,t2,t3 in zip(tra,tdec, T.tyc1[I2], T.tyc2[I2], T.tyc3[I2]):
+			if not plot.wcs.is_inside(r, d):
+				continue
 			ann.add_target(r, d, 'Tycho-2 %i-%i-%i' % (t1,t2,t3))
 
 			

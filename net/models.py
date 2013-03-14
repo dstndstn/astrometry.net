@@ -401,6 +401,10 @@ class Image(models.Model):
     #  image_thumbnail_set -> Image
     #  image_display_set -> Image
 
+    def is_source_list(self):
+        ''' xy list? '''
+        return hasattr(self, 'sourcelist')
+
     def get_mime_type(self):
         if hasattr(self, 'sourcelist'):
             return self.sourcelist.get_mime_type()
