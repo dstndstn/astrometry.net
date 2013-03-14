@@ -86,6 +86,13 @@ schema migration scripts.  In the simplest case, copy the database.
     (for ((;;)); do python -u process_submissions.py -j 4 -s 4 > dj.log 2>&1; sleep 10; done) &
     [ctrl-A d]
 
+(9.) If necessary, restart staging's apache:
+
+    sudo bash
+    source ~nova/.bashrc
+    /etc/apache2-staging/stop-apache
+    /etc/apache2-staging/start-apache
+
 (9.) Test it out.
 
 (10.) Decide to launch!
@@ -100,7 +107,10 @@ schema migration scripts.  In the simplest case, copy the database.
 
 (1.) Get dstn to take down the apache2-nova server.
 
-sudo /etc/apache2-nova/stop-apache
+    sudo bash
+    source ~nova/.bashrc
+    /etc/apache2-nova/stop-apache
+    /etc/apache2-nova/start-apache
 
 (2.) Become nova@oven .
 
