@@ -2,6 +2,8 @@ import os
 import pyfits
 from astrometry.util.pyfits_utils import fits_table
 import numpy as np
+import logging
+import urlparse
 
 from common import *
 from dr7 import *
@@ -46,8 +48,7 @@ class Frame(SdssFile):
 
 		fpM = sdss.readFpM(run, camcol, field, bandname)
 		for plane in [ 'INTERP', 'SATUR', 'CR', 'GHOST' ]:
-		    fpM.setMaskedPixels(plane, invvar, 0, roi=roi)
-		
+			fpM.setMaskedPixels(plane, invvar, 0, roi=roi)
 		'''
 		calibvec = self.getCalibVec()
 		bigsky = self.getSky()
@@ -134,11 +135,13 @@ class DR8(DR7):
 		self.daspaths = {
 			'idR': 'photo/data/%(run)i/fields/%(camcol)i/idR-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit.Z',
 			'fpObjc': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpObjc-%(run)06i-%(camcol)i-%(field)04i.fit',
-			'frame': 'photoObj/frames/%(rerun)s/%(run)i/%(camcol)i/frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2',
+			# DR8 frames are no longer available on DAS.
+			'frame': '/sas/dr9/boss/photoObj/frames/%(rerun)s/%(run)i/%(camcol)i/frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2',
+			#'frame': 'photoObj/frames/%(rerun)s/%(run)i/%(camcol)i/frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2',
 			'photoObj': 'photoObj/%(rerun)s/%(run)i/%(camcol)i/photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
 			'psField': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/psField-%(run)06i-%(camcol)i-%(field)04i.fit',
 			'photoField': 'photoObj/%(rerun)s/%(run)i/photoField-%(run)06i-%(camcol)i.fits',
-			'fpM': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit',
+			'fpM': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit.gz',
 			'fpAtlas': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpAtlas-%(run)06i-%(camcol)i-%(field)04i.fit',
 			}
 
@@ -164,6 +167,12 @@ class DR8(DR7):
 		#print 'Rerun type:', type(rl.rerun), rl.rerun.dtype
 		self.runlist = rl
 
+		self.logger = logging.getLogger('astrometry.sdss.DR%i' %
+										self.getDRNumber())
+		#self.logger.debug('debug test')
+		#self.logger.info('info test')
+		#self.logger.warning('warning test')
+		
 	def _get_runlist_filename(self):
 		return self._get_data_file('runList-dr8.par')
 
@@ -185,9 +194,8 @@ class DR8(DR7):
 	def get_url(self, filetype, run, camcol, field, band=None):
 		rerun = self.get_rerun(run, field)
 		path = self.daspaths[filetype]
-		url = (self.dasurl +
-			   path % dict(run=run, camcol=camcol, field=field, rerun=rerun,
-						   band=band))
+		url = urlparse.urljoin(self.dasurl, path % dict(
+			run=run, camcol=camcol, field=field, rerun=rerun, band=band))
 		return url
 	
 	def retrieve(self, filetype, run, camcol, field=None, band=None, skipExisting=True,
@@ -213,7 +221,7 @@ class DR8(DR7):
 			oo += tempsuffix
 		
 		cmd = cmd % dict(outfn=oo, url=url)
-		#print 'cmd:', cmd
+		self.logger.debug('cmd: %s' % cmd)
 		(rtn,out,err) = run_command(cmd)
 		if rtn:
 			print 'Command failed: command', cmd
@@ -229,7 +237,7 @@ class DR8(DR7):
 		if filetype in self.processcmds:
 			cmd = self.processcmds[filetype]
 			cmd = cmd % dict(input = outfn + suff, output = outfn)
-			print 'cmd:', cmd
+			self.logger.debug('cmd: %s' % cmd)
 			(rtn,out,err) = run_command(cmd)
 			if rtn:
 				print 'Command failed: command', cmd
@@ -260,7 +268,7 @@ class DR8(DR7):
 		else:
 			fn = filename
 		#print 'reading file', fn
- 		p = pyfits.open(fn)
+		p = pyfits.open(fn)
 		#print 'got', len(p), 'HDUs'
 		# in nanomaggies
 		f.image = p[0].data

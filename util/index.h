@@ -162,6 +162,12 @@ void index_unload(index_t* index);
 int index_reload(index_t* index);
 
 /**
+ Closes the FILE*s in this index.  Once you have index_reload()ed,
+ you can call this function and the index will remain valid.
+ */
+int index_close_fds(index_t* index);
+
+/**
  Close an index and free associated data structures, *without freeing
  'index' itself*.
  */
