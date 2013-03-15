@@ -41,10 +41,10 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 		# so go through the primary header and fix them by converting invalid
 		# characters to '_'
 		hdr = hdu.header
-		cards = hdr.ascardlist()
+		logging.info('Header has %i cards' % len(hdr))
 		# allowed characters (FITS standard section 5.1.2.1)
 		pat = re.compile(r'[^A-Z0-9_\-]')
-		for k in cards.keys():
+		for k in hdr.keys():
 			# new keyword:
 			knew = pat.sub('_', k)
 			if k != knew:
@@ -64,7 +64,8 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 		# (it fails to round-trip scaled data correctly!)
 		bzero = hdr.get('BZERO', None)
 		bscale = hdr.get('BSCALE', None)
-		if bzero is not None and bscale is not None:
+		if (bzero is not None and bscale is not None
+			and (bzero != 0. or bscale != 1.)):
 			logging.debug('Scaling to bzero=%g, bscale=%g' % (bzero, bscale))
 			hdu.scale('int16', '', bscale, bzero)
 

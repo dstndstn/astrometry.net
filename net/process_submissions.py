@@ -278,7 +278,7 @@ def dojob(job, userimage, log=None):
         raise Exception
 
     log.msg('Solver completed successfully.')
-    
+
     # Solved?
     wcsfn = os.path.join(jobdir, wcsfile)
     log.msg('Checking for WCS file', wcsfn)
@@ -288,7 +288,7 @@ def dojob(job, userimage, log=None):
         wcs = Tan(wcsfn, 0)
         # Convert to database model...
         tan = TanWCS(crval1=wcs.crval[0], crval2=wcs.crval[1],
-                     crpix1=wcs.crpix[0], crpix2=wcs.crpix[1], 
+                     crpix1=wcs.crpix[0], crpix2=wcs.crpix[1],
                      cd11=wcs.cd[0], cd12=wcs.cd[1],
                      cd21=wcs.cd[2], cd22=wcs.cd[3],
                      imagew=img.width, imageh=img.height)
@@ -487,7 +487,6 @@ def get_or_create_image(df):
             img.save()
         else:
             raise Exception('This file\'s type is not supported.')
-        
     return img
 
 
@@ -507,7 +506,7 @@ def create_image(df):
         img.height = h
         img.save()
     except:
-        logmsg('file is not an image file')    
+        logmsg('file is not an image file')
         img = None
     return img
 
@@ -545,7 +544,7 @@ def create_source_list(df):
             logmsg('fitsfn: %s' % fitsfn)
             logmsg(e)
             logmsg('file is not a text list')
-            
+
     if fits:
         try:
             img = SourceList(disk_file=df, source_type=source_type)
@@ -563,9 +562,9 @@ def create_source_list(df):
             logmsg(e)
             img = None
             raise e
-        
+
     return img
-    
+
 ## DEBUG
 def sub_callback(result):
     print 'Submission callback: Result:', result
@@ -715,4 +714,3 @@ if __name__ == '__main__':
     opt,args = parser.parse_args()
 
     main(opt.jobthreads, opt.subthreads, opt.refreshrate, opt.maxsubretries)
-

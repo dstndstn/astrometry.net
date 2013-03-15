@@ -1,9 +1,6 @@
 
 from process_submissions import *
 
-#try_dojob(job, uimage)
-#try_dosub(sub, max_retrie)
-
 import django
 
 def _dojob(j):
