@@ -54,7 +54,7 @@ class Frame(SdssFile):
 		return bigsky
 
 	def getInvvar(self, psfield, bandnum, ignoreSourceFlux=False,
-				  constantSkyAt=None):
+				  sourceFlux=None, constantSkyAt=None):
 		'''
 		If constantSkyAt = (x,y) (INTEGERS!),
 		returns a scalar (rather than a np.array) of the invvar at that point.
@@ -66,22 +66,28 @@ class Frame(SdssFile):
 			fpM.setMaskedPixels(plane, invvar, 0, roi=roi)
 		'''
 		calibvec = self.getCalibVec()
+
 		if constantSkyAt:
 			x,y = constantSkyAt
 			calibvec = calibvec[x]
 			sky = self.getSkyAt(x,y)
 			if ignoreSourceFlux:
 				dn = sky
-			else:
+			elif sourceFlux is None:
+				image = self.getImage()
 				dn = (image[y,x] / calibvec) + sky
+			else:
+				dn = (sourceFlux / calibvec) + sky
 		else:
 			bigsky = self.getSky()
 			if ignoreSourceFlux:
 				dn = bigsky
-			else:
+			elif sourceFlux is None:
 				image = self.getImage()
-				assert(bigsky.shape == image.shape)
 				dn = (image / calibvec) + bigsky
+			else:
+				dn = (sourceFlux / calibvec) + bigsky
+
 		gain = psfield.getGain(bandnum)
 		# Note, "darkvar" includes dark current *and* read noise.
 		darkvar = psfield.getDarkVariance(bandnum)
