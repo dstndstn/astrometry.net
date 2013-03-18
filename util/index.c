@@ -473,7 +473,7 @@ void index_unload(index_t* index) {
 	}
 }
 
-int index_close_fds(index_t* index) {
+int index_close_fds(index_t* ind) {
 	kdtree_fits_t* io;
 	if (ind->quads->fb->fid) {
 		if (fclose(ind->quads->fb->fid)) {

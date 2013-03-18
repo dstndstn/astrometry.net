@@ -91,7 +91,8 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 			   const char* wcsoutfn,
 			   anbool scamp_head_file,
 			   double* xy, int Nxy,
-			   int imageW, int imageH) {
+			   int imageW, int imageH,
+			   anbool forcetan) {
 	qfits_header* hdr = NULL;
 	double* radec = NULL;
 	int rtn = -1;
@@ -156,7 +157,20 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 		free(txthdr);
 		free(txt);
 	} else {
+		char* ct;
 		hdr = qfits_header_readext(wcsinfn, ext);
+
+		ct = fits_get_dupstring(hdr, "CTYPE1");
+		if ((ct && streq(ct, "RA---TPV")) || forcetan) {
+			// http://iraf.noao.edu/projects/ccdmosaic/tpv.html
+			logmsg("Replacing CTYPE1 = %s header with RA---TAN\n", ct);
+			fits_update_value(hdr, "CTYPE1", "RA---TAN");
+		}
+		ct = fits_get_dupstring(hdr, "CTYPE2");
+		if ((ct && streq(ct, "DEC--TPV")) || forcetan) {
+			logmsg("Replacing CTYPE2 = %s header with DEC--TAN\n", ct);
+			fits_update_value(hdr, "CTYPE2", "DEC--TAN");
+		}
 	}
 	if (!hdr) {
 		ERROR("Failed to read header: file %s, ext %i\n", wcsinfn, ext);
@@ -295,13 +309,14 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 #include "boilerplate.h"
 #include "bl.h"
 
-const char* OPTIONS = "hve:sx:X:y:Y:a:b:W:H:";
+const char* OPTIONS = "hve:sx:X:y:Y:a:b:W:H:t";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s [options] <input-wcs> <output-wcs>\n"
 		   "   [-e <extension>] FITS HDU number to read WCS from (default 0 = primary)\n"
 		   "   [-s]: treat input as Scamp .head file\n"
+		   "   [-t]: override the CTYPE* cards in the WCS header, and assume they are TAN.\n"
 		   "   [-v]: +verboseness\n"
 		   " Set the IMAGEW, IMAGEH in the output file:\n"
 		   "   [-W <int>]\n"
@@ -335,7 +350,7 @@ int main(int argc, char** args) {
 	double ylo = 1;
 	double yhi = 1000;
 	double ystep = 0;
-
+	anbool forcetan = FALSE;
 	dl* xylst;
 	double x,y;
 	double* xy;
@@ -346,6 +361,9 @@ int main(int argc, char** args) {
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 't':
+			forcetan = TRUE;
+			break;
 		case 'W':
 			W = atoi(optarg);
 			break;
@@ -425,7 +443,8 @@ int main(int argc, char** args) {
 	xy = dl_to_array(xylst);
 	dl_free(xylst);
 
-	if (wcs_pv2sip(wcsinfn, ext, wcsoutfn, scamp, xy, Nxy, W, H)) {
+	if (wcs_pv2sip(wcsinfn, ext, wcsoutfn, scamp, xy, Nxy, W, H,
+				   forcetan)) {
 		exit(-1);
 	}
 

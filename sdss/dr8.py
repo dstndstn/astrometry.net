@@ -25,6 +25,17 @@ class Frame(SdssFile):
 	def getCalibVec(self):
 		return self.calib
 
+	def getSkyAt(self, x, y):
+		skyim = self.sky
+		(sh,sw) = skyim.shape
+		if sw != 256:
+			skyim = skyim.T
+		(sh,sw) = skyim.shape
+		xi = np.round(self.skyxi[x]).astype(int)
+		yi = np.round(self.skyyi[y]).astype(int)
+		yi = np.minimum(yi,sh-1)
+		return skyim[yi,xi]
+	
 	def getSky(self):
 		skyim = self.sky
 		(sh,sw) = skyim.shape
@@ -42,8 +53,12 @@ class Frame(SdssFile):
 		bigsky = skyim[YI,XI]
 		return bigsky
 
-	def getInvvar(self, psfield, bandnum, ignoreSourceFlux=False):
+	def getInvvar(self, psfield, bandnum, ignoreSourceFlux=False,
+				  constantSkyAt=None):
 		'''
+		If constantSkyAt = (x,y) (INTEGERS!),
+		returns a scalar (rather than a np.array) of the invvar at that point.
+		
 		NOTE that this does NOT blank out masked pixels; use, eg,
 
 		fpM = sdss.readFpM(run, camcol, field, bandname)
@@ -51,13 +66,22 @@ class Frame(SdssFile):
 			fpM.setMaskedPixels(plane, invvar, 0, roi=roi)
 		'''
 		calibvec = self.getCalibVec()
-		bigsky = self.getSky()
-		if ignoreSourceFlux:
-			dn = bigsky
+		if constantSkyAt:
+			x,y = constantSkyAt
+			calibvec = calibvec[x]
+			sky = self.getSkyAt(x,y)
+			if ignoreSourceFlux:
+				dn = sky
+			else:
+				dn = (image[y,x] / calibvec) + sky
 		else:
-			image = self.getImage()
-			assert(bigsky.shape == image.shape)
-			dn = (image / calibvec) + bigsky
+			bigsky = self.getSky()
+			if ignoreSourceFlux:
+				dn = bigsky
+			else:
+				image = self.getImage()
+				assert(bigsky.shape == image.shape)
+				dn = (image / calibvec) + bigsky
 		gain = psfield.getGain(bandnum)
 		# Note, "darkvar" includes dark current *and* read noise.
 		darkvar = psfield.getDarkVariance(bandnum)
