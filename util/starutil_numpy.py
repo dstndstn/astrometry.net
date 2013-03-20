@@ -2,6 +2,9 @@ from numpy import *
 import datetime
 import numpy as np
 
+arcsecperrad = 3600. * 180. / np.pi
+axistilt = 23.44 # degrees
+
 def ra_normalize(ra):
 	return np.mod(ra, 360.)
 
