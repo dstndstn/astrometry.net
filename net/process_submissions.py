@@ -367,9 +367,9 @@ def dosub(sub):
         sub.license.allow_commercial_use,
         sub.license.allow_modifications))
     if sub.disk_file is None:
-        print 'Retrieving URL', sub.url
+        logmsg('Sub %i: retrieving URL' % (sub.id), sub.url)
         (fn, headers) = urllib.urlretrieve(sub.url)
-        print 'Wrote to file', fn
+        logmsg('Sub %i: wrote URL to file' % (sub.id), fn)
         df = DiskFile.from_file(fn, Image.ORIG_COLLECTION)
         # Try to split the URL into a filename component and save it
         p = urlparse(sub.url)
@@ -411,7 +411,7 @@ def dosub(sub):
         pass
 
     if tarfile.is_tarfile(fn):
-        logmsg('file is a tarball')
+        logmsg('File %s: tarball' % fn)
         tar = tarfile.open(fn)
         dirnm = tempfile.mkdtemp()
         for tarinfo in tar.getmembers():
@@ -430,14 +430,15 @@ def dosub(sub):
         shutil.rmtree(dirnm, ignore_errors=True)
     else:
         # assume file is single image
-        logmsg('single file')
+        logmsg('File %s: single file' % fn)
         # create Image object
         img = get_or_create_image(df)
-        logmsg('Got/created Image %i' % img.id)
+        logmsg('File %s: created Image %s' % (fn, str(img)))
         # create UserImage object.
         if img:
+            logmsg('File %s: Image id %i' % (fn, img.id))
             uimg = create_user_image(sub, img, original_filename)
-            logmsg('Created UserImage %i' % uimg.id)
+            logmsg('Image %i: created UserImage %i' % (img.id, uimg.id))
 
     sub.set_processing_finished()
     sub.save()
@@ -583,7 +584,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
         dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
         dosub_pool = multiprocessing.Pool(processes=dosub_nthreads)
 
-    print 'Refresh rate: %f seconds' % refresh_rate
+    print 'Refresh rate: %.1f seconds' % refresh_rate
     print 'Submission processing retry limit: %d' % max_sub_retries
 
     # Find Submissions that have been started but not finished;
@@ -613,21 +614,30 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
     me.set_watchdog()
     me.save()
 
+    lastsubs = []
+    lastjobs = []
+
     while True:
         me.set_watchdog()
         me.save()
 
-        print 'Checking for new Submissions'
-        newsubs = Submission.objects.filter(processing_started__isnull=True)
-        print 'Found', newsubs.count(), 'unstarted submissions'
+        print
 
-        print 'Checking for UserImages without Jobs'
+        #print 'Checking for new Submissions'
+        newsubs = Submission.objects.filter(processing_started__isnull=True)
+        if newsubs.count():
+            print 'Found', newsubs.count(), 'unstarted Submissions:', [s.id for s in newsubs]
+
+        #print 'Checking for UserImages without Jobs'
         all_user_images = UserImage.objects.annotate(job_count=Count('jobs'))
         newuis = all_user_images.filter(job_count=0)
-        print 'Found', len(newuis), 'userimages without Jobs'
+        if newuis.count():
+            print 'Found', len(newuis), 'UserImages without Jobs:', [u.id for u in newuis]
 
         runsubs = me.subs.filter(finished=False)
-        print 'Submissions running:', len(subresults)
+        if subresults != lastsubs:
+            print 'Submissions running:', len(subresults)
+            lastsubs = subresults
         for sid,res in subresults:
             print '  Submission id', sid, 'ready:', res.ready(),
             if res.ready():
@@ -644,7 +654,9 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
             print
 
         runjobs = me.jobs.filter(finished=False)
-        print 'Jobs running:', len(jobresults)
+        if jobresults != lastjobs:
+            print 'Jobs running:', len(jobresults)
+            lastjobs = jobresults
         for jid,res in jobresults:
             print '  Job id', jid, 'ready:', res.ready(),
             if res.ready():
