@@ -27,13 +27,14 @@
 #include "errors.h"
 #include "log.h"
 
-static const char* OPTIONS = "hi:w:o:d";
+static const char* OPTIONS = "hi:w:o:dv";
 
 static void printHelp(char* progname) {
 	printf("%s    -i <input-file>\n"
 		   "      -w <WCS-file>\n"
 		   "      -o <output-file>\n"
            "      [-d]: also copy the data segment\n"
+		   "      [-v]: +verbose\n"
 		   "\n",
 		   progname);
 }
@@ -48,9 +49,13 @@ int main(int argc, char *argv[]) {
 	char* wcsfn = NULL;
 	char* progname = argv[0];
     anbool copydata = FALSE;
+    int loglvl = LOG_MSG;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'v':
+			loglvl++;
+			break;
         case 'i':
 			infn = optarg;
 			break;
@@ -75,7 +80,7 @@ int main(int argc, char *argv[]) {
 		printHelp(progname);
 		exit(-1);
 	}
-
+	log_init(loglvl);
     fits_use_error_system();
 
     if (new_wcs(infn, wcsfn, outfn, copydata)) {

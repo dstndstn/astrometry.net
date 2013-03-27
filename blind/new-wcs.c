@@ -49,6 +49,8 @@ static char* exclude_input[] = {
 	"^PV[[:digit:]]*_[[:digit:]]*.?$",
 	"^CROTA[12]$",
 	"^END$",
+	// our TAN/SIP
+	"^IMAGE[HW]$",
 };
 static int NE1 = sizeof(exclude_input) / sizeof(char*);
 
@@ -146,12 +148,11 @@ int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
         n2++;
 	}
 
-
-
 	logverb("Reading input file FITS headers...\n");
 
 	N = qfits_header_n(inhdr);
 	for (i=0; i<N; i++) {
+		anbool added_newkey = FALSE;
         char line[FITS_LINESZ + 1];
 		if (qfits_header_getitem(inhdr, i, key, val, comment, line)) {
 			ERROR("Failed to read FITS header card %i from input file", i);
@@ -165,7 +166,27 @@ int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
             // Completely skip the END card, since _ND is not a valid line.
             if (streq(key, "END"))
                 continue;
+			snprintf(newkey, FITS_LINESZ+1, "_%.7s", key+1);
+			logverb("New key: \"%s\"\n", newkey);
+			strcpy(key, newkey);
             line[0] = '_';
+			added_newkey = TRUE;
+		}
+		// If the header already contains this new (starting-with-"_")
+		// key, add three comment cards instead.
+		if (starts_with(key, "_") &&
+			(qfits_header_getstr(inhdr, key) ||
+			 qfits_header_getstr(outhdr, key))) {
+			logverb("Key \"%s\" already exists; adding COMMENT cards for value and comment instead\n", key);
+			if (!added_newkey) {
+				snprintf(newkey, FITS_LINESZ+1, "Original key: \"%s\"", key);
+				qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
+			}
+			snprintf(newkey, FITS_LINESZ+1, " = %s", val);
+			qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
+			snprintf(newkey, FITS_LINESZ+1, " / %s", comment);
+			qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
+			continue;
 		}
 
 		qfits_header_append(outhdr, key, val, comment, line);
@@ -199,6 +220,15 @@ int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
              */
             continue;
 		}
+		if (streq(key, "DATE") && qfits_header_getstr(outhdr, key)) {
+			// If the input header already had a DATE card,
+			snprintf(newkey, FITS_LINESZ+1, "Original WCS key: \"%s\"", key);
+			qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
+			snprintf(newkey, FITS_LINESZ+1, "_%.7s", key);
+			strcpy(key, newkey);
+            line[0] = '_';
+		}
+
 		qfits_header_append(outhdr, key, val, comment, line);
 	}
 	qfits_header_destroy(wcshdr);

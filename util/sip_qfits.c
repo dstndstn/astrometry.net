@@ -197,15 +197,14 @@ static void add_polynomial(qfits_header* hdr, const char* format,
 }
 
 void sip_add_to_header(qfits_header* hdr, const sip_t* sip) {
-	if (sip->wcstan.sin) {
-		qfits_header_add(hdr, "CTYPE1", "RA---SIN-SIP", "SIN projection + SIP distortions", NULL);
-		qfits_header_add(hdr, "CTYPE2", "DEC--SIN-SIP", "SIN projection + SIP distortions", NULL);
-	} else {
-		qfits_header_add(hdr, "CTYPE1", "RA---TAN-SIP", "TAN (gnomic) projection + SIP distortions", NULL);
-		qfits_header_add(hdr, "CTYPE2", "DEC--TAN-SIP", "TAN (gnomic) projection + SIP distortions", NULL);
-	}
-
 	wcs_hdr_common(hdr, &(sip->wcstan));
+	if (sip->wcstan.sin) {
+		qfits_header_add_after(hdr, "WCSAXES", "CTYPE2", "DEC--SIN-SIP", "SIN projection + SIP distortions", NULL);
+		qfits_header_add_after(hdr, "WCSAXES", "CTYPE1", "RA---SIN-SIP", "SIN projection + SIP distortions", NULL);
+	} else {
+		qfits_header_add_after(hdr, "WCSAXES", "CTYPE2", "DEC--TAN-SIP", "TAN (gnomic) projection + SIP distortions", NULL);
+		qfits_header_add_after(hdr, "WCSAXES", "CTYPE1", "RA---TAN-SIP", "TAN (gnomic) projection + SIP distortions", NULL);
+	}
 
 	fits_header_add_int(hdr, "A_ORDER", sip->a_order, "Polynomial order, axis 1");
 	add_polynomial(hdr, "A_%i_%i", sip->a_order, (double*)sip->a, SIP_MAXORDER, TRUE);
@@ -227,14 +226,14 @@ qfits_header* sip_create_header(const sip_t* sip) {
 }
 
 void tan_add_to_header(qfits_header* hdr, const tan_t* tan) {
-	if (tan->sin) {
-		qfits_header_add(hdr, "CTYPE1", "RA---SIN", "SIN projection", NULL);
-		qfits_header_add(hdr, "CTYPE2", "DEC--SIN", "SIN projection", NULL);
-	} else {
-		qfits_header_add(hdr, "CTYPE1", "RA---TAN", "TAN (gnomic) projection", NULL);
-		qfits_header_add(hdr, "CTYPE2", "DEC--TAN", "TAN (gnomic) projection", NULL);
-	}
 	wcs_hdr_common(hdr, tan);
+	if (tan->sin) {
+		qfits_header_add_after(hdr, "WCSAXES", "CTYPE2", "DEC--SIN", "SIN projection", NULL);
+		qfits_header_add_after(hdr, "WCSAXES", "CTYPE1", "RA---SIN", "SIN projection", NULL);
+	} else {
+		qfits_header_add_after(hdr, "WCSAXES", "CTYPE2", "DEC--TAN", "TAN (gnomic) projection", NULL);
+		qfits_header_add_after(hdr, "WCSAXES", "CTYPE1", "RA---TAN", "TAN (gnomic) projection", NULL);
+	}
 }
 
 qfits_header* tan_create_header(const tan_t* tan) {
