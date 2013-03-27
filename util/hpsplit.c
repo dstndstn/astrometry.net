@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
 		r2 = MAX(r2, distsq(xyz, cxyz, 3));
 		logverb("  max distsq: %.3f\n", r2);
 		logverb("  margin dist: %.3f\n", md);
-		maxcaps[i].r2 = square(MAX(0, sqrt(r2) + md));
+		maxcaps[i].r2 = square(sqrt(r2) + md);
 		logverb("  max cap distsq: %.3f\n", maxcaps[i].r2);
 		r2a = r2;
 
@@ -228,7 +228,7 @@ int main(int argc, char *argv[]) {
 			r2 = MIN(r2, distsq(xyz, cxyz, 3));
 			r2b = MAX(r2b, distsq(xyz, cxyz, 3));
 		}
-		mincaps[i].r2 = square(MAX(0, sqrt(r2) - md));
+		mincaps[i].r2 = square(sqrt(r2) + md);
 		logverb("\nhealpix %i: min rad    %g\n", i, sqrt(r2));
 		logverb("healpix %i: max rad    %g\n", i, sqrt(r2a));
 		logverb("healpix %i: max rad(b) %g\n", i, sqrt(r2b));
