@@ -229,11 +229,16 @@ and util/os-features-config.h, or running::
 Getting Index Files
 ===================
 
-Get pre-cooked index files from: <http://broiler.astrometry.net/~dstn/4000>_
+Get pre-cooked index files from: <http://broiler.astrometry.net/~dstn/4200>_
 (these are built from the 2MASS catalog).
 
 Or, for wide-angle images, <http://broiler.astrometry.net/~dstn/4100>_
 (these are built from the Tycho-2 catalog).
+
+We used to have the "4000-series" files:
+(http://broiler.astrometry.net/~dstn/4000), but these suffer from a
+bug where parts of the sky do are not covered by the reference
+catalog.
 
 Each index file is designed to solve images within a narrow range of
 scales.  The index files designed to solve small (angular size) images
@@ -242,9 +247,9 @@ files required for the images you wish to solve.  If you grab extra
 index files, the solver will run more slowly, but the results should
 be the same.
 
-The files are named like *index-40XX.fits* or *index-40XX-YY.fits*.
+The files are named like *index-42XX.fits* or *index-42XX-YY.fits*.
 *XX* is the "scale", *YY* is the "healpix" number.  These are called
-the "4000-series" index files.
+the "4200-series" index files.
 
 Each index file contains a large number of "skymarks" (landmarks for
 the sky) that allow our solver to identify your images.  The skymarks
@@ -255,13 +260,13 @@ say, 10% to 100% of the sizes of the images you want to solve.
 For example, let's say you have some 1-degree square images.  You
 should grab index files that contain skymarks of size 0.1 to 1 degree,
 or 6 to 60 arcminutes.  Referring to the table below, you should grab
-index files 4003 through 4009.  You might find that the same number of
+index files 4203 through 4209.  You might find that the same number of
 fields solve, and faster, using just one or two of the index files in
-the middle of that range - in our example you might try 4005, 4006 and
-4007.
+the middle of that range - in our example you might try 4205, 4206 and
+4207.
 
 For reference, we used index files 202 alone for our SDSS tests (13x9
-arcmin fields); these are the same scale is the new 4002 files.
+arcmin fields); these are the same scale is the new 4202 files.
 
 The medium-sized index files are split into 12 "healpix" tiles; each
 one covers 1/12th of the sky.  The small-sized ones are split into 48
@@ -273,45 +278,45 @@ http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp2.png
 | Index Filename         |   Range of skymark diameters |
 |                        |         (arcminutes)         |
 +========================+==============================+
-| index-4019.fits.bz2    |      1400  - 2000            |
+| index-4219.fits.bz2    |      1400  - 2000            |
 +------------------------+------------------------------+
-| index-4018.fits.bz2    |      1000  - 1400            |
+| index-4218.fits.bz2    |      1000  - 1400            |
 +------------------------+------------------------------+
-| index-4017.fits.bz2    |       680  - 1000            |
+| index-4217.fits.bz2    |       680  - 1000            |
 +------------------------+------------------------------+
-| index-4016.fits.bz2    |       480  -  680            |
+| index-4216.fits.bz2    |       480  -  680            |
 +------------------------+------------------------------+
-| index-4015.fits.bz2    |       340  -  480            |
+| index-4215.fits.bz2    |       340  -  480            |
 +------------------------+------------------------------+
-| index-4014.fits.bz2    |       240  -  340            |
+| index-4214.fits.bz2    |       240  -  340            |
 +------------------------+------------------------------+
-| index-4013.fits.bz2    |       170  -  240            |
+| index-4213.fits.bz2    |       170  -  240            |
 +------------------------+------------------------------+
-| index-4012.fits.bz2    |       120  -  170            |
+| index-4212.fits.bz2    |       120  -  170            |
 +------------------------+------------------------------+
-| index-4011.fits.bz2    |        85  -  120            |
+| index-4211.fits.bz2    |        85  -  120            |
 +------------------------+------------------------------+
-| index-4010.fits.bz2    |        60  -   85            |
+| index-4210.fits.bz2    |        60  -   85            |
 +------------------------+------------------------------+
-| index-4009.fits.bz2    |        42  -   60            |
+| index-4209.fits.bz2    |        42  -   60            |
 +------------------------+------------------------------+
-| index-4008.fits.bz2    |        30  -   42            |
+| index-4208.fits.bz2    |        30  -   42            |
 +------------------------+------------------------------+
-| index-4007-*.fits.bz2  |        22  -   30            |
+| index-4207-*.fits.bz2  |        22  -   30            |
 +------------------------+------------------------------+
-| index-4006-*.fits.bz2  |        16  -   22            |
+| index-4206-*.fits.bz2  |        16  -   22            |
 +------------------------+------------------------------+
-| index-4005-*.fits.bz2  |        11  -   16            |
+| index-4205-*.fits.bz2  |        11  -   16            |
 +------------------------+------------------------------+
-| index-4004-*.fits.bz2  |         8  -   11            |
+| index-4204-*.fits.bz2  |         8  -   11            |
 +------------------------+------------------------------+
-| index-4003-*.fits.bz2  |         5.6  -  8.0          |
+| index-4203-*.fits.bz2  |         5.6  -  8.0          |
 +------------------------+------------------------------+
-| index-4002-*.fits.bz2  |         4.0  -  5.6          |
+| index-4202-*.fits.bz2  |         4.0  -  5.6          |
 +------------------------+------------------------------+
-| index-4001-*.fits.bz2  |         2.8  -  4.0          |
+| index-4201-*.fits.bz2  |         2.8  -  4.0          |
 +------------------------+------------------------------+
-| index-4000-*.fits.bz2  |         2.0  -  2.8          |
+| index-4200-*.fits.bz2  |         2.0  -  2.8          |
 +------------------------+------------------------------+
 
 Download the index files you need and put them in the top-level

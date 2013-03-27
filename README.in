@@ -2,9 +2,13 @@ Astrometry.net code release
 ===========================
 
 
-Note: the sphinx-generated documentation in doc/html contains much
-more information.  A current snapshot of this documentation is kept at
-http://astrometry.net/doc
+NOTE NOTE NOTE
+================================
+Note: the (generated) documentation in doc/html contains more
+up-to-date information.  A current snapshot of this documentation is
+kept at http://astrometry.net/doc
+================================
+NOTE NOTE NOTE
 
 
 Copyright 2006-2010 Michael Blanton, David W. Hogg, Dustin Lang, Keir
