@@ -175,6 +175,28 @@ int main(int argc, char *argv[]) {
 
 	md = deg2dist(margin);
 
+	/**
+	 About the mincaps/maxcaps:
+
+	 These have a center and radius-squared, describing the region
+	 inside a small circle on the sphere.
+
+	 The "mincaps" describe the regions that are definitely owned by a
+	 single healpix -- ie, more than MARGIN distance from any edge.
+	 That is, the mincap is the small circle centered at (0.5, 0.5) in
+	 the healpix and with radius = the distance to the closest healpix
+	 boundary, MINUS the margin distance.
+
+	 Below, we first check whether a new star is within the "mincap"
+	 of any healpix.  If so, we stick it in that healpix and continue.
+
+	 Otherwise, we check all the "maxcaps" -- these are the healpixes
+	 it could *possibly* be in.  We then refine with
+	 healpix_within_range_of_xyz.  The maxcap distance is the distance
+	 to the furthest boundary point, PLUS the margin distance.
+	 */
+
+
 	cap_t* mincaps = malloc(NHP * sizeof(cap_t));
 	cap_t* maxcaps = malloc(NHP * sizeof(cap_t));
 	for (i=0; i<NHP; i++) {
@@ -228,7 +250,7 @@ int main(int argc, char *argv[]) {
 			r2 = MIN(r2, distsq(xyz, cxyz, 3));
 			r2b = MAX(r2b, distsq(xyz, cxyz, 3));
 		}
-		mincaps[i].r2 = square(sqrt(r2) + md);
+		mincaps[i].r2 = square(MIN(0, sqrt(r2) - md));
 		logverb("\nhealpix %i: min rad    %g\n", i, sqrt(r2));
 		logverb("healpix %i: max rad    %g\n", i, sqrt(r2a));
 		logverb("healpix %i: max rad(b) %g\n", i, sqrt(r2b));
