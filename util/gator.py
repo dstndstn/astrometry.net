@@ -9,6 +9,7 @@ def gator2fits(fn):
 			break
 	names = line
 	types = f.readline()
+	units = f.readline()
 	xxx = f.readline()
 
 	#print 'names:', names
@@ -23,6 +24,7 @@ def gator2fits(fn):
 	#print 'Types:', types
 		
 	data = f.read()
+	#print 'Data:', data
 	data = data.replace('|', ' ')
 	data = data.replace('null', 'NaN')
 	
