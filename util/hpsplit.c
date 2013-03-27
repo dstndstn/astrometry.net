@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
 			r2 = MIN(r2, distsq(xyz, cxyz, 3));
 			r2b = MAX(r2b, distsq(xyz, cxyz, 3));
 		}
-		mincaps[i].r2 = square(MIN(0, sqrt(r2) - md));
+		mincaps[i].r2 = square(MAX(0, sqrt(r2) - md));
 		logverb("\nhealpix %i: min rad    %g\n", i, sqrt(r2));
 		logverb("healpix %i: max rad    %g\n", i, sqrt(r2a));
 		logverb("healpix %i: max rad(b) %g\n", i, sqrt(r2b));
