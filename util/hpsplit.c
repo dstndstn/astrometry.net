@@ -189,18 +189,27 @@ int main(int argc, char *argv[]) {
 		cxyz = mincaps[i].xyz;
 		healpix_to_xyzarr(i, nside, 0.5, 0.5, mincaps[i].xyz);
 		memcpy(maxcaps[i].xyz, cxyz, 3 * sizeof(double));
+		logverb("Center of HP %i: (%.3f, %.3f, %.3f)\n", i, cxyz[0], cxyz[1], cxyz[2]);
+
 		// radius-squared:
 		// max is the easy one: max of the four corners (I assume)
 		r2 = 0.0;
 		healpix_to_xyzarr(i, nside, 0.0, 0.0, xyz);
+		logverb("  HP %i corner 1: (%.3f, %.3f, %.3f), distsq %.3f\n", i, xyz[0], xyz[1], xyz[2], distsq(xyz, cxyz, 3));
 		r2 = MAX(r2, distsq(xyz, cxyz, 3));
 		healpix_to_xyzarr(i, nside, 1.0, 0.0, xyz);
+		logverb("  HP %i corner 1: (%.3f, %.3f, %.3f), distsq %.3f\n", i, xyz[0], xyz[1], xyz[2], distsq(xyz, cxyz, 3));
 		r2 = MAX(r2, distsq(xyz, cxyz, 3));
 		healpix_to_xyzarr(i, nside, 0.0, 1.0, xyz);
+		logverb("  HP %i corner 1: (%.3f, %.3f, %.3f), distsq %.3f\n", i, xyz[0], xyz[1], xyz[2], distsq(xyz, cxyz, 3));
 		r2 = MAX(r2, distsq(xyz, cxyz, 3));
 		healpix_to_xyzarr(i, nside, 1.0, 1.0, xyz);
+		logverb("  HP %i corner 1: (%.3f, %.3f, %.3f), distsq %.3f\n", i, xyz[0], xyz[1], xyz[2], distsq(xyz, cxyz, 3));
 		r2 = MAX(r2, distsq(xyz, cxyz, 3));
-		maxcaps[i].r2 = square(MAX(0, sqrt(r2) - md));
+		logverb("  max distsq: %.3f\n", r2);
+		logverb("  margin dist: %.3f\n", md);
+		maxcaps[i].r2 = square(MAX(0, sqrt(r2) + md));
+		logverb("  max cap distsq: %.3f\n", maxcaps[i].r2);
 		r2a = r2;
 
 		r2 = 1.0;
