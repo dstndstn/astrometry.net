@@ -90,12 +90,21 @@ HISTORY
 *      2004-06-21  W Pence   fixed reporting error when prstat=no and when
 *                            opening a nonexistent or non-FITS file.
 *                            Also fixed elusive memory allocation error.
+*
+*      2009-06-08  W Pence   updates to comply with V3.0 of the FITS Standard
+*      2010-07-26  W Pence   Updates to WCS keyword checks, plux other V3.0 issues
 */
 
 #define TOOLSUB ftverify
 /* headas_main() requires that TOOLSUB be defined first */
 
 long totalerr, totalwrn;
+
+#ifdef STANDALONE
+#include "fitsverify.c"
+#else
+#include "headas_main.c"
+#endif
 
 /* Function Prototypes */
 int ftverify (void);
@@ -105,12 +114,6 @@ int ftverify_getpar (char *infile, char *outfile,int * prehead,
 int ftverify_work (char *infile, char *outfile,int prehead,
     int prstat, char* errreport, int testdata, int testcsum,
     int testfill, int heasarc_conv);
-
-#ifdef STANDALONE
-#include "fitsverify.c"
-#else
-#include "headas_main.c"
-#endif
 
 int err_report=0;
 int prhead=0;
@@ -132,7 +135,7 @@ int ftverify (void)
     char errreport[PIL_LINESIZE];
     
     static char taskname[80] = "ftverify";
-    static char version[8] = "4.13";
+    static char version[8] = "4.16";
 
     /* Register taskname and version. */
 
@@ -231,11 +234,12 @@ int ftverify_work(
 /* call work function to verify that infile conforms to the FITS
        standard and write report to the output file */
 {
+    FILE *runfile = 0;
     FILE *outfptr = 0;
     FILE *list=0;
-    int status = 0, filestatus;
+    int status = 0, filestatus, runnum;
     char * p;
-    char task[80];
+    char task[80],runchars[30];
     char tversion[80];
     float fversion;
     int i, nerrs, nwarns;
@@ -283,6 +287,24 @@ int ftverify_work(
            outfile);
        outfptr = stdout;
     }
+
+#ifdef WEBTOOL
+    /* try opening and incrementing the file containing cumulative # of runs */
+    runfile=fopen("/tmp.shared/fits/tmpverify/counter.fitsverify","r+"); 
+/*    runfile=fopen("counter.fitsverify","r+"); */
+    if (runfile) {
+        fgets(runchars,20,runfile);
+	runnum=atoi(runchars);
+	runnum++;
+	sprintf(comm,"                                           Run Number %d",runnum);
+	wrtout(outfptr,comm);
+        sprintf(runchars, "%d", runnum);
+	fflush(runfile);
+	rewind(runfile);
+	fputs(runchars, runfile);
+    }
+
+#endif
 
     wrtout(outfptr," ");
     fits_get_version(&fversion);

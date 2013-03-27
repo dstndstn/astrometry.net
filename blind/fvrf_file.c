@@ -78,6 +78,7 @@ int test_hduname (int hdunum1,		/* index of first hdu */
 { 
     HduName *p1;
     HduName *p2; 
+
     p1 = hduname[hdunum1-1];
     p2 = hduname[hdunum2-1];
     if(!strlen(p1->extname) || !strlen(p2->extname)) return 0;

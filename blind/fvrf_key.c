@@ -74,6 +74,9 @@ int fits_parse_card(FILE *out,		/* output file pointer */
         !strcmp(kname,"HIERARCH") ||
         !strcmp(kname,"CONTINUE") ||
         !strcmp(kname,"")   ){ 
+
+        *ktype =  COM_KEY;
+
         p = &card[8];
         strcpy(kcomm, p);
         kcomm[FLEN_COMMENT-1] = '\0';
@@ -94,6 +97,7 @@ int fits_parse_card(FILE *out,		/* output file pointer */
 
     /* End Keyword: 9-80 shall be filled with ASCII blanks \x20 */ 
     if( !strcmp(kname,"END") ){ 
+        *ktype =  COM_KEY;
         if(card[3] == '\0') return 0;
         for( p = &card[8]; *p != '\0'; p++) { 
             if(*p != '\x20' ){ 
@@ -110,8 +114,9 @@ int fits_parse_card(FILE *out,		/* output file pointer */
     p = &card[8];
     strncpy(vind,p,2);
     vind[2] = '\0';
-    if(strcmp(vind,"= ") ){
+    if(strcmp(vind,"= ") && strcmp(vind,"=") ){
         /* no value indicator, so this is a commentary keyword */
+       *ktype =  COM_KEY;
         strcpy(kcomm, p);
         kcomm[FLEN_COMMENT-1] = '\0';
         for( ; *p != '\0'; p++) { 
@@ -517,17 +522,24 @@ void pr_kval_err(FILE *out,		/* output  FILE */
     }
 
     if(errnum & UNKNOWN_TYPE) {
+      if (*kval != 0) {  /* don't report null keywords as an error */
 	sprintf(errmes,
    "Keyword #%d, %s: Type of value \"%s\" is unknown.",
          kpos,kname,kval);
 	wrterr(out,errmes,1);
+      }
     }
     return ;
 } 
 
     int check_str(FitsKey* pkey, FILE *out) 
 {
-    if(pkey->ktype != STR_KEY) { 
+    if(pkey->ktype == UNKNOWN && *(pkey->kvalue) == 0) {
+        sprintf(errmes,"Keyword #%d, %s has a null value; expected a string.",
+        pkey->kindex,pkey->kname);
+        wrterr(out,errmes,1); 
+        return 0;
+    } else if(pkey->ktype != STR_KEY) { 
         sprintf(errmes,"Keyword #%d, %s: \"%s\" is not a string.",
         pkey->kindex,pkey->kname, pkey->kvalue);
         wrterr(out,errmes,1); 
@@ -538,7 +550,12 @@ void pr_kval_err(FILE *out,		/* output  FILE */
 
     int check_int(FitsKey* pkey, FILE *out) 
 {
-    if(pkey->ktype != INT_KEY) { 
+    if(pkey->ktype == UNKNOWN && *(pkey->kvalue) == 0) {
+        sprintf(errmes,"Keyword #%d, %s has a null value; expected an integer.",
+        pkey->kindex,pkey->kname);
+        wrterr(out,errmes,1); 
+        return 0;
+    } else if(pkey->ktype != INT_KEY) { 
         sprintf(errmes,"Keyword #%d, %s: value = %s is not an integer.",
         pkey->kindex,pkey->kname, pkey->kvalue);
 	if(pkey->ktype == STR_KEY)  
@@ -550,7 +567,12 @@ void pr_kval_err(FILE *out,		/* output  FILE */
 }
     int check_flt(FitsKey* pkey, FILE *out) 
 {
-    if(pkey->ktype != INT_KEY && pkey->ktype != FLT_KEY) { 
+    if(pkey->ktype == UNKNOWN && *(pkey->kvalue) == 0) {
+        sprintf(errmes,"Keyword #%d, %s has a null value; expected a float.",
+        pkey->kindex,pkey->kname);
+        wrterr(out,errmes,1); 
+        return 0;
+    } else if(pkey->ktype != INT_KEY && pkey->ktype != FLT_KEY) { 
         sprintf(errmes,
         "Keyword #%d, %s: value = %s is not a floating point number.",
         pkey->kindex,pkey->kname, pkey->kvalue);

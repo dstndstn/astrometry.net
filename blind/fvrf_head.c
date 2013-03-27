@@ -4,6 +4,14 @@
  */
 #include "fverify.h"
 
+/* 
+the following are only needed if one calls wcslib 
+#include <wcslib/wcshdr.h>
+#include <wcslib/wcsfix.h>
+#include <wcslib/wcs.h>
+#include <wcslib/getwcstab.h>
+*/
+
 static char **cards;		/* array to store the keywords  */
 static int ncards;		/* total number of the keywords */
 static char **tmpkwds;          /* An  string array holding the keyword name. 
@@ -11,8 +19,6 @@ static char **tmpkwds;          /* An  string array holding the keyword name.
 				  and not includes the keywords before 
 				  the first non-reserved keyword and END
 				  keyword. */
-
-
 
 static char **ttype; 
 static char **tform;  
@@ -56,9 +62,11 @@ void verify_fits(char *infile, FILE *out)
     for (i = len - 1; i >= 0 && isspace((int)*p); i--) {*p = '\0'; p--;}
     if(!strlen(pfile)) return;
 
+#ifndef WEBTOOL
     wrtout(out," ");
     sprintf(comm,"File: %s",pfile);
     wrtout(out,comm);
+#endif
 
     totalhdu = 0;
 
@@ -110,6 +118,7 @@ void verify_fits(char *infile, FILE *out)
             &fitshdu);                          /* initialize fitshdu  */
 
         test_hdu(infits,out,&fitshdu);          /* test hdu header */
+
         if(testdata)
             test_data(infits,out,&fitshdu);
 
@@ -173,7 +182,7 @@ void init_hdu(fitsfile *infits, 	/* input fits file   */
     FitsKey ** kwds;
     char *p = 0;
     int numusrkey; 
-    long lv,lu=0L; 
+    LONGLONG lv,lu=0L; 
     
 
     FitsKey tmpkey;
@@ -231,7 +240,7 @@ void init_hdu(fitsfile *infits, 	/* input fits file   */
                  tmpkey.kname,tmpkey.kvalue); 
          wrterr(out,errmes,1);  
     } 
-    if(hdunum == 1) { /* SIMPLEX should be logical T */
+    if(hdunum == 1) { /* SIMPLE should be logical T */
         if(strcmp(tmpkey.kname,"SIMPLE"))  
             wrterr(out, "The 1st keyword of a primary array is not SIMPLE.",1);
         if( !check_log(&tmpkey,out)|| strcmp(tmpkey.kvalue,"T")) 
@@ -256,8 +265,10 @@ void init_hdu(fitsfile *infits, 	/* input fits file   */
 	    strncmp(p,"BINTABLE",8)  && 
 	    strncmp(p,"A3DTABLE",8)  && 
 	    strncmp(p,"IUEIMAGE",8)  && 
+	    strncmp(p,"FOREIGN ",8)  && 
+	    strncmp(p,"DUMP    ",8)  && 
 	    strncmp(p,"IMAGE   ",8)  )   { 
-            sprintf(errmes, "Illegal XTENSION value \"%8.8s\".",p);
+            sprintf(errmes, "Unregistered XTENSION value \"%8.8s\".",p);
             wrterr(out,errmes,1);
         }
         else { 
@@ -284,9 +295,6 @@ void init_hdu(fitsfile *infits, 	/* input fits file   */
     if(fits_read_key(infits, TINT, "BITPIX", &(hduptr->bitpix), NULL, &status))
          wrtferr(out,"",&status,2);
     check_fixed_int(cards[1], out);
-    if (hduptr->bitpix == 64){
-         wrtwrn(out,"BITPIX = 64: The 64-bit integer datatype is not standard.",0);
-    }
 
     /* Read and Parse the NAXIS */
     hduptr->naxis = 0;
@@ -295,7 +303,7 @@ void init_hdu(fitsfile *infits, 	/* input fits file   */
     check_fixed_int(cards[2], out);
 
     if(hduptr->naxis!=0)  
-	 hduptr->naxes = (long *)malloc(hduptr->naxis*sizeof(long));
+	 hduptr->naxes = (LONGLONG *)malloc(hduptr->naxis*sizeof(LONGLONG));
     for (i = 0; i < hduptr->naxis; i++) hduptr->naxes[i] = -1;
 
     /* Parse the keywords NAXISn */ 
@@ -304,7 +312,11 @@ void init_hdu(fitsfile *infits, 	/* input fits file   */
 	    &(tmpkey.ktype), tmpkey.kvalue,comm); 
         p = tmpkey.kname+5; 
 	if(!isdigit((int) *p))continue;
+#if (USE_LL_SUFFIX == 1)
+        if(check_int(&tmpkey,out)) lu = strtoll(tmpkey.kvalue,NULL,10);
+#else
 	if(check_int(&tmpkey,out)) lu = strtol(tmpkey.kvalue,NULL,10);
+#endif
         lv = strtol(p,NULL,10); 
         if(lv > hduptr->naxis && lv <= 0) {      
             sprintf(errmes,
@@ -361,7 +373,16 @@ void init_hdu(fitsfile *infits, 	/* input fits file   */
 	kwds[i]->goodkey=1;
 	if(fits_parse_card(out,1+j,cards[j], kwds[i]->kname, 
 		     &(kwds[i]->ktype), kwds[i]->kvalue,comm)) 
-		     kwds[i]->goodkey=0; 
+		     kwds[i]->goodkey=0;
+		     
+	if (kwds[i]->ktype == UNKNOWN && *(kwds[i]->kvalue) == 0)
+	{
+	    sprintf(errmes,
+               "Keyword #%d, %s has a null value.", 
+                j+1,kwds[i]->kname); 
+            wrtwrn(out,errmes,0);
+	}
+
         /* only count the non-commentary keywords */ 
 	if (!strcmp(kwds[i]->kname,"CONTINUE")) { 
             hduptr->use_longstr = 1;
@@ -421,7 +442,7 @@ void init_hdu(fitsfile *infits, 	/* input fits file   */
 *      test_hdu 
 *
 *   Test the  HDU header
-*
+*    This includes many tests of WCS keywords
 *	
 *************************************************************/
 void test_hdu(fitsfile *infits, 	/* input fits file   */ 
@@ -431,6 +452,69 @@ void test_hdu(fitsfile *infits, 	/* input fits file   */
 
 { 
     int status = 0;
+    FitsKey **kwds;
+    int numusrkey;
+    int hdunum;
+    char *p, *p2, *pname = 0;
+    int i,j,k,m,n, wcsaxes = 0, taxes;
+    int wcsaxesExists = 0, wcsaxesvalue = 0, wcsaxespos = 0, wcskeypos = 1000000000;
+    FitsKey *pkey;
+    int crota2_exists = 0, matrix_exists[2] = {0,0};  
+    double dvalue;
+
+    /* floating WCS keywords  */
+    char *cfltkeys[] = {"CRPIX", "CRVAL","CDELT","CROTA",
+                        "CRDER","CSYER", "PV"};
+    int ncfltkeys = 7;  
+    int keynum[] = {0,0,0,0,0,0,0}, nmax = 0;
+
+    /* floating non-indexed WCS keywords  */
+    char *cfltnkeys[] = {"RESTFRQ", "RESTFREQ", "RESTWAV",
+			"OBSGEO-X", "OBSGEO-Y", "OBSGEO-Z", 
+			"VELOSYS", "ZSOURCE", "VELANGL",
+			"LONPOLE", "LATPOLE"};
+    int ncfltnkeys = 11;      
+
+    /* floating WCS keywords w/ underscore  */
+    char *cflt_keys[] = {"PC","CD"};
+    int ncflt_keys = 2;
+
+    /* string WCS keywords  */
+    char *cstrkeys[] = {"CTYPE", "CUNIT", "PS", "CNAME" };
+    int ncstrkeys = 4;  
+ 
+     /* string RADESYS keywords with list of allowed values  */
+    char *rastrkeys[] = {"RADESYS", "RADECSYS" };
+    int nrastrkeys = 2;  
+
+     /* string spectral ref frame keywords with list of allowed values  */
+    char *specstrkeys[] = {"SPECSYS", "SSYSOBS", "SSYSSRC" };
+    int nspecstrkeys = 3;  
+
+
+    numusrkey = hduptr->tkeys;
+    kwds = hduptr->kwds;
+
+    /* find the extension  name and version */
+    strcpy(temp,"EXTNAME");
+    ptemp = temp;
+    key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n);
+    if(k> -1 ) {
+         if(kwds[k]->ktype == STR_KEY)
+              strcpy(hduptr->extname,kwds[k]->kvalue);
+    }
+
+    strcpy(temp,"EXTVER");
+    ptemp = temp;
+    key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n);
+    if(k> -1 ) { 
+         if(kwds[k]->ktype == INT_KEY) 
+               hduptr->extver = (int) strtol(kwds[k]->kvalue,NULL,10);
+    }
+
+    /* set the HduName structure */ 
+    hdunum = hduptr->hdunum;
+    set_hduname(hdunum,hduptr->hdutype,hduptr->extname, hduptr->extver);
 
     if(hduptr->hdunum == 1) { 
         test_prm(infits,out,hduptr);
@@ -453,6 +537,372 @@ void test_hdu(fitsfile *infits, 	/* input fits file   */
     }
     /* test the general keywords */
     test_header(infits,out,hduptr); 
+
+    /* test if CROTA2 exists; if so, then PCi_j must not exist */
+    strcpy(temp,"CROTA2"); 
+    ptemp = temp;
+    key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n);
+    if (n == 1) {
+        pkey = hduptr->kwds[k];
+        crota2_exists = pkey->kindex;  
+    }
+    
+    strcpy(temp,"WCSAXES"); 
+    ptemp = temp;
+
+    /* first find the primary WCSAXES value, if it exists */
+    key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n);  
+    if (k >= 0) {
+        j = k;
+        if (check_int(kwds[j],out)) {
+            pkey = hduptr->kwds[j]; 
+	    wcsaxesvalue = (int) strtol(pkey->kvalue,NULL,10);
+            nmax = wcsaxesvalue;
+        }
+    }
+
+    /* Check and find max value of the WCSAXESa keywords */ 
+    /* Use the max value when checking the range of the indexed WCS keywords. */
+    /* This is a less rigorous test than if one were to test the range of the */
+    /* keywords for each of the alternate WCS systems (A - Z) against the */
+    /* corresponding WCSAXESa keyword.  */
+    key_match(tmpkwds,numusrkey,&ptemp,0,&k,&n);  
+
+    for (j = k; j< n + k ; j++){
+	if (check_int(kwds[j],out)) {
+            pkey = hduptr->kwds[j]; 
+	    taxes = (int) strtol(pkey->kvalue,NULL,10);
+            if (taxes > wcsaxes) wcsaxes = taxes;
+            wcsaxesExists = 1;
+
+	    /* store highest index of any wcsaxes keyword */
+	    /*  (they must appear before other WCS keywords) */
+	    if (pkey->kindex > wcsaxespos) wcsaxespos = pkey->kindex;
+	}
+    }
+
+    /* test datatype of reserved indexed floating point WCS keywords */
+    for (i = 0; i < ncfltkeys; i++) {
+        strcpy(temp,cfltkeys[i]);
+    	ptemp = temp;
+    	key_match(tmpkwds,numusrkey,&ptemp,0,&k,&n);  
+        if(k < 0) continue;
+
+        for (j = k; j < k+n; j++) { 
+            pkey = hduptr->kwds[j]; 
+
+	    p = kwds[j]->kname; 
+	    p += strlen(temp);
+            if(!isdigit((int)*p)) continue;
+
+	    if (!check_flt(pkey,out) )continue;
+
+	    if (i == 2 ) {  /* test that CDELTi != 0 */
+		dvalue = strtod(pkey->kvalue, NULL);
+		if (dvalue == 0.) {
+		    sprintf( errmes, 
+            "Keyword #%d, %s: must have non-zero value.",
+                   pkey->kindex,pkey->kname);
+                   wrterr(out,errmes,1);
+		}
+	    }
+
+	    if (i == 4 || i == 5 ) {  /* test that CRDERi and CSYSERi are non-negative */
+		dvalue = strtod(pkey->kvalue, NULL);
+		if (dvalue < 0.) {
+		    sprintf( errmes, 
+            "Keyword #%d, %s: must have non-negative value: %s",
+                   pkey->kindex,pkey->kname,pkey->kvalue);
+                   wrterr(out,errmes,1);
+		}
+	    }
+
+            m = (int)strtol(p,&p2,10);
+            if (wcsaxesExists) {     /* WCSAXES keyword exists */
+
+              if (m < 1 || m > wcsaxes) { 
+                 sprintf( errmes, 
+            "Keyword #%d, %s: index %d is not in range 1-%d (WCSAXES).",
+                   pkey->kindex,pkey->kname,m,wcsaxes);
+                   wrterr(out,errmes,1);
+              }
+
+            } else {
+
+                if (m < 1 || m > hduptr->naxis) { 
+                  sprintf( errmes, 
+                  "Keyword #%d, %s: index %d is not in range 1-%d (NAXIS).",
+                   pkey->kindex,pkey->kname,m,hduptr->naxis);
+                   wrtwrn(out,errmes,0);
+                }
+            }
+
+            /* count the number of each keyword */
+	    if (*p2 == 0) {  /* only test the primary set of WCS keywords */
+        	keynum[i] = keynum[i] + 1;
+		if (m > nmax) nmax = m;
+            }
+
+	    /* store lowest index of any wcs keyword */
+	    if (pkey->kindex < wcskeypos) {
+	        wcskeypos = pkey->kindex;
+		pname = pkey->kname;
+	    }
+        } 
+    }
+
+    if (wcsaxesvalue == 0) {  /* limit value of nmax to the legal maximum */
+        if (nmax > hduptr->naxis)
+	    nmax = hduptr->naxis;
+    } else {
+        if (nmax > wcsaxesvalue)
+	    nmax = wcsaxesvalue;
+    }
+
+    if (keynum[0] < nmax) { /* test number of CRPIXi keywords */
+             sprintf( errmes, 
+            "Some CRPIXi keywords appear to be missing; expected %d.",nmax);
+             wrtwrn(out,errmes,0);
+    }
+    if (keynum[1] < nmax) { /* test number of CRVALi keywords */
+             sprintf( errmes, 
+            "Some CRVALi keywords appear to be missing; expected %d.",nmax);
+             wrtwrn(out,errmes,0);
+    }
+
+    /* test datatype of reserved non-indexed floating point WCS keywords */
+    for (i = 0; i < ncfltnkeys; i++) {
+        strcpy(temp,cfltnkeys[i]);
+    	ptemp = temp;
+    	key_match(tmpkwds,numusrkey,&ptemp,0,&k,&n);  
+
+        if(k < 0) continue;
+
+        for (j = k; j < k+n; j++) { 
+            pkey = hduptr->kwds[j]; 
+
+	    if (!check_flt(pkey,out) )continue;
+        } 
+    }
+
+    /* test datatype of reserved indexed floating point WCS keywords with "_" */
+    for (i = 0; i < ncflt_keys; i++) {
+        strcpy(temp,cflt_keys[i]);
+    	ptemp = temp;
+    	key_match(tmpkwds,numusrkey,&ptemp,0,&k,&n);  
+        if(k < 0) continue;
+
+        for (j = k; j < k+n; j++) { 
+            pkey = hduptr->kwds[j]; 
+
+	    p = kwds[j]->kname; 
+	    p += strlen(temp);
+            if(!isdigit((int)*p)) continue;
+	    
+	    p2 = strchr(p, '_');   /* 2 digits must be separated by a '_' */
+	    if (!p2) continue;     
+
+	    if (!check_flt(pkey,out) )continue;
+
+            *p2 = '\0';   /* terminate string at the '_' */
+	    
+            /* test the first digit */
+            m = (int)strtol(p,NULL,10);
+            *p2 = '_';   /* replace the '_' */
+
+            if (wcsaxesExists) {     /* WCSAXES keyword exists */
+
+              if (m < 1 || m > wcsaxes) { 
+                 sprintf( errmes, 
+            "Keyword #%d, %s: 1st index %d is not in range 1-%d (WCSAXES).",
+                   pkey->kindex,pkey->kname,m,wcsaxes);
+                   wrterr(out,errmes,1);
+              }
+
+            } else {
+
+              if (m < 1 || m > hduptr->naxis) { 
+                sprintf( errmes, 
+            "Keyword #%d, %s: 1st index %d is not in range 1-%d (NAXIS).",
+                   pkey->kindex,pkey->kname,m,hduptr->naxis);
+                   wrtwrn(out,errmes,0);
+              }
+ 
+            }
+
+            /* test the second digit */
+            p = p2 + 1;
+            m = (int)strtol(p,&p2,10);
+
+            if (wcsaxesExists) {     /* WCSAXES keyword exists */
+
+              if (m < 1 || m > wcsaxes) { 
+                 sprintf( errmes, 
+            "Keyword #%d, %s: 2nd index %d is not in range 1-%d (WCSAXES).",
+                   pkey->kindex,pkey->kname,m,wcsaxes);
+                   wrterr(out,errmes,1);
+              }
+
+            } else {
+
+                if (m < 1 || m > hduptr->naxis) { 
+                sprintf( errmes, 
+                "Keyword #%d, %s: 2nd index %d is not in range 1-%d (NAXIS).",
+                   pkey->kindex,pkey->kname,m,hduptr->naxis);
+                   wrtwrn(out,errmes,0);
+                }
+            }
+
+	    if (*p2 == 0) { /* no alternate suffix on the PC or CD name */
+	       matrix_exists[i] = pkey->kindex;
+	    }
+
+	    /* store lowest index of any wcs keyword */
+	    if (pkey->kindex < wcskeypos) {
+	        wcskeypos = pkey->kindex;
+		pname = pkey->kname;
+	    }
+        } 
+    }
+
+    if (matrix_exists[0] > 0 && matrix_exists[1] > 0 ) {
+       sprintf( errmes, 
+            "Keywords PCi_j (#%d) and CDi_j (#%d) are mutually exclusive.",
+                   matrix_exists[0],matrix_exists[1]);
+                   wrterr(out,errmes,1);
+    }
+
+    if (matrix_exists[0] > 0 && crota2_exists > 0 ) {
+       sprintf( errmes, 
+            "Keywords PCi_j (#%d) and CROTA2 (#%d) are mutually exclusive.",
+                   matrix_exists[0],crota2_exists);
+                   wrterr(out,errmes,1);
+    }
+
+    /* test datatype of reserved indexed string WCS keywords */
+    for (i = 0; i < ncstrkeys; i++) {
+        strcpy(temp,cstrkeys[i]);
+    	ptemp = temp;
+        keynum[i] = 0;
+    	key_match(tmpkwds,numusrkey,&ptemp,0,&k,&n);  
+
+        if(k < 0) continue;
+
+        for (j = k; j < k+n; j++) { 
+            pkey = hduptr->kwds[j]; 
+
+	    p = kwds[j]->kname; 
+	    p += strlen(temp);
+            if(!isdigit((int)*p)) continue;
+
+	    if (!check_str(pkey,out) )continue;
+
+            m = (int)strtol(p,&p2,10);
+
+            if (wcsaxesExists) {     /* WCSAXES keyword exists */
+
+              if (m < 1 || m > wcsaxes) { 
+                 sprintf( errmes, 
+            "Keyword #%d, %s: index %d is not in range 1-%d (WCSAXES).",
+                   pkey->kindex,pkey->kname,m,wcsaxes);
+                   wrterr(out,errmes,1);
+              }
+
+            } else {
+
+                if (m < 1 || m > hduptr->naxis) { 
+                   sprintf( errmes, 
+                   "Keyword #%d, %s: index %d is not in range 1-%d (NAXIS).",
+                   pkey->kindex,pkey->kname,m,hduptr->naxis);
+                   wrtwrn(out,errmes,0);
+                } 
+ 
+            }
+
+	    if (*p2 == 0) {  /* only test the primary set of WCS keywords */
+        	keynum[i] = keynum[i] + 1;
+            }
+
+	    /* store lowest index of any wcs keyword */
+	    if (pkey->kindex < wcskeypos) {
+	        wcskeypos = pkey->kindex;
+		pname = pkey->kname;
+	    }
+        } 
+    }
+
+    if (keynum[0] < nmax) {
+             sprintf( errmes, 
+            "Some CTYPEi keywords appear to be missing; expected %d.",nmax);
+             wrtwrn(out,errmes,0);
+    }
+
+    if (wcskeypos < wcsaxespos) { 
+             sprintf( errmes, 
+            "WCSAXES keyword #%d appears after other WCS keyword %s #%d",
+	       wcsaxespos, pname, wcskeypos);
+             wrterr(out,errmes,1);
+    }
+
+    /* test datatype and value of reserved RADECSYS WCS keywords */
+    for (i = 0; i < nrastrkeys; i++) {
+        strcpy(temp,rastrkeys[i]);
+    	ptemp = temp;
+        keynum[i] = 0;
+    	key_match(tmpkwds,numusrkey,&ptemp,0,&k,&n);  
+
+        if(k < 0) continue;
+
+        for (j = k; j < k+n; j++) { 
+            pkey = hduptr->kwds[j]; 
+
+	    p = kwds[j]->kname; 
+	    p += strlen(temp);
+
+	    if (!check_str(pkey,out) )continue;
+
+            if (strcmp(pkey->kvalue, "ICRS") && strcmp(pkey->kvalue, "FK5") && 
+	        strcmp(pkey->kvalue, "FK4") && strcmp(pkey->kvalue, "FK4-NO-E") && 
+		strcmp(pkey->kvalue, "GAPPT")) {
+                   sprintf( errmes, 
+                   "Keyword #%d, %s has non-allowed value: %s",
+                   pkey->kindex,pkey->kname,pkey->kvalue);
+                   wrtwrn(out,errmes,0);
+	    }
+ 
+        } 
+    }
+
+    /* test datatype and value of reserved spectral ref frame WCS keywords */
+    for (i = 0; i < nspecstrkeys; i++) {
+        strcpy(temp,specstrkeys[i]);
+    	ptemp = temp;
+        keynum[i] = 0;
+    	key_match(tmpkwds,numusrkey,&ptemp,0,&k,&n);  
+
+        if(k < 0) continue;
+
+        for (j = k; j < k+n; j++) { 
+            pkey = hduptr->kwds[j]; 
+
+	    p = kwds[j]->kname; 
+	    p += strlen(temp);
+
+	    if (!check_str(pkey,out) )continue;
+
+            if (strcmp(pkey->kvalue, "TOPOCENT") && strcmp(pkey->kvalue, "GEOCENTR") && 
+	        strcmp(pkey->kvalue, "BARYCENT") && strcmp(pkey->kvalue, "HELIOCEN") && 
+	        strcmp(pkey->kvalue, "LSRK") && strcmp(pkey->kvalue, "LSRD") && 
+	        strcmp(pkey->kvalue, "GALACTOC") && strcmp(pkey->kvalue, "LOCALGRP") && 
+	        strcmp(pkey->kvalue, "CMBDIPOL") && strcmp(pkey->kvalue, "SOURCE")) {
+                   sprintf( errmes, 
+                   "Keyword #%d, %s has non-allowed value: %s",
+                   pkey->kindex,pkey->kname,pkey->kvalue);
+                   wrtwrn(out,errmes,0);
+	    }
+ 
+        } 
+    }
 
     /* test the fill area */ 
     if(testfill) { 
@@ -485,15 +935,6 @@ void test_prm(fitsfile *infits, 	/* input fits file   */
     int numusrkey;
     char *p;
 
-/*
-  Only issue warning for EXTNAME, EXTVER, and EXTLEVEL in
-  the primary array because there is currently a grass roots movement
-  for changing this prohibition in the FITS Standard.
-*/
-
-    char *wrnkey[] = {"EXTNAME","EXTVER","EXTLEVEL"};
-    int nwrnkey = 3;
-
     char *exlkey[] = {"XTENSION"};
     int nexlkey = 1;
 
@@ -502,9 +943,6 @@ void test_prm(fitsfile *infits, 	/* input fits file   */
   
     /* The SIMPLE, BITPIX, NAXIS, and NAXISn keywords  have been 
        checked in CFITSIO */
-
-    /* set the HduName structure */ 
-    set_hduname(hduptr->hdunum,hduptr->hdutype,hduptr->extname, hduptr->extver);
 
     /* excluded keywords cannot be used. */ 
     for (i = 0; i < nexlkey; i++) {
@@ -520,19 +958,6 @@ void test_prm(fitsfile *infits, 	/* input fits file   */
         }
     } 
    
-    /* warn about keywords that should not be used */ 
-    for (i = 0; i < nwrnkey; i++) {
-        strcpy(temp,wrnkey[i]);
-        ptemp = temp;
-        key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n); 
-        if( n > 0) { 
-            pkey = hduptr->kwds[k]; 
-	    sprintf(errmes,
-               "Keyword #%d, %s should not be used in a primary array.", 
-                pkey->kindex,wrnkey[i]); 
-            wrtwrn(out,errmes,0);
-        }
-    } 
     /* Check if Random Groups file */   
     strcpy(temp,"GROUPS");
     ptemp = temp;
@@ -547,32 +972,23 @@ void test_prm(fitsfile *infits, 	/* input fits file   */
     } 
 
     /* check the position of the EXTEND  */
-    if (hduptr->isgroup == 0) {  /* this doesn't apply to random groups files */
+
+/*  the EXTEND keyword is no longer required if the file contains extensions */
+
+    if (hduptr->isgroup == 0) { 
        strcpy(temp,"EXTEND");
        ptemp = temp;
        key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n); 
-       if( k < 0 && totalhdu > 1) { 
-	    sprintf(errmes,"Cannot find the EXTEND keyword.");
-            wrterr(out,errmes,1);
-       } 
-       else if( k > 0) { 
+       if( k > 0) { 
            pkey = hduptr->kwds[k]; 
-           if(pkey->kindex != 4 + hduptr->naxis ) { 
-             sprintf(errmes, 
-"Keyword #%d, EXTEND is not after the last NAXIS or NAXISn card.",
-             pkey->kindex); 
-             wrterr(out,errmes,1);
-           }
 
 	   if(check_log(pkey,out) && *(pkey->kvalue)!='T' && totalhdu > 1) {
 	      sprintf(errmes,"There are extensions but EXTEND = F.");
               wrterr(out,errmes,1); 
-
            }
-           check_fixed_log(cards[pkey->kindex - 1], out);
        }
     }
-       
+      
     /* Check PCOUNT and GCOUNT  keyword */   
     strcpy(temp,"PCOUNT");
     ptemp = temp;
@@ -624,12 +1040,16 @@ void test_prm(fitsfile *infits, 	/* input fits file   */
              pkey->kindex, pkey->kname);
          wrtwrn(out,errmes,0);
 	 check_log(pkey,out);
+
+/*  no longer required
          if(pkey->kindex > 36) {
                   sprintf(errmes,
                    "Keyword #%d, BLOCKED, appears beyond keyword 36.", 
                     pkey->kindex);
                   wrterr(out,errmes,1);  
          }
+*/
+
     }
 
     /*  Check PSCALn keywords (only in Random Groups) */ 
@@ -727,6 +1147,7 @@ void test_prm(fitsfile *infits, 	/* input fits file   */
         }     
     } 
     test_array(infits, out, hduptr);
+        
     return;
 }
 
@@ -749,37 +1170,17 @@ void test_ext(fitsfile *infits, 	/* input fits file   */
     int numusrkey;
     char *exlkey[] = {"SIMPLE","EXTEND", "BLOCKED", }; 
     int nexlkey = 3;
-    char *exlnkey[] = {"PTYPE","PSCAL", "PZERO", }; 
-    int nexlnkey = 3;
+    char *exlnkey[] = {"PTYPE","PSCAL", "PZERO", "GROUPS", }; 
+    int nexlnkey = 4;
     int hdunum;
     char *p;
 
     numusrkey = hduptr->tkeys;
     kwds = hduptr->kwds;
-
-    /* find the extension  name and version */
-    strcpy(temp,"EXTNAME");
-    ptemp = temp;
-    key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n);
-    if(k> -1 ) {
-         if(check_str(kwds[k],out))
-              strcpy(hduptr->extname,kwds[k]->kvalue);
-    }
-
-    strcpy(temp,"EXTVER");
-    ptemp = temp;
-    key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n);
-    if(k> -1 ) { 
-         if(check_int(kwds[k],out)) 
-               hduptr->extver = (int) strtol(kwds[k]->kvalue,NULL,10);
-    }
-
-    /* set the HduName structure */ 
     hdunum = hduptr->hdunum;
-    set_hduname(hdunum,hduptr->hdutype,hduptr->extname, hduptr->extver);
 
     /* check the duplicate extensions */
-    for (i = hdunum - 1; i > 1; i--) { 
+    for (i = hdunum - 1; i > 0; i--) { 
         if(test_hduname(hdunum,i)) { 
             sprintf(comm, 
 	    "The HDU %d and %d have identical type/name/version", 
@@ -787,11 +1188,6 @@ void test_ext(fitsfile *infits, 	/* input fits file   */
             wrtwrn(out,comm,0);
         }
     }
-
-    strcpy(temp,"EXTLEVEL");
-    ptemp = temp;
-    key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n);
-    if(k> -1 ) check_int(kwds[k],out);
 
     /* check the position of the PCOUNT  */
     strcpy(temp,"PCOUNT");
@@ -805,10 +1201,7 @@ void test_ext(fitsfile *infits, 	/* input fits file   */
         pkey = hduptr->kwds[k]; 
 	if(check_int(pkey,out)) 
 	    hduptr->pcount = (int) strtol(pkey->kvalue,NULL,10);
-        if( (hduptr->hdutype == IMAGE_HDU  ||
-	     hduptr->hdutype == ASCII_TBL  ||
-	     hduptr->hdutype == BINARY_TBL ) && 
-	     pkey->kindex != 4 + hduptr->naxis ) {
+        if( pkey->kindex != 4 + hduptr->naxis ) {
 	     sprintf(errmes,"PCOUNT is not in record %d of the header.",
                  hduptr->naxis + 4); 
              wrterr(out,errmes,1);
@@ -829,10 +1222,7 @@ void test_ext(fitsfile *infits, 	/* input fits file   */
         pkey = hduptr->kwds[k]; 
 	if(check_int(pkey,out)) 
 	    hduptr->gcount = (int) strtol(pkey->kvalue,NULL,10);
-        if( (hduptr->hdutype == IMAGE_HDU  ||
-	     hduptr->hdutype == ASCII_TBL  ||
-	     hduptr->hdutype == BINARY_TBL ) && 
-	     pkey->kindex != 5 + hduptr->naxis ) {
+        if( pkey->kindex != 5 + hduptr->naxis ) {
 	     sprintf(errmes,"GCOUNT is not in record %d of the header.",
                  hduptr->naxis + 5); 
              wrterr(out,errmes,1);
@@ -912,6 +1302,7 @@ void test_img_ext(fitsfile *infits, 	/* input fits file   */
     }
 
     test_array(infits, out, hduptr);
+    
     return ;
 }
 
@@ -932,7 +1323,7 @@ void test_array(fitsfile *infits, 	/* input fits file   */
     int numusrkey;
     FitsKey **kwds;
     char *p;
-    int i,j,k,m,n, wcsaxes = 0, wcsaxesExists = 0;
+    int i,j,k,n;
     FitsKey *pkey;
 
     /* excluded non-indexed keywords  */
@@ -945,25 +1336,14 @@ void test_array(fitsfile *infits, 	/* input fits file   */
                       "TTYPE", "TUNIT","TDISP","TDIM",
                       "TCTYP","TCUNI","TCRVL","TCDLT","TCRPX","TCROT"}; 
     int nexlnkeys = 15;
-     
-    /* floating WCS keywords  */
-    char *cfltkeys[] = {"CRPIX", "CRVAL","CDELT","CROTA","PC","CD","PV",
-                        "CRDER","CSYER" };
-    int ncfltkeys = 9;  
-
-    /* string WCS keywords  */
-    char *cstrkeys[] = {"CTYPE", "CUNIT", "PS" };
-    int ncstrkeys = 3;  
     
     /* non-indexed floating keywords  (excluding BSCALE) */
-    char *fltkeys[] = {"BZERO","DATAMAX","DATAMIN",
-                       "LONPOLE","LATPOLE"};
-    int nfltkeys = 5;  
+    char *fltkeys[] = {"BZERO","DATAMAX","DATAMIN"};
+    int nfltkeys = 3;  
 
     /* non-indexed string keywords */
-    char *strkeys[] = {"BUNIT","WCSNAME"};
-    int nstrkeys = 2;  
-
+    char *strkeys[] = {"BUNIT"};
+    int nstrkeys = 1;  
     
     numusrkey = hduptr->tkeys;
     kwds = hduptr->kwds;
@@ -976,7 +1356,7 @@ void test_array(fitsfile *infits, 	/* input fits file   */
 	check_int(kwds[k],out);
         if(hduptr->bitpix < 0) { 
             sprintf(errmes,
-          "Keyword #%d, %s cannot be used with a negative BITPIX = %d.",
+          "Keyword #%d, %s must not be used with floating point data (BITPIX = %d).",
                kwds[k]->kindex,kwds[k]->kname, hduptr->bitpix); 
             wrterr(out,errmes,2);
         } 
@@ -1052,98 +1432,102 @@ void test_array(fitsfile *infits, 	/* input fits file   */
         } 
     }
 
-    /*  Check for WCSAXES keyword */ 
-    strcpy(temp,"WCSAXES");
-    ptemp = temp;
-    key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n);  
-    if( k >= 0) {
-	if (check_int(kwds[k],out)) {
-            pkey = hduptr->kwds[k]; 
-	    wcsaxes = (int) strtol(pkey->kvalue,NULL,10);
-            wcsaxesExists = 1;
-        }
-    }
-
-    /* test datatype of reserved indexed floating point WCS keywords */
-    for (i = 0; i < ncfltkeys; i++) {
-        strcpy(temp,cfltkeys[i]);
-    	ptemp = temp;
-    	key_match(tmpkwds,numusrkey,&ptemp,0,&k,&n);  
-        if(k < 0) continue;
-
-        for (j = k; j < k+n; j++) { 
-            pkey = hduptr->kwds[j]; 
-
-	    p = kwds[j]->kname; 
-	    p += strlen(temp);
-            if(!isdigit((int)*p)) continue;
-
-	    if (!check_flt(pkey,out) )continue;
-
-            m = (int)strtol(p,NULL,10);
-
-            if (wcsaxesExists) {     /* WCSAXES keyword exists */
-
-              if (m < 1 || m > wcsaxes) { 
-                 sprintf( errmes, 
-            "Keyword #%d, %s: index %d is not in range 1-%d (WCSAXES).",
-                   pkey->kindex,pkey->kname,m,wcsaxes);
-                   wrterr(out,errmes,1);
-              }
-
-            } else {
-
-              if (m < 1 || m > hduptr->naxis) { 
-                sprintf( errmes, 
-            "Keyword #%d, %s: index %d is not in range 1-%d (NAXIS).",
-                   pkey->kindex,pkey->kname,m,hduptr->naxis);
-                   wrtwrn(out,errmes,0);
-              }
- 
-            }
-        } 
-    }
-
-    /* test datatype of reserved indexed string WCS keywords */
-    for (i = 0; i < ncstrkeys; i++) {
-        strcpy(temp,cstrkeys[i]);
-    	ptemp = temp;
-    	key_match(tmpkwds,numusrkey,&ptemp,0,&k,&n);  
-        if(k < 0) continue;
-
-        for (j = k; j < k+n; j++) { 
-            pkey = hduptr->kwds[j]; 
-
-	    p = kwds[j]->kname; 
-	    p += strlen(temp);
-            if(!isdigit((int)*p)) continue;
-
-	    if (!check_str(pkey,out) )continue;
-
-            m = (int)strtol(p,NULL,10);
-
-            if (wcsaxesExists) {     /* WCSAXES keyword exists */
-
-              if (m < 1 || m > wcsaxes) { 
-                 sprintf( errmes, 
-            "Keyword #%d, %s: index %d is not in range 1-%d (WCSAXES).",
-                   pkey->kindex,pkey->kname,m,wcsaxes);
-                   wrterr(out,errmes,1);
-              }
-
-            } else {
-
-              if (m < 1 || m > hduptr->naxis) { 
-                sprintf( errmes, 
-            "Keyword #%d, %s: index %d is not in range 1-%d (NAXIS).",
-                   pkey->kindex,pkey->kname,m,hduptr->naxis);
-                   wrtwrn(out,errmes,0);
-              } 
- 
-            }
-        } 
-    }
+    return;
 }
+
+/*************************************************************
+*
+*      test_img_wcs 
+*
+*   Test the image WCS keywords
+*
+*	
+*************************************************************/
+
+/*
+void test_img_wcs(fitsfile *infits, 	
+	     FILE*     out,	
+	     FitsHdu  *hduptr	
+            )
+{
+
+    int nkeyrec, nreject, nwcs, status = 0;
+    int *stat = 0, ii; 
+    char *header;
+    struct wcsprm *wcs;
+*/
+
+/* NOTE: WCSLIB currently doesn't provide very much diagnostic information
+  about possible problems with the WCS keywords so for now, comment out this
+  routine.
+*/  
+
+    /* use WCSLIB to look for inconsistencies in the WCS keywords */
+
+    /* Read in the FITS header, excluding COMMENT and HISTORY keyrecords. */
+/*
+    if (fits_hdr2str(infits, 1, NULL, 0, &header, &nkeyrec, &status)) {
+        sprintf(errmes,
+           "test_img_ext failed to read header keywords into array %d", status);
+        wrterr(out,errmes,1);
+	return;
+    }
+*/
+    /* Interpret the WCS keywords. */
+
+/*
+    if ((status = wcsbth(header, nkeyrec, WCSHDR_all, -2, 0, 0, &nreject, &nwcs,
+                       &wcs))) {
+        sprintf(errmes,
+           "test_img_ext: wcsbth ERROR %d: %s.", status, wcshdr_errmsg[status]);
+        wrterr(out,errmes,1);
+
+        free(header);
+	return;
+    }
+
+    free(header);
+
+    if (wcs) {
+        if (nwcs == 1) {
+           sprintf(errmes,
+               " Found 1 World Coordinate System (WCS).");
+        } else {
+           sprintf(errmes,
+               " Found %d World Coordinate Systems (WCS).", nwcs);
+        }
+        wrtout(out,errmes);
+    }
+*/
+    /* Translate non-standard WCS keyvalues and look for inconsistencies */
+
+/* this doesn't provide any useful checks 
+    stat = malloc(NWCSFIX * sizeof(int));
+
+    if ((status = wcsfix(7, 0, wcs, stat))) {
+      for (ii = 0; ii < NWCSFIX; ii++) {
+        if (stat[ii] > 0) {
+           sprintf(errmes, "wcsfix ERROR %d: %s.", stat[ii],
+                   wcsfix_errmsg[stat[ii]]);
+           wrtwrn(out,errmes,0);
+
+        }
+      }
+    }
+
+    if ((status = wcsset(wcs))) {
+      sprintf(errmes,
+         "wcsset ERROR %d %s.", status, wcs_errmsg[status]);
+      wrtwrn(out,errmes,0);
+    }
+*/
+
+/*
+    status = wcsvfree(&nwcs, &wcs);
+
+    return;
+}
+*/
 
 /*************************************************************
 *
@@ -1169,16 +1553,11 @@ void test_tbl(fitsfile *infits, 	/* input fits file   */
     long lm;
     int mcol;
 
-    /* excluded, non-index keywords (allowed in tile-compressed images */
+    /* excluded, non-index keywords (allowed in tile-compressed images) */
     char*  exlkey[] = {"BSCALE","BZERO", "BUNIT", "BLANK", "DATAMAX",
                        "DATAMIN" };
     int nexlkey = 6;
  
-    /* excluded, indexed keywords */
-    char*  exlkeys[] = {"CTYPE","CRPIX", "CROTA", "CRVAL", "CDELT",
-                        "PC","CD","PV","CRDER","CSYER","CUNIT", "PS"};
-    int nexlkeys = 12;
-     
     /* floating WCS keywords  */
     char *cfltkeys[] = {"TCRVL","TCDLT","TCRPX","TCROT" };
     int ncfltkeys = 4;  
@@ -1244,7 +1623,10 @@ void test_tbl(fitsfile *infits, 	/* input fits file   */
         if(!isdigit((int)*p)) continue;
 
 	check_str(pkey,out);
+
+/*  TFORMn keyword no longer required to be padded to at least 8 characters
         check_fixed_str(cards[pkey->kindex - 1], out);
+*/
 
         if(*(pkey->kvalue) == ' ') {
             sprintf(errmes,"Keyword #%d, %s: TFORM=\"%s\" ",
@@ -1275,12 +1657,6 @@ void test_tbl(fitsfile *infits, 	/* input fits file   */
                 wrterr(out,errmes,1);
             }
 
-            if (*p == 'K' || *p == 'k') {
-                sprintf(errmes,
-                "%s = '%s': The 64-bit integer datatype is not standard.",
-                pkey->kname, pkey->kvalue);
-                wrtwrn(out,errmes,0);
-            }
             p++;            
         }    
     }
@@ -1316,6 +1692,7 @@ void test_tbl(fitsfile *infits, 	/* input fits file   */
 	p += 5;
         if(!isdigit((int)*p)) continue;
 
+        if (*(kwds[j]->kvalue) == '\0') continue;  /* ignore blank string */
 	check_str(kwds[j],out);
         if(*(kwds[j]->kvalue) == ' ') { 
             sprintf(errmes,"Keyword #%d, %s: TDISP=\"%s\" ", 
@@ -1324,6 +1701,8 @@ void test_tbl(fitsfile *infits, 	/* input fits file   */
                     "should not have leading space.");
             wrterr(out,errmes,1); 
         }
+
+
 	i = (int) strtol(p,NULL,10) -1 ; 
         if(i< 0 || i >= mcol ) {
             sprintf(errmes,
@@ -1389,6 +1768,7 @@ void test_tbl(fitsfile *infits, 	/* input fits file   */
                  } 
                  if(strchr(tform[i],'I') == NULL &&  
                     strchr(tform[i],'J') == NULL &&  
+                    strchr(tform[i],'K') == NULL &&  
                     strchr(tform[i],'B') == NULL &&  
                     strchr(tform[i],'X') == NULL   ){ 
                      sprintf(errmes,
@@ -1399,7 +1779,7 @@ void test_tbl(fitsfile *infits, 	/* input fits file   */
                  break;
             case 'F': 
                  p++;
-		 d = 0;
+		 d = -1;
 		 w = 0;
                  w = strtol(p,NULL,10); 
                  if((q = strchr(p,'.')) != NULL) {
@@ -1408,7 +1788,7 @@ void test_tbl(fitsfile *infits, 	/* input fits file   */
                      d = strtol(p,NULL,10); 
                  } 
                  if(!w || w == LONG_MAX || w == LONG_MIN  || 
-                    !d || d == LONG_MAX || d == LONG_MIN  || w < d+1 ) {
+                    d == -1 || d == LONG_MAX || d == LONG_MIN  || w < d+1 ) {
                      sprintf(errmes,
                        "Keyword #%d, %s: invalid format \"%s\".", 
                        kwds[j]->kindex,kwds[j]->kname, kwds[j]->kvalue); 
@@ -1527,6 +1907,8 @@ OTHERKEY:
       }
 
       /* search for excluded indexed keywords */
+
+/* these WCS keywords are all allowed (changed July 2010) 
       for (i = 0; i < nexlkeys; i++) {
         strcpy(temp,exlkeys[i]);
     	ptemp = temp;
@@ -1545,6 +1927,7 @@ OTHERKEY:
             wrterr(out,errmes,1);
         } 
       }
+*/
     }
 
     /* test datatype of reserved indexed floating point WCS keywords */
@@ -1759,7 +2142,7 @@ void test_asc_ext(fitsfile *infits, 	/* input fits file   */
     }
 
     
-    /* check whether the column name is unique in the first 16 characters */
+    /* check whether the column name is unique  */
     test_colnam(out, hduptr);
     return ;
 } 
@@ -1789,7 +2172,7 @@ void test_bin_ext(fitsfile *infits, 	/* input fits file   */
     int repeat, width;
     FitsKey **kwds;
     int numusrkey;
-    int mcol;
+    int mcol, vla, datatype;
 
     /* The indexed keywords excluded from ascii table */
     char *exlkeys[] = { "TBCOL"}; 
@@ -1827,7 +2210,8 @@ void test_bin_ext(fitsfile *infits, 	/* input fits file   */
         }     
         if(strchr(tform[i],'B') == NULL &&  
            strchr(tform[i],'I') == NULL &&  
-           strchr(tform[i],'J') == NULL ) { 
+           strchr(tform[i],'J') == NULL &&  
+           strchr(tform[i],'K') == NULL ) { 
             sprintf(errmes,
      "Keyword #%d, %s is used for the column with format \"%s \".", 
             kwds[j]->kindex,kwds[j]->kname,tform[i]); 
@@ -1926,6 +2310,29 @@ void test_bin_ext(fitsfile *infits, 	/* input fits file   */
          }
     }
 
+    /* if PCOUNT != 0, test that there is at least 1 variable length array column */
+    vla = 0;
+    if(hduptr->pcount) {
+        for (i=0; i< mcol; i++){ 
+            if(fits_get_coltype(infits, i+1, &datatype, NULL, NULL, &status)){ 
+               sprintf(errmes,"Column #%d: ",i);
+ 	       wrtferr(out,errmes, &status,2);
+            }
+            if (datatype < 0) {
+	      vla = 1;
+	      break;
+	    }
+	}
+
+	if (vla == 0) {
+	    sprintf(errmes,
+	    "PCOUNT = %ld, but there are no variable-length array columns.",
+	   (long) hduptr->pcount);
+            wrtwrn(out,errmes,0);
+	} 
+    }
+      
+   
     /* Check TDIMn  keywords */ 
     strcpy(temp,"TDIM");
     key_match(tmpkwds,numusrkey,&ptemp,0,&k,&n);  
@@ -1992,7 +2399,7 @@ void test_bin_ext(fitsfile *infits, 	/* input fits file   */
         } 
     }
     
-    /* check whether the column name is unique in the first 16 characters */
+    /* check whether the column name is unique */
     test_colnam(out, hduptr);
     return ;
 } 
@@ -2001,7 +2408,7 @@ void test_bin_ext(fitsfile *infits, 	/* input fits file   */
 *
 *      test_header
 *
-*   Test the extension header
+*   Test the general keywords that can be in any header
 *
 *	
 *************************************************************/
@@ -2018,13 +2425,17 @@ void test_header(
 
 
     /* string keywords */ 
-    char *strkey[] = {"ORIGIN", "AUTHOR","CREATOR","REFERENC","TELESCOP",
-        "INSTRUME", "OBSERVER", "OBJECT", "RADESYS"}; 
+    char *strkey[] = {"EXTNAME", "ORIGIN", "AUTHOR","CREATOR","REFERENC","TELESCOP",
+        "INSTRUME", "OBSERVER", "OBJECT"}; 
     int nstrkey = 9;
 
+    /* int keywords  */
+    char *intkey[] = {"EXTVER", "EXTLEVEL"};
+    int nintkey = 2;
+
     /* floating keywords  */
-    char *fltkey[] = {"EQUINOX", "MJD-OBS"};
-    int nfltkey = 2;
+    char *fltkey[] = {"EQUINOX", "MJD-OBS", "MJD-AVG"};
+    int nfltkey = 3;
 
     FitsKey** kwds;		/* FitsKey structure array */ 
     int numusrkey;
@@ -2122,6 +2533,14 @@ void test_header(
     	if(k > -1) check_str(kwds[k],out);
     }
 
+    /* Check the reserved int keywords */
+    for (i = 0; i < nintkey; i++) {
+        strcpy(temp,intkey[i]);
+    	ptemp = temp;
+    	key_match(tmpkwds,numusrkey,&ptemp,1,&k,&n);  
+    	if(k > -1) check_int(kwds[k],out);
+    }
+
     /* Check  reserved floating  keywords */   
     for (i = 0; i < nfltkey; i++) {
         strcpy(temp,fltkey[i]);
@@ -2151,6 +2570,11 @@ void test_header(
           wrtwrn(out,errmes,1);
         }
     }
+
+/*  disabled this routine because it doesn't perform an useful tests 
+    test_img_wcs(infits, out, hduptr);
+
+*/
     return; 
 }
 	
@@ -2210,8 +2634,7 @@ void key_match(char **strs,  	/* fits keyname  array */
 *
 *      test_colnam
 *
-*   Test the whether the column name is unique. Only the first 
-*   16 characters are tested.
+*   Test the whether the column name is unique. 
 *
 *	
 *************************************************************/
@@ -2244,11 +2667,15 @@ void test_colnam(FILE *out,
             wrtwrn(out,errmes,0);
             continue;
         }
+
+
+/*      disable this check (it was only a warning) 
         if( (*p  > 'z' || *p < 'a') && (*p > 'Z' || *p <'A') 
                 && (*p > '9' || *p < '0') ) { 
             sprintf(errmes,"Column #%d: Name \"%s\" does not begin with a letter or a digit.",i+1,ttype[i]);
             wrtwrn(out,errmes,1);
         }  
+*/
         while(*p != '\0') { 
             if(    (*p > 'z' || *p < 'a') && (*p > 'Z' || *p < 'A')  
                 && (*p > '9' || *p < '0') && (*p != '_')) { 
@@ -2275,6 +2702,8 @@ void test_colnam(FILE *out,
     /* Check the duplication of the column name */ 
     for (i = 0; i < n-1; i++) { 
         if(!strlen(cols[i]->name)) continue;
+
+/*      disable this warning
         if(!strncmp(cols[i]->name,cols[i+1]->name,16)) { 
             sprintf(errmes,
      "Columns #%d, %s and #%d, %s are not unique within first 16 characters(case insensitive).", 
@@ -2282,9 +2711,11 @@ void test_colnam(FILE *out,
             cols[i+1]->index, ttype[(cols[i+1]->index-1)]);
           wrtwrn(out,errmes,1);
         }
+*/
+
         if(!strcmp(cols[i]->name,cols[i+1]->name)) { 
             sprintf(errmes,
-     "Columns #%d, %s and #%d, %s are not unique(case insensitive).", 
+     "Columns #%d, %s and #%d, %s are not unique (case insensitive).", 
             cols[i]->index,   ttype[(cols[i]->index-1)], 
             cols[i+1]->index, ttype[(cols[i+1]->index-1)]);
           wrtwrn(out,errmes,0);
@@ -2328,7 +2759,7 @@ void   parse_vtform(fitsfile *infits,
     } 
     while(isdigit((int)*p))p++;
 
-    if(*p != 'P') { 
+    if( (*p != 'P') && (*p != 'Q') ) { 
         sprintf(errmes,
 	  "TFORM%d is not for the variable length array: %s.", 
         colnum, tform[colnum-1]); 
@@ -2449,8 +2880,13 @@ void print_summary(fitsfile *infits, 	/* input fits file   */
             strcat(extnv,extver);
         }
 
+#if (USE_LL_SUFFIX == 1)
+        sprintf(comm," %s  (%d columns x %lld rows)", extnv, hduptr->ncols,
+           hduptr->naxes[1]);
+#else
         sprintf(comm," %s  (%d columns x %ld rows)", extnv, hduptr->ncols,
            hduptr->naxes[1]);
+#endif
         wrtout(out,comm);
         if(hduptr->ncols) {
            wrtout(out," ");
@@ -2505,13 +2941,21 @@ void print_summary(fitsfile *infits, 	/* input fits file   */
             sprintf(temp," %d axes ",hduptr->naxis);
 	    strcat(comm,temp);
 
+#if (USE_LL_SUFFIX == 1)
+	    sprintf(temp, "(%lld",hduptr->naxes[0]);
+#else
 	    sprintf(temp, "(%ld",hduptr->naxes[0]);
+#endif
 	    strcat(comm,temp);
 
 	    npix = hduptr->naxes[0];
 	    for ( i = 1; i < hduptr->naxis; i++){ 
 	       npix *= hduptr->naxes[i];
+#if (USE_LL_SUFFIX == 1)
+	       sprintf(temp, " x %lld",hduptr->naxes[i]);
+#else
 	       sprintf(temp, " x %ld",hduptr->naxes[i]);
+#endif
 	       strcat(comm,temp);
             }  
 	    strcat(comm,"), ");
@@ -2565,13 +3009,21 @@ void print_summary(fitsfile *infits, 	/* input fits file   */
             sprintf(temp," %d axes ",hduptr->naxis);
 	    strcat(comm,temp);
 
+#if (USE_LL_SUFFIX == 1)
+	    sprintf(temp, "(%lld",hduptr->naxes[0]);
+#else
 	    sprintf(temp, "(%ld",hduptr->naxes[0]);
+#endif
 	    strcat(comm,temp);
 
 	    npix = hduptr->naxes[0];
 	    for ( i = 1; i < hduptr->naxis; i++){ 
 	       npix *= hduptr->naxes[i];
+#if (USE_LL_SUFFIX == 1)
+	       sprintf(temp, " x %lld",hduptr->naxes[i]);
+#else
 	       sprintf(temp, " x %ld",hduptr->naxes[i]);
+#endif
 	       strcat(comm,temp);
             }  
 	    strcat(comm,"), ");

@@ -1,7 +1,3 @@
-/*
-  This file is part of "fitsverify" and was imported from:
-    http://heasarc.gsfc.nasa.gov/docs/software/ftools/fitsverify/
- */
 #ifndef _FVERIFY_H
 #define _FVERIFY_H
 
@@ -98,7 +94,7 @@ typedef struct {
     int  pcount;		/* pcount  */
     int  bitpix;		/* pix number */
     int  naxis;			/* number of the axis,used for image array*/
-    long *naxes;		/* dimension of each axis,used for image array*/
+    LONGLONG *naxes;		/* dimension of each axis,used for image array*/
     int  ncols;			/* number of the columns, used for image only*/ 
     char extname[FLEN_VALUE];		/* EXTENSION NAME */
     int extver;			/* extension version */
