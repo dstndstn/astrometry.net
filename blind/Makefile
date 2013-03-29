@@ -355,6 +355,7 @@ demo_dsmooth: demo_dsmooth.o dsmooth.o \
 control-program: control-program.o \
 		$(BACKEND_OBJS) $(SIMPLEXY_OBJ) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 ALL_OBJ += control-program.o
 
 # qfits is only needed for writing debugging images...
