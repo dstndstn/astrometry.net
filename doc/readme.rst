@@ -43,6 +43,7 @@ Installing
 The short version::
 
    make
+   make py
    make extra
    make install  # to put it in /usr/local/astrometry
    # or:
@@ -55,7 +56,7 @@ Prerequisites
 -------------
 
 For full functionality, you will need:
-  * GNU build tools (gcc, make, etc.)
+  * GNU build tools (gcc/clang, make, etc.)
   * cairo
   * netpbm
   * libpng
@@ -64,6 +65,7 @@ For full functionality, you will need:
   * python (probably >= 2.4)
   * numpy
   * pyfits: http://www.stsci.edu/resources/software_hardware/pyfits
+  * cfitsio: http://heasarc.gsfc.nasa.gov/fitsio/
  
 
 Ubuntu or Debian-like systems:
@@ -73,7 +75,8 @@ Ubuntu or Debian-like systems:
 
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
                            libpng12-dev libjpeg-dev python-numpy \
-                           zlib-devel python-pyfits
+                           python-pyfits python-dev zlib1g-dev
+
 
 RHEL / RedHat-like distributions:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -85,10 +88,12 @@ RHEL / RedHat-like distributions:
                        libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64 \
 					   zlib-devel libjpeg-devel
 
+I don't know what the *cfitsio* packages is called -- anyone?
+
 Mac OS X using homebrew:
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-These instructions Worked For Me as of September 2012 on OSX 10.8.
+These instructions *Worked For Me* as of September 2012 on OSX 10.8.
 
 First set up homebrew:
   * grab `XCode <https://developer.apple.com/xcode/>`_ (from the Apps Store.  Free, but you still need a credit card.  Argh.)
@@ -106,12 +111,9 @@ Optionally, grab some other handy homebrew packages::
     $ brew install cfitsio --with-examples
     $ brew install md5sha1sum     # OSX doesn't come with this?!  For shame
  
-Get our fork of homebrew-science::
+Get our fork of homebrew-science and install::
 
     $ brew tap camphogg/science     # homebrew/science development is slow!
-
-And finally::
-
     $ brew install astrometry.net
 
 Or::
