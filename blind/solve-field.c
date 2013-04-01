@@ -483,6 +483,7 @@ static int plot_annotations(augment_xylist_t* axy, const char* me, anbool verbos
 		sl_appendf(cmdline, "%f", plotscale);
 	}
     sl_append(cmdline, "-N");
+    sl_append(cmdline, "-B");
     sl_append(cmdline, "-C");
     sl_append(cmdline, "-o");
 	assert(annfn);
