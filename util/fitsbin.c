@@ -516,10 +516,11 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	} else {
 
 		if (fits_bytes_needed(expected) != tabsize) {
-			ERROR("Expected table size (%i => %i FITS blocks) is not equal to "
-				  "size of table \"%s\" (%i FITS blocks).",
-				  (int)expected, fits_blocks_needed(expected),
-				  chunk->tablename, (int)(tabsize / FITS_BLOCK_SIZE));
+			ERROR("Expected table size (%zu => %i FITS blocks) is not equal to "
+				  "size of table \"%s\" (%zu => %i FITS blocks).",
+				  expected, fits_blocks_needed(expected),
+				  chunk->tablename, (size_t)tabsize,
+				  (int)(tabsize / FITS_BLOCK_SIZE));
 			return -1;
 		}
 		get_mmap_size(tabstart, tabsize, &mapstart, &(chunk->mapsize), &mapoffset);
