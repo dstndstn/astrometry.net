@@ -503,7 +503,7 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
         return -1;
     }
 
-    expected = chunk->itemsize * chunk->nrows;
+    expected = (size_t)chunk->itemsize * (size_t)chunk->nrows;
 	if (in_memory(fb)) {
 		int i;
 		chunk->data = malloc(expected);
