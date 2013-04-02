@@ -1171,9 +1171,9 @@ int fits_write_data(FILE* fid, void* pvalue, tfits_type type, anbool flip) {
     return fits_write_data_array(fid, pvalue, type, 1, flip);
 }
 
-int fits_bytes_needed(int size) {
-	size += FITS_BLOCK_SIZE - 1;
-	return size - (size % FITS_BLOCK_SIZE);
+size_t fits_bytes_needed(size_t size) {
+	size += (size_t)(FITS_BLOCK_SIZE - 1);
+	return size - (size % (size_t)FITS_BLOCK_SIZE);
 }
 
 int fits_blocks_needed(int size) {

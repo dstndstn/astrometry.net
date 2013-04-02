@@ -152,7 +152,7 @@ fits_add_long_history(qfits_header* dst, const char* format, ...);
 // how many FITS blocks are required to hold 'size' bytes?
 int fits_blocks_needed(int size);
 
-int fits_bytes_needed(int size);
+size_t fits_bytes_needed(size_t size);
 
 int fits_pad_file_with(FILE* fid, char pad);
 
