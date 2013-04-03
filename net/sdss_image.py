@@ -2,22 +2,26 @@ import math
 import os
 import urllib
 
+if __name__ == '__main__':
+    import os
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+
 from astrometry.net.log import *
 from astrometry.net.tmpfile import *
 from astrometry.net import settings
 
-def plot_sdss_image(wcsfn, plotfn, image_scale=1.0):
+def plot_sdss_image(wcsfn, plotfn, image_scale=1.0, debug_ps=None):
     from astrometry.util import util as anutil
     from astrometry.blind import plotstuff as ps
     # Parse the wcs.fits file
     wcs = anutil.Tan(wcsfn, 0)
-    # arcsec radius
-    #scale = math.hypot(wcs.imagew, wcs.imageh)/2. * wcs.pixel_scale()
     # grab SDSS tiles with about the same resolution as this image.
-    logmsg('Image scale is', wcs.pixel_scale(), 'arcsec/pix')
+    pixscale = wcs.pixel_scale()
+    pixscale = pixscale / image_scale
+    logmsg('Original image scale is', wcs.pixel_scale(), 'arcsec/pix; scaled', image_scale, '->', pixscale)
     # size of SDSS image tiles to request, in pixels
     sdsssize = 512
-    scale = sdsssize * wcs.pixel_scale() / 60.
+    scale = sdsssize * pixscale / 60.
     # healpix-vs-north-up rotation
     nside = anutil.healpix_nside_for_side_length_arcmin(scale / math.sqrt(2.))
     nside = 2 ** int(math.ceil(math.log(nside)/math.log(2.)))
@@ -33,7 +37,7 @@ def plot_sdss_image(wcsfn, plotfn, image_scale=1.0):
     #logmsg('Healpix of center:', hp)
     radius = wcs.radius()
     hps = anutil.healpix_rangesearch_radec(ra, dec, radius, nside)
-    logmsg('Healpixes in range:', hps)
+    logmsg('Healpixes in range:', len(hps), ': ', hps)
 
     scale = math.sqrt(2.) * anutil.healpix_side_length_arcmin(nside) * 60. / float(sdsssize)
     logmsg('Grabbing SDSS tile with scale', scale, 'arcsec/pix')
@@ -71,7 +75,12 @@ def plot_sdss_image(wcsfn, plotfn, image_scale=1.0):
         img.set_file(fn)
         plot.plot('image')
 
-    if False:
+        if debug_ps is not None:
+            fn = debug_ps.getnext()
+            plot.write(fn)
+            print 'Wrote', fn
+        
+    if debug_ps is not None:
         out = plot.outline
         plot.color = 'white'
         plot.alpha = 0.25
@@ -79,5 +88,32 @@ def plot_sdss_image(wcsfn, plotfn, image_scale=1.0):
             swcsfn = os.path.join(dirnm, '%i.wcs'%hp)
             ps.plot_outline_set_wcs_file(out, swcsfn, 0)
             plot.plot('outline')
+        plot.write(fn)
+        print 'Wrote', fn
 
     plot.write(plotfn)
+
+
+
+
+if __name__ == '__main__':
+    import logging
+    from astrometry.util import util as anutil
+
+    logging.basicConfig(format='%(message)s',
+                        level=logging.DEBUG)
+
+    wcsfn = 'wcs.fits'
+    outfn = 'sdss.png'
+
+    if True:
+        wcs = anutil.Tan(wcsfn)
+        scale = 640. / wcs.get_width()
+        print 'Scale', scale
+        
+    from astrometry.util.plotutils import *
+
+    ps = PlotSequence('sdss')
+    
+    plot_sdss_image(wcsfn, outfn, image_scale=scale, debug_ps=ps)
+    

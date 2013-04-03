@@ -21,14 +21,24 @@ class PlotSequence(object):
 		self.ploti += n
 	def skipto(self, n):
 		self.ploti = n
+
+	def _getnextlist(self):
+		lst = ['%s-%s.%s' % (self.basefn, self.format % self.ploti, suff)
+				for suff in self.suffixes]
+		self.ploti += 1
+		return lst
+
+	def getnext(self):
+		lst = self._getnextlist()
+		if len(lst) == 1:
+			return lst[0]
+		return lst
+
 	def savefig(self):
 		import pylab as plt
-		for suff in self.suffixes:
-			fn = '%s-%s.%s' % (self.basefn, self.format % self.ploti,
-							   suff)
+		for fn in self._getnextlist():
 			plt.savefig(fn)
 			print 'saved', fn
-		self.ploti += 1
 
 def loghist(x, y, nbins=100,
 			hot=True, doclf=True, docolorbar=True, lo=0.3,
