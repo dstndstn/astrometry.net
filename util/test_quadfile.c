@@ -37,15 +37,19 @@ void test_quadfile_inmemory_big(CuTest* ct) {
 		exit(-1);
 	}
 
+	printf("Switching to reading...\n");
 	if (quadfile_switch_to_reading(qf)) {
 		ERROR("Failed to switch to reading");
 		exit(-1);
 	}
 
+	printf("Reading...\n");
     for (i=0; i<N; i++) {
 		for (d=0; d<D; d++) {
 			equad[d] = i+d;
 		}
+		if (i % 1000000 == 0)
+			printf("Reading %i\n", i);
 		if (quadfile_get_stars(qf, i, quad)) {
 			ERROR("Failed to read %i\n", i);
 			exit(-1);
