@@ -519,6 +519,8 @@ anwcs.getHeaderString = anwcs_get_header_string
 %include "sip.h"
 %include "sip_qfits.h"
 
+%pythondynamic sip_t;
+
 %extend sip_t {
 	sip_t(const char* fn=NULL, int ext=0) {
 		if (fn)
@@ -664,6 +666,13 @@ sip_t.radec_bounds = sip_t_radec_bounds
 #def sip_t_fromstring(s):
 #	sip = sip_from_string(s, len(s),
 
+_real_sip_t_init = sip_t.__init__
+def my_sip_t_init(self, *args, **kwargs):
+	_real_sip_t_init(self, *args, **kwargs)
+	if self.this is None:
+		raise RuntimeError('Duck punch!')
+sip_t.__init__ = my_sip_t_init
+
 Sip = sip_t
 	%}
 
@@ -681,7 +690,7 @@ Sip = sip_t
 		} else {
 	        t = (tan_t*)calloc(1, sizeof(tan_t));
 	    }
-	    printf("tan_t: %p\n", t);
+	//	    printf("tan_t: %p\n", t);
 		if (!t) {
 	        // SWIG_exception(SWIG_RuntimeError, "Failed to read TAN WCS header");
 			PyErr_SetString(PyExc_RuntimeError, "Failed to read TAN WCS header");

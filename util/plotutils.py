@@ -132,6 +132,7 @@ def loghist(x, y, nbins=100,
 
 def plothist(x, y, nbins=100, log=False,
 			 doclf=True, docolorbar=True, dohot=True,
+			 plo=None, phi=None,
 			 imshowargs={}, **hist2dargs):
 	if log:
 		return loghist(x, y, nbins=nbins, doclf=doclf, docolorbar=docolobar,
@@ -143,6 +144,15 @@ def plothist(x, y, nbins=100, log=False,
 	myargs = dict(extent=(min(xe), max(xe), min(ye), max(ye)),
 				  aspect='auto',
 				  interpolation='nearest', origin='lower')
+	vmin = None
+	if plo is not None:
+		vmin = np.percentile(H.ravel(), plo)
+		myargs.update(vmin=vmin)
+	if phi is not None:
+		vmin = imshowargs.get('vmin', vmin)
+		vmax = np.percentile(H.ravel(), phi)
+		if vmax != vmi:
+			myargs.update(vmax=vmax)
 	myargs.update(imshowargs)
 	plt.imshow(H.T, **myargs)
 	if dohot:

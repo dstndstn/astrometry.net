@@ -173,13 +173,28 @@ class Plotstuff(object):
 		x = plotstuff_set_alpha(self.pargs, a)
 
 	def plot_grid(self, rastep, decstep, ralabelstep=None, declabelstep=None):
+		import numpy as np
+
 		grid = plot_grid_get(self.pargs)
 		grid.rastep = rastep
 		grid.decstep = decstep
+		rformat = None
 		if ralabelstep is None:
 			ralabelstep = 0
+		else:
+			rdigits = np.ceil(-np.log10(ralabelstep))
+			rformat = '%.' + '%i'%rdigits + 'f'
+		dformat = None
 		if declabelstep is None:
 			declabelstep = 0
+		else:
+			ddigits = np.ceil(-np.log10(declabelstep))
+			dformat = '%.' + '%i'%ddigits + 'f'
+		if rformat is not None or dformat is not None:
+			rformat = rformat or '%.2f'
+			dformat = dformat or '%.2f'
+			grid.set_formats(rformat, dformat)
+			
 		grid.ralabelstep = ralabelstep
 		grid.declabelstep = declabelstep
 		self.plot('grid')

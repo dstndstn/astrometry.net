@@ -298,6 +298,12 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 	}
 }
 
+%extend plotgrid_args {
+	int set_formats(const char* raformat, const char* decformat) {
+		return plot_grid_set_formats(self, raformat, decformat);
+	}
+}
+
 %extend plotoutline_args {
 	int set_wcs_file(const char* fn, int ext) {
 		return plot_outline_set_wcs_file(self, fn, ext);
