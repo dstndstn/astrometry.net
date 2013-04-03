@@ -33,7 +33,7 @@
 #include "log.h"
 #include "starutil.h"
 
-const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:B:A:D:";
+const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:B:A:D:t:";
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
