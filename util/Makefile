@@ -479,7 +479,7 @@ ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
 	test_scamp_catalog test_starutil test_svd test_hd \
 	test_tycho2 test_anwcs test_sip-utils test_errors test_multiindex \
-	test_convolve_image test_qsort_r test_wcs test_big_tables
+	test_convolve_image test_qsort_r test_wcs test_big_tables test_quadfile
 # test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
@@ -488,6 +488,8 @@ ALL_TEST_EXTRA_LDFLAGS = $(WCSLIB_LIB)
 include $(COMMON)/makefile.tests
 
 DEP_OBJ += $(ALL_TEST_FILES_O)
+
+test_quadfile: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 test_big_tables: $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -544,9 +546,7 @@ test_svd: $(ANUTILS_LIB) $(GSL_LIB)
 # we'll just tack this on here... It depends on cairo, libjpeg, etc, so it's not part
 # of the anX.a libraries.
 ifeq ($(MAKECMDGOALS),cairoutils.o)
-
-include cairoutils.dep
-
+  include cairoutils.dep
 endif
 
 .PHONY: clean
