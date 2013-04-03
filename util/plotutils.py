@@ -151,7 +151,7 @@ def plothist(x, y, nbins=100, log=False,
 	if phi is not None:
 		vmin = imshowargs.get('vmin', vmin)
 		vmax = np.percentile(H.ravel(), phi)
-		if vmax != vmi:
+		if vmax != vmin:
 			myargs.update(vmax=vmax)
 	myargs.update(imshowargs)
 	plt.imshow(H.T, **myargs)

@@ -412,13 +412,7 @@ class tabledata(object):
 			columns = self.get_columns()
 		for c in columns:
 			X = self.get(c)
-			try:
-				dt = X.dtype
-			except:
-				continue
-			if dt.byteorder in ['>','<']:
-				# go native
-				X = X.astype(dt.newbyteorder('N'))
+			X = normalize_column(X)
 			self.set(c, X)
 
 	def to_fits_columns(self, columns=None):
@@ -490,14 +484,25 @@ class tabledata(object):
 			#print repr(col)
 			#print 'col', name, ': data length:', val.shape
 		return cols
-		
+
+
+def normalize_column(X):
+	try:
+		dt = X.dtype
+	except:
+		return X
+	if dt.byteorder in ['>','<']:
+		# go native
+		X = X.astype(dt.newbyteorder('N'))
+	return X
 
 def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 			   header='default',
 			   columns=None,
 			   column_map=None,
 			   lower=True,
-	       mmap=True):
+	       mmap=True,
+			   normalize=True):
 	'''
 	If 'columns' (a list of strings) is passed, only those columns
 	will be read; otherwise all columns will be read.
@@ -532,6 +537,8 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 		col = data.field(c)
 		if rows is not None:
 			col = col[rows]
+		if normalize:
+			col = normalize_column(col)
 		if column_map is not None:
 			c = column_map.get(c, c)
 		if lower:
