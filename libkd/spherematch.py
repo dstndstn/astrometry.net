@@ -97,7 +97,7 @@ def _freetrees(kd1, kd2):
     if kd2 != kd1:
         spherematch_c.kdtree_free(kd2)
 
-def match(x1, x2, radius, notself=False):
+def match(x1, x2, radius, notself=False, permuted=True):
     '''
     (indices,dists) = match(x1, x2, radius):
 
@@ -191,8 +191,7 @@ def match(x1, x2, radius, notself=False):
 
     '''
     (kd1,kd2) = _buildtrees(x1, x2)
-    #print 'spherematch.match: notself=', notself
-    (inds,dists) = spherematch_c.match(kd1, kd2, radius, notself)
+    (inds,dists) = spherematch_c.match(kd1, kd2, radius, notself, permuted)
     _freetrees(kd1, kd2)
     return (inds,dists)
 
