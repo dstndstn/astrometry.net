@@ -27,7 +27,7 @@
 
 #include "qfits.h"
 #include "qfits_convert.h"
-
+#include "anqfits.h"
 #include "fitsioutils.h"
 #include "ioutils.h"
 #include "keywords.h"
@@ -1225,31 +1225,39 @@ void fits_mod_reverse_endian(qfits_header* header) {
 }
 
 qfits_table* fits_get_table_column(const char* fn, const char* colname, int* pcol) {
-    int i, nextens, start, size;
+    int i, nextens;
+	off_t start, size;
+	anqfits_t* fits;
+	fits = anqfits_open(fn);
+	if (!fits) {
+		ERROR("Failed to open file \"%s\"", fn);
+		return NULL;
+	}
 
-	nextens = qfits_query_n_ext(fn);
+	nextens = anqfits_n_ext(fits);
 	for (i=0; i<=nextens; i++) {
         qfits_table* table;
         int c;
-		if (qfits_get_datinfo(fn, i, &start, &size) == -1) {
-			fprintf(stderr, "error getting start/size for ext %i.\n", i);
+		start = anqfits_data_start(fits, i);
+		if (start == -1) {
+			ERROR("Failed to get data start for ext %i", i);
             return NULL;
         }
-		if (!qfits_is_table(fn, i))
-            continue;
-        table = qfits_table_open(fn, i);
-		if (!table) {
-			fprintf(stderr, "Couldn't read FITS table from file %s, extension %i.\n",
-					fn, i);
+		size = anqfits_data_size(fits, i);
+		if (size == -1) {
+			ERROR("Failed to get data size for ext %i", i);
+            return NULL;
+        }
+		table = anqfits_get_table(fits, i);
+		if (!table)
 			continue;
-		}
 		c = fits_find_column(table, colname);
 		if (c != -1) {
 			*pcol = c;
 			return table;
 		}
-		qfits_table_close(table);
     }
+	anqfits_close(fits);
 	return NULL;
 }
 

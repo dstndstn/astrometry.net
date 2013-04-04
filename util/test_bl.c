@@ -22,7 +22,7 @@
 #include <stdarg.h>
 
 #include "cutest.h"
-
+#include "an-bool.h"
 #include "bl.h"
 
 void test_il_sorted(CuTest* tc) {
