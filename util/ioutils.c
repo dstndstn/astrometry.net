@@ -730,9 +730,21 @@ char* shell_escape(const char* str) {
     return result;
 }
 
+static char* get_temp_dir() {
+	char* dir = getenv("TMP");
+	if (!dir) {
+		dir = "/tmp";
+	}
+	return dir;
+}
+
 char* create_temp_file(const char* fn, const char* dir) {
     char* tempfile;
     int fid;
+	if (!dir) {
+		dir = get_temp_dir();
+	}
+
     asprintf_safe(&tempfile, "%s/tmp.%s.XXXXXX", dir, fn);
     fid = mkstemp(tempfile);
     if (fid == -1) {
@@ -746,6 +758,9 @@ char* create_temp_file(const char* fn, const char* dir) {
 
 char* create_temp_dir(const char* name, const char* dir) {
     char* tempdir;
+	if (!dir) {
+		dir = get_temp_dir();
+	}
     asprintf_safe(&tempdir, "%s/tmp.%s.XXXXXX", dir, name);
     if (!mkdtemp(tempdir)) {
         SYSERROR("Failed to create temp dir");

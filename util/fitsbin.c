@@ -520,7 +520,7 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 				  "size of table \"%s\" (%zu => %i FITS blocks).",
 				  expected, fits_blocks_needed(expected),
 				  chunk->tablename, (size_t)tabsize,
-				  (int)(tabsize / FITS_BLOCK_SIZE));
+				  (int)(tabsize / (off_t)FITS_BLOCK_SIZE));
 			return -1;
 		}
 		get_mmap_size(tabstart, tabsize, &mapstart, &(chunk->mapsize), &mapoffset);
@@ -589,31 +589,13 @@ fitsbin_t* fitsbin_open_fits(anqfits_t* fits) {
 }
 
 fitsbin_t* fitsbin_open(const char* fn) {
-    fitsbin_t* fb;
-	if (!qfits_is_fits(fn)) {
-        ERROR("File \"%s\" is not FITS format.", fn);
-        return NULL;
+	anqfits_t* fits;
+	fits = anqfits_open(fn);
+	if (!fits) {
+		ERROR("Failed to open file \"%s\"", fn);
+		return NULL;
 	}
-    fb = new_fitsbin(fn);
-    if (!fb)
-        return fb;
-	fb->fid = fopen(fn, "rb");
-	if (!fb->fid) {
-		SYSERROR("Failed to open file \"%s\"", fn);
-        goto bailout;
-	}
-    fb->primheader = qfits_header_read(fn);
-    if (!fb->primheader) {
-        ERROR("Couldn't read FITS header from file \"%s\"", fn);
-        goto bailout;
-    }
-	fb->Next = 1 + qfits_query_n_ext(fn);
-	debug("N ext: %i\n", fb->Next);
-
-    return fb;
- bailout:
-    fitsbin_close(fb);
-    return NULL;
+	return fitsbin_open_fits(fits);
 }
 
 fitsbin_t* fitsbin_open_in_memory() {

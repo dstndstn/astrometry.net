@@ -282,7 +282,7 @@ solver_test_2.o: solver.c
 ALL_TEST_FILES = test_dfind test_ctmf test_dsmooth test_2mass \
 	test_usnob test_nomad test_matchfile test_blindutils \
 	test_dcen3x3 test_resort-xylist test_simplexy test_tweak \
-	test_multiindex2
+	test_multiindex2 test_codefile
 
 ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=
@@ -306,6 +306,8 @@ test_multiindex2: test_multiindex2.o solver.o verify.o \
 ALL_TEST_EXTRA_OBJS += solver.o verify.o tweak2.o tweak.o quad-utils.o
 
 #../util/cutest.o \
+
+test_codefile: codefile.o quad-utils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
 test_2mass: 2mass.o 2mass-fits.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += 2mass-fits.o 2mass.o

@@ -97,8 +97,10 @@ char* resolve_path(const char* filename, const char* basedir);
 
 char* find_executable(const char* progname, const char* sibling);
 
+// If "dir" is NULL, create temp file in $TMP, or /tmp if not set.
 char* create_temp_file(const char* fn, const char* dir);
 
+// If "dir" is NULL, create temp file in $TMP, or /tmp if not set.
 char* create_temp_dir(const char* name, const char* dir);
 
 char* shell_escape(const char* str);

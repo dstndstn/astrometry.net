@@ -943,7 +943,7 @@ int fits_pad_file_with(FILE* fid, char pad) {
 	
 	// pad with zeros up to a multiple of 2880 bytes.
 	offset = ftello(fid);
-	npad = (offset % FITS_BLOCK_SIZE);
+	npad = (offset % (off_t)FITS_BLOCK_SIZE);
 	if (npad) {
 		int i;
 		npad = FITS_BLOCK_SIZE - npad;
