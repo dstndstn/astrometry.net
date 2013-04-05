@@ -183,7 +183,8 @@ int fits_find_column(const qfits_table* table, const char* colname);
 
 int fits_get_atom_size(tfits_type type);
 
-int fits_find_table_column(const char* fn, const char* colname, int* start, int* size, int* extension);
+int fits_find_table_column(const char* fn, const char* colname,
+						   off_t* start, off_t* size, int* extension);
 
 qfits_table* fits_get_table_column(const char* fn, const char* colname, int* pcol);
 

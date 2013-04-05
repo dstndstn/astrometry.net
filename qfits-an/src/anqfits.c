@@ -37,28 +37,43 @@ off_t anqfits_header_start(const anqfits_t* qf, int ext) {
   assert(ext >= 0 && ext < qf->Nexts);
   if (ext >= qf->Nexts)
     return -1;
-  return (off_t)qf->exts[ext].hdr_start * FITS_BLOCK_SIZE;
+  return (off_t)qf->exts[ext].hdr_start * (off_t)FITS_BLOCK_SIZE;
 }
 
 off_t anqfits_header_size(const anqfits_t* qf, int ext) {
   assert(ext >= 0 && ext < qf->Nexts);
   if (ext >= qf->Nexts)
     return -1;
-  return (off_t)qf->exts[ext].hdr_size * FITS_BLOCK_SIZE;
+  return (off_t)qf->exts[ext].hdr_size * (off_t)FITS_BLOCK_SIZE;
 }
 
 off_t anqfits_data_start(const anqfits_t* qf, int ext) {
   assert(ext >= 0 && ext < qf->Nexts);
   if (ext >= qf->Nexts)
     return -1;
-  return (off_t)qf->exts[ext].data_start * FITS_BLOCK_SIZE;
+  return (off_t)qf->exts[ext].data_start * (off_t)FITS_BLOCK_SIZE;
 }
 
 off_t anqfits_data_size(const anqfits_t* qf, int ext) {
   assert(ext >= 0 && ext < qf->Nexts);
   if (ext >= qf->Nexts)
     return -1;
-  return (off_t)qf->exts[ext].data_size * FITS_BLOCK_SIZE;
+  return (off_t)qf->exts[ext].data_size * (off_t)FITS_BLOCK_SIZE;
+}
+
+int anqfits_get_data_start_and_size(const anqfits_t* qf, int ext,
+									off_t* pstart, off_t* psize) {
+  if (pstart) {
+	  *pstart = anqfits_data_start(qf, ext);
+	  if (*pstart == -1)
+		  return -1;
+  }
+  if (psize) {
+	  *psize = anqfits_data_start(qf, ext);
+	  if (*psize == -1)
+		  return -1;
+  }
+  return 0;
 }
 
 qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {

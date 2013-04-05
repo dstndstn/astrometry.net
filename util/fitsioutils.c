@@ -1235,7 +1235,7 @@ qfits_table* fits_get_table_column(const char* fn, const char* colname, int* pco
 	}
 
 	nextens = anqfits_n_ext(fits);
-	for (i=0; i<=nextens; i++) {
+	for (i=0; i<nextens; i++) {
         qfits_table* table;
         int c;
 		start = anqfits_data_start(fits, i);
@@ -1261,23 +1261,30 @@ qfits_table* fits_get_table_column(const char* fn, const char* colname, int* pco
 	return NULL;
 }
 
-int fits_find_table_column(const char* fn, const char* colname, int* pstart, int* psize, int* pext) {
+int fits_find_table_column(const char* fn, const char* colname, off_t* pstart, off_t* psize, int* pext) {
     int i, nextens;
-	nextens = qfits_query_n_ext(fn);
-	for (i=1; i<=nextens; i++) {
-        qfits_table* table;
+
+	anqfits_t* fits;
+	fits = anqfits_open(fn);
+	if (!fits) {
+		ERROR("Failed to open file \"%s\"", fn);
+		return -1;
+	}
+
+	nextens = anqfits_n_ext(fits);
+	for (i=1; i<nextens; i++) {
+        const qfits_table* table;
         int c;
-        table = qfits_table_open(fn, i);
+        table = anqfits_get_table_const(fits, i);
 		if (!table) {
 			ERROR("Couldn't read FITS table from file %s, extension %i.\n", fn, i);
 			continue;
 		}
 		c = fits_find_column(table, colname);
-		qfits_table_close(table);
 		if (c == -1) {
 			continue;
 		}
-		if (qfits_get_datinfo(fn, i, pstart, psize) == -1) {
+		if (anqfits_get_data_start_and_size(fits, i, pstart, psize)) {
 			ERROR("error getting start/size for ext %i in file %s.\n", i, fn);
             return -1;
         }
@@ -1285,7 +1292,7 @@ int fits_find_table_column(const char* fn, const char* colname, int* pstart, int
 		return 0;
     }
 	debug("searched %i extensions in file %s but didn't find a table with a column \"%s\".\n",
-		nextens, fn, colname);
+		  nextens, fn, colname);
     return -1;
 }
 
