@@ -359,12 +359,12 @@ static fitstable_t* get_tagalong(startree_t* s, anbool report_errs) {
 			ERROR("Failed to open FITS table from %s", fn);
 		return NULL;
 	}
-	next = qfits_query_n_ext(fn);
-	for (i=1; i<=next; i++) {
+	next = fitstable_n_extensions(tag);
+	for (i=1; i<next; i++) {
 		char* type;
 		anbool eq;
-		qfits_header* hdr;
-		hdr = qfits_header_readext(fn, i);
+		const qfits_header* hdr;
+		hdr = anqfits_get_header_const(tag->anq, i);
 		if (!hdr) {
 			if (report_errs)
 				ERROR("Failed to read FITS header for ext %i in %s", i, fn);
@@ -373,7 +373,6 @@ static fitstable_t* get_tagalong(startree_t* s, anbool report_errs) {
 		type = fits_get_dupstring(hdr, "AN_FILE");
 		eq = streq(type, AN_FILETYPE_TAGALONG);
 		free(type);
-		qfits_header_destroy(hdr);
 		if (!eq)
 			continue;
 		ext = i;

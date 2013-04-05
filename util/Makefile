@@ -489,6 +489,9 @@ include $(COMMON)/makefile.tests
 
 DEP_OBJ += $(ALL_TEST_FILES_O)
 
+tests: $(ALL_TEST_FILES)
+.PHONY: tests
+
 test_quadfile: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 test_big_tables: $(ANUTILS_LIB) $(QFITS_LIB)

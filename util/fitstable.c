@@ -89,6 +89,9 @@ static off_t get_row_offset(const fitstable_t* table, int row) {
 }
 
 int fitstable_n_extensions(const fitstable_t* t) {
+	if (t->anq) {
+		return anqfits_n_ext(t->anq);
+	}
 	return 1 + qfits_query_n_ext(t->fn);
 }
 

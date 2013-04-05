@@ -307,6 +307,9 @@ ALL_TEST_EXTRA_OBJS += solver.o verify.o tweak2.o tweak.o quad-utils.o
 
 #../util/cutest.o \
 
+tests: $(ALL_TEST_FILES)
+.PHONY: tests
+
 test_codefile: codefile.o quad-utils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
 test_2mass: 2mass.o 2mass-fits.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
