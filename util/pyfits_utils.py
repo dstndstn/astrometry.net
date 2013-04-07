@@ -501,12 +501,20 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 			   columns=None,
 			   column_map=None,
 			   lower=True,
-	       mmap=True,
-			   normalize=True):
+			   mmap=True,
+			   normalize=True,
+			   use_fitsio=True):
 	'''
 	If 'columns' (a list of strings) is passed, only those columns
 	will be read; otherwise all columns will be read.
 	'''
+	fitsio = None
+	if use_fitsio:
+		try:
+			import fitsio
+		except:
+			pass
+
 	pf = None
 	hdr = None
 	# aliases
@@ -515,40 +523,54 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 	if ext is not None:
 		hdunum = ext
 	if isinstance(dataorfn, str):
-		pf = pyfits.open(dataorfn, memmap=mmap)
-		data = pf[hdunum].data
-		if header == 'default':
-			hdr = pf[hdunum].header
-		# FIXME -- havoc?
-		del pf
-		pf = None
+
+		if fitsio:
+			F = fitsio.FITS(dataorfn)
+			data = F[hdunum]
+		else:
+			pf = pyfits.open(dataorfn, memmap=mmap)
+			data = pf[hdunum].data
+			if header == 'default':
+				hdr = pf[hdunum].header
+			del pf
+			pf = None
 	else:
 		data = dataorfn
 
 	if data is None:
 		return None
-	fields = tabledata(header=hdr)
-	if columns is None:
-		columns = data.dtype.names
+	T = tabledata(header=hdr)
 
-	fields._columns = []
-	for c in columns:
-		#print 'reading column "%s"' % c
-		col = data.field(c)
-		if rows is not None:
-			col = col[rows]
-		if normalize:
-			col = normalize_column(col)
-		if column_map is not None:
-			c = column_map.get(c, c)
-		if lower:
-			c = c.lower()
-		fields.set(c, col)
-		#fields._columns.append(c)
-	#fields._length = len(data)
-	if pf:
-		pf.close()
-	return fields
+	T._columns = []
+
+	if fitsio:
+		dd = data.read(rows=rows, columns=columns)
+		if columns is None:
+			columns = data.colnames
+		for c in columns:
+			if column_map is not None:
+				c = column_map.get(c, c)
+			if lower:
+				c = c.lower()
+			T.set(c, col)
+		
+	else:
+		if columns is None:
+			columns = data.dtype.names
+			for c in columns:
+				#print 'reading column "%s"' % c
+				col = data.field(c)
+				if rows is not None:
+					col = col[rows]
+				if normalize:
+					col = normalize_column(col)
+				if column_map is not None:
+					c = column_map.get(c, c)
+				if lower:
+					c = c.lower()
+				T.set(c, col)
+
+	return T
 
 table_fields = fits_table
 
