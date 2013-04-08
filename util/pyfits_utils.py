@@ -1,8 +1,6 @@
 import os
 import pyfits
-import numpy
 import numpy as np
-from numpy import array, isscalar, ndarray
 
 def pyfits_writeto(p, filename, **kwargs):
 	'''
@@ -50,13 +48,13 @@ def merge_tables(TT, columns=None):
 		if col.startswith('_'):
 			continue
 		v0 = TT[0].getcolumn(col)
-		if isinstance(v0, numpy.ndarray):
-			V = numpy.concatenate([T.getcolumn(col) for T in TT])
+		if isinstance(v0, np.ndarray):
+			V = np.concatenate([T.getcolumn(col) for T in TT])
 		elif type(v0) is list:
 			V = v0
 			for T in TT[1:]:
 				V.extend(T.getcolumn(col))
-		elif numpy.isscalar(v0):
+		elif np.isscalar(v0):
 			#print 'merge_tables: copying scalar from first table:', col, '=', v0
 			V = v0
 		else:
@@ -100,7 +98,7 @@ def cut_array(val, I, name=None, to=None):
 			val[I] = to
 			return
 
-	if type(val) in [numpy.ndarray, numpy.core.defchararray.chararray]:
+	if type(val) in [np.ndarray, np.core.defchararray.chararray]:
 		#print 'slicing numpy array "%s": val shape' % name, val.shape
 		#print 'slice shape:', I.shape
 		# You can't slice a two-dimensional, length-zero, numpy array,
@@ -113,7 +111,7 @@ def cut_array(val, I, name=None, to=None):
 			val[I] = to
 			return
 
-	inttypes = [int, numpy.int64, numpy.int32, numpy.int]
+	inttypes = [int, np.int64, np.int32, np.int]
 
 	if type(val) in [list,tuple] and type(I) in inttypes:
 		if to is None:
@@ -124,7 +122,7 @@ def cut_array(val, I, name=None, to=None):
 
 	# HACK -- emulate numpy's boolean and int array slicing
 	# (when "val" is a normal python list)
-	if type(I) is numpy.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, numpy.bool])
+	if type(I) is np.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, np.bool])
 															 or (I.dtype == bool)):
 		try:
 			if to is None:
@@ -139,7 +137,7 @@ def cut_array(val, I, name=None, to=None):
 			#setattr(rtn, name, val)
 			#continue
 
-	if type(I) is numpy.ndarray and all(I.astype(int) == I):
+	if type(I) is np.ndarray and all(I.astype(int) == I):
 		if to is None:
 			return [val[i] for i in I]
 		else:
@@ -147,7 +145,7 @@ def cut_array(val, I, name=None, to=None):
 			for i,t in zip(I,to):
 				val[i] = t
 				
-	if (numpy.isscalar(I) and hasattr(I, 'dtype') and
+	if (np.isscalar(I) and hasattr(I, 'dtype') and
 		I.dtype in inttypes):
 		if to is None:
 			return val[int(I)]
@@ -197,7 +195,7 @@ class tabledata(object):
 			print '	 ', k,
 			v = self.get(k)
 			print '(%s)' % (str(type(v))),
-			if numpy.isscalar(v):
+			if np.isscalar(v):
 				print v,
 			elif hasattr(v, 'shape'):
 				print 'shape', v.shape,
@@ -262,14 +260,14 @@ class tabledata(object):
 			print 'I:', I
 			# HACK... "[:]" -> slice(None, None, None)
 			if I.start is None and I.stop is None and I.step is None:
-				I = numpy.arange(len(self))
+				I = np.arange(len(self))
 			else:
-				I = numpy.arange(I.start, I.stop, I.step)
+				I = np.arange(I.start, I.stop, I.step)
 		for name,val in self.__dict__.items():
 			if name.startswith('_'):
 				continue
 			# ?
-			if numpy.isscalar(val):
+			if np.isscalar(val):
 				self.set(name, O.get(name))
 				continue
 			try:
@@ -277,12 +275,12 @@ class tabledata(object):
 			except Exception:
 				# HACK -- emulate numpy's boolean and int array slicing...
 				ok = False
-				#if type(I) == numpy.ndarray and hasattr(I, 'dtype') and I.dtype == bool:
+				#if type(I) == np.ndarray and hasattr(I, 'dtype') and I.dtype == bool:
 				#	for i,b in enumerate(I):
 				#		if b:
 				#			val[i] = O.get(val)
 				#	ok = True
-				#if type(I) == numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'int':
+				#if type(I) == np.ndarray and hasattr(I, 'dtype') and I.dtype == 'int':
 				#	rtn.set(name, [val[i] for i in I])
 				#	ok = True
 				#if len(I) == 0:
@@ -314,11 +312,11 @@ class tabledata(object):
 		for name,val in self.__dict__.items():
 			if name.startswith('_'):
 				continue
-			if numpy.isscalar(val):
+			if np.isscalar(val):
 				#print 'copying scalar', name
 				rtn.set(name, val)
 				continue
-			if type(val) in [numpy.ndarray, numpy.core.defchararray.chararray]:
+			if type(val) in [np.ndarray, np.core.defchararray.chararray]:
 				#print 'copying numpy array', name
 				rtn.set(name, val.copy())
 				continue
@@ -336,7 +334,7 @@ class tabledata(object):
 		for name,val in self.__dict__.items():
 			if name.startswith('_'):
 				continue
-			if numpy.isscalar(val):
+			if np.isscalar(val):
 				continue
 			#print 'cutting', name
 			C = cut_array(val, I, name)
@@ -348,7 +346,7 @@ class tabledata(object):
 		for name,val in self.__dict__.items():
 			if name.startswith('_'):
 				continue
-			if numpy.isscalar(val):
+			if np.isscalar(val):
 				rtn.set(name, val)
 				continue
 			try:
@@ -358,7 +356,7 @@ class tabledata(object):
 				raise
 			rtn.set(name, C)
 
-			if isscalar(I):
+			if np.isscalar(I):
 				rtn._length = 1
 			else:
 				rtn._length = len(getattr(rtn, name))
@@ -373,14 +371,14 @@ class tabledata(object):
 		for name,val in self.__dict__.items():
 			if name.startswith('_'):
 				continue
-			if numpy.isscalar(val):
+			if np.isscalar(val):
 				continue
 			try:
 				val2 = X.getcolumn(name)
 				if type(val) is list:
 					newX = val + val2
 				else:
-					newX = numpy.append(val, val2, axis=0)
+					newX = np.append(val, val2, axis=0)
 				self.set(name, newX)
 				self._length = len(newX)
 			except Exception as e:
@@ -388,9 +386,26 @@ class tabledata(object):
 				#print 'exception:', e
                 #raise Exception('exception appending element "%s"' % name)
 
-	def write_to(self, fn, columns=None, header='default', primheader=None):
-		if columns is None and hasattr(self, '_columns'):
-			columns = self._columns
+	def write_to(self, fn, columns=None, header='default', primheader=None,
+				 use_fitsio=True):
+
+		fitsio = None
+		if use_fitsio:
+			try:
+				import fitsio
+			except:
+				pass
+
+		if columns is None:
+			columns = self.get_columns()
+
+		if fitsio:
+			arrays = [self.get(c) for c in columns]
+			fits = fitsio.FITS(fn, 'rw')
+			fits.write(arrays, names=columns)
+			return
+
+
 		fc = self.to_fits_columns(columns)
 		#print 'FITS columns:', fc
 		T = pyfits.new_table(fc)
@@ -418,28 +433,27 @@ class tabledata(object):
 	def to_fits_columns(self, columns=None):
 		cols = []
 
-		fmap = {numpy.float64:'D',
-				numpy.float32:'E',
-				numpy.int32:'J',
-				numpy.int64:'K',
-				numpy.uint8:'B', #
-				numpy.int16:'I',
-				#numpy.bool:'X',
-				#numpy.bool_:'X',
-				numpy.bool:'L',
-				numpy.bool_:'L',
-				numpy.string_:'A',
+		fmap = {np.float64:'D',
+				np.float32:'E',
+				np.int32:'J',
+				np.int64:'K',
+				np.uint8:'B', #
+				np.int16:'I',
+				#np.bool:'X',
+				#np.bool_:'X',
+				np.bool:'L',
+				np.bool_:'L',
+				np.string_:'A',
 				}
 
 		if columns is None:
-			columns = self.__dict__.keys()
+			columns = self.get_columns()
 				
 		for name in columns:
-			if name.startswith('_'):
-				continue
 			if not name in self.__dict__:
 				continue
-			val = self.__dict__.get(name)
+			val = self.get(name)
+
 			#print 'col', name, 'type', val.dtype, 'descr', val.dtype.descr
 			#print repr(val.dtype)
 			#print val.dtype.type
@@ -447,8 +461,15 @@ class tabledata(object):
 			#print val.shape
 			#print val.size
 			#print val.itemsize
-			if type(val) is list:
+
+			if type(val) in [list, tuple]:
 				val = np.array(val)
+
+			try:
+				val = normalize_column(val)
+			except:
+				pass
+
 			try:
 				fitstype = fmap.get(val.dtype.type, 'D')
 			except:
@@ -546,13 +567,14 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 	if fitsio:
 		dd = data.read(rows=rows, columns=columns)
 		if columns is None:
-			columns = data.colnames
+			columns = data.get_colnames()
 		for c in columns:
+			X = dd[c]
 			if column_map is not None:
 				c = column_map.get(c, c)
 			if lower:
 				c = c.lower()
-			T.set(c, col)
+			T.set(c, X)
 		
 	else:
 		if columns is None:

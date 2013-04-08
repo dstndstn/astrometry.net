@@ -159,6 +159,52 @@ photo_flags2_info = [
 ]
 
 
+specobj_boss_target1_info = [
+	# masktype BOSS_TARGET1 64 "BOSS survey primary target selection flags"
+	# galaxies
+	(0, 'GAL_LOZ', "low-z lrgs"),
+	(1, 'GAL_CMASS', "dperp > 0.55, color-mag cut"),
+	(2, 'GAL_CMASS_COMM', "dperp > 0.55, commissioning color-mag cut"),
+	(3, 'GAL_CMASS_SPARSE', "GAL_CMASS_COMM & (!GAL_CMASS) & (i < 19.9) sparsely sampled"),
+	(6, 'SDSS_KNOWN', "Matches a known SDSS spectra"),
+	(7, 'GAL_CMASS_ALL', "GAL_CMASS and the entire sparsely sampled region"),
+	(8, 'GAL_IFIBER2_FAINT', "ifiber2 > 21.5, extinction corrected. Used after Nov 2010"),
+	# galaxies deprecated
+	#maskbits BOSS_TARGET1 3 GAL_GRRED "red in g-r"
+	#maskbits BOSS_TARGET1 4 GAL_TRIANGLE "GAL_HIZ and !GAL_CMASS"
+	#maskbits BOSS_TARGET1 5 GAL_LODPERP "Same as hiz but between dperp00 and dperp0"
+	# qsos (1)
+	(10, 'QSO_CORE', "restrictive qso selection: commissioning only"),
+	(11, 'QSO_BONUS', "permissive qso selection: commissioning only"),
+	(12, 'QSO_KNOWN_MIDZ', "known qso between [2.2,9.99]"),
+	(13, 'QSO_KNOWN_LOHIZ', "known qso outside of miz range. never target"),
+	(14, 'QSO_NN', "Neural Net that match to sweeps/pass cuts"),
+	(15, 'QSO_UKIDSS', "UKIDSS stars that match sweeps/pass flag cuts"),
+	(16, 'QSO_KDE_COADD', "kde targets from the stripe82 coadd"),
+	(17, 'QSO_LIKE', "likelihood method"),
+	(18, 'QSO_FIRST_BOSS', "FIRST radio match"),
+	(19, 'QSO_KDE', "selected by kde+chi2"),
+	# standards
+	(20, 'STD_FSTAR', "standard f-stars"),
+	(21, 'STD_WD', "white dwarfs"),
+	(22, 'STD_QSO', "qso"),
+	# template stars
+	(32, 'TEMPLATE_GAL_PHOTO', "galaxy templates"),
+	(33, 'TEMPLATE_QSO_SDSS1', "QSO templates"),
+	(34, 'TEMPLATE_STAR_PHOTO', "stellar templates"),
+	(35, 'TEMPLATE_STAR_SPECTRO', "stellar templates (spectroscopically known)"),
+	# qsos (2)
+	(40, 'QSO_CORE_MAIN', "Main survey core sample"),
+	(41, 'QSO_BONUS_MAIN', "Main survey bonus sample"),
+	(42, 'QSO_CORE_ED', "Extreme Deconvolution in Core"),
+	(43, 'QSO_CORE_LIKE', "Likelihood that make it into core"),
+	(44, 'QSO_KNOWN_SUPPZ', "known qso between [1.8,2.15]"),
+]
+
+
+specobj_boss_target1_map = dict([(nm, 1<<bit)
+								 for bit,nm,desc in specobj_boss_target1_info])
+
 photo_flags1_map = dict([(nm, 1<<bit)
 						 for bit,nm,desc in photo_flags1_info])
 photo_flags2_map = dict([(nm, 1<<bit)
