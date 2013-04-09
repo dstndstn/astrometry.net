@@ -506,6 +506,14 @@ class tabledata(object):
 			#print 'col', name, ': data length:', val.shape
 		return cols
 
+	def add_columns_from(self, X):
+		assert(len(self) == len(X))
+		mycols = self.get_columns()
+		for c in X.get_columns():
+			if c in mycols:
+				print 'Not copying existing column', c
+				continue
+			self.set(c, X.get(c))
 
 def normalize_column(X):
 	try:
