@@ -263,24 +263,24 @@ def tree_close(kd):
     return spherematch_c.kdtree_close(kd)
     
 def trees_match(kd1, kd2, radius, nearest=False, notself=False,
-                permuted=True, docount=False):
+                permuted=True, count=False):
     '''
     Runs rangesearch or nearest-neighbour matching on given kdtrees.
 
     'radius' is Euclidean distance.
 
-	If 'nearest'=True, returns the nearest neighbour of each point in "kd1";
-	ie, "I" will NOT contain duplicates, but "J" may.
+    If 'nearest'=True, returns the nearest neighbour of each point in "kd1";
+    ie, "I" will NOT contain duplicates, but "J" may.
 
-	If 'docount'=True, also counts the number of objects within range
-	as well as returning the nearest neighbor of each point in "kd1";
-	the return value becomes I,J,d,counts , counts a numpy array of ints.
+    If 'count'=True, also counts the number of objects within range
+    as well as returning the nearest neighbor of each point in "kd1";
+    the return value becomes I,J,d,counts , counts a numpy array of ints.
 
     Returns (I, J, d), where
       I are indices into kd1
       J are indices into kd2
       d are distances-squared
-	  [counts is number of sources in range]
+      [counts is number of sources in range]
 
     >>> import numpy as np
     >>> X = np.array([[1, 2, 3, 6]]).T.astype(float)
@@ -290,23 +290,30 @@ def trees_match(kd1, kd2, radius, nearest=False, notself=False,
     >>> I,J,d = trees_match(kd1, kd2, 1.1, nearest=True)
     >>> print I
     [0 1 2]
-	>>> print J
-	[0 0 2]
-	>>> print d
-	[  0.  60.  60.]
-
-	'''
-	rtn = None
+    >>> print J
+    [0 0 2]
+    >>> print d
+    [  0.  60.  60.]
+    >>> I,J,d,count = trees_match(kd1, kd2, 1.1, nearest=True, count=True)
+    >>> print I
+    [0 1 2]
+    >>> print J
+    [0 0 2]
+    >>> print d
+    [  0.  60.  60.]
+    >>> print count
+    [1 1 2]
+    '''
+    rtn = None
     if nearest:
-		rtn = spherematch_c.nearest2(kd2, kd1, radius, notself, docount)
-		# I,J,d,[count]
-		d = rtn[2]
-		rtn[2] = distsq2deg(d)
+        rtn = spherematch_c.nearest2(kd2, kd1, radius, notself, count)
+        # J,I,d,[count]
+        rtn = (rtn[1], rtn[0], distsq2deg(rtn[2]),) + rtn[3:]
     else:
         (inds,dists) = spherematch_c.match(kd1, kd2, radius, notself, permuted)
         d = dist2deg(dists[:,0])
         I,J = inds[:,0], inds[:,1]
-		rtn = (I,J,d)
+        rtn = (I,J,d)
     return rtn
 
 tree_bbox = spherematch_c.kdtree_bbox

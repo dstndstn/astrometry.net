@@ -79,7 +79,7 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2
 	params.count_in_range = NULL;
 	if (count_in_range) {
 	  if (!(*count_in_range)) {
-		*count_in_range = (int*)malloc(NY * sizeof(int));
+		*count_in_range = (int*)calloc(NY, sizeof(int));
 	  }
 	  params.count_in_range = *count_in_range;
 	}

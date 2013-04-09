@@ -449,8 +449,8 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
   tempinds = (int*)malloc(NY * sizeof(int));
   tempd2 = (double*)malloc(NY * sizeof(double));
   if (docount) {
-	tempcount = (int*)malloc(NY * sizeof(int));
-	ptempcount = &tempcount;
+	tempcount = (int*)calloc(NY, sizeof(int));
+    ptempcount = &tempcount;
   }
 
   dualtree_nearestneighbour(kd1, kd2, rad*rad, &tempd2, &tempinds, ptempcount, notself);
@@ -470,8 +470,8 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
   pj = PyArray_DATA(J);
   pd = PyArray_DATA(dist2s);
   if (docount) {
-	counts = PyArray_SimpleNew(1, dims, NPY_INT);
-	pc = PyArray_DATA(counts);
+    counts = PyArray_SimpleNew(1, dims, NPY_INT);
+    pc = PyArray_DATA(counts);
   }
 
   j = 0;
@@ -481,8 +481,8 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
     pi[j] = kdtree_permute(kd1, tempinds[i]);
     pj[j] = kdtree_permute(kd2, i);
     pd[j] = tempd2[i];
-	if (docount)
-	  pc[j] = tempcount[i];
+    if (docount)
+      pc[j] = tempcount[i];
     j++;
   }
 
@@ -491,10 +491,10 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
   free(tempcount);
 
   if (docount) {
-	rtn = Py_BuildValue("(OOOO)", I, J, dist2s, counts);
-	Py_DECREF(counts);
+    rtn = Py_BuildValue("(OOOO)", I, J, dist2s, counts);
+    Py_DECREF(counts);
   } else {
-	rtn = Py_BuildValue("(OOO)", I, J, dist2s);
+    rtn = Py_BuildValue("(OOO)", I, J, dist2s);
   }
   Py_DECREF(I);
   Py_DECREF(J);
