@@ -267,7 +267,7 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     //pdist2s = PyArray_DATA(dist2s);
 	pdist2s = tempdists;
 
-    dualtree_nearestneighbour(kd1, kd2, rad*rad, &pdist2s, &pinds, notself);
+    dualtree_nearestneighbour(kd1, kd2, rad*rad, &pdist2s, &pinds, NULL, notself);
 
 	// now we have to apply kd1's permutation array!
 	for (i=0; i<NY; i++)
@@ -396,23 +396,28 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
   long p1, p2;
   kdtree_t *kd1, *kd2;
   npy_intp dims[1];
-  PyArrayObject* I;
-  PyArrayObject* J;
-  PyArrayObject* dist2s;
+  PyObject* I;
+  PyObject* J;
+  PyObject* dist2s;
+  PyObject* counts = NULL;
   int *pi;
   int *pj;
+  int *pc = NULL;
   double *pd;
   double rad;
   anbool notself;
+  anbool docount;
   int* tempinds;
+  int* tempcount = NULL;
+  int** ptempcount = NULL;
   double* tempd2;
   PyObject* rtn;
 
   // So that ParseTuple("b") with a C "anbool" works
   assert(sizeof(anbool) == sizeof(unsigned char));
 
-  if (!PyArg_ParseTuple(args, "lldb", &p1, &p2, &rad, &notself)) {
-    PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");
+  if (!PyArg_ParseTuple(args, "lldbb", &p1, &p2, &rad, &notself, &docount)) {
+    PyErr_SetString(PyExc_ValueError, "need five args: two kdtree identifiers (ints), search radius, notself (bool) and docount (bool)");
     return NULL;
   }
   // Nasty!
@@ -423,10 +428,16 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
   if (kdtree_node_node_mindist2_exceeds(kd1, 0, kd2, 0, rad*rad)) {
     // allocate empty return arrays
     dims[0] = 0;
-    I = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
-    J = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
-    dist2s = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-    rtn = Py_BuildValue("(OOO)", I, J, dist2s);
+    I = PyArray_SimpleNew(1, dims, NPY_INT);
+    J = PyArray_SimpleNew(1, dims, NPY_INT);
+    dist2s = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
+	if (docount) {
+	  counts = PyArray_SimpleNew(1, dims, NPY_INT);
+	  rtn = Py_BuildValue("(OOOO)", I, J, dist2s, counts);
+	  Py_DECREF(counts);
+	} else {
+	  rtn = Py_BuildValue("(OOO)", I, J, dist2s);
+	}
     Py_DECREF(I);
     Py_DECREF(J);
     Py_DECREF(dist2s);
@@ -437,8 +448,12 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
 
   tempinds = (int*)malloc(NY * sizeof(int));
   tempd2 = (double*)malloc(NY * sizeof(double));
+  if (docount) {
+	tempcount = (int*)malloc(NY * sizeof(int));
+	ptempcount = &tempcount;
+  }
 
-  dualtree_nearestneighbour(kd1, kd2, rad*rad, &tempd2, &tempinds, notself);
+  dualtree_nearestneighbour(kd1, kd2, rad*rad, &tempd2, &tempinds, ptempcount, notself);
 
   // count number of matches
   N = 0;
@@ -448,13 +463,16 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
 
   // allocate return arrays
   dims[0] = N;
-  I = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
-  J = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
-  dist2s = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-
+  I = PyArray_SimpleNew(1, dims, NPY_INT);
+  J = PyArray_SimpleNew(1, dims, NPY_INT);
+  dist2s = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
   pi = PyArray_DATA(I);
   pj = PyArray_DATA(J);
   pd = PyArray_DATA(dist2s);
+  if (docount) {
+	counts = PyArray_SimpleNew(1, dims, NPY_INT);
+	pc = PyArray_DATA(counts);
+  }
 
   j = 0;
   for (i=0; i<NY; i++) {
@@ -463,20 +481,26 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
     pi[j] = kdtree_permute(kd1, tempinds[i]);
     pj[j] = kdtree_permute(kd2, i);
     pd[j] = tempd2[i];
+	if (docount)
+	  pc[j] = tempcount[i];
     j++;
   }
 
   free(tempinds);
   free(tempd2);
+  free(tempcount);
 
-  rtn = Py_BuildValue("(OOO)", I, J, dist2s);
+  if (docount) {
+	rtn = Py_BuildValue("(OOOO)", I, J, dist2s, counts);
+	Py_DECREF(counts);
+  } else {
+	rtn = Py_BuildValue("(OOO)", I, J, dist2s);
+  }
   Py_DECREF(I);
   Py_DECREF(J);
   Py_DECREF(dist2s);
   return rtn;
 }
-
-
 
 
 static PyMethodDef spherematchMethods[] = {

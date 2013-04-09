@@ -34,8 +34,10 @@ struct rs_params {
 
     double* node_nearest_d2;
 
+  double d2;
     double* nearest_d2;
     int* nearest_ind;
+  int* count_in_range;
 };
 typedef struct rs_params rs_params;
 
@@ -45,7 +47,9 @@ static void rs_handle_result(void* extra, kdtree_t* searchtree, int searchnode,
 							 kdtree_t* querytree, int querynode);
 
 void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2,
-                               double** nearest_d2, int** nearest_ind, anbool notself) {
+                               double** nearest_d2, int** nearest_ind,
+							   int** count_in_range,
+							   anbool notself) {
     int i, NY, NNY;
 
     // dual-tree search callback functions
@@ -70,6 +74,15 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2
 	params.xtree = xtree;
 	params.ytree = ytree;
 	params.notself = notself;
+	params.d2 = maxdist2;
+
+	params.count_in_range = NULL;
+	if (count_in_range) {
+	  if (!(*count_in_range)) {
+		*count_in_range = (int*)malloc(NY * sizeof(int));
+	  }
+	  params.count_in_range = *count_in_range;
+	}
 
 	// were we given a d2 array?
     if (*nearest_d2)
@@ -109,6 +122,13 @@ static anbool rs_within_range(void* vparams,
     rs_params* p = (rs_params*)vparams;
     double maxd2;
 
+	// count-in-range is actually more like rangesearch...
+	if (p->count_in_range) {
+	  if (kdtree_node_node_mindist2_exceeds(xtree, xnode, ytree, ynode, p->d2))
+        return FALSE;
+	  return TRUE;
+	}
+
     if (kdtree_node_node_mindist2_exceeds(xtree, xnode, ytree, ynode,
                                           p->node_nearest_d2[ynode]))
         return FALSE;
@@ -139,6 +159,7 @@ static void rs_handle_result(void* vparams,
 	int x, y;
     rs_params* p = (rs_params*)vparams;
 	int D = ytree->ndim;
+	double checkd2;
 
 	xl = kdtree_left (xtree, xnode);
 	xr = kdtree_right(xtree, xnode);
@@ -147,10 +168,18 @@ static void rs_handle_result(void* vparams,
 
 	for (y=yl; y<=yr; y++) {
 		void* py = kdtree_get_data(ytree, y);
-        p->nearest_d2[y] = MIN(p->nearest_d2[y], p->node_nearest_d2[ynode]);
+
+		if (p->count_in_range) {
+		  checkd2 = p->d2;
+		} else {
+		  p->nearest_d2[y] = MIN(p->nearest_d2[y], p->node_nearest_d2[ynode]);
+		  checkd2 = p->nearest_d2[y];
+		}
+		
 		// check if we can eliminate the whole x node for this y point...
-        if (kdtree_node_point_mindist2_exceeds(xtree, xnode, py, p->nearest_d2[y]))
-            continue;
+        if (kdtree_node_point_mindist2_exceeds(xtree, xnode, py, checkd2))
+		  continue;
+
 		for (x=xl; x<=xr; x++) {
 			double d2;
 			void* px;
@@ -158,6 +187,13 @@ static void rs_handle_result(void* vparams,
 				continue;
 			px = kdtree_get_data(xtree, x);
 			d2 = distsq(px, py, D);
+
+			if (p->count_in_range) {
+			  if (d2 < p->d2) {
+				p->count_in_range[y]++;
+			  }
+			}
+
             if (d2 > p->nearest_d2[y])
                 continue;
             p->nearest_d2[y] = d2;
