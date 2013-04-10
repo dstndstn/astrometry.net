@@ -401,6 +401,9 @@ class tabledata(object):
 
 		if fitsio:
 			arrays = [self.get(c) for c in columns]
+			# fitsio has *strange* behavior when file already exists.
+			if os.path.exists(fn):
+				os.unlink(fn)
 			fits = fitsio.FITS(fn, 'rw')
 			fits.write(arrays, names=columns)
 			return
