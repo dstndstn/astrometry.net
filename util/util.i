@@ -424,11 +424,16 @@ char* anwcs_wcslib_to_string(const anwcs_t* wcs,
 		return anwcs_radec2pixelxy($self, ra, dec, p_x, p_y);
 	}
 
+	int write_to(const char* filename) {
+		return anwcs_write($self, filename);
+	}
+
  }
 %pythoncode %{
 anwcs = anwcs_t
 anwcs.imagew = property(anwcs.get_width,  anwcs.set_width,  None, 'image width')
 anwcs.imageh = property(anwcs.get_height, anwcs.set_height, None, 'image height')
+anwcs.writeto = anwcs.write_to
 
 def anwcs_from_string(s):
     return anwcs_t(s, -1, len(s))
