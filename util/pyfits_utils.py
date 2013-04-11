@@ -576,7 +576,7 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 	T._columns = []
 
 	if fitsio:
-		dd = data.read(rows=rows, columns=columns)
+		dd = data.read(rows=rows, columns=columns, lower=True)
 		if columns is None:
 			columns = data.get_colnames()
 		for c in columns:
