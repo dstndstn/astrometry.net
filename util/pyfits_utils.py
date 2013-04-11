@@ -578,7 +578,13 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 	if fitsio:
 		dd = data.read(rows=rows, columns=columns, lower=True)
 		if columns is None:
-			columns = data.get_colnames()
+			try:
+				columns = data.get_colnames()
+			except:
+				columns = data.colnames
+
+			columns = [c.lower() for c in columns]
+					
 		for c in columns:
 			X = dd[c]
 			if column_map is not None:

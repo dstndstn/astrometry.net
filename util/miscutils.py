@@ -1,6 +1,52 @@
-from numpy import sin, atleast_1d, zeros, logical_and
 from math import pi
 import numpy as np
+
+def polygons_intersect(poly1, poly2):
+	'''
+	Determines whether the given 2-D polygons intersect.
+
+	poly1, poly2: np arrays with shape (N,2)
+	'''
+
+	# Check whether any points in poly1 are inside poly2,
+	# or vice versa.
+	for (px,py) in poly1:
+		if point_in_poly(px,py, poly2):
+			return True
+	for (px,py) in poly2:
+		if point_in_poly(px,py, poly1):
+			return True
+
+	# Check for intersections between line segments.  O(n^2) brutish
+	N1 = len(poly1)
+	N2 = len(poly2)
+
+	for i in range(N1):
+		for j in range(N2):
+			if line_segments_intersect(poly1[i % N1, :], poly1[(i+1) % N1, :],
+									   poly2[j % N2, :], poly2[(j+1) % N2, :]):
+				return True
+	return False
+	
+
+def line_segments_intersect((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
+	'''
+	Determines whether the two given line segments intersect;
+
+	(x1,y1) to (x2,y2)
+	and 
+	(x3,y3) to (x4,y4)
+	'''
+	x,y = intersection((x1,y1),(x2,y2),(x3,y3),(x4,y4))
+	if x1 == x2:
+		p1,p2 = y1,y2
+		p = y
+	else:
+		p1,p2 = x1,x2
+		p = x
+
+	return (p >= min(p1,p2)) and (p <= max(p1,p2))
+
 
 def intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
 	'''
@@ -23,6 +69,7 @@ def intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
 		  ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)))
 	return px,py
 
+
 def point_in_poly(x, y, poly):
 	'''
 	Performs a point-in-polygon test for numpy arrays of *x* and *y*
@@ -32,7 +79,9 @@ def point_in_poly(x, y, poly):
 
 	Returns a numpy array of bools.
 	'''
-	inside = np.zeros(np.atleast_1d(x).shape, bool)
+	x = np.atleast_1d(x)
+	y = np.atleast_1d(y)
+	inside = np.zeros(x.shape, bool)
 	for i in range(len(poly)):
 		j = (i-1 + len(poly)) % len(poly)
 		xi,xj = poly[i,0], poly[j,0]
@@ -48,15 +97,10 @@ def lanczos_filter(order, x):
 	x = np.atleast_1d(x)
 	nz = np.logical_and(x != 0., np.logical_and(x < order, x > -order))
 	nz = np.flatnonzero(nz)
-									   
-	#filt = np.zeros(len(x), float)
 	filt = np.zeros(x.shape, dtype=float)
-	#filt[nz] = order * sin(pi * x[nz]) * sin(pi * x[nz] / order) / ((pi * x[nz])**2)
 	pinz = pi * x.flat[nz]
 	filt.flat[nz] = order * np.sin(pinz) * np.sin(pinz / order) / (pinz**2)
 	filt[x == 0] = 1.
-	#filt[x >  order] = 0.
-	#filt[x < -order] = 0.
 	return filt
 
 # Given a range of integer coordinates that you want to, eg, cut out
