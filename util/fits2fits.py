@@ -44,19 +44,21 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 		logging.info('Header has %i cards' % len(hdr))
 		# allowed characters (FITS standard section 5.1.2.1)
 		pat = re.compile(r'[^A-Z0-9_\-]')
-		for k in hdr.keys():
+
+		newcards = []
+		for c in hdr.ascard:
+			k = c.keyword
 			# new keyword:
 			knew = pat.sub('_', k)
 			if k != knew:
 				logging.debug('Replacing illegal keyword %s by %s' % (k, knew))
-				# add the new header card
 				# it seems pyfits is not clever enough to notice this...
 				if len(knew) > 8:
 					knew = 'HIERARCH ' + knew
-				hdr.update(knew, cards[k].value, cards[k].comment, after=k)
-				# remove the old one.
-				del hdr[k]
-
+			newcards.append(pyfits.Card(keyword=knew, value=c.value,
+										comment=c.comment))
+		hdu.header = pyfits.Header(newcards)
+			
 		# Fix input header
 		hdu.verify('fix')
 
