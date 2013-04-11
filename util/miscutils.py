@@ -2,6 +2,27 @@ from numpy import sin, atleast_1d, zeros, logical_and
 from math import pi
 import numpy as np
 
+def intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
+	'''
+	Determines the point where the lines described by
+	(x1,y1) to (x2,y2)
+	and 
+	(x3,y3) to (x4,y4)
+	intersect.
+
+	Note that this may be beyond the endpoints of the line segments.
+
+	Probably raises an exception if the lines are parallel, or does
+	something numerically crazy.
+	'''
+	# copy-n-paste from Wikipedia, latex->python -- woo!
+	px = (((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
+		  ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)))
+
+	py = (((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
+		  ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)))
+	return px,py
+
 def point_in_poly(x, y, poly):
 	'''
 	Performs a point-in-polygon test for numpy arrays of *x* and *y*
