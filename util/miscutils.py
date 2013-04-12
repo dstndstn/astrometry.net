@@ -12,10 +12,10 @@ def polygons_intersect(poly1, poly2):
 	# or vice versa.
 	for (px,py) in poly1:
 		if point_in_poly(px,py, poly2):
-			return True
+			return (px,py)
 	for (px,py) in poly2:
 		if point_in_poly(px,py, poly1):
-			return True
+			return (px,py)
 
 	# Check for intersections between line segments.  O(n^2) brutish
 	N1 = len(poly1)
@@ -23,9 +23,10 @@ def polygons_intersect(poly1, poly2):
 
 	for i in range(N1):
 		for j in range(N2):
-			if line_segments_intersect(poly1[i % N1, :], poly1[(i+1) % N1, :],
-									   poly2[j % N2, :], poly2[(j+1) % N2, :]):
-				return True
+			xy = line_segments_intersect(poly1[i % N1, :], poly1[(i+1) % N1, :],
+										 poly2[j % N2, :], poly2[(j+1) % N2, :])
+			if xy:
+				return xy
 	return False
 	
 
@@ -37,7 +38,7 @@ def line_segments_intersect((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
 	and 
 	(x3,y3) to (x4,y4)
 	'''
-	x,y = intersection((x1,y1),(x2,y2),(x3,y3),(x4,y4))
+	x,y = line_intersection((x1,y1),(x2,y2),(x3,y3),(x4,y4))
 	if x1 == x2:
 		p1,p2 = y1,y2
 		p = y
@@ -45,10 +46,22 @@ def line_segments_intersect((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
 		p1,p2 = x1,x2
 		p = x
 
-	return (p >= min(p1,p2)) and (p <= max(p1,p2))
+	if not ((p >= min(p1,p2)) and (p <= max(p1,p2))):
+		return False
 
+	if x3 == x4:
+		p1,p2 = y3,y4
+		p = y
+	else:
+		p1,p2 = x3,x4
+		p = x
 
-def intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
+	if not ((p >= min(p1,p2)) and (p <= max(p1,p2))):
+		return False
+	return (x,y)
+	
+
+def line_intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
 	'''
 	Determines the point where the lines described by
 	(x1,y1) to (x2,y2)
@@ -61,20 +74,28 @@ def intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
 	Probably raises an exception if the lines are parallel, or does
 	something numerically crazy.
 	'''
-	# copy-n-paste from Wikipedia, latex->python -- woo!
+	# This code started with the equation from Wikipedia,
+	# then I added special-case handling.
+	# bottom = ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
+	# if bottom == 0:
+	# 	raise RuntimeError("divide by zero")
+	# t1 = (x1 * y2 - y1 * x2)
+	# t2 = (x3 * y4 - y3 * x4)
+	# px = (t1 * (x3 - x4) - t2 * (x1 - x2)) / bottom
+	# py = (t1 * (y3 - y4) - t2 * (y1 - y2)) / bottom
 
-	#
-	bottom = ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
-	if bottom == 0:
-		raise RuntimeError("divide by zero")
-
-	px = (((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
-		  bottom)
-
-	py = (((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
-		  bottom)
-
-	return px,py
+	# From http://wiki.processing.org/w/Line-Line_intersection
+	bx = float(x2) - float(x1)
+	by = float(y2) - float(y1)
+	dx = float(x4) - float(x3)
+	dy = float(y4) - float(y3)
+	b_dot_d_perp = bx*dy - by*dx
+	if b_dot_d_perp == 0:
+		return None,None
+	cx = float(x3) - float(x1)
+	cy = float(y3) - float(y1)
+	t = (cx*dy - cy*dx) / b_dot_d_perp
+	return x1 + t*bx, y1 + t*by
 
 
 def point_in_poly(x, y, poly):
@@ -147,3 +168,118 @@ def get_overlapping_region(xlo, xhi, xmin, xmax):
 	assert(Xhi <= (xhi-xlo))
 
 	return (slice(xloclamp, xhiclamp+1), slice(Xlo, Xhi+1))
+
+
+
+if __name__ == '__main__':
+	import matplotlib
+	matplotlib.use('Agg')
+	import pylab as plt
+	import numpy as np
+	from astrometry.util.plotutils import *
+	ps = PlotSequence('miscutils')
+
+	np.random.seed(42)
+	
+	if True:
+		for i in range(20):
+			if i <= 10:
+				xy1 = np.array([[0,0],[0,4],[4,4],[4,0]])
+			else:
+				xy1 = np.random.uniform(high=10., size=(4,2))
+			xy2 = np.random.uniform(high=10., size=(4,2))
+			plt.clf()
+			I = np.array([0,1,2,3,0])
+			xy = polygons_intersect(xy1, xy2)
+			if xy:
+				cc = 'r'
+				x,y = xy
+				plt.plot(x,y, 'mo', mec='m', mfc='none', ms=20, mew=3, zorder=30)
+			else:
+				cc = 'k'
+			plt.plot(xy1[I,0], xy1[I,1], '-', color=cc, zorder=20, lw=3)
+			plt.plot(xy2[I,0], xy2[I,1], '-', color=cc, zorder=20, lw=3)
+			ax = plt.axis()
+			plt.axis([ax[0]-0.5, ax[1]+0.5, ax[2]-0.5, ax[3]+0.5])
+			ps.savefig()
+	
+	if False:
+		X,Y = np.meshgrid(np.linspace(-1,11, 20), np.linspace(-1,11, 23))
+		X = X.ravel()
+		Y = Y.ravel()
+		for i in range(20):
+			if i == 0:
+				xy = np.array([[0,0],[0,10],[10,10],[10,0]])
+			else:
+				xy = np.random.uniform(high=10., size=(4,2))
+			plt.clf()
+			I = np.array([0,1,2,3,0])
+			plt.plot(xy[I,0], xy[I,1], 'r-', zorder=20, lw=3)
+			inside = point_in_poly(X, Y, xy)
+			plt.plot(X[inside], Y[inside], 'bo')
+			out = np.logical_not(inside)
+			plt.plot(X[out], Y[out], 'ro')
+			ax = plt.axis()
+			plt.axis([ax[0]-0.5, ax[1]+0.5, ax[2]-0.5, ax[3]+0.5])
+			ps.savefig()
+		
+
+
+	if True:
+		# intersection()
+		for i in range(20):
+			if i == 0:
+				x1 = x2 = 0
+				y1 = 0
+				y2 = 1
+				x3 = 1
+				x4 = -1
+				y3 = 0
+				y4 = 1
+			elif i == 1:
+				x1,y1 = 0,0
+				x2,y2 = 0,1
+				x3,y3 = -3,0
+				x4,y4 = -2,0
+			elif i == 2:
+				x1,y1 = 1,0
+				x2,y2 = 0,1
+				x3,y3 = -3,0
+				x4,y4 = -2,0
+			elif i == 3:
+				x1,y1 = 0,1
+				x2,y2 = 1,0
+				x3,y3 = 0,-3
+				x4,y4 = 0,-2
+			elif i == 4:
+				x1,y1 = 0,0
+				x2,y2 = 0,1
+				x3,y3 = 0,2
+				x4,y4 = 0,3
+			elif i == 5:
+				x1,y1 = -1,0
+				x2,y2 = 1, 0
+				x3,y3 = 0, 2
+				x4,y4 = 0.5, 1
+			else:
+				xy = np.random.uniform(high=10., size=(8,))
+				x1,y1,x2,y2,x3,y3,x4,y4 = xy
+			plt.clf()
+			plt.plot([x1,x2],[y1,y2], 'r-', zorder=20, lw=3)
+			plt.plot([x3,x4],[y3,y4], 'b-', zorder=20, lw=3)
+			x,y = line_intersection((x1,y1),(x2,y2),(x3,y3),(x4,y4))
+			plt.plot(x, y, 'kx', ms=20, zorder=25)
+			plt.plot([x1,x],[y1,y], 'k--', alpha=0.5, zorder=15)
+			plt.plot([x2,x],[y2,y], 'k--', alpha=0.5, zorder=15)
+			plt.plot([x3,x],[y3,y], 'k--', alpha=0.5, zorder=15)
+			plt.plot([x4,x],[y4,y], 'k--', alpha=0.5, zorder=15)
+
+			# line_segments_intersect()
+			if line_segments_intersect((x1,y1),(x2,y2),(x3,y3),(x4,y4)):
+				plt.plot(x,y, 'mo', mec='m', mfc='none', ms=20, mew=3, zorder=30)
+			ax = plt.axis()
+			plt.axis([ax[0]-0.5, ax[1]+0.5, ax[2]-0.5, ax[3]+0.5])
+			ps.savefig()
+			
+
+		
