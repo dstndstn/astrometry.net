@@ -62,11 +62,18 @@ def intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
 	something numerically crazy.
 	'''
 	# copy-n-paste from Wikipedia, latex->python -- woo!
+
+	#
+	bottom = ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
+	if bottom == 0:
+		raise RuntimeError("divide by zero")
+
 	px = (((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
-		  ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)))
+		  bottom)
 
 	py = (((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
-		  ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)))
+		  bottom)
+
 	return px,py
 
 
@@ -82,10 +89,16 @@ def point_in_poly(x, y, poly):
 	x = np.atleast_1d(x)
 	y = np.atleast_1d(y)
 	inside = np.zeros(x.shape, bool)
+	# This does a winding test -- count how many times a horizontal ray
+	# from (-inf,y) to (x,y) crosses the boundary.
 	for i in range(len(poly)):
 		j = (i-1 + len(poly)) % len(poly)
 		xi,xj = poly[i,0], poly[j,0]
 		yi,yj = poly[i,1], poly[j,1]
+
+		if yi == yj:
+			continue
+
 		I = np.logical_and(
 			np.logical_or(np.logical_and(yi <= y, y < yj),
 						  np.logical_and(yj <= y, y < yi)),
