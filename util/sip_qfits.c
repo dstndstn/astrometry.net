@@ -249,7 +249,7 @@ static void* read_header_file(const char* fn, int ext, anbool only, void* dest,
 	if (only) {
 	  hdr = anqfits_get_header_only(fn, ext);
 	} else {
-	  hdr = qfits_header_readext(fn, ext);
+	  hdr = anqfits_get_header2(fn, ext);
 	}
 	if (!hdr) {
 		ERROR("Failed to read FITS header from file \"%s\" extension %i", fn, ext);
@@ -271,7 +271,7 @@ sip_t* sip_read_header_file(const char* fn, sip_t* dest) {
   return read_header_file(fn, 0, FALSE, dest, call_sip_read_header);
 }
 sip_t* sip_read_header_file_ext(const char* fn, int ext, sip_t* dest) {
-  return read_header_file(fn, ext, FALSE, dest, call_sip_read_header);
+  return read_header_file(fn, ext, TRUE, dest, call_sip_read_header);
 }
 
 static void* call_tan_read_header(const qfits_header* hdr, void* dest) {

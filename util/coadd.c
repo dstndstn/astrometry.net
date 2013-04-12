@@ -6,7 +6,20 @@
 #include "mathutil.h"
 #include "errors.h"
 #include "log.h"
+#include "resample.h"
 
+coadd_t* coadd_new_from_wcs(anwcs_t* wcs) {
+  int W,H;
+  coadd_t* co;
+  W = anwcs_imagew(wcs);
+  H = anwcs_imagew(wcs);
+  co = coadd_new(W, H);
+  if (!co) {
+	return NULL;
+  }
+  co->wcs = wcs;
+  return co;
+}
 
 coadd_t* coadd_new(int W, int H) {
 	coadd_t* ca = calloc(1, sizeof(coadd_t));
@@ -16,6 +29,14 @@ coadd_t* coadd_new(int W, int H) {
 	ca->H = H;
 	ca->resample_func = nearest_resample_f;
 	return ca;
+}
+
+void coadd_set_lanczos(coadd_t* co, int Lorder) {
+  lanczos_args_t* L = calloc(1, sizeof(lanczos_args_t));
+  L->weighted = 0;
+  L->order = Lorder;
+  co->resample_token = L;
+  co->resample_func = lanczos_resample_f;
 }
 
 void coadd_debug(coadd_t* co) {
@@ -128,6 +149,21 @@ int coadd_add_image(coadd_t* ca, const number* img,
 	return 0;
 }
 
+
+number* coadd_get_snapshot(coadd_t* co, number* outimg,
+						   number badpix) {
+  int i;
+  if (!outimg)
+	outimg = calloc(co->W * co->H, sizeof(number));
+
+  for (i=0; i<(co->W * co->H); i++) {
+		if (co->weight[i] == 0)
+		  outimg[i] = badpix;
+		else
+		  outimg[i] = co->img[i] / co->weight[i];
+  }
+  return outimg;
+}
 
 
 // divide "img" by "weight"; set img=badpix where weight=0.

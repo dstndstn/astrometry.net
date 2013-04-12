@@ -83,6 +83,18 @@ qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {
   return qfits_header_copy(hdr);
 }
 
+qfits_header* anqfits_get_header2(const char* fn, int ext) {
+  qfits_header* hdr;
+  anqfits_t* anq = anqfits_open(fn);
+  if (!anq) {
+    qfits_error("Failed to read FITS file \"%s\"", fn);
+    return NULL;
+  }
+  hdr = anqfits_get_header(anq, ext);
+  anqfits_close(anq);
+  return hdr;
+}
+
 qfits_header* anqfits_get_header_only(const char* fn, int ext) {
   qfits_header* hdr;
   anqfits_t* anq = anqfits_open_hdu(fn, ext);

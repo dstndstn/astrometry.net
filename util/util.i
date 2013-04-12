@@ -23,6 +23,7 @@
 #include "starkd.h"
 #include "starutil.h"
 #include "an-bool.h"
+#include "ioutils.h"
 
 #include "coadd.h"
 #include "wcs-resample.h"
@@ -384,8 +385,12 @@ char* anwcs_wcslib_to_string(const anwcs_t* wcs,
 
 %extend anwcs_t {
 	anwcs_t(char* fn, int ext=0, int slen=0) {
-		if (ext == -1) {
+		if ((ext == -1) ||
+			(starts_with(fn, "SIMPLE  =") && !file_exists(fn)))	{
 			# assume header string
+			if (slen == 0) {
+				slen = strlen(fn);
+			}
 			return anwcs_wcslib_from_string(fn, slen);
 		}
 		anwcs_t* w = anwcs_open(fn, ext);
@@ -660,7 +665,29 @@ sip_t.__str__ = sip_t_tostring
 def sip_t_get_cd(self):
     cd = self.wcstan.cd
     return (cd[0], cd[1], cd[2], cd[3])
+def sip_t_set_cd(self, x):
+    self.wcstan.cd = x
 sip_t.get_cd = sip_t_get_cd
+sip_t.set_cd = sip_t_set_cd
+
+def sip_t_get_crval(self):
+	return self.wcstan.crval
+def sip_t_set_crval(self, x):
+	self.wcstan.crval = x
+sip_t.get_crval = sip_t_get_crval
+sip_t.set_crval = sip_t_set_crval
+
+def sip_t_get_crpix(self):
+	return self.wcstan.crpix
+def sip_t_set_crpix(self, x):
+	self.wcstan.crpix = x
+sip_t.get_crpix = sip_t_get_crpix
+sip_t.set_crpix = sip_t_set_crpix
+
+sip_t.crval = property(sip_t_get_crval, sip_t_set_crval, None, 'CRVAL')
+sip_t.crpix = property(sip_t_get_crpix, sip_t_set_crpix, None, 'CRPIX')
+sip_t.cd    = property(sip_t_get_cd   , sip_t_set_cd,    None, 'CD')
+
 
 def sip_t_radec_bounds(self):
 	W,H = self.wcstan.imagew, self.wcstan.imageh
@@ -677,6 +704,7 @@ def my_sip_t_init(self, *args, **kwargs):
 	if self.this is None:
 		raise RuntimeError('Duck punch!')
 sip_t.__init__ = my_sip_t_init
+
 
 Sip = sip_t
 	%}
@@ -825,6 +853,64 @@ Sip = sip_t
 
 
  };
+
+
+%inline %{
+
+  // Wrapper on coadd_add_image that accepts numpy arrays.
+
+  static int coadd_add_numpy(coadd_t* c, 
+							 PyObject* np_img, PyObject* np_weight,
+							 float fweight, const anwcs_t* wcs) {
+	PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
+	// in numpy v2.0 these constants have a NPY_ARRAY_ prefix
+	int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+	float *img, *weight;
+
+	Py_INCREF(dtype);
+	np_img = PyArray_CheckFromAny(np_img, dtype, 2, 2, req, NULL);
+	img = PyArray_DATA(np_img);
+	if (!np_img) {
+	  ERR("Failed to PyArray_FromAny the image\n");
+	  Py_XDECREF(np_img);
+	  Py_DECREF(dtype);
+	  return -1;
+	}
+	if (np_weight == Py_None) {
+	  weight = NULL;
+	} else {
+	  Py_INCREF(dtype);
+	  np_weight = PyArray_CheckFromAny(np_weight, dtype, 2, 2, req, NULL);
+	  if (!np_weight) {
+		ERR("Failed to PyArray_FromAny the weight\n");
+		Py_XDECREF(np_weight);
+		Py_DECREF(dtype);
+		return -1;
+	  }
+	  weight = PyArray_DATA(np_weight);
+	}
+
+	int rtn = coadd_add_image(c, img, weight, fweight, wcs);
+
+	Py_DECREF(np_img);
+	if (weight) {
+	  Py_DECREF(np_weight);
+	}
+	Py_DECREF(dtype);
+	return rtn;
+  }
+
+  static PyObject* coadd_get_snapshot_numpy(coadd_t* co, float badpix) {
+	npy_intp dim[2];
+	PyObject* npimg;
+	dim[0] = co->H;
+	dim[1] = co->W;
+	npimg = PyArray_EMPTY(2, dim, NPY_FLOAT, 0);
+	coadd_get_snapshot(co, PyArray_DATA(npimg), badpix);
+	return npimg;
+  }
+
+%}
 
 
 %inline %{

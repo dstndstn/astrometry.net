@@ -19,11 +19,10 @@
 #ifndef RESAMPLE_H
 #define RESAMPLE_H
 
-struct lanczos_args_s {
+typedef struct {
 	int order;
 	int weighted;
-};
-typedef struct lanczos_args_s lanczos_args_t;
+} lanczos_args_t;
 
 /***
  All the lanczos_* functions take a "lanczos_args_t*". for their "void* token".

@@ -8,7 +8,7 @@ typedef float number;
  badpixfunc_t;
  */
 
-struct coadd_s {
+typedef struct {
 	number* img;
 	number* weight;
 	int W, H;
@@ -22,10 +22,13 @@ struct coadd_s {
 							//void* isbadpix_token,
 							void* resample_token);
 	void* resample_token;
-};
-typedef struct coadd_s coadd_t;
+} coadd_t;
 
 coadd_t* coadd_new(int W, int H);
+
+coadd_t* coadd_new_from_wcs(anwcs_t* wcs);
+
+void coadd_set_lanczos(coadd_t* co, int Lorder);
 
 int coadd_add_image(coadd_t* c, const number* img, const number* weightimg,
 					number weight, const anwcs_t* wcs);
@@ -33,6 +36,8 @@ int coadd_add_image(coadd_t* c, const number* img, const number* weightimg,
 
 // divide "img" by "weight"; set img=badpix where weight=0.
 void coadd_divide_by_weight(coadd_t* c, number badpix);
+
+number* coadd_get_snapshot(coadd_t* c, number* outimg, number badpix);
 
 void coadd_free(coadd_t* c);
 
