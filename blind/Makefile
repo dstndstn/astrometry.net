@@ -206,6 +206,11 @@ simplexy: image2xy
 
 # Problem with "+" in INSTALL_DIR...
 #$(SED) "s+add_path /usr/local/astrometry/+add_path $(INSTALL_DIR)/+" < ../etc/backend.cfg-dist > $(INSTALL_DIR)/etc/backend.cfg
+# awk fails because it interprets special characters in the replacement text;
+#   make install INSTALL_DIR='/tmp/123+45$%^&*('    fails.
+# $(AWK) '{sub("INSTALL_DIR", ENVIRON["INSTALL_DIR"]); printf "%s\n", "$$0"}' < ../etc/backend.cfg-dist > '$(INSTALL_DIR)/etc/backend.cfg'
+# Another suggested solution was:
+# echo '$(INSTALL_DIR)' | python -c "print open('../etc/backend.cfg-dist').read().replace('add_path /usr/local/astrometry', 'add_path '+raw_input());" > '$(INSTALL_DIR)/etc/backend.cfg'
 
 install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	@echo Installing in directory '$(INSTALL_DIR)'
@@ -216,8 +221,7 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	done
 	mkdir -p '$(INSTALL_DIR)/etc'
 
-	echo '$(INSTALL_DIR)' | python -c "print open('../etc/backend.cfg-dist').read().replace('add_path /usr/local/astrometry', 'add_path '+raw_input());" > '$(INSTALL_DIR)/etc/backend.cfg'
-
+	python -c "import os; print open('../etc/backend.cfg-dist').read().replace('INSTALL_DIR', os.environ['INSTALL_DIR'])" > '$(INSTALL_DIR)/etc/backend.cfg'
 	mkdir -p '$(INSTALL_DIR)/include'
 	@for x in $(INSTALL_H); do \
 		echo cp $$x '$(INSTALL_DIR)/include'; \
