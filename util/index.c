@@ -70,6 +70,8 @@ static void get_filenames(const char* indexname,
     if (ends_with(indexname, ".quad.fits")) {
         basename = strdup(indexname);
         basename[strlen(indexname)-10] = '\0';
+		logverb("Index name \"%s\" ends with .quad.fits: using basename \"%s\"\n",
+				indexname, basename);
     } else {
         char* fits;
         if (file_readable(indexname)) {
@@ -78,6 +80,7 @@ static void get_filenames(const char* indexname,
             if (skdtfn) *skdtfn = strdup(indexname);
             if (quadfn) *quadfn = strdup(indexname);
             *singlefile = TRUE;
+			logverb("Index name \"%s\" is readable; assuming singe file.\n", indexname);
             return;
         }
         asprintf_safe(&fits, "%s.fits", indexname);
@@ -88,16 +91,20 @@ static void get_filenames(const char* indexname,
             if (skdtfn) *skdtfn = strdup(indexname);
             if (quadfn) *quadfn = strdup(indexname);
             *singlefile = TRUE;
+			logverb("Index name \"%s\" with .fits suffix, \"%s\", is readable; assuming singe file.\n", indexname, fits);
             free(fits);
             return;
         }
         free(fits);
         basename = strdup(indexname);
+		logverb("Index name \"%s\": neither filename nor filename.fits exist, so using index name as base filename\n");
     }
     if (ckdtfn) asprintf_safe(ckdtfn, "%s.ckdt.fits", basename);
     if (skdtfn) asprintf_safe(skdtfn, "%s.skdt.fits", basename);
     if (quadfn) asprintf_safe(quadfn, "%s.quad.fits", basename);
     *singlefile = FALSE;
+	logverb("Index name \"%s\": looking for file \"%s\", \"%s\", \"%s\"\n", indexname,
+			(ckdtfn ? *ckdtfn : "none"), (skdtfn ? *skdtfn : "none"), (quadfn ? *quadfn : "none"));
     free(basename);
     return;
 }
@@ -143,16 +150,16 @@ anbool index_is_file_index(const char* filename) {
 
     get_filenames(filename, &quadfn, &ckdtfn, &skdtfn, &singlefile);
     if (!file_readable(quadfn)) {
-        ERROR("Index file %s is not readable.\n", quadfn);
+        ERROR("Index file %s is not readable.", quadfn);
         goto finish;
     }
     if (!singlefile) {
         if (!file_readable(ckdtfn)) {
-            ERROR("Index file %s is not readable.\n", ckdtfn);
+            ERROR("Index file %s is not readable.", ckdtfn);
             goto finish;
         }
         if (!file_readable(skdtfn)) {
-            ERROR("Index file %s is not readable.\n", skdtfn);
+            ERROR("Index file %s is not readable.", skdtfn);
             goto finish;
         }
     }
