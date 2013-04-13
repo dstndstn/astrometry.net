@@ -143,6 +143,11 @@ install-indexes:
 		echo tar xvzf $$x -C '$(INSTALL_DIR)/data'; \
 		tar xvzf $$x -C '$(INSTALL_DIR)/data'; \
 	done
+	@for x in `ls index-*.fits 2>/dev/null`; do \
+		echo Installing $$x in '$(INSTALL_DIR)/data'...; \
+		echo "cp $$x '$(INSTALL_DIR)/data'" \
+		cp $$x '$(INSTALL_DIR)/data' \
+	done
 
 reconfig:
 	-rm -f util/os-features-config.h util/makefile.os-features
