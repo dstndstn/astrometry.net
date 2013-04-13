@@ -89,12 +89,20 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 	# Keep only in-bounds pixels.
 	I = np.flatnonzero((ixi >= 0) * (iyi >= 0) * (ixi < w) * (iyi < h))
 
-	fxi = fxi[I]
-	fyi = fyi[I]
-	ixi = ixi[I]
-	iyi = iyi[I]
-	ixo = ixo[I]
-	iyo = iyo[I]
+	fxi = fxi.flat[I]
+	fyi = fyi.flat[I]
+	ixi = ixi.flat[I]
+	iyi = iyi.flat[I]
+	#ixo = ixo[I % len(xx)]
+	#iyo = iyo[I / len(xx)]
+	print 'I', I.shape
+	print 'dims', (len(iyo),len(ixo))
+	iyo,ixo = np.unravel_index(I, (len(iyo),len(ixo)))
+
+	assert(np.all(ixo >= 0))
+	assert(np.all(iyo >= 0))
+	assert(np.all(ixo < W))
+	assert(np.all(iyo < H))
 
 	assert(np.all(ixi >= 0))
 	assert(np.all(iyi >= 0))
@@ -138,4 +146,4 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 	else:
 		rims = []
 
-	return (ixo,iyo, ixi,iyi, rims)
+	return (iyo,ixo, iyi,ixi, rims)
