@@ -74,9 +74,14 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 	iyo = np.arange(max(0, y0-margin), min(H, y1+margin+1), dtype=int)
 
 	# And run the interpolator.  [xy]spline() does a meshgrid-like broadcast,
-	# so fxi,fyi 
+	# so fxi,fyi have shape n(iyo),n(ixo)
 	fxi = xspline(ixo, iyo).T
 	fyi = yspline(ixo, iyo).T
+
+	print 'ixo', ixo.shape
+	print 'iyo', iyo.shape
+	print 'fxi', fxi.shape
+	print 'fyi', fyi.shape
 
 	ixi = np.round(fxi).astype(int)
 	iyi = np.round(fyi).astype(int)
@@ -88,30 +93,15 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 	fyi = fyi[I]
 	ixi = ixi[I]
 	iyi = iyi[I]
+	ixo = ixo[I]
+	iyo = iyo[I]
 
 	assert(np.all(ixi >= 0))
 	assert(np.all(iyi >= 0))
 	assert(np.all(ixi < w))
 	assert(np.all(iyi < h))
 
-	# Keep only in-bounds pixels... with a margin
 	if len(Limages):
-		m = L+1
-		IL = np.flatnonzero((ixi >= m) * (ixi < w-m) * (iyi >= m) * (iyi < h-m))
-
-		ilxo,ilyo = np.unravel_index(IL, fxi.shape)
-		ilxi,ilyi = ixi[IL], iyi[IL]
-
-		assert(np.all(ilxo >= 0))
-		assert(np.all(ilyo >= 0))
-		assert(np.all(ilxo < W))
-		assert(np.all(ilyo < H))
-
-		assert(np.all(ilxi >= 0))
-		assert(np.all(ilyi >= 0))
-		assert(np.all(ilxi < w))
-		assert(np.all(ilyi < h))
-
 		fxi -= ixi
 		fyi -= iyi
 		dx = fxi
@@ -121,13 +111,12 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 
 		# Lanczos interpolation.
 		# number of pixels
-		nn = len(ilxo)
+		nn = len(ixo)
 		NL = 2*L+1
 
 		# We interpolate all the pixels at once.
 
 		# accumulators for each input image
-
 		laccs = [np.zeros(nn) for im in Limages]
 		# sum of lanczos terms
 		fsum = np.zeros(nn)
@@ -138,7 +127,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 			for ox in off:
 				fx = lanczos_filter(L, ox + dx)
 				for lacc,im in zip(laccs, Limages):
-					lacc += fx * fy * im[ilyi + oy, ilxi + ox]
+					lacc += fx * fy * im[np.clip(iyi + oy, 0, h-1),
+										 np.clip(ixi + ox, 0, w-1)]
 				fsum += fx*fy
 		for lacc in laccs:
 			lacc /= fsum
@@ -148,4 +138,4 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 	else:
 		rims = []
 
-	return (ixo,iyo, ixi,iyi, ilxo,ilyo, ilxo,ilyo, rims)
+	return (ixo,iyo, ixi,iyi, rims)
