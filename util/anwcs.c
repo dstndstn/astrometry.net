@@ -436,6 +436,14 @@ static int wcslib_add_to_header(const anwcslib_t* wcslib, qfits_header* hdr) {
 	return -1;
 }
 
+static void wcslib_get_cd_matrix(const anwcslib_t* wcslib, double* p_cd) {
+  ERROR("Not implemented: wcslib_get_cd_matrix!");
+  assert(0);
+  p_cd[0] = 0;
+  p_cd[1] = 0;
+  p_cd[2] = 0;
+  p_cd[3] = 0;
+}
 
 #endif  // end of WCSLIB implementations
 
@@ -490,10 +498,22 @@ static int ansip_add_to_header(const sip_t* sip, qfits_header* hdr) {
 	return 0;
 }
 
+static void ansip_get_cd_matrix(const sip_t* sip, double *p_cd) {
+  p_cd[0] = sip->wcstan.cd[0][0];
+  p_cd[1] = sip->wcstan.cd[0][1];
+  p_cd[2] = sip->wcstan.cd[1][0];
+  p_cd[3] = sip->wcstan.cd[1][1];
+}
+
+
 /////////////////// dispatched anwcs_t entry points //////////////////////////
 
 void anwcs_set_size(anwcs_t* anwcs, int W, int H) {
 	ANWCS_DISPATCH(anwcs, , , set_size, W, H);
+}
+
+void anwcs_get_cd_matrix(const anwcs_t* anwcs, double *p_cd) {
+  ANWCS_DISPATCH(anwcs, , , get_cd_matrix, p_cd);
 }
 
 void anwcs_get_radec_bounds(const anwcs_t* wcs, int stepsize,

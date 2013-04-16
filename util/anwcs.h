@@ -97,6 +97,8 @@ int anwcs_xyz2pixelxy(const anwcs_t* wcs, const double* xyz, double *px, double 
 
 anbool anwcs_radec_is_inside_image(const anwcs_t* wcs, double ra, double dec);
 
+void anwcs_get_cd_matrix(const anwcs_t* wcs, double* p_cd);
+
 /**
  The SIP implementation guarantees:
 

@@ -371,6 +371,15 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
   $result = Py_BuildValue("(ddd)", $1[0], $1[1], $1[2]);
 }
 
+// anwcs_get_cd_matrix
+%typemap(in, numinputs=0) double* p_cd (double tempcd[4]) {
+	$1 = tempcd;
+}
+%typemap(argout) double* p_cd {
+  $result = Py_BuildValue("(dddd)", $1[0], $1[1], $1[2], $1[3]);
+}
+
+
 %typemap(in, numinputs=0) char **stringparam (char* tempstr) {
 			 $1 = &tempstr;
 }
@@ -381,6 +390,7 @@ char* anwcs_wcslib_to_string(const anwcs_t* wcs,
 	  char **stringparam, int *stringsizeparam);
 
 %ignore anwcs_wcslib_to_string;
+
 %include "anwcs.h"
 
 %extend anwcs_t {
@@ -397,6 +407,11 @@ char* anwcs_wcslib_to_string(const anwcs_t* wcs,
 		return w;
 	}
 	~anwcs_t() { free($self); }
+
+	double pixel_scale() { return anwcs_pixel_scale($self); }
+
+	// FIXME -- this should be more like linearizeAtPoint(x,y)
+	//void get_cd() { return anwcs_get_cd_matrix($self); }
 
 	void get_center(double *p_ra, double *p_dec) {
 		anwcs_get_radec_center_and_radius($self, p_ra, p_dec, NULL);
@@ -452,6 +467,9 @@ def anwcs_get_header_string(self):
 		 'END'+' '*77)
 anwcs.getHeaderString = anwcs_get_header_string
 
+def anwcs_get_cd(self):
+	return anwcs_get_cd_matrix(self)
+anwcs.get_cd = anwcs_get_cd
 
 	%}
 
