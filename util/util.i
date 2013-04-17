@@ -1274,6 +1274,7 @@ def sip_t_getstate(self):
 	return t
 
 def sip_t_setstate(self, s):
+	self.this = _util.new_sip_t()
 	(t, self.a_order, self.b_order, self.a, self.b,
 	 self.ap_order, self.bp_order, self.ap, self.bp) = s
 	print 'sip setstate:', self
