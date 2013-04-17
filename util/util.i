@@ -544,6 +544,13 @@ anwcs.get_cd = anwcs_get_cd
 %apply double [ANY] { double crpix[2] };
 %apply double flatmatrix[ANY][ANY] { double cd[2][2] };
 
+// SIP coefficients; array size must match SIP_MAXORDER.
+%apply double flatmatrix[ANY][ANY] { double a[10][10] };
+%apply double flatmatrix[ANY][ANY] { double b[10][10] };
+%apply double flatmatrix[ANY][ANY] { double ap[10][10] };
+%apply double flatmatrix[ANY][ANY] { double bp[10][10] };
+
+
 %include "sip.h"
 %include "sip_qfits.h"
 
@@ -1113,17 +1120,18 @@ tan_t.__str__ = tan_t_tostring
 def tan_t_getstate(self):
 	return (self.crpix[0], self.crpix[1], self.crval[0], self.crval[1],
 			self.cd[0], self.cd[1], self.cd[2], self.cd[3],
-			self.imagew, self.imageh)
+			self.imagew, self.imageh, self.sin)
 def tan_t_setstate(self, state):
 	#print 'setstate: self', self, 'state', state
 	#print 'state', state
 	self.this = _util.new_tan_t()
 	#print 'self', repr(self)
-	p0,p1,v0,v1,cd0,cd1,cd2,cd3,w,h = state
+	p0,p1,v0,v1,cd0,cd1,cd2,cd3,w,h,sin = state
 	self.set_crpix(p0,p1)
 	self.set_crval(v0,v1)
 	self.set_cd(cd0,cd1,cd2,cd3)
 	self.set_imagesize(w,h)
+	self.sin = sin
 	#(self.crpix[0], self.crpix[1], self.crval[0], self.crval[1],
 	#self.cd[0], self.cd[1], self.cd[2], self.cd[3],
 	#self.imagew, self.imageh) = state
@@ -1258,6 +1266,39 @@ def sip_t_radec2pixelxy_any(self, r, d):
 sip_t.radec2pixelxy_single = sip_t.radec2pixelxy
 sip_t.radec2pixelxy = sip_t_radec2pixelxy_any
 
+# picklable
+def sip_t_getstate(self):
+	t = (self.wcstan.__getstate__(),
+		 self.a_order, self.b_order, self.a, self.b,
+		 self.ap_order, self.bp_order, self.ap, self.bp)
+	return t
+
+def sip_t_setstate(self, s):
+	(t, self.a_order, self.b_order, self.a, self.b,
+	 self.ap_order, self.bp_order, self.ap, self.bp) = s
+	print 'sip setstate:', self
+
+	#print 'tan state:', t
+	#self.wcstan.__setstate__(t)
+	#print 'self.wcstan:', self.wcstan
+	#tan_t_setstate(self.wcstan, t)
+	#print 'self.wcstan 2:', self.wcstan
+
+	# disturbingly, tan_t_setstate doesn't work because it resets self.this = ...
+	p0,p1,v0,v1,cd0,cd1,cd2,cd3,w,h,sin = t
+	self.wcstan.set_crpix(p0,p1)
+	self.wcstan.set_crval(v0,v1)
+	self.wcstan.set_cd(cd0,cd1,cd2,cd3)
+	self.wcstan.set_imagesize(w,h)
+	self.wcstan.sin = sin
+
+
+def sip_t_getnewargs(self):
+	return ()
+
+sip_t.__getstate__ = sip_t_getstate
+sip_t.__setstate__ = sip_t_setstate
+sip_t.__getnewargs__ = sip_t_getnewargs
 
 %} 
 
