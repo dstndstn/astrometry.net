@@ -357,11 +357,13 @@ void sip_calc_distortion(const sip_t* sip, double u, double v, double* U, double
 	double guv=0.;
 	for (p=0; p<=sip->a_order; p++)
 		for (q=0; q<=sip->a_order; q++)
-			if ((p+q > 0) && (p+q <= sip->a_order))
+			//if ((p+q > 0) && (p+q <= sip->a_order))
+			if (p+q <= sip->a_order)
 				fuv += sip->a[p][q]*pow(u,p)*pow(v,q);
 	for (p=0; p<=sip->b_order; p++) 
 		for (q=0; q<=sip->b_order; q++) 
-			if ((p+q > 0) && (p+q <= sip->b_order))
+			//if ((p+q > 0) && (p+q <= sip->b_order))
+			if (p+q <= sip->b_order)
 				guv += sip->b[p][q]*pow(u,p)*pow(v,q);
 	*U = u + fuv;
 	*V = v + guv;
@@ -387,10 +389,10 @@ void sip_calc_inv_distortion(const sip_t* sip, double U, double V, double* u, do
 	double gUV=0.;
 	for (p=0; p<=sip->ap_order; p++)
 		for (q=0; q<=sip->ap_order; q++)
-			fUV += sip->ap[p][q]*pow(U,p)*pow(V,q);
+			fUV += sip->ap[p][q] * pow(U,p) * pow(V,q);
 	for (p=0; p<=sip->bp_order; p++) 
 		for (q=0; q<=sip->bp_order; q++) 
-			gUV += sip->bp[p][q]*pow(U,p)*pow(V,q);
+			gUV += sip->bp[p][q] * pow(U,p) * pow(V,q);
 
 	*u = U + fUV;
 	*v = V + gUV;

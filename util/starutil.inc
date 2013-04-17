@@ -195,7 +195,7 @@ WarnUnusedResult InlineDefine
 anbool star_coords(const double *s, const double *r,
 	 anbool tangent, double *x, double *y) {
 	// As used by the sip.c code, this does the TAN projection
-	// (if "tangent" is TRUE; SIN projection other)
+	// (if "tangent" is TRUE; SIN projection otherwise)
 	// r: CRVAL
     // s: RA,Dec to be projected
 	// ASSUME r,s are unit vectors

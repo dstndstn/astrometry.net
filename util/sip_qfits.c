@@ -289,15 +289,15 @@ tan_t* tan_read_header_file_ext_only(const char* fn, int ext, tan_t* dest) {
 
 
 static anbool read_polynomial(const qfits_header* hdr, const char* format,
-							int order, double* data, int datastride,
-							anbool skip_linear) {
+							  int order, double* data, int datastride,
+							  anbool skip_linear, anbool skip_zero) {
 	int i, j;
 	char key[64];
 	double nil = -HUGE_VAL;
 	double val;
 	for (i=0; i<=order; i++)
 		for (j=0; (i+j)<=order; j++) {
-			if (i+j < 1)
+			if (skip_zero && i+j < 1)
 				continue;
 			// FIXME - should we try to read it and not fail if it doesn't exist,
 			// or not read it at all?  Is it reasonable for linear terms to exist
@@ -325,6 +325,8 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	const char* expect2;
 	anbool is_sin;
 	anbool is_tan;
+	anbool skip_linear;
+	anbool skip_zero;
 
 	memset(&sip, 0, sizeof(sip_t));
 
@@ -391,10 +393,13 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 		return NULL;
 	}
 
-	if (!read_polynomial(hdr, "A_%i_%i",  sip.a_order,  (double*)sip.a,  SIP_MAXORDER, TRUE) ||
-		!read_polynomial(hdr, "B_%i_%i",  sip.b_order,  (double*)sip.b,  SIP_MAXORDER, TRUE) ||
-		(sip.ap_order > 0 && !read_polynomial(hdr, "AP_%i_%i", sip.ap_order, (double*)sip.ap, SIP_MAXORDER, FALSE)) ||
-		(sip.bp_order > 0 && !read_polynomial(hdr, "BP_%i_%i", sip.bp_order, (double*)sip.bp, SIP_MAXORDER, FALSE))) {
+	skip_linear = FALSE;
+	skip_zero = FALSE;
+
+	if (!read_polynomial(hdr, "A_%i_%i",  sip.a_order,  (double*)sip.a,  SIP_MAXORDER, skip_linear, skip_zero) ||
+		!read_polynomial(hdr, "B_%i_%i",  sip.b_order,  (double*)sip.b,  SIP_MAXORDER, skip_linear, skip_zero) ||
+		(sip.ap_order > 0 && !read_polynomial(hdr, "AP_%i_%i", sip.ap_order, (double*)sip.ap, SIP_MAXORDER, FALSE, FALSE)) ||
+		(sip.bp_order > 0 && !read_polynomial(hdr, "BP_%i_%i", sip.bp_order, (double*)sip.bp, SIP_MAXORDER, FALSE, FALSE))) {
 		ERROR("SIP: failed to read polynomial terms");
 		return NULL;
 	}

@@ -45,7 +45,7 @@ AN_SHELL ?= /bin/sh
 
 RANLIB ?= ranlib
 
-AWK := LC_ALL=C LC_NUMERIC=EN_US awk
+AWK ?= LC_ALL=C LC_NUMERIC=EN_US awk
 
 SED ?= sed
 

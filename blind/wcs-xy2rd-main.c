@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2013 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -25,12 +26,13 @@
 #include "bl.h"
 #include "boilerplate.h"
 #include "wcs-rd2xy.h"
+#include "starutil.h"
 #include "anwcs.h"
 #include "errors.h"
 #include "wcs-xy2rd.h"
 #include "log.h"
 
-const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:X:Y:LTv";
+const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:X:Y:LTvs";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -40,6 +42,7 @@ void print_help(char* progname) {
 		   "   [-t]: just use TAN projection, even if SIP extension exists.\n"
 		   "   [-L]: force WCSlib\n"
 		   "   [-T]: force WCStools\n"
+		   "   [-s]: print sexigesimal too\n"
 		   "   -i <xyls input file>\n"
 		   "   -o <rdls output file>\n"
 		   "  [-f <xyls field index>] (default: all)\n"
@@ -65,6 +68,7 @@ int main(int argc, char** args) {
 	anbool forcetan = FALSE;
 	anbool forcewcslib = FALSE;
 	anbool forcewcstools = FALSE;
+	anbool printhms = FALSE;
 	il* fields;
 	int ext = 0;
 	double x, y;
@@ -77,6 +81,9 @@ int main(int argc, char** args) {
         switch (c) {
 		case 'v':
 			loglvl++;
+			break;
+		case 's':
+			printhms = TRUE;
 			break;
 		case 'L':
 			forcewcslib = TRUE;
@@ -159,6 +166,13 @@ int main(int argc, char** args) {
 		// convert immediately.
 		anwcs_pixelxy2radec(wcs, x, y, &ra, &dec);
 		printf("Pixel (%.10f, %.10f) -> RA,Dec (%.10f, %.10f)\n", x, y, ra, dec);
+		if (printhms) {
+			char str[32];
+			ra2hmsstring(ra, str);
+			printf("                       RA,Dec (%20s, ", str);
+			dec2dmsstring(dec, str);
+			printf("%20s)\n", str);
+		}
 		anwcs_free(wcs);
 		exit(0);
 	}

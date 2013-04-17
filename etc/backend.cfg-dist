@@ -25,7 +25,7 @@
 cpulimit 300
 
 # In which directories should we search for indices?
-add_path /usr/local/astrometry/data
+add_path INSTALL_DIR/data
 
 # Load any indices found in the directories listed above.
 autoindex

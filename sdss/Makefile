@@ -13,11 +13,11 @@ INSTALL_PY := __init__.py common.py dr7.py dr8.py runList-dr8.par \
 
 .PHONY: install
 install: _cutils.so cutils.py
-	@echo Installing in directory $(MY_DIR)
-	mkdir -p $(MY_DIR)
+	@echo Installing in directory '$(MY_DIR)'
+	mkdir -p '$(MY_DIR)'
 	@for x in $(INSTALL_PY); do \
-		echo cp $$x $(MY_DIR); \
-		cp $$x $(MY_DIR); \
+		echo cp $$x '$(MY_DIR)'; \
+		cp $$x '$(MY_DIR)'; \
 	done
 
 
