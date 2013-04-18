@@ -1277,14 +1277,7 @@ def sip_t_setstate(self, s):
 	self.this = _util.new_sip_t()
 	(t, self.a_order, self.b_order, self.a, self.b,
 	 self.ap_order, self.bp_order, self.ap, self.bp) = s
-	print 'sip setstate:', self
-
-	#print 'tan state:', t
 	#self.wcstan.__setstate__(t)
-	#print 'self.wcstan:', self.wcstan
-	#tan_t_setstate(self.wcstan, t)
-	#print 'self.wcstan 2:', self.wcstan
-
 	# disturbingly, tan_t_setstate doesn't work because it resets self.this = ...
 	p0,p1,v0,v1,cd0,cd1,cd2,cd3,w,h,sin = t
 	self.wcstan.set_crpix(p0,p1)

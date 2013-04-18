@@ -405,6 +405,10 @@ class tabledata(object):
 			if os.path.exists(fn):
 				os.unlink(fn)
 			fits = fitsio.FITS(fn, 'rw')
+
+			for a,c in zip(arrays, columns):
+				print 'Writing:', c, 'shape', getattr(a, 'shape', None), 'type', (getattr(a, 'dtype', type(a)))
+
 			fits.write(arrays, names=columns)
 			return
 
