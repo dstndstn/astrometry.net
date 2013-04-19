@@ -71,6 +71,54 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
     return (I, J, d)
 
 
+def cluster_radec(ra, dec, R, singles=False):
+	'''
+	Finds connected groups of objects in RA,Dec space.
+
+	Returns a list of lists of indices that are connected,
+	EXCLUDING singletons.
+	'''
+	I,J,d = match_radec(ra, dec, ra, dec, R, notself=True)
+	# 'mgroups' maps each index in a group to a list of the group members
+	mgroups = {}
+	for i,j in zip(I,J):
+		if i in mgroups and j in mgroups:
+			if mgroups[i] == mgroups[j]:
+				continue
+			# merge if they are different;
+			# assert(they are disjoint)
+			merge = mgroups[i] + mgroups[j]
+			for k in merge:
+				mgroups[k] = merge
+		elif i in mgroups:
+			#
+			lst = mgroups[i]
+			lst.append(j)
+			mgroups[j] = lst
+		elif j in mgroups:
+			lst = mgroups[j]
+			lst.append(i)
+			mgroups[i] = lst
+		else:
+			lst = [i,j]
+			mgroups[i] = lst
+			mgroups[j] = lst
+
+	mgroups = mgroups.values()
+
+	if singles:
+		S = np.ones(len(ra), bool)
+		for g in mgroups:
+			S[np.array(g)] = False
+		S = np.flatnonzero(S)
+		return mgroups,S
+
+	return mgroups
+
+
+
+
+
 def _cleaninputs(x1, x2):
     fx1 = x1.astype(np.float64)
     if x2 is x1:
