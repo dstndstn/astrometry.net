@@ -1,12 +1,17 @@
 from astrometry.util.file import *
 
 class CallGlobal(object):
-	def __init__(self, pattern, *args, **kwargs):
+	def __init__(self, pattern, globals, *args, **kwargs):
 		self.pat = pattern
 		self.args = args
 		self.kwargs = kwargs
-	def __call__(self, stage, kwargs):
+		self.globals = globals
+	def getfunc(self, stage):
 		func = self.pat % stage
+		func = eval(func, self.globals)
+		return func
+	def __call__(self, stage, **kwargs):
+		func = self.getfunc(stage)
 		kwa = self.kwargs.copy()
 		kwa.update(kwargs)
 		return func(*self.args, **kwa)
