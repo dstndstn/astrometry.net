@@ -716,10 +716,19 @@ def new_fits_file(req, jobid=None):
     img = job.user_image.image
     df = img.disk_file
     infn = df.get_path()
-    ## FIXME -- could convert other formats to FITS...
-    if not df.is_fits_image():
-        return HttpResponse('Image is not FITS format: %s' % df.file_type)
-    fitsinfn = infn
+    if df.is_fits_image():
+        fitsinfn = infn
+    else:
+        ## FIXME -- could convert other formats to FITS...
+        pnmfn = get_temp_file()
+        fitsinfn = get_temp_file()
+        cmd = 'image2pnm.py -i %s -o %s && pnmtofits %s > %s' % (infn, pnmfn, pnmfn, fitsinfn)
+        logmsg('Running: ' + cmd)
+        (rtn, out, err) = run_command(cmd)
+        if rtn:
+            logmsg('out: ' + out)
+            logmsg('err: ' + err)
+            return HttpResponse('image2pnm.py failed: out ' + out + ', err ' + err)
     outfn = get_temp_file()
     cmd = 'new-wcs -i %s -w %s -o %s -d' % (fitsinfn, wcsfn, outfn)
     logmsg('Running: ' + cmd)

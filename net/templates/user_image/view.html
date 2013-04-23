@@ -185,12 +185,10 @@ $(document).ready(function() {
             <td>WCS file:</td>
             <td><a href="{% url astrometry.net.views.image.wcs_file jobid=job.id %}">wcs.fits</a></td>
         </tr>
-        {% if job.user_image.image.disk_file.is_fits_image %}
         <tr>
             <td>New FITS image:</td>
             <td><a href="{% url astrometry.net.views.image.new_fits_file jobid=job.id %}">new-image.fits</a></td>
         </tr>
-        {% endif %}
         <tr>
             <td>KMZ (<a href="http://www.google.com/sky/">Google Sky</a>):</td>
             <td><a href="{% url astrometry.net.views.image.kml_file jobid=job.id %}?ignore=.kmz">image.kmz</a></td>
