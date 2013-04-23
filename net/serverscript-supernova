@@ -1,0 +1,34 @@
+#! /bin/bash
+
+set -e
+
+# This script gets run on astro.cs.toronto.edu via ssh from oven.
+# Careful about writing things to stdout - we pipe it to tar on the other end.
+
+# Assume that we start in the directory containing the "backend" executable.
+PWD=$(pwd)
+BACKEND="$PWD/backend"
+
+# Read jobid
+read -s jobid
+
+# Create our job directory.
+cd /data1/nova/tmp
+mkdir -p $jobid
+cd $jobid
+# Delete previous contents... carefully
+rm -f wcs.fits job.axy
+
+export TMP=/data1/nova/tmp
+
+echo "In job dir $(pwd)" > backend.log
+tar xvf - >> backend.log
+
+CFG=$HOME/nova/net/nova.cfg
+# /data1/INDEXES/200/cfg
+# stderr goes back over the ssh tunnel to the log file on oven.
+$BACKEND -v --to-stderr -c $CFG job.axy >> backend.log
+
+# Send back all the files we generated!
+tar cf - --exclude job.axy *
+
