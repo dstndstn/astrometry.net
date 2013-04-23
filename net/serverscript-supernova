@@ -24,7 +24,7 @@ export TMP=/data1/nova/tmp
 echo "In job dir $(pwd)" > backend.log
 tar xvf - >> backend.log
 
-CFG=$HOME/nova/net/nova.cfg
+CFG=$HOME/supernova/net/supernova.cfg
 # /data1/INDEXES/200/cfg
 # stderr goes back over the ssh tunnel to the log file on oven.
 $BACKEND -v --to-stderr -c $CFG job.axy >> backend.log
