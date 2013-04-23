@@ -1071,6 +1071,9 @@ class Submission(Hideable):
     album = models.ForeignKey('Album', blank=True, null=True)
 
     submitted_on = models.DateTimeField(auto_now_add=True)
+    # This field is used as a marker that the job has been submitted to the
+    # worker pool for processing.  ACTUAL processing may not happen until
+    # later.
     processing_started = models.DateTimeField(null=True)
     processing_finished = models.DateTimeField(null=True)
 

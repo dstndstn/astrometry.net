@@ -363,9 +363,11 @@ def try_dosub(sub, max_retries):
         return 'exception'
 
 def dosub(sub):
-    logmsg('sub license settings: commercial=%s, modifications=%s' % (
-        sub.license.allow_commercial_use,
-        sub.license.allow_modifications))
+    sub.set_processing_really_started()
+    sub.save()
+    #logmsg('sub license settings: commercial=%s, modifications=%s' % (
+    #    sub.license.allow_commercial_use,
+    #    sub.license.allow_modifications))
     if sub.disk_file is None:
         logmsg('Sub %i: retrieving URL' % (sub.id), sub.url)
         (fn, headers) = urllib.urlretrieve(sub.url)
