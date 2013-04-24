@@ -10,10 +10,13 @@ class CallGlobal(object):
 		func = self.pat % stage
 		func = eval(func, self.globals)
 		return func
-	def __call__(self, stage, **kwargs):
-		func = self.getfunc(stage)
+	def getkwargs(self, stage, **kwargs):
 		kwa = self.kwargs.copy()
 		kwa.update(kwargs)
+		return kwa
+	def __call__(self, stage, **kwargs):
+		func = self.getfunc(stage)
+		kwa = self.getkwargs(stage, **kwargs)
 		return func(*self.args, **kwa)
 
 def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
