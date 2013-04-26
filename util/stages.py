@@ -36,9 +36,11 @@ def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
 		P = {}
 	else:
 		prereq = prereqs.get(stage, stage-1)
-
-		P = runstage(prereq, picklepat, stagefunc,
-					 force=force, prereqs=prereqs, **kwargs)
+		if prereq is None:
+			P = {}
+		else:
+			P = runstage(prereq, picklepat, stagefunc,
+						 force=force, prereqs=prereqs, **kwargs)
 
 	print 'Running stage', stage
 	R = stagefunc(stage, **P)

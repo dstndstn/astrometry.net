@@ -79,41 +79,57 @@ def cluster_radec(ra, dec, R, singles=False):
 	EXCLUDING singletons.
 	'''
 	I,J,d = match_radec(ra, dec, ra, dec, R, notself=True)
+
 	# 'mgroups' maps each index in a group to a list of the group members
 	mgroups = {}
+	# 'ugroups' is a list of the unique groups
+	ugroups = []
+	
 	for i,j in zip(I,J):
+		# Are both sources already in groups?
 		if i in mgroups and j in mgroups:
+			# Are they already in the same group?
 			if mgroups[i] == mgroups[j]:
 				continue
 			# merge if they are different;
 			# assert(they are disjoint)
-			merge = mgroups[i] + mgroups[j]
+			lsti = mgroups[i]
+			lstj = mgroups[j]
+			merge = lsti + lstj
 			for k in merge:
 				mgroups[k] = merge
+
+			ugroups.remove(lsti)
+			ugroups.remove(lstj)
+			ugroups.append(merge)
+
 		elif i in mgroups:
-			#
+			# Add j to i's group
 			lst = mgroups[i]
 			lst.append(j)
 			mgroups[j] = lst
 		elif j in mgroups:
+			# Add i to j's group
 			lst = mgroups[j]
 			lst.append(i)
 			mgroups[i] = lst
 		else:
+			# Create a new group
 			lst = [i,j]
 			mgroups[i] = lst
 			mgroups[j] = lst
 
-	mgroups = mgroups.values()
+			ugroups.append(lst)
+
 
 	if singles:
 		S = np.ones(len(ra), bool)
-		for g in mgroups:
+		for g in ugroups:
 			S[np.array(g)] = False
 		S = np.flatnonzero(S)
-		return mgroups,S
+		return ugroups,S
 
-	return mgroups
+	return ugroups
 
 
 

@@ -658,6 +658,13 @@ anwcs.get_cd = anwcs_get_cd
 		return $self->bp[i][j];
 	}
 
+	void set_width(double x) {
+		$self->wcstan.imagew = x;
+	}
+	void set_height(double x) {
+    	$self->wcstan.imageh = x;
+	}
+
 	double get_width() {
 		return $self->wcstan.imagew;
 	}
