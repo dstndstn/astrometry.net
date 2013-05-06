@@ -406,8 +406,8 @@ class tabledata(object):
 				os.unlink(fn)
 			fits = fitsio.FITS(fn, 'rw')
 
-			for a,c in zip(arrays, columns):
-				print 'Writing:', c, 'shape', getattr(a, 'shape', None), 'type', (getattr(a, 'dtype', type(a)))
+			#for a,c in zip(arrays, columns):
+			#	print 'Writing:', c, 'shape', getattr(a, 'shape', None), 'type', (getattr(a, 'dtype', type(a)))
 
 			fits.write(arrays, names=columns)
 			return
@@ -579,7 +579,7 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 
 	T._columns = []
 
-	if fitsio:
+	if fitsio and not (type(data) == pyfits.core.FITS_rec):
 		dd = data.read(rows=rows, columns=columns, lower=True)
 		if columns is None:
 			try:

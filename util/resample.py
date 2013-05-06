@@ -6,7 +6,7 @@ from miscutils import lanczos_filter
 from astrometry.util.plotutils import *
 import pylab as plt
 
-def resample_with_wcs(targetwcs, wcs, Limages, L):
+def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 	'''
 	Returns (Yo,Xo, Yi,Xi, ims)
 
@@ -14,6 +14,13 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 	If empty, just returns nearest-neighbour indices.
 
 	L: int, lanczos order
+
+	targetwcs, wcs: duck-typed WCS objects that must have:
+	   - properties "imagew", "imageh"
+	   - methods  "pixelxy2radec"
+	   -          "radec2pixelxy"
+
+	The WCS functions are expected to operate in FITS pixel-indexing.
 
 	Use the results like:
 
@@ -26,7 +33,7 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 
 	### DEBUG
 	ps = PlotSequence('resample')
-
+	#ps = None
 
 	H,W = int(targetwcs.imageh), int(targetwcs.imagew)
 	h,w = int(      wcs.imageh), int(      wcs.imagew)
@@ -42,107 +49,123 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 	# many out-of-bounds pixels...
 	XY = []
 	for x,y in [(0,0), (w-1,0), (w-1,h-1), (0, h-1)]:
-		#rd = wcs.pixelToPosition(x,y)
-		#XY.append(targetwcs.positionToPixel(rd))
 		ra,dec = wcs.pixelxy2radec(float(x + 1), float(y + 1))
 		ok,xw,yw = targetwcs.radec2pixelxy(ra, dec)
 		XY.append((xw - 1, yw - 1))
 	XY = np.array(XY)
 
-	# Now we build a spline that maps "target" pixels to "input" pixels
-
-	# spline inputs: pixel coords in the 'target' image
 	x0,y0 = np.round(XY.min(axis=0)).astype(int)
 	x1,y1 = np.round(XY.max(axis=0)).astype(int)
-	margin = 20
-	step = 25
-	xx = np.arange(max(0, x0-margin), min(W, x1+margin+step), step)
-	yy = np.arange(max(0, y0-margin), min(H, y1+margin+step), step)
+	if spline:
+		# Now we build a spline that maps "target" pixels to "input" pixels
+		# spline inputs: pixel coords in the 'target' image
+		margin = 20
+		step = 25
+		xx = np.arange(max(0, x0-margin), min(W, x1+margin+step), step)
+		yy = np.arange(max(0, y0-margin), min(H, y1+margin+step), step)
 
-	if ps:
-		def expand_axes():
-			M = 100
-			ax = plt.axis()
-			plt.axis([ax[0]-M, ax[1]+M, ax[2]-M, ax[3]+M])
-			plt.axis('scaled')
+		if ps:
+			def expand_axes():
+				M = 100
+				ax = plt.axis()
+				plt.axis([ax[0]-M, ax[1]+M, ax[2]-M, ax[3]+M])
+				plt.axis('scaled')
 
-		plt.clf()
-		plt.plot(XY[:,0], XY[:,1], 'ro')
-		plt.plot(xx, np.zeros_like(xx), 'b.')
-		plt.plot(np.zeros_like(yy), yy, 'c.')
-		plt.plot(xx, np.zeros_like(xx)+max(yy), 'b.')
-		plt.plot(max(xx) + np.zeros_like(yy), yy, 'c.')
-		plt.plot([0,W,W,0,0], [0,0,H,H,0], 'k-')
-		plt.title('A: Target image: bbox')
-		expand_axes()
-		ps.savefig()
+			plt.clf()
+			plt.plot(XY[:,0], XY[:,1], 'ro')
+			plt.plot(xx, np.zeros_like(xx), 'b.')
+			plt.plot(np.zeros_like(yy), yy, 'c.')
+			plt.plot(xx, np.zeros_like(xx)+max(yy), 'b.')
+			plt.plot(max(xx) + np.zeros_like(yy), yy, 'c.')
+			plt.plot([0,W,W,0,0], [0,0,H,H,0], 'k-')
+			plt.title('A: Target image: bbox')
+			expand_axes()
+			ps.savefig()
 
-	if (len(xx) == 0) or (len(yy) == 0):
-		print 'No overlap between input and target WCSes'
-		return (None,)*5
-	if (len(xx) <= 3) or (len(yy) <= 3):
-		print 'Not enough overlap between input and target WCSes'
-		return (None,)*5
+			if (len(xx) == 0) or (len(yy) == 0):
+				print 'No overlap between input and target WCSes'
+				return (None,)*5
+		if (len(xx) <= 3) or (len(yy) <= 3):
+			print 'Not enough overlap between input and target WCSes'
+			return (None,)*5
+	
+		# spline outputs -- pixel coords in the 'input' image
+		XYo = []
+		for y in yy:
+			for x in xx:
+				#rd = targetwcs.pixelToPosition(x,y)
+				#XYo.append(wcs.positionToPixel(rd))
+				ra,dec = targetwcs.pixelxy2radec(float(x + 1), float(y + 1))
+				ok,xw,yw = wcs.radec2pixelxy(ra,dec)
+				XYo.append((xw - 1, yw - 1))
+		XYo = np.array(XYo)
+		Xo = XYo[:,0].reshape(len(yy), len(xx))
+		Yo = XYo[:,1].reshape(len(yy), len(xx))
+		del XYo
 
-	# spline outputs -- pixel coords in the 'input' image
-	XYo = []
-	for y in yy:
-		for x in xx:
-			#rd = targetwcs.pixelToPosition(x,y)
-			#XYo.append(wcs.positionToPixel(rd))
-			ra,dec = targetwcs.pixelxy2radec(float(x + 1), float(y + 1))
-			ok,xw,yw = wcs.radec2pixelxy(ra,dec)
-			XYo.append((xw - 1, yw - 1))
-	XYo = np.array(XYo)
-	Xo = XYo[:,0].reshape(len(yy), len(xx))
-	Yo = XYo[:,1].reshape(len(yy), len(xx))
-	del XYo
+		if ps:
+			plt.clf()
+			plt.plot(Xo, Yo, 'b.')
+			plt.plot([0,w,w,0,0], [0,0,h,h,0], 'k-')
+			plt.title('B: Input image')
+			expand_axes()
+			ps.savefig()
+	
+		xspline = interp.RectBivariateSpline(xx, yy, Xo.T)
+		yspline = interp.RectBivariateSpline(xx, yy, Yo.T)
+		del Xo
+		del Yo
 
-	if ps:
-		plt.clf()
-		plt.plot(Xo, Yo, 'b.')
-		plt.plot([0,w,w,0,0], [0,0,h,h,0], 'k-')
-		plt.title('B: Input image')
-		expand_axes()
-		ps.savefig()
-
-	xspline = interp.RectBivariateSpline(xx, yy, Xo.T)
-	yspline = interp.RectBivariateSpline(xx, yy, Yo.T)
-	del Xo
-	del Yo
+	else:
+		margin = 0
 
 	# Now, build the full pixel grid we want to interpolate...
 	ixo = np.arange(max(0, x0-margin), min(W, x1+margin+1), dtype=int)
 	iyo = np.arange(max(0, y0-margin), min(H, y1+margin+1), dtype=int)
 
-	# And run the interpolator.  [xy]spline() does a meshgrid-like broadcast,
-	# so fxi,fyi have shape n(iyo),n(ixo)
-	# f[xy]i: floating-point pixel coords in the input image
-	fxi = xspline(ixo, iyo).T
-	fyi = yspline(ixo, iyo).T
+	if spline:
+		# And run the interpolator.  [xy]spline() does a meshgrid-like broadcast,
+		# so fxi,fyi have shape n(iyo),n(ixo)
+		# f[xy]i: floating-point pixel coords in the input image
+		fxi = xspline(ixo, iyo).T
+		fyi = yspline(ixo, iyo).T
 
-	if ps:
-		plt.clf()
-		plt.plot(ixo, np.zeros_like(ixo), 'r,')
-		plt.plot(np.zeros_like(iyo), iyo, 'm,')
-		plt.plot(ixo, max(iyo) + np.zeros_like(ixo), 'r,')
-		plt.plot(max(ixo) + np.zeros_like(iyo), iyo, 'm,')
-		plt.plot([0,W,W,0,0], [0,0,H,H,0], 'k-')
-		plt.title('C: Target image; i*o')
-		expand_axes()
-		ps.savefig()
+		if ps:
+			plt.clf()
+			plt.plot(ixo, np.zeros_like(ixo), 'r,')
+			plt.plot(np.zeros_like(iyo), iyo, 'm,')
+			plt.plot(ixo, max(iyo) + np.zeros_like(ixo), 'r,')
+			plt.plot(max(ixo) + np.zeros_like(iyo), iyo, 'm,')
+			plt.plot([0,W,W,0,0], [0,0,H,H,0], 'k-')
+			plt.title('C: Target image; i*o')
+			expand_axes()
+			ps.savefig()
+	
+			plt.clf()
+			plt.plot(fxi, fyi, 'r,')
+			plt.plot([0,w,w,0,0], [0,0,h,h,0], 'k-')
+			plt.title('D: Input image, f*i')
+			expand_axes()
+			ps.savefig()
 
-		plt.clf()
-		plt.plot(fxi, fyi, 'r,')
-		plt.plot([0,w,w,0,0], [0,0,h,h,0], 'k-')
-		plt.title('D: Input image, f*i')
-		expand_axes()
-		ps.savefig()
+	else:
+		fxi = np.empty((len(iyo),len(ixo)))
+		fyi = np.empty((len(iyo),len(ixo)))
 
-	print 'ixo', ixo.shape
-	print 'iyo', iyo.shape
-	print 'fxi', fxi.shape
-	print 'fyi', fyi.shape
+		fxo = (ixo).astype(float) + 1.
+		fyo = np.empty_like(fxo)
+		for i,y in enumerate(iyo):
+			fyo[:] = y + 1.
+			# Assume 1-d vectorized pixel<->radec
+			ra,dec = targetwcs.pixelxy2radec(fxo, fyo)
+			ok,x,y = wcs.radec2pixelxy(ra, dec)
+			fxi[i,:] = x - 1.
+			fyi[i,:] = y - 1.
+
+	# print 'ixo', ixo.shape
+	# print 'iyo', iyo.shape
+	# print 'fxi', fxi.shape
+	# print 'fyi', fyi.shape
 
 	# i[xy]i: int coords in the input image
 	ixi = np.round(fxi).astype(int)
@@ -156,15 +179,15 @@ def resample_with_wcs(targetwcs, wcs, Limages, L):
 	iyi = iyi.flat[I]
 	print 'I', I.shape
 	print 'dims', (len(iyo),len(ixo))
-	I = np.unravel_index(I, (len(iyo),len(ixo)))
-	iyo = iyo[0] + I[0]
-	ixo = ixo[0] + I[1]
+	iy,ix = np.unravel_index(I, (len(iyo),len(ixo)))
+	iyo = iyo[0] + iy
+	ixo = ixo[0] + ix
 	#ixo = ixo[I % len(ixo)]
 	#iyo = iyo[I / len(ixo)]
 	# i[xy]o: int coords in the target image
 
 
-	if ps:
+	if spline and ps:
 		plt.clf()
 		plt.plot(ixo, iyo, 'r,')
 		plt.plot([0,W,W,0,0], [0,0,H,H,0], 'k-')

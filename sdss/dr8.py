@@ -297,9 +297,9 @@ class DR8(DR7):
 			fn = self.getPath('frame', run, camcol, field, band)
 		else:
 			fn = filename
-		#print 'reading file', fn
+		print 'reading file', fn
 		p = pyfits.open(fn)
-		#print 'got', len(p), 'HDUs'
+		print 'got', len(p), 'HDUs'
 		# in nanomaggies
 		f.image = p[0].data
 		f.header = p[0].header

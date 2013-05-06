@@ -503,6 +503,13 @@ void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
     if (pdecmax) *pdecmax = b.decmax;
 }
 
+void sip_shift(const sip_t* sipin, sip_t* sipout,
+			   double xlo, double xhi, double ylo, double yhi) {
+  memmove(sipout, sipin, sizeof(sip_t));
+  tan_transform(&(sipin->wcstan), &(sipout->wcstan),
+				xlo, xhi, ylo, yhi, 1.0);
+}
+
 void tan_transform(const tan_t* tanin, tan_t* tanout,
 				   double xlo, double xhi, double ylo, double yhi,
 				   double scale) {
