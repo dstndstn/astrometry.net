@@ -779,8 +779,11 @@ int augment_xylist(augment_xylist_t* axy,
 				exit(-1);
 			}
 			line += strlen(pnmfn) + 1;
-			if (sscanf(line, " P%cM %255s %d by %d maxval %d",
-					   &pnmtype, typestr, &axy->W, &axy->H, &maxval) != 5) {
+			// "PBM raw, 750 by 864"
+			//if (sscanf(line, " P%cM %255s %d by %d maxval %d",
+			//&pnmtype, typestr, &axy->W, &axy->H, &maxval) != 5) {
+			if (sscanf(line, " P%cM %255s %d by %d",
+					   &pnmtype, typestr, &axy->W, &axy->H) != 4) {
 				ERROR("Failed to parse output from pnmfile: \"%s\"\n", line);
 				exit(-1);
 			}
@@ -836,7 +839,7 @@ int augment_xylist(augment_xylist_t* axy,
 
                 run(cmd, verbose);
 
-			} else {
+			} else if (pnmtype == 'G') {
                 logverb("Converting PGM image to FITS...\n");
 
                 append_executable(cmd, "an-pnmtofits", me);
@@ -845,7 +848,21 @@ int augment_xylist(augment_xylist_t* axy,
                 append_escape(cmd, fitsimgfn);
 
                 run(cmd, verbose);
+
+			} else if (pnmtype == 'B') {
+                logverb("Converting PBM image to FITS...\n");
+
+                sl_append(cmd, "pbmtopgm 3 3");
+                append_escape(cmd, pnmfn);
+				sl_append(cmd, "|");
+                append_executable(cmd, "an-pnmtofits", me);
+				sl_append(cmd, ">");
+                append_escape(cmd, fitsimgfn);
+                run(cmd, verbose);
+			} else {
+				assert(0);
 			}
+
 		}
 
         if (axy->keep_fitsimg) {

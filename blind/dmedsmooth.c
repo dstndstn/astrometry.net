@@ -2,6 +2,7 @@
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Michael Blanton, Keir Mierle, David W. Hogg,
   Sam Roweis and Dustin Lang.
+  Copyright 2013 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -59,8 +60,8 @@ int dmedsmooth(float *image,
 
 	/* get grids */
 	sp = halfbox;
-	nxgrid = nx / sp + 2;
-
+	nxgrid = MAX(1, nx / sp) + 2;
+	printf("nxgrid %i\n", nxgrid);
 	// "xgrid" are the centers.
 	// "xlo" are the (inclusive) lower-bounds
 	// "xhi" are the (inclusive) upper-bounds
@@ -76,9 +77,11 @@ int dmedsmooth(float *image,
 	for (i = 0;i < nxgrid;i++) {
 		xlo[i] = MAX(xgrid[i] - sp, 0);
 		xhi[i] = MIN(xgrid[i] + sp, nx-1);
+		printf("xlo[%i],xhi[%i] = %i,%i\n", i, i, xlo[i], xhi[i]);
 	}
 
-	nygrid = ny / sp + 2;
+	nygrid = MAX(1, ny / sp) + 2;
+	printf("nygrid %i\n", nygrid);
 	ylo = (int *) malloc(nygrid * sizeof(int));
 	yhi = (int *) malloc(nygrid * sizeof(int));
 	ygrid = (int *) malloc(nygrid * sizeof(int));
@@ -91,6 +94,7 @@ int dmedsmooth(float *image,
 	for (i = 0;i < nygrid;i++) {
 		ylo[i] = MAX(ygrid[i] - sp, 0);
 		yhi[i] = MIN(ygrid[i] + sp, ny-1);
+		printf("ylo[%i],yhi[%i] = %i,%i\n", i, i, ylo[i], yhi[i]);
 	}
 
 	// the median-filtered image (subsampled on a grid).
