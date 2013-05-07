@@ -149,7 +149,7 @@ static an_option_t options[] = {
 	{'^', "use-sextractor", no_argument, NULL,
 	 "use SExtractor rather than built-in image2xy to find sources"},
 	{'&', "sextractor-config", required_argument, "filename",
-	 "use the given SExtractor config file (default: etc/sextractor.conf).  "
+	 "use the given SExtractor config file.  "
 	 "Note that CATALOG_NAME and CATALOG_TYPE values will be over-ridden by command-line values.  "
 	 "This option implies --use-sextractor."},
 	{'*', "sextractor-path", required_argument, "filename",

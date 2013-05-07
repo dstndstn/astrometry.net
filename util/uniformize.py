@@ -37,6 +37,11 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 	x = xy.field(xcol)
 	y = xy.field(ycol)
 
+	if len(x) == 0:
+		print 'Empty xylist'
+		pyfits_writeto(p, outfile)
+		return
+	
 	# use IMAGEW,H, or compute bounds?
 	#  #$)(*&%^ NaNs in LSST source positions.  Seriously, WTF!
 	I = logical_and(isfinite(x), isfinite(y))
