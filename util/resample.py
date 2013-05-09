@@ -41,8 +41,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 	for im in Limages:
 		assert(im.shape == (h,w))
 
-	print 'Target size', W, H
-	print 'Input size', w, h
+	#print 'Target size', W, H
+	#print 'Input size', w, h
 	
 	# First find the approximate bbox of the input image in
 	# the target image so that we don't ask for way too
@@ -177,8 +177,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 	fyi = fyi.flat[I]
 	ixi = ixi.flat[I]
 	iyi = iyi.flat[I]
-	print 'I', I.shape
-	print 'dims', (len(iyo),len(ixo))
+	#print 'I', I.shape
+	#print 'dims', (len(iyo),len(ixo))
 	iy,ix = np.unravel_index(I, (len(iyo),len(ixo)))
 	iyo = iyo[0] + iy
 	ixo = ixo[0] + ix

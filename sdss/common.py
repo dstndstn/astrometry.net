@@ -457,7 +457,7 @@ class AsTrans(SdssFile):
 	def munu_to_pixel(self, mu, nu, color=0):
 		xprime, yprime = self.munu_to_prime(mu, nu, color)
 		#print 'py: xprime,yprime', xprime,yprime
-		return self.prime_to_pixel(xprime, yprime)
+		return self.prime_to_pixel(xprime, yprime, color=color)
 
 	munu_to_pixel_single = munu_to_pixel
 
@@ -533,6 +533,7 @@ class AsTrans(SdssFile):
 		qx = qx * np.ones_like(x)
 		qy = qy * np.ones_like(y)
 		#print 'color', color.shape, 'px', px.shape, 'qx', qx.shape
+		#print 'color', color, 'px', px, 'py', py
 		xprime += np.where(color < color0, px * color, qx)
 		yprime += np.where(color < color0, py * color, qy)
 
