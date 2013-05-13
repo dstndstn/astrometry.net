@@ -123,6 +123,9 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 	ixo = np.arange(max(0, x0-margin), min(W, x1+margin+1), dtype=int)
 	iyo = np.arange(max(0, y0-margin), min(H, y1+margin+1), dtype=int)
 
+	if len(ixo) == 0 or len(iyo) == 0:
+		return (None,)*5
+
 	if spline:
 		# And run the interpolator.  [xy]spline() does a meshgrid-like broadcast,
 		# so fxi,fyi have shape n(iyo),n(ixo)
@@ -162,8 +165,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 			fxi[i,:] = x - 1.
 			fyi[i,:] = y - 1.
 
-	# print 'ixo', ixo.shape
-	# print 'iyo', iyo.shape
+	print 'ixo', ixo.shape
+	print 'iyo', iyo.shape
 	# print 'fxi', fxi.shape
 	# print 'fyi', fyi.shape
 
