@@ -146,8 +146,11 @@ class Plotstuff(object):
 			else:
 				self.line_to_xy(x, y)
 		
-	def get_image_as_numpy(self):
-		return self.pargs.get_image_as_numpy()
+	def get_image_as_numpy(self, flip=False):
+		return self.pargs.get_image_as_numpy(flip)
+
+	def set_image_from_numpy(self, img, flip=False):
+		self.pargs.set_image_from_numpy(img, flip)
 
 	def apply_settings(self):
 		plotstuff_builtin_apply(self.pargs.cairo, self.pargs)

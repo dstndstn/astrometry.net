@@ -499,6 +499,9 @@ int plot_image_read(const plot_args_t* pargs, plotimage_t* args) {
 int plot_image_set_filename(plotimage_t* args, const char* fn) {
 	free(args->fn);
 	args->fn = strdup_safe(fn);
+	// ??
+	free(args->img);
+	args->img = NULL;
 	return 0;
 }
 

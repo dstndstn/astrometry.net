@@ -620,19 +620,65 @@ void cairoutils_argb32_to_rgba_2(const unsigned char* inimg,
     }
 }
 
+void cairoutils_argb32_to_rgba_flip(const unsigned char* inimg,
+									unsigned char* outimg, int W, int H) {
+    int i, j;
+	for (i=0; i<H; i++) {
+		const unsigned char* inrow = inimg + 4 * (i*W);
+		unsigned char* outrow = outimg + 4 * (H-1-i) * W;
+		for (j=0; j<(W); j++) {
+			unsigned char r,g,b,a;
+			uint32_t ipix = *((uint32_t*)(inrow + 4*j));
+			a = (ipix >> 24) & 0xff;
+			r = (ipix >> 16) & 0xff;
+			g = (ipix >>  8) & 0xff;
+			b = (ipix      ) & 0xff;
+			outrow[4*j + 0] = r;
+			outrow[4*j + 1] = g;
+			outrow[4*j + 2] = b;
+			outrow[4*j + 3] = a;
+		}
+	}
+}
+
 void cairoutils_rgba_to_argb32(unsigned char* img, int W, int H) {
+	cairoutils_rgba_to_argb32_2(img, img, W, H);
+}
+
+void cairoutils_rgba_to_argb32_2(const unsigned char* inimg,
+								 unsigned char* outimg, int W, int H) {
     int i;
     for (i=0; i<(H*W); i++) {
         unsigned char r,g,b,a;
         uint32_t* ipix;
-        r = img[4*i + 0];
-        g = img[4*i + 1];
-        b = img[4*i + 2];
-        a = img[4*i + 3];
-        ipix = (uint32_t*)(img + 4*i);
+        r = inimg[4*i + 0];
+        g = inimg[4*i + 1];
+        b = inimg[4*i + 2];
+        a = inimg[4*i + 3];
+        ipix = (uint32_t*)(outimg + 4*i);
         *ipix = (a << 24) | (r << 16) | (g << 8) | b;
     }
 }
+
+void cairoutils_rgba_to_argb32_flip(const unsigned char* inimg,
+									unsigned char* outimg, int W, int H) {
+    int i, j;
+	for (i=0; i<H; i++) {
+		const unsigned char* inrow = inimg + 4 * (i*W);
+		unsigned char* outrow = outimg + 4 * (H-1-i) * W;
+		for (j=0; j<(W); j++) {
+			unsigned char r,g,b,a;
+			uint32_t* ipix;
+			r = inrow[4*j + 0];
+			g = inrow[4*j + 1];
+			b = inrow[4*j + 2];
+			a = inrow[4*j + 3];
+			ipix = (uint32_t*)(outrow + 4*j);
+			*ipix = (a << 24) | (r << 16) | (g << 8) | b;
+		}
+	}
+}
+
 
 #if HAVE_NETPBM
 unsigned char* cairoutils_read_ppm_stream(FILE* fin, int* pW, int* pH) {

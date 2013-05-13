@@ -45,7 +45,16 @@ void cairoutils_argb32_to_rgba(unsigned char* img, int W, int H);
 void cairoutils_argb32_to_rgba_2(const unsigned char* inimg,
 								 unsigned char* outimg, int W, int H);
 
+void cairoutils_argb32_to_rgba_flip(const unsigned char* inimg,
+									unsigned char* outimg, int W, int H);
+
 void cairoutils_rgba_to_argb32(unsigned char* img, int W, int H);
+
+void cairoutils_rgba_to_argb32_2(const unsigned char* inimg,
+								 unsigned char* outimg, int W, int H);
+
+void cairoutils_rgba_to_argb32_flip(const unsigned char* inimg,
+									unsigned char* outimg, int W, int H);
 
 void cairoutils_premultiply_alpha_rgba(unsigned char* img, int W, int H);
 

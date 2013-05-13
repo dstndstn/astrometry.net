@@ -265,7 +265,7 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 
 
 %extend plot_args {
-	PyObject* get_image_as_numpy() {
+	PyObject* get_image_as_numpy(int flip) {
 		npy_intp dim[3];
 		unsigned char* img;
 		PyObject* npimg;
@@ -274,8 +274,42 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 		dim[2] = 4;
 		img = cairo_image_surface_get_data(self->target);
 		npimg = PyArray_EMPTY(3, dim, NPY_UBYTE, 0);
-		cairoutils_argb32_to_rgba_2(img, PyArray_DATA(npimg), self->W, self->H);
+		if (flip) {
+			cairoutils_argb32_to_rgba_flip(img, PyArray_DATA(npimg), self->W, self->H);
+		} else {
+			cairoutils_argb32_to_rgba_2(img, PyArray_DATA(npimg), self->W, self->H);
+		}
 		return npimg;
+	}
+
+	int set_image_from_numpy(PyObject* npimg, int flip) {
+		unsigned char* img;
+		unsigned char* inimg;
+		PyArray_Descr* dtype = PyArray_DescrFromType(PyArray_UBYTE);
+		int req = NPY_C_CONTIGUOUS | NPY_ALIGNED;
+		if ((PyArray_DIM(npimg, 0) != self->H) ||
+			(PyArray_DIM(npimg, 1) != self->W) ||
+			(PyArray_DIM(npimg, 2) != 4)) {
+			PyErr_SetString(PyExc_ValueError, "Expected image with shape (H, W, 4)");
+			return -1;
+		}
+		Py_INCREF(dtype);
+		npimg = PyArray_FromAny(npimg, dtype, 3, 3, req, NULL);
+		if (!npimg) {
+			PyErr_SetString(PyExc_ValueError, "img wasn't the type expected");
+			Py_DECREF(dtype);
+			return -1;
+		}
+		inimg = PyArray_DATA(npimg);
+		img = cairo_image_surface_get_data(self->target);
+		if (flip) {
+			cairoutils_rgba_to_argb32_flip(inimg, img, self->W, self->H);
+		} else {
+			cairoutils_rgba_to_argb32_2(inimg, img, self->W, self->H);
+		}
+		Py_DECREF(npimg);
+		Py_DECREF(dtype);
+		return 0;
 	}
 
 	int set_wcs_file(const char* fn, int ext) {

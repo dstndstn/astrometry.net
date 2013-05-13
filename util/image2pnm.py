@@ -37,6 +37,7 @@ imgcmds = {fitstype : (fitsext, 'an-fitstopnm -i %s > %s'),
 		   'Netpbm PGM'		  : ('pgm',	 pgmcmd),
 		   'Netpbm PGM "rawbits" image data' : ('pgm',	pgmcmd),
 		   'TIFF image data'  : ('tiff',  'tifftopnm %s > %s'),
+		   'PC bitmap' : ('bmp', 'bmptopnm %s > %s'),
 		   # RAW is not recognized by 'file'; we have to use 'dcraw',
 		   # but we still store this here for convenience.
 		   'raw'			  : ('raw', 'dcraw -4 -c %s > %s'),
