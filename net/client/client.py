@@ -210,6 +210,10 @@ class Client(object):
         return self.overlay_plot('galex_image_for_wcs', outfn,
                                  wcsfn, wcsext)
 
+	def myjobs(self):
+		result = self.send_request('myjobs/')
+		return result['jobs']
+
     def job_status(self, job_id, justdict=False):
         result = self.send_request('jobs/%s' % job_id, {})
         if justdict:
@@ -267,6 +271,7 @@ if __name__ == '__main__':
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--substatus', '-s', dest='sub_id', help='Get status of a submission')
     parser.add_option('--jobstatus', '-j', dest='job_id', help='Get status of a job')
+	parser.add_option('--jobs', '-J', dest='myjobs', action='store_true', help='Get all my jobs')
     parser.add_option('--jobsbyexacttag', '-T', dest='jobs_by_exact_tag', help='Get a list of jobs associated with a given tag--exact match')
     parser.add_option('--jobsbytag', '-t', dest='jobs_by_tag', help='Get a list of jobs associated with a given tag')
     parser.add_option( '--private', '-p',
@@ -400,5 +405,9 @@ if __name__ == '__main__':
     if opt.jobs_by_exact_tag:
         tag = opt.jobs_by_exact_tag
         print c.jobs_by_tag(tag, 'yes')
+
+	if opt.myjobs:
+		jobs = c.myjobs()
+		print jobs
 
     #print c.submission_images(1)

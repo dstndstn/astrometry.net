@@ -92,7 +92,6 @@ def requires_json_login(handler):
     return handle_request
 
 
-
 def upload_common(request, url=None, file=None):
     df, original_filename = handle_upload(file=file, url=url)
     submittor = request.user if request.user.is_authenticated() else None
@@ -264,6 +263,14 @@ def api_login(request):
                               'message': 'authenticated user: ' + str(profile.user.email),
                               'session': key,
                               })
+
+@csrf_exempt
+@requires_json_args
+@requires_json_session
+@requires_json_login
+def myjobs(request):
+	jobs = Job.objects.filter(user_image__user=auth.get_user(request))
+	return HttpResponseJson({ 'jobs': [j.id for j in jobs]})
 
 @csrf_exempt
 def submission_status(req, sub_id):
