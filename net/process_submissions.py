@@ -363,8 +363,8 @@ def try_dosub(sub, max_retries):
         return 'exception'
 
 def dosub(sub):
-    sub.set_processing_really_started()
-    sub.save()
+    #sub.set_processing_really_started()
+    #sub.save()
     #logmsg('sub license settings: commercial=%s, modifications=%s' % (
     #    sub.license.allow_commercial_use,
     #    sub.license.allow_modifications))

@@ -269,8 +269,8 @@ def api_login(request):
 @requires_json_session
 @requires_json_login
 def myjobs(request):
-	jobs = Job.objects.filter(user_image__user=auth.get_user(request))
-	return HttpResponseJson({ 'jobs': [j.id for j in jobs], 'status':'success'})
+    jobs = Job.objects.filter(user_image__user=auth.get_user(request))
+    return HttpResponseJson({ 'jobs': [j.id for j in jobs], 'status':'success'})
 
 @csrf_exempt
 def submission_status(req, sub_id):
@@ -351,6 +351,46 @@ def objects_in_field(req, job_id):
     return HttpResponseJson({
         'objects_in_field':json_sky_objects}
     )
+
+@csrf_exempt
+def job_info(req, job_id):
+    job = get_object_or_404(Job, pk=job_id)
+    ui = job.user_image
+    sky_objects = ui.sky_objects.all()
+    json_sky_objects = [sky_obj.name for sky_obj in sky_objects]
+
+    tags = TaggedUserImage.objects.filter(user_image = ui)
+    json_tags = [t.tag.text for t in tags]
+
+    machine_user = User.objects.get(username=MACHINE_USERNAME)
+    mtags = tags.filter(tagger = machine_user)
+    machine_tags = [t.tag.text for t in mtags]
+
+    status = job.get_status_blurb()
+
+    result = {
+        'objects_in_field':json_sky_objects,
+        'machine_tags': machine_tags,
+        'tags':json_tags,
+        'status':status,
+        'original_filename': ui.original_file_name,
+        }
+
+    if job.calibration:
+        cal = job.calibration
+        (ra, dec, radius) = cal.get_center_radecradius()
+        pixscale = cal.raw_tan.get_pixscale()
+        orient = cal.raw_tan.get_orientation()
+        result['calibration'] = {
+            'ra':ra,
+            'dec':dec,
+            'radius':radius,
+            'pixscale':pixscale,
+            'orientation':orient,
+            }
+
+
+    return HttpResponseJson(result)
 
 @csrf_exempt
 def jobs_by_tag(req):
