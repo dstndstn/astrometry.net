@@ -270,7 +270,7 @@ def api_login(request):
 @requires_json_login
 def myjobs(request):
 	jobs = Job.objects.filter(user_image__user=auth.get_user(request))
-	return HttpResponseJson({ 'jobs': [j.id for j in jobs]})
+	return HttpResponseJson({ 'jobs': [j.id for j in jobs], 'status':'success'})
 
 @csrf_exempt
 def submission_status(req, sub_id):
