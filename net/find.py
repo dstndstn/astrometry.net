@@ -6,7 +6,11 @@ sys.path.append(p)
 import settings
 from astrometry.net.models import *
 from log import *
+from django.contrib.auth.models import User
 
+import logging
+logging.basicConfig(format='%(message)s',
+                    level=logging.DEBUG)
 
 if __name__ == '__main__':
 	import optparse
@@ -16,6 +20,7 @@ if __name__ == '__main__':
 	parser.add_option('-u', '--userimage', type=int, dest='uimage', help='UserImage ID')
 	parser.add_option('-r', '--rerun', dest='rerun', action='store_true',
 					  help='Re-run this submission?')
+	parser.add_option('--chown', dest='chown', type=int, default=0, help='Change owner of userimage by user id #')
 
 	opt,args = parser.parse_args()
 	if not (opt.sub or opt.job or opt.uimage):
@@ -57,5 +62,11 @@ if __name__ == '__main__':
 		ui = UserImage.objects.all().get(id=opt.uimage)
 		print 'UserImage', ui
 
+		if opt.chown:
+			user = User.objects.all().get(id=opt.chown)
+			print 'User:', user
+			print 'chowning', ui, 'to', user
+			ui.user = user
+			ui.save()
 		
 	

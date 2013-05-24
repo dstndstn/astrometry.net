@@ -839,7 +839,7 @@ class SkyLocation(models.Model):
         if nside is None or healpix is None:
             nside = self.nside
             healpix = self.healpix
-        user_images = UserImage.objects.all()
+        user_images = UserImage.objects.all_visible()
         user_images = user_images.filter(jobs__calibration__sky_location__nside=nside)
         user_images = user_images.filter(jobs__calibration__sky_location__healpix=healpix)
         return user_images
@@ -881,7 +881,7 @@ class UserImageManager(models.Manager):
     def admin_all(self):
         return super(UserImageManager, self)
 
-    def all(self):
+    def all_visible(self):
         anonymous = User.objects.get(username=ANONYMOUS_USERNAME)
         solved_anonymous_uis = super(UserImageManager, self).filter(user=anonymous, jobs__calibration__isnull=False)
         non_anonymous_uis = super(UserImageManager, self).exclude(user=anonymous)
@@ -891,7 +891,7 @@ class UserImageManager(models.Manager):
     def public_only(self, user=None):
         if user and not user.is_authenticated():
             user = None
-        return self.all().filter(Q(publicly_visible='y') | Q(user=user))    
+        return self.all_visible().filter(Q(publicly_visible='y') | Q(user=user))
     
 
 class UserImage(Hideable):

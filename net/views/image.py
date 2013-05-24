@@ -260,13 +260,19 @@ def annotated_image(req, jobid=None, size='full'):
             '--scale %s' % (str(scale)),]
     #if rad < 10.:
     if rad < 1.:
-        args.extend(['--uzccat %s' % uzcfn,
+        args.extend([#'--uzccat %s' % uzcfn,
                      '--abellcat %s' % abellfn,
                      '--hdcat %s' % hdfn
                      ])
 
     if rad < 0.25:
         args.append('--tycho2cat %s' % tycho2fn)
+
+    if rad > 10:
+        args.append('--no-ngc')
+
+	if rad > 30:
+		args.append('--no-bright')
             
     cmd = ' '.join(args + ['%s %s %s' % (wcsfn, pnmfn, annfn)])
 
@@ -641,25 +647,25 @@ def index_nearby(req, user_image_id=None):
     
 def index_recent(req):
     return index(req, 
-                 UserImage.objects.all().order_by('-submission__submitted_on')[:9],
+                 UserImage.objects.all_visible()[:9], #.order_by('-submission__submitted_on')[:9],
                  template_name='user_image/index_recent.html')
 
 def index_all(req):
     return index(req,
-                 UserImage.objects.all().order_by('-submission__submitted_on'),
+                 UserImage.objects.all_visible().order_by('-submission__submitted_on'),
                  template_name='user_image/index_all.html')
 
 def index_user(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
     return index(req,
-                 user.user_images.all().order_by('-submission__submitted_on'),
+                 user.user_images.all_visible().order_by('-submission__submitted_on'),
                  template_name='user_image/index_user.html',
                  context={'display_user':user})
 
 def index_by_user(req):
     # make ordering case insensitive
     context = {
-        'users':User.objects.all().order_by('profile__display_name', 'id')
+        'users':User.objects.all_visible().order_by('profile__display_name', 'id')
     }
     return render_to_response('user_image/index_by_user.html',
         context,
@@ -668,7 +674,7 @@ def index_by_user(req):
 def index_album(req, album_id=None):
     album = get_object_or_404(Album, pk=album_id)
     return index(req,
-                 album.user_images.all(),
+                 album.user_images.all_visible(),
                  template_name='user_image/index_album.html',
                  context={'album':album})
 
@@ -836,7 +842,7 @@ def search(req):
 
     form = ImageSearchForm(form_data)
     context = {}
-    images = UserImage.objects.all()
+    images = UserImage.objects.all_visible()
     page_number = req.GET.get('page',1)
     category = 'tag'
     calibrated = True
@@ -857,7 +863,7 @@ def search(req):
                 tags = map(strip,tags.split(','))
                 tags = list(set(tags)) # remove duplicate tags
                 
-                images = UserImage.objects.all().filter(tags__text__in=tags).distinct()
+                images = UserImage.objects.all_visible().filter(tags__text__in=tags).distinct()
                 tag_objs = Tag.objects.filter(text__in=tags)
                 context['tags'] = tag_objs
 
@@ -868,7 +874,7 @@ def search(req):
                 user = User.objects.filter(profile__display_name=username)[:1]
                 images = UserImage.objects.none()
                 if len(user) > 0:
-                    images = UserImage.objects.all().filter(user=user)
+                    images = UserImage.objects.all_visible().filter(user=user)
                     context['display_user'] = user[0] 
                 else:
                     context['display_users'] = User.objects.filter(profile__display_name__startswith=username)[:5]

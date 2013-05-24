@@ -32,6 +32,8 @@ if __name__ == '__main__':
 	parser = OptionParser('usage: %prog <wcs.fits file> <image file> <output.{jpg,png,pdf} file>')
 	parser.add_option('--scale', dest='scale', type=float,
 					  help='Scale plot by this factor')
+	parser.add_option('--no-ngc', dest='ngc', action='store_false', default=True)
+	parser.add_option('--no-bright', dest='bright', action='store_false', default=True)
 	parser.add_option('--hdcat', dest='hdcat',
 					  help='Path to Henry Draper catalog hd.fits')
 	parser.add_option('--uzccat', dest='uzccat',
@@ -66,7 +68,7 @@ if __name__ == '__main__':
 					  help='Plot RA,Dec markers')
 	parser.add_option('--quad', dest='quad', action='append', default=[],
 					  help='Plot quad from given match file')
-	
+
 	opt,args = parser.parse_args()
 	if len(args) != 3:
 		parser.print_help()
@@ -75,7 +77,7 @@ if __name__ == '__main__':
 	wcsfn = args[0]
 	imgfn = args[1]
 	outfn = args[2]
-	
+
 	fmt = PLOTSTUFF_FORMAT_JPG
 	s = outfn.split('.')
 	if len(s):
@@ -103,9 +105,11 @@ if __name__ == '__main__':
 		plot.plot_grid(0.1, 0.1, 0.2, 0.2)
 
 	ann = plot.annotations
-	ann.NGC = True
+	ann.NGC = opt.ngc
 	ann.constellations = True
-	ann.bright = True
+	ann.constellation_labels = True
+	ann.constellation_labels_long = True
+	ann.bright = opt.bright
 	ann.ngc_fraction = 0.
 	if opt.hdcat:
 		ann.HD = True
@@ -151,7 +155,6 @@ if __name__ == '__main__':
 				continue
 			ann.add_target(r, d, 'Tycho-2 %i-%i-%i' % (t1,t2,t3))
 
-			
 	plot.color = opt.textcolor
 	plot.fontsize = opt.textsize
 	plot.lw = opt.lw
@@ -159,7 +162,7 @@ if __name__ == '__main__':
 	plot.halign = opt.halign
 	plot.label_offset_x = opt.tox;
 	plot.label_offset_y = opt.toy;
-	
+
 	if len(opt.target):
 		for t in opt.target:
 			if plot_annotations_add_named_target(ann, t):

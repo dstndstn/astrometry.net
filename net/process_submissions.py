@@ -149,10 +149,8 @@ def create_job_logger(job):
     return MyLogger(logger)
 
 def try_dojob(job, userimage):
-    jobdir = job.make_dir()
-    log = create_job_logger(job)
     try:
-        return dojob(job, userimage, log=log)
+        return dojob(job, userimage)
     except:
         print 'Caught exception while processing Job', job
         traceback.print_exc(None, sys.stdout)
@@ -160,11 +158,15 @@ def try_dojob(job, userimage):
         job.set_end_time()
         job.status = 'F'
         job.save()
+        log = create_job_logger(job)
         log.msg('Caught exception while processing Job', job.id)
         log.msg(traceback.format_exc(None))
 
 def dojob(job, userimage, log=None):
-    jobdir = job.get_dir()
+    jobdir = job.make_dir()
+    #print 'Created job dir', jobdir
+    #log = create_job_logger(job)
+    #jobdir = job.get_dir()
     if log is None:
         log = create_job_logger(job)
     log.msg('Starting Job processing for', job)
@@ -363,11 +365,8 @@ def try_dosub(sub, max_retries):
         return 'exception'
 
 def dosub(sub):
-    #sub.set_processing_really_started()
-    #sub.save()
-    #logmsg('sub license settings: commercial=%s, modifications=%s' % (
-    #    sub.license.allow_commercial_use,
-    #    sub.license.allow_modifications))
+    sub.set_processing_started()
+    sub.save()
     if sub.disk_file is None:
         logmsg('Sub %i: retrieving URL' % (sub.id), sub.url)
         (fn, headers) = urllib.urlretrieve(sub.url)
@@ -583,7 +582,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
         dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
     if dosub_nthreads > 1:
         print 'Processing submissions with %d threads' % dosub_nthreads
-        dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
+        #dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
         dosub_pool = multiprocessing.Pool(processes=dosub_nthreads)
 
     print 'Refresh rate: %.1f seconds' % refresh_rate

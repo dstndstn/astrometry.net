@@ -11,7 +11,7 @@ class ImageSearchForm(forms.Form):
                                                   required=False)
 
 def images(req):
-    images = UserImage.objects.all()
+    images = UserImage.objects.all_visible()
     form = ImageSearchForm(req.GET)
     if form.is_valid():
         query_string = urllib.urlencode(form.cleaned_data)

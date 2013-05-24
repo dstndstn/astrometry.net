@@ -396,7 +396,7 @@ def job_info(req, job_id):
 def jobs_by_tag(req):
     query = req.GET.get('query')
     exact = req.GET.get('exact')
-    images = UserImage.objects.all()
+    images = UserImage.objects.all_visible()
     job_ids = []
     if exact:
         try:
