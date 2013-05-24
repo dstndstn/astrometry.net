@@ -1061,7 +1061,7 @@ class Submission(Hideable):
 
     tweak_order = models.IntegerField(blank=True, null=True, default=2)
 
-    downsample_factor = models.PositiveIntegerField(blank=True, null=True)
+    downsample_factor = models.PositiveIntegerField(blank=True, null=True, default=2)
 
     use_sextractor = models.BooleanField(default=False)
     crpix_center = models.BooleanField(default=False)
