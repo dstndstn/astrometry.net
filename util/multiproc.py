@@ -95,9 +95,11 @@ class multiproc(object):
 			return self.pool.map_async(funcwrapper(func), iterable)
 		return self.pool.map_async(func, iterable)
 		
-	def apply(self, f, args, kwargs={}):
+	def apply(self, f, args, wrap=False, kwargs={}):
 		if self.pool is None:
-			return apply(f, args, kwargs)
+			return FakeAsyncResult(f(*args, **kwargs))
+		if wrap:
+			f = funcwrapper(f)
 		res = self.applyfunc(f, args, kwargs)
 		self.async_results.append(res)
 		return res

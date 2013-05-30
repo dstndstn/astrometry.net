@@ -201,6 +201,9 @@ plotstuff_run_commandf(plot_args_t* pargs, const char* fmt, ...);
 int plotstuff_output(plot_args_t* pargs);
 void plotstuff_free(plot_args_t* pargs);
 
+/* Reset drawing surface with color (0,0,0) and alpha=0 */
+void plotstuff_clear(plot_args_t* pargs);
+
 
 void plotstuff_stack_marker(plot_args_t* pargs, double x, double y);
 void plotstuff_stack_arrow(plot_args_t* pargs, double x, double y,

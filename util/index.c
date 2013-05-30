@@ -97,7 +97,7 @@ static void get_filenames(const char* indexname,
         }
         free(fits);
         basename = strdup(indexname);
-		logverb("Index name \"%s\": neither filename nor filename.fits exist, so using index name as base filename\n");
+	logverb("Index name \"%s\": neither filename nor filename.fits exist, so using index name as base filename\n", basename);
     }
     if (ckdtfn) asprintf_safe(ckdtfn, "%s.ckdt.fits", basename);
     if (skdtfn) asprintf_safe(skdtfn, "%s.skdt.fits", basename);

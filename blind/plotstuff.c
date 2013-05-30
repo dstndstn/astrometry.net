@@ -92,6 +92,15 @@ plot_args_t* plotstuff_new() {
 	return pargs;
 }
 
+void plotstuff_clear(plot_args_t* pargs) {
+  cairo_operator_t op;
+  assert(pargs->cairo);
+  op = cairo_get_operator(pargs->cairo);
+  cairo_set_operator(pargs->cairo, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(pargs->cairo);
+  cairo_set_operator(pargs->cairo, op);
+}
+
 void plotstuff_move_to(plot_args_t* pargs, double x, double y) {
 	if (pargs->move_to)
 		pargs->move_to(pargs, x, y, pargs->move_to_baton);
@@ -351,6 +360,8 @@ int cairo_set_color(cairo_t* cairo, const char* color) {
 }
 
 void plotstuff_builtin_apply(cairo_t* cairo, plot_args_t* args) {
+  //printf("Set rgba %.2f, %.2f, %.2f, %.2f\n", args->rgba[0], args->rgba[1],
+  //args->rgba[2], args->rgba[3]);
 	cairo_set_rgba(cairo, args->rgba);
 	cairo_set_line_width(cairo, args->lw);
 	cairo_set_operator(cairo, args->op);
