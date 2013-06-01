@@ -135,8 +135,8 @@ def plothist(x, y, nbins=100, log=False,
 			 plo=None, phi=None,
 			 imshowargs={}, **hist2dargs):
 	if log:
-		return loghist(x, y, nbins=nbins, doclf=doclf, docolorbar=docolobar,
-					   dohot=dohit, imshowargs=imshowargs, **kwargs)
+		return loghist(x, y, nbins=nbins, doclf=doclf, docolorbar=docolorbar,
+					   dohot=dohot, imshowargs=imshowargs) #, **kwargs)
 					   
 	if doclf:
 		plt.clf()

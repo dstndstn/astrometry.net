@@ -215,23 +215,26 @@ class Client(object):
         return result['jobs']
 
     def job_status(self, job_id, justdict=False):
-        result = self.send_request('jobs/%s' % job_id, {})
+        result = self.send_request('jobs/%s' % job_id)
         if justdict:
             return result
         stat = result.get('status')
         if stat == 'success':
-            result = self.send_request('jobs/%s/calibration' % job_id, {})
+            result = self.send_request('jobs/%s/calibration' % job_id)
             print 'Calibration:', result
-            result = self.send_request('jobs/%s/tags' % job_id, {})
+            result = self.send_request('jobs/%s/tags' % job_id)
             print 'Tags:', result
-            result = self.send_request('jobs/%s/machine_tags' % job_id, {})
+            result = self.send_request('jobs/%s/machine_tags' % job_id)
             print 'Machine Tags:', result
-            result = self.send_request('jobs/%s/objects_in_field' % job_id, {})
+            result = self.send_request('jobs/%s/objects_in_field' % job_id)
             print 'Objects in field:', result
+            result = self.send_request('jobs/%s/info' % job_id)
+            print 'Calibration:', result
+
         return stat
 
     def sub_status(self, sub_id, justdict=False):
-        result = self.send_request('submissions/%s' % sub_id, {})
+        result = self.send_request('submissions/%s' % sub_id)
         if justdict:
             return result
         return result.get('status')
@@ -377,13 +380,13 @@ if __name__ == '__main__':
             time.sleep(5)
 
         if success:
-            result = c.send_request('jobs/%s/calibration' % opt.job_id, {})
+            result = c.send_request('jobs/%s/calibration' % opt.job_id)
             print 'Calibration:', result
-            result = c.send_request('jobs/%s/tags' % opt.job_id, {})
+            result = c.send_request('jobs/%s/tags' % opt.job_id)
             print 'Tags:', result
-            result = c.send_request('jobs/%s/machine_tags' % opt.job_id, {})
+            result = c.send_request('jobs/%s/machine_tags' % opt.job_id)
             print 'Machine Tags:', result
-            result = c.send_request('jobs/%s/objects_in_field' % opt.job_id, {})
+            result = c.send_request('jobs/%s/objects_in_field' % opt.job_id)
             print 'Objects in field:', result
 
         opt.job_id = None
