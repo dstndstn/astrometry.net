@@ -4,6 +4,8 @@ import sys
 path = os.path.abspath(__file__)
 sys.path.append(os.path.dirname(os.path.dirname(path)))
 
+from an_build_ext import *
+
 from distutils.core import setup, Extension
 from numpy.distutils.misc_util import get_numpy_include_dirs
 from setuputils import *
@@ -13,10 +15,9 @@ numpy_inc = get_numpy_include_dirs()
 c_swig_module = Extension('_util',
 						  sources = ['util_wrap.c' ],
 						  include_dirs = numpy_inc +
-						  [
-							  '../qfits-an/include',
-							  '../libkd',
-							  '.'],
+						  ['../qfits-an/include',
+						   '../libkd',
+						   '.'],
 						  extra_objects = [
 							  'libanfiles.a',
 							  '../libkd/libkd.a',
@@ -24,15 +25,11 @@ c_swig_module = Extension('_util',
 							  '../qfits-an/lib/libqfits.a',
 							  '../gsl-an/libgsl-an.a',
 							  ],
-						  extra_link_args=[os.environ.get('WCSLIB_LIB', ''),
-#os.environ.get('GSL_LIB', ''),
-#'-O0 -g'
-										   ],
-						  #extra_compile_args = ['-O0 -g'],
+						  extra_link_args=[os.environ.get('WCSLIB_LIB', '')],
+	)
 
-						  )
-
-setup(name = 'Access to Astrometry.net utils in python',
+setup(cmdclass={'build_ext': an_build_ext},
+	  name = 'Access to Astrometry.net utils in python',
       version = '1.0',
       description = '',
       author = 'Astrometry.net (Dustin Lang)',

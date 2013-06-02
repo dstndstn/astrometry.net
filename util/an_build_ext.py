@@ -24,7 +24,6 @@ class an_build_ext(build_ext):
 
 		for source in sources:
 			(base, ext) = os.path.splitext(source)
-			print 'swig base,ext', base, ext
 			if ext == ".i":				# SWIG interface file
 				new_sources.append(base + '_wrap' + target_ext)
 				swig_sources.append(source)

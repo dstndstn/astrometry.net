@@ -16,7 +16,7 @@ def get_libs(pkg, required=True):
 	libs = [l for l in libs if len(l)]
 	# Strip off the leading "-l"
 	libs = [l[2:] for l in libs]
-	print 'returning libs:', libs
+	#print 'returning libs:', libs
 	return libs
 
 def get_include_dirs(pkg):
@@ -29,7 +29,7 @@ def get_include_dirs(pkg):
 	dirs = [l for l in dirs if len(l)]
 	# Strip off the leading "-I"
 	dirs = [l[2:] for l in dirs]
-	print 'returning include dirs:', dirs
+	#print 'returning include dirs:', dirs
 	return dirs
 
 def get_lib_dirs(pkg, required=True):

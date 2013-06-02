@@ -203,11 +203,10 @@ _healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o erro
 util.py util_wrap.c: util.i $(ANUTILS_H)
 	swig -python -I. $<
 
-_util.so: util_wrap.c setup-util.py \
+_util.so: util_wrap.c \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 	WCSLIB_LIB="$(WCSLIB_LIB)" GSL_LIB="$(GSL_LIB)" \
-	python setup-util.py build --force --build-base build --build-platlib build/lib
-	cp build/lib/_util.so $@
+	python setup-util.py -v build_ext -v --inplace 
 
 PYUTIL := _util.so util.py
 pyutil: $(PYUTIL)
