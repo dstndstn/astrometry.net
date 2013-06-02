@@ -94,7 +94,7 @@ int dmedsmooth(float *image,
 	for (i = 0;i < nygrid;i++) {
 		ylo[i] = MAX(ygrid[i] - sp, 0);
 		yhi[i] = MIN(ygrid[i] + sp, ny-1);
-		printf("ylo[%i],yhi[%i] = %i,%i\n", i, i, ylo[i], yhi[i]);
+		//printf("ylo[%i],yhi[%i] = %i,%i\n", i, i, ylo[i], yhi[i]);
 	}
 
 	// the median-filtered image (subsampled on a grid).

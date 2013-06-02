@@ -662,6 +662,7 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 	fields = tabledata()
 	txtrows = [r for r in txtrows if not r.startswith('#')]
 	coldata = [[] for x in colnames]
+	ncomplain = 0
 	for i,r in enumerate(txtrows):
 		if maxcols is not None:
 			r = r[:maxcols]
@@ -677,6 +678,9 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 			
 		if len(cols) != len(colnames):
 			#raise Exception('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n	"%s"' % (len(colnames), ', '.join(colnames), i, len(cols), r))
+			ncomplain += 1
+			if ncomplain > 10:
+				continue
 			print 'Expected to find %i columns of data to match headers (%s) in row %i; got %i\n	"%s"' % (len(colnames), ', '.join(colnames), i, len(cols), r)
 			continue
 		#assert(len(cols) == len(colnames))
@@ -698,6 +702,9 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 			for cd,c in zip(coldata, cols):
 				cd.append(c)
 
+	if ncomplain > 10:
+		print 'Total of', ncomplain, 'bad lines'
+				
 	if coltypes is None:
 		for i,col in enumerate(coldata):
 			isint = True
