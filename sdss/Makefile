@@ -8,6 +8,10 @@ include $(COMMON)/makefile.common
 INSTALL_DIR ?= /usr/local/astrometry
 MY_DIR := $(INSTALL_DIR)/python/astrometry/sdss
 
+.PHONY: release_files
+release_files:
+	swig -python -I. cutils.i
+
 _cutils.so cutils.py: cutils.i
 	python setup.py -v build_ext --inplace
 

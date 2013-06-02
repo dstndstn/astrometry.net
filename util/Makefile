@@ -132,6 +132,12 @@ MAIN_PROGS := wcs-resample fit-wcs
 
 all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS) $(MAIN_PROGS)
 
+.PHONY: release_files
+release_files:
+	swig -python -I. util.i
+	swig -python -I. index.i
+
+
 # Things that it depends on but that aren't linked in
 ANUTILS_DEPS :=
 

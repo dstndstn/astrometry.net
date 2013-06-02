@@ -173,14 +173,12 @@ release:
 	for x in $(RELEASE_SUBDIRS); do \
 		svn export $(RELEASE_SVN)/$$x $(RELEASE_DIR)/$$x; \
 	done
-	(cd $(RELEASE_DIR)/util && swig -python -I. util.i)
-	(cd $(RELEASE_DIR)/util && swig -python -I. index.i)
-	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../qfits-an/src plotstuff.i)
-	(cd $(RELEASE_DIR)/sdss && swig -python -I. cutils.i)
+	(cd $(RELEASE_DIR)/util  && make release_files)
+	(cd $(RELEASE_DIR)/blind && make release_files)
+	(cd $(RELEASE_DIR)/sdss  && make release_files)
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
 	bzip2 --best $(RELEASE_DIR).tar
-# about plotstuff.i build above: qfits-an/include  doesn't contain headers until after the build...
 
 # spherematch-only release
 SP_RELEASE_DIR := pyspherematch-$(SP_RELEASE_VER)
@@ -195,7 +193,7 @@ release-pyspherematch:
 	for x in $(SP_RELEASE_SUBDIRS); do \
 		svn export $(SP_RELEASE_SVN)/$$x $(SP_RELEASE_DIR)/$$x; \
 	done
-	# replace, add and remove files from spherematch-only release
+
 	cp -r $(SP_ONLY)/* $(SP_RELEASE_DIR)
 	for x in $(SP_RELEASE_REMOVE); do \
 		rm -v $(SP_RELEASE_DIR)/$$x; \
@@ -233,7 +231,7 @@ SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
 SNAPSHOT_SUBDIRS := $(RELEASE_SUBDIRS)
 
 snapshot:
-	$(AN_SHELL) ./make-snapshot.sh $(SNAPSHOT_SVN) $(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}') "$(SNAPSHOT_SUBDIRS)"
+	$(AN_SHELL) ./make-snapshot.sh $(SNAPSHOT_SVN) $(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}') "$(SNAPSHOT_SUBDIRS)" "util blind sdss"
 
 test:
 	$(MAKE) -C blind test
