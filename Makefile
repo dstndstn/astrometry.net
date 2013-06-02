@@ -173,9 +173,12 @@ release:
 	for x in $(RELEASE_SUBDIRS); do \
 		svn export $(RELEASE_SVN)/$$x $(RELEASE_DIR)/$$x; \
 	done
-	(cd $(RELEASE_DIR)/util  && make release_files)
-	(cd $(RELEASE_DIR)/blind && make release_files)
-	(cd $(RELEASE_DIR)/sdss  && make release_files)
+
+	(cd $(RELEASE_DIR)/util  && swig -python -I. util.i)
+	(cd $(RELEASE_DIR)/util  && swig -python -I. index.i)
+	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../qfits-an-src plotstuff.i)
+	(cd $(RELEASE_DIR)/sdss  && swig -python -I. cutils.i)
+
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
 	bzip2 --best $(RELEASE_DIR).tar
@@ -230,8 +233,29 @@ retag-release-pyspherematch:
 SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
 SNAPSHOT_SUBDIRS := $(RELEASE_SUBDIRS)
 
+.PHONY: snapshot
 snapshot:
-	$(AN_SHELL) ./make-snapshot.sh $(SNAPSHOT_SVN) $(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}') "$(SNAPSHOT_SUBDIRS)" "util blind sdss"
+	-rm -R snapshot snapshot.tar
+	svn export -N $(SNAPSHOT_SVN) snapshot
+	for x in $(SNAPSHOT_SUBDIRS); do \
+		svn export $(SNAPSHOT_SVN)/$$x snapshot/$$x; \
+	done
+
+	(cd snapshot/util  && swig -python -I. util.i)
+	(cd snapshot/util  && swig -python -I. index.i)
+	(cd snapshot/blind && swig -python -I. -I../util -I../qfits-an/src plotstuff.i)
+	(cd snapshot/sdss  && swig -python -I. cutils.i)
+
+	SSD=astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}'); \
+	mv snapshot $$SSD; \
+	tar cf snapshot.tar $$SSD; \
+	gzip --best -c snapshot.tar > $$SSD.tar.gz; \
+	bzip2 --best -c snapshot.tar > $$SSD.tar.bz2
+
+#mv snapshot astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}')
+#tar cf snapshot.tar astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}')
+#gzip --best -c snapshot.tar > astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}').tar.gz
+#bzip2 --best snapshot.tar > astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}').tar.bz2
 
 test:
 	$(MAKE) -C blind test

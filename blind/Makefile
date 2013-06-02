@@ -189,10 +189,6 @@ all: $(QFITS_LIB) $(LIBKD_LIB) \
 	$(PROGS) $(PIPELINE) $(PROSPECTUS) $(FITS_UTILS) fitsverify \
 	$(BACKEND_LIB) $(BACKEND_SO)
 
-.PHONY: release_files
-release_files:
-	swig -python -I. -I../util -I../qfits-an-src plotstuff.i
-
 cairo: $(CAIROEXECS)
 .PHONY: cairo
 
