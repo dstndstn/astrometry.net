@@ -1,11 +1,18 @@
+.PHONY: all
 all: _cutils.so cutils.py
+
+BASEDIR := ..
+COMMON := $(BASEDIR)/util
+include $(COMMON)/makefile.common
 
 INSTALL_DIR ?= /usr/local/astrometry
 MY_DIR := $(INSTALL_DIR)/python/astrometry/sdss
 
-_cutils.so cutils.py: setup.py cutils.i
-	python setup.py build --force --build-base build --build-platlib build/lib
-	cp build/lib/_cutils.so .
+_cutils.so cutils.py: cutils.i
+	python setup.py -v build_ext --inplace
+
+# --build-base build --build-platlib build/lib
+# cp build/lib/_cutils.so .
 
 INSTALL_PY := __init__.py common.py dr7.py dr8.py runList-dr8.par \
 	dr9.py runList-dr9.par \

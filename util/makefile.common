@@ -26,6 +26,8 @@ endif
 .SUFFIXES :=
 
 # These are files
+%.py: ;
+%.i: ;
 %.c: ;
 %.h: ;
 %.awk: ;
