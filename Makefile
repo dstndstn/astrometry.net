@@ -158,7 +158,7 @@ config: util/os-features-config.h util/makefile.os-features
 	$(MAKE) -C util config
 .PHONY: config
 
-RELEASE_VER := 0.43
+RELEASE_VER := 0.44
 SP_RELEASE_VER := 0.3
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
