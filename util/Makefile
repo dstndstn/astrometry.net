@@ -200,8 +200,8 @@ _sip.so: sip-utils.o gslutils.o sip.o starutil.o mathutil.o sip_qfits.o \
 _healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o errors.o ioutils.o bl.o log.o tic.o os-features.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
-util.py util_wrap.c: util.i $(ANUTILS_H)
-	swig -python -I. $<
+#util.py util_wrap.c: util.i $(ANUTILS_H)
+#	swig -python -I. $<
 
 _util.so: util_wrap.c \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
