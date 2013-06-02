@@ -104,7 +104,7 @@ def get_image_type(infile):
 	if typeinfo is None:
 		return (None, None, 'Could not determine file type (does the file exist?): %s' % infile)
 	(ext,cmd) = get_cmd(typeinfo, imgcmds)
-	logging.debug('ext:', ext)
+	logging.debug('ext: %s' % ext)
 	# "file" recognizes some RAWs as TIFF, but tifftopnm can't read them...
 	# run "dcraw" here if the type is TIFF.
 	if ext == tiffext and is_raw(infile):
@@ -192,7 +192,7 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 		# we might rename this file later, so don't add it to the list of
 		# tempfiles to delete until later...
 		os.close(f)
-		logging.debug('temporary output file: ', outfile)
+		logging.debug('temporary output file: %s' % outfile)
 
 	if ext == fitsext and extension:
 		cmd = an_fitstopnm_ext_cmd % extension

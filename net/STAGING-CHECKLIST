@@ -5,6 +5,15 @@
 
 (0.) Become nova@oven.
 
+(0.5) Merge any changes made on the current "nova" branch into trunk:
+
+    cd ~/nova
+    svn log -v | less  # look for tagged rev and any changes;
+
+    cd ~/supernova
+    svn merge -r 22222:HEAD ^/tags/nova/2011-01-01-1
+    svn commit -m "merged naughty change on nova tag"
+
 (1.) Tag the code:
 
     cd ~/supernova

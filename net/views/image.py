@@ -290,6 +290,11 @@ def annotated_image(req, jobid=None, size='full'):
     os.environ['PYTHONPATH'] = ':'.join(sys.path)
 
     logmsg('Running: ' + cmd)
+    #logmsg('PYTHONPATH: ' + os.environ['PYTHONPATH'])
+    #logmsg('PATH: ' + os.environ['PATH'])
+    #(rtn,out,err) = run_command('which plotann.py')
+    #logmsg('which plotann.py: ' + out)
+
     (rtn, out, err) = run_command(cmd)
     if rtn:
         logmsg('out: ' + out)
