@@ -670,11 +670,10 @@ pyplotstuff: _plotstuff_c.so
 plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) $(ANUTILS_DIR)/sip.h $(ANUTILS_DIR)/anwcs.h
 	swig -python $(ANUTILS_INC) $(QFITS_INC) $<
 
-_plotstuff_c.so: plotstuff_wrap.c setup.py $(PLOTSTUFF) $(CATS_LIB) \
+_plotstuff_c.so: plotstuff_wrap.c $(PLOTSTUFF) $(CATS_LIB) \
 		$(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	python setup.py build --force --build-base build --build-platlib build/lib
-	cp build/lib/_plotstuff_c.so $@
+	python setup.py -v build_ext -v --inplace
 
 plotxy.o: plotxy.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) -c -o $@ $<

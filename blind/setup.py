@@ -4,11 +4,13 @@ import sys
 path = os.path.abspath(__file__)
 dotdot = os.path.dirname(os.path.dirname(path))
 sys.path.append(dotdot)
-#sys.path.append(os.path.dirname(dotdot))
-#print 'sys.path is', sys.path
+
+# add ../util
+sys.path.append(os.path.join(dotdot, 'util'))
+from an_build_ext import an_build_ext
+from setuputils import *
+
 from distutils.core import setup, Extension
-#from astrometry.util.setuputils import *
-from util.setuputils import *
 
 import numpy
 numpy_inc = numpy.get_include()
@@ -24,7 +26,7 @@ compile_args = []
 
 # Pull "-I/dir" into extra_inc_dirs
 for w in (' '.join([netpbm_inc, jpeg_inc])).split(' '):
-	print 'word "%s"' % w
+	#print 'word "%s"' % w
 	if len(w) == 0:
 		continue
 	if w.startswith('-I'):
@@ -37,7 +39,7 @@ extra_link_libs = []
 link_args = []
 
 for w in (' '.join([netpbm_lib, jpeg_lib])).split(' '):
-	print 'word "%s"' % w
+	#print 'word "%s"' % w
 	if len(w) == 0:
 		continue
 	if w.startswith('-L'):
@@ -76,7 +78,8 @@ c_module = Extension('_plotstuff_c',
 		     extra_link_args=link_args,
 					 )
 
-setup(name = 'Plotting stuff in python',
+setup(cmdclass={'build_ext': an_build_ext},
+	  name = 'Plotting stuff in python',
       version = '1.0',
       description = 'Just what you need, another plotting package!',
       author = 'Astrometry.net (Dustin Lang)',
