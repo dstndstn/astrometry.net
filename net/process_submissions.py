@@ -508,7 +508,8 @@ def create_image(df):
         img.height = h
         img.save()
     except:
-        logmsg('file is not an image file')
+        import traceback
+        logmsg('file is not an image file: ' + traceback.format_exc())
         img = None
     return img
 

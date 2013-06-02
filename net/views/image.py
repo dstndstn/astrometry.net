@@ -728,7 +728,7 @@ def new_fits_file(req, jobid=None):
         ## FIXME -- could convert other formats to FITS...
         pnmfn = get_temp_file()
         fitsinfn = get_temp_file()
-        cmd = 'image2pnm.py -i %s -o %s && pnmtofits %s > %s' % (infn, pnmfn, pnmfn, fitsinfn)
+        cmd = 'image2pnm.py -i %s -o %s && an-pnmtofits %s > %s' % (infn, pnmfn, pnmfn, fitsinfn)
         logmsg('Running: ' + cmd)
         (rtn, out, err) = run_command(cmd)
         if rtn:
