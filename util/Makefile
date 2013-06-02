@@ -217,11 +217,9 @@ py: $(PYUTIL)
 index_wrap.c: index.i index.h
 	swig -python -I. $<
 
-_index_util.so _index_c.so: index_wrap.c index_pyutils.c setup-index.py \
+_index_util.so _index_c.so: index_wrap.c index_pyutils.c \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-	python setup-index.py build --force --build-base build --build-platlib build/lib
-	cp build/lib/_index_c.so _index_c.so
-	cp build/lib/_index_util.so _index_util.so
+	python setup-index.py build_ext --inplace
 
 coadd: coadd-main.o $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) $(WCS_LIB_DEP)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
