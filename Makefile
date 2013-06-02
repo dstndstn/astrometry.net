@@ -176,7 +176,7 @@ release:
 
 	(cd $(RELEASE_DIR)/util  && swig -python -I. util.i)
 	(cd $(RELEASE_DIR)/util  && swig -python -I. index.i)
-	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../qfits-an-src plotstuff.i)
+	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../qfits-an/src plotstuff.i)
 	(cd $(RELEASE_DIR)/sdss  && swig -python -I. cutils.i)
 
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
