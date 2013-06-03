@@ -48,12 +48,11 @@ class RaDecToRcf(object):
 
 			if self.kd is None:
 				self.kd = spherematch_c.kdtree_build(self.sdssxyz)
-
 			rds = array([x for x in broadcast(ra,dec)])
 			xyz = radectoxyz(rds[:,0], rds[:,1]).astype(double)
 			kd2 = spherematch_c.kdtree_build(xyz)
 			notself = False
-			inds,D = spherematch_c.match(self.kd, kd2, np.sqrt(d2), notself)
+			inds,D = spherematch_c.match(self.kd, kd2, np.sqrt(d2), notself,True)
 			if len(inds) == 0:
 				return []
 			spherematch_c.kdtree_free(kd2)
