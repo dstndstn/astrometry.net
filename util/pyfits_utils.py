@@ -600,18 +600,18 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 	else:
 		if columns is None:
 			columns = data.dtype.names
-			for c in columns:
-				#print 'reading column "%s"' % c
-				col = data.field(c)
-				if rows is not None:
-					col = col[rows]
-				if normalize:
-					col = normalize_column(col)
-				if column_map is not None:
-					c = column_map.get(c, c)
-				if lower:
-					c = c.lower()
-				T.set(c, col)
+		for c in columns:
+			#print 'reading column "%s"' % c
+			col = data.field(c)
+			if rows is not None:
+				col = col[rows]
+			if normalize:
+				col = normalize_column(col)
+			if column_map is not None:
+				c = column_map.get(c, c)
+			if lower:
+				c = c.lower()
+			T.set(c, col)
 
 	return T
 

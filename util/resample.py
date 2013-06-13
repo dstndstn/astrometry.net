@@ -32,8 +32,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 	# Adapted from detection/sdss-demo.py
 
 	### DEBUG
-	ps = PlotSequence('resample')
-	#ps = None
+	#ps = PlotSequence('resample')
+	ps = None
 
 	H,W = int(targetwcs.imageh), int(targetwcs.imagew)
 	h,w = int(      wcs.imageh), int(      wcs.imagew)
@@ -61,8 +61,14 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 		# spline inputs: pixel coords in the 'target' image
 		margin = 20
 		step = 25
-		xx = np.arange(max(0, x0-margin), min(W, x1+margin+step), step)
-		yy = np.arange(max(0, y0-margin), min(H, y1+margin+step), step)
+		xlo = max(0, x0-margin)
+		xhi = min(W, x1+margin)
+		nx = np.ceil(float(xhi - xlo) / step) + 1
+		xx = np.linspace(xlo, xhi, nx)
+		ylo = max(0, y0-margin)
+		yhi = min(H, y1+margin)
+		ny = np.ceil(float(yhi - ylo) / step) + 1
+		yy = np.linspace(ylo, yhi, ny)
 
 		if ps:
 			def expand_axes():
@@ -165,8 +171,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 			fxi[i,:] = x - 1.
 			fyi[i,:] = y - 1.
 
-	print 'ixo', ixo.shape
-	print 'iyo', iyo.shape
+	# print 'ixo', ixo.shape
+	# print 'iyo', iyo.shape
 	# print 'fxi', fxi.shape
 	# print 'fyi', fyi.shape
 
