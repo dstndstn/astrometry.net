@@ -138,9 +138,9 @@ $(BACKEND_LIB): $(BACKEND_OBJS)
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
-$(BACKEND_SO): $(BACKEND_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(LIBKD_LIB) \
+$(BACKEND_SO): $(BACKEND_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB) $(GSL_LIB)
-	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
+	$(CC) $(SHAREDLIBFLAGS) -o $@ $^ $(LDLIBS)
 
 # old and miscellaneous executables that aren't part of the pipeline.
 OLDEXECS := plotquads rawstartree checkquads
@@ -415,8 +415,7 @@ wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += wcs-rd2xy-main.o
 
-wcs-pv2sip: wcs-pv2sip.o tweak.o \
-		$(ANLIBS) $(GSL_LIB)
+wcs-pv2sip: wcs-pv2sip.o tweak.o $(ANLIBS)
 ALL_OBJ += wcs-pv2sip.o
 
 hpgrid: hpgrid.o $(ANUTILS_LIB) $(GSL_LIB)

@@ -15,8 +15,12 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 GSL_DIR := $(BASEDIR)/gsl-an
-GSL_INC := -I$(GSL_DIR)
-GSL_LIB := $(GSL_DIR)/libgsl-an.a
+
+# flags needed to compile gsl
+GSL_INC ?= -I$(GSL_DIR)
+
+# flags needed to link gsl
+GSL_LIB ?= $(GSL_DIR)/libgsl-an.a
 
 $(GSL_LIB):
 	$(MAKE) -C $(GSL_DIR)
