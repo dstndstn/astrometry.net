@@ -197,9 +197,11 @@ ifeq ($(OPTIMIZE),yes)
   FLAGS_DEF += -DNDEBUG
 
 else
-  # debuggy!
-  FLAGS_DEF += -O0
-  FLAGS_DEF += -g
+  ifeq ($(OPTIMIZE),no)
+    # debuggy!
+    FLAGS_DEF += -O0
+    FLAGS_DEF += -g
+  endif
 
 endif
 
