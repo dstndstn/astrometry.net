@@ -581,16 +581,20 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 
 	if fitsio and not (type(data) == pyfits.core.FITS_rec):
 		dd = data.read(rows=rows, columns=columns, lower=True)
+		if dd is None:
+			return None
+
 		if columns is None:
 			try:
 				columns = data.get_colnames()
 			except:
 				columns = data.colnames
 
-			columns = [c.lower() for c in columns]
-					
+			if lower:
+				columns = [c.lower() for c in columns]
+
 		for c in columns:
-			X = dd[c]
+			X = dd[c.lower()]
 			if column_map is not None:
 				c = column_map.get(c, c)
 			if lower:
