@@ -158,11 +158,11 @@ def cut_array(val, I, name=None, to=None):
 
 	print 'Error slicing array:'
 	print 'array is'
-	print '  type:', type(val)
-	print '  ', val
+	print '	 type:', type(val)
+	print '	 ', val
 	print 'cut is'
-	print '  type:', type(I)
-	print '  ', I
+	print '	 type:', type(I)
+	print '	 ', I
 	raise Exception('Error in cut_array')
 
 class tabledata(object):
@@ -384,7 +384,7 @@ class tabledata(object):
 			except Exception as e:
 				print 'exception appending element "%s"' % name
 				#print 'exception:', e
-                #raise Exception('exception appending element "%s"' % name)
+				#raise Exception('exception appending element "%s"' % name)
 
 	def write_to(self, fn, columns=None, header='default', primheader=None,
 				 use_fitsio=True):
@@ -409,7 +409,9 @@ class tabledata(object):
 			#for a,c in zip(arrays, columns):
 			#	print 'Writing:', c, 'shape', getattr(a, 'shape', None), 'type', (getattr(a, 'dtype', type(a)))
 
-			fits.write(arrays, names=columns)
+			if header == 'default':
+				header = None
+			fits.write(arrays, names=columns, header=header)
 			return
 
 
