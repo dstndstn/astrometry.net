@@ -228,6 +228,8 @@ class Client(object):
             print 'Machine Tags:', result
             result = self.send_request('jobs/%s/objects_in_field' % job_id)
             print 'Objects in field:', result
+            result = self.send_request('jobs/%s/annotations' % job_id)
+            print 'Annotations:', result
             result = self.send_request('jobs/%s/info' % job_id)
             print 'Calibration:', result
 

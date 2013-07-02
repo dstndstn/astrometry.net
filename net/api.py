@@ -400,7 +400,6 @@ def annotations_in_field(req, job_id):
 
     return HttpResponseJson({
         'annotations': jobjs})
-    )
     
     
 @csrf_exempt
