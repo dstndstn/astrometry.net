@@ -243,9 +243,9 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 
 		off = np.arange(-L, L+1)
 		for oy in off:
-			fy = lanczos_filter(L, oy + dy)
+			fy = lanczos_filter(L, -oy + dy)
 			for ox in off:
-				fx = lanczos_filter(L, ox + dx)
+				fx = lanczos_filter(L, -ox + dx)
 				for lacc,im in zip(laccs, Limages):
 					lacc += fx * fy * im[np.clip(iyi + oy, 0, h-1),
 										 np.clip(ixi + ox, 0, w-1)]
