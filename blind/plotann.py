@@ -62,14 +62,14 @@ def get_annotations(wcs, opt):
         for i in range(len(T)):
             if not wcs.is_inside(T.ra[i], T.dec[i]):
                 continue
-            annobjs.append((T.ra[i], T.dec[i], 'UZC %s' % T.zname[i]))
+            annobjs.append((T.ra[i], T.dec[i], 'uzc', ['UZC %s' % T.zname[i]]))
 
     if opt.abellcat:
         T = fits_table(opt.abellcat)
         for i in range(len(T)):
             if not wcs.is_inside(T.ra[i], T.dec[i]):
                 continue
-            annobjs.append((T.ra[i], T.dec[i], 'Abell %i' % T.aco[i]))
+            annobjs.append((T.ra[i], T.dec[i], 'abell', ['Abell %i' % T.aco[i]]))
 
     if opt.t2cat:
 
@@ -78,9 +78,83 @@ def get_annotations(wcs, opt):
         for r,d,t1,t2,t3 in zip(tra,tdec, T.tyc1[I2], T.tyc2[I2], T.tyc3[I2]):
             if not wcs.is_inside(r, d):
                 continue
-            annobjs.append((r, d, 'Tycho-2 %i-%i-%i' % (t1,t2,t3)))
+            annobjs.append((r, d, 'tycho2', ['Tycho-2 %i-%i-%i' % (t1,t2,t3)]))
 
     return annobjs
+
+
+def get_annotations_for_wcs(wcs, opt):
+    anns = get_annotations(wcs, opt)
+    # NGC/IC 2000
+    circs = []
+    if opt.ngcnames:
+        T = fits_table(opt.ngcnames)
+        T.cut(np.array([len(s) for s in T.name]))
+        T.isngc = np.array([not s.startswith('I') for s in T.name])
+        T.num = np.array([int(s.replace('I','').strip()) for s in T.name])
+        namemap = {}
+        for X,nm in zip(zip(T.isngc, T.num), T.object):
+            if not X in namemap:
+                namemap[X] = []
+            namemap[X].append(nm)
+    else:
+        namemap = None
+    # HACK
+    for nm,isngc,cat in [('NGC', True, opt.ngccat), ('IC', False, opt.iccat)]:
+        if not cat:
+            continue
+        T = fits_table(cat)
+        num = T.get(nm.lower() + 'num')
+        for i in range(len(T)):
+            # FIXME -- include NGC object radius...?
+            if not wcs.is_inside(float(T.ra[i]), float(T.dec[i])):
+                continue
+            names = ['%s %i' % (nm, num[i])]
+            if namemap:
+                more = namemap.get((isngc, num[i]), None)
+                if more:
+                    names += more #' / '.join(more)
+            if T.radius[i]:
+                circs.append((T.ra[i], T.dec[i], nm.lower(), names, T.radius[i]))
+            else:
+                anns.append((T.ra[i], T.dec[i], nm.lower(), names))
+
+    if opt.hdcat:
+        ra,dec,I = match_kdtree_catalog(wcs, opt.hdcat)
+        for r,d,i in zip(ra,dec,I):
+            if not wcs.is_inside(r, d):
+                continue
+            # good ol' HD catalog and its sensible numbering scheme
+            anns.append((r, d, 'hd', ['HD %i' % (i+1)]))
+
+            #print 'Annotation objects:', anns
+            #print 'Circles:', circs
+
+    jobjs = []
+    for r,d,typ,names in anns:
+        ok,x,y = wcs.radec2pixelxy(float(r),float(d))
+        # objs.append('{ "type" : "%s", ' % typ +
+        #             '  "names": [ "%s" ], ' % '", "'.join(names) +
+        #             '  "pixelx": %g, ' % x +
+        #             '  "pixely": %g, ' % y +
+        #             '  "radius": 0 }')
+        jobjs.append(dict(type=typ, names=names, pixelx=x, pixely=y,
+                          radius=0.))
+    for r,d,typ,names,rad in circs:
+        ok,x,y = wcs.radec2pixelxy(float(r),float(d))
+        pixscale = wcs.pixel_scale()
+        pixrad = (rad * 3600.) / pixscale
+        # objs.append('{ "type" : "%s", ' % typ +
+        #             '  "names": [ "%s" ], ' % '", "'.join(names) +
+        #             '  "pixelx": %g, ' % x +
+        #             '  "pixely": %g, ' % y +
+        #             '  "radius": %g }' % pixrad)
+        jobjs.append(dict(type=typ, names=names, pixelx=x, pixely=y,
+                          radius=pixrad))
+
+    return jobjs
+    
+
 
 if __name__ == '__main__':
     parser = OptionParser('usage: %prog <wcs.fits file> <image file> <output.{jpg,png,pdf} file>\n' +
@@ -149,52 +223,10 @@ if __name__ == '__main__':
     if dojson:
         from astrometry.util.util import anwcs
         wcs = anwcs(wcsfn,0)
-        anns = get_annotations(wcs, opt)
-        circs = []
-        if opt.ngcnames:
-            T = fits_table(opt.ngcnames)
-            T.cut(np.array([len(s) for s in T.name]))
-            T.isngc = np.array([not s.startswith('I') for s in T.name])
-            T.num = np.array([int(s.replace('I','').strip()) for s in T.name])
-            namemap = {}
-            for X,nm in zip(zip(T.isngc, T.num), T.object):
-                if not X in namemap:
-                    namemap[X] = []
-                namemap[X].append(nm)
-        else:
-            namemap = None
-            
-        # HACK
-        for nm,isngc,cat in [('NGC', True, opt.ngccat), ('IC', False, opt.iccat)]:
-            if not cat:
-                continue
-            T = fits_table(cat)
-            num = T.get(nm.lower() + 'num')
-            for i in range(len(T)):
-                # FIXME -- include NGC object radius...?
-                if not wcs.is_inside(float(T.ra[i]), float(T.dec[i])):
-                    continue
-                name = '%s %i' % (nm, num[i])
-                if namemap:
-                    more = namemap.get((isngc, num[i]), None)
-                    if more:
-                        name += ' / '.join(more)
-                if T.radius[i]:
-                    circs.append((T.ra[i], T.dec[i], name, T.radius[i]))
-                else:
-                    anns.append((T.ra[i], T.dec[i], name))
-
-        if opt.hdcat:
-            ra,dec,I = match_kdtree_catalog(wcs, opt.hdcat)
-            for r,d,i in zip(ra,dec,I):
-                if not wcs.is_inside(r, d):
-                    continue
-                # good ol' HD catalog and its sensible numbering scheme
-                anns.append((r, d, 'HD %i' % (i+1)))
-
-        print 'Annotation objects:', anns
-        print 'Circles:', circs
-                
+        jobjs = get_annotations_for_wcs(wcs, opt)
+        import simplejson
+        json = simplejson.dumps(jobjs)
+        print json
         sys.exit(0)
                 
     
@@ -236,7 +268,8 @@ if __name__ == '__main__':
         ann.hd_catalog = opt.hdcat
 
     anns = get_annotations(plot.wcs, opt)
-    for r,d,name in anns:
+    for r,d,typ,names in anns:
+        name = ' / '.join(names)
         ann.add_target(r, d, name)
 
     plot.color = opt.textcolor
