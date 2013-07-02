@@ -302,7 +302,9 @@ def annotated_image(req, jobid=None, size='full'):
         return HttpResponse('plot failed: ' + err + "<br><pre>" + out + "</pre><br><pre>" + err + "</pre>")
     f = open(annfn)
     res = HttpResponse(f)
-    res['Content-Type'] = 'image/png'
+    #res['Content-Type'] = 'image/png'
+    # plotann.py produces jpeg by default
+    res['Content-Type'] = 'image/jpeg'
     return res
 
 def onthesky_image(req, zoom=None, calid=None):

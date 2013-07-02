@@ -8,6 +8,7 @@
 (0.5) Merge any changes made on the current "nova" branch into trunk:
 
     cd ~/nova
+    svn up
     svn log -v | less  # look for tagged rev and any changes;
 
     cd ~/supernova
@@ -17,6 +18,7 @@
 (1.) Tag the code:
 
     cd ~/supernova
+    svn up
     svn copy -m "tag" . ^/tags/nova/2011-06-29-1 
 
 (with today's date, and an appropriate release number)
