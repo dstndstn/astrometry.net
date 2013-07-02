@@ -376,7 +376,7 @@ static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
   //kdtree_inverse_permutation(kd, 
 
   for (k=0; k<N; k++) {
-    int ii = I[k];
+	long ii = I[k];
     // ?
     //ii = kdtree_permute(kd, ii);
     kdtree_copy_data_double(kd, ii, 1, X);
@@ -389,6 +389,52 @@ static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
   return rtn;
 }
 
+
+static PyObject* spherematch_kdtree_permute(PyObject* self, PyObject* args) {
+  PyArrayObject* pyX;
+  long* X;
+  PyObject* rtn;
+  npy_intp dims[1];
+  long i;
+  kdtree_t* kd;
+  long k, N;
+  long* I;
+  PyObject* pyO;
+  PyObject* pyI;
+  PyArray_Descr* dtype = PyArray_DescrFromType(NPY_INT);
+  int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+
+  if (!PyArg_ParseTuple(args, "lO", &i, &pyO)) {
+    PyErr_SetString(PyExc_ValueError, "need two args: kdtree identifier (int), index array (numpy array of ints)");
+    return NULL;
+  }
+  // Nasty!
+  kd = (kdtree_t*)i;
+
+  Py_INCREF(dtype);
+  pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
+  if (!pyI) {
+    PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
+    Py_XDECREF(dtype);
+  }
+  N = PyArray_DIM(pyI, 0);
+
+  dims[0] = N;
+
+  pyX = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
+  X = PyArray_DATA(pyX);
+  I = PyArray_DATA(pyI);
+
+  for (k=0; k<N; k++) {
+	long ii = I[k];
+	X[k] = kdtree_permute(kd, ii);
+  }
+  Py_DECREF(pyI);
+  Py_DECREF(dtype);
+  rtn = Py_BuildValue("O", pyX);
+  Py_DECREF(pyX);
+  return rtn;
+}
 
 
 static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
@@ -522,6 +568,9 @@ static PyMethodDef spherematchMethods[] = {
 
     {"kdtree_get_positions", spherematch_kdtree_get_data, METH_VARARGS,
      "Retrieve the positions of given indices in this tree (np array of ints)" },
+
+	{"kdtree_permute", spherematch_kdtree_permute, METH_VARARGS,
+	 "Apply kd-tree permutation array to (get from kd-tree indices back to original)"},
 
     { "match", spherematch_match, METH_VARARGS,
       "find matching data points" },
