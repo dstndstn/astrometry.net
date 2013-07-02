@@ -353,6 +353,57 @@ def objects_in_field(req, job_id):
     )
 
 @csrf_exempt
+def annotations_in_field(req, job_id):
+    job = get_object_or_404(Job, pk=job_id)
+    if not job.calibration:
+        return HttpResponseJson({
+            'error':'no calibration data available for job %d' % int(job_id)
+        })
+    cal = job.calibration
+    wcsfn = cal.get_wcs_file()
+
+    class OptDuck(object):
+        pass
+    
+    from astrometry.util.util import anwcs
+    import astrometry.blind.plotann
+    wcs = anwcs(wcsfn,0)
+
+    catdir = settings.CAT_DIR
+    uzcfn = os.path.join(catdir, 'uzc2000.fits')
+    abellfn = os.path.join(catdir, 'abell-all.fits')
+    ngcfn = os.path.join(catdir, 'ngc2000.fits')
+    ngcnamesfn = os.path.join(catdir, 'ngc2000name.fits')
+    icfn = os.path.join(catdir, 'ic2000.fits')
+    brightfn = os.path.join(catdir, 'brightstars.fits')
+    hdfn = settings.HENRY_DRAPER_CAT
+    tycho2fn = settings.TYCHO2_KD
+    
+    opt = plotann.get_empty_opts()
+
+    rad = cal.get_radius()
+
+    # These are the same limits used in views/image.py for annotations
+    if rad < 1.:
+        opt.abellcat = abellfn
+        opt.hdcat = hdfn
+    if rad < 0.25:
+        opt.t2cat = tycho2fn
+    if rad < 10:
+        opt.ngc = True
+        opt.ngccat = ngcfn
+        opt.ngcname = ngcnamesfn
+        opt.iccat = icfn
+    opt.brightcat = brightfn
+    
+    jobjs = plotann.get_annotations_for_wcs(wcs, opt)
+
+    return HttpResponseJson({
+        'annotations': jobjs})
+    )
+    
+    
+@csrf_exempt
 def job_info(req, job_id):
     job = get_object_or_404(Job, pk=job_id)
     ui = job.user_image

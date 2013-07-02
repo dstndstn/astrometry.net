@@ -99,7 +99,7 @@ def get_annotations_for_wcs(wcs, opt):
             namemap[X].append(nm)
     else:
         namemap = None
-    # HACK
+
     for nm,isngc,cat in [('NGC', True, opt.ngccat), ('IC', False, opt.iccat)]:
         if not cat:
             continue
@@ -127,34 +127,46 @@ def get_annotations_for_wcs(wcs, opt):
             # good ol' HD catalog and its sensible numbering scheme
             anns.append((r, d, 'hd', ['HD %i' % (i+1)]))
 
-            #print 'Annotation objects:', anns
-            #print 'Circles:', circs
-
+    if opt.brightcat:
+        T = fits_table(opt.brightcat)
+        for r,d,n1,n2 in zip(T.ra, T.dec, T.name1, T.name2):
+            if not wcs.is_inside(r, d):
+                continue
+            names = [n1]
+            if len(n2.strip()):
+                names.append(n2.strip())
+            anns.append((r, d, 'bright', names))
+            
     jobjs = []
     for r,d,typ,names in anns:
         ok,x,y = wcs.radec2pixelxy(float(r),float(d))
-        # objs.append('{ "type" : "%s", ' % typ +
-        #             '  "names": [ "%s" ], ' % '", "'.join(names) +
-        #             '  "pixelx": %g, ' % x +
-        #             '  "pixely": %g, ' % y +
-        #             '  "radius": 0 }')
         jobjs.append(dict(type=typ, names=names, pixelx=x, pixely=y,
                           radius=0.))
     for r,d,typ,names,rad in circs:
         ok,x,y = wcs.radec2pixelxy(float(r),float(d))
         pixscale = wcs.pixel_scale()
         pixrad = (rad * 3600.) / pixscale
-        # objs.append('{ "type" : "%s", ' % typ +
-        #             '  "names": [ "%s" ], ' % '", "'.join(names) +
-        #             '  "pixelx": %g, ' % x +
-        #             '  "pixely": %g, ' % y +
-        #             '  "radius": %g }' % pixrad)
         jobjs.append(dict(type=typ, names=names, pixelx=x, pixely=y,
                           radius=pixrad))
 
     return jobjs
-    
 
+class OptDuck(object):
+    pass
+
+def get_empty_opts():
+    opt = OptDuck()
+    opt.ngc = False
+    opt.bright = False
+    opt.brightcat = None
+    opt.hdcat = None
+    opt.uzccat = None
+    opt.t2cat = None
+    opt.abellcat = None
+    opt.ngccat = None
+    opt.ngcnames = None
+    opt.iccat = None
+    return opt
 
 if __name__ == '__main__':
     parser = OptionParser('usage: %prog <wcs.fits file> <image file> <output.{jpg,png,pdf} file>\n' +
@@ -178,6 +190,8 @@ if __name__ == '__main__':
                       help='Path to ngc2000names.fits for aliases')
     parser.add_option('--iccat', dest='iccat',
                       help='Path to IC2000 catalog ic2000.fits -- ONLY USED FOR JSON OUTPUT!')
+    parser.add_option('--brightcat', dest='brightcat',
+                      help='Path to bright-star catalog -- ONLY USED FOR JSON OUTPUT!')
 
     parser.add_option('--target', '-t', dest='target', action='append',
                       default=[],
