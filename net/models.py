@@ -626,7 +626,6 @@ class Calibration(models.Model):
         return s
 
     def get_wcs_file(self):
-        logmsg('Calibration: job is', self.job)
         return self.job.get_wcs_file()
 
     def wcs(self):

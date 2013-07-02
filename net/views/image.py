@@ -239,9 +239,7 @@ def annotated_image(req, jobid=None, size='full'):
     annfn = get_temp_file()
 
     #datadir = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)), 'data')
-    catdir = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)),
-                          'catalogs')
-    
+    catdir = settings.CAT_DIR
     uzcfn = os.path.join(catdir, 'uzc2000.fits')
     abellfn = os.path.join(catdir, 'abell-all.fits')
 

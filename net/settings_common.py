@@ -9,6 +9,10 @@ TIME_FORMAT = 'H:i:s\Z'
 
 WEB_DIR = os.path.realpath(os.path.dirname(astrometry.net.__file__)) + '/'
 
+# Catalogs
+CAT_DIR = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)),
+                       'catalogs')
+
 SDSS_TILE_DIR = os.path.join(WEB_DIR, 'sdss-tiles')
 GALEX_JPEG_DIR = '/data1/GALEX-jpegs'
 HENRY_DRAPER_CAT = os.path.join(WEB_DIR, 'hd.fits')

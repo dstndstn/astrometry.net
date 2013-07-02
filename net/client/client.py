@@ -382,14 +382,15 @@ if __name__ == '__main__':
             time.sleep(5)
 
         if success:
-            result = c.send_request('jobs/%s/calibration' % opt.job_id)
-            print 'Calibration:', result
-            result = c.send_request('jobs/%s/tags' % opt.job_id)
-            print 'Tags:', result
-            result = c.send_request('jobs/%s/machine_tags' % opt.job_id)
-            print 'Machine Tags:', result
-            result = c.send_request('jobs/%s/objects_in_field' % opt.job_id)
-            print 'Objects in field:', result
+            c.job_status(opt.job_id)
+            # result = c.send_request('jobs/%s/calibration' % opt.job_id)
+            # print 'Calibration:', result
+            # result = c.send_request('jobs/%s/tags' % opt.job_id)
+            # print 'Tags:', result
+            # result = c.send_request('jobs/%s/machine_tags' % opt.job_id)
+            # print 'Machine Tags:', result
+            # result = c.send_request('jobs/%s/objects_in_field' % opt.job_id)
+            # print 'Objects in field:', result
 
         opt.job_id = None
         opt.sub_id = None
