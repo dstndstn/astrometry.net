@@ -10,13 +10,14 @@ TIME_FORMAT = 'H:i:s\Z'
 WEB_DIR = os.path.realpath(os.path.dirname(astrometry.net.__file__)) + '/'
 
 # Catalogs
-CAT_DIR = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)),
+CAT_DIR = os.path.join(os.path.dirname(os.path.dirname(WEB_DIR)),
                        'catalogs')
 
 SDSS_TILE_DIR = os.path.join(WEB_DIR, 'sdss-tiles')
 GALEX_JPEG_DIR = '/data1/GALEX-jpegs'
-HENRY_DRAPER_CAT = os.path.join(WEB_DIR, 'hd.fits')
+#HENRY_DRAPER_CAT = os.path.join(WEB_DIR, 'hd.fits')
 
+HENRY_DRAPER_CAT = '/data1/catalogs-fits/HD/hd2.fits'
 TYCHO2_KD = '/data2/nova/tycho2.kd'
 
 DATADIR = os.path.join(WEB_DIR, 'data', 'files')

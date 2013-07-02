@@ -2,6 +2,13 @@ import base64
 
 from functools import wraps
 
+if __name__ == '__main__':
+    import os
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+    import sys
+    fn = os.path.dirname(os.path.dirname(__file__))
+    sys.path.append(fn)
+
 from django.contrib import auth
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse, HttpResponseBadRequest
@@ -352,23 +359,10 @@ def objects_in_field(req, job_id):
         'objects_in_field':json_sky_objects}
     )
 
-@csrf_exempt
-def annotations_in_field(req, job_id):
-    job = get_object_or_404(Job, pk=job_id)
-    if not job.calibration:
-        return HttpResponseJson({
-            'error':'no calibration data available for job %d' % int(job_id)
-        })
-    cal = job.calibration
+def get_anns(cal):
     wcsfn = cal.get_wcs_file()
-
-    class OptDuck(object):
-        pass
-    
     from astrometry.util.util import anwcs
-    import astrometry.blind.plotann
     wcs = anwcs(wcsfn,0)
-
     catdir = settings.CAT_DIR
     uzcfn = os.path.join(catdir, 'uzc2000.fits')
     abellfn = os.path.join(catdir, 'abell-all.fits')
@@ -379,10 +373,9 @@ def annotations_in_field(req, job_id):
     hdfn = settings.HENRY_DRAPER_CAT
     tycho2fn = settings.TYCHO2_KD
     
+    import astrometry.blind.plotann as plotann
     opt = plotann.get_empty_opts()
-
     rad = cal.get_radius()
-
     # These are the same limits used in views/image.py for annotations
     if rad < 1.:
         opt.abellcat = abellfn
@@ -397,7 +390,17 @@ def annotations_in_field(req, job_id):
     opt.brightcat = brightfn
     
     jobjs = plotann.get_annotations_for_wcs(wcs, opt)
+    return jobjs
 
+@csrf_exempt
+def annotations_in_field(req, job_id):
+    job = get_object_or_404(Job, pk=job_id)
+    if not job.calibration:
+        return HttpResponseJson({
+            'error':'no calibration data available for job %d' % int(job_id)
+        })
+    cal = job.calibration
+    jobjs = get_anns(cal)
     return HttpResponseJson({
         'annotations': jobjs})
     
@@ -466,3 +469,11 @@ def jobs_by_tag(req):
     return HttpResponseJson({
         'job_ids':job_ids}
     )
+
+
+
+
+if __name__ == '__main__':
+    job = Job.objects.get(id=12)
+    cal = job.calibration
+    print get_anns(cal)

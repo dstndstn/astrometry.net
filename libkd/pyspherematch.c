@@ -344,7 +344,7 @@ static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
   long i;
   kdtree_t* kd;
   int k, D, N;
-  long* I;
+  npy_int* I;
   PyObject* pyO;
   PyObject* pyI;
   PyArray_Descr* dtype = PyArray_DescrFromType(NPY_INT);
@@ -373,12 +373,8 @@ static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
   X = PyArray_DATA(pyX);
   I = PyArray_DATA(pyI);
 
-  //kdtree_inverse_permutation(kd, 
-
   for (k=0; k<N; k++) {
-	long ii = I[k];
-    // ?
-    //ii = kdtree_permute(kd, ii);
+    npy_int ii = I[k];
     kdtree_copy_data_double(kd, ii, 1, X);
     X += D;
   }
@@ -392,13 +388,13 @@ static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
 
 static PyObject* spherematch_kdtree_permute(PyObject* self, PyObject* args) {
   PyArrayObject* pyX;
-  long* X;
+  npy_int* X;
   PyObject* rtn;
   npy_intp dims[1];
   long i;
   kdtree_t* kd;
   long k, N;
-  long* I;
+  npy_int* I;
   PyObject* pyO;
   PyObject* pyI;
   PyArray_Descr* dtype = PyArray_DescrFromType(NPY_INT);
@@ -426,8 +422,9 @@ static PyObject* spherematch_kdtree_permute(PyObject* self, PyObject* args) {
   I = PyArray_DATA(pyI);
 
   for (k=0; k<N; k++) {
-	long ii = I[k];
-	X[k] = kdtree_permute(kd, ii);
+    npy_int ii = I[k];
+    //printf("Permute: ii=%i\n", ii);
+    X[k] = kdtree_permute(kd, ii);
   }
   Py_DECREF(pyI);
   Py_DECREF(dtype);

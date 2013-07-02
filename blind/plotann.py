@@ -43,8 +43,10 @@ def match_kdtree_catalog(wcs, catfn):
     I,J,d = trees_match(kd, kd2, r, permuted=False)
     # HACK
     #I2,J,d = trees_match(kd, kd2, r)
-    I2 = tree_permute(kd, I)
     xyz = spherematch_c.kdtree_get_positions(kd, I)
+    #print 'I', I
+    I2 = tree_permute(kd, I)
+    #print 'I2', I2
     tree_free(kd2)
     tree_close(kd)
     tra,tdec = xyztoradec(xyz)
@@ -72,7 +74,7 @@ def get_annotations(wcs, opt):
             annobjs.append((T.ra[i], T.dec[i], 'abell', ['Abell %i' % T.aco[i]]))
 
     if opt.t2cat:
-
+        #print 'Matching Tycho2...'
         tra,tdec,I2 = match_kdtree_catalog(wcs, opt.t2cat)
         T = fits_table(opt.t2cat, hdu=6)
         for r,d,t1,t2,t3 in zip(tra,tdec, T.tyc1[I2], T.tyc2[I2], T.tyc3[I2]):
@@ -120,6 +122,7 @@ def get_annotations_for_wcs(wcs, opt):
                 anns.append((T.ra[i], T.dec[i], nm.lower(), names))
 
     if opt.hdcat:
+        #print 'Matching HD...'
         ra,dec,I = match_kdtree_catalog(wcs, opt.hdcat)
         for r,d,i in zip(ra,dec,I):
             if not wcs.is_inside(r, d):
