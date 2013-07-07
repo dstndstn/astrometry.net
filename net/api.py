@@ -434,13 +434,14 @@ def job_info(req, job_id):
         cal = job.calibration
         (ra, dec, radius) = cal.get_center_radecradius()
         pixscale = cal.raw_tan.get_pixscale()
-        orient = cal.raw_tan.get_orientation()
+        orient = cal.get_orientation()
         result['calibration'] = {
             'ra':ra,
             'dec':dec,
             'radius':radius,
             'pixscale':pixscale,
             'orientation':orient,
+            'parity': cal.get_parity(),
             }
 
 
