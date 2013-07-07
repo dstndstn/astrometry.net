@@ -315,13 +315,14 @@ def calibration(req, job_id):
         cal = job.calibration
         (ra, dec, radius) = cal.get_center_radecradius()
         pixscale = cal.raw_tan.get_pixscale()
-        orient = cal.raw_tan.get_orientation()
+        orient = cal.get_orientation()
         return HttpResponseJson({
             'ra':ra,
             'dec':dec,
             'radius':radius,
             'pixscale':pixscale,
             'orientation':orient,
+            'parity': cal.get_parity(),
         })
     else:
         return HttpResponseJson({

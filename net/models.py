@@ -641,6 +641,12 @@ class Calibration(models.Model):
     def get_center_radecradius(self):
         return self.raw_tan.get_center_radecradius()
 
+    def get_orientation(self):
+        return self.raw_tan.get_orientation()
+
+    def get_parity(self):
+        return self.raw_tan.get_parity()
+
     def format_radec(self):
         r,d = self.get_center_radec()
         return '%.3f, %.3f' % (r, d)
@@ -669,7 +675,7 @@ class Calibration(models.Model):
         return '%.3g arcsec/pixel' % s
 
     def format_orientation(self):
-        o = self.raw_tan.get_orientation()
+        o = self.get_orientation()
         return 'Up is %.3g degrees E of N' % o
     
     def get_objs_in_field(self):

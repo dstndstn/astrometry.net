@@ -80,7 +80,16 @@ class TanWCS(models.Model):
         A = parity * self.cd21 - self.cd12
         orient = -math.degrees(math.atan2(A, T))
         return orient
-    
+
+    def get_parity(self):
+        # From sip.c:
+        det = self._det_cd()
+        if det >= 0:
+            parity = 1.
+        else:
+            parity = -1.
+        return parity
+
     # returns the field area in square degrees.
     def get_field_area(self):
         scale = self.get_pixscale() / 3600.0
