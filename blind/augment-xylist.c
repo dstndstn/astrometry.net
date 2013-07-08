@@ -34,6 +34,7 @@
 #include <unistd.h>
 #include <libgen.h>
 #include <getopt.h>
+#include <assert.h>
 
 #include "ioutils.h"
 #include "bl.h"
