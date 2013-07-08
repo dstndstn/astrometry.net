@@ -135,9 +135,23 @@ def get_annotations_for_wcs(wcs, opt):
         for r,d,n1,n2 in zip(T.ra, T.dec, T.name1, T.name2):
             if not wcs.is_inside(r, d):
                 continue
-            names = [n1]
-            if len(n2.strip()):
-                names.append(n2.strip())
+            print 'Bright-star catalog:', n1, n2
+            names = []
+            n1 = n1.strip()
+            if len(n1):
+                if '\\u' in n1:
+                    n1 = unicode(n1)
+                    import simplejson
+                    x = simplejson.dumps(n1)
+                    x = x.replace('\\\\','\\')
+                    n1 = simplejson.loads(x)
+                names.append(n1)
+            n2 = n2.strip()
+            if len(n2):
+                names.append(n2)
+            if len(names) == 0:
+                # skip unnamed stars
+                continue
             anns.append((r, d, 'bright', names))
             
     jobjs = []
