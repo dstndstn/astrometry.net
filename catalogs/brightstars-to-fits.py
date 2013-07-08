@@ -15,7 +15,7 @@ print j
 
 nm, nm2, rr, dd = [],[],[],[]
 for n1,n2,r,d,mag in j:
-    nm.append(simplejson.dumps(n1))
+    nm.append(simplejson.dumps(n1).replace('"',''))
     nm2.append(n2)
     rr.append(r)
     dd.append(d)
