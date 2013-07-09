@@ -28,6 +28,7 @@ j = j[:-1]
 print j
 
 nm, nm2, rr, dd = [],[],[],[]
+vmag = []
 for n1,n2,r,d,mag in j:
     #print 'n1', n1
     j = simplejson.dumps(n1)
@@ -36,7 +37,7 @@ for n1,n2,r,d,mag in j:
     #print '  ->', j
     nm.append(j.replace('"', ''))
     nm2.append(str(n2))
-
+    vmag.append(float(mag))
     rr.append(r)
     dd.append(d)
 
@@ -46,6 +47,7 @@ import numpy as np
 T = tabledata()
 T.name1 = np.array(nm)
 T.name2 = np.array(nm2)
+T.vmag = np.array(vmag)
 T.ra = np.array(rr)
 T.dec = np.array(dd)
 T.about()
