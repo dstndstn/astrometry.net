@@ -132,7 +132,7 @@ def get_annotations_for_wcs(wcs, opt):
 
     if opt.brightcat:
         T = fits_table(opt.brightcat)
-        for r,d,n1,n2 in zip(T.ra, T.dec, T.name1, T.name2):
+        for r,d,n1,n2,vmag in zip(T.ra, T.dec, T.name1, T.name2, T.vmag):
             if not wcs.is_inside(r, d):
                 continue
             print 'Bright-star catalog:', n1, n2
@@ -152,13 +152,18 @@ def get_annotations_for_wcs(wcs, opt):
             if len(names) == 0:
                 # skip unnamed stars
                 continue
-            anns.append((r, d, 'bright', names))
+            anns.append((r, d, 'bright', names, vmag))
             
     jobjs = []
-    for r,d,typ,names in anns:
+    for ann in anns:
+        r,d,typ,names = ann[:4]
         ok,x,y = wcs.radec2pixelxy(float(r),float(d))
-        jobjs.append(dict(type=typ, names=names, pixelx=x, pixely=y,
-                          radius=0.))
+        dd = dict(type=typ, names=names, pixelx=x, pixely=y,
+                  radius=0.)
+        if len(ann) == 5:
+            mag = ann[4]
+            dd.update(vmag=mag)
+        jobjs.append(dd)
     for r,d,typ,names,rad in circs:
         ok,x,y = wcs.radec2pixelxy(float(r),float(d))
         pixscale = wcs.pixel_scale()
