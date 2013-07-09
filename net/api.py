@@ -360,7 +360,7 @@ def objects_in_field(req, job_id):
         'objects_in_field':json_sky_objects}
     )
 
-def get_anns(cal):
+def get_anns(cal, nbright=0):
     wcsfn = cal.get_wcs_file()
     from astrometry.util.util import anwcs
     wcs = anwcs(wcsfn,0)
@@ -376,6 +376,8 @@ def get_anns(cal):
     
     import astrometry.blind.plotann as plotann
     opt = plotann.get_empty_opts()
+    if nbright:
+        opt.nbright = nbright
     rad = cal.get_radius()
     # These are the same limits used in views/image.py for annotations
     if rad < 1.:
@@ -401,7 +403,10 @@ def annotations_in_field(req, job_id):
             'error':'no calibration data available for job %d' % int(job_id)
         })
     cal = job.calibration
-    jobjs = get_anns(cal)
+    kwa = {}
+    if 'nbright' in req.GET:
+        kwa.update(nbright=int(req.GET['nbright']))
+    jobjs = get_anns(cal, **kwa)
     return HttpResponseJson({
         'annotations': jobjs})
     

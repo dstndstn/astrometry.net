@@ -132,6 +132,9 @@ def get_annotations_for_wcs(wcs, opt):
 
     if opt.brightcat:
         T = fits_table(opt.brightcat)
+        if opt.nbright:
+            T.cut(np.argsort(T.vmag))
+        nb = 0
         for r,d,n1,n2,vmag in zip(T.ra, T.dec, T.name1, T.name2, T.vmag):
             if not wcs.is_inside(r, d):
                 continue
@@ -153,6 +156,9 @@ def get_annotations_for_wcs(wcs, opt):
                 # skip unnamed stars
                 continue
             anns.append((r, d, 'bright', names, vmag))
+            nb += 1
+            if opt.nbright and nb >= opt.nbright:
+                break
             
     jobjs = []
     for ann in anns:
@@ -181,6 +187,7 @@ def get_empty_opts():
     opt.ngc = False
     opt.bright = False
     opt.brightcat = None
+    opt.nbright = 0
     opt.hdcat = None
     opt.uzccat = None
     opt.t2cat = None
@@ -214,6 +221,9 @@ if __name__ == '__main__':
                       help='Path to IC2000 catalog ic2000.fits -- ONLY USED FOR JSON OUTPUT!')
     parser.add_option('--brightcat', dest='brightcat',
                       help='Path to bright-star catalog -- ONLY USED FOR JSON OUTPUT!')
+
+    parser.add_option('--nbright', dest='nbright', type=int, default=0,
+                      help='Max number of bright stars')
 
     parser.add_option('--target', '-t', dest='target', action='append',
                       default=[],
