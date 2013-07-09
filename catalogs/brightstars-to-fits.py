@@ -3,11 +3,25 @@ import re
 
 lines = open('brightstars-data.c').readlines()
 l = ''.join(lines[3:-2]).replace('{','[').replace('}',']')
-#rex = re.compile(r'\\x(..)\\x(..)')
-#l = rex.sub(l, '\\u\1\2')
-l = re.sub(r'\\x(..)\\x(..)""', r'\u\1\2 ', l)
+
+def replace_unicode(match):
+    c1 = match.group(1)
+    c2 = match.group(2)
+    #s = eval('\\x%s\\x%s'
+    s = '"\\x%s\\x%s"' % (c1, c2)
+    #print 's', s
+    s = eval(s)
+    #print 's', s
+    d = s.decode('utf8')
+    return d + ' '
+
+l = re.sub(r'\\x(..)\\x(..)""', replace_unicode, l)
+#l = re.sub(r'\\x(..)\\x(..)""', r'\u\1\2 ', l)
+#l = re.sub(r'\\x(..)\\x(..)""', r'\x\1\x\2 ', l)
+#l = l.decode('utf8')
+
 l = '[' + l + '0 ]'
-#print l
+print l
 
 j = simplejson.loads(l)
 j = j[:-1]
@@ -15,8 +29,14 @@ print j
 
 nm, nm2, rr, dd = [],[],[],[]
 for n1,n2,r,d,mag in j:
-    nm.append(simplejson.dumps(n1).replace('"',''))
-    nm2.append(n2)
+    #print 'n1', n1
+    j = simplejson.dumps(n1)
+    #print 'json:', j
+    #j = str(j)
+    #print '  ->', j
+    nm.append(j.replace('"', ''))
+    nm2.append(str(n2))
+
     rr.append(r)
     dd.append(d)
 
@@ -28,4 +48,5 @@ T.name1 = np.array(nm)
 T.name2 = np.array(nm2)
 T.ra = np.array(rr)
 T.dec = np.array(dd)
+T.about()
 T.writeto('brightstars.fits')
