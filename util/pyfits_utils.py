@@ -583,6 +583,12 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
     T._columns = []
 
     if fitsio and not (type(data) == pyfits.core.FITS_rec):
+        # fitsio sorts the rows and de-duplicates them, so compute
+        # permutation vector 'I' to undo that.
+        I = None
+        if rows is not None:
+            rows,I = np.unique(rows, return_inverse=True)
+
         dd = data.read(rows=rows, columns=columns, lower=True)
         if dd is None:
             return None
@@ -598,6 +604,9 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 
         for c in columns:
             X = dd[c.lower()]
+            if I is not None:
+                # apply permutation
+                X = X[I]
             if column_map is not None:
                 c = column_map.get(c, c)
             if lower:
@@ -632,20 +641,25 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
         f = None
         if isinstance(forfn, str):
             f = open(forfn)
+            print 'Reading file', forfn
             data = f.read()
             f.close()
         else:
             data = forfn.read()
+            print 'Read', len(data), 'bytes'
     else:
         data = text
 
     # replace newline variations with a single newline character
+    print 'Replacing line endings'
     data = data.replace('\r\n','\n') # windows
     data = data.replace('\r','\n') # mac os
-
+    print 'Splitting lines'
     txtrows = data.split('\n')
-
-    txtrows = txtrows[skiplines:]
+    print 'Got', len(txtrows), 'lines'
+    if skiplines != 0:
+        txtrows = txtrows[skiplines:]
+        print 'Skipped', skiplines, 'kept', len(txtrows)
 
     if headerline is None:
         # column names are in the first (un-skipped) line.
@@ -657,6 +671,7 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
     header = header.split()
     if len(header) == 0:
         raise Exception('Expected to find column names in the first row of text; got \"%s\".' % txt)
+    print 'Header:', len(header), 'columns'
     #assert(len(header) >= 1)
     if trycsv and (split is None) and (len(header) == 1) and (',' in header[0]):
         # try CSV
@@ -670,9 +685,12 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 
     fields = tabledata()
     txtrows = [r for r in txtrows if not r.startswith('#')]
+    print 'Kept', len(txtrows), 'non-commented rows'
     coldata = [[] for x in colnames]
     ncomplain = 0
     for i,r in enumerate(txtrows):
+        if i and (i % 1000000 == 0):
+            print 'Row', i
         if maxcols is not None:
             r = r[:maxcols]
         if split is None:
