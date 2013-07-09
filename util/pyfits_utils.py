@@ -625,7 +625,9 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 table_fields = fits_table
 
 # ultra-brittle text table parsing.
-def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, maxcols=None, headerline=None, coltypes=None, intvalmap={'NaN':-1000000}):
+def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, maxcols=None, headerline=None, coltypes=None,
+                      intvalmap={'NaN':-1000000},
+                      floatvalmap={}):
     if text is None:
         f = None
         if isinstance(forfn, str):
@@ -692,9 +694,14 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
             continue
         #assert(len(cols) == len(colnames))
         if coltypes is not None:
+            floattypes = [float,np.float32,np.float64]
             for i,(cd,c,t) in enumerate(zip(coldata, cols, coltypes)):
-                if len(c) == 0 and t in [float,np.float32,np.float64]:
-                    cd.append(np.nan)
+                if t in floattypes:
+                    if len(c) == 0:
+                        cd.append(np.nan)
+                        continue
+                    c = floatvalmap.get(c, c)
+
                 if t in [int, np.int32, np.int64]:
                     try:
                         cd.append(t(c))
