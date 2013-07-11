@@ -47,6 +47,7 @@ deg|deg|
  A copy of this input file is available at 
  http://trac.astrometry.net/browser/binary/henry-draper/henry-draper.tsv
 
+ (note, the Tycho-2 cross-ref file is also there, as are hd.fits and hd2.fits (with bounding-boxes))
 
  HOWEVER, the positions aren't very accurate, so this program has the capability of
  reading a Tycho2-to-HD cross-reference catalog:

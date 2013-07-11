@@ -391,6 +391,8 @@ if __name__ == '__main__':
             # print 'Machine Tags:', result
             # result = c.send_request('jobs/%s/objects_in_field' % opt.job_id)
             # print 'Objects in field:', result
+            #result = c.send_request('jobs/%s/annotations' % opt.job_id)
+            #print 'Annotations:', result
 
         opt.job_id = None
         opt.sub_id = None
@@ -405,6 +407,9 @@ if __name__ == '__main__':
         print c.sub_status(opt.sub_id)
     if opt.job_id:
         print c.job_status(opt.job_id)
+        #result = c.send_request('jobs/%s/annotations' % opt.job_id)
+        #print 'Annotations:', result
+
     if opt.jobs_by_tag:
         tag = opt.jobs_by_tag
         print c.jobs_by_tag(tag, None)

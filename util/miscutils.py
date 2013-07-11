@@ -1,6 +1,56 @@
 from math import pi
 import numpy as np
 
+def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
+                required=None):
+    '''
+    Patch masked pixels by iteratively averaging non-masked neighboring pixels.
+
+    mask: True for good pixels
+    required: if non-None: True for pixels you want to be patched.
+    dxdy: Pixels to average in, relative to pixels to be patched.
+    
+    Returns True if patching was successful.
+    '''
+    assert(img.shape == mask.shape)
+    assert(len(img.shape) == 2)
+    h,w = img.shape
+    Nlast = -1
+    while True:
+        needpatching = np.logical_not(mask)
+        if required is not None:
+            needpatching *= required
+        I = np.flatnonzero(needpatching)
+        print len(I), 'pixels need patching'
+        if len(I) == 0:
+            break
+        if len(I) == Nlast:
+            return False
+        Nlast = len(I)
+        iy,ix = np.unravel_index(I, img.shape)
+        psum = np.zeros(len(I), img.dtype)
+        pn = np.zeros(len(I), int)
+
+        for dx,dy in dxdy:
+            ok = True
+            if dx < 0:
+                ok = ok * (x >= (-dx))
+            if dx > 0:
+                ok = ok * (x <= (w-1-dx))
+            if dy < 0:
+                ok = ok * (y >= (-dy))
+            if dy > 0:
+                ok = ok * (y <= (h-1-dy))
+
+            psum[ok] += (img [iy[ok]+dx, ix[ok]+dy] *
+                         mask[iy[ok]+dx, ix[ok]+dy])
+            pn[ok] += mask[iy[ok]+dx, ix[ok]+dy]
+                
+        img.flat[I] = (psum / np.maximum(pn, 1)).astype(img.dtype)
+        mask.flat[I] = (pn > 0)
+    return True
+    
+
 def polygons_intersect(poly1, poly2):
 	'''
 	Determines whether the given 2-D polygons intersect.
