@@ -10,6 +10,9 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 	'''
 	Returns (Yo,Xo, Yi,Xi, ims)
 
+    or (None,None,None,None,None) if the target and input wcs do not
+    overlap enough.
+
 	Limages: list of images to Lanczos-interpolate at the given Lanczos order.
 	If empty, just returns nearest-neighbour indices.
 
@@ -17,8 +20,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 
 	targetwcs, wcs: duck-typed WCS objects that must have:
 	   - properties "imagew", "imageh"
-	   - methods  "pixelxy2radec"
-	   -          "radec2pixelxy"
+	   - methods  "r,d = pixelxy2radec(x, y)"
+	   -          "ok,x,y = radec2pixelxy(ra, dec)"
 
 	The WCS functions are expected to operate in FITS pixel-indexing.
 

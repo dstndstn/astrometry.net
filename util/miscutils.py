@@ -21,11 +21,11 @@ def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
         if required is not None:
             needpatching *= required
         I = np.flatnonzero(needpatching)
-        print len(I), 'pixels need patching'
         if len(I) == 0:
             break
         if len(I) == Nlast:
             return False
+        print 'Patching', len(I), 'pixels'
         Nlast = len(I)
         iy,ix = np.unravel_index(I, img.shape)
         psum = np.zeros(len(I), img.dtype)
@@ -34,20 +34,32 @@ def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
         for dx,dy in dxdy:
             ok = True
             if dx < 0:
-                ok = ok * (x >= (-dx))
+                ok = ok * (ix >= (-dx))
             if dx > 0:
-                ok = ok * (x <= (w-1-dx))
+                ok = ok * (ix <= (w-1-dx))
             if dy < 0:
-                ok = ok * (y >= (-dy))
+                ok = ok * (iy >= (-dy))
             if dy > 0:
-                ok = ok * (y <= (h-1-dy))
+                ok = ok * (iy <= (h-1-dy))
 
-            psum[ok] += (img [iy[ok]+dx, ix[ok]+dy] *
-                         mask[iy[ok]+dx, ix[ok]+dy])
-            pn[ok] += mask[iy[ok]+dx, ix[ok]+dy]
+            # darn, NaN * False = NaN, not zero.
+            finite = np.isfinite(img [iy[ok]+dy, ix[ok]+dx])
+            ok[ok] *= finite
+
+            psum[ok] += (img [iy[ok]+dy, ix[ok]+dx] *
+                         mask[iy[ok]+dy, ix[ok]+dx])
+            pn[ok] += mask[iy[ok]+dy, ix[ok]+dx]
+
+            # print 'ix', ix
+            # print 'iy', iy
+            # print 'dx,dy', dx,dy
+            # print 'ok', ok
+            # print 'psum', psum
+            # print 'pn', pn
                 
         img.flat[I] = (psum / np.maximum(pn, 1)).astype(img.dtype)
         mask.flat[I] = (pn > 0)
+        #print 'Patched', np.sum(pn > 0)
     return True
     
 

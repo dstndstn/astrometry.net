@@ -11,5 +11,5 @@ setup(cmdclass={'build_ext': an_build_ext},
 	  author = 'Lang & Hogg',
 	  author_email = 'dstn@cmu.edu',
 	  url = 'http://astrometry.net',
-	  ext_modules = [Extension('_cutils', ['cutils.i'])],
+	  ext_modules = [Extension('_cutils', ['cutils.i'], libraries=['m'])],
 	)
