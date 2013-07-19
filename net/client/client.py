@@ -23,9 +23,10 @@ class RequestError(Exception):
     pass
 
 class Client(object):
-
+    default_url = 'http://nova.astrometry.net/api/'
+    
     def __init__(self,
-                 apiurl = 'http://nova.astrometry.net/api/'):
+                 apiurl = default_url):
         self.session = None
         self.apiurl = apiurl
 
@@ -252,12 +253,13 @@ class Client(object):
 if __name__ == '__main__':
     import optparse
     parser = optparse.OptionParser()
-    parser.add_option('--server', dest='server',
-                      help='Set server base URL (eg, http://nova.astrometry.net/api/)')
+    parser.add_option('--server', dest='server', default=Client.default_url,
+                      help='Set server base URL (eg, %default)')
     parser.add_option('--apikey', '-k', dest='apikey',
                       help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
     parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
     parser.add_option('--wait', '-w', dest='wait', action='store_true', help='After submitting, monitor job status')
+    parser.add_option('--wcs', dest='wcs', help='Download resulting wcs.fits file, saving to given filename; implies --wait if --urlupload or --upload')
     parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
     parser.add_option('--scale-units', dest='scale_units',
                       choices=('arcsecperpix', 'arcminwidth', 'degwidth', 'focalmm'), help='Units for scale estimate')
@@ -315,12 +317,14 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     args = {}
-    if opt.server:
-        args['apiurl'] = opt.server
+    args['apiurl'] = opt.server
     c = Client(**args)
     c.login(opt.apikey)
 
     if opt.upload or opt.upload_url:
+        if opt.wcs:
+            opt.wait = True
+
         kwargs = dict(
             allow_commercial_use=opt.allow_commercial,
             allow_modifications=opt.allow_mod,
@@ -333,6 +337,13 @@ if __name__ == '__main__':
             kwargs.update(scale_est=opt.scale_est,
                           scale_err=opt.scale_err,
                           scale_type='ev')
+        elif opt.scale_lower or opt.scale_upper:
+            kwargs.update(scale_type='ul')
+            if opt.scale_lower:
+                kwargs.update(scale_lower=opt.scale_lower)
+            if opt.scale_upper:
+                kwargs.update(scale_upper=opt.scale_upper)
+                
         for key in ['scale_units', 'center_ra', 'center_dec', 'radius', 'downsample_factor',]:
             if getattr(opt, key) is not None:
                 kwargs.update(key=getattr(opt, key))
@@ -394,6 +405,17 @@ if __name__ == '__main__':
             #result = c.send_request('jobs/%s/annotations' % opt.job_id)
             #print 'Annotations:', result
 
+            if opt.wcs:
+                # We don't need the API for this, just construct URL
+                url = opt.server.replace('/api/', '/wcs_file/%i' % opt.job_id)
+                print 'Retrieving WCS file from', url
+                f = urlopen(url)
+                txt = f.read()
+                w = open(opt.wcs, 'wb')
+                w.write(txt)
+                w.close()
+                print 'Wrote to', opt.wcs
+                
         opt.job_id = None
         opt.sub_id = None
 
