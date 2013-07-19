@@ -75,8 +75,8 @@ Ubuntu or Debian-like systems:
 
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
                            libpng12-dev libjpeg-dev python-numpy \
-                           python-pyfits python-dev zlib1g-dev
-
+                           python-pyfits python-dev zlib1g-dev \
+                           swig cfitsio-dev
 
 RHEL / RedHat-like distributions:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
