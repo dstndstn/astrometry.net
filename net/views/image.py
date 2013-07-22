@@ -266,6 +266,7 @@ def annotated_image(req, jobid=None, size='full'):
     if rad < 0.25:
         args.append('--tycho2cat %s' % tycho2fn)
 
+    #if rad > 20:
     if rad > 10:
         args.append('--no-ngc')
 

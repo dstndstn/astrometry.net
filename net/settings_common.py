@@ -79,14 +79,14 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-		# Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+                # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': '',
         'USER': secrets.DATABASE_USER,
         'PASSWORD': secrets.DATABASE_PASSWORD,
         'HOST': secrets.DATABASE_HOST,
         'PORT': secrets.DATABASE_PORT,
-		}
+                }
 }
 
 # Local time zone for this installation. Choices can be found here:
@@ -204,7 +204,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-	'astrometry.net',
+        'astrometry.net',
     'django_openid_auth',
     'south',
 )
@@ -241,13 +241,13 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-	'formatters': {
+    'formatters': {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-		},
+                },
         'simple': {
             'format': '%(levelname)s %(message)s'
-		},
+                },
     },
     'handlers': {
         'mail_admins': {
@@ -265,6 +265,11 @@ LOGGING = {
         },
     },
     'loggers': {
+        'django.db': {                                                                                                                      
+            'handlers': ['console'],                                                                                                        
+            'level': 'INFO',                                                                                                                
+            'propagate': True,                                                                                                              
+            },
         'django.request': {
             'handlers': ['console'],
             #'level': 'DEBUG',
