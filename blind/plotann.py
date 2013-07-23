@@ -230,6 +230,12 @@ if __name__ == '__main__':
                       help='Add named target (eg "M 31", "NGC 1499")')
     parser.add_option('--no-grid', dest='grid', action='store_false',
                       default=True, help='Turn off grid lines')
+    parser.add_option('--grid-size', dest='gridsize', type=float,
+                      default=0.1,
+                      help='Grid spacing (in degrees), default %default')
+    parser.add_option('--grid-label', dest='gridlab', type=float,
+                      default=0.2,
+                      help='Grid label spacing (in degrees), default %default')
 
     parser.add_option('--tcolor', dest='textcolor', default='green',
                       help='Text color')
@@ -300,7 +306,8 @@ if __name__ == '__main__':
 
     if opt.grid:
         plot.color = 'gray'
-        plot.plot_grid(0.1, 0.1, 0.2, 0.2)
+        plot.plot_grid(opt.gridsize, opt.gridsize,
+                       opt.gridlab, opt.gridlab)
 
     ann = plot.annotations
     ann.NGC = opt.ngc
@@ -311,6 +318,7 @@ if __name__ == '__main__':
     ann.ngc_fraction = 0.
     if opt.hdcat:
         ann.HD = True
+        ann.HD_labels = True
         ann.hd_catalog = opt.hdcat
 
     anns = get_annotations(plot.wcs, opt)
