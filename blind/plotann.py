@@ -251,7 +251,7 @@ if __name__ == '__main__':
                       help='Text offset y')
     parser.add_option('--lw', dest='lw', default=2, type=float,
                       help='Annotations line width')
-    parser.add_option('--ms', dest='ms', default=12, type=float,
+    parser.add_option('--ms', dest='ms', default=0., type=float,
                       help='Marker size')
     parser.add_option('--rd', dest='rd', action='append', default=[],
                       help='Plot RA,Dec markers')
@@ -292,6 +292,9 @@ if __name__ == '__main__':
     #plot.wcs_file = wcsfn
     #plot.outformat = fmt
     #plotstuff_set_size_wcs(plot.pargs)
+
+    if opt.ms:
+        plot.markersize = opt.ms
 
     plot.outfn = outfn
     img = plot.image
@@ -344,7 +347,6 @@ if __name__ == '__main__':
     for rdfn in opt.rd:
         rd = plot.radec
         rd.fn = rdfn
-        plot.markersize = opt.ms
         plot.plot('radec')
 
     for mfn in opt.quad:

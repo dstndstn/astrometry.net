@@ -69,6 +69,8 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 
 		logverb("Target: \"%s\" at (%g,%g)\n", tar->name, tar->ra, tar->dec);
 		okquadrant = plotstuff_radec2xy(pargs, tar->ra, tar->dec, &px, &py);
+        px -= 1;
+        py -= 1;
 
 		if (okquadrant &&
 			px >= 0 && px < pargs->W && py >= 0 && py < pargs->H) {
@@ -274,6 +276,8 @@ static void plot_brightstars(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann)
 		// skip unnamed
 		if (!strlen(bs->name) && !strlen(bs->common_name))
 			continue;
+        px -= 1;
+        py -= 1;
 
 		plotstuff_stack_marker(pargs, px, py);
         if (ann->bright_labels) {
@@ -317,6 +321,9 @@ static void plot_hd(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 		char label[16];
 		if (!plotstuff_radec2xy(pargs, entry->ra, entry->dec, &px, &py))
 			continue;
+        px -= 1;
+        py -= 1;
+
 		if (px < 1 || py < 1 || px > pargs->W || py > pargs->H)
 			continue;
 		logverb("HD %i at RA,Dec (%g,%g) -> xy (%g, %g)\n", entry->hd, entry->ra, entry->dec, px, py);
@@ -366,6 +373,8 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 				  (ngc->is_ngc ? "NGC":"IC"), ngc->id, ngc->ra, ngc->dec);
 			continue;
 		}
+        px -= 1;
+        py -= 1;
 
 		pixrad = 0.5 * ngc->size * 60.0 / imscale;
 		if (px < -pixrad || py < -pixrad || px > pargs->W + pixrad || py > pargs->H + pixrad) {
