@@ -5,14 +5,26 @@ import sys
 
 # add .. to PYTHONPATH
 path = os.path.realpath(__file__)
-print 'Path', path
+print 'My path', path
 basedir = os.path.dirname(os.path.dirname(path))
+
+#print 'PYTHONPATH is', os.environ['PYTHONPATH']
+
 print 'Adding basedir', basedir, 'to PYTHONPATH'
 sys.path.append(basedir)
 
 # add ../blind and ../util to PATH
 os.environ['PATH'] += ':' + os.path.join(basedir, 'blind')
 os.environ['PATH'] += ':' + os.path.join(basedir, 'util')
+
+print 'sys.path is:'
+for x in sys.path:
+    print '  ', x
+
+print 'PATH is:', os.environ['PATH']
+
+import pyfits
+
 
 import tempfile
 import traceback

@@ -1,7 +1,7 @@
 # settings_nova.py
 from settings_common import *
 
-TEMPDIR = '/data1/tmp'
+TEMPDIR = '/data2/tmp'
 DATABASES['default']['NAME'] = 'an-nova'
 
 LOGGING['loggers']['django.request']['level'] = 'WARN'

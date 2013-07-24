@@ -263,7 +263,6 @@ class DiskFile(models.Model):
     #  image_set -> Image
     #  submissions -> Submission
     #  cachedfile_set -> CachedFile ?
-    
 
     def __str__(self):
         return 'DiskFile: %s, size %i, type %s, coll %s' % (self.file_hash, self.size, self.file_type, self.collection)

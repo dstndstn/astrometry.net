@@ -19,7 +19,7 @@ if __name__ == '__main__':
 	parser.add_option('-j', '--job', type=int, dest='job', help='Job ID')
 	parser.add_option('-u', '--userimage', type=int, dest='uimage', help='UserImage ID')
 	parser.add_option('-r', '--rerun', dest='rerun', action='store_true',
-					  help='Re-run this submission?')
+					  help='Re-run this submission/job?')
 	parser.add_option('--chown', dest='chown', type=int, default=0, help='Change owner of userimage by user id #')
 
 	opt,args = parser.parse_args()
@@ -57,6 +57,11 @@ if __name__ == '__main__':
 		sub = ui.submission
 		print 'Submission', sub
 		print sub.disk_file.get_path()
+
+		if opt.rerun:
+			from process_submissions import try_dojob
+			print 'Re-trying job', job.id
+			try_dojob(job, ui)
 
 	if opt.uimage:
 		ui = UserImage.objects.all().get(id=opt.uimage)
