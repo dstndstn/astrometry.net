@@ -357,7 +357,7 @@ if __name__ == '__main__':
         plot.plot('radec')
 
     for fn in opt.xy:
-        xy = plot.radec
+        xy = plot.xy
         xy.fn = fn
         plot.plot('xy')
         
