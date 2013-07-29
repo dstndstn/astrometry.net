@@ -204,6 +204,7 @@ if __name__ == '__main__':
                       help='Scale plot by this factor')
     parser.add_option('--no-ngc', dest='ngc', action='store_false', default=True)
     parser.add_option('--no-bright', dest='bright', action='store_false', default=True)
+    parser.add_option('--no-const', dest='const', action='store_false', default=True, help='Do not plot constellations')
     parser.add_option('--hdcat', dest='hdcat',
                       help='Path to Henry Draper catalog hd.fits')
     parser.add_option('--uzccat', dest='uzccat',
@@ -219,6 +220,10 @@ if __name__ == '__main__':
                       help='Path to ngc2000names.fits for aliases')
     parser.add_option('--iccat', dest='iccat',
                       help='Path to IC2000 catalog ic2000.fits -- ONLY USED FOR JSON OUTPUT!')
+
+    parser.add_option('--ngcfrac', dest='ngcfrac', type=float, default=0.,
+                      help='Minimum fraction of image size to plot NGC/IC objs')
+
     parser.add_option('--brightcat', dest='brightcat',
                       help='Path to bright-star catalog -- ONLY USED FOR JSON OUTPUT!')
 
@@ -314,11 +319,11 @@ if __name__ == '__main__':
 
     ann = plot.annotations
     ann.NGC = opt.ngc
-    ann.constellations = True
-    ann.constellation_labels = True
-    ann.constellation_labels_long = True
+    ann.constellations = opt.const
+    ann.constellation_labels = opt.const
+    ann.constellation_labels_long = opt.const
     ann.bright = opt.bright
-    ann.ngc_fraction = 0.
+    ann.ngc_fraction = opt.ngcfrac
     if opt.hdcat:
         ann.HD = True
         ann.HD_labels = True

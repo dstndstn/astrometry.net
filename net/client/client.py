@@ -260,6 +260,7 @@ if __name__ == '__main__':
     parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
     parser.add_option('--wait', '-w', dest='wait', action='store_true', help='After submitting, monitor job status')
     parser.add_option('--wcs', dest='wcs', help='Download resulting wcs.fits file, saving to given filename; implies --wait if --urlupload or --upload')
+    parser.add_option('--kmz', dest='kmz', help='Download resulting kmz file, saving to given filename; implies --wait if --urlupload or --upload')
     parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
     parser.add_option('--scale-units', dest='scale_units',
                       choices=('arcsecperpix', 'arcminwidth', 'degwidth', 'focalmm'), help='Units for scale estimate')
@@ -322,7 +323,7 @@ if __name__ == '__main__':
     c.login(opt.apikey)
 
     if opt.upload or opt.upload_url:
-        if opt.wcs:
+        if opt.wcs or opt.kmz:
             opt.wait = True
 
         kwargs = dict(
@@ -405,16 +406,24 @@ if __name__ == '__main__':
             #result = c.send_request('jobs/%s/annotations' % opt.job_id)
             #print 'Annotations:', result
 
+            retrieveurls = []
             if opt.wcs:
                 # We don't need the API for this, just construct URL
                 url = opt.server.replace('/api/', '/wcs_file/%i' % opt.job_id)
-                print 'Retrieving WCS file from', url
+                retrieveurls.append((url, opt.wcs))
+            if opt.kmz:
+                url = opt.server.replace('/api/', '/kml_file/%i/' % opt.job_id)
+                retrieveurls.append((url, opt.kmz))
+
+            for url,fn in retrieveurls:
+                print 'Retrieving file from', url, 'to', fn
                 f = urlopen(url)
                 txt = f.read()
-                w = open(opt.wcs, 'wb')
+                w = open(fn, 'wb')
                 w.write(txt)
                 w.close()
-                print 'Wrote to', opt.wcs
+                print 'Wrote to', fn
+
                 
         opt.job_id = None
         opt.sub_id = None
