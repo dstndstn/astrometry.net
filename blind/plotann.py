@@ -260,6 +260,8 @@ if __name__ == '__main__':
                       help='Marker size')
     parser.add_option('--rd', dest='rd', action='append', default=[],
                       help='Plot RA,Dec markers')
+    parser.add_option('--xy', dest='xy', action='append', default=[],
+                      help='Plot x,y markers')
     parser.add_option('--quad', dest='quad', action='append', default=[],
                       help='Plot quad from given match file')
 
@@ -354,6 +356,11 @@ if __name__ == '__main__':
         rd.fn = rdfn
         plot.plot('radec')
 
+    for fn in opt.xy:
+        xy = plot.radec
+        xy.fn = fn
+        plot.plot('xy')
+        
     for mfn in opt.quad:
         match = fits_table(mfn)
         for m in match:
