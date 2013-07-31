@@ -27,6 +27,22 @@ The steps are:
   * :ref:`build-index`
   * :ref:`use`
 
+Here are some pictures of the index-building process itself:
+
++-------------------------------+----------------------------+----------------------------------------------+
+|A reference catalog:           |We lay down a healpix grid: | And select the brightest stars in each cell: |
++-------------------------------+----------------------------+----------------------------------------------+
+| .. image:: usnob.png          | .. image:: usnob-grid.png  | .. image:: cut.png                           |
+|  :height: 200px               |  :height: 200px            |  :height: 200px                              |
++-------------------------------+----------------------------+----------------------------------------------+
+|And then try to build a 4-star | And again...               | And again, until the sky is densely tiled    |
+|feature centered in each cell  |                            | in features.                                 |
++-------------------------------+----------------------------+----------------------------------------------+
+| .. image:: quads1b.png        | .. image:: quads2b.png     | .. image:: quads3b.png                       |
+|  :height: 200px               |  :height: 200px            |  :height: 200px                              |
++-------------------------------+----------------------------+----------------------------------------------+
+
+
 .. _convert-to-fits:
 
 Convert your reference catalog to FITS tables
@@ -38,27 +54,27 @@ process take FITS tables as inputs.
 Many astrometric reference catalogs are available in FITS format.  For
 those that aren't, here are a few options for converting to FITS
 BINTABLE (binary table) format:
-  * *text2fits.py* in the Astrometry.net package---useful for CSV
-    (comma-separated values) and other ASCII text inputs; this is a
-    simple parser and takes a huge amount of memory to process big
-    files.  It would be possible to make it "stream" the inputs and
-    outputs, but I haven't done that (yet).
-  * Custom format converters, including *2masstofits*, *nomadtofits*,
-    *ucac3tofits*, and *usnobtofits* (all in the Astrometry.net
-    package).
-  * Check the `Vizier <http://vizier.u-strasbg.fr/viz-bin/VizieR-2>`_
-    service to see if your catalog is available there; sometimes you
-    can download it as FITS binary table (in the "Preferences" box for
-    output format).  I find the Vizier search engine impossible to
-    use; just use your favorite web search engine to query, say,
-    "vizier ucac4".
-  * Write your own custom converter.  If I had to do this again, I
-    would rewrite all the *Xtofits* converters above in python,
-    probably using the `struct module <http://docs.python.org/2/library/struct.html>`_.
-    But if you are converting a format that is very similar to one of
-    the above, the fastest may be to copy-n-edit one of the existing
-    ones.  If you do this, please consider contributing your code back
-    to the Astrometry.net codebase.
+* *text2fits.py* in the Astrometry.net package---useful for CSV
+(comma-separated values) and other ASCII text inputs; this is a
+simple parser and takes a huge amount of memory to process big
+files.  It would be possible to make it "stream" the inputs and
+outputs, but I haven't done that (yet).
+* Custom format converters, including *2masstofits*, *nomadtofits*,
+*ucac3tofits*, and *usnobtofits* (all in the Astrometry.net
+package).
+* Check the `Vizier <http://vizier.u-strasbg.fr/viz-bin/VizieR-2>`_
+service to see if your catalog is available there; sometimes you
+can download it as FITS binary table (in the "Preferences" box for
+output format).  I find the Vizier search engine impossible to
+use; just use your favorite web search engine to query, say,
+"vizier ucac4".
+* Write your own custom converter.  If I had to do this again, I
+would rewrite all the *Xtofits* converters above in python,
+probably using the `struct module <http://docs.python.org/2/library/struct.html>`_.
+But if you are converting a format that is very similar to one of
+the above, the fastest may be to copy-n-edit one of the existing
+ones.  If you do this, please consider contributing your code back
+to the Astrometry.net codebase.
 
 As for python FITS table handling, the *best* option is
 `fitsio <https://github.com/esheldon/fitsio>`_.
