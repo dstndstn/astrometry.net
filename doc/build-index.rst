@@ -374,8 +374,18 @@ the part of the sky that your index covers.
     [-I <unique-id>] set the unique ID of this index
 
 Select an identifier for your index files.  I usually encode the date
-and scale: eg 2013-08-01, scale 2, becomes 13080102.  The different
-healpixes at a scale do not need unique IDs.
+and scale: eg 2013-08-01, scale 2, becomes 13080102.  Or I keep a
+running number, like the 4100-series and 4200-series files.  The
+different healpixes at a scale do not need unique IDs.
+
+**Triangles?**::
+
+    [-d <dimquads>] number of stars in a "quad" (default 4).
+
+Normally we use four-star featurse.  This allows you to build 3- or
+5-star features instead.  3-star features are useful for wide-angle
+images.  5-star features are probably not useful for most purposes.
+
 
 You probably don't need to set any of the options below here
 ------------------------------------------------------------
@@ -395,12 +405,111 @@ and ``-D`` options::
 **Indexing Details**::
 
     [-m <margin>]: add a margin of <margin> healpixels; default 0
+
+Try to create features in a margin around each healpix tile.  Not
+normally necessary: the healpix tiles can contain overlapping margins
+*stars*, so each one can recognize images that straddle its boundary.
+There's no need to also cover the margin regions with (probably
+duplicate) features.
+
+::
+
     [-n <sweeps>]    (ie, number of stars per fine healpix grid cell); default 10
+
+We try to select a bright, uniform subset of stars from your reference
+catalog by laying down a fine healpix grid and selecting ``-n`` stars
+from each.  This allows you to select fewer or more.  With fewer, you
+risk being unable to recognize some images.  With more, file sizes
+will be bigger.
+
+::
+
     [-r <dedup-radius>]: deduplication radius in arcseconds; default no deduplication
+
+We can remove stars that are within a radius of exclusion of each
+other (eg, double stars, or problems with the reference catalog).
+
+::
+
     [-j <jitter-arcsec>]: positional error of stars in the reference catalog (in arcsec; default 1)
-    [-d <dimquads>] number of stars in a "quad" (default 4).
+
+The index files contain a FITS header card saying what the typical
+astrometric error is.  This is used when "verifying" a proposed match;
+I don't think the system is very sensitive to this value.
+
+::
+
     [-p <passes>]   number of rounds of quad-building (ie, # quads per healpix cell, default 16)
+
+We try to build a uniform set of features by laying down a fine
+healpix grid and trying to build a feature in each cell.  We run
+multiple passes of this, building a total of ``-p`` features in each
+cell.
+
+::
+
     [-R <reuse-times>] number of times a star can be used (default: 8)
+
+By default, any star can be used in at most 8 features.  This prevents
+us from relying too heavily on any one star.
+
+::
+
     [-L <max-reuses>] make extra passes through the healpixes, increasing the "-r" reuse
-                         limit each time, up to "max-reuses".
+                      limit each time, up to "max-reuses".
+
+Sometimes the ``-R`` option means that we "use up" all the stars in an
+area and can't build as many features as we would like.  This option
+enables a second pass where we loosen up with ``-R`` value, trying to
+build extra features.
+
+**Runtime details**::
+
+    [-M]: in-memory (don't use temp files)
+    [-T]: don't delete temp files
+    [-t <temp-dir>]: use this temp direcotry (default: /tmp)
+    [-v]: add verbosity.
+
+The help messages are all pretty self-explanatory, no?
+
+
+.. _use:
+
+Using your shiny new index files
+================================
+
+In order to use your new index files, you need to create a *backend
+config* file that tells the astrometry engine where to find them.
+
+The default backend config file is in
+/usr/local/astrometry/etc/backend.cfg
+
+You can either edit that file, or create a new .cfg file.  Either way,
+you need to add lines like::
+
+    # In which directories should we search for indices?
+    add_path /home/dstn/astrometry/data
+
+    # Load any indices found in the directories listed above.
+    autoindex
+
+    ## Or... explicitly list the indices to load.
+    #index index-4200-00.fits
+    #index index-4200-01.fits
+
+
+It is safe to include multiple sets of index files that cover the same
+region of sky, mix and match, or whatever.  The astrometry engine will
+just use whatever you give it.
+
+If you edited the default backend.cfg file, ``solve-field`` and
+``backend`` will start using your new index files right away.  If you
+create a new index file (I often put one in the directory containing
+the index files themselves), you need to tell ``solve-field`` where it
+is::
+
+    solve-field --backend-config /path/to/backend.cfg [...]
+
+
+That's it!  Report successes, failures, frustrations, missing documentation, spelling errors, and such at the `Astrometry.net google group <http://astrometry.net/group>`_.
 
