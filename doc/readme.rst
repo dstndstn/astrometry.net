@@ -30,12 +30,9 @@ The code includes:
   * The QFITS library with several modifications
   * libkd, a compact and high-performance kdtree library
 
-In principle, the code in the tarball is sufficient to reproduce our
-entire astrometry system and replicate our blind astrometry results
-(e.g. on the SDSS fields).  However, this requires the entire USNO-B
-1.0 catalogue which is about 80GB in size.  For ease of use, we are
-distributing our pre-cooked index files (about 25 GB total), which are
-the same files we're using for our web service.
+The code requires *index* files, processed from an astrometric
+reference catalog such as USNO-B1 or 2MASS.  We have released several
+of these; see :ref:`getting-index-files`.
 
 Installing
 ==========
@@ -64,7 +61,7 @@ For full functionality, you will need:
   * libz
   * python (probably >= 2.4)
   * numpy
-  * pyfits: http://www.stsci.edu/resources/software_hardware/pyfits
+  * pyfits: http://www.stsci.edu/resources/software_hardware/pyfits (version >= 3.1)
   * cfitsio: http://heasarc.gsfc.nasa.gov/fitsio/
  
 
@@ -227,6 +224,7 @@ and util/os-features-config.h, or running::
 
 
 
+.. _getting-index-files:
 
 Getting Index Files
 ===================
