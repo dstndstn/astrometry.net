@@ -38,9 +38,33 @@ print 'R,D', R,D
 
 wcs = Tan(0., 0., 0., 0., 1e-3, 0., 0., 1e-3, 100., 100.)
 
-r1 = 1.
-d1 = 2.
+x1 = np.arange(3.)
+x2 = np.arange(3)
+x3 = x1[np.newaxis,:]
+x4 = x1[:,np.newaxis]
+x5 = x1.astype(np.float32)
+x6 = x1.astype(np.dtype(np.float64).newbyteorder('S'))
 
-ok,x,y = tan_t_rd2xy_broadcast(wcs, r1, d1)
-print 'ok,x,y', ok,x,y
+for r,d in [(1., 2.),
+            (1., x1),
+            (1, x2),
+            (1, x1),
+            (x1, x1),
+            (x1, x3),
+            (x3, x4),
+            (1., x5),
+            (1., x6),
+            ]:
+    print '  r', type(r),
+    if hasattr(r, 'dtype'):
+       print r.dtype,
+    print r
+
+    print '  d', type(d),
+    if hasattr(d, 'dtype'):
+        print d.dtype,
+    print d
+    
+    ok,x,y = tan_t_rd2xy_broadcast(wcs, r, d)
+    print 'ok,x,y', ok,x,y
 

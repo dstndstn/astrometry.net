@@ -951,6 +951,14 @@ Sip = sip_t
 
 %inline %{
 
+/*
+static anbool tan_rd2xy_wrapper(const void* wcs,
+                                double in1, double in2,
+                                double* out1, double* out2) {
+    return tan_radec2pixelxy((tan_t*)wcs, in1, in2, out1, out2);
+}
+*/
+
     static PyObject* broadcast_2to2ok
         (
          anbool func(const void*, double, double, double*, double*),
@@ -976,9 +984,9 @@ Sip = sip_t
         // grow inner loop
         flags |= NPY_ITER_GROWINNER;
 
+        op[0] = PyArray_FromAny(in1, NULL, 0, 0, 0, NULL);
+        op[1] = PyArray_FromAny(in2, NULL, 0, 0, 0, NULL);
         // automatically allocate the output arrays.
-        op[0] = in1;
-        op[1] = in2;
         op[2] = NULL;
         op[3] = NULL;
         op[4] = NULL;
@@ -1014,7 +1022,7 @@ Sip = sip_t
         // allocated them)
         if ((strideptr[0] == sizeof(double)) &&
             (strideptr[1] == sizeof(double))) {
-            printf("Contiguous inputs; going fast\n");
+            // printf("Contiguous inputs; going fast\n");
             do {
                 N = *innersizeptr;
                 double* din1 = (double*)dataptrarray[0];
@@ -1032,7 +1040,7 @@ Sip = sip_t
                 }
             } while (iternext(iter));
         } else {
-            printf("Non-contiguous inputs; going slow\n");
+            // printf("Non-contiguous inputs; going slow\n");
             npy_intp stride1 = NpyIter_GetInnerStrideArray(iter)[0];
             npy_intp stride2 = NpyIter_GetInnerStrideArray(iter)[1];
             do {
@@ -1066,6 +1074,10 @@ Sip = sip_t
         }
         return ret;
     }
+
+static PyObject* tan_rd2xy_wrapper(tan_t* wcs, PyObject* in1, PyObject* in2) {
+    return broadcast_2to2ok(tan_radec2pixelxy, wcs, in1, in2);
+}
 
 
 
@@ -1301,8 +1313,20 @@ tan_t.pixelxy2radec = tan_t_pixelxy2radec_any
 
 # DEBUG
 def tan_t_rd2xy_broadcast(self, r, d):
-    return broadcast_2to2ok(tan_radec2pixelxy, self.this, r, d)
+    return tan_rd2xy_wrapper(self.this, r, d)
+    # print 'tan_radec2pixelxy:', tan_radec2pixelxy, repr(tan_radec2pixelxy)
+    # try:
+    #     return broadcast_2to2ok(tan_radec2pixelxy, self.this, r, d)
+    # except:
+    #     import traceback
+    #     traceback.print_exc()
+    # try:
+    #     return broadcast_2to2ok(tan_rd2xy_wrapper, self.this, r, d)
+    # except:
+    #     import traceback
+    #     traceback.print_exc()
 
+        
 def tan_t_radec2pixelxy_any(self, r, d):
     if np.iterable(r) or np.iterable(d):
         r = np.atleast_1d(r).astype(float)
