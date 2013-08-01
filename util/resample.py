@@ -6,17 +6,32 @@ from miscutils import lanczos_filter
 from astrometry.util.plotutils import *
 import pylab as plt
 
-def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
+class ResampleError(Exception):
+    pass
+class OverlapError(ResampleError):
+    pass
+class NoOverlapError(OverlapError):
+    pass
+class SmallOverlapError(OverlapError):
+    pass
+
+def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
+                      splineFallback = True,
+                      splineStep = 25,
+                      splineMargin = 12):
     '''
     Returns (Yo,Xo, Yi,Xi, ims)
 
-    or (None,None,None,None,None) if the target and input wcs do not
-    overlap enough.
+    Use the results like:
 
-    Limages: list of images to Lanczos-interpolate at the given Lanczos order.
-    If empty, just returns nearest-neighbour indices.
+    target[Yo,Xo] = nearest_neighbour[Yi,Xi]
+    # or
+    target[Yo,Xo] = ims[i]
 
-    L: int, lanczos order
+
+    raises NoOverlapError if the target and input WCSes do not
+    overlap.  Raises SmallOverlapError if they do not overlap "enough"
+    (as described below).
 
     targetwcs, wcs: duck-typed WCS objects that must have:
        - properties "imagew", "imageh"
@@ -25,12 +40,24 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
 
     The WCS functions are expected to operate in FITS pixel-indexing.
 
-    Use the results like:
+    The WCS function must support 1-d, broadcasting, vectorized
+    pixel<->radec calls.
 
-    target[Yo,Xo] = nearest_neighbour[Yi,Xi]
+    Limages: list of images to Lanczos-interpolate at the given Lanczos order.
+    If empty, just returns nearest-neighbour indices.
 
-    target[Yo,Xo] = ims[i]
-    
+    L: int, lanczos order
+
+    spline: bool: use a spline interpolator to reduce the number of
+    WCS calls.
+
+    splineFallback: bool: the spline requires a certain amount of
+    spatial overlap.  With splineFallback = True, fall back to
+    non-spline version.  With splineFallback = False, just raises
+    SmallOverlapError.
+
+    splineStep: approximate grid size
+
     '''
     # Adapted from detection/sdss-demo.py
 
@@ -62,8 +89,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
     if spline:
         # Now we build a spline that maps "target" pixels to "input" pixels
         # spline inputs: pixel coords in the 'target' image
-        margin = 20
-        step = 25
+        margin = splineMargin
+        step = splineStep
         xlo = max(0, x0-margin)
         xhi = min(W, x1+margin)
         nx = np.ceil(float(xhi - xlo) / step) + 1
@@ -92,15 +119,25 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True):
             ps.savefig()
 
         if (len(xx) == 0) or (len(yy) == 0):
-            print 'No overlap between input and target WCSes'
-            return (None,)*5
+            #print 'No overlap between input and target WCSes'
+            raise NoOverlapError()
+
         if (len(xx) <= 3) or (len(yy) <= 3):
-            print 'Not enough overlap between input and target WCSes'
-            return (None,)*5
-    
+            #print 'Not enough overlap between input and target WCSes'
+            if splineFallback:
+                spline = False
+            else:
+                raise SmallOverlapError()
+
+    if spline:
         # spline outputs -- pixel coords in the 'input' image
-        XYo = []
+        #XYo = []
+        Xo = np.empty((len(yy), len(xx)))
+        Yo = np.empty((len(yy), len(xx)))
         for y in yy:
+            
+
+
             for x in xx:
                 #rd = targetwcs.pixelToPosition(x,y)
                 #XYo.append(wcs.positionToPixel(rd))
