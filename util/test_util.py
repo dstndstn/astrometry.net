@@ -34,3 +34,13 @@ X,Y = np.array([1,2,3]), np.array([4,5,6])
 print 'X,Y', X,Y
 R,D = wcs.pixelxy2radec(X, Y)
 print 'R,D', R,D
+
+
+wcs = Tan(0., 0., 0., 0., 1e-3, 0., 0., 1e-3, 100., 100.)
+
+r1 = 1.
+d1 = 2.
+
+ok,x,y = tan_t_rd2xy_broadcast(wcs, r1, d1)
+print 'ok,x,y', ok,x,y
+

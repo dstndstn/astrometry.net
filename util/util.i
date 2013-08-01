@@ -951,6 +951,126 @@ Sip = sip_t
 
 %inline %{
 
+    static PyObject* broadcast_2to2ok
+        (
+         anbool func(const void*, double, double, double*, double*),
+         const void* baton,
+         PyObject* in1, PyObject* in2) {
+
+        NpyIter *iter;
+        NpyIter_IterNextFunc *iternext;
+        PyObject *op[5];
+        PyObject *ret;
+        npy_uint32 flags;
+        npy_uint32 op_flags[5];
+        npy_intp *innersizeptr;
+        char **dataptrarray;
+        npy_intp* strideptr;
+		PyArray_Descr* dtypes[5];
+        npy_intp i, N;
+
+        // we'll do the inner loop ourselves
+        flags = NPY_ITER_EXTERNAL_LOOP;
+        // use buffers to satisfy dtype casts
+        flags |= NPY_ITER_BUFFERED;
+        // grow inner loop
+        flags |= NPY_ITER_GROWINNER;
+
+        // automatically allocate the output arrays.
+        op[0] = in1;
+        op[1] = in2;
+        op[2] = NULL;
+        op[3] = NULL;
+        op[4] = NULL;
+
+        op_flags[0] = NPY_ITER_READONLY | NPY_ITER_NBO;
+        op_flags[1] = NPY_ITER_READONLY | NPY_ITER_NBO;
+        op_flags[2] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
+        op_flags[3] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
+        op_flags[4] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
+
+        dtypes[0] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[1] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[2] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[3] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[4] = PyArray_DescrFromType(NPY_BOOL);
+
+        iter = NpyIter_MultiNew(5, op, flags, NPY_KEEPORDER, NPY_SAFE_CASTING,
+                                op_flags, dtypes);
+        for (i=0; i<5; i++)
+            Py_DECREF(dtypes[i]);
+
+        if (!iter)
+            return NULL;
+
+        iternext = NpyIter_GetIterNext(iter, NULL);
+        strideptr = NpyIter_GetInnerStrideArray(iter);
+        // The inner loop size and data pointers may change during the
+        // loop, so just cache the addresses.
+        innersizeptr = NpyIter_GetInnerLoopSizePtr(iter);
+        dataptrarray = NpyIter_GetDataPtrArray(iter);
+
+        // are the inputs contiguous?  (Outputs will be, since we
+        // allocated them)
+        if ((strideptr[0] == sizeof(double)) &&
+            (strideptr[1] == sizeof(double))) {
+            printf("Contiguous inputs; going fast\n");
+            do {
+                N = *innersizeptr;
+                double* din1 = (double*)dataptrarray[0];
+                double* din2 = (double*)dataptrarray[1];
+                double* dout1 = (double*)dataptrarray[2];
+                double* dout2 = (double*)dataptrarray[3];
+                char* ok = dataptrarray[4];
+                while (N--) {
+                    *ok = func(baton, *din1, *din2, dout1, dout2);
+                    ok++;
+                    din1++;
+                    din2++;
+                    dout1++;
+                    dout2++;
+                }
+            } while (iternext(iter));
+        } else {
+            printf("Non-contiguous inputs; going slow\n");
+            npy_intp stride1 = NpyIter_GetInnerStrideArray(iter)[0];
+            npy_intp stride2 = NpyIter_GetInnerStrideArray(iter)[1];
+            do {
+                npy_intp size = *innersizeptr;
+                char* src1 = dataptrarray[0];
+                char* src2 = dataptrarray[1];
+                double* dout1 = (double*)dataptrarray[2];
+                double* dout2 = (double*)dataptrarray[3];
+                char* ok = dataptrarray[4];
+
+                for (i=0; i<size; i++) {
+                    *ok = func(baton, *((double*)src1), *((double*)src2),
+                               dout1, dout2);
+                    ok++;
+                    src1 += stride1;
+                    src2 += stride2;
+                    dout1++;
+                    dout2++;
+                }
+            } while (iternext(iter));
+        }
+
+        // Grab the results -- note "4,2,3" order -- ok,x,y
+        ret = Py_BuildValue("(OOO)",
+                            NpyIter_GetOperandArray(iter)[4],
+                            NpyIter_GetOperandArray(iter)[2],
+                            NpyIter_GetOperandArray(iter)[3]);
+        if (NpyIter_Deallocate(iter) != NPY_SUCCEED) {
+            Py_DECREF(ret);
+            return NULL;
+        }
+        return ret;
+    }
+
+
+
+
+
 	static int tan_wcs_resample(tan_t* inwcs, tan_t* outwcs,
 								PyObject* np_inimg, PyObject* np_outimg,
 								int weighted, int lorder) {
@@ -1167,7 +1287,7 @@ def tan_t_get_cd(self):
 tan_t.get_cd = tan_t_get_cd
 
 def tan_t_pixelxy2radec_any(self, x, y):
-	if np.iterable(x) or np.iterable(y):
+    if np.iterable(x) or np.iterable(y):
 		x = np.atleast_1d(x).astype(float)
 		y = np.atleast_1d(y).astype(float)
 		r = np.empty(len(x))
@@ -1178,6 +1298,10 @@ def tan_t_pixelxy2radec_any(self, x, y):
 		return self.pixelxy2radec_single(float(x), float(y))
 tan_t.pixelxy2radec_single = tan_t.pixelxy2radec
 tan_t.pixelxy2radec = tan_t_pixelxy2radec_any
+
+# DEBUG
+def tan_t_rd2xy_broadcast(self, r, d):
+    return broadcast_2to2ok(tan_radec2pixelxy, self.this, r, d)
 
 def tan_t_radec2pixelxy_any(self, r, d):
 	if np.iterable(r) or np.iterable(d):
