@@ -131,23 +131,17 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
 
     if spline:
         # spline outputs -- pixel coords in the 'input' image
-        #XYo = []
-        Xo = np.empty((len(yy), len(xx)))
-        Yo = np.empty((len(yy), len(xx)))
-        for y in yy:
-            
 
-
-            for x in xx:
-                #rd = targetwcs.pixelToPosition(x,y)
-                #XYo.append(wcs.positionToPixel(rd))
-                ra,dec = targetwcs.pixelxy2radec(float(x + 1), float(y + 1))
-                ok,xw,yw = wcs.radec2pixelxy(ra,dec)
-                XYo.append((xw - 1, yw - 1))
-        XYo = np.array(XYo)
-        Xo = XYo[:,0].reshape(len(yy), len(xx))
-        Yo = XYo[:,1].reshape(len(yy), len(xx))
-        del XYo
+        #rr,dd = targetwcs.pixelxy2radec(xx + 1, yy + 1)
+        #ok,Xo,Yo = wcs.radec2pixelxy(rr, dd)
+        # del rr
+        # del dd
+        #rr,dd = 
+        ok,Xo,Yo = wcs.radec2pixelxy(
+            *targetwcs.pixelxy2radec(xx + 1, yy + 1))
+        Xo -= 1.
+        Yo -= 1.
+        del ok
 
         if ps:
             plt.clf()
@@ -170,7 +164,7 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
     iyo = np.arange(max(0, y0-margin), min(H, y1+margin+1), dtype=int)
 
     if len(ixo) == 0 or len(iyo) == 0:
-        return (None,)*5
+        raise NoOverlapError()
 
     if spline:
         # And run the interpolator.  [xy]spline() does a meshgrid-like broadcast,
@@ -198,19 +192,24 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
             ps.savefig()
 
     else:
-        fxi = np.empty((len(iyo),len(ixo)))
-        fyi = np.empty((len(iyo),len(ixo)))
+        # fxi = np.empty((len(iyo),len(ixo)))
+        # fyi = np.empty((len(iyo),len(ixo)))
+        # fxo = (ixo).astype(float) + 1.
+        # fyo = np.empty_like(fxo)
+        # for i,y in enumerate(iyo):
+        #     fyo[:] = y + 1.
+        #     # Assume 1-d vectorized pixel<->radec
+        #     ra,dec = targetwcs.pixelxy2radec(fxo, fyo)
+        #     ok,x,y = wcs.radec2pixelxy(ra, dec)
+        #     fxi[i,:] = x - 1.
+        #     fyi[i,:] = y - 1.
 
-        fxo = (ixo).astype(float) + 1.
-        fyo = np.empty_like(fxo)
-        for i,y in enumerate(iyo):
-            fyo[:] = y + 1.
-            # Assume 1-d vectorized pixel<->radec
-            ra,dec = targetwcs.pixelxy2radec(fxo, fyo)
-            ok,x,y = wcs.radec2pixelxy(ra, dec)
-            fxi[i,:] = x - 1.
-            fyi[i,:] = y - 1.
-
+        ok,fxi,fyi = wcs.radec2pixelxy(
+            *targetwcs.pixelxy2radec(ixo + 1., iyo + 1.))
+        del ok
+        fxi -= 1.
+        fyi -= 1.
+        
     # print 'ixo', ixo.shape
     # print 'iyo', iyo.shape
     # print 'fxi', fxi.shape
@@ -234,7 +233,6 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
     #ixo = ixo[I % len(ixo)]
     #iyo = iyo[I / len(ixo)]
     # i[xy]o: int coords in the target image
-
 
     if spline and ps:
         plt.clf()
