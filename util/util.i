@@ -951,13 +951,64 @@ Sip = sip_t
 
 %inline %{
 
-/*
-static anbool tan_rd2xy_wrapper(const void* wcs,
-                                double in1, double in2,
-                                double* out1, double* out2) {
-    return tan_radec2pixelxy((tan_t*)wcs, in1, in2, out1, out2);
+    static PyObject* broadcast_2to2ok
+        (
+         anbool func(const void*, double, double, double*, double*),
+         const void* baton,
+         PyObject* in1, PyObject* in2);
+
+    static PyObject* broadcast_2to2
+        (
+         void func(const void*, double, double, double*, double*),
+         const void* baton,
+         PyObject* in1, PyObject* in2);
+
+    static PyObject* broadcast_2to2i
+        (
+         int func(const void*, double, double, double*, double*),
+         const void* baton,
+         PyObject* in1, PyObject* in2);
+         
+         
+static PyObject* tan_rd2xy_wrapper(const tan_t* wcs,
+                                   PyObject* in1, PyObject* in2) {
+    return broadcast_2to2ok(tan_radec2pixelxy, wcs, in1, in2);
 }
-*/
+static PyObject* sip_rd2xy_wrapper(const sip_t* wcs,
+                                   PyObject* in1, PyObject* in2) {
+    return broadcast_2to2ok(sip_radec2pixelxy, wcs, in1, in2);
+}
+static PyObject* anwcs_rd2xy_wrapper(const anwcs_t* wcs,
+                                     PyObject* in1, PyObject* in2) {
+    return broadcast_2to2i(anwcs_radec2pixelxy, wcs, in1, in2);
+}
+
+
+static PyObject* tan_rd2iwc_wrapper(const tan_t* wcs,
+                                   PyObject* in1, PyObject* in2) {
+    return broadcast_2to2ok(tan_radec2iwc, wcs, in1, in2);
+}
+static PyObject* sip_rd2iwc_wrapper(const sip_t* wcs,
+                                   PyObject* in1, PyObject* in2) {
+    return broadcast_2to2ok(sip_radec2iwc, wcs, in1, in2);
+}
+
+static PyObject* tan_xy2rd_wrapper(const tan_t* wcs,
+                                   PyObject* in1, PyObject* in2) {
+    return broadcast_2to2(tan_pixelxy2radec, wcs, in1, in2);
+}
+static PyObject* sip_xy2rd_wrapper(const sip_t* wcs,
+                                   PyObject* in1, PyObject* in2) {
+    return broadcast_2to2(sip_pixelxy2radec, wcs, in1, in2);
+}
+static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
+                                   PyObject* in1, PyObject* in2) {
+    return broadcast_2to2i(anwcs_pixelxy2radec, wcs, in1, in2);
+}
+
+
+
+         
 
     static PyObject* broadcast_2to2ok
         (
@@ -967,7 +1018,7 @@ static anbool tan_rd2xy_wrapper(const void* wcs,
 
         NpyIter *iter;
         NpyIter_IterNextFunc *iternext;
-        PyObject *op[5];
+        PyArrayObject *op[5];
         PyObject *ret;
         npy_uint32 flags;
         npy_uint32 op_flags[5];
@@ -976,7 +1027,7 @@ static anbool tan_rd2xy_wrapper(const void* wcs,
         npy_intp* strideptr;
         PyArray_Descr* dtypes[5];
         npy_intp i, N;
-
+        
         // we'll do the inner loop ourselves
         flags = NPY_ITER_EXTERNAL_LOOP;
         // use buffers to satisfy dtype casts
@@ -984,8 +1035,8 @@ static anbool tan_rd2xy_wrapper(const void* wcs,
         // grow inner loop
         flags |= NPY_ITER_GROWINNER;
 
-        op[0] = PyArray_FromAny(in1, NULL, 0, 0, 0, NULL);
-        op[1] = PyArray_FromAny(in2, NULL, 0, 0, 0, NULL);
+        op[0] = (PyArrayObject*)PyArray_FromAny(in1, NULL, 0, 0, 0, NULL);
+        op[1] = (PyArrayObject*)PyArray_FromAny(in2, NULL, 0, 0, 0, NULL);
         // automatically allocate the output arrays.
         op[2] = NULL;
         op[3] = NULL;
@@ -1075,9 +1126,230 @@ static anbool tan_rd2xy_wrapper(const void* wcs,
         return ret;
     }
 
-static PyObject* tan_rd2xy_wrapper(tan_t* wcs, PyObject* in1, PyObject* in2) {
-    return broadcast_2to2ok(tan_radec2pixelxy, wcs, in1, in2);
-}
+
+    static PyObject* broadcast_2to2i
+        (
+         int func(const void*, double, double, double*, double*),
+         const void* baton,
+         PyObject* in1, PyObject* in2) {
+
+        NpyIter *iter;
+        NpyIter_IterNextFunc *iternext;
+        PyArrayObject *op[5];
+        PyObject *ret;
+        npy_uint32 flags;
+        npy_uint32 op_flags[5];
+        npy_intp *innersizeptr;
+        char **dataptrarray;
+        npy_intp* strideptr;
+        PyArray_Descr* dtypes[5];
+        npy_intp i, N;
+        
+        // we'll do the inner loop ourselves
+        flags = NPY_ITER_EXTERNAL_LOOP;
+        // use buffers to satisfy dtype casts
+        flags |= NPY_ITER_BUFFERED;
+        // grow inner loop
+        flags |= NPY_ITER_GROWINNER;
+
+        op[0] = (PyArrayObject*)PyArray_FromAny(in1, NULL, 0, 0, 0, NULL);
+        op[1] = (PyArrayObject*)PyArray_FromAny(in2, NULL, 0, 0, 0, NULL);
+        // automatically allocate the output arrays.
+        op[2] = NULL;
+        op[3] = NULL;
+        op[4] = NULL;
+
+        op_flags[0] = NPY_ITER_READONLY | NPY_ITER_NBO;
+        op_flags[1] = NPY_ITER_READONLY | NPY_ITER_NBO;
+        op_flags[2] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
+        op_flags[3] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
+        op_flags[4] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
+
+        dtypes[0] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[1] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[2] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[3] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[4] = PyArray_DescrFromType(NPY_INT);
+
+        iter = NpyIter_MultiNew(5, op, flags, NPY_KEEPORDER, NPY_SAFE_CASTING,
+                                op_flags, dtypes);
+        for (i=0; i<5; i++)
+            Py_DECREF(dtypes[i]);
+
+        if (!iter)
+            return NULL;
+
+        iternext = NpyIter_GetIterNext(iter, NULL);
+        strideptr = NpyIter_GetInnerStrideArray(iter);
+        // The inner loop size and data pointers may change during the
+        // loop, so just cache the addresses.
+        innersizeptr = NpyIter_GetInnerLoopSizePtr(iter);
+        dataptrarray = NpyIter_GetDataPtrArray(iter);
+
+        // are the inputs contiguous?  (Outputs will be, since we
+        // allocated them)
+        if ((strideptr[0] == sizeof(double)) &&
+            (strideptr[1] == sizeof(double))) {
+            // printf("Contiguous inputs; going fast\n");
+            do {
+                N = *innersizeptr;
+                double* din1 = (double*)dataptrarray[0];
+                double* din2 = (double*)dataptrarray[1];
+                double* dout1 = (double*)dataptrarray[2];
+                double* dout2 = (double*)dataptrarray[3];
+                int* ok = (int*)dataptrarray[4];
+                while (N--) {
+                    *ok = func(baton, *din1, *din2, dout1, dout2);
+                    ok++;
+                    din1++;
+                    din2++;
+                    dout1++;
+                    dout2++;
+                }
+            } while (iternext(iter));
+        } else {
+            // printf("Non-contiguous inputs; going slow\n");
+            npy_intp stride1 = NpyIter_GetInnerStrideArray(iter)[0];
+            npy_intp stride2 = NpyIter_GetInnerStrideArray(iter)[1];
+            do {
+                npy_intp size = *innersizeptr;
+                char* src1 = dataptrarray[0];
+                char* src2 = dataptrarray[1];
+                double* dout1 = (double*)dataptrarray[2];
+                double* dout2 = (double*)dataptrarray[3];
+                int* ok = (int*)dataptrarray[4];
+
+                for (i=0; i<size; i++) {
+                    *ok = func(baton, *((double*)src1), *((double*)src2),
+                               dout1, dout2);
+                    ok++;
+                    src1 += stride1;
+                    src2 += stride2;
+                    dout1++;
+                    dout2++;
+                }
+            } while (iternext(iter));
+        }
+
+        // Grab the results -- note "4,2,3" order -- ok,x,y
+        ret = Py_BuildValue("(OOO)",
+                            NpyIter_GetOperandArray(iter)[4],
+                            NpyIter_GetOperandArray(iter)[2],
+                            NpyIter_GetOperandArray(iter)[3]);
+        if (NpyIter_Deallocate(iter) != NPY_SUCCEED) {
+            Py_DECREF(ret);
+            return NULL;
+        }
+        return ret;
+    }
+    
+
+
+    static PyObject* broadcast_2to2
+        (
+         void func(const void*, double, double, double*, double*),
+         const void* baton,
+         PyObject* in1, PyObject* in2) {
+
+        NpyIter *iter;
+        NpyIter_IterNextFunc *iternext;
+        PyArrayObject *op[4];
+        PyObject *ret;
+        npy_uint32 flags;
+        npy_uint32 op_flags[4];
+        npy_intp *innersizeptr;
+        char **dataptrarray;
+        npy_intp* strideptr;
+        PyArray_Descr* dtypes[4];
+        npy_intp i, N;
+        
+        // we'll do the inner loop ourselves
+        flags = NPY_ITER_EXTERNAL_LOOP;
+        // use buffers to satisfy dtype casts
+        flags |= NPY_ITER_BUFFERED;
+        // grow inner loop
+        flags |= NPY_ITER_GROWINNER;
+
+        op[0] = (PyArrayObject*)PyArray_FromAny(in1, NULL, 0, 0, 0, NULL);
+        op[1] = (PyArrayObject*)PyArray_FromAny(in2, NULL, 0, 0, 0, NULL);
+        // automatically allocate the output arrays.
+        op[2] = NULL;
+        op[3] = NULL;
+
+        op_flags[0] = NPY_ITER_READONLY | NPY_ITER_NBO;
+        op_flags[1] = NPY_ITER_READONLY | NPY_ITER_NBO;
+        op_flags[2] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
+        op_flags[3] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
+
+        dtypes[0] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[1] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[2] = PyArray_DescrFromType(NPY_DOUBLE);
+        dtypes[3] = PyArray_DescrFromType(NPY_DOUBLE);
+
+        iter = NpyIter_MultiNew(4, op, flags, NPY_KEEPORDER, NPY_SAFE_CASTING,
+                                op_flags, dtypes);
+        for (i=0; i<4; i++)
+            Py_DECREF(dtypes[i]);
+        if (!iter)
+            return NULL;
+
+        iternext = NpyIter_GetIterNext(iter, NULL);
+        strideptr = NpyIter_GetInnerStrideArray(iter);
+        // The inner loop size and data pointers may change during the
+        // loop, so just cache the addresses.
+        innersizeptr = NpyIter_GetInnerLoopSizePtr(iter);
+        dataptrarray = NpyIter_GetDataPtrArray(iter);
+
+        // are the inputs contiguous?  (Outputs will be, since we
+        // allocated them)
+        if ((strideptr[0] == sizeof(double)) &&
+            (strideptr[1] == sizeof(double))) {
+            // printf("Contiguous inputs; going fast\n");
+            do {
+                N = *innersizeptr;
+                double* din1 = (double*)dataptrarray[0];
+                double* din2 = (double*)dataptrarray[1];
+                double* dout1 = (double*)dataptrarray[2];
+                double* dout2 = (double*)dataptrarray[3];
+                while (N--) {
+                    func(baton, *din1, *din2, dout1, dout2);
+                    din1++;
+                    din2++;
+                    dout1++;
+                    dout2++;
+                }
+            } while (iternext(iter));
+        } else {
+            // printf("Non-contiguous inputs; going slow\n");
+            npy_intp stride1 = NpyIter_GetInnerStrideArray(iter)[0];
+            npy_intp stride2 = NpyIter_GetInnerStrideArray(iter)[1];
+            do {
+                npy_intp size = *innersizeptr;
+                char* src1 = dataptrarray[0];
+                char* src2 = dataptrarray[1];
+                double* dout1 = (double*)dataptrarray[2];
+                double* dout2 = (double*)dataptrarray[3];
+                for (i=0; i<size; i++) {
+                    func(baton, *((double*)src1), *((double*)src2),
+                         dout1, dout2);
+                    src1 += stride1;
+                    src2 += stride2;
+                    dout1++;
+                    dout2++;
+                }
+            } while (iternext(iter));
+        }
+
+        // Grab the results
+        ret = Py_BuildValue("(OO)",
+                            NpyIter_GetOperandArray(iter)[2],
+                            NpyIter_GetOperandArray(iter)[3]);
+        if (NpyIter_Deallocate(iter) != NPY_SUCCEED) {
+            Py_DECREF(ret);
+            return NULL;
+        }
+        return ret;
+    }
 
 
 
@@ -1128,89 +1400,6 @@ static PyObject* tan_rd2xy_wrapper(tan_t* wcs, PyObject* in1, PyObject* in2) {
         Py_DECREF(np_outimg);
 
         return res;
-    }
-
-
-    static int tansip_numpy_pixelxy2radec(tan_t* tan, sip_t* sip, PyObject* npx, PyObject* npy, 
-                                          PyObject* npra, PyObject* npdec, PyObject* npok,
-                                            int reverse, int iwc) {
-                                        
-        int i, N;
-        double *x, *y, *ra, *dec;
-        anbool *ok = NULL;
-        assert(tan || sip);
-        assert(!(tan && sip));
-        
-        if (PyArray_NDIM(npx) != 1) {
-            PyErr_SetString(PyExc_ValueError, "arrays must be one-dimensional");
-            return -1;
-        }
-        if (PyArray_TYPE(npx) != PyArray_DOUBLE) {
-            PyErr_SetString(PyExc_ValueError, "array must contain doubles");
-            return -1;
-        }
-        N = PyArray_DIM(npx, 0);
-        if ((PyArray_DIM(npy, 0) != N) ||
-            (PyArray_DIM(npra, 0) != N) ||
-            (PyArray_DIM(npdec, 0) != N)) {
-            PyErr_SetString(PyExc_ValueError, "arrays must be the same size");
-            return -1;
-        }
-        x = PyArray_GETPTR1(npx, 0);
-        y = PyArray_GETPTR1(npy, 0);
-        ra = PyArray_GETPTR1(npra, 0);
-        dec = PyArray_GETPTR1(npdec, 0);
-        if (reverse) {
-            if (PyArray_DIM(npok, 0) != N) {
-                PyErr_SetString(PyExc_ValueError, "arrays must be the same size");
-                return -1;
-            }
-            ok = PyArray_GETPTR1(npok, 0);
-        }
-        if (!reverse) {
-            if (iwc) {
-                PyErr_SetString(PyExc_ValueError, "reverse=0, iwc=1 not supported (yet)");
-                return -1;
-            }
-            if (tan) {
-                for (i=0; i<N; i++)
-                    tan_pixelxy2radec(tan, x[i], y[i], ra+i, dec+i);
-            } else {
-                for (i=0; i<N; i++)
-                    sip_pixelxy2radec(sip, x[i], y[i], ra+i, dec+i);
-            }
-        } else {
-            if (tan) {
-                if (iwc) {
-                    for (i=0; i<N; i++)
-                        if (!(ok[i] = tan_radec2iwc(tan, ra[i], dec[i], x+i, y+i))) {
-                            x[i] = HUGE_VAL;
-                            y[i] = HUGE_VAL;
-                        }
-                } else {
-                    for (i=0; i<N; i++)
-                        if (!(ok[i] = tan_radec2pixelxy(tan, ra[i], dec[i], x+i, y+i))) {
-                            x[i] = HUGE_VAL;
-                            y[i] = HUGE_VAL;
-                        }
-                }
-            } else {
-                if (iwc) {
-                    for (i=0; i<N; i++)
-                        if (!(ok[i] = sip_radec2iwc(sip, ra[i], dec[i], x+i, y+i))) {
-                            x[i] = HUGE_VAL;
-                            y[i] = HUGE_VAL;
-                        }
-                } else {
-                    for (i=0; i<N; i++)
-                        if (!(ok[i] = sip_radec2pixelxy(sip, ra[i], dec[i], x+i, y+i))) {
-                            x[i] = HUGE_VAL;
-                            y[i] = HUGE_VAL;
-                        }
-                }
-            }               
-        }
-        return 0;
     }
 
     static int tan_numpy_xyz2pixelxy(tan_t* tan, PyObject* npxyz,
@@ -1298,70 +1487,49 @@ def tan_t_get_cd(self):
     return (cd[0], cd[1], cd[2], cd[3])
 tan_t.get_cd = tan_t_get_cd
 
-def tan_t_pixelxy2radec_any(self, x, y):
-    if np.iterable(x) or np.iterable(y):
-        x = np.atleast_1d(x).astype(float)
-        y = np.atleast_1d(y).astype(float)
-        r = np.empty(len(x))
-        d = np.empty(len(x))
-        tansip_numpy_pixelxy2radec(self.this, None, x, y, r, d, None, 0, 0)
-        return r,d
-    else:
-        return self.pixelxy2radec_single(float(x), float(y))
+
+
+
+def tan_t_pixelxy2radec(self, x, y):
+    return tan_xy2rd_wrapper(self.this, x, y)
 tan_t.pixelxy2radec_single = tan_t.pixelxy2radec
-tan_t.pixelxy2radec = tan_t_pixelxy2radec_any
+tan_t.pixelxy2radec = tan_t_pixelxy2radec
 
-# DEBUG
-def tan_t_rd2xy_broadcast(self, r, d):
+def tan_t_radec2pixelxy(self, r, d):
     return tan_rd2xy_wrapper(self.this, r, d)
-    # print 'tan_radec2pixelxy:', tan_radec2pixelxy, repr(tan_radec2pixelxy)
-    # try:
-    #     return broadcast_2to2ok(tan_radec2pixelxy, self.this, r, d)
-    # except:
-    #     import traceback
-    #     traceback.print_exc()
-    # try:
-    #     return broadcast_2to2ok(tan_rd2xy_wrapper, self.this, r, d)
-    # except:
-    #     import traceback
-    #     traceback.print_exc()
-
-        
-def tan_t_radec2pixelxy_any(self, r, d):
-    if np.iterable(r) or np.iterable(d):
-        r = np.atleast_1d(r).astype(float)
-        d = np.atleast_1d(d).astype(float)
-        # HACK -- should broadcast...
-        assert(len(r) == len(d))
-        x = np.empty(len(r))
-        y = np.empty(len(r))
-        ok = np.empty(len(r), bool)
-        # This looks like a bug (pixelxy2radec rather than radec2pixel)
-        # but it isn't ("reverse = 1")
-        tansip_numpy_pixelxy2radec(self.this, None, x, y, r, d, ok, 1, 0)
-        return ok,x,y
-    else:
-        ok,x,y = self.radec2pixelxy_single(r, d)
-        return ok,x,y
 tan_t.radec2pixelxy_single = tan_t.radec2pixelxy
-tan_t.radec2pixelxy = tan_t_radec2pixelxy_any
+tan_t.radec2pixelxy = tan_t_radec2pixelxy
 
-def tan_t_radec2iwc_any(self, r, d):
-    if np.iterable(r) or np.iterable(d):
-        r = np.atleast_1d(r).astype(float)
-        d = np.atleast_1d(d).astype(float)
-        assert(len(r) == len(d))
-        x = np.empty(len(r))
-        y = np.empty(len(r))
-        ok = np.empty(len(r), bool)
-        # Call the general-purpose numpy wrapper with reverse=1, iwc=1
-        tansip_numpy_pixelxy2radec(self.this, None, x, y, r, d, ok, 1, 1)
-        return ok,x,y
-    else:
-        ok,x,y = self.radec2iwc_single(r, d)
-        return ok,x,y
+def tan_t_radec2iwc(self, r, d):
+    return tan_rd2iwc_wrapper(self.this, r, d)
 tan_t.radec2iwc_single = tan_t.radec2iwc
-tan_t.radec2iwc = tan_t_radec2iwc_any
+tan_t.radec2iwc = tan_t_radec2iwc
+
+def sip_t_pixelxy2radec(self, x, y):
+    return sip_xy2rd_wrapper(self.this, x, y)
+sip_t.pixelxy2radec_single = sip_t.pixelxy2radec
+sip_t.pixelxy2radec = sip_t_pixelxy2radec
+
+def sip_t_radec2pixelxy(self, r, d):
+    return sip_rd2xy_wrapper(self.this, r, d)
+sip_t.radec2pixelxy_single = sip_t.radec2pixelxy
+sip_t.radec2pixelxy = sip_t_radec2pixelxy
+
+def sip_t_radec2iwc(self, r, d):
+    return sip_rd2iwc_wrapper(self.this, r, d)
+sip_t.radec2iwc_single = sip_t.radec2iwc
+sip_t.radec2iwc = sip_t_radec2iwc
+
+
+def anwcs_t_pixelxy2radec(self, x, y):
+    return anwcs_xy2rd_wrapper(self.this, x, y)
+anwcs_t.pixelxy2radec_single = anwcs_t.pixelxy2radec
+anwcs_t.pixelxy2radec = anwcs_t_pixelxy2radec
+
+def anwcs_t_radec2pixelxy(self, r, d):
+    return anwcs_rd2xy_wrapper(self.this, r, d)
+anwcs_t.radec2pixelxy_single = anwcs_t.radec2pixelxy
+anwcs_t.radec2pixelxy = anwcs_t_radec2pixelxy
 
 
 
@@ -1374,22 +1542,6 @@ def tan_t_radec_bounds(self):
     return (r.min(), r.max(), d.min(), d.max())
 tan_t.radec_bounds = tan_t_radec_bounds    
 
-def tan_t_xyz2pixelxy_any(self, xyz):
-    if np.iterable(xyz[0]):
-        xyz = np.atleast_2d(xyz).astype(float)
-        (N,three) = xyz.shape
-        assert(three == 3)
-        x = np.empty(N)
-        y = np.empty(N)
-        # This looks like a bug (pixelxy2radec rather than radec2pixel)
-        # but it isn't ("reverse = 1")
-        tan_numpy_xyz2pixelxy(self.this, xyz, x, y)
-        return x,y
-    else:
-        good,x,y = self.xyz2pixelxy_single(*xyz)
-        return x,y
-tan_t.xyz2pixelxy_single = tan_t.xyz2pixelxy
-tan_t.xyz2pixelxy = tan_t_xyz2pixelxy_any
 
 _real_tan_t_init = tan_t.__init__
 def my_tan_t_init(self, *args, **kwargs):
@@ -1401,41 +1553,6 @@ tan_t.__init__ = my_tan_t_init
 Tan = tan_t
 
 
-
-
-
-######## SIP #####################
-def sip_t_pixelxy2radec_any(self, x, y):
-    if np.iterable(x) or np.iterable(y):
-        x = np.atleast_1d(x).astype(float)
-        y = np.atleast_1d(y).astype(float)
-        r = np.empty(len(x))
-        d = np.empty(len(x))
-        tansip_numpy_pixelxy2radec(None, self.this, x, y, r, d, None, 0, 0)
-        return r,d
-    else:
-        return self.pixelxy2radec_single(float(x), float(y))
-sip_t.pixelxy2radec_single = sip_t.pixelxy2radec
-sip_t.pixelxy2radec = sip_t_pixelxy2radec_any
-
-def sip_t_radec2pixelxy_any(self, r, d):
-    if np.iterable(r) or np.iterable(d):
-        r = np.atleast_1d(r).astype(float)
-        d = np.atleast_1d(d).astype(float)
-        # HACK -- should broadcast...
-        assert(len(r) == len(d))
-        x = np.empty(len(r))
-        y = np.empty(len(r))
-        ok = np.empty(len(r), bool)
-        # This looks like a bug (pixelxy2radec rather than radec2pixel)
-        # but it isn't ("reverse = 1")
-        tansip_numpy_pixelxy2radec(None, self.this, x, y, r, d, ok, 1, 0)
-        return ok,x,y
-    else:
-        ok,x,y = self.radec2pixelxy_single(r, d)
-        return ok,x,y
-sip_t.radec2pixelxy_single = sip_t.radec2pixelxy
-sip_t.radec2pixelxy = sip_t_radec2pixelxy_any
 
 def sip_t_get_subimage(self, xlo, xhi, ylo, yhi):
     sipout = sip_t(self)
@@ -1462,7 +1579,6 @@ def sip_t_setstate(self, s):
     self.wcstan.set_cd(cd0,cd1,cd2,cd3)
     self.wcstan.set_imagesize(w,h)
     self.wcstan.sin = sin
-
 
 def sip_t_getnewargs(self):
     return ()

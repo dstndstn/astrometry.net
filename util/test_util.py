@@ -65,6 +65,6 @@ for r,d in [(1., 2.),
         print d.dtype,
     print d
     
-    ok,x,y = tan_t_rd2xy_broadcast(wcs, r, d)
+    ok,x,y = wcs.radec2pixelxy(r, d)
     print 'ok,x,y', ok,x,y
 
