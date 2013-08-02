@@ -138,7 +138,9 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
         # del dd
         #rr,dd = 
         ok,Xo,Yo = wcs.radec2pixelxy(
-            *targetwcs.pixelxy2radec(xx + 1, yy + 1))
+            *targetwcs.pixelxy2radec(
+                xx[np.newaxis,:] + 1,
+                yy[:,np.newaxis] + 1))
         Xo -= 1.
         Yo -= 1.
         del ok
@@ -205,7 +207,7 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
         #     fyi[i,:] = y - 1.
 
         ok,fxi,fyi = wcs.radec2pixelxy(
-            *targetwcs.pixelxy2radec(ixo + 1., iyo + 1.))
+            *targetwcs.pixelxy2radec(ixo[np.newaxis,:] + 1., iyo[:,np.newaxis] + 1.))
         del ok
         fxi -= 1.
         fyi -= 1.
