@@ -16,8 +16,8 @@ CAT_DIR = os.path.join(os.path.dirname(os.path.dirname(WEB_DIR)),
 SDSS_TILE_DIR = os.path.join(WEB_DIR, 'sdss-tiles')
 GALEX_JPEG_DIR = os.path.join(WEB_DIR, 'GALEX-jpegs')
 #HENRY_DRAPER_CAT = os.path.join(WEB_DIR, 'hd.fits')
-
-HENRY_DRAPER_CAT = '/data1/catalogs-fits/HD/hd2.fits'
+#HENRY_DRAPER_CAT = '/data1/catalogs-fits/HD/hd2.fits'
+HENRY_DRAPER_CAT = '/data2/nova/hd.fits'
 TYCHO2_KD = '/data2/nova/tycho2.kd'
 
 DATADIR = os.path.join(WEB_DIR, 'data', 'files')
