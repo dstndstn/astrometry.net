@@ -63,6 +63,12 @@ data and database inconsistent.  (Ditto for the "jobs" directory.)
 The exact details will depend on whether you have to run any elaborate
 schema migration scripts.  In the simplest case, copy the database.
 
+    dropdb an-staging
+    createdb an-staging
+    pg_dump an-nova | psql an-staging
+
+OLD INSTRUCTIONS (db copy requires too much downtime on nova)::
+
     # stop process_submissions.py on nova temporarily, to allow access to an-nova database
     screen -R nova
     fg 1
