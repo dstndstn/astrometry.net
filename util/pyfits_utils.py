@@ -681,71 +681,14 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
     ncomplain = 0
     i0 = 0
     while True:
-        # Create empty data arrays
-        data = []
-        for t in coltypes:
-            if t is str:
-                data.append([''] * Nchunk)
-            else:
-                data.append(np.zeros(Nchunk, t))
-
-        j = 0
-
-        lines = []
-        for i,line in zip(xrange(Nchunk), f):
-            lines.append(line)
-            
-        #for i,line in zip(xrange(Nchunk), f):
         import time
         t0 = time.clock()
 
-        for i,line in enumerate(lines):
-            line = line.strip()
-            if split is None:
-                words = line.split()
-            else:
-                words = line.split(split)
-            if len(words) != len(colnames):
-                ncomplain += 1
-                if ncomplain > 10:
-                    continue
-                print ('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n    "%s"\n(Skipping this row of the input file)' %
-                       (len(colnames), ', '.join(colnames), i+i0, len(words), r))
-                continue
-
-            floattypes = [float,np.float32,np.float64]
-            inttypes = [int, np.int32, np.int64]
-
-            for ic,(dat,word,typ,name) in enumerate(zip(data, words, coltypes, colnames)):
-                valmap = None
-                if typ in floattypes:
-                    valmap = floatvalmap
-                if typ in inttypes:
-                    valmap = intvalmap
-
-                if valmap is not None and word in valmap:
-                    val = valmap[word]
-                else:
-                    try:
-                        val = typ(word)
-                    except:
-                        print ('Failed to parse word "%s" as a %s, line %i column %i (line: "%s")' %
-                               (word, str(typ), i+i0, ic, line))
-                        raise
-
-                dat[j] = val
-            j += 1
-
-        t1 = time.clock()
-
-        data2 = []
-        for t in coltypes:
-            data2.append([None] * Nchunk)
-
-        t2 = time.clock()
-
+        # Create empty data arrays
+        data = [[None] * Nchunk for t in coltypes]
         j = 0
-        for i,line in enumerate(lines):
+        lines = []
+        for i,line in zip(xrange(Nchunk), f):
             line = line.strip()
             if split is None:
                 words = line.split()
@@ -758,41 +701,56 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
                 print ('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n    "%s"\n(Skipping this row of the input file)' %
                        (len(colnames), ', '.join(colnames), i+i0, len(words), r))
                 continue
-            for d,w in zip(data2, words):
+            for d,w in zip(data, words):
                 d[j] = w
             j += 1
+        nread = i+1
+        goodrows = j
+        
+        t1 = time.clock()
 
-        for dat,typ in zip(data2, coltypes):
-            valmap = None
+        floattypes = [float,np.float32,np.float64]
+        inttypes = [int, np.int32, np.int64]
+
+        for dat,typ in zip(data, coltypes):
             if typ in floattypes:
                 valmap = floatvalmap
-            if typ in inttypes:
+            elif typ in inttypes:
                 valmap = intvalmap
-            if valmap is None:
+            else:
                 continue
+            # HACK -- replace with stringified versions of bad-values
+            valmap = dict([(k,str(v)) for k,v in valmap.items()])
             for i,d in enumerate(dat):
+                #dat[i] = valmap.get(d,d)
+                # try:
+                #     dat[i] = valmap[d]
+                # except KeyError:
+                #     pass
                 if d in valmap:
-                    dat[i] = str(valmap[d])
-
-        data2 = [dat[:j] for dat in data2]
-        data2 = [np.array(dat).astype(typ) for dat,typ in zip(data2, coltypes)]
+                    dat[i] = valmap[d]
+        t2 = time.clock()
+                    
+        # trim to valid rows
+        data = [dat[:goodrows] for dat in data]
+        # convert
+        data = [np.array(dat).astype(typ) for dat,typ in zip(data, coltypes)]
                     
         t3 = time.clock()
 
-        print 'Parsing elements:', t1-t0
-        print 'np.astype:', t3-t2
-        
-            
+        #print 'Reading & splitting:', t1-t0
+        #print 'Bad values:', t2-t1
+        #print 'Conversion:', t3-t2
+        #print 'Total:', t3-t0
+
         # print 'Read', i+1, 'lines'
         # print 'Read', j, 'valid lines'
-        print 'Read:', i0 + i+1
+        print 'Read line', i0 + nread
         
-        # trim to valid rows
-        data = [dat[:j] for dat in data]
         alldata.append(data)
-        i0 += (i + 1)
+        i0 += nread
 
-        if i != (Nchunk - 1):
+        if nread != Nchunk:
             break
         
     if ncomplain > 10:
