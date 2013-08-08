@@ -633,6 +633,184 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 
 table_fields = fits_table
 
+### FIXME -- it would be great to have a streaming text2fits as well!
+### (fitsio does this fairly easily)
+def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
+                         headerline=None, coltypes=None,
+                         intvalmap={'NaN':-1000000, '':-1000000},
+                         floatvalmap={'': np.nan}):
+    # unimplemented
+    assert(maxcols is None)
+
+    f = None
+    if isinstance(forfn, str):
+        f = open(forfn)
+        print 'Reading file', forfn
+    else:
+        f = forfn
+
+    for i in range(skiplines):
+        x = f.readline()
+        print 'Skipping line:', x
+
+    if headerline is None:
+        headerline = f.readline().strip()
+        print 'Header:', headerline
+    header = headerline
+
+    if header[0] == '#':
+        header = header[1:]
+
+    if split is None:
+        colnames = header.split()
+    else:
+        colnames = header.split(split)
+    print 'Column names:', colnames
+
+    if coltypes is not None:
+        if len(coltypes) != len(colnames):
+            print 'Column names:', len(colnames)
+            print 'Column types:', len(coltypes)
+            raise Exception('Column names vs types length mismatch: %i vs %i' %
+                            (len(colnames), len(coltypes)))
+    else:
+        coltypes = [str] * len(colnames)
+
+    Nchunk = 100000
+    alldata = []
+    ncomplain = 0
+    i0 = 0
+    while True:
+        # Create empty data arrays
+        data = []
+        for t in coltypes:
+            if t is str:
+                data.append([''] * Nchunk)
+            else:
+                data.append(np.zeros(Nchunk, t))
+
+        j = 0
+
+        lines = []
+        for i,line in zip(xrange(Nchunk), f):
+            lines.append(line)
+            
+        #for i,line in zip(xrange(Nchunk), f):
+        import time
+        t0 = time.clock()
+
+        for i,line in enumerate(lines):
+            line = line.strip()
+            if split is None:
+                words = line.split()
+            else:
+                words = line.split(split)
+            if len(words) != len(colnames):
+                ncomplain += 1
+                if ncomplain > 10:
+                    continue
+                print ('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n    "%s"\n(Skipping this row of the input file)' %
+                       (len(colnames), ', '.join(colnames), i+i0, len(words), r))
+                continue
+
+            floattypes = [float,np.float32,np.float64]
+            inttypes = [int, np.int32, np.int64]
+
+            for ic,(dat,word,typ,name) in enumerate(zip(data, words, coltypes, colnames)):
+                valmap = None
+                if typ in floattypes:
+                    valmap = floatvalmap
+                if typ in inttypes:
+                    valmap = intvalmap
+
+                if valmap is not None and word in valmap:
+                    val = valmap[word]
+                else:
+                    try:
+                        val = typ(word)
+                    except:
+                        print ('Failed to parse word "%s" as a %s, line %i column %i (line: "%s")' %
+                               (word, str(typ), i+i0, ic, line))
+                        raise
+
+                dat[j] = val
+            j += 1
+
+        t1 = time.clock()
+
+        data2 = []
+        for t in coltypes:
+            data2.append([None] * Nchunk)
+
+        t2 = time.clock()
+
+        j = 0
+        for i,line in enumerate(lines):
+            line = line.strip()
+            if split is None:
+                words = line.split()
+            else:
+                words = line.split(split)
+            if len(words) != len(colnames):
+                ncomplain += 1
+                if ncomplain > 10:
+                    continue
+                print ('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n    "%s"\n(Skipping this row of the input file)' %
+                       (len(colnames), ', '.join(colnames), i+i0, len(words), r))
+                continue
+            for d,w in zip(data2, words):
+                d[j] = w
+            j += 1
+
+        for dat,typ in zip(data2, coltypes):
+            valmap = None
+            if typ in floattypes:
+                valmap = floatvalmap
+            if typ in inttypes:
+                valmap = intvalmap
+            if valmap is None:
+                continue
+            for i,d in enumerate(dat):
+                if d in valmap:
+                    dat[i] = str(valmap[d])
+
+        data2 = [dat[:j] for dat in data2]
+        data2 = [np.array(dat).astype(typ) for dat,typ in zip(data2, coltypes)]
+                    
+        t3 = time.clock()
+
+        print 'Parsing elements:', t1-t0
+        print 'np.astype:', t3-t2
+        
+            
+        # print 'Read', i+1, 'lines'
+        # print 'Read', j, 'valid lines'
+        print 'Read:', i0 + i+1
+        
+        # trim to valid rows
+        data = [dat[:j] for dat in data]
+        alldata.append(data)
+        i0 += (i + 1)
+
+        if i != (Nchunk - 1):
+            break
+        
+    if ncomplain > 10:
+        print 'Total of', ncomplain, 'bad lines'
+
+    # merge chunks
+    T = tabledata()
+    for name in reversed(colnames):
+        print 'Merging', name
+        xx = [data.pop() for data in alldata]
+        print 'lengths:', [len(x) for x in xx]
+        xx = np.hstack(xx)
+        print 'total:', len(xx)
+        print 'type:', xx.dtype
+        T.set(name, xx)
+
+    return T
+        
 # ultra-brittle text table parsing.
 def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, maxcols=None, headerline=None, coltypes=None,
                       intvalmap={'NaN':-1000000},

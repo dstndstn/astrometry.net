@@ -35,9 +35,13 @@ if __name__ == '__main__':
 
     fnulls = dict([(x, np.nan) for x in opt.fnull])
     
-    t = text_table_fields(textfn, split=opt.separator, maxcols=opt.maxcols,
-                          skiplines=opt.skiplines, headerline=opt.header,
-                          coltypes=coltypes, floatvalmap=fnulls)
-    t.write_to(fitsfn)
+    #T = text_table_fields(textfn, split=opt.separator, maxcols=opt.maxcols,
+    #                      skiplines=opt.skiplines, headerline=opt.header,
+    #                      coltypes=coltypes, floatvalmap=fnulls)
+    fnulls[''] = np.nan
+    T = streaming_text_table(textfn, split=opt.separator, maxcols=opt.maxcols,
+                             skiplines=opt.skiplines, headerline=opt.header,
+                             coltypes=coltypes, floatvalmap=fnulls)
+    T.write_to(fitsfn)
 
     
