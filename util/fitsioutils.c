@@ -299,15 +299,17 @@ void fits_use_error_system() {
     qfits_err_statset(1);
 }
 
-int fits_convert_data(void* vdest, int deststride, tfits_type desttype,
-                      const void* vsrc, int srcstride, tfits_type srctype,
-                      int arraysize, size_t N) {
+int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
+                        const void* vsrc, int srcstride, tfits_type srctype,
+                        int arraysize, size_t N,
+                        double bzero, double bscale) {
 	size_t i;
     int j;
     char* dest = vdest;
     const char* src = vsrc;
     int destatomsize = fits_get_atom_size(desttype);
     int srcatomsize = fits_get_atom_size(srctype);
+    anbool scaling = (bzero != 0.0) || (bscale != 1.0);
 
     // this loop is over rows of data
     for (i=0; i<N; i++) {
@@ -359,6 +361,14 @@ int fits_convert_data(void* vdest, int deststride, tfits_type desttype,
                 return -1;
             }
 
+            if (scaling) {
+                if (src_is_int) {
+                    src_is_int = FALSE;
+                    dval = ival;
+                }
+                dval = (bzero + dval * bscale);
+            }
+
             switch (desttype) {
             case TFITS_BIN_TYPE_A:
             case TFITS_BIN_TYPE_X:
@@ -397,6 +407,15 @@ int fits_convert_data(void* vdest, int deststride, tfits_type desttype,
         src  +=  srcstride;
     }
     return 0;
+}
+
+
+int fits_convert_data(void* vdest, int deststride, tfits_type desttype,
+                      const void* vsrc, int srcstride, tfits_type srctype,
+                      int arraysize, size_t N) {
+    return fits_convert_data_2(vdest, deststride, desttype,
+                               vsrc, srcstride, srctype,
+                               arraysize, N, 0.0, 1.0);
 }
 
 double fits_get_double_val(const qfits_table* table, int column,

@@ -204,6 +204,11 @@ int fits_convert_data(void* dest, int deststride, tfits_type desttype,
                       const void* src, int srcstride, tfits_type srctype,
                       int arraysize, size_t N);
 
+int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
+                        const void* vsrc, int srcstride, tfits_type srctype,
+                        int arraysize, size_t N,
+                        double bzero, double bscale);
+
 // write single column fields:
 int fits_write_data_A(FILE* fid, char value);
 int fits_write_data_B(FILE* fid, uint8_t value);

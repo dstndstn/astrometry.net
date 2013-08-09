@@ -27,9 +27,8 @@
 #include <math.h>
 
 #include "an-bool.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "permutedsort.h"
-#include "qfits_error.h"
 #include "log.h"
 #include "errors.h"
 #include "fitsioutils.h"
@@ -117,10 +116,11 @@ int main(int argc, char *argv[]) {
 	int ext = 0;
 	int plane = 0;
 	int margin = 0;
-	qfitsloader ldr;
 	float* img;
 	int nx, ny;
     anbool invert = FALSE;
+
+    anqfits_t* anq;
 
 	anbool minval_set = FALSE;
 	anbool maxval_set = FALSE;
@@ -221,26 +221,18 @@ int main(int argc, char *argv[]) {
 
 	maxpix = (sixteenbit ? 65535 : 255);
 
-	ldr.filename = infn;
-	ldr.xtnum = ext;
-	ldr.pnum = plane;
-	ldr.ptype = PTYPE_FLOAT;
-	ldr.map = 1;
-
-	if (qfitsloader_init(&ldr)) {
-		ERROR("Failed to read input file info: \"%s\"", infn);
+    anq = anqfits_open(infn);
+    if (!anq) {
+		ERROR("Failed to read input file: \"%s\"", infn);
 		exit(-1);
-	}
-
+    }
 	logverb("Reading pixels...\n");
-	if (qfits_loadpix(&ldr)) {
+    img = anqfits_readpix(anq, ext, 0,0,0,0, plane,
+                          PTYPE_FLOAT, NULL, &nx, &ny);
+    if (!img) {
 		ERROR("Failed to load pixels.");
 		exit(-1);
 	}
-
-	img = ldr.fbuf;
-	nx = ldr.lx;
-	ny = ldr.ly;
 
 	if (median) {
 		int* perm = permuted_sort(img, sizeof(float), compare_floats_asc, NULL, nx*ny);
@@ -256,8 +248,6 @@ int main(int argc, char *argv[]) {
 
 		logverb("Doing ordinal transform...\n");
 		perm = permuted_sort(img, sizeof(float), compare_floats_asc, NULL, np);
-
-		qfitsloader_free_buffers(&ldr);
 
 		if (sixteenbit)
 			outimg = malloc(np * sizeof(uint16_t));
@@ -359,11 +349,12 @@ int main(int argc, char *argv[]) {
 			}
 			i += n;
 		}
-		qfitsloader_free_buffers(&ldr);
 	}
 
 	if (outfn)
 		fclose(fout);
+    anqfits_close(anq);
+    free(img);
 	logverb("Done!\n");
 	return 0;
 }

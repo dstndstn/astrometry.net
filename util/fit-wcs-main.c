@@ -65,6 +65,7 @@ int main(int argc, char** args) {
     int siporder = 0;
     int W, H;
     anbool crpix_center = FALSE;
+    int i;
 
 	fits_use_error_system();
 
@@ -74,10 +75,10 @@ int main(int argc, char** args) {
 			print_help(args[0]);
 			exit(0);
         case 'W':
-            width = atoi(optarg);
+            W = atoi(optarg);
             break;
         case 'H':
-            height = atoi(optarg);
+            H = atoi(optarg);
             break;
         case 'C':
             crpix_center = TRUE;
@@ -209,8 +210,8 @@ int main(int argc, char** args) {
             }
         }
         logverb("Image size = %i x %i pix\n", W, H);
-        wcs.a_order  = wcs.b_order  = sip_order;
-        wcs.ap_order = wcs.bp_order = sip_order + 1;
+        wcs.a_order  = wcs.b_order  = siporder;
+        wcs.ap_order = wcs.bp_order = siporder + 1;
         // Start with a TAN
         if (fit_tan_wcs(xyz, fieldxy, N, &(wcs.wcstan), NULL)) {
             ERROR("Failed to fit for TAN WCS");
@@ -237,7 +238,7 @@ int main(int argc, char** args) {
             goto bailout;
         }
     } else {
-        if (sip_write_to_file(&wcs), outfn)) {
+        if (sip_write_to_file(&wcs, outfn)) {
             ERROR("Failed to write SIP WCS header to file \"%s\"", outfn);
             goto bailout;
         }
