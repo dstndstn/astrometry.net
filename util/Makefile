@@ -40,7 +40,7 @@ ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
 	gslutils.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
-	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o wcs-resample.o scamp.o
+	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o wcs-resample.o
 
 ANFILES_LIB := libanfiles.a
 # Things that it depends on but that aren't linked in
@@ -49,7 +49,7 @@ ANFILES_OBJ :=
 
 ifndef NO_QFITS
 ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
-	starxy.o qidxfile.o quadfile.o scamp-catalog.o \
+	starxy.o qidxfile.o quadfile.o scamp.o scamp-catalog.o \
 	hd.o
 ANFILES_DEPS += $(QFITS_LIB)
 endif
