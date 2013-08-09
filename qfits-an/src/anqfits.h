@@ -11,12 +11,10 @@
 #include "qfits_header.h"
 #include "qfits_table.h"
 #include "qfits_keywords.h"
-
-//typedef uint8_t bool;
+#include "qfits_std.h"
 
 // Everything we know about a FITS extension.
 struct anqfits_ext_t {
-	//bool inited;
 	// Offsets to header, in FITS blocks
 	// --> int works for ~12 TB files.
 	int hdr_start;
@@ -27,25 +25,58 @@ struct anqfits_ext_t {
 	// Data size
 	int data_size;
 	qfits_header* header;
-	//bool table_read;
 	qfits_table* table;
 };
 typedef struct anqfits_ext_t anqfits_ext_t;
 
 struct anqfits_t {
     char* filename;
-    //ino_t       inode ; /* Inode */
-    //time_t        mtime;  /* Last modification date */
-    //int filesize; /* File size in bytes */
-    //time_t        ctime;  /* Last modification date */
-
     int Nexts;    // # of extensions in file
-
 	anqfits_ext_t* exts;
-
-    off_t filesize ; // File size in FITS blocks (2880 bytes)
+    off_t filesize ; // File size in FITS blocks
 };
 typedef struct anqfits_t anqfits_t;
+
+
+
+typedef struct anqfitsloader {
+    /** input: Index of the plane you want, from 0 to np-1 */
+    int            pnum;
+    /** input: Pixel type you want (PTYPE_FLOAT, PTYPE_INT or PTYPE_DOUBLE) */
+    int            ptype;
+    /** input: Guarantee file copy or allow file mapping */
+    int         map;
+    /** output: Size in X of the requested plane */
+    int            lx;
+    /** output: Size in Y of the requested plane */
+    int            ly;
+    /** output: Number of planes present in this extension */
+    int            np;
+    /** output: BITPIX for this extension */
+    int            bitpix;
+    /** output: BSCALE found for this extension */
+    double        bscale;
+    /** output: BZERO found for this extension */
+    double        bzero;
+    /** output: Start of the data segment (in bytes) for your request */
+    off_t          seg_start;
+    /** output: Size of the data segment (in bytes) for your request */
+    off_t         seg_size;
+
+    /** output: Pointer to pixel buffer loaded as integer values */
+    int        *    ibuf;
+    /** output: Pointer to pixel buffer loaded as float values */
+    float    *    fbuf;
+    /** output: Pointer to pixel buffer loaded as double values */
+    double    *    dbuf;
+
+	// internal: allocated buffer.
+	void* pixbuffer;
+} anqfitsloader_t;
+
+
+
+
 
 anqfits_t* anqfits_open(const char* filename);
 
