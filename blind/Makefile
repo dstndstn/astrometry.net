@@ -102,11 +102,11 @@ PIPELINE := usnobtofits hpowned \
 	startree hpquads codetree unpermute-quads unpermute-stars blind \
 	solvedserver printsolved xylist2fits mergesolved rdlsinfo xylsinfo \
 	wcsinfo subwcs wcs-grab fits-guess-scale agreeable new-wcs get-wcs \
-	augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
+	augment-xylist solve-field wcs-xy2rd wcs-rd2xy \
 	certifiable 2masstofits nomadtofits \
 	merge-index index-to-table setsolved \
 	startree2 uniformize-catalog build-index query-starkd \
-	local-index index-info
+	local-index index-info fit-wcs
 
 PROGS := backend image2xy control-program
 
@@ -415,6 +415,11 @@ wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += wcs-rd2xy-main.o
 
+fit-wcs: fit-wcs-main.o tweak2.o tweak.o verify.o matchobj.o $(UTIL_OBJS) \
+		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
+ALL_OBJ += fit-wcs-main.o
+
 wcs-pv2sip: wcs-pv2sip.o tweak.o $(ANLIBS)
 ALL_OBJ += wcs-pv2sip.o
 
@@ -532,11 +537,10 @@ ALL_OBJ += verify-main.o
 solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o \
 		image2xy-files.o resort-xylist.o tabsort.o cut-table.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
-		scamp.o \
 		$(SIMPLEXY_OBJ) $(CFITS_DEP) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(CFITS_LIB) $(LDLIBS)
 
-ALL_OBJ += scamp.o cut-table.o
+ALL_OBJ += cut-table.o
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o cut-table.o fits-guess-scale.o \
 		image2xy-files.o resort-xylist.o blindutils.o \

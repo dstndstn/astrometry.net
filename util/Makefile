@@ -126,7 +126,7 @@ CFLAGS += -I.
 PYTHON_LIBS := _sip.so _healpix.so
 
 PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image search-index hpsplit wcs-to-tan get-healpix
-MAIN_PROGS := wcs-resample fit-wcs
+MAIN_PROGS := wcs-resample
 
 # tycho2tostellarium build-hd-tree
 
