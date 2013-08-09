@@ -534,7 +534,7 @@ def normalize_column(X):
         X = X.astype(dt.newbyteorder('N'))
     return X
 
-def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
+def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
                header='default',
                columns=None,
                column_map=None,
@@ -546,6 +546,9 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
     If 'columns' (a list of strings) is passed, only those columns
     will be read; otherwise all columns will be read.
     '''
+    if dataorfn is None:
+        return tabledata(header=header)
+    
     fitsio = None
     if use_fitsio:
         try:

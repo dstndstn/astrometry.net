@@ -1,3 +1,5 @@
+#include <sys/param.h>
+
 #include "starutil.h"
 #include "mathutil.h"
 #include "fit-wcs.h"
@@ -10,8 +12,9 @@
 #include "anwcs.h"
 #include "log.h"
 #include "errors.h"
+#include "tweak2.h"
 
-static const char* OPTIONS = "hx:X:Y:R:D:c:r:o:v";
+static const char* OPTIONS = "hx:X:Y:R:D:c:r:o:s:W:H:Cv";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -21,9 +24,15 @@ void print_help(char* progname) {
 		   "   -r <rdls input file>\n"
 		   "     [-R <RA-column-name> -D <Dec-column-name>]\n"
 		   " OR\n"
-		   "   -c <corr file>\n"
+		   "   -c <correspondences file>\n"
+           "      (default column names: FIELD_X, FIELD_Y, INDEX_RA, INDEX_DEC)\n"
 		   "\n"
 		   "   -o <WCS output file>\n"
+           "\n"
+           "   [-s <SIP-order>] (default is a WCS TAN solution, not SIP)\n"
+           "   [-W <image-width> ] (default: max X position; used for SIP)\n"
+           "   [-H <image-height>] (default: max Y position; used for SIP)\n"
+           "   [-C]: set CRPIX to be the center of the field; SIP only\n"
            "   [-v]: verbose\n"
 		   "\n", progname);
 }
@@ -50,9 +59,12 @@ int main(int argc, char** args) {
 	int N;
 	double* fieldxy = NULL;
 	double* xyz = NULL;
-	tan_t wcs;
+	sip_t wcs;
 	int rtn = -1;
     int loglvl = LOG_MSG;
+    int siporder = 0;
+    int W, H;
+    anbool crpix_center = FALSE;
 
 	fits_use_error_system();
 
@@ -61,6 +73,18 @@ int main(int argc, char** args) {
         case 'h':
 			print_help(args[0]);
 			exit(0);
+        case 'W':
+            width = atoi(optarg);
+            break;
+        case 'H':
+            height = atoi(optarg);
+            break;
+        case 'C':
+            crpix_center = TRUE;
+            break;
+        case 's':
+            siporder = atoi(optarg);
+            break;
 		case 'c':
 			corrfn = optarg;
 			break;
@@ -168,15 +192,56 @@ int main(int argc, char** args) {
 	}
 
 	logverb("Fitting WCS\n");
-	if (fit_tan_wcs(xyz, fieldxy, N, &wcs, NULL)) {
-		ERROR("Failed to fit for TAN WCS");
-		goto bailout;
-	}
+    if (siporder == 0) {
+        if (fit_tan_wcs(xyz, fieldxy, N, &(wcs.wcstan), NULL)) {
+            ERROR("Failed to fit for TAN WCS");
+            goto bailout;
+        }
+    } else {
+        if (W == 0) {
+            for (i=0; i<N; i++) {
+                W = MAX(W, (int)ceil(fieldxy[2*i + 0]));
+            }
+        }
+        if (H == 0) {
+            for (i=0; i<N; i++) {
+                H = MAX(H, (int)ceil(fieldxy[2*i + 1]));
+            }
+        }
+        logverb("Image size = %i x %i pix\n", W, H);
+        wcs.a_order  = wcs.b_order  = sip_order;
+        wcs.ap_order = wcs.bp_order = sip_order + 1;
+        // Start with a TAN
+        if (fit_tan_wcs(xyz, fieldxy, N, &(wcs.wcstan), NULL)) {
+            ERROR("Failed to fit for TAN WCS");
+            goto bailout;
+        }
+        if (crpix_center) {
+            double cx,cy;
+            double cr,cd;
+            cx = 1. + 0.5 * W;
+            cy = 1. + 0.5 * H;
+            tan_pixelxy2radec(&(wcs.wcstan), cx, cy, &cr, &cd);
+            wcs.wcstan.crpix[0] = cx;
+            wcs.wcstan.crpix[1] = cy;
+            wcs.wcstan.crval[0] = cr;
+            wcs.wcstan.crval[1] = cd;
+        }
 
-	if (tan_write_to_file(&wcs, outfn)) {
-		ERROR("Failed to write TAN WCS header to file \"%s\"", outfn);
-		goto bailout;
-	}
+        tweak2_from_correspondences(fieldxy, xyz, NULL, N, &wcs);
+    }
+
+    if (siporder <= 1) {
+        if (tan_write_to_file(&(wcs.wcstan), outfn)) {
+            ERROR("Failed to write TAN WCS header to file \"%s\"", outfn);
+            goto bailout;
+        }
+    } else {
+        if (sip_write_to_file(&wcs), outfn)) {
+            ERROR("Failed to write SIP WCS header to file \"%s\"", outfn);
+            goto bailout;
+        }
+    }
 	logverb("Wrote WCS to %s\n", outfn);
 
 	starxy_free_data(&xy);
