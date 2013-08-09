@@ -106,9 +106,9 @@ PIPELINE := usnobtofits hpowned \
 	certifiable 2masstofits nomadtofits \
 	merge-index index-to-table setsolved \
 	startree2 uniformize-catalog build-index query-starkd \
-	local-index index-info fit-wcs
+	local-index index-info 
 
-PROGS := backend image2xy control-program
+PROGS := backend image2xy control-program fit-wcs
 
 PROSPECTUS := quadidx codeprojections quadscales quadsperstar \
 	quadcenters startree2rdls
