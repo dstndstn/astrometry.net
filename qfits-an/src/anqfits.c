@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <errno.h>
+#include <sys/mman.h>
 
 #include "anqfits.h"
 #include "qfits_std.h"
@@ -22,6 +23,10 @@
 #include "qfits_rw.h"
 #include "qfits_card.h"
 
+#include "qfits_image.h"
+#include "qfits_convert.h"
+#include "qfits_byteswap.h"
+
 #if 0
 #define qdebug( code ) { code }
 #define debug printf
@@ -29,6 +34,160 @@
 #define qdebug( code ) {}
 #define debug(args...)
 #endif
+
+
+// from ioutils.c
+static
+void get_mmap_size(size_t start, size_t size, off_t* mapstart, size_t* mapsize, int* pgap) {
+	int ps = getpagesize();
+	int gap = start % ps;
+	// start must be a multiple of pagesize.
+	*mapstart = start - gap;
+	*mapsize  = size  + gap;
+	*pgap = gap;
+}
+// from fitsioutils.c:
+static int fits_get_atom_size(tfits_type type) {
+	int atomsize = -1;
+	switch (type) {
+	case TFITS_BIN_TYPE_A:
+	case TFITS_BIN_TYPE_X:
+	case TFITS_BIN_TYPE_L:
+	case TFITS_BIN_TYPE_B:
+		atomsize = 1;
+		break;
+	case TFITS_BIN_TYPE_I:
+		atomsize = 2;
+		break;
+	case TFITS_BIN_TYPE_J:
+	case TFITS_BIN_TYPE_E:
+		atomsize = 4;
+		break;
+	case TFITS_BIN_TYPE_K:
+	case TFITS_BIN_TYPE_D:
+		atomsize = 8;
+		break;
+	default:
+		break;
+	}
+	return atomsize;
+}
+
+static 
+int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
+                        const void* vsrc, int srcstride, tfits_type srctype,
+                        int arraysize, size_t N,
+                        double bzero, double bscale) {
+	size_t i;
+    int j;
+    char* dest = vdest;
+    const char* src = vsrc;
+    int destatomsize = fits_get_atom_size(desttype);
+    int srcatomsize = fits_get_atom_size(srctype);
+    int scaling = (bzero != 0.0) || (bscale != 1.0);
+
+    // this loop is over rows of data
+    for (i=0; i<N; i++) {
+        // store local pointers so we can stride over the array, without
+        // affecting the row stride.
+        char* adest = dest;
+        const char* asrc = src;
+        int64_t ival = 0;
+        double  dval = 0;
+        int src_is_int = 1;
+
+        // this loop is over elements of the array, if the column contains an array.
+        // (ie, for scalar columns, arraysize is 1.)
+        for (j=0; j<arraysize; j++) {
+            switch (srctype) {
+            case TFITS_BIN_TYPE_A:
+            case TFITS_BIN_TYPE_X:
+            case TFITS_BIN_TYPE_B:
+                ival = *((uint8_t*)asrc);
+                break;
+            case TFITS_BIN_TYPE_L:
+                // these are actually the characters 'T' and 'F'.
+                ival = *((uint8_t*)asrc);
+                if (ival == 'T')
+                    ival = 1;
+                else
+                    ival = 0;
+                break;
+            case TFITS_BIN_TYPE_I:
+                ival = *((int16_t*)asrc);
+                break;
+            case TFITS_BIN_TYPE_J:
+                ival = *((int32_t*)asrc);
+                break;
+            case TFITS_BIN_TYPE_K:
+                ival = *((int64_t*)asrc);
+                break;
+            case TFITS_BIN_TYPE_E:
+                dval = *((float*)asrc);
+                src_is_int = 0;
+                break;
+            case TFITS_BIN_TYPE_D:
+                dval = *((double*)asrc);
+                src_is_int = 0;
+                break;
+            default:
+                fprintf(stderr, "fits_convert_data: unknown source type %i\n", srctype);
+                assert(0);
+                return -1;
+            }
+
+            if (scaling) {
+                if (src_is_int) {
+                    src_is_int = 0;
+                    dval = ival;
+                }
+                dval = (bzero + dval * bscale);
+            }
+
+            switch (desttype) {
+            case TFITS_BIN_TYPE_A:
+            case TFITS_BIN_TYPE_X:
+            case TFITS_BIN_TYPE_B:
+                *((uint8_t*)adest) = (src_is_int ? ival : dval);
+                break;
+            case TFITS_BIN_TYPE_L:
+                *((char*)adest) = (src_is_int ? ival : dval) ? 'T' : 'F';
+                break;
+            case TFITS_BIN_TYPE_I:
+                *((int16_t*)adest) = (src_is_int ? ival : dval);
+                break;
+            case TFITS_BIN_TYPE_J:
+                *((int32_t*)adest) = (src_is_int ? ival : dval);
+                break;
+            case TFITS_BIN_TYPE_K:
+                *((int64_t*)adest) = (src_is_int ? ival : dval);
+                break;
+            case TFITS_BIN_TYPE_E:
+                *((float*)adest) = (src_is_int ? ival : dval);
+                break;
+            case TFITS_BIN_TYPE_D:
+                *((double*)adest) = (src_is_int ? ival : dval);
+                break;
+            default:
+                fprintf(stderr, "fits_convert_data: unknown destination type %i\n", desttype);
+                assert(0);
+                return -1;
+            }
+
+            asrc  += srcatomsize;
+            adest += destatomsize;
+        }
+
+        dest += deststride;
+        src  +=  srcstride;
+    }
+    return 0;
+}
+
+
+
+
+
 
 int anqfits_n_ext(const anqfits_t* qf) {
     return qf->Nexts;
@@ -165,6 +324,103 @@ const qfits_table* anqfits_get_table_const(const anqfits_t* qf, int ext) {
     return qf->exts[ext].table;
 }
 
+anqfits_image_t* anqfits_get_image(const anqfits_t* qf, int ext) {
+    const anqfits_image_t* t = anqfits_get_image_const(qf, ext);
+    anqfits_image_t* tout;
+    if (!t)
+        return NULL;
+    tout = anqfits_image_new();
+    memcpy(tout, t, sizeof(anqfits_image_t));
+    return tout;
+}
+
+const anqfits_image_t* anqfits_get_image_const(const anqfits_t* qf, int ext) {
+    assert(ext >= 0 && ext < qf->Nexts);
+    if (!qf->exts[ext].image) {
+        anqfits_image_t* img;
+        const qfits_header* hdr = anqfits_get_header_const(qf, ext);
+        int naxis1, naxis2, naxis3;
+        if (!hdr) {
+            qfits_error("Failed to get header for ext %i\n", ext);
+            return NULL;
+        }
+        img = anqfits_image_new();
+
+        // from qfits_image.c : qfitsloader_init()
+        img->bitpix = qfits_header_getint(hdr, "BITPIX", -1);
+        img->naxis  = qfits_header_getint(hdr, "NAXIS",  -1);
+        naxis1 = qfits_header_getint(hdr, "NAXIS1", -1);
+        naxis2 = qfits_header_getint(hdr, "NAXIS2", -1);
+        naxis3 = qfits_header_getint(hdr, "NAXIS3", -1);
+        img->bzero  = qfits_header_getdouble(hdr, "BZERO", 0.0);
+        img->bscale = qfits_header_getdouble(hdr, "BSCALE", 1.0);
+
+        if (img->bitpix == -1) {
+            qfits_error("Missing BITPIX in file %s ext %i", qf->filename, ext);
+            goto bailout;
+        }
+        if (!((img->bitpix == 8) || (img->bitpix == 16) ||
+              (img->bitpix == 32) ||
+              (img->bitpix == -32) || (img->bitpix == -64))) {
+            qfits_error("Invalid BITPIX %i in file %s ext %i",
+                        img->bitpix, qf->filename, ext);
+            goto bailout;
+        }
+        img->bpp = BYTESPERPIXEL(img->bitpix);
+
+        if (img->naxis < 0) {
+            qfits_error("No NAXIS in file %s ext %i", qf->filename, ext);
+            goto bailout;
+        }
+        if (img->naxis==0) {
+            qfits_error("NAXIS = 0 in file %s ext %i", qf->filename, ext);
+            goto bailout;
+        }
+        if (img->naxis > 3) {
+            qfits_error("NAXIS = %i > 3 unsupported in file %s ext %i",
+                        img->naxis, qf->filename, ext);
+            goto bailout;
+        }
+        /* NAXIS1 must always be present */
+        if (naxis1 < 0) {
+            qfits_error("No NAXIS1 in file %s ext %i", qf->filename, ext);
+            goto bailout;
+        }
+        img->width = 1;
+        img->height = 1;
+        img->planes = 1;
+        switch (img->naxis) {
+        case 1:
+            img->width = naxis1;
+            break;
+        case 3:
+            if (naxis3 < 0) {
+                qfits_error("No NAXIS3 in file %s ext %i", qf->filename, ext);
+                goto bailout;
+            }
+            img->planes = naxis3;
+            // no break: fall through to...
+        case 2:
+            if (naxis2 < 0) {
+                qfits_error("No NAXIS2 in file %s ext %i", qf->filename, ext);
+                goto bailout;
+            }
+            img->height = naxis2;
+            img->width = naxis1;
+            break;
+        }
+        qf->exts[ext].image = img;
+        return img;
+
+    bailout:
+        anqfits_image_free(img);
+        return NULL;
+    }
+    return qf->exts[ext].image;
+}
+
+
+
 
 
 static int starts_with(const char* str, const char* start) {
@@ -250,20 +506,23 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
 
     /* Stat file to get its size */
     if (stat(filename, &sta)!=0) {
-        qdebug(printf("anqfits: cannot stat file %s: %s\n", filename, strerror(errno)););
+        qdebug(printf("anqfits: cannot stat file %s: %s\n",
+                      filename, strerror(errno)););
         goto bailout;
     }
 
     /* Open input file */
     in=fopen(filename, "r");
     if (!in) {
-        qdebug(printf("anqfits: cannot open file %s: %s\n", filename, strerror(errno)););
+        qdebug(printf("anqfits: cannot open file %s: %s\n",
+                      filename, strerror(errno)););
         goto bailout;
     }
 
     /* Read first block in */
     if (fread(buf, 1, FITS_BLOCK_SIZE, in) != FITS_BLOCK_SIZE) {
-        qdebug(printf("anqfits: error reading first block from %s: %s\n", filename, strerror(errno)););
+        qdebug(printf("anqfits: error reading first block from %s: %s\n",
+                      filename, strerror(errno)););
         goto bailout;
     }
     /* Identify FITS magic number */
@@ -328,8 +587,6 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
     
     if (xtend) {
         /* Look for extensions */
-        //qdebug(printf("anqfits: searching for extensions in %s\n", filename););
-
         /*
          * Register all extension offsets
          */
@@ -354,7 +611,8 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
                 off *= (size_t)FITS_BLOCK_SIZE;
                 seeked = fseeko(in, off, SEEK_CUR);
                 if (seeked == -1) {
-                    qfits_error("anqfits: failed to fseeko in file %s: %s", filename, strerror(errno));
+                    qfits_error("anqfits: failed to fseeko in file %s: %s",
+                                filename, strerror(errno));
                     goto bailout;
                 }
 
@@ -401,7 +659,8 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
             while (!found_it && !end_of_file) {
                 if (!firsttime) {
                     if (fread(buf, 1, FITS_BLOCK_SIZE, in) != FITS_BLOCK_SIZE) {
-                        qdebug(printf("anqfits: XTENSION without END in %s\n", filename););
+                        qdebug(printf("anqfits: XTENSION without END in %s\n",
+                                      filename););
                         end_of_file = 1;
                         break;
                     }
@@ -413,7 +672,8 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
                     debug("parse_header_block() failed: bailing\n");
                     goto bailout;
                 }
-                debug("parse_header_block() succeeded: found END? %s\n", found_it ? "yes":"no");
+                debug("parse_header_block() succeeded: found END? %s\n",
+                      found_it ? "yes":"no");
             }
             if (found_it) {
                 data_bytes = get_data_bytes(hdr);
@@ -425,7 +685,8 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
                 qf->Nexts++;
                 if (qf->Nexts >= ext_capacity) {
                     ext_capacity *= 2;
-                    qf->exts = realloc(qf->exts, ext_capacity * sizeof(anqfits_ext_t));
+                    qf->exts = realloc(qf->exts,
+                                       ext_capacity * sizeof(anqfits_ext_t));
                     assert(qf->exts);
                     if (!qf->exts)
                         goto bailout;
@@ -452,11 +713,17 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
     for (i=0; i<qf->Nexts; i++) {
         qf->exts[i].hdr_size = qf->exts[i].data_start - qf->exts[i].hdr_start;
         if (i == qf->Nexts-1) {
-            debug("st_size %zu, /block_size = %zu\n", (off_t)sta.st_size, (off_t)(sta.st_size / (size_t)FITS_BLOCK_SIZE));
-            qf->exts[i].data_size = (sta.st_size/FITS_BLOCK_SIZE) - qf->exts[i].data_start;
+            debug("st_size %zu, /block_size = %zu\n",
+                  (off_t)sta.st_size,
+                  (off_t)(sta.st_size / (size_t)FITS_BLOCK_SIZE));
+            qf->exts[i].data_size = ((sta.st_size/FITS_BLOCK_SIZE) -
+                                     qf->exts[i].data_start);
         } else
-            qf->exts[i].data_size = qf->exts[i+1].hdr_start - qf->exts[i].data_start;
-        debug("  Ext %i: header size %i, data size %i; hdr=%p\n", i, qf->exts[i].hdr_size, qf->exts[i].data_size, qf->exts[i].header);
+            qf->exts[i].data_size = (qf->exts[i+1].hdr_start -
+                                     qf->exts[i].data_start);
+        debug("  Ext %i: header size %i, data size %i; hdr=%p\n",
+              i, qf->exts[i].hdr_size, qf->exts[i].data_size,
+              qf->exts[i].header);
         debug("ext %i: hdr_start %i, hdr_size %i, data_start %i, data_size %i, blocks\n",
               i,
               qf->exts[i].hdr_start, qf->exts[i].hdr_size,
@@ -488,18 +755,248 @@ void anqfits_close(anqfits_t* qf) {
             qfits_header_destroy(qf->exts[i].header);
         if (qf->exts[i].table)
             qfits_table_close(qf->exts[i].table);
+        if (qf->exts[i].image)
+            anqfits_image_free(qf->exts[i].image);
     }
     free(qf->exts);
     free(qf->filename);
     free(qf);
 }
 
-
-
-int anqfits_loadpix(const anqfits_t* qf, int ext, anqfitsloader_t* loader) {
-
-
+anqfits_image_t* anqfits_image_new() {
+    anqfits_image_t* img = calloc(1, sizeof(anqfits_image_t));
+    assert(img);
+    return img;
 }
+void anqfits_image_free(anqfits_image_t* img) {
+    free(img);
+}
+
+
+tfits_type anqfits_ptype_to_ttype(int ptype) {
+    switch (ptype) {
+    case PTYPE_UINT8:
+        return TFITS_BIN_TYPE_B;
+    case PTYPE_INT16:
+        return TFITS_BIN_TYPE_I;
+    case PTYPE_INT:
+        return TFITS_BIN_TYPE_J;
+    case PTYPE_FLOAT:
+        return TFITS_BIN_TYPE_E;
+    case PTYPE_DOUBLE:
+        return TFITS_BIN_TYPE_D;
+    }
+    qfits_error("Unknown ptype %i\n", ptype);
+    assert(0);
+    return -1;
+}
+
+void* anqfits_readpix(const anqfits_t* qf, int ext,
+                      int x0, int x1, int y0, int y1,
+                      /** The plane you want, from 0 to planes-1 */
+                      int            plane,
+                      /** Pixel type you want
+                       (PTYPE_FLOAT, PTYPE_INT or PTYPE_DOUBLE) */
+                      int            ptype,
+                      void* output,
+                      int* pW, int* pH) {
+    const anqfits_image_t* img = anqfits_get_image_const(qf, ext);
+
+    off_t NX, NY;
+    off_t planesize;
+
+    off_t start;
+    off_t size;
+
+    off_t mapstart;
+    size_t mapsize;
+    int mapoffset;
+    char* map = NULL;
+    FILE* f = NULL;
+    char* datastart;
+    char* rowstart;
+    char* outrowstart;
+    off_t outrowsize;
+
+    int x, y;
+    off_t inlinesize;
+    char* inlinebuf = NULL;
+
+    int inptype;
+
+    char* alloc_output = NULL;
+    int outbpp;
+
+    tfits_type in_ttype, out_ttype;
+
+    if (x0) {
+        if ((x0 < 0) || (x1 && (x0 >= x1)) || (x0 >= img->width)) {
+            qfits_error("Invalid x0=%i not in [0, x1=%i <= W=%i) reading %s ext %i",
+                        x0, x1, img->width, qf->filename, ext);
+            return NULL;
+        }
+    }
+    if (y0) {
+        if ((y0 < 0) || (y1 && (y0 >= y1)) || (y0 >= img->height)) {
+            qfits_error("Invalid y0=%i not in [0, y1=%i <= W=%i) reading %s ext %i",
+                        y0, y1, img->height, qf->filename, ext);
+            return NULL;
+        }
+    }
+    if (x1) {
+        if ((x1 < 0) || (x1 <= x0) || (x1 > img->width)) {
+            qfits_error("Invalid x1=%i not in [0, x0=%i, W=%i) reading %s ext %i",
+                        x1, x0, img->width);
+            return NULL;
+        }
+    } else {
+        x1 = img->width;
+    }
+    if (y1) {
+        if ((y1 < 0) || (y1 <= y0) || (y1 > img->height)) {
+            qfits_error("Invalid y1=%i not in [0, y0=%i, H=%i) reading %s ext %i",
+                        y1, y0, img->height);
+            return NULL;
+        }
+    } else {
+        y1 = img->height;
+    }
+
+    if ((plane < 0) || (plane >= img->planes)) {
+        qfits_error("Plane %i not in [0, %i) reading %s ext %i\n",
+                    plane, img->planes, qf->filename, ext);
+        return NULL;
+    }
+
+    NX = x1 - x0;
+    NY = y1 - y0;
+
+    planesize = img->width * img->height * (off_t)img->bpp;
+
+    f = fopen(qf->filename, "rb");
+    if (!f) {
+        qfits_error("Failed to fopen %s: %s\n", qf->filename, strerror(errno));
+        return NULL;
+    }
+
+    start = ((off_t)qf->exts[ext].data_start * (off_t)FITS_BLOCK_SIZE
+             + ((off_t)y0 * img->width + (off_t)x0) * (off_t)img->bpp);
+    size = (((off_t)(y1 - y0 - 1) * img->width + (off_t)(x1 - x0)) *
+            (off_t)img->bpp);
+
+    get_mmap_size(start, size, &mapstart, &mapsize, &mapoffset);
+	int mode, flags;
+    mode = PROT_READ;
+    flags = MAP_SHARED;
+    map = mmap(0, mapsize, mode, flags, fileno(f), mapstart);
+    if (map == MAP_FAILED) {
+        qfits_error("Failed to mmap file %s: %s",
+                    qf->filename, strerror(errno));
+        map = NULL;
+        goto bailout;
+    }
+    fclose(f);
+    f = NULL;
+
+    datastart = map + mapoffset;
+
+    /*
+     if (fseeko(f, start, SEEK_SET)) {
+     qfits_error("Failed to fseeko(%zu) in file %s ext %i: %s\n",
+     start, qf->filename, ext, strerror(errno));
+     goto bailout;
+     }
+     */
+
+    inlinesize = (off_t)(x1 - x0) * (off_t)img->bpp;
+    inlinebuf = malloc(inlinesize);
+
+    switch (img->bitpix) {
+    case 8:
+        inptype = PTYPE_UINT8;
+        break;
+    case 16:
+        inptype = PTYPE_INT16;
+        break;
+    case 32:
+        inptype = PTYPE_INT;
+        break;
+    case -32:
+        inptype = PTYPE_FLOAT;
+        break;
+    case -64:
+        inptype = PTYPE_DOUBLE;
+        break;
+    default:
+        qfits_error("Unknown bitpix %i\n", img->bitpix);
+        goto bailout;
+    }
+
+    in_ttype = anqfits_ptype_to_ttype(inptype);
+    out_ttype = anqfits_ptype_to_ttype(ptype);
+
+    outbpp = qfits_pixel_ctype_size(ptype);
+    if (!output) {
+        output = alloc_output = malloc((off_t)(x1-x0) * (off_t)(y1-y0) *
+                                       (off_t)outbpp);
+    }
+
+    rowstart = datastart;
+    outrowstart = output;
+    outrowsize = (off_t)outbpp * (off_t)(x1-x0);
+
+    // Rows...
+    for (y=y0; y<y1; y++) {
+        memcpy(inlinebuf, rowstart, (off_t)img->bpp * (off_t)(x1-x0));
+        rowstart += (off_t)img->bpp * img->width;
+#ifndef WORDS_BIGENDIAN
+        char* ptr = inlinebuf;
+        for (x=x0; x<x1; x++) {
+            qfits_swap_bytes(ptr, img->bpp);
+            ptr += img->bpp;
+        }
+#endif
+        // passthrough?
+        if ((img->bzero == 0.0) && (img->bscale == 1.0) &&
+            (inptype == ptype)) {
+            memcpy(outrowstart, inlinebuf, outrowsize);
+            outrowstart += outrowsize;
+            continue;
+        }
+
+        // we treat these as "arrays" since both the input and output
+        // are contiguous; hence no stride needed, and N=1.
+        if (fits_convert_data_2(outrowstart, 0, out_ttype,
+                                inlinebuf, 0, in_ttype,
+                                x1-x0, 1, img->bzero, img->bscale)) {
+            qfits_error("Failed to fits_convert_data_2\n");
+            goto bailout;
+        }
+
+        outrowstart += outrowsize;
+    }
+
+    munmap(map, mapsize);
+    free(inlinebuf);
+
+    if (pW)
+        *pW = (x1 - x0);
+    if (pH)
+        *pH = (y1 - y0);
+
+    return output;
+
+ bailout:
+    free(inlinebuf);
+    free(alloc_output);
+    fclose(f);
+    if (map) {
+        munmap(map, mapsize);
+    }
+    return NULL;
+}
+
+
 
 
 

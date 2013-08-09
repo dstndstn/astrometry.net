@@ -12,6 +12,22 @@
 #include "qfits_table.h"
 #include "qfits_keywords.h"
 #include "qfits_std.h"
+#include "qfits_image.h"
+
+typedef struct {
+    int naxis;
+    off_t width;
+    off_t height;
+    off_t planes;
+    int bpp;
+    int bitpix;
+    double bscale;
+    double bzero;
+} anqfits_image_t;
+
+anqfits_image_t* anqfits_image_new();
+void anqfits_image_free(anqfits_image_t*);
+
 
 // Everything we know about a FITS extension.
 struct anqfits_ext_t {
@@ -26,6 +42,7 @@ struct anqfits_ext_t {
 	int data_size;
 	qfits_header* header;
 	qfits_table* table;
+    anqfits_image_t* image;
 };
 typedef struct anqfits_ext_t anqfits_ext_t;
 
@@ -36,44 +53,6 @@ struct anqfits_t {
     off_t filesize ; // File size in FITS blocks
 };
 typedef struct anqfits_t anqfits_t;
-
-
-
-typedef struct anqfitsloader {
-    /** input: Index of the plane you want, from 0 to np-1 */
-    int            pnum;
-    /** input: Pixel type you want (PTYPE_FLOAT, PTYPE_INT or PTYPE_DOUBLE) */
-    int            ptype;
-    /** input: Guarantee file copy or allow file mapping */
-    int         map;
-    /** output: Size in X of the requested plane */
-    int            lx;
-    /** output: Size in Y of the requested plane */
-    int            ly;
-    /** output: Number of planes present in this extension */
-    int            np;
-    /** output: BITPIX for this extension */
-    int            bitpix;
-    /** output: BSCALE found for this extension */
-    double        bscale;
-    /** output: BZERO found for this extension */
-    double        bzero;
-    /** output: Start of the data segment (in bytes) for your request */
-    off_t          seg_start;
-    /** output: Size of the data segment (in bytes) for your request */
-    off_t         seg_size;
-
-    /** output: Pointer to pixel buffer loaded as integer values */
-    int        *    ibuf;
-    /** output: Pointer to pixel buffer loaded as float values */
-    float    *    fbuf;
-    /** output: Pointer to pixel buffer loaded as double values */
-    double    *    dbuf;
-
-	// internal: allocated buffer.
-	void* pixbuffer;
-} anqfitsloader_t;
-
 
 
 
@@ -119,6 +98,24 @@ char* anqfits_header_get_data(const anqfits_t* qf, int ext, int* Nbytes);
 qfits_table* anqfits_get_table(const anqfits_t* qf, int ext);
 
 const qfits_table* anqfits_get_table_const(const anqfits_t* qf, int ext);
+
+anqfits_image_t* anqfits_get_image(const anqfits_t* qf, int ext);
+
+const anqfits_image_t* anqfits_get_image_const(const anqfits_t* qf, int ext);
+
+
+void* anqfits_readpix(const anqfits_t* qf, int ext,
+                      /** Pixel window coordinates (0 for whole image);
+                       THESE ARE ZERO-INDEXED, unlike qfits_loadpix,
+                       and (x1,y1) or NON-INCLUSIVE. **/
+                      int x0, int x1, int y0, int y1,
+                      /** The plane you want, from 0 to planes-1 */
+                      int            pnum,
+                      /** Pixel type you want
+                       (PTYPE_FLOAT, PTYPE_INT or PTYPE_DOUBLE) */
+                      int            ptype,
+                      void* output,
+                      int* W, int* H);
 
 /*
  Deprecated // ?

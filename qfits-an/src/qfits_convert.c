@@ -67,6 +67,10 @@ int qfits_pixel_fitstype_size(int fitstype) {
 	return n;
 }
 
+/**
+ Converts a value described by a "PTYPE_"
+ To a value described by a "BPP_"
+ */
 int qfits_pixel_ctofits(int ctype, int fitstype,
 						const void* cval, void* fitsval) {
 	const float* ifloat;
