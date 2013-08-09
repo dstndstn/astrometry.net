@@ -168,7 +168,7 @@ INSTALL_H := 2mass-fits.h 2mass.h allquads.h augment-xylist.h axyfile.h \
 	codefile.h codetree.h ctmf.h dimage.h fits-guess-scale.h hpquads.h \
 	image2xy-files.h image2xy.h matchfile.h matchobj.h merge-index.h \
 	new-wcs.h nomad-fits.h nomad.h quad-builder.h quad-utils.h radix.h \
-	resort-xylist.h scamp.h simplexy-common.h simplexy.h solvedclient.h \
+	resort-xylist.h simplexy-common.h simplexy.h solvedclient.h \
 	solvedfile.h solver.h tabsort.h tweak.h uniformize-catalog.h \
 	unpermute-quads.h unpermute-stars.h usnob-fits.h usnob.h verify.h \
 	wcs-rd2xy.h wcs-xy2rd.h tweak2.h
