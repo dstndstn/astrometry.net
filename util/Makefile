@@ -49,7 +49,7 @@ ANFILES_OBJ :=
 
 ifndef NO_QFITS
 ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
-	starxy.o an-catalog.o qidxfile.o quadfile.o scamp-catalog.o \
+	starxy.o qidxfile.o quadfile.o scamp-catalog.o \
 	hd.o
 ANFILES_DEPS += $(QFITS_LIB)
 endif
@@ -138,7 +138,7 @@ ANUTILS_DEPS :=
 # ANUTILS_OBJ -- in makefile.utils
 
 # Actually there are ANFILES_H mixed in here too....
-ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h \
+ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	an-thread.h anwcs.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph  bt.h cairoutils.h \
 	codekd.h \
 	errors.h fitsbin.h fitsfile.h fitsioutils.h \

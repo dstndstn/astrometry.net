@@ -98,7 +98,7 @@ OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
 
 2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
 
-PIPELINE := usnobtofits build-an-catalog hpowned cut-an \
+PIPELINE := usnobtofits hpowned \
 	startree hpquads codetree unpermute-quads unpermute-stars blind \
 	solvedserver printsolved xylist2fits mergesolved rdlsinfo xylsinfo \
 	wcsinfo subwcs wcs-grab fits-guess-scale agreeable new-wcs get-wcs \
@@ -454,13 +454,6 @@ usnobtofits: usnobtofits.o usnob-fits.o usnob.o \
 
 hpowned: hpowned.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
-build-an-catalog: build-an-catalog.o usnob-fits.o usnob.o \
-		2mass-fits.o 2mass.o \
-		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-cut-an: cut-an.o catalog.o usnob.o \
-		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
 startree: startree.o catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
@@ -529,7 +522,7 @@ verify: verify-main.o verify.o verify2.o matchfile.o matchobj.o $(PLOTSTUFF) $(C
 keirthing: keirthing.o tweak.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
-dstnthing: dstnthing.o tweak2.o tweak.o matchfile.o matchobj.o verify.o scamp.o $(PLOTSTUFF) \
+dstnthing: dstnthing.o tweak2.o tweak.o matchfile.o matchobj.o verify.o $(PLOTSTUFF) \
 		$(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += dstnthing.o
@@ -607,10 +600,6 @@ mergesolved: mergesolved.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $
 solvedserver: solvedserver.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) \
 		$(QFITS_LIB)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
-
-plotcat: plotcat.o 2mass-fits.o 2mass.o nomad-fits.o nomad.o catalog.o usnob-fits.o usnob.o \
-		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(LIBKD_LIB) \
-		$(QFITS_LIB)
 
 plotquad.o: plotquad.c 
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c $< -o $@
