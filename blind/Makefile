@@ -442,6 +442,12 @@ nomadtofits: nomadtofits.o nomad-fits.o nomad.o \
 ucac3tofits: ucac3tofits.o ucac3-fits.o ucac3.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) -lbz2 $(LDLIBS)
+ALL_OBJ += ucac3tofits.o ucac3-fits.o ucac3.o
+
+ucac4tofits: ucac4tofits.o ucac4-fits.o ucac4.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) -lbz2 $(LDLIBS)
+ALL_OBJ += ucac4tofits.o ucac4-fits.o ucac4.o
 
 read_nomad: read_nomad.o nomad.o
 
