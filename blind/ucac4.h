@@ -1,7 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2011 Dustin Lang.
-  Copyright 2013 Michal Kočer.
+  Copyright 2013 Michal Kočer, Klet Observatory.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
