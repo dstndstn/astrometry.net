@@ -45,6 +45,10 @@ x4 = x1[:,np.newaxis]
 x5 = x1.astype(np.float32)
 x6 = x1.astype(np.dtype(np.float64).newbyteorder('S'))
 
+import gc
+gc.collect()
+gc.set_debug(gc.DEBUG_LEAK)
+
 for r,d in [(1., 2.),
             (1., x1),
             (1, x2),
@@ -68,3 +72,9 @@ for r,d in [(1., 2.),
     ok,x,y = wcs.radec2pixelxy(r, d)
     print 'ok,x,y', ok,x,y
 
+gc.collect()
+
+print 'Garbage:', len(gc.garbage)
+for x in gc.garbage:
+    print '  ', x
+    

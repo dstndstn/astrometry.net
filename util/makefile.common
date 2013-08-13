@@ -83,6 +83,10 @@ FLAGS_DEF += $(shell $(CCTEST))
 ARG := -fno-signaling-nans
 FLAGS_DEF += $(shell $(CCTEST))
 
+# gcc non-IEEE faster math
+ARG := -ffast-math
+FLAGS_DEF += $(shell $(CCTEST))
+
 # gcc 3.3 on Mac doesn't support -pthread
 # clang 4.1: warns about including -pthread
 ARG := -pthread

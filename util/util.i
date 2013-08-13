@@ -1107,7 +1107,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         npy_intp* strideptr;
         PyArray_Descr* dtypes[5];
         npy_intp i, N;
-        
+
         // we'll do the inner loop ourselves
         flags = NPY_ITER_EXTERNAL_LOOP;
         // use buffers to satisfy dtype casts
@@ -1121,6 +1121,17 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         op[2] = NULL;
         op[3] = NULL;
         op[4] = NULL;
+
+        if ((PyArray_Size((PyObject*)op[0]) == 0) ||
+            (PyArray_Size((PyObject*)op[1]) == 0)) {
+            // empty inputs -- empty outputs
+            npy_intp dim = 0;
+            ret = Py_BuildValue("(NNN)",
+                                PyArray_SimpleNew(1, &dim, NPY_BOOL),
+                                PyArray_SimpleNew(1, &dim, NPY_DOUBLE),
+                                PyArray_SimpleNew(1, &dim, NPY_DOUBLE));
+            goto cleanup;
+        }
 
         op_flags[0] = NPY_ITER_READONLY | NPY_ITER_NBO;
         op_flags[1] = NPY_ITER_READONLY | NPY_ITER_NBO;
@@ -1199,10 +1210,14 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                             NpyIter_GetOperandArray(iter)[4],
                             NpyIter_GetOperandArray(iter)[2],
                             NpyIter_GetOperandArray(iter)[3]);
+
+        cleanup:
         if (NpyIter_Deallocate(iter) != NPY_SUCCEED) {
             Py_DECREF(ret);
             return NULL;
         }
+        Py_DECREF(op[0]);
+        Py_DECREF(op[1]);
         return ret;
     }
 
@@ -1239,6 +1254,17 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         op[2] = NULL;
         op[3] = NULL;
         op[4] = NULL;
+
+        if ((PyArray_Size((PyObject*)op[0]) == 0) ||
+            (PyArray_Size((PyObject*)op[1]) == 0)) {
+            // empty inputs -- empty outputs
+            npy_intp dim = 0;
+            ret = Py_BuildValue("(NNN)",
+                                PyArray_SimpleNew(1, &dim, NPY_INT),
+                                PyArray_SimpleNew(1, &dim, NPY_DOUBLE),
+                                PyArray_SimpleNew(1, &dim, NPY_DOUBLE));
+            goto cleanup;
+        }
 
         op_flags[0] = NPY_ITER_READONLY | NPY_ITER_NBO;
         op_flags[1] = NPY_ITER_READONLY | NPY_ITER_NBO;
@@ -1317,10 +1343,13 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                             NpyIter_GetOperandArray(iter)[4],
                             NpyIter_GetOperandArray(iter)[2],
                             NpyIter_GetOperandArray(iter)[3]);
+        cleanup:
         if (NpyIter_Deallocate(iter) != NPY_SUCCEED) {
             Py_DECREF(ret);
             return NULL;
         }
+        Py_DECREF(op[0]);
+        Py_DECREF(op[1]);
         return ret;
     }
     
@@ -1357,6 +1386,16 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         // automatically allocate the output arrays.
         op[2] = NULL;
         op[3] = NULL;
+
+        if ((PyArray_Size((PyObject*)op[0]) == 0) ||
+            (PyArray_Size((PyObject*)op[1]) == 0)) {
+            // empty inputs -- empty outputs
+            npy_intp dim = 0;
+            ret = Py_BuildValue("(NN)",
+                                PyArray_SimpleNew(1, &dim, NPY_DOUBLE),
+                                PyArray_SimpleNew(1, &dim, NPY_DOUBLE));
+            goto cleanup;
+        }
 
         op_flags[0] = NPY_ITER_READONLY | NPY_ITER_NBO;
         op_flags[1] = NPY_ITER_READONLY | NPY_ITER_NBO;
@@ -1426,10 +1465,14 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         ret = Py_BuildValue("(OO)",
                             NpyIter_GetOperandArray(iter)[2],
                             NpyIter_GetOperandArray(iter)[3]);
+
+        cleanup:
         if (NpyIter_Deallocate(iter) != NPY_SUCCEED) {
             Py_DECREF(ret);
             return NULL;
         }
+        Py_DECREF(op[0]);
+        Py_DECREF(op[1]);
         return ret;
     }
 
