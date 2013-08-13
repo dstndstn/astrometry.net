@@ -39,7 +39,8 @@
 int resample_wcs_files(const char* infitsfn, int infitsext,
 					   const char* inwcsfn, int inwcsext,
 					   const char* outwcsfn, int outwcsext,
-					   const char* outfitsfn, int lorder) {
+					   const char* outfitsfn, int lorder,
+                       int zero_inf) {
 
     anwcs_t* inwcs;
     anwcs_t* outwcs;
@@ -98,6 +99,15 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
     assert(inimg);
     inW = qinimg.lx;
     inH = qinimg.ly;
+
+    if (zero_inf) {
+        int i;
+        for (i=0; i<(inW*inH); i++) {
+            if (!isfinite(inimg[i])) {
+                inimg[i] = 0.0;
+            }
+        }
+    }
 
     logmsg("Input  image is %i x %i pixels.\n", inW, inH);
     logmsg("Output image is %i x %i pixels.\n", outW, outH);
