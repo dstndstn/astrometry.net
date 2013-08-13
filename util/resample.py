@@ -303,7 +303,8 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages):
         try:
             from util import lanczos3_filter, lanczos3_filter_table
             #lfunc = lambda nil,x,y: lanczos3_filter(x,y)
-            lfunc = lambda nil,x,y: lanczos3_filter_table(x,y)
+            # 0: no rangecheck
+            lfunc = lambda nil,x,y: lanczos3_filter_table(x,y, 0)
         except:
             pass
 
@@ -315,9 +316,11 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages):
     fx = np.zeros(n)
     fy = np.zeros(n)
     for oy in off:
+        #print 'dy range:', min(-oy + dy), max(-oy + dy)
         lfunc(L, -oy + dy, fy)
         for ox in off:
             lfunc(L, -ox + dx, fx)
+            #print 'dx range:', min(-ox + dx), max(-ox + dx)
             for lacc,im in zip(laccs, limages):
                 lacc += fx * fy * im[np.clip(iyi + oy, 0, h-1),
                                      np.clip(ixi + ox, 0, w-1)]

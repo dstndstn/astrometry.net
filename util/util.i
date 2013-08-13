@@ -176,21 +176,25 @@ void log_set_level(int lvl);
         return 0;
     }
 
-    static int lanczos3_filter_table(PyObject* np_dx, PyObject* np_f) {
+    static int lanczos3_filter_table(PyObject* np_dx, PyObject* np_f, int rangecheck) {
         npy_intp N;
         npy_intp i;
         double* dx;
         double* f;
 
-        // 6 * 1024 = 6144
-        const int Nlut = 1024;
-        static double lut[6 * Nlut];
+        // Nlut is number of bins per unit x
+        static const int Nlutunit = 1024;
+        static const double lut0 = -4.;
+        static const int Nlut = 8 * Nlutunit;
+        // We want bins to go from -4 to 4 (Lanczos-3 range of -3 to 3, plus some buffer)
+        // [Nlut]
+        static double lut[8192];
         static int initialized = 0;
 
         if (!initialized) {
-            for (i=0; i<(6*Nlut); i++) {
+            for (i=0; i<(Nlut); i++) {
                 double x,f;
-                x = (-3. + (i / (double)Nlut));
+                x = (lut0 + (i / (double)Nlutunit));
                 if (x <= -3.0 || x >= 3.0) {
                     f = 0.0;
                 } else if (x == 0) {
@@ -224,12 +228,20 @@ void log_set_level(int lvl);
         }
         dx = PyArray_DATA(np_dx);
         f = PyArray_DATA(np_f);
-        for (i=N; i>0; i--, dx++, f++) {
-            double x = *dx;
-            int li = (int)((x + 3.0) * Nlut);
-            if ((li < 0) || (li > 6*Nlut)) {
-                *f = 0.0;
-            } else {
+        if (rangecheck) {
+            for (i=N; i>0; i--, dx++, f++) {
+                double x = *dx;
+                int li = (int)((x - lut0) * Nlutunit);
+                if ((li < 0) || (li >= Nlut)) {
+                    *f = 0.0;
+                } else {
+                    *f = lut[li];
+                }
+            }
+        } else {
+            for (i=N; i>0; i--, dx++, f++) {
+                double x = *dx;
+                int li = (int)((x - lut0) * Nlutunit);
                 *f = lut[li];
             }
         }
