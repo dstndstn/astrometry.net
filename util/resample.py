@@ -343,10 +343,14 @@ if __name__ == '__main__':
 
     wcs = Sip(intfn)
     pix = fitsio.read(intfn)
-
+    pix[np.logical_not(np.isfinite(pix))] = 0.
+    
     t0 = time.clock()
     Yo,Xo,Yi,Xi,ims = resample_with_wcs(cowcs, wcs, [pix], 3)
     t1 = time.clock()
 
     print 'Resampling took', t1-t0
     
+    out = np.zeros((H,W))
+    out[Yo,Xo] = ims[0]
+    fitsio.write('resampled.fits', out, clobber=True)
