@@ -6,7 +6,7 @@ wipe the database].
 
 -the API communication uses JSON wrapped to look like a normal html
 form submission.  The API is a django view and has URLs starting with
-http://supernova.astrometry.net/api/
+http://nova.astrometry.net/api/
 
 -the first thing the client does is log in, sending its API key and
 getting back a session key.  That session key is used in all further
