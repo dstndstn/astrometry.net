@@ -33,7 +33,7 @@
 #include "errors.h"
 #include "fitsioutils.h"
 
-const char* OPTIONS = "hw:e:E:x:";
+const char* OPTIONS = "hw:e:E:x:L:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -42,6 +42,7 @@ void print_help(char* progname) {
 		   "   [-w <input WCS file>] (default is to read WCS from input FITS image)\n"
 		   "   [-e <input WCS FITS extension>] (default: 0)\n"
 		   "   [-x <output WCS FITS extension>] (default: 0)\n"
+           "   [-L <Lanczos order>] (default: nearest-neighbor resampling)\n"
 		   "\n", progname);
 }
 
@@ -57,6 +58,7 @@ int main(int argc, char** args) {
 	int inwcsext = 0;
 	int inimgext = 0;
 	int outwcsext = 0;
+    int Lorder = 0;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
@@ -75,6 +77,9 @@ int main(int argc, char** args) {
 		case 'x':
 			outwcsext = atoi(optarg);
 			break;
+        case 'L':
+            Lorder = atoi(optarg);
+            break;
 		}
 	}
 
@@ -94,7 +99,7 @@ int main(int argc, char** args) {
         inwcsfn = infitsfn;
 
 	if (resample_wcs_files(infitsfn, inimgext, inwcsfn, inwcsext,
-						   outwcsfn, outwcsext, outfitsfn, 0)) {
+						   outwcsfn, outwcsext, outfitsfn, Lorder)) {
 		ERROR("Failed to resample image");
 		exit(-1);
 	}

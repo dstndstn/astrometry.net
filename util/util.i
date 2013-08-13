@@ -118,24 +118,40 @@ void log_set_level(int lvl);
      }
      */
 
-
     static int lanczos3_filter(PyObject* np_dx, PyObject* np_f) {
         npy_intp N;
         npy_intp i;
-        PyArray_Descr* dtype = PyArray_DescrFromType(PyArray_DOUBLE);
+        PyArray_Descr* dtype;
         int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
             NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
         int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
         double* dx;
         double* f;
 
-		printf("Refcount of dtype: %li\n", Py_REFCNT(dtype));
+        /*
+         dtype = PyArray_DescrFromType(PyArray_DOUBLE);
+         printf("Refcount of dtype: %li\n", Py_REFCNT(dtype));
+         np_dx = PyArray_CheckFromAny(np_dx, dtype, 1, 1, req, NULL);
+         np_f  = PyArray_CheckFromAny(np_f , dtype, 1, 1, reqout, NULL);
+         if (!np_dx || !np_f) {
+         ERR("Failed to PyArray_CheckFromAny()\n");
+         return -1;
+         }
+         */
 
-        np_dx = PyArray_CheckFromAny(np_dx, dtype, 1, 1, req, NULL);
-        np_f  = PyArray_CheckFromAny(np_f , dtype, 1, 1, reqout, NULL);
-        if (!np_dx || !np_f) {
-            ERR("Failed to PyArray_CheckFromAny()\n");
-            return -1;
+        if (!PyArray_Check(np_dx) ||
+            !PyArray_Check(np_f ) ||
+            !PyArray_ISNOTSWAPPED(np_dx) ||
+            !PyArray_ISNOTSWAPPED(np_f ) ||
+            !PyArray_ISFLOAT(np_dx) ||
+            !PyArray_ISFLOAT(np_f ) ||
+            !(PyArray_NDIM(np_dx) == 1) ||
+            !(PyArray_NDIM(np_f ) == 1) ||
+            !PyArray_ISCONTIGUOUS(np_dx) ||
+            !PyArray_ISCONTIGUOUS(np_f ) ||
+            !PyArray_ISWRITEABLE(np_f)
+            ) {
+            ERR("Arrays aren't right type\n");
         }
         N = PyArray_DIM(np_dx, 0);
         if (PyArray_DIM(np_f, 0) != N) {
@@ -146,23 +162,17 @@ void log_set_level(int lvl);
         f = PyArray_DATA(np_f);
         const double thirdpi = M_PI / 3.0;
         const double pisq = M_PI * M_PI;
+        const double threeopisq = 3. / pisq;
         for (i=N; i>0; i--, dx++, f++) {
-            double x = MIN(MAX(*dx, -3.0), 3.0);
-            /*
-             if (*dx < -3.0 || *dx > 3.0 || *dx == 0.0) {
-             *f = 0.0;
-             continue;
-             }
-             */
-            if (unlikely(x == 0.0)) {
+            double x = *dx;
+            if (x < -3.0 || x > 3.0) {
                 *f = 0.0;
+            } else if (x == 0) {
+                *f = 1.0;
             } else {
-                *f = 3. * sin(M_PI * x) * sin(thirdpi * x) / (pisq * x * x);
+                *f = threeopisq * sin(M_PI * x) * sin(thirdpi * x) / (x * x);
             }
         }
-		printf("Refcount of np_dx: %li\n", Py_REFCNT(np_dx));
-		printf("Refcount of np_f: %li\n", Py_REFCNT(np_f));
-		printf("Refcount of dtype: %li\n", Py_REFCNT(dtype));
         return 0;
     }
 

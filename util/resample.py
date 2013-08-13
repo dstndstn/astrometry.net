@@ -297,20 +297,56 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages):
     laccs: list of [float, 1-d numpy array, len n]: outputs
     limages list of [float, 2-d numpy array, shape h,w]: inputs
     '''
+
+    lfunc = lanczos_filter
+    if L == 3:
+        try:
+            from util import lanczos3_filter
+            lfunc = lambda nil,x,y: lanczos3_filter(x,y)
+        except:
+            pass
+
     h,w = limages[0].shape
     n = len(ixi)
     # sum of lanczos terms
     fsum = np.zeros(n)
     off = np.arange(-L, L+1)
-    fx = np.zeros(nn)
-    fy = np.zeros(nn)
+    fx = np.zeros(n)
+    fy = np.zeros(n)
     for oy in off:
-        lanczos_filter(L, -oy + dy, fy)
+        lfunc(L, -oy + dy, fy)
         for ox in off:
-            lanczos_filter(L, -ox + dx, fx)
+            lfunc(L, -ox + dx, fx)
             for lacc,im in zip(laccs, limages):
                 lacc += fx * fy * im[np.clip(iyi + oy, 0, h-1),
                                      np.clip(ixi + ox, 0, w-1)]
                 fsum += fx*fy
     for lacc in laccs:
         lacc /= fsum
+
+
+
+if __name__ == '__main__':
+    import fitsio
+    from astrometry.util.util import Sip,Tan
+    import time
+    
+    ra,dec = 219.577111, 54.52
+    pixscale = 2.75 / 3600.
+    #W,H = 2048, 2048
+    W,H = 512, 512
+    cowcs = Tan(ra, dec, (W+1)/2., (H+1)/2.,
+                -pixscale, 0., 0., pixscale, W, H)
+    cowcs.write_to('co.wcs')
+    
+    intfn = '05579a167-w1-int-1b.fits'
+
+    wcs = Sip(intfn)
+    pix = fitsio.read(intfn)
+
+    t0 = time.clock()
+    Yo,Xo,Yi,Xi,ims = resample_with_wcs(cowcs, wcs, [pix], 3)
+    t1 = time.clock()
+
+    print 'Resampling took', t1-t0
+    
