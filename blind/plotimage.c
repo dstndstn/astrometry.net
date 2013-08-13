@@ -30,6 +30,7 @@
 #include "permutedsort.h"
 #include "wcs-resample.h"
 #include "mathutil.h"
+#include "anqfits.h"
 
 
 DEFINE_PLOTTER(image);
@@ -297,28 +298,23 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 
 static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* args) {
 	float* fimg;
-	qfitsloader ld;
+    anqfits_t* anq;
 	unsigned char* img;
 	float* rimg = NULL;
 	float* dimg = NULL;
 
-	ld.filename = args->fn;
-	ld.xtnum = args->fitsext;
-	ld.pnum = args->fitsplane;
-	ld.map = 1;
-	ld.ptype = PTYPE_FLOAT;
-		
-	if (qfitsloader_init(&ld)) {
-		ERROR("qfitsloader_init() failed");
-		return NULL;
+    anq = anqfits_open(args->fn);
+    if (!anq) {
+		ERROR("Failed to read input file: \"%s\"", args->fn);
+        return NULL;
+    }
+    fimg = anqfits_readpix(anq, args->fitsext, 0,0,0,0, args->fitsplane,
+                           PTYPE_FLOAT, NULL, &args->W, &args->H);
+    anqfits_close(anq);
+    if (!fimg) {
+		ERROR("Failed to load pixels.");
+        return NULL;
 	}
-	if (qfits_loadpix(&ld)) {
-		ERROR("qfits_loadpix() failed");
-		return NULL;
-	}
-	args->W = ld.lx;
-	args->H = ld.ly;
-	fimg = ld.fbuf;
 
 	if (args->downsample) {
 		int nw, nh;
@@ -364,7 +360,7 @@ static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* arg
 
 	img = plot_image_scale_float(args, fimg);
 
- 	qfitsloader_free_buffers(&ld);
+    free(fimg);
 	free(rimg);
 	free(dimg);
 	return img;
