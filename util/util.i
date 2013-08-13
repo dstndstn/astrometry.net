@@ -121,10 +121,10 @@ void log_set_level(int lvl);
     static int lanczos3_filter(PyObject* np_dx, PyObject* np_f) {
         npy_intp N;
         npy_intp i;
-        PyArray_Descr* dtype;
-        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
-            NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
-        int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+        // PyArray_Descr* dtype;
+        // int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
+        //     NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+        // int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
         double* dx;
         double* f;
 
@@ -175,6 +175,68 @@ void log_set_level(int lvl);
         }
         return 0;
     }
+
+    static int lanczos3_filter_table(PyObject* np_dx, PyObject* np_f) {
+        npy_intp N;
+        npy_intp i;
+        double* dx;
+        double* f;
+
+        // 6 * 1024 = 6144
+        const int Nlut = 1024;
+        static double lut[6 * Nlut];
+        static int initialized = 0;
+
+        if (!initialized) {
+            for (i=0; i<(6*Nlut); i++) {
+                double x,f;
+                x = (-3. + (i / (double)Nlut));
+                if (x <= -3.0 || x >= 3.0) {
+                    f = 0.0;
+                } else if (x == 0) {
+                    f = 1.0;
+                } else {
+                    f = 3. * sin(M_PI * x) * sin(M_PI / 3.0 * x) / (M_PI * M_PI * x * x);
+                }
+                lut[i] = f;
+            }
+            initialized = 1;
+        }
+
+        if (!PyArray_Check(np_dx) ||
+            !PyArray_Check(np_f ) ||
+            !PyArray_ISNOTSWAPPED(np_dx) ||
+            !PyArray_ISNOTSWAPPED(np_f ) ||
+            !PyArray_ISFLOAT(np_dx) ||
+            !PyArray_ISFLOAT(np_f ) ||
+            !(PyArray_NDIM(np_dx) == 1) ||
+            !(PyArray_NDIM(np_f ) == 1) ||
+            !PyArray_ISCONTIGUOUS(np_dx) ||
+            !PyArray_ISCONTIGUOUS(np_f ) ||
+            !PyArray_ISWRITEABLE(np_f)
+            ) {
+            ERR("Arrays aren't right type\n");
+        }
+        N = PyArray_DIM(np_dx, 0);
+        if (PyArray_DIM(np_f, 0) != N) {
+            ERR("Input and output must have same dimensions\n");
+            return -1;
+        }
+        dx = PyArray_DATA(np_dx);
+        f = PyArray_DATA(np_f);
+        for (i=N; i>0; i--, dx++, f++) {
+            double x = *dx;
+            int li = (int)((x + 3.0) * Nlut);
+            if ((li < 0) || (li > 6*Nlut)) {
+                *f = 0.0;
+            } else {
+                *f = lut[li];
+            }
+        }
+        return 0;
+    }
+
+
 
 
 
@@ -1096,7 +1158,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
          const void* baton,
          PyObject* in1, PyObject* in2) {
 
-        NpyIter *iter;
+        NpyIter *iter = NULL;
         NpyIter_IterNextFunc *iternext;
         PyArrayObject *op[5];
         PyObject *ret;
@@ -1229,7 +1291,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
          const void* baton,
          PyObject* in1, PyObject* in2) {
 
-        NpyIter *iter;
+        NpyIter *iter = NULL;
         NpyIter_IterNextFunc *iternext;
         PyArrayObject *op[5];
         PyObject *ret;
@@ -1362,7 +1424,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
          const void* baton,
          PyObject* in1, PyObject* in2) {
 
-        NpyIter *iter;
+        NpyIter *iter = NULL;
         NpyIter_IterNextFunc *iternext;
         PyArrayObject *op[4];
         PyObject *ret;

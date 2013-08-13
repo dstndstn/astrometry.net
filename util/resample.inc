@@ -16,8 +16,6 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-#include <assert.h>
-
 double MANGLE(lanczos_resample_unw_sep)(double px, double py,
 										const number* img,
 										int W, int H, void* token) {

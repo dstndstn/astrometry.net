@@ -301,8 +301,9 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages):
     lfunc = lanczos_filter
     if L == 3:
         try:
-            from util import lanczos3_filter
-            lfunc = lambda nil,x,y: lanczos3_filter(x,y)
+            from util import lanczos3_filter, lanczos3_filter_table
+            #lfunc = lambda nil,x,y: lanczos3_filter(x,y)
+            lfunc = lambda nil,x,y: lanczos3_filter_table(x,y)
         except:
             pass
 

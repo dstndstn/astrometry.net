@@ -19,6 +19,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/param.h>
+#include <assert.h>
+
+#include <fenv.h>
 
 #include "resample.h"
 
@@ -32,6 +35,26 @@ double lanczos(double x, int order) {
 	if (x > order || x < -order)
 		return 0.0;
 	return order * sin(M_PI * x) * sin(M_PI * x / (double)order) / square(M_PI * x);
+    /*
+    feclearexcept(FE_ALL_EXCEPT);
+    double rtn = order * sin(M_PI * x) * sin(M_PI * x / (double)order) / square(M_PI * x);
+    if (fetestexcept(FE_DIVBYZERO)) {
+        printf("DIVBYZERO: %f\n", x);
+    }
+    if (fetestexcept(FE_INEXACT)) {
+        printf("INEXACT: %f\n", x);
+    }
+    if (fetestexcept(FE_INVALID)) {
+        printf("INVALID: %f\n", x);
+    }
+    if (fetestexcept(FE_OVERFLOW)) {
+        printf("OVERFLOW: %f\n", x);
+    }
+    if (fetestexcept(FE_UNDERFLOW)) {
+        printf("UNDERFLOW: %f\n", x);
+    }
+    return rtn;
+     */
 }
 
 #define MANGLEGLUE2(n,f) n ## _ ## f
