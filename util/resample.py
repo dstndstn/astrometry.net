@@ -278,24 +278,39 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
 
         # accumulators for each input image
         laccs = [np.zeros(nn) for im in Limages]
-        # sum of lanczos terms
-        fsum = np.zeros(nn)
-
-        off = np.arange(-L, L+1)
-        for oy in off:
-            fy = lanczos_filter(L, -oy + dy)
-            for ox in off:
-                fx = lanczos_filter(L, -ox + dx)
-                for lacc,im in zip(laccs, Limages):
-                    lacc += fx * fy * im[np.clip(iyi + oy, 0, h-1),
-                                         np.clip(ixi + ox, 0, w-1)]
-                fsum += fx*fy
-        for lacc in laccs:
-            lacc /= fsum
-
+        _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, Limages)
         rims = laccs
 
     else:
         rims = []
 
     return (iyo,ixo, iyi,ixi, rims)
+
+
+def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages):
+    '''
+    L: int, Lanczos order
+    ixi: int, 1-d numpy array, len n, x coord in input images
+    iyi:     ----""----        y
+    dx: float, 1-d numpy array, len n, fractional x coord
+    dy:      ----""----                    y
+    laccs: list of [float, 1-d numpy array, len n]: outputs
+    limages list of [float, 2-d numpy array, shape h,w]: inputs
+    '''
+    h,w = limages[0].shape
+    n = len(ixi)
+    # sum of lanczos terms
+    fsum = np.zeros(n)
+    off = np.arange(-L, L+1)
+    fx = np.zeros(nn)
+    fy = np.zeros(nn)
+    for oy in off:
+        lanczos_filter(L, -oy + dy, fy)
+        for ox in off:
+            lanczos_filter(L, -ox + dx, fx)
+            for lacc,im in zip(laccs, limages):
+                lacc += fx * fy * im[np.clip(iyi + oy, 0, h-1),
+                                     np.clip(ixi + ox, 0, w-1)]
+                fsum += fx*fy
+    for lacc in laccs:
+        lacc /= fsum

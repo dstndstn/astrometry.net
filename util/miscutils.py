@@ -189,15 +189,16 @@ def point_in_poly(x, y, poly):
 		inside[I] = np.logical_not(inside[I])
 	return inside
 
-def lanczos_filter(order, x):
+def lanczos_filter(order, x, out=None):
 	x = np.atleast_1d(x)
 	nz = np.logical_and(x != 0., np.logical_and(x < order, x > -order))
 	nz = np.flatnonzero(nz)
-	filt = np.zeros(x.shape, dtype=float)
+    if out is None:
+        out = np.zeros(x.shape, dtype=float)
 	pinz = pi * x.flat[nz]
-	filt.flat[nz] = order * np.sin(pinz) * np.sin(pinz / order) / (pinz**2)
-	filt[x == 0] = 1.
-	return filt
+	out.flat[nz] = order * np.sin(pinz) * np.sin(pinz / order) / (pinz**2)
+	out[x == 0] = 1.
+	return out
 
 # Given a range of integer coordinates that you want to, eg, cut out
 # of an image, [xlo, xhi], and bounds for the image [xmin, xmax],

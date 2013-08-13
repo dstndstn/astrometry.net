@@ -8,6 +8,7 @@
 // numpy.
 #include <numpy/arrayobject.h>
 #include <stdint.h>
+#include <sys/param.h>
 
 #include "log.h"
 #include "healpix.h"
@@ -28,6 +29,7 @@
 #include "coadd.h"
 #include "wcs-resample.h"
 #include "resample.h"
+#include "keywords.h"
 
 #define true 1
 #define false 0
@@ -106,6 +108,66 @@ void log_set_level(int lvl);
         printf("  descr byteorder: '%c'\n", desc->byteorder);
         printf("  descr elsize: %i\n", desc->elsize);
     }
+
+    /*
+     static void lanczos_interpolate(int L, PyObject* np_ixi, PyObject* np_iyi,
+     PyObject* np_dx, PyObject* np_dy,
+     PyObject* lins, PyObject* louts) {
+     np_intp W,H;
+     //PyArray_Descr* dtype = PyArray_DescrFromType(PyArray_DOUBLE);
+     }
+     */
+
+
+    static int lanczos3_filter(PyObject* np_dx, PyObject* np_f) {
+        npy_intp N;
+        npy_intp i;
+        PyArray_Descr* dtype = PyArray_DescrFromType(PyArray_DOUBLE);
+        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
+            NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+        int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+        double* dx;
+        double* f;
+
+		printf("Refcount of dtype: %li\n", Py_REFCNT(dtype));
+
+        np_dx = PyArray_CheckFromAny(np_dx, dtype, 1, 1, req, NULL);
+        np_f  = PyArray_CheckFromAny(np_f , dtype, 1, 1, reqout, NULL);
+        if (!np_dx || !np_f) {
+            ERR("Failed to PyArray_CheckFromAny()\n");
+            return -1;
+        }
+        N = PyArray_DIM(np_dx, 0);
+        if (PyArray_DIM(np_f, 0) != N) {
+            ERR("Input and output must have same dimensions\n");
+            return -1;
+        }
+        dx = PyArray_DATA(np_dx);
+        f = PyArray_DATA(np_f);
+        const double thirdpi = M_PI / 3.0;
+        const double pisq = M_PI * M_PI;
+        for (i=N; i>0; i--, dx++, f++) {
+            double x = MIN(MAX(*dx, -3.0), 3.0);
+            /*
+             if (*dx < -3.0 || *dx > 3.0 || *dx == 0.0) {
+             *f = 0.0;
+             continue;
+             }
+             */
+            if (unlikely(x == 0.0)) {
+                *f = 0.0;
+            } else {
+                *f = 3. * sin(M_PI * x) * sin(thirdpi * x) / (pisq * x * x);
+            }
+        }
+		printf("Refcount of np_dx: %li\n", Py_REFCNT(np_dx));
+		printf("Refcount of np_f: %li\n", Py_REFCNT(np_f));
+		printf("Refcount of dtype: %li\n", Py_REFCNT(dtype));
+        return 0;
+    }
+
+
+
 
     static int lanczos_shift_image_c(PyObject* np_img, PyObject* np_weight,
                                      PyObject* np_outimg,
@@ -397,9 +459,9 @@ char* anwcs_wcslib_to_string(const anwcs_t* wcs,
     anwcs_t(char* fn, int ext=0, int slen=0) {
         if ((ext == -1) ||
             (starts_with(fn, "SIMPLE  =") && !file_exists(fn))) {
-            # assume header string
+            // assume header string
             if (slen == 0) {
-                slen = strlen(fn);
+                 slen = (int)strlen(fn);
             }
             return anwcs_wcslib_from_string(fn, slen);
         }
@@ -951,59 +1013,66 @@ Sip = sip_t
 
 %inline %{
 
+    typedef anbool (*f_2to2ok)(const void*, double, double, double*, double*);
+    typedef void   (*f_2to2)  (const void*, double, double, double*, double*);
+    typedef int    (*f_2to2i) (const void*, double, double, double*, double*);
+
     static PyObject* broadcast_2to2ok
         (
-         anbool func(const void*, double, double, double*, double*),
+         //anbool func(const void*, double, double, double*, double*),
+         f_2to2ok func,
          const void* baton,
          PyObject* in1, PyObject* in2);
 
     static PyObject* broadcast_2to2
         (
-         void func(const void*, double, double, double*, double*),
+         //void func(const void*, double, double, double*, double*),
+         f_2to2 func,
          const void* baton,
          PyObject* in1, PyObject* in2);
 
     static PyObject* broadcast_2to2i
         (
-         int func(const void*, double, double, double*, double*),
+         //int func(const void*, double, double, double*, double*),
+         f_2to2i func,
          const void* baton,
          PyObject* in1, PyObject* in2);
          
          
 static PyObject* tan_rd2xy_wrapper(const tan_t* wcs,
                                    PyObject* in1, PyObject* in2) {
-    return broadcast_2to2ok(tan_radec2pixelxy, wcs, in1, in2);
+    return broadcast_2to2ok((f_2to2ok)tan_radec2pixelxy, wcs, in1, in2);
 }
 static PyObject* sip_rd2xy_wrapper(const sip_t* wcs,
                                    PyObject* in1, PyObject* in2) {
-    return broadcast_2to2ok(sip_radec2pixelxy, wcs, in1, in2);
+    return broadcast_2to2ok((f_2to2ok)sip_radec2pixelxy, wcs, in1, in2);
 }
 static PyObject* anwcs_rd2xy_wrapper(const anwcs_t* wcs,
                                      PyObject* in1, PyObject* in2) {
-    return broadcast_2to2i(anwcs_radec2pixelxy, wcs, in1, in2);
+    return broadcast_2to2i((f_2to2i)anwcs_radec2pixelxy, wcs, in1, in2);
 }
 
 
 static PyObject* tan_rd2iwc_wrapper(const tan_t* wcs,
                                    PyObject* in1, PyObject* in2) {
-    return broadcast_2to2ok(tan_radec2iwc, wcs, in1, in2);
+    return broadcast_2to2ok((f_2to2ok)tan_radec2iwc, wcs, in1, in2);
 }
 static PyObject* sip_rd2iwc_wrapper(const sip_t* wcs,
                                    PyObject* in1, PyObject* in2) {
-    return broadcast_2to2ok(sip_radec2iwc, wcs, in1, in2);
+    return broadcast_2to2ok((f_2to2ok)sip_radec2iwc, wcs, in1, in2);
 }
 
 static PyObject* tan_xy2rd_wrapper(const tan_t* wcs,
                                    PyObject* in1, PyObject* in2) {
-    return broadcast_2to2(tan_pixelxy2radec, wcs, in1, in2);
+    return broadcast_2to2((f_2to2)tan_pixelxy2radec, wcs, in1, in2);
 }
 static PyObject* sip_xy2rd_wrapper(const sip_t* wcs,
                                    PyObject* in1, PyObject* in2) {
-    return broadcast_2to2(sip_pixelxy2radec, wcs, in1, in2);
+    return broadcast_2to2((f_2to2)sip_pixelxy2radec, wcs, in1, in2);
 }
 static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                                    PyObject* in1, PyObject* in2) {
-    return broadcast_2to2i(anwcs_pixelxy2radec, wcs, in1, in2);
+    return broadcast_2to2i((f_2to2i)anwcs_pixelxy2radec, wcs, in1, in2);
 }
 
 
@@ -1012,7 +1081,8 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
 
     static PyObject* broadcast_2to2ok
         (
-         anbool func(const void*, double, double, double*, double*),
+         //anbool func(const void*, double, double, double*, double*),
+         f_2to2ok func,
          const void* baton,
          PyObject* in1, PyObject* in2) {
 
@@ -1129,7 +1199,8 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
 
     static PyObject* broadcast_2to2i
         (
-         int func(const void*, double, double, double*, double*),
+         //int func(const void*, double, double, double*, double*),
+         f_2to2i func,
          const void* baton,
          PyObject* in1, PyObject* in2) {
 
@@ -1247,7 +1318,8 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
 
     static PyObject* broadcast_2to2
         (
-         void func(const void*, double, double, double*, double*),
+         //void func(const void*, double, double, double*, double*),
+         f_2to2 func,
          const void* baton,
          PyObject* in1, PyObject* in2) {
 
