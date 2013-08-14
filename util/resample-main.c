@@ -8,9 +8,9 @@
 #include "errors.h"
 #include "log.h"
 #include "mathutil.h"
-#include "qfits_image.h"
 #include "keywords.h"
 #include "tic.h"
+#include "anqfits.h"
 
 static const char* OPTIONS = "hrvz:o:e:w:WqI:x:y:";
 
@@ -144,7 +144,7 @@ int main(int argc, char** args) {
 	double outpixscale;
 	int i;
 	int loglvl = LOG_MSG;
-	qfitsloader ld;
+    anqfits_t* anq;
 	int fitsext = 0;
 	int order = 3;
 
@@ -185,26 +185,19 @@ int main(int argc, char** args) {
 	if (!inwcsfn)
 		inwcsfn = infn;
 
+    anq = anqfits_open(infn);
+    if (!anq) {
+        ERROR("Failed to open \"%s\"", infn);
+        exit(-1);
+    }
 
-	ld.filename = infn;
-	// extension
-	ld.xtnum = fitsext;
-	// color plane
-	ld.pnum = 0;
-	ld.map = 1;
-	ld.ptype = PTYPE_DOUBLE;
-	if (qfitsloader_init(&ld)) {
-		ERROR("qfitsloader_init() failed");
-		exit(-1);
-	}
-	if (qfits_loadpix(&ld)) {
-		ERROR("qfits_loadpix() failed");
-		exit(-1);
-	}
-
-	W = ld.lx;
-	H = ld.ly;
-	img = ld.dbuf;
+    img = anqfits_readpix(anq, fitsext, 0, 0, 0, 0, 0, PTYPE_DOUBLE,
+                          NULL, &W, &H);
+    if (!img) {
+        ERROR("Failed to read pixel from \"%s\"", infn);
+        exit(-1);
+    }
+    anqfits_close(anq);
 	logmsg("Read image %s: %i x %i.\n", infn, W, H);
 
 	logmsg("Reading input WCS file %s\n", inwcsfn);
@@ -246,7 +239,7 @@ int main(int argc, char** args) {
 				   outimg, outW, outH, outwcs,
 				   NULL, 0,
 				   TRUE, order);
-
+    free(img);
 
 	logmsg("Writing output: %s\n", outfn);
 	// HACK -- reduce output image to float, in-place.

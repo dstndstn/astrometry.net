@@ -180,7 +180,7 @@ svn.c: $(SVN_C_DEPS)
 	echo "//" >> svn.c
 
 resample: resample-main.o \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) $(WCS_LIB_DEP)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += resampe.o
 
