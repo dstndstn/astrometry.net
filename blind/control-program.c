@@ -40,7 +40,7 @@
 #include "errors.h"
 
 // required for this sample program, maybe not for yours...
-#include "qfits.h"
+#include "anqfits.h"
 #include "image2xy.h"
 #include "sip_qfits.h"
 #include "fitsioutils.h"
@@ -75,32 +75,26 @@ static void get_next_field(char* fits_image_fn,
 						   double** starflux, sip_t** sip,
 						   double* ra, double* dec) {
 	int i, N;
-	//int W, H;
 	simplexy_t simxy;
 	// For this sample program I'm just going to read from a FITS image,
 	// but you probably want to grab data fresh from the CCD...
-	qfitsloader qimg;
-	qimg.filename = fits_image_fn;
-	qimg.xtnum = 0;
-	qimg.pnum = 0;
-	qimg.ptype = PTYPE_FLOAT;
-	qimg.map = 1;
+	anqfits_t* anq;
 
-	if (qfitsloader_init(&qimg)) {
-        ERROR("Failed to read FITS image from file \"%s\"\n", fits_image_fn);
-		exit(-1);
-	}
-	//W = qimg.lx;
-	//H = qimg.ly;
-    if (qimg.np != 1) {
-        logmsg("Warning, image has %i planes but this program only looks at the first one.\n", qimg.np);
-    }
-    if (qfits_loadpix(&qimg)) {
-        ERROR("Failed to read pixels from FITS image \"%s\"", fits_image_fn);
+    anq = anqfits_open(fits_image_fn);
+    if (!anq) {
+        ERROR("Failed to open FITS file \"%s\"\n", fits_image_fn);
         exit(-1);
     }
 
 	simplexy_set_defaults(&simxy);
+    simxy.image = anqfits_readpix(anq, 0, 0, 0, 0, 0, 0, PTYPE_FLOAT, NULL,
+                                  &(simxy.nx), &(simxy.ny));
+    anqfits_close(anq);
+    if (!simxy.image) {
+        ERROR("Failed to read image pixel from FITS file \"%s\"\n",
+              fits_image_fn);
+        exit(-1);
+    }
 
 	image2xy_run(&simxy, 0, 0);
 
@@ -115,7 +109,7 @@ static void get_next_field(char* fits_image_fn,
 		(*starflux)[i] = simxy.flux[i];
 	}
 	simplexy_free_contents(&simxy);
-    qfitsloader_free_buffers(&qimg);
+    // simplexy_free_contents frees the image data
 
 	// Try reading SIP header...
     logmsg("Trying to read WCS header from %s...\n", fits_image_fn);
