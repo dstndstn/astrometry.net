@@ -547,21 +547,31 @@ int plot_image_plot(const char* command,
 }
 
 static int read_fits_size(plotimage_t* args, int* W, int* H) {
-	qfitsloader ld;
-	ld.filename = args->fn;
-	ld.xtnum = args->fitsext;
-	ld.pnum = args->fitsplane;
-	ld.map = 1;
-	ld.ptype = PTYPE_FLOAT;
-	if (qfitsloader_init(&ld)) {
-		ERROR("qfitsloader_init() failed");
-		return -1;
-	}
+    anqfits_t* anq;
+    const anqfits_image_t* img;
+    anq = anqfits_open(args->fn);
+    if (!anq) {
+		ERROR("Failed to read input file: \"%s\"", args->fn);
+        return -1;
+    }
+    img = anqfits_get_image_const(anq, args->fitsext);
+    if (!img) {
+        ERROR("Failed to read image extension %i from file \"%s\"\n",
+              args->fitsext, args->fn);
+        anqfits_close(anq);
+        return -1;
+    }
 	if (W)
-		*W = ld.lx;
+		*W = img->width;
 	if (H)
-		*H = ld.ly;
-	qfitsloader_free_buffers(&ld);
+		*H = img->height;
+    if (args->fitsplane >= img->planes) {
+        ERROR("Requested FITS image plane %i, but only %i available\n",
+              args->fitsplane, (int)img->planes);
+        anqfits_close(anq);
+        return -1;
+    }
+    anqfits_close(anq);
 	return 0;
 }
 
