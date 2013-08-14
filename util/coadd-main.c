@@ -10,11 +10,12 @@
 #include "errors.h"
 #include "log.h"
 #include "mathutil.h"
-#include "qfits_image.h"
+#include "anqfits.h"
 #include "keywords.h"
 #include "tic.h"
 #include "convolve-image.h"
 #include "ioutils.h"
+#include "resample.h"
 
 static const char* OPTIONS = "hvw:o:e:O:Ns:p:D";
 
@@ -134,51 +135,50 @@ int main(int argc, char** args) {
 	coadd->wcs = outwcs;
 
 	if (nearest) {
-		coadd->resample_func = nearest_resample;
+		coadd->resample_func = nearest_resample_f;
 		coadd->resample_token = NULL;
 	} else {
-		coadd->resample_func = lanczos_resample;
+		coadd->resample_func = lanczos_resample_f;
 		largs.order = order;
 		coadd->resample_token = &largs;
 	}
 
 	for (i=0; i<sl_size(inimgfns); i++) {
-		qfitsloader ld;
-		qfitsloader wld;
+        anqfits_t* anq;
+        anqfits_t* wanq;
 		float* img;
 		float* wt = NULL;
 		anwcs_t* inwcs;
 		char* fn;
 		int ext;
 		float overallwt = 1.0;
+        int W, H;
 
 		fn = sl_get(inimgfns, i);
 		ext = il_get(inimgexts, i);
 		logmsg("Reading input image \"%s\" ext %i\n", fn, ext);
-		ld.filename = fn;
-		// extension
-		ld.xtnum = ext;
-		// color plane
-		ld.pnum = plane;
-		ld.map = 1;
-		ld.ptype = PTYPE_FLOAT;
-		if (qfitsloader_init(&ld)) {
-			ERROR("qfitsloader_init() failed");
-			exit(-1);
-		}
-		if (qfits_loadpix(&ld)) {
-			ERROR("qfits_loadpix() failed");
-			exit(-1);
-		}
-		img = ld.fbuf;
-		logmsg("Read image: %i x %i.\n", ld.lx, ld.ly);
+
+        anq = anqfits_open(fn);
+        if (!anq) {
+            ERROR("Failed to open file \"%s\"\n", fn);
+            exit(-1);
+        }
+
+        img = anqfits_readpix(anq, ext, 0, 0, 0, 0, plane,
+                              PTYPE_FLOAT, NULL, &W, &H);
+        if (!img) {
+            ERROR("Failed to read image from ext %i of %s\n", ext, fn);
+            exit(-1);
+        }
+        anqfits_close(anq);
+		logmsg("Read image: %i x %i.\n", W, H);
 
 		if (sigma > 0.0) {
 			int k0, nk;
 			float* kernel;
 			logmsg("Smoothing by Gaussian with sigma=%g\n", sigma);
 			kernel = convolve_get_gaussian_kernel_f(sigma, 4, &k0, &nk);
-			convolve_1d_f(img, ld.lx, ld.ly, kernel, k0, nk, img, NULL);
+			convolve_separable_f(img, W, H, kernel, k0, nk, img, NULL);
 			free(kernel);
 		}
 
@@ -195,7 +195,7 @@ int main(int argc, char** args) {
 			ERROR("Pixel scale from the WCS file is zero.  Usually this means the image has no valid WCS header.\n");
 			exit(-1);
 		}
-		if (anwcs_imagew(inwcs) != ld.lx || anwcs_imageh(inwcs) != ld.ly) {
+		if (anwcs_imagew(inwcs) != W || anwcs_imageh(inwcs) != H) {
 			ERROR("Size mismatch between image and WCS!");
 			exit(-1);
 		}
@@ -207,24 +207,21 @@ int main(int argc, char** args) {
 			wt = NULL;
 		} else if (file_exists(fn)) {
 			logmsg("Reading input weight image \"%s\" ext %i\n", fn, ext);
-			wld.filename = fn;
-			// extension
-			wld.xtnum = ext;
-			// color plane
-			wld.pnum = 0;
-			wld.map = 1;
-			wld.ptype = PTYPE_FLOAT;
-			if (qfitsloader_init(&wld)) {
-				ERROR("qfitsloader_init() failed");
-				exit(-1);
-			}
-			if (qfits_loadpix(&wld)) {
-				ERROR("qfits_loadpix() failed");
-				exit(-1);
-			}
-			wt = wld.fbuf;
-			logmsg("Read image: %i x %i.\n", wld.lx, wld.ly);
-			if (wld.lx != ld.lx || wld.ly != ld.ly) {
+            wanq = anqfits_open(fn);
+            if (!wanq) {
+                ERROR("Failed to open file \"%s\"\n", fn);
+                exit(-1);
+            }
+            int wtW, wtH;
+            wt = anqfits_readpix(anq, ext, 0, 0, 0, 0, 0,
+                              PTYPE_FLOAT, NULL, &wtW, &wtH);
+            if (!wt) {
+                ERROR("Failed to read image from ext %i of %s\n", ext, fn);
+                exit(-1);
+            }
+            anqfits_close(wanq);
+			logmsg("Read image: %i x %i.\n", wtW, wtH);
+			if (wtW != W || wtH != H) {
 				ERROR("Size mismatch between image and weight!");
 				exit(-1);
 			}
@@ -241,16 +238,16 @@ int main(int argc, char** args) {
 		if (divweight && wt) {
 			int j;
 			logmsg("Dividing image by weight image...\n");
-			for (j=0; j<(ld.lx*ld.ly); j++)
+			for (j=0; j<(W*H); j++)
 				img[j] /= wt[j];
 		}
 
 		coadd_add_image(coadd, img, wt, overallwt, inwcs);
 
 		anwcs_free(inwcs);
-		qfitsloader_free_buffers(&ld);
+        free(img);
 		if (wt)
-			qfitsloader_free_buffers(&wld);
+			free(wt);
 	}
 
 	//
