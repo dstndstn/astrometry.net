@@ -31,6 +31,8 @@
 #include "mathutil.h"
 #include "fitsioutils.h"
 #include "ioutils.h"
+#include "anqfits.h"
+#include "qfits_convert.h"
 
 static const char* OPTIONS = "hvs:e:";
 
@@ -52,9 +54,10 @@ int main(int argc, char *argv[]) {
 	char* outfn = NULL;
 	FILE* fout;
 	anbool tostdout = FALSE;
-	qfitsloader load;
-	qfitsdumper dump;
+    anqfits_t* anq;
+    int W, H;
 	qfits_header* hdr;
+    const anqfits_image_t* animg;
 	float* img;
 	int loglvl = LOG_MSG;
 	int scale = 2;
@@ -112,98 +115,109 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	load.filename = infn;
-	load.xtnum = ext;
-	load.pnum = 0;
-	load.ptype = PTYPE_FLOAT;
-	load.map = 0;
+    anq = anqfits_open(infn);
+    if (!anq) {
+        ERROR("Failed to open input file \"%s\"", infn);
+        exit(-1);
+    }
+    animg = anqfits_get_image_const(anq, ext);
+    
+    W = (int)animg->width;
+    H = (int)animg->height;
+    if (!animg) {
+        ERROR("Failde to read image from \"%s\"", infn);
+        exit(-1);
+    }
 
-	if (qfitsloader_init(&load)) {
-		ERROR("Failed to read input file info: \"%s\"", infn);
-		exit(-1);
-	}
-
+    /*
 	if (tostdout)
 		dump.filename = "STDOUT";
 	else
 		dump.filename = outfn;
 	dump.ptype = PTYPE_FLOAT;
 	dump.out_ptype = out_bitpix;
+     */
 
-	get_output_image_size(load.lx % scale, load.ly % scale,
+	get_output_image_size(W % scale, H % scale,
 						  scale, edge, &outw, &outh);
-	outw += (load.lx / scale);
-	outh += (load.ly / scale);
-
+	outw += (W / scale);
+	outh += (H / scale);
+    
 	hdr = qfits_header_default();
     fits_header_add_int(hdr, "BITPIX", out_bitpix, "bits per pixel");
-	if (load.np > 1)
+	if (animg->planes > 1)
 		fits_header_add_int(hdr, "NAXIS", 3, "number of axes");
 	else
 		fits_header_add_int(hdr, "NAXIS", 2, "number of axes");
     fits_header_add_int(hdr, "NAXIS1", outw, "image width");
     fits_header_add_int(hdr, "NAXIS2", outh, "image height");
-	if (load.np > 1)
-		fits_header_add_int(hdr, "NAXIS3", load.np, "number of planes");
+	if (animg->planes > 1)
+		fits_header_add_int(hdr, "NAXIS3", animg->planes, "number of planes");
+
 	if (qfits_header_dump(hdr, fout)) {
 		ERROR("Failed to write FITS header to \"%s\"", outfn);
 		exit(-1);
 	}
 	qfits_header_destroy(hdr);
-	// qfits pixel dumping works by re-opening the file and appending to it... ugh...
-	if (!tostdout && fclose(fout)) {
-		ERROR("Failed to pad or close output file");
-		exit(-1);
-	}
 
-	winw = load.lx;
+	winw = W;
 	winh = (int)ceil(ceil(1024*1024 / (float)winw) / (float)scale) * scale;
 
 	outimg = malloc((int)ceil(winw/scale)*(int)ceil(winh/scale) * sizeof(float));
 			
-	logmsg("Image is %i x %i x %i\n", load.lx, load.ly, load.np);
-	logmsg("Output will be %i x %i x %i\n", outw, outh, load.np);
+	logmsg("Image is %i x %i x %i\n", W, H, (int)animg->planes);
+	logmsg("Output will be %i x %i x %i\n", outw, outh, (int)animg->planes);
 	logverb("Reading in blocks of %i x %i\n", winw, winh);
-	for (plane=0; plane<load.np; plane++) {
+	for (plane=0; plane<animg->planes; plane++) {
 		int bx, by;
 		int nx, ny;
-		load.pnum = plane;
-		for (by=0; by<(int)ceil(load.ly / (float)winh); by++) {
-			for (bx=0; bx<(int)ceil(load.lx / (float)winw); bx++) {
+		for (by=0; by<(int)ceil(H / (float)winh); by++) {
+			for (bx=0; bx<(int)ceil(W / (float)winw); bx++) {
+                int i;
 				int lox, loy, hix, hiy, outw, outh;
-				nx = MIN(winw, load.lx - bx*winw);
-				ny = MIN(winh, load.ly - by*winh);
-				lox = 1 + bx*winw;
-				loy = 1 + by*winh;
-				hix = lox + nx - 1;
-				hiy = loy + ny - 1;
+				nx = MIN(winw, W - bx*winw);
+				ny = MIN(winh, H - by*winh);
+				lox = bx*winw;
+				loy = by*winh;
+				hix = lox + nx;
+				hiy = loy + ny;
 				logverb("  reading %i,%i + %i,%i\n", lox, loy, nx, ny);
-				if (qfits_loadpix_window(&load, lox, loy, hix, hiy)) {
-					ERROR("Failed to load pixels.");
-					exit(-1);
-				}
-				img = load.fbuf;
+
+                img = anqfits_readpix(anq, ext, lox, hix, loy, hiy, plane,
+                                      PTYPE_FLOAT, NULL, &W, &H);
+                if (!img) {
+                    ERROR("Failed to load pixel window: x=[%i, %i), y=[%i,%i), plane %i\n",
+                          lox, hix, loy, hiy, plane);
+                    exit(-1);
+                }
 
 				average_image_f(img, nx, ny, scale, edge,
 								&outw, &outh, outimg);
-				qfitsloader_free_buffers(&load);
+                free(img);
 
 				logverb("  writing %i x %i\n", outw, outh);
 				if (outw * outh == 0)
 					continue;
 
-				dump.fbuf = outimg;
-				dump.npix = outw * outh;
-				logverb("  ptype: %i\n", dump.ptype);
-				if (qfits_pixdump(&dump)) {
-					ERROR("Failed to write pixels.\n");
-					exit(-1);
-				}
-				npixout += dump.npix;
+                for (i=0; i<outw*outh; i++) {
+                    int nbytes = abs(out_bitpix)/8;
+                    char buf[nbytes];
+                    if (qfits_pixel_ctofits(PTYPE_FLOAT, out_bitpix,
+                                            outimg + i, buf)) {
+                        ERROR("Failed to convert pixel to FITS type\n");
+                        exit(-1);
+                    }
+                    if (fwrite(buf, nbytes, 1, fout) != 1) {
+                        ERROR("Failed to write pixels\n");
+                        exit(-1);
+                    }
+                }
+				npixout += outw*outh;
 			}
 		}
 	}
 	free(outimg);
+    anqfits_close(anq);
 
 	if (tostdout) {
 		// pad.
@@ -212,12 +226,16 @@ int main(int argc, char *argv[]) {
 		N = (npixout * (abs(out_bitpix) / 8)) % 2880;
 		memset(pad, 0, 2880);
 		fwrite(pad, 1, N, fout);
-	} else
-		if (fits_pad_file_name(outfn)) {
+	} else {
+		if (fits_pad_file(fout)) {
 			ERROR("Failed to pad output file");
 			exit(-1);
 		}
-
+        if (fclose(fout)) {
+            SYSERROR("Failed to close output file");
+            exit(-1);
+        }
+    }
 	logverb("Done!\n");
 	return 0;
 }
