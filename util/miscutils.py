@@ -1,24 +1,6 @@
 from math import pi
 import numpy as np
 
-def clip_polygon(poly1, poly2):
-    from clipper import Clipper, Point, PolyType, ClipType, PolyFillType
-    '''
-    '''
-    c = Clipper()
-    p1 = [Point(x,y) for x,y in poly1]
-    p2 = [Point(x,y) for x,y in poly2]
-    c.AddPolygon(p1, PolyType.Subject)
-    c.AddPolygon(p2, PolyType.Clip)
-    solution = []
-    pft = PolyFillType.EvenOdd
-    result = c.Execute(ClipType.Intersection, solution, pft, pft)
-    if len(solution) > 1:
-        raise RuntimeError('Polygon clipping results in non-simple polygon')
-    print 'Result:', result
-    print 'Solution:', solution
-    return [(s.x, s.y) for s in solution[0]]
-    
 def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
                 required=None):
     '''
@@ -81,6 +63,57 @@ def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
     return True
     
 
+def clip_polygon(poly1, poly2):
+    '''
+    Returns a new polygon resulting from taking poly1 and clipping it to lie inside poly2.
+    '''
+    # from clipper import Clipper, Point, PolyType, ClipType, PolyFillType
+    # '''
+    # '''
+    # c = Clipper()
+    # p1 = [Point(x,y) for x,y in poly1]
+    # p2 = [Point(x,y) for x,y in poly2]
+    # c.AddPolygon(p1, PolyType.Subject)
+    # c.AddPolygon(p2, PolyType.Clip)
+    # solution = []
+    # pft = PolyFillType.EvenOdd
+    # result = c.Execute(ClipType.Intersection, solution, pft, pft)
+    # if len(solution) > 1:
+    #     raise RuntimeError('Polygon clipping results in non-simple polygon')
+    # assert(result)
+    # #print 'Result:', result
+    # #print 'Solution:', solution
+    # return [(s.x, s.y) for s in solution[0]]
+    # Sutherland-Hodgman algorithm -- thanks, Wikipedia!
+    N2 = len(poly2)
+    # clip by each edge in turn.
+    for j in range(N2):
+        # target "left_right" value
+        clip1 = poly2[j]
+        clip2 = poly2[(j+1)%N2]
+        LRinside = _left_right(clip1, clip2, poly2[(j+2)%N2])
+        # are poly vertices inside or outside the clip polygon?
+        isinside = [_left_right(clip1, clip2, p) == LRinside
+                    for p in poly1]
+        # the resulting clipped polygon
+        clipped = []
+        N1 = len(poly1)
+        for i in range(N1):
+            S = poly1[i]
+            E = poly1[(i+1)%N1]
+            Sin = isinside[i]
+            Ein = isinside[(i+1)%N1]
+            if Ein:
+                if not Sin:
+                    clipped.append(line_intersection(clip1, clip2, S, E))
+                clipped.append(E)
+            else:
+                if Sin:
+                    clipped.append(line_intersection(clip1, clip2, S, E))
+        poly1 = clipped
+    return poly1
+
+    
 def polygons_intersect(poly1, poly2):
     '''
     Determines whether the given 2-D polygons intersect.
@@ -177,6 +210,14 @@ def line_intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
     t = (cx*dy - cy*dx) / b_dot_d_perp
     return x1 + t*bx, y1 + t*by
 
+def _left_right((x1,y1), (x2,y2), (x3,y3)):
+    '''
+    is (x3,y3) to the 'left' or 'right' of the line from (x1,y1) to (x2,y2) ?
+    '''
+    dx2,dy2 = x2-x1, y2-y1
+    dx3,dy3 = x3-x1, y3-y1
+    return (dx2 * dy3 - dx3 * dy2) > 0
+
 
 def point_in_poly(x, y, poly):
     '''
@@ -261,6 +302,28 @@ if __name__ == '__main__':
     ps = PlotSequence('miscutils')
 
     np.random.seed(42)
+
+    if True:
+        p2 = np.array([[0,0],[0,4],[4,4],[4,0]])
+
+        for i,p1 in enumerate([ np.array([[0,0],[0,2],[2,2],[2,0]]),
+                                np.array([[-1,-1],[0,2],[2,2],[2,0]]),
+                                np.array([[4,0],[0,4],[-4,0],[0,-4]]),
+                                np.array([[-1,2],[2,5],[5,2],[2,-1]]),
+                                ] + [None]*10):
+            if p1 is None:
+                p1 = np.random.uniform(high=6., low=-2, size=(4,2))
+            pc = np.array(clip_polygon(p1, p2))
+            plt.clf()
+            I = np.array([0,1,2,3,0])
+            plt.plot(p1[I,0], p1[I,1], 'b-', lw=3, alpha=0.5)
+            plt.plot(p2[I,0], p2[I,1], 'k-')
+            I = np.array(range(len(pc)) + [0])
+            plt.plot(pc[I,0], pc[I,1], 'r-')
+            plt.axis([-1,5,-1,5])
+            plt.savefig('clip-%02i.png' % i)
+        import sys
+        sys.exit(0)
     
     if True:
         for i in range(20):
