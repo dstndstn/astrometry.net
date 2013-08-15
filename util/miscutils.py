@@ -1,6 +1,24 @@
 from math import pi
 import numpy as np
 
+def clip_polygon(poly1, poly2):
+    from clipper import Clipper, Point, PolyType, ClipType, PolyFillType
+    '''
+    '''
+    c = Clipper()
+    p1 = [Point(x,y) for x,y in poly1]
+    p2 = [Point(x,y) for x,y in poly2]
+    c.AddPolygon(p1, PolyType.Subject)
+    c.AddPolygon(p2, PolyType.Clip)
+    solution = []
+    pft = PolyFillType.EvenOdd
+    result = c.Execute(ClipType.Intersection, solution, pft, pft)
+    if len(solution) > 1:
+        raise RuntimeError('Polygon clipping results in non-simple polygon')
+    print 'Result:', result
+    print 'Solution:', solution
+    return [(s.x, s.y) for s in solution[0]]
+    
 def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
                 required=None):
     '''
