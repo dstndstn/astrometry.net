@@ -18,7 +18,8 @@ class SmallOverlapError(OverlapError):
 def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
                       splineFallback = True,
                       splineStep = 25,
-                      splineMargin = 12):
+                      splineMargin = 12,
+                      table=True):
     '''
     Returns (Yo,Xo, Yi,Xi, ims)
 
@@ -57,6 +58,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
     SmallOverlapError.
 
     splineStep: approximate grid size
+
+    table: use Lanczos3 look-up table?
 
     '''
     # Adapted from detection/sdss-demo.py
@@ -278,7 +281,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
 
         # accumulators for each input image
         laccs = [np.zeros(nn) for im in Limages]
-        _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, Limages)
+        _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, Limages,
+                             table=table)
         rims = laccs
 
     else:
@@ -287,7 +291,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
     return (iyo,ixo, iyi,ixi, rims)
 
 
-def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages):
+def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
+                         table=True):
     '''
     L: int, Lanczos order
     ixi: int, 1-d numpy array, len n, x coord in input images
@@ -302,9 +307,11 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages):
     if L == 3:
         try:
             from util import lanczos3_filter, lanczos3_filter_table
-            #lfunc = lambda nil,x,y: lanczos3_filter(x,y)
             # 0: no rangecheck
-            lfunc = lambda nil,x,y: lanczos3_filter_table(x,y, 0)
+            if table:
+                lfunc = lambda nil,x,y: lanczos3_filter_table(x,y, 0)
+            else:
+                lfunc = lambda nil,x,y: lanczos3_filter(x,y)
         except:
             pass
 

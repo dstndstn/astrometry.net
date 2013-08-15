@@ -841,6 +841,15 @@ def sip_t_tostring(self):
              self.ap_order, self.bp_order))
 sip_t.__str__ = sip_t_tostring
 
+def sip_t_get_subimage(self, x0, y0, w, h):
+    wcs2 = sip_t(self)
+    cpx,cpy = wcs2.crpix
+    wcs2.set_crpix((cpx - x0, cpy - y0))
+    wcs2.set_width(float(w))
+    wcs2.set_height(float(h))
+    return wcs2
+sip_t.get_subimage = sip_t_get_subimage
+
 sip_t.imagew = property(sip_t.get_width,  sip_t.set_width,  None, 'image width')
 sip_t.imageh = property(sip_t.get_height, sip_t.set_height, None, 'image height')
 
@@ -968,6 +977,14 @@ Sip = sip_t
     double get_height() {
         return $self->imageh;
     }
+
+    void set_width(double x) {
+        $self->imagew = x;
+    }
+    void set_height(double x) {
+        $self->imageh = x;
+    }
+
     double pixel_scale() { return tan_pixel_scale($self); }
     void radec_center(double *p_ra, double *p_dec) {
         tan_get_radec_center($self, p_ra, p_dec);
@@ -1810,13 +1827,21 @@ tan_t.__init__ = my_tan_t_init
 
 Tan = tan_t
 
+def tan_t_get_subimage(self, x0, y0, w, h):
+    wcs2 = tan_t(self)
+    cpx,cpy = wcs2.crpix
+    wcs2.set_crpix(cpx - x0, cpy - y0)
+    wcs2.set_width(float(w))
+    wcs2.set_height(float(h))
+    return wcs2
+tan_t.get_subimage = tan_t_get_subimage
 
-
-def sip_t_get_subimage(self, xlo, xhi, ylo, yhi):
-    sipout = sip_t(self)
-    sip_shift(self.this, sipout.this, float(xlo), float(xhi), float(ylo), float(yhi))
-    return sipout
-sip_t.get_subimage = sip_t_get_subimage
+# Deja Vu!
+# def sip_t_get_subimage(self, xlo, xhi, ylo, yhi):
+#     sipout = sip_t(self)
+#     sip_shift(self.this, sipout.this, float(xlo), float(xhi), float(ylo), float(yhi))
+#     return sipout
+# sip_t.get_subimage = sip_t_get_subimage
 
 # picklable
 def sip_t_getstate(self):
