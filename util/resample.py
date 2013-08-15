@@ -19,7 +19,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
                       splineFallback = True,
                       splineStep = 25,
                       splineMargin = 12,
-                      table=True):
+                      table=True,
+                      cinterp = True):
     '''
     Returns (Yo,Xo, Yi,Xi, ims)
 
@@ -281,10 +282,19 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
 
         # accumulators for each input image
         laccs = [np.zeros(nn) for im in Limages]
-        _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, Limages,
-                             table=table)
-        rims = laccs
 
+        if cinterp:
+            from util import lanczos3_interpolate
+            ixi = ixi.astype(np.int)
+            iyi = iyi.astype(np.int)
+            print 'ixi/iyi', ixi.shape, ixi.dtype, iyi.shape, iyi.dtype
+            print 'dx/dy', dx.shape, dx.dtype, dy.shape, dy.dtype
+            rtn = lanczos3_interpolate(ixi, iyi, dx, dy, laccs, Limages)
+            print 'rtn:', rtn
+        else:
+            _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, Limages,
+                                 table=table)
+        rims = laccs
     else:
         rims = []
 
@@ -345,23 +355,38 @@ if __name__ == '__main__':
     ra,dec = 219.577111, 54.52
     pixscale = 2.75 / 3600.
     #W,H = 2048, 2048
-    W,H = 512, 512
+    #W,H = 512, 512
+    W,H = 100,100
     cowcs = Tan(ra, dec, (W+1)/2., (H+1)/2.,
                 -pixscale, 0., 0., pixscale, W, H)
     cowcs.write_to('co.wcs')
     
-    intfn = '05579a167-w1-int-1b.fits'
-
+    #intfn = '05579a167-w1-int-1b.fits'
+    intfn = 'wise-frames/9a/05579a/167/05579a167-w1-int-1b.fits'
     wcs = Sip(intfn)
     pix = fitsio.read(intfn)
     pix[np.logical_not(np.isfinite(pix))] = 0.
+
+    print 'pix', pix.shape, pix.dtype
+
+    # pix = pix[500:600,500:600]
+    # h,w = pix.shape
+    # wcs = wcs.get_subimage(500,500, h,w)
     
     t0 = time.clock()
     Yo,Xo,Yi,Xi,ims = resample_with_wcs(cowcs, wcs, [pix], 3)
-    t1 = time.clock()
+    t1 = time.clock() - t0
+    print 'C resampling took', t1
 
-    print 'Resampling took', t1-t0
+    t0 = time.clock()
+    Yo2,Xo2,Yi2,Xi2,ims2 = resample_with_wcs(cowcs, wcs, [pix], 3, cinterp=False)
+    t2 = time.clock() - t0
+    print 'py resampling took', t2
     
     out = np.zeros((H,W))
     out[Yo,Xo] = ims[0]
-    fitsio.write('resampled.fits', out, clobber=True)
+    fitsio.write('resampled-c.fits', out, clobber=True)
+
+    out = np.zeros((H,W))
+    out[Yo,Xo] = ims2[0]
+    fitsio.write('resampled-py.fits', out, clobber=True)

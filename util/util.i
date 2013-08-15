@@ -109,14 +109,172 @@ void log_set_level(int lvl);
         printf("  descr elsize: %i\n", desc->elsize);
     }
 
-    /*
-     static void lanczos_interpolate(int L, PyObject* np_ixi, PyObject* np_iyi,
-     PyObject* np_dx, PyObject* np_dy,
-     PyObject* lins, PyObject* louts) {
-     np_intp W,H;
-     //PyArray_Descr* dtype = PyArray_DescrFromType(PyArray_DOUBLE);
-     }
-     */
+
+    static int lanczos3_interpolate(PyObject* np_ixi, PyObject* np_iyi,
+                                    PyObject* np_dx, PyObject* np_dy,
+                                    PyObject* loutputs, PyObject* linputs) {
+        npy_intp W,H, N;
+        npy_intp Nimages;
+        npy_intp i, j;
+        PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE); //PyArray_DOUBLE);
+        PyArray_Descr* itype = PyArray_DescrFromType(NPY_INT64); //PyArray_INT);
+        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
+            NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+        int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+
+        //long *ixi, *iyi;
+        int64_t *ixi, *iyi;
+        double *dx, *dy;
+
+        static const int L = 3;
+        // Nlut is number of bins per unit x
+        static const int Nlutunit = 1024;
+        static const double lut0 = -(L+1);
+        static const int Nlut = 2*(L+1) * Nlutunit;
+        // We want bins to go from -4 to 4 (Lanczos-3 range of -3 to 3, plus some buffer)
+        // [Nlut]
+        static double lut[8192];
+        static int initialized = 0;
+
+        if (!initialized) {
+            for (i=0; i<(Nlut); i++) {
+                double x,f;
+                x = (lut0 + (i / (double)Nlutunit));
+                if (x <= -L || x >= L) {
+                    f = 0.0;
+                } else if (x == 0) {
+                    f = 1.0;
+                } else {
+                    f = 3. * sin(M_PI * x) * sin(M_PI / L * x) / (M_PI * M_PI * x * x);
+                }
+                lut[i] = f;
+            }
+            initialized = 1;
+        }
+
+        // CheckFromAny steals the dtype reference
+        Py_INCREF(itype);
+        np_ixi = PyArray_CheckFromAny(np_ixi, itype, 1, 1, req, NULL);
+        np_iyi = PyArray_CheckFromAny(np_iyi, itype, 1, 1, req, NULL);
+        // itype refcount = 0
+        Py_INCREF(dtype);
+        Py_INCREF(dtype);
+        np_dx  = PyArray_CheckFromAny(np_dx,  dtype, 1, 1, req, NULL);
+        np_dy  = PyArray_CheckFromAny(np_dy,  dtype, 1, 1, req, NULL);
+        // dtype refcount = 1 (we use it more below)
+        if (!np_ixi || !np_iyi) {
+            ERR("ixi,iyi arrays are wrong type / shape\n");
+            return -1;
+        }
+        if (!np_dx || !np_dy) {
+            ERR("dx,dy arrays are wrong type / shape\n");
+            return -1;
+        }
+        N = PyArray_DIM(np_ixi, 0);
+        if ((PyArray_DIM(np_iyi, 0) != N) ||
+            (PyArray_DIM(np_dx,  0) != N) ||
+            (PyArray_DIM(np_dy,  0) != N)) {
+            ERR("ixi,iyi,dx,dy arrays must be same size\n");
+            return -1;
+        }
+
+        if (!PyList_Check(loutputs) ||
+            !PyList_Check(linputs)) {
+            ERR("loutputs and linputs must be lists of np arrays\n");
+            return -1;
+        }
+        Nimages = PyList_Size(loutputs);
+        if (PyList_Size(linputs) != Nimages) {
+            ERR("loutputs and linputs must be same length\n");
+            return -1;
+        }
+
+        ixi = PyArray_DATA(np_ixi);
+        iyi = PyArray_DATA(np_iyi);
+        dx  = PyArray_DATA(np_dx);
+        dy  = PyArray_DATA(np_dy);
+
+        for (i=0; i<Nimages; i++) {
+            PyObject* np_inimg = PyList_GetItem(linputs, i);
+            PyObject* np_outimg = PyList_GetItem(loutputs, i);
+            double *inimg, *outimg;
+
+            Py_INCREF(dtype);
+            Py_INCREF(dtype);
+            np_inimg  = PyArray_CheckFromAny(np_inimg,   dtype, 2, 2, req, NULL);
+            np_outimg  = PyArray_CheckFromAny(np_outimg, dtype, 1, 1, reqout, NULL);
+            if (!np_inimg || !np_outimg) {
+                ERR("Failed to convert input and output images to right type/shape\n");
+                return -1;
+            }
+            if (PyArray_DIM(np_outimg, 0) != N) {
+                ERR("Output image must be same shape as ixo\n");
+                return -1;
+            }
+            H = PyArray_DIM(np_inimg, 0);
+            W = PyArray_DIM(np_inimg, 1);
+            inimg  = PyArray_DATA(np_inimg);
+            outimg = PyArray_DATA(np_outimg);
+
+            for (j=0; j<N; j++) {
+                // resample inimg[ iyi[j] + dy[j], ixi[j] + dx[j] ]
+                // to outimg[ j ]
+                npy_intp u,v;
+
+                int tx0, ty0;
+
+                tx0 = (int)((dx[j] + L - lut0) * Nlutunit);
+                ty0 = (int)((dy[j] + L - lut0) * Nlutunit);
+                if ((tx0 < 0) || (tx0 >= Nlut)) {
+                    printf("tx0 = %i (dx = %g) not in [0, %i)\n", tx0, dx[j], Nlut);
+                    return -1;
+                }
+                if ((ty0 < 0) || (ty0 >= Nlut)) {
+                    printf("ty0 = %i (dy = %g) not in [0, %i)\n", ty0, dy[j], Nlut);
+                    return -1;
+                }
+                //printf("tx0,ty0: %i,%i\n", tx0, ty0);
+
+                // Lanczos kernel in y direction
+                double acc = 0.;
+                double nacc = 0.;
+                for (v=0; v<2*L+1; v++) {
+                    int iy = iyi[j] - L + v;
+                    //
+                    double accx = 0;
+                    double naccx = 0;
+                    double ly = lut[ty0 - v*Nlutunit];
+
+                    iy = MAX(iy, 0);
+                    iy = MIN(iy, H-1);
+                    for (u=0; u<2*L+1; u++) {
+                        int ix = ixi[j] - L + u;
+                        double lx = lut[tx0 - u*Nlutunit];
+                        ix = MAX(ix, 0);
+                        ix = MIN(ix, W-1);
+                        accx += inimg[iy * W + ix] * lx;
+                        naccx += lx;
+                    }
+                    acc += ly * accx;
+                    nacc += ly * naccx;
+                }
+
+                outimg[j] = acc / nacc;
+
+            }
+
+            Py_DECREF(np_inimg);
+            Py_DECREF(np_outimg);
+        }
+
+        Py_DECREF(dtype);
+
+        Py_DECREF(np_ixi);
+        Py_DECREF(np_iyi);
+        Py_DECREF(np_dx);
+        Py_DECREF(np_dy);
+        return 0;
+    }
 
     static int lanczos3_filter(PyObject* np_dx, PyObject* np_f) {
         npy_intp N;
@@ -152,6 +310,7 @@ void log_set_level(int lvl);
             !PyArray_ISWRITEABLE(np_f)
             ) {
             ERR("Arrays aren't right type\n");
+            return -1;
         }
         N = PyArray_DIM(np_dx, 0);
         if (PyArray_DIM(np_f, 0) != N) {
