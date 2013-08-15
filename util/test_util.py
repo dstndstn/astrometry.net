@@ -44,6 +44,8 @@ x3 = x1[np.newaxis,:]
 x4 = x1[:,np.newaxis]
 x5 = x1.astype(np.float32)
 x6 = x1.astype(np.dtype(np.float64).newbyteorder('S'))
+x7 = 3.
+x8 = np.array(3.)
 
 import gc
 gc.collect()
@@ -58,7 +60,11 @@ for r,d in [(1., 2.),
             (x3, x4),
             (1., x5),
             (1., x6),
+            (1., x7),
+            (1., x8),
             ]:
+    print
+    print 'testing radec2pixelxy'
     print '  r', type(r),
     if hasattr(r, 'dtype'):
        print r.dtype,
@@ -70,8 +76,17 @@ for r,d in [(1., 2.),
     print d
     
     ok,x,y = wcs.radec2pixelxy(r, d)
-    print 'ok,x,y', ok,x,y
+    print 'ok,x,y =', ok,x,y
+    print '  x', type(x),
+    if hasattr(x, 'dtype'):
+        print x.dtype,
+    print x
+    print '  y', type(y),
+    if hasattr(y, 'dtype'):
+        print y.dtype,
+    print y
 
+    
 gc.collect()
 
 print 'Garbage:', len(gc.garbage)

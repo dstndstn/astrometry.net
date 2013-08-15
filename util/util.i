@@ -1279,11 +1279,42 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
             } while (iternext(iter));
         }
 
-        // Grab the results -- note "4,2,3" order -- ok,x,y
-        ret = Py_BuildValue("(OOO)",
-                            NpyIter_GetOperandArray(iter)[4],
-                            NpyIter_GetOperandArray(iter)[2],
-                            NpyIter_GetOperandArray(iter)[3]);
+        if (PyArray_IsPythonScalar(in1) && PyArray_IsPythonScalar(in2)) {
+            PyObject* px  = (PyObject*)NpyIter_GetOperandArray(iter)[2];
+            PyObject* py  = (PyObject*)NpyIter_GetOperandArray(iter)[3];
+            PyObject* pok = (PyObject*)NpyIter_GetOperandArray(iter)[4];
+            //printf("Both inputs are python scalars\n");
+            double d;
+            unsigned char c;
+            d = *(double*)PyArray_DATA(px);
+            px = PyFloat_FromDouble(d);
+            d = *(double*)PyArray_DATA(py);
+            py = PyFloat_FromDouble(d);
+            c = *(unsigned char*)PyArray_DATA(pok);
+            pok = PyBool_FromLong(c);
+            ret = Py_BuildValue("(NNN)", pok, px, py);
+            /*
+             // I couldn't figure this out -- ScalarAsCtype didn't work
+             if (PyArray_CheckScalar(px)) {
+             printf("x is scalar\n");
+             }
+             if (PyArray_IsScalar(px, Double)) {
+             printf("x is PyDoubleArrType\n");
+             }
+             if (PyArray_IsScalar(px, CDouble)) {
+             printf("x is PyCDoubleArrType\n");
+             }
+             if (PyArray_ISFLOAT(px)) {
+             printf("x ISFLOAT\n");
+             }
+             //PyArray_ScalarAsCtype(px, &d);
+             */
+        } else {
+            ret = Py_BuildValue("(OOO)",
+                                NpyIter_GetOperandArray(iter)[4],
+                                NpyIter_GetOperandArray(iter)[2],
+                                NpyIter_GetOperandArray(iter)[3]);
+        }
 
         cleanup:
         if (NpyIter_Deallocate(iter) != NPY_SUCCEED) {
@@ -1412,11 +1443,27 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
             } while (iternext(iter));
         }
 
-        // Grab the results -- note "4,2,3" order -- ok,x,y
-        ret = Py_BuildValue("(OOO)",
-                            NpyIter_GetOperandArray(iter)[4],
-                            NpyIter_GetOperandArray(iter)[2],
-                            NpyIter_GetOperandArray(iter)[3]);
+        if (PyArray_IsPythonScalar(in1) && PyArray_IsPythonScalar(in2)) {
+            PyObject* px  = (PyObject*)NpyIter_GetOperandArray(iter)[2];
+            PyObject* py  = (PyObject*)NpyIter_GetOperandArray(iter)[3];
+            PyObject* pok = (PyObject*)NpyIter_GetOperandArray(iter)[4];
+            //printf("Both inputs are python scalars\n");
+            double d;
+            int i;
+            d = *(double*)PyArray_DATA(px);
+            px = PyFloat_FromDouble(d);
+            d = *(double*)PyArray_DATA(py);
+            py = PyFloat_FromDouble(d);
+            i = *(int*)PyArray_DATA(pok);
+            pok = PyInt_FromLong(i);
+            ret = Py_BuildValue("(NNN)", pok, px, py);
+        } else {
+            // Grab the results -- note "4,2,3" order -- ok,x,y
+            ret = Py_BuildValue("(OOO)",
+                                NpyIter_GetOperandArray(iter)[4],
+                                NpyIter_GetOperandArray(iter)[2],
+                                NpyIter_GetOperandArray(iter)[3]);
+        }
         cleanup:
         if (NpyIter_Deallocate(iter) != NPY_SUCCEED) {
             Py_DECREF(ret);
@@ -1535,10 +1582,22 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
             } while (iternext(iter));
         }
 
-        // Grab the results
-        ret = Py_BuildValue("(OO)",
-                            NpyIter_GetOperandArray(iter)[2],
-                            NpyIter_GetOperandArray(iter)[3]);
+        if (PyArray_IsPythonScalar(in1) && PyArray_IsPythonScalar(in2)) {
+            PyObject* px  = (PyObject*)NpyIter_GetOperandArray(iter)[2];
+            PyObject* py  = (PyObject*)NpyIter_GetOperandArray(iter)[3];
+            //printf("Both inputs are python scalars\n");
+            double d;
+            d = *(double*)PyArray_DATA(px);
+            px = PyFloat_FromDouble(d);
+            d = *(double*)PyArray_DATA(py);
+            py = PyFloat_FromDouble(d);
+            ret = Py_BuildValue("(NN)", px, py);
+        } else {
+            // Grab the results
+            ret = Py_BuildValue("(OO)",
+                                NpyIter_GetOperandArray(iter)[2],
+                                NpyIter_GetOperandArray(iter)[3]);
+        }
 
         cleanup:
         if (NpyIter_Deallocate(iter) != NPY_SUCCEED) {
