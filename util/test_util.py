@@ -1,5 +1,34 @@
 from util import *
 import numpy as np
+import time
+
+for seed in range(42, 100):
+    np.random.seed(seed)
+
+    X = np.random.normal(scale=10.0, size=(1016,1016)).astype(np.float32)
+    # X = np.random.normal(scale=10.0, size=(10,10)).astype(np.float32)
+
+    for i in range(3):
+        t0 = time.clock()
+        m = np.median(X)
+        t1 = time.clock() - t0
+        print 'np.median:', t1
+    print 'value:', m
+
+    I = np.argsort(X.ravel())
+    m = X.flat[I[len(I)/2]]
+    print 'element[N/2] =', m
+
+    for i in range(3):
+        t0 = time.clock()
+        pym = flat_median_f(X)
+        t1 = time.clock() - t0
+        print 'flat_median:', t1
+        print 'value:', pym
+        assert(pym == m)
+        
+import sys
+sys.exit(0)
 
 wcs = Tan()
 

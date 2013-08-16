@@ -9,6 +9,7 @@
 #include <numpy/arrayobject.h>
 #include <stdint.h>
 #include <sys/param.h>
+#include <stdlib.h>
 
 #include "log.h"
 #include "healpix.h"
@@ -110,6 +111,99 @@ void log_set_level(int lvl);
     }
 
 
+    static double flat_median_f(PyObject* np_arr) {
+        PyArray_Descr* dtype;
+        npy_intp N;
+        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
+            NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+        float* x;
+        float med = 0;
+        int L, R;
+        int mid;
+
+        dtype = PyArray_DescrFromType(NPY_FLOAT);
+        np_arr  = PyArray_CheckFromAny(np_arr, dtype, 0, 0, req, NULL);
+        dtype = NULL;
+        N = PyArray_Size(np_arr);
+        x = (float*)malloc(sizeof(float) * N);
+        memcpy(x, PyArray_DATA(np_arr), sizeof(float)*N);
+
+        // Pseudocode from wikipedia's 'Selection algorithm' page
+        L = 0;
+        R = N-1;
+        mid = N/2;
+        while (L < R) {
+            int ipivot;
+            int i,j;
+            float pivot;
+            //printf("L=%i, R=%i, mid=%i,   (N=%i)\n", L, R, mid, R-L+1);
+            //ipivot = (L+R) / 2;
+            ipivot = random() % (1+R-L) + L;
+            pivot = x[ipivot];
+            //printf("ipivot=%i, pivot=%f, x[L]=%f, x[R]=%f\n", ipivot, pivot, x[L], x[R]);
+            // partition array...
+            i = L;
+            j = R;
+            do {
+                //printf("starting scan: i=%i, j=%i\n", i, j);
+                // scan for elements out of place
+                // scan from the left:
+                while (x[i] < pivot)
+                    i++;
+                // scan from the right:
+                while (x[j] >= pivot && j>i)
+                    j--;
+                // now x[i] >= pivot
+                // and (x[j] < pivot) OR j == i
+                assert(x[i] >= pivot);
+                assert((x[j] < pivot) || (j == i));
+                assert(j >= i);
+                if (i < j) {
+                    // swap
+                    float tmp = x[i];
+                    x[i] = x[j];
+                    x[j] = tmp;
+                }
+            } while (i < j);
+
+            //printf("done: i=%i, j=%i\n", i, j);
+
+            //assert(i == j || (i == j+1) || (i == j+2));
+            int k;
+            for (k=L; k<i; k++) {
+                assert(x[k] < pivot);
+            }
+            for (k=i; k<=R; k++) {
+                assert(x[k] >= pivot);
+            }
+
+            // there must be at least one element in the right partition
+            assert(i <= R);
+
+            if (i > mid)
+                // the median is in the left partition (< pivot)
+                R = i-1;
+            else {
+                // the median is in the right partition (>= pivot)
+                L = i;
+            }
+
+            assert(L <= mid);
+            assert(R >= mid);
+        }
+
+        //printf("L=%i, R=%i, mid=%i,   (N=%i)\n", L, R, mid, R-L+1);
+        //printf("x[L]=%f, x[R]=%f, x[mid] = %f\n", x[L], x[R], x[mid]);
+        //printf("L=%i, R=%i, mid=%i\n", L, R, mid);
+        med = x[mid];
+
+        free(x);
+
+        Py_DECREF(np_arr);
+        return med;
+    }
+
+
     static int lanczos3_interpolate(PyObject* np_ixi, PyObject* np_iyi,
                                     PyObject* np_dx, PyObject* np_dy,
                                     PyObject* loutputs, PyObject* linputs) {
@@ -162,8 +256,8 @@ void log_set_level(int lvl);
         // Nlutunit is number of bins per unit x
         //static const int Nlutunit = 1024;
         static const int Nlutunit = 2048;
-        static const double lut0 = -(L+0.5);
-        static const int Nunits = 2*(L+1);
+        static const double lut0 = -3.5; //-(L+0.5);
+        static const int Nunits = 8; //2*(L+1);
         //static const int Nlut = Nunits * Nlutunit;
         //static float lut[8192];
         static float lut[16384];
@@ -394,7 +488,7 @@ void log_set_level(int lvl);
         // Nlutunit is number of bins per unit x
         static const int Nlutunit = 1024;
         static const float lut0 = -4.;
-        static const int Nlut = 8 * Nlutunit;
+        static const int Nlut = 8192; //8 * Nlutunit;
         // We want bins to go from -4 to 4 (Lanczos-3 range of -3 to 3, plus some buffer)
         // [Nlut]
         static float lut[8192];
