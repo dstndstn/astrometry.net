@@ -25,7 +25,7 @@ typedef struct {
     double bzero;
 } anqfits_image_t;
 
-anqfits_image_t* anqfits_image_new();
+anqfits_image_t* anqfits_image_new(void);
 void anqfits_image_free(anqfits_image_t*);
 
 
