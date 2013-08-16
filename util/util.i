@@ -294,13 +294,13 @@ void log_set_level(int lvl);
                     for (v=0; v<2*L+1; v++,
                              iy++, ly++) {
                         float accx = 0;
-                        int clipiy = MAX(0, MIN(H-1, iy));
+                        int clipiy = MAX(0, MIN((int)(H-1), iy));
                         int ix = *ixi - L;
                         float* lx = lut + tx0;
                         float* inpix = inimg + clipiy * W;
                         // Lanczos kernel in x direction
                         for (u=0; u<2*L+1; u++, ix++, lx++) {
-                            int clipix = MAX(0, MIN(W-1, ix));
+                            int clipix = MAX(0, MIN((int)(W-1), ix));
                             accx  += (*lx) * (inpix[clipix]);
                         }
                         acc  += (*ly) * accx;
@@ -978,6 +978,16 @@ anwcs.get_cd = anwcs_get_cd
 
     ~sip_t() { free($self); }
 
+    sip_t* get_subimage(int x0, int y0, int w, int h) {
+        sip_t* sub = malloc(sizeof(sip_t));
+        memcpy(sub, $self, sizeof(sip_t));
+        sub->wcstan.crpix[0] -= x0;
+        sub->wcstan.crpix[1] -= y0;
+        sub->wcstan.imagew = w;
+        sub->wcstan.imageh = h;
+        return sub;
+    }
+
     double pixel_scale() { return sip_pixel_scale($self); }
 
     int write_to(const char* filename) {
@@ -1088,14 +1098,14 @@ def sip_t_tostring(self):
              self.ap_order, self.bp_order))
 sip_t.__str__ = sip_t_tostring
 
-def sip_t_get_subimage(self, x0, y0, w, h):
-    wcs2 = sip_t(self)
-    cpx,cpy = wcs2.crpix
-    wcs2.set_crpix((cpx - x0, cpy - y0))
-    wcs2.set_width(float(w))
-    wcs2.set_height(float(h))
-    return wcs2
-sip_t.get_subimage = sip_t_get_subimage
+# def sip_t_get_subimage(self, x0, y0, w, h):
+#     wcs2 = sip_t(self)
+#     cpx,cpy = wcs2.crpix
+#     wcs2.set_crpix((cpx - x0, cpy - y0))
+#     wcs2.set_width(float(w))
+#     wcs2.set_height(float(h))
+#     return wcs2
+# sip_t.get_subimage = sip_t_get_subimage
 
 sip_t.imagew = property(sip_t.get_width,  sip_t.set_width,  None, 'image width')
 sip_t.imageh = property(sip_t.get_height, sip_t.set_height, None, 'image height')
@@ -1926,7 +1936,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
 
     static int tan_numpy_xyz2pixelxy(tan_t* tan, PyObject* npxyz,
            PyObject* npx, PyObject* npy) {
-        int i, N;
+        npy_intp i, N;
         int rtn = 0;
         double *x, *y;
         
