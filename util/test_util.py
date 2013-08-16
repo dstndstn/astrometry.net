@@ -2,10 +2,20 @@ from util import *
 import numpy as np
 import time
 
+import fitsio
+#X = fitsio.read('nasty.fits')
+X = fitsio.read('dsky.fits')
+assert(np.all(np.isfinite(X)))
+print 'med', np.median(X)
+print 'flat...'
+f = flat_median_f(X)
+print 'flat', f
+
 for seed in range(42, 100):
     np.random.seed(seed)
 
-    X = np.random.normal(scale=10.0, size=(1016,1016)).astype(np.float32)
+    #X = np.random.normal(scale=10.0, size=(1016,1016)).astype(np.float32)
+    X = np.random.normal(scale=10.0, size=(1015,1015)).astype(np.float32)
     # X = np.random.normal(scale=10.0, size=(10,10)).astype(np.float32)
 
     for i in range(3):
@@ -24,12 +34,9 @@ for seed in range(42, 100):
         pym = flat_median_f(X)
         t1 = time.clock() - t0
         print 'flat_median:', t1
-        print 'value:', pym
-        assert(pym == m)
+    print 'value:', pym
+    assert(pym == m)
         
-import sys
-sys.exit(0)
-
 wcs = Tan()
 
 wcs.crval = (1.,2.)

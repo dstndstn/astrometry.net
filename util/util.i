@@ -123,11 +123,25 @@ void log_set_level(int lvl);
 
         dtype = PyArray_DescrFromType(NPY_FLOAT);
         np_arr  = PyArray_CheckFromAny(np_arr, dtype, 0, 0, req, NULL);
+        if (!np_arr) {
+            ERR("flat_median_f: Failed to convert array to float\n");
+            return 0;
+        }
         dtype = NULL;
         N = PyArray_Size(np_arr);
         x = (float*)malloc(sizeof(float) * N);
         memcpy(x, PyArray_DATA(np_arr), sizeof(float)*N);
         Py_DECREF(np_arr);
+
+        {
+            int i;
+            for (i=0; i<N; i++) {
+                if (!isfinite(x[i])) {
+                    ERR("flat_median_f cannot handle NaN values (element %i)\n", i);
+                    return x[i];
+                }
+            }
+        }
 
         // Pseudocode from wikipedia's 'Selection algorithm' page
         L = 0;
@@ -136,7 +150,9 @@ void log_set_level(int lvl);
         while (L < R) {
             int ipivot;
             int i,j;
+            int k;
             float pivot;
+            printf("L=%i, R=%i (N=%i), mid=%i\n", L, R, 1+R-L, mid);
             ipivot = random() % (1+R-L) + L;
             pivot = x[ipivot];
             // partition array...
@@ -163,7 +179,6 @@ void log_set_level(int lvl);
                 }
             } while (i < j);
             {
-                int k;
                 for (k=L; k<i; k++) {
                     assert(x[k] < pivot);
                 }
@@ -171,15 +186,81 @@ void log_set_level(int lvl);
                     assert(x[k] >= pivot);
                 }
             }
-            // there must be at least one element in the right partition
+            // partition the right partition into == and >
+            j = i;
+            k = R;
+            do {
+                //printf("i=%i, j=%i, k=%i\n", i, j, k);
+                // scan for elements out of place
+                // scan from the right:
+                while (x[k] > pivot)
+                    k--;
+                // scan from the left:
+                while (x[j] == pivot && j<k)
+                    j++;
+
+                assert(x[k] == pivot);
+                assert((x[j] > pivot) || (j == k));
+                assert(k >= j);
+                if (j < k) {
+                    // swap
+                    float tmp = x[j];
+                    x[j] = x[k];
+                    x[k] = tmp;
+                }
+            } while (j < k);
+
+            j = k+1;
+
+            {
+                printf("L=%i, i=%i, j=%i, k=%i, R=%i\n", L, i, j, k, R);
+                for (k=L; k<i; k++) {
+                    assert(x[k] < pivot);
+                }
+                for (k=i; k<j; k++) {
+                    assert(x[k] == pivot);
+                }
+                for (k=j; k<=R; k++) {
+                    assert(x[k] > pivot);
+                }
+            }
+
+
+
+            // there must be at least one element in the right partitions
             assert(i <= R);
-            if (i > mid)
+
+            // there must be at least one element in the middle partition
+            assert(j-i >= 1);
+
+            if (mid < i)
                 // the median is in the left partition (< pivot)
                 R = i-1;
+            else if (mid >= j)
+                // the median is in the right partition (> pivot)
+                L = j;
             else {
-                // the median is in the right partition (>= pivot)
-                L = i;
+                // the median is in the middle partition (== pivot)
+                L = R = i;
+                break;
             }
+
+            /*
+             else {
+             // the median is in the right partition (>= pivot)
+             int k;
+             L = i;
+             // check for all values == pivot
+             for (k=L; k<=R; k++) {
+             if (x[k] != pivot)
+             break;
+             }
+             if (k == R+1) {
+             R = L;
+             break;
+             }
+             }
+             */
             assert(L <= mid);
             assert(R >= mid);
         }
