@@ -84,6 +84,7 @@ def clip_polygon(poly1, poly2):
     # #print 'Result:', result
     # #print 'Solution:', solution
     # return [(s.x, s.y) for s in solution[0]]
+
     # Sutherland-Hodgman algorithm -- thanks, Wikipedia!
     N2 = len(poly2)
     # clip by each edge in turn.

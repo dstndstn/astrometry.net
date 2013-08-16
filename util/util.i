@@ -130,15 +130,36 @@ void log_set_level(int lvl);
         int32_t *ixi, *iyi;
         float *dx, *dy;
 
+        /*
+         dx,dy are in [-0.5, 0.5].
+
+         Lanczos-3 kernel is zero outside [-3,3].
+
+         We build a look-up table where [0] is L(-3.5).
+
+         And organized so that:
+         lut[0] = L(-3.5)
+         lut[1] = L(-2.5)
+         lut[2] = L(-1.5)
+         lut[3] = L(-0.5)
+         lut[4] = L( 0.5)
+         lut[5] = L( 1.5)
+         lut[6] = L( 2.5)
+         lut[7] is empty for padding
+
+         lut[8]  = L(-3.499)
+         lut[9]  = L(-2.499)
+         lut[10] = L(-1.499)
+         ...
+
+         */
+
         static const int L = 3;
         // Nlut is number of bins per unit x
         static const int Nlutunit = 1024;
-        static const double lut0 = -(L+1);
+        static const double lut0 = -(L+0.5);
         static const int Nunits = 2*(L+1);
         static const int Nlut = Nunits * Nlutunit;
-        // We want bins to go from -4 to 4 (Lanczos-3 range of -3 to 3, plus some buffer)
-        // [Nlut]
-        //static double lut[8192];
         static float lut[8192];
         static int initialized = 0;
 
@@ -168,10 +189,14 @@ void log_set_level(int lvl);
                     } else if (x == 0) {
                         f = 1.0;
                     } else {
-                        f = 3. * sin(M_PI * x) * sin(M_PI / L * x) / (M_PI * M_PI * x * x);
+                        f = 3. * sin(M_PI * x) * sin(M_PI / L * x) / 
+                            (M_PI * M_PI * x * x);
                     }
                     lut[i * Nunits + j] = f;
                 }
+            }
+            for (i=0; i<Nlut; i++) {
+                printf("lut[% 4li] = %f\n", i, lut[i]);
             }
             initialized = 1;
         }
@@ -248,27 +273,27 @@ void log_set_level(int lvl);
                 int tx0, ty0;
                 //tx0 = (int)((dx[j] + L - lut0) * Nlutunit);
                 //ty0 = (int)((dy[j] + L - lut0) * Nlutunit);
+
                 tx0 = (int)((-(dx[j]+L) - lut0) * Nlutunit);
                 ty0 = (int)((-(dy[j]+L) - lut0) * Nlutunit);
-                //printf("tx0, ty0 = %i,%i\n", tx0, ty0);
-                tx0 = (tx0 % Nlutunit) + tx0 / Nlutunit;
-                ty0 = (ty0 % Nlutunit) + ty0 / Nlutunit;
-                assert(tx0 >= 0);
-                assert(ty0 >= 0);
-                assert(tx0 < Nlutunit);
-                assert(ty0 < Nlutunit);
+                printf("tx0, ty0 = %i,%i\n", tx0, ty0);
+                tx0 = tx0 % Nlutunit;
+                ty0 = ty0 % Nlutunit;
                 tx0 *= Nunits;
                 ty0 *= Nunits;
-
+                // assert(tx0 >= 0);
+                // assert(ty0 >= 0);
+                // assert(tx0 < Nlutunit);
+                // assert(ty0 < Nlutunit);
                 //printf("-> tx0, ty0 = %i,%i\n", tx0, ty0);
-                if ((tx0 < 0) || (tx0 >= Nlut)) {
-                    printf("tx0 = %i (dx = %g) not in [0, %i)\n", tx0, dx[j], Nlut);
-                    return -1;
-                }
-                if ((ty0 < 0) || (ty0 >= Nlut)) {
-                    printf("ty0 = %i (dy = %g) not in [0, %i)\n", ty0, dy[j], Nlut);
-                    return -1;
-                }
+                // if ((tx0 < 0) || (tx0 >= Nlut)) {
+                //     printf("tx0 = %i (dx = %g) not in [0, %i)\n", tx0, dx[j], Nlut);
+                //     return -1;
+                // }
+                // if ((ty0 < 0) || (ty0 >= Nlut)) {
+                //     printf("ty0 = %i (dy = %g) not in [0, %i)\n", ty0, dy[j], Nlut);
+                //     return -1;
+                // }
                 //printf("tx0,ty0: %i,%i\n", tx0, ty0);
 
                 // Lanczos kernel in y direction
@@ -285,20 +310,19 @@ void log_set_level(int lvl);
                     //iy = MAX(iy, 0);
                     //iy = MIN(iy, H-1);
                     int ix = ixi[j] - L;
-                    //float* inpix = inimg + 
                     float* lx = lut + tx0;
+                    float* inpix = inimg + clipiy * W;
                     for (u=0; u<2*L+1; u++, ix++, lx++) {
                         //double lx = lut[tx0 - u*Nlutunit];
                         int clipix = MAX(0, MIN(W-1, ix));
                         //ix = MAX(ix, 0);
                         //ix = MIN(ix, W-1);
-                        accx  += inimg[clipiy * W + clipix] * *lx;
+                        accx  += *lx * inpix[clipix];
                         naccx += *lx;
                     }
                     acc  += *ly * accx;
                     nacc += *ly * naccx;
                 }
-
                 outimg[j] = acc / nacc;
 
             }

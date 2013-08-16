@@ -279,16 +279,13 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
         del fxi
         del fyi
 
-        #print 'dx', dx.min(), dx.max()
-        #print 'dy', dy.min(), dy.max()
+        print 'dx', dx.min(), dx.max()
+        print 'dy', dy.min(), dy.max()
 
         # Lanczos interpolation.
         # number of pixels
         nn = len(ixo)
         NL = 2*L+1
-
-        # We interpolate all the pixels at once.
-
         # accumulators for each input image
         laccs = [np.zeros(nn, np.float32) for im in Limages]
 
@@ -363,6 +360,17 @@ if __name__ == '__main__':
     import fitsio
     from astrometry.util.util import Sip,Tan
     import time
+
+    # from astrometry.util.util import lanczos3_filter, lanczos3_filter_table
+    # x = np.linspace(-4, 4, 500)
+    # L = np.zeros_like(x)
+    # L2 = np.zeros(len(x), np.float32)
+    # lanczos3_filter(x, L)
+    # lanczos3_filter_table(x.astype(np.float32), L2, 1)
+    # plt.clf()
+    # plt.plot(x, L, 'r-')
+    # plt.plot(x, L2, 'b-')
+    # plt.savefig('l1.png')
     
     ra,dec = 219.577111, 54.52
     pixscale = 2.75 / 3600.
@@ -399,7 +407,17 @@ if __name__ == '__main__':
     out = np.zeros((H,W))
     out[Yo,Xo] = ims[0]
     fitsio.write('resampled-c.fits', out, clobber=True)
-
+    cout = out
+    
     out = np.zeros((H,W))
     out[Yo,Xo] = ims2[0]
     fitsio.write('resampled-py.fits', out, clobber=True)
+    pyout = out
+
+    plt.clf()
+    plt.imshow(cout, interpolation='nearest', origin='lower')
+    plt.savefig('c.png')
+    plt.clf()
+    plt.imshow(pyout, interpolation='nearest', origin='lower')
+    plt.savefig('py.png')
+    
