@@ -127,6 +127,7 @@ void log_set_level(int lvl);
         N = PyArray_Size(np_arr);
         x = (float*)malloc(sizeof(float) * N);
         memcpy(x, PyArray_DATA(np_arr), sizeof(float)*N);
+        Py_DECREF(np_arr);
 
         // Pseudocode from wikipedia's 'Selection algorithm' page
         L = 0;
@@ -136,16 +137,12 @@ void log_set_level(int lvl);
             int ipivot;
             int i,j;
             float pivot;
-            //printf("L=%i, R=%i, mid=%i,   (N=%i)\n", L, R, mid, R-L+1);
-            //ipivot = (L+R) / 2;
             ipivot = random() % (1+R-L) + L;
             pivot = x[ipivot];
-            //printf("ipivot=%i, pivot=%f, x[L]=%f, x[R]=%f\n", ipivot, pivot, x[L], x[R]);
             // partition array...
             i = L;
             j = R;
             do {
-                //printf("starting scan: i=%i, j=%i\n", i, j);
                 // scan for elements out of place
                 // scan from the left:
                 while (x[i] < pivot)
@@ -165,21 +162,17 @@ void log_set_level(int lvl);
                     x[j] = tmp;
                 }
             } while (i < j);
-
-            //printf("done: i=%i, j=%i\n", i, j);
-
-            //assert(i == j || (i == j+1) || (i == j+2));
-            int k;
-            for (k=L; k<i; k++) {
-                assert(x[k] < pivot);
+            {
+                int k;
+                for (k=L; k<i; k++) {
+                    assert(x[k] < pivot);
+                }
+                for (k=i; k<=R; k++) {
+                    assert(x[k] >= pivot);
+                }
             }
-            for (k=i; k<=R; k++) {
-                assert(x[k] >= pivot);
-            }
-
             // there must be at least one element in the right partition
             assert(i <= R);
-
             if (i > mid)
                 // the median is in the left partition (< pivot)
                 R = i-1;
@@ -187,19 +180,11 @@ void log_set_level(int lvl);
                 // the median is in the right partition (>= pivot)
                 L = i;
             }
-
             assert(L <= mid);
             assert(R >= mid);
         }
-
-        //printf("L=%i, R=%i, mid=%i,   (N=%i)\n", L, R, mid, R-L+1);
-        //printf("x[L]=%f, x[R]=%f, x[mid] = %f\n", x[L], x[R], x[mid]);
-        //printf("L=%i, R=%i, mid=%i\n", L, R, mid);
         med = x[mid];
-
         free(x);
-
-        Py_DECREF(np_arr);
         return med;
     }
 
