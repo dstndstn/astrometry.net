@@ -152,7 +152,7 @@ void log_set_level(int lvl);
             int i,j;
             int k;
             float pivot;
-            printf("L=%i, R=%i (N=%i), mid=%i\n", L, R, 1+R-L, mid);
+            //printf("L=%i, R=%i (N=%i), mid=%i\n", L, R, 1+R-L, mid);
             ipivot = random() % (1+R-L) + L;
             pivot = x[ipivot];
             // partition array...
@@ -190,7 +190,6 @@ void log_set_level(int lvl);
             j = i;
             k = R;
             do {
-                //printf("i=%i, j=%i, k=%i\n", i, j, k);
                 // scan for elements out of place
                 // scan from the right:
                 while (x[k] > pivot)
@@ -213,7 +212,7 @@ void log_set_level(int lvl);
             j = k+1;
 
             {
-                printf("L=%i, i=%i, j=%i, k=%i, R=%i\n", L, i, j, k, R);
+                //printf("L=%i, i=%i, j=%i, k=%i, R=%i\n", L, i, j, k, R);
                 for (k=L; k<i; k++) {
                     assert(x[k] < pivot);
                 }
@@ -244,23 +243,6 @@ void log_set_level(int lvl);
                 L = R = i;
                 break;
             }
-
-            /*
-             else {
-             // the median is in the right partition (>= pivot)
-             int k;
-             L = i;
-             // check for all values == pivot
-             for (k=L; k<=R; k++) {
-             if (x[k] != pivot)
-             break;
-             }
-             if (k == R+1) {
-             R = L;
-             break;
-             }
-             }
-             */
             assert(L <= mid);
             assert(R >= mid);
         }
