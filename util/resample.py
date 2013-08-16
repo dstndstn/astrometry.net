@@ -176,8 +176,8 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
         # And run the interpolator.  [xy]spline() does a meshgrid-like broadcast,
         # so fxi,fyi have shape n(iyo),n(ixo)
         # f[xy]i: floating-point pixel coords in the input image
-        fxi = xspline(ixo, iyo).T
-        fyi = yspline(ixo, iyo).T
+        fxi = xspline(ixo, iyo).T.astype(np.float32)
+        fyi = yspline(ixo, iyo).T.astype(np.float32)
 
         if ps:
             plt.clf()
@@ -221,23 +221,29 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
     # print 'fxi', fxi.shape
     # print 'fyi', fyi.shape
 
-    # i[xy]i: int coords in the input image
-    ixi = np.round(fxi).astype(int)
-    iyi = np.round(fyi).astype(int)
+    # # i[xy]i: int coords in the input image
+    # ixi = np.round(fxi).astype(int)
+    # iyi = np.round(fyi).astype(int)
+    # # Keep only in-bounds pixels.
+    # I = np.flatnonzero((ixi >= 0) * (iyi >= 0) * (ixi < w) * (iyi < h))
+    # fxi = fxi.flat[I]
+    # fyi = fyi.flat[I]
+    # ixi = ixi.flat[I]
+    # iyi = iyi.flat[I]
 
     # Keep only in-bounds pixels.
-    I = np.flatnonzero((ixi >= 0) * (iyi >= 0) * (ixi < w) * (iyi < h))
+    ## HACK -- 0.51
+    I = np.flatnonzero((fxi >= -0.5) * (fyi >= -0.5) * (fxi < w-0.51) * (fyi < h-0.51))
     fxi = fxi.flat[I]
     fyi = fyi.flat[I]
-    ixi = ixi.flat[I]
-    iyi = iyi.flat[I]
-    #print 'I', I.shape
+    # i[xy]i: int coords in the input image
+    ixi = np.round(fxi).astype(np.int32)
+    iyi = np.round(fyi).astype(np.int32)
+
     #print 'dims', (len(iyo),len(ixo))
     iy,ix = np.unravel_index(I, (len(iyo),len(ixo)))
     iyo = iyo[0] + iy
     ixo = ixo[0] + ix
-    #ixo = ixo[I % len(ixo)]
-    #iyo = iyo[I / len(ixo)]
     # i[xy]o: int coords in the target image
 
     if spline and ps:
@@ -268,10 +274,13 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
     if len(Limages):
         fxi -= ixi
         fyi -= iyi
-        dx = fxi
-        dy = fyi
+        dx = fxi.astype(np.float32)
+        dy = fyi.astype(np.float32)
         del fxi
         del fyi
+
+        #print 'dx', dx.min(), dx.max()
+        #print 'dy', dy.min(), dy.max()
 
         # Lanczos interpolation.
         # number of pixels
@@ -281,16 +290,16 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
         # We interpolate all the pixels at once.
 
         # accumulators for each input image
-        laccs = [np.zeros(nn) for im in Limages]
+        laccs = [np.zeros(nn, np.float32) for im in Limages]
 
         if cinterp:
             from util import lanczos3_interpolate
-            ixi = ixi.astype(np.int)
-            iyi = iyi.astype(np.int)
-            print 'ixi/iyi', ixi.shape, ixi.dtype, iyi.shape, iyi.dtype
-            print 'dx/dy', dx.shape, dx.dtype, dy.shape, dy.dtype
-            rtn = lanczos3_interpolate(ixi, iyi, dx, dy, laccs, Limages)
-            print 'rtn:', rtn
+            # ixi = ixi.astype(np.int)
+            # iyi = iyi.astype(np.int)
+            # print 'ixi/iyi', ixi.shape, ixi.dtype, iyi.shape, iyi.dtype
+            # print 'dx/dy', dx.shape, dx.dtype, dy.shape, dy.dtype
+            rtn = lanczos3_interpolate(ixi, iyi, dx, dy, laccs, [lim.astype(np.float32) for lim in Limages])
+            # print 'rtn:', rtn
         else:
             _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, Limages,
                                  table=table)
@@ -319,7 +328,8 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
             from util import lanczos3_filter, lanczos3_filter_table
             # 0: no rangecheck
             if table:
-                lfunc = lambda nil,x,y: lanczos3_filter_table(x,y, 0)
+                #lfunc = lambda nil,x,y: lanczos3_filter_table(x,y, 0)
+                lfunc = lambda nil,x,y: lanczos3_filter_table(x,y, 1)
             else:
                 lfunc = lambda nil,x,y: lanczos3_filter(x,y)
         except:
@@ -330,8 +340,10 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
     # sum of lanczos terms
     fsum = np.zeros(n)
     off = np.arange(-L, L+1)
-    fx = np.zeros(n)
-    fy = np.zeros(n)
+    #fx = np.zeros(n)
+    #fy = np.zeros(n)
+    fx = np.zeros(n, np.float32)
+    fy = np.zeros(n, np.float32)
     for oy in off:
         #print 'dy range:', min(-oy + dy), max(-oy + dy)
         lfunc(L, -oy + dy, fy)
@@ -373,10 +385,11 @@ if __name__ == '__main__':
     # h,w = pix.shape
     # wcs = wcs.get_subimage(500,500, h,w)
     
-    t0 = time.clock()
-    Yo,Xo,Yi,Xi,ims = resample_with_wcs(cowcs, wcs, [pix], 3)
-    t1 = time.clock() - t0
-    print 'C resampling took', t1
+    for i in range(5):
+        t0 = time.clock()
+        Yo,Xo,Yi,Xi,ims = resample_with_wcs(cowcs, wcs, [pix], 3)
+        t1 = time.clock() - t0
+        print 'C resampling took', t1
 
     t0 = time.clock()
     Yo2,Xo2,Yi2,Xi2,ims2 = resample_with_wcs(cowcs, wcs, [pix], 3, cinterp=False)

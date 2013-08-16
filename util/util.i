@@ -116,38 +116,62 @@ void log_set_level(int lvl);
         npy_intp W,H, N;
         npy_intp Nimages;
         npy_intp i, j;
-        PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE); //PyArray_DOUBLE);
-        PyArray_Descr* itype = PyArray_DescrFromType(NPY_INT64); //PyArray_INT);
+        //PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE); //PyArray_DOUBLE);
+        //PyArray_Descr* itype = PyArray_DescrFromType(NPY_INT64); //PyArray_INT);
+        PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
+        PyArray_Descr* itype = PyArray_DescrFromType(NPY_INT32);
         int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
             NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
         int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
 
         //long *ixi, *iyi;
-        int64_t *ixi, *iyi;
-        double *dx, *dy;
+        //int64_t *ixi, *iyi;
+        //double *dx, *dy;
+        int32_t *ixi, *iyi;
+        float *dx, *dy;
 
         static const int L = 3;
         // Nlut is number of bins per unit x
         static const int Nlutunit = 1024;
         static const double lut0 = -(L+1);
-        static const int Nlut = 2*(L+1) * Nlutunit;
+        static const int Nunits = 2*(L+1);
+        static const int Nlut = Nunits * Nlutunit;
         // We want bins to go from -4 to 4 (Lanczos-3 range of -3 to 3, plus some buffer)
         // [Nlut]
-        static double lut[8192];
+        //static double lut[8192];
+        static float lut[8192];
         static int initialized = 0;
 
         if (!initialized) {
-            for (i=0; i<(Nlut); i++) {
+            /*
+             for (i=0; i<(Nlut); i++) {
+             double x,f;
+             x = (lut0 + (i / (double)Nlutunit));
+             if (x <= -L || x >= L) {
+             f = 0.0;
+             } else if (x == 0) {
+             f = 1.0;
+             } else {
+             f = 3. * sin(M_PI * x) * sin(M_PI / L * x) / (M_PI * M_PI * x * x);
+             }
+             lut[i] = f;
+             }
+             */
+            // this table has the elements you need to use together stored together:
+            // L(x[0]), L(x[0]+1), L(x[0]+2), ...; L(x[1]), L(x[1]+1), L(x[2]+2), ...
+            for (i=0; i<Nlutunit; i++) {
                 double x,f;
                 x = (lut0 + (i / (double)Nlutunit));
-                if (x <= -L || x >= L) {
-                    f = 0.0;
-                } else if (x == 0) {
-                    f = 1.0;
-                } else {
-                    f = 3. * sin(M_PI * x) * sin(M_PI / L * x) / (M_PI * M_PI * x * x);
+                for (j=0; j<Nunits; j++, x+=1.0) {
+                    if (x <= -L || x >= L) {
+                        f = 0.0;
+                    } else if (x == 0) {
+                        f = 1.0;
+                    } else {
+                        f = 3. * sin(M_PI * x) * sin(M_PI / L * x) / (M_PI * M_PI * x * x);
+                    }
+                    lut[i * Nunits + j] = f;
                 }
-                lut[i] = f;
             }
             initialized = 1;
         }
@@ -197,7 +221,8 @@ void log_set_level(int lvl);
         for (i=0; i<Nimages; i++) {
             PyObject* np_inimg = PyList_GetItem(linputs, i);
             PyObject* np_outimg = PyList_GetItem(loutputs, i);
-            double *inimg, *outimg;
+            //double *inimg, *outimg;
+            float *inimg, *outimg;
 
             Py_INCREF(dtype);
             Py_INCREF(dtype);
@@ -220,11 +245,22 @@ void log_set_level(int lvl);
                 // resample inimg[ iyi[j] + dy[j], ixi[j] + dx[j] ]
                 // to outimg[ j ]
                 npy_intp u,v;
-
                 int tx0, ty0;
+                //tx0 = (int)((dx[j] + L - lut0) * Nlutunit);
+                //ty0 = (int)((dy[j] + L - lut0) * Nlutunit);
+                tx0 = (int)((-(dx[j]+L) - lut0) * Nlutunit);
+                ty0 = (int)((-(dy[j]+L) - lut0) * Nlutunit);
+                //printf("tx0, ty0 = %i,%i\n", tx0, ty0);
+                tx0 = (tx0 % Nlutunit) + tx0 / Nlutunit;
+                ty0 = (ty0 % Nlutunit) + ty0 / Nlutunit;
+                assert(tx0 >= 0);
+                assert(ty0 >= 0);
+                assert(tx0 < Nlutunit);
+                assert(ty0 < Nlutunit);
+                tx0 *= Nunits;
+                ty0 *= Nunits;
 
-                tx0 = (int)((dx[j] + L - lut0) * Nlutunit);
-                ty0 = (int)((dy[j] + L - lut0) * Nlutunit);
+                //printf("-> tx0, ty0 = %i,%i\n", tx0, ty0);
                 if ((tx0 < 0) || (tx0 >= Nlut)) {
                     printf("tx0 = %i (dx = %g) not in [0, %i)\n", tx0, dx[j], Nlut);
                     return -1;
@@ -236,27 +272,31 @@ void log_set_level(int lvl);
                 //printf("tx0,ty0: %i,%i\n", tx0, ty0);
 
                 // Lanczos kernel in y direction
-                double acc = 0.;
-                double nacc = 0.;
-                for (v=0; v<2*L+1; v++) {
-                    int iy = iyi[j] - L + v;
+                float acc = 0.;
+                float nacc = 0.;
+                int iy = iyi[j] - L;
+                float* ly = lut + ty0;
+                for (v=0; v<2*L+1; v++, iy++, ly++) {
                     //
-                    double accx = 0;
-                    double naccx = 0;
-                    double ly = lut[ty0 - v*Nlutunit];
-
-                    iy = MAX(iy, 0);
-                    iy = MIN(iy, H-1);
-                    for (u=0; u<2*L+1; u++) {
-                        int ix = ixi[j] - L + u;
-                        double lx = lut[tx0 - u*Nlutunit];
-                        ix = MAX(ix, 0);
-                        ix = MIN(ix, W-1);
-                        accx += inimg[iy * W + ix] * lx;
-                        naccx += lx;
+                    float accx = 0;
+                    float naccx = 0;
+                    //double ly = lut[ty0 - v*Nlutunit];
+                    int clipiy = MAX(0, MIN(H-1, iy));
+                    //iy = MAX(iy, 0);
+                    //iy = MIN(iy, H-1);
+                    int ix = ixi[j] - L;
+                    //float* inpix = inimg + 
+                    float* lx = lut + tx0;
+                    for (u=0; u<2*L+1; u++, ix++, lx++) {
+                        //double lx = lut[tx0 - u*Nlutunit];
+                        int clipix = MAX(0, MIN(W-1, ix));
+                        //ix = MAX(ix, 0);
+                        //ix = MIN(ix, W-1);
+                        accx  += inimg[clipiy * W + clipix] * *lx;
+                        naccx += *lx;
                     }
-                    acc += ly * accx;
-                    nacc += ly * naccx;
+                    acc  += *ly * accx;
+                    nacc += *ly * naccx;
                 }
 
                 outimg[j] = acc / nacc;
@@ -338,22 +378,22 @@ void log_set_level(int lvl);
     static int lanczos3_filter_table(PyObject* np_dx, PyObject* np_f, int rangecheck) {
         npy_intp N;
         npy_intp i;
-        double* dx;
-        double* f;
+        float* dx;
+        float* f;
 
         // Nlut is number of bins per unit x
         static const int Nlutunit = 1024;
-        static const double lut0 = -4.;
+        static const float lut0 = -4.;
         static const int Nlut = 8 * Nlutunit;
         // We want bins to go from -4 to 4 (Lanczos-3 range of -3 to 3, plus some buffer)
         // [Nlut]
-        static double lut[8192];
+        static float lut[8192];
         static int initialized = 0;
 
         if (!initialized) {
             for (i=0; i<(Nlut); i++) {
-                double x,f;
-                x = (lut0 + (i / (double)Nlutunit));
+                float x,f;
+                x = (lut0 + (i / (float)Nlutunit));
                 if (x <= -3.0 || x >= 3.0) {
                     f = 0.0;
                 } else if (x == 0) {
@@ -367,11 +407,48 @@ void log_set_level(int lvl);
         }
 
         if (!PyArray_Check(np_dx) ||
+            !PyArray_Check(np_f )) {
+            ERR("Array check\n");
+        }
+        if (!PyArray_ISNOTSWAPPED(np_dx) ||
+            !PyArray_ISNOTSWAPPED(np_f )) {
+            ERR("Swapped\n");
+        }
+        if (!PyArray_ISFLOAT(np_dx) ||
+            !PyArray_ISFLOAT(np_f )) {
+            ERR("Float\n");
+        }
+        if ((PyArray_ITEMSIZE(np_dx) != sizeof(float)) ||
+            (PyArray_ITEMSIZE(np_f ) != sizeof(float))) {
+            ERR("sizeof float\n");
+        }
+        if ((PyArray_ITEMSIZE(np_dx) != sizeof(float))) {
+            ERR("sizeof dx %i\n", PyArray_ITEMSIZE(np_dx));
+        }
+        if ((PyArray_ITEMSIZE(np_f ) != sizeof(float))) {
+            ERR("sizeof f %i\n", PyArray_ITEMSIZE(np_f));
+        }
+        if (!(PyArray_NDIM(np_dx) == 1) ||
+            !(PyArray_NDIM(np_f ) == 1)) {
+            ERR("one-d\n");
+        }
+        if (!PyArray_ISCONTIGUOUS(np_dx) ||
+            !PyArray_ISCONTIGUOUS(np_f )) {
+            ERR("contig\n");
+        }
+        if (!PyArray_ISWRITEABLE(np_f)) {
+            ERR("writable\n");
+        }
+
+
+        if (!PyArray_Check(np_dx) ||
             !PyArray_Check(np_f ) ||
             !PyArray_ISNOTSWAPPED(np_dx) ||
             !PyArray_ISNOTSWAPPED(np_f ) ||
             !PyArray_ISFLOAT(np_dx) ||
             !PyArray_ISFLOAT(np_f ) ||
+            (PyArray_ITEMSIZE(np_dx) != sizeof(float)) ||
+            (PyArray_ITEMSIZE(np_f ) != sizeof(float)) ||
             !(PyArray_NDIM(np_dx) == 1) ||
             !(PyArray_NDIM(np_f ) == 1) ||
             !PyArray_ISCONTIGUOUS(np_dx) ||
@@ -379,6 +456,7 @@ void log_set_level(int lvl);
             !PyArray_ISWRITEABLE(np_f)
             ) {
             ERR("Arrays aren't right type\n");
+            return -1;
         }
         N = PyArray_DIM(np_dx, 0);
         if (PyArray_DIM(np_f, 0) != N) {
@@ -389,7 +467,7 @@ void log_set_level(int lvl);
         f = PyArray_DATA(np_f);
         if (rangecheck) {
             for (i=N; i>0; i--, dx++, f++) {
-                double x = *dx;
+                float x = *dx;
                 int li = (int)((x - lut0) * Nlutunit);
                 if ((li < 0) || (li >= Nlut)) {
                     *f = 0.0;
@@ -399,7 +477,7 @@ void log_set_level(int lvl);
             }
         } else {
             for (i=N; i>0; i--, dx++, f++) {
-                double x = *dx;
+                float x = *dx;
                 int li = (int)((x - lut0) * Nlutunit);
                 *f = lut[li];
             }
