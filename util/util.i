@@ -116,17 +116,12 @@ void log_set_level(int lvl);
         npy_intp W,H, N;
         npy_intp Nimages;
         npy_intp i, j;
-        //PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE); //PyArray_DOUBLE);
-        //PyArray_Descr* itype = PyArray_DescrFromType(NPY_INT64); //PyArray_INT);
         PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
         PyArray_Descr* itype = PyArray_DescrFromType(NPY_INT32);
         int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
             NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
         int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
 
-        //long *ixi, *iyi;
-        //int64_t *ixi, *iyi;
-        //double *dx, *dy;
         int32_t *ixi, *iyi;
         float *dx, *dy;
 
@@ -146,43 +141,42 @@ void log_set_level(int lvl);
          lut[5] = L( 1.5)
          lut[6] = L( 2.5)
          lut[7] is empty for padding
+                actually, = sum(lut[0:7])
 
          lut[8]  = L(-3.499)
          lut[9]  = L(-2.499)
          lut[10] = L(-1.499)
          ...
+         ...
+         lut[8184] = L(-2.501)
+         lut[8185] = L(-1.501)
+         lut[8186] = L(-0.501)
+         ...
 
+         This is annoying because [-3.5,3] and [3,3.5] are zero so we
+         have to sum 7 elements rather than 6.  But the alternatives
+         seem worse.
          */
 
         static const int L = 3;
-        // Nlut is number of bins per unit x
-        static const int Nlutunit = 1024;
+        // Nlutunit is number of bins per unit x
+        //static const int Nlutunit = 1024;
+        static const int Nlutunit = 2048;
         static const double lut0 = -(L+0.5);
         static const int Nunits = 2*(L+1);
-        static const int Nlut = Nunits * Nlutunit;
-        static float lut[8192];
+        //static const int Nlut = Nunits * Nlutunit;
+        //static float lut[8192];
+        static float lut[16384];
         static int initialized = 0;
 
         if (!initialized) {
-            /*
-             for (i=0; i<(Nlut); i++) {
-             double x,f;
-             x = (lut0 + (i / (double)Nlutunit));
-             if (x <= -L || x >= L) {
-             f = 0.0;
-             } else if (x == 0) {
-             f = 1.0;
-             } else {
-             f = 3. * sin(M_PI * x) * sin(M_PI / L * x) / (M_PI * M_PI * x * x);
-             }
-             lut[i] = f;
-             }
-             */
-            // this table has the elements you need to use together stored together:
-            // L(x[0]), L(x[0]+1), L(x[0]+2), ...; L(x[1]), L(x[1]+1), L(x[2]+2), ...
+            // this table has the elements you need to use together
+            // stored together: L(x[0]), L(x[0]+1), L(x[0]+2), ...;
+            // L(x[1]), L(x[1]+1), L(x[2]+2), ...
             for (i=0; i<Nlutunit; i++) {
                 double x,f;
-                x = (lut0 + (i / (double)Nlutunit));
+                double acc = 0.;
+                x = (lut0 + ((i+0.5) / (double)Nlutunit));
                 for (j=0; j<Nunits; j++, x+=1.0) {
                     if (x <= -L || x >= L) {
                         f = 0.0;
@@ -193,11 +187,16 @@ void log_set_level(int lvl);
                             (M_PI * M_PI * x * x);
                     }
                     lut[i * Nunits + j] = f;
+                    acc += f;
                 }
+                lut[i*Nunits + Nunits-1] = acc;
+                //printf("acc: %f\n", acc);
             }
-            for (i=0; i<Nlut; i++) {
-                printf("lut[% 4li] = %f\n", i, lut[i]);
-            }
+            /*
+             for (i=0; i<Nlut; i++) {
+             printf("lut[% 4li] = %f\n", i, lut[i]);
+             }
+             */
             initialized = 1;
         }
 
@@ -246,7 +245,6 @@ void log_set_level(int lvl);
         for (i=0; i<Nimages; i++) {
             PyObject* np_inimg = PyList_GetItem(linputs, i);
             PyObject* np_outimg = PyList_GetItem(loutputs, i);
-            //double *inimg, *outimg;
             float *inimg, *outimg;
 
             Py_INCREF(dtype);
@@ -266,65 +264,66 @@ void log_set_level(int lvl);
             inimg  = PyArray_DATA(np_inimg);
             outimg = PyArray_DATA(np_outimg);
 
-            for (j=0; j<N; j++) {
+            for (j=0; j<N; j++, outimg++, ixi++, iyi++) {
                 // resample inimg[ iyi[j] + dy[j], ixi[j] + dx[j] ]
                 // to outimg[ j ]
                 npy_intp u,v;
                 int tx0, ty0;
-                //tx0 = (int)((dx[j] + L - lut0) * Nlutunit);
-                //ty0 = (int)((dy[j] + L - lut0) * Nlutunit);
-
+                float acc = 0.;
+                float nacc;
+                float* ly;
+                int ix,iy;
                 tx0 = (int)((-(dx[j]+L) - lut0) * Nlutunit);
                 ty0 = (int)((-(dy[j]+L) - lut0) * Nlutunit);
-                printf("tx0, ty0 = %i,%i\n", tx0, ty0);
-                tx0 = tx0 % Nlutunit;
-                ty0 = ty0 % Nlutunit;
+                //printf("tx0, ty0 = %i,%i\n", tx0, ty0);
+                // clip
+                tx0 = MAX(0, MIN(Nlutunit-1, tx0));
+                ty0 = MAX(0, MIN(Nlutunit-1, ty0));
                 tx0 *= Nunits;
                 ty0 *= Nunits;
-                // assert(tx0 >= 0);
-                // assert(ty0 >= 0);
-                // assert(tx0 < Nlutunit);
-                // assert(ty0 < Nlutunit);
-                //printf("-> tx0, ty0 = %i,%i\n", tx0, ty0);
-                // if ((tx0 < 0) || (tx0 >= Nlut)) {
-                //     printf("tx0 = %i (dx = %g) not in [0, %i)\n", tx0, dx[j], Nlut);
-                //     return -1;
-                // }
-                // if ((ty0 < 0) || (ty0 >= Nlut)) {
-                //     printf("ty0 = %i (dy = %g) not in [0, %i)\n", ty0, dy[j], Nlut);
-                //     return -1;
-                // }
-                //printf("tx0,ty0: %i,%i\n", tx0, ty0);
 
-                // Lanczos kernel in y direction
-                float acc = 0.;
-                float nacc = 0.;
-                int iy = iyi[j] - L;
-                float* ly = lut + ty0;
-                for (v=0; v<2*L+1; v++, iy++, ly++) {
-                    //
-                    float accx = 0;
-                    float naccx = 0;
-                    //double ly = lut[ty0 - v*Nlutunit];
-                    int clipiy = MAX(0, MIN(H-1, iy));
-                    //iy = MAX(iy, 0);
-                    //iy = MIN(iy, H-1);
-                    int ix = ixi[j] - L;
-                    float* lx = lut + tx0;
-                    float* inpix = inimg + clipiy * W;
-                    for (u=0; u<2*L+1; u++, ix++, lx++) {
-                        //double lx = lut[tx0 - u*Nlutunit];
-                        int clipix = MAX(0, MIN(W-1, ix));
-                        //ix = MAX(ix, 0);
-                        //ix = MIN(ix, W-1);
-                        accx  += *lx * inpix[clipix];
-                        naccx += *lx;
+                ly = lut + ty0;
+
+                iy = *iyi;
+                ix = *ixi;
+                // special-case pixels near the image edges.
+                if (ix < L || ix >= (W-L) || iy < L || iy >= (H-L)) {
+                    //if (ix < L || ix >= (W-L)) {
+                    iy -= L;
+                    // Lanczos kernel in y direction
+                    for (v=0; v<2*L+1; v++,
+                             iy++, ly++) {
+                        float accx = 0;
+                        int clipiy = MAX(0, MIN(H-1, iy));
+                        int ix = *ixi - L;
+                        float* lx = lut + tx0;
+                        float* inpix = inimg + clipiy * W;
+                        // Lanczos kernel in x direction
+                        for (u=0; u<2*L+1; u++, ix++, lx++) {
+                            int clipix = MAX(0, MIN(W-1, ix));
+                            accx  += (*lx) * (inpix[clipix]);
+                        }
+                        acc  += (*ly) * accx;
                     }
-                    acc  += *ly * accx;
-                    nacc += *ly * naccx;
+                } else {
+                    iy -= L;
+                    // Lanczos kernel in y direction
+                    for (v=0; v<2*L+1; v++,
+                             iy++, ly++) {
+                        float accx = 0;
+                        int ix = *ixi - L;
+                        float* lx = lut + tx0;
+                        float* inpix = inimg + iy * W + ix;
+                        // Lanczos kernel in x direction
+                        for (u=0; u<2*L+1; u++,
+                                 lx++, inpix++) {
+                            accx  += (*lx) * (*inpix);
+                        }
+                        acc  += (*ly) * accx;
+                    }
                 }
-                outimg[j] = acc / nacc;
-
+                nacc = lut[tx0 + Nunits-1] * lut[ty0 + Nunits-1];
+                *outimg = acc / nacc;
             }
 
             Py_DECREF(np_inimg);
@@ -343,23 +342,8 @@ void log_set_level(int lvl);
     static int lanczos3_filter(PyObject* np_dx, PyObject* np_f) {
         npy_intp N;
         npy_intp i;
-        // PyArray_Descr* dtype;
-        // int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
-        //     NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
-        // int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
-        double* dx;
-        double* f;
-
-        /*
-         dtype = PyArray_DescrFromType(PyArray_DOUBLE);
-         printf("Refcount of dtype: %li\n", Py_REFCNT(dtype));
-         np_dx = PyArray_CheckFromAny(np_dx, dtype, 1, 1, req, NULL);
-         np_f  = PyArray_CheckFromAny(np_f , dtype, 1, 1, reqout, NULL);
-         if (!np_dx || !np_f) {
-         ERR("Failed to PyArray_CheckFromAny()\n");
-         return -1;
-         }
-         */
+        float* dx;
+        float* f;
 
         if (!PyArray_Check(np_dx) ||
             !PyArray_Check(np_f ) ||
@@ -367,6 +351,8 @@ void log_set_level(int lvl);
             !PyArray_ISNOTSWAPPED(np_f ) ||
             !PyArray_ISFLOAT(np_dx) ||
             !PyArray_ISFLOAT(np_f ) ||
+            (PyArray_ITEMSIZE(np_dx) != sizeof(float)) ||
+            (PyArray_ITEMSIZE(np_f ) != sizeof(float)) ||
             !(PyArray_NDIM(np_dx) == 1) ||
             !(PyArray_NDIM(np_f ) == 1) ||
             !PyArray_ISCONTIGUOUS(np_dx) ||
@@ -405,7 +391,7 @@ void log_set_level(int lvl);
         float* dx;
         float* f;
 
-        // Nlut is number of bins per unit x
+        // Nlutunit is number of bins per unit x
         static const int Nlutunit = 1024;
         static const float lut0 = -4.;
         static const int Nlut = 8 * Nlutunit;
