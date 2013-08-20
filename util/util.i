@@ -651,7 +651,7 @@ void log_set_level(int lvl);
 
         lanczos_args_t lanczos;
 
-        PyArray_Descr* dtype = PyArray_DescrFromType(PyArray_DOUBLE);
+        PyArray_Descr* dtype;
         // in numpy v2.0 these constants have a NPY_ARRAY_ prefix
         int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
                NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
@@ -672,20 +672,25 @@ void log_set_level(int lvl);
          print_array(np_outweight);
          */
 
-        // FIXME ???? do the CheckFromAny() calls need INCREFS on the dtypes?
-
+	dtype = PyArray_DescrFromType(PyArray_DOUBLE);
+	Py_INCREF(dtype);
         np_img = PyArray_CheckFromAny(np_img, dtype, 2, 2, req, NULL);
         if (np_weight != Py_None) {
+	    Py_INCREF(dtype);
             np_weight = PyArray_CheckFromAny(np_weight, dtype, 2, 2, req, NULL);
             if (!np_weight) {
                 ERR("Failed to run PyArray_FromAny on np_weight\n");
                 return -1;
             }
         }
+	Py_INCREF(dtype);
         np_outimg = PyArray_CheckFromAny(np_outimg, dtype, 2, 2, reqout, NULL);
         if (np_outweight != Py_None) {
+	    Py_INCREF(dtype);
             np_outweight = PyArray_CheckFromAny(np_outweight, dtype, 2, 2, reqout, NULL);
         }
+	Py_DECREF(dtype);
+	dtype = NULL;
 
         if (!np_img || !np_outimg || !np_outweight) {
             ERR("Failed to PyArray_FromAny the images (np_img=%p, np_outimg=%p, np_outweight=%p)\n",
