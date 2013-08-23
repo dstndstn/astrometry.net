@@ -273,6 +273,9 @@ sip_t* sip_read_header_file(const char* fn, sip_t* dest) {
 sip_t* sip_read_header_file_ext(const char* fn, int ext, sip_t* dest) {
   return read_header_file(fn, ext, TRUE, dest, call_sip_read_header);
 }
+sip_t* sip_read_header_file_ext_only(const char* fn, int ext, sip_t* dest) {
+  return read_header_file(fn, ext, TRUE, dest, call_sip_read_header);
+}
 
 static void* call_tan_read_header(const qfits_header* hdr, void* dest) {
 	return tan_read_header(hdr, dest);

@@ -38,6 +38,8 @@ sip_t* sip_read_header_file(const char* fn, sip_t* dest);
 
 sip_t* sip_read_header_file_ext(const char* fn, int ext, sip_t* dest);
 
+sip_t* sip_read_header_file_ext_only(const char* fn, int ext, sip_t* dest);
+
 tan_t* tan_read_header_file(const char* fn, tan_t* dest);
 
 tan_t* tan_read_header_file_ext(const char* fn, int ext, tan_t* dest);

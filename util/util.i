@@ -1100,7 +1100,7 @@ anwcs.get_cd = anwcs_get_cd
 %extend sip_t {
     sip_t(const char* fn=NULL, int ext=0) {
         if (fn)
-            return sip_read_header_file_ext(fn, ext, NULL);
+            return sip_read_header_file_ext_only(fn, ext, NULL);
         sip_t* t = (sip_t*)calloc(1, sizeof(sip_t));
         return t;
     }
