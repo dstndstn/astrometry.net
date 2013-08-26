@@ -641,7 +641,8 @@ table_fields = fits_table
 def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
                          headerline=None, coltypes=None,
                          intvalmap={'NaN':-1000000, '':-1000000},
-                         floatvalmap={'': np.nan}):
+                         floatvalmap={'': np.nan},
+                         skipcomments=True):
     # unimplemented
     assert(maxcols is None)
 
@@ -693,6 +694,11 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         lines = []
         for i,line in zip(xrange(Nchunk), f):
             line = line.strip()
+            if line.startswith('#') and skipcomments:
+                print 'Skipping comment line:'
+                print line
+                print
+                continue
             if split is None:
                 words = line.split()
             else:
@@ -702,7 +708,7 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
                 if ncomplain > 10:
                     continue
                 print ('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n    "%s"\n(Skipping this row of the input file)' %
-                       (len(colnames), ', '.join(colnames), i+i0, len(words), r))
+                       (len(colnames), ', '.join(colnames), i+i0, len(words), line))
                 continue
             for d,w in zip(data, words):
                 d[j] = w

@@ -25,7 +25,7 @@ def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
             break
         if len(I) == Nlast:
             return False
-        print 'Patching', len(I), 'pixels'
+        #print 'Patching', len(I), 'pixels'
         Nlast = len(I)
         iy,ix = np.unravel_index(I, img.shape)
         psum = np.zeros(len(I), img.dtype)

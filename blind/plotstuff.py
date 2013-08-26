@@ -185,13 +185,13 @@ class Plotstuff(object):
 		if ralabelstep is None:
 			ralabelstep = 0
 		else:
-			rdigits = np.ceil(-np.log10(ralabelstep))
+			rdigits = max(0, np.ceil(-np.log10(ralabelstep)))
 			rformat = '%.' + '%i'%rdigits + 'f'
 		dformat = None
 		if declabelstep is None:
 			declabelstep = 0
 		else:
-			ddigits = np.ceil(-np.log10(declabelstep))
+			ddigits = max(0, np.ceil(-np.log10(declabelstep)))
 			dformat = '%.' + '%i'%ddigits + 'f'
 		if rformat is not None or dformat is not None:
 			rformat = rformat or '%.2f'
