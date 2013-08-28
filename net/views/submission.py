@@ -251,7 +251,7 @@ def upload_file(request):
                 sub.disk_file, sub.original_filename = handle_upload(file=request.FILES['file'])
             elif form.cleaned_data['upload_type'] == 'url':
                 sub.url = form.cleaned_data['url']
-                p = urlparse(url)
+                p = urlparse(sub.url)
                 p = p.path
                 if p:
                     s = p.split('/')

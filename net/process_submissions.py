@@ -418,7 +418,8 @@ def dosub(sub):
         if i != -1:
             original_filename = original_filename[:i]
         logmsg('extracted gzip file %s' % original_filename)
-        fn = tempfn
+        #fn = tempfn
+        fn = df.get_path()
     except:
         # not a gzip file
         pass
