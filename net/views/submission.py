@@ -251,7 +251,13 @@ def upload_file(request):
                 sub.disk_file, sub.original_filename = handle_upload(file=request.FILES['file'])
             elif form.cleaned_data['upload_type'] == 'url':
                 sub.url = form.cleaned_data['url']
-                sub.disk_file, sub.original_filename = handle_upload(url=sub.url)
+                p = urlparse(url)
+                p = p.path
+                if p:
+                    s = p.split('/')
+                    sub.original_filename = s[-1]
+                # Don't download the URL now!  Let process_submissions do that!
+                # sub.disk_file, sub.original_filename = handle_upload(url=sub.url)
             
             try:
                 sub.save()
