@@ -160,7 +160,7 @@ int main(int argc, char** args) {
 		for (i=0; i<N; i++) {
 			double x, y;
 			x = xlo + xstep * i;
-			y = ylo + ystep * i;
+			y = ylo + ystep * j;
 			if (anwcs_pixelxy2xyz(inwcs, x, y, xyz + (j*N + i)*3)) {
 				ERROR("Failed to apply WCS to pixel coord (%g,%g)", x, y);
 				exit(-1);
@@ -171,7 +171,7 @@ int main(int argc, char** args) {
 	}
 
 	logverb("Fitting TAN WCS\n");
-	if (fit_tan_wcs(xy, xyz, N*N, &outwcs, NULL)) {
+	if (fit_tan_wcs(xyz, xy, N*N, &outwcs, NULL)) {
 		ERROR("Failed to fit TAN WCS");
 		exit(-1);
 	}

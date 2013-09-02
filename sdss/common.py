@@ -827,7 +827,7 @@ class PsField(SdssFile):
 			b /= absum
 		
 		return (float(a), float(s1), float(b), float(s2))
-
+ 
 	def getEigenPsfs(self, bandnum):
 		'''
 		Returns a numpy array of shape, eg, (4, 51, 51).
