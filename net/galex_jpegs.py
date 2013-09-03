@@ -29,11 +29,15 @@ def plot_into_wcs(wcsfn, plotfn, wcsext=0, basedir='.', scale=1.0):
 
     plot = ps.Plotstuff(outformat='png', wcsfn=wcsfn, wcsext=wcsext, size=size)
     plot.scale_wcs(scale)
+
+    debug('WCS:', str(plot.wcs))
+    plot.wcs.write_to('/tmp/wcs.fits')
+
     img = plot.image
     img.format = ps.PLOTSTUFF_FORMAT_JPG
     img.resample = 1
     if len(T):
-        paths = T.path
+        paths = [fn.strip() for fn in T.path]
     else:
         paths = []
         plot.color = 'black'
@@ -42,6 +46,8 @@ def plot_into_wcs(wcsfn, plotfn, wcsext=0, basedir='.', scale=1.0):
         jpegfn = os.path.join(basedir, jpegfn)
         imwcsfn = jpegfn.replace('.jpg', '.wcs')
         debug('  Plotting GALEX fields', jpegfn, imwcsfn)
+        #debug('jpeg "%s"' % jpegfn)
+        #debug('wcs  "%s"' % imwcsfn)
         img.set_wcs_file(imwcsfn, 0)
         img.set_file(jpegfn)
         # convert black to transparent

@@ -347,6 +347,7 @@ def galex_image(req, calid=None, size='full'):
     cal = get_object_or_404(Calibration, pk=calid)
     key = 'galex_size%s_cal%i' % (size, cal.id)
     df = CachedFile.get(key)
+
     if df is None:
         wcsfn = cal.get_wcs_file()
         plotfn = get_temp_file()
@@ -355,6 +356,12 @@ def galex_image(req, calid=None, size='full'):
             scale = float(image.image.get_display_image().width)/image.image.width
         else:
             scale = 1.0
+
+        # logmsg('WCS filename:', wcsfn)
+        # logmsg('Plot filename:', plotfn)
+        # logmsg('Basedir:', settings.GALEX_JPEG_DIR)
+        # logmsg('Scale:', scale)
+
         plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR, scale=scale)
         # cache
         logmsg('Caching key "%s"' % key)
