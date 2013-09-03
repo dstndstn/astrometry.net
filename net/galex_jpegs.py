@@ -30,8 +30,8 @@ def plot_into_wcs(wcsfn, plotfn, wcsext=0, basedir='.', scale=1.0):
     plot = ps.Plotstuff(outformat='png', wcsfn=wcsfn, wcsext=wcsext, size=size)
     plot.scale_wcs(scale)
 
-    debug('WCS:', str(plot.wcs))
-    plot.wcs.write_to('/tmp/wcs.fits')
+    #debug('WCS:', str(plot.wcs))
+    #plot.wcs.write_to('/tmp/wcs.fits')
 
     img = plot.image
     img.format = ps.PLOTSTUFF_FORMAT_JPG
