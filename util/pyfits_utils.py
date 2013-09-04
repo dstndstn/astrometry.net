@@ -17,9 +17,13 @@ def pyfits_writeto(p, filename, **kwargs):
 
 def merge_tables(TT, columns=None):
     assert(len(TT) > 0)
-    if columns is None:
+    if columns in [None, 'minimal']:
         cols = set(TT[0].get_columns())
         for T in TT[1:]:
+            if columns == 'minimal' and len(cols.symmetric_difference(T.get_columns())):
+                cols = cols.intersection(T.get_columns())
+                continue
+    
             # They must have the same set of columns
             if len(cols.symmetric_difference(T.get_columns())):
                 print 'Tables to merge must have the same set of columns.'
@@ -27,11 +31,12 @@ def merge_tables(TT, columns=None):
                 print 'Target table columns:', T.get_columns()
                 print 'Difference:', cols.symmetric_difference(T.get_columns())
             assert(len(cols.symmetric_difference(T.get_columns())) == 0)
+        cols = list(cols)
         # ordered set
-        cols = []
-        for c in TT[0].get_columns():
-            if not c in cols:
-                cols.append(c)
+        #cols = []
+        #for c in TT[0].get_columns():
+        #    if not c in cols:
+        #        cols.append(c)
     else:
         for i,T in enumerate(TT):
             # ensure they all have the requested columns
