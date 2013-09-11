@@ -392,7 +392,7 @@ class tabledata(object):
                 #raise Exception('exception appending element "%s"' % name)
 
     def write_to(self, fn, columns=None, header='default', primheader=None,
-                 use_fitsio=True):
+                 use_fitsio=True, append=False):
 
         fitsio = None
         if use_fitsio:
@@ -408,7 +408,8 @@ class tabledata(object):
             arrays = [self.get(c) for c in columns]
             # fitsio has *strange* behavior when file already exists.
             if os.path.exists(fn):
-                os.unlink(fn)
+                if not append:
+                    os.unlink(fn)
             fits = fitsio.FITS(fn, 'rw')
 
             #for a,c in zip(arrays, columns):
@@ -597,9 +598,14 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
         if rows is not None:
             rows,I = np.unique(rows, return_inverse=True)
 
-        dd = data.read(rows=rows, columns=columns, lower=True)
-        if dd is None:
-            return None
+        if type(data) == np.ndarray:
+            dd = data
+            if columns is None:
+                columns = data.dtype.fields.keys()
+        else:
+            dd = data.read(rows=rows, columns=columns, lower=True)
+            if dd is None:
+                return None
 
         if columns is None:
             try:
