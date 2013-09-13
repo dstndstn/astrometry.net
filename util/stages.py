@@ -21,6 +21,8 @@ class CallGlobal(object):
 
 def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
              update=True, write=True, initial_args={}, **kwargs):
+    # NOTE, if you add or change args here, be sure to update the recursive
+    # "runstage" call below!!
     print 'Runstage', stage
 
     pfn = picklepat % stage
@@ -41,7 +43,7 @@ def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
         else:
             P = runstage(prereq, picklepat, stagefunc,
                          force=force, prereqs=prereqs, update=update,
-                         write=write, **kwargs)
+                         write=write, initial_args=initial_args, **kwargs)
 
     P.update(kwargs)
 

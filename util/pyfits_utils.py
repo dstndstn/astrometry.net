@@ -791,7 +791,7 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         
 # ultra-brittle text table parsing.
 def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, maxcols=None, headerline=None, coltypes=None,
-                      intvalmap={'NaN':-1000000},
+                      intvalmap={'NaN':-1000000, '':-1000000},
                       floatvalmap={}):
     if text is None:
         f = None
@@ -813,6 +813,12 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
     print 'Splitting lines'
     txtrows = data.split('\n')
     print 'Got', len(txtrows), 'lines'
+    print 'First line:', txtrows[0]
+    print 'Last line:', txtrows[-1]
+    if txtrows[-1] == '':
+        print 'Trimming last line.'
+        txtrows = txtrows[:-1]
+        print 'Last line now:', txtrows[-1]
     if skiplines != 0:
         txtrows = txtrows[skiplines:]
         print 'Skipped', skiplines, 'kept', len(txtrows)
