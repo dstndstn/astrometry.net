@@ -345,12 +345,13 @@ if __name__ == '__main__':
             if opt.scale_upper:
                 kwargs.update(scale_upper=opt.scale_upper)
                 
-        for key in ['scale_units', 'center_ra', 'center_dec', 'radius', 'downsample_factor',]:
+        for key in ['scale_units', 'center_ra', 'center_dec', 'radius',
+                    'downsample_factor',]:
             if getattr(opt, key) is not None:
-                kwargs.update(key=getattr(opt, key))
+                kwargs[key] = getattr(opt, key)
         if opt.parity is not None:
             kwargs.update(parity=int(opt.parity))
-
+            
         if opt.upload:
             upres = c.upload(opt.upload, **kwargs)
         if opt.upload_url:
