@@ -104,6 +104,7 @@ def upload_common(request, url=None, file=None):
     submittor = request.user if request.user.is_authenticated() else None
 
     json = request.json
+    logmsg('upload: JSON', json)
     allow_commercial_use = json.get('allow_commercial_use', 'd')
     allow_modifications = json.get('allow_modifications', 'd')
     license,created = License.objects.get_or_create(
@@ -140,6 +141,8 @@ def upload_common(request, url=None, file=None):
                     ]:
         if key in json:
             subargs[key] = typ(json[key])
+
+    logmsg('upload: submission args:', subargs)
 
     sub = Submission(**subargs)
     sub.save()
