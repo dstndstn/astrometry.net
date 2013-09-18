@@ -269,7 +269,7 @@ if __name__ == '__main__':
     parser.add_option('--scale-lower', dest='scale_lower', type=float, help='Scale lower-bound')
     parser.add_option('--scale-upper', dest='scale_upper', type=float, help='Scale upper-bound')
     parser.add_option('--scale-est', dest='scale_est', type=float, help='Scale estimate')
-    parser.add_option('--scale-err', dest='scale_err', type=float, help='Scale estimate error')
+    parser.add_option('--scale-err', dest='scale_err', type=float, help='Scale estimate error (in PERCENT), eg "10" if you estimate can be off by 10%')
     parser.add_option('--ra', dest='center_ra', type=float, help='RA center')
     parser.add_option('--dec', dest='center_dec', type=float, help='Dec center')
     parser.add_option('--radius', dest='radius', type=float, help='Search radius around RA,Dec center')
