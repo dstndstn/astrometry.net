@@ -729,6 +729,22 @@ def wcs_file(req, jobid=None):
     res['Content-Disposition'] = 'attachment; filename=wcs.fits'
     return res
 
+def rdls_file(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    f = open(job.get_rdls_file())
+    res = HttpResponse(f)
+    res['Content-Type'] = 'application/fits' 
+    res['Content-Disposition'] = 'attachment; filename=rdls.fits'
+    return res
+
+def axy_file(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    f = open(job.get_axy_file())
+    res = HttpResponse(f)
+    res['Content-Type'] = 'application/fits' 
+    res['Content-Disposition'] = 'attachment; filename=axy.fits'
+    return res
+
 def new_fits_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
     wcsfn = job.get_wcs_file()

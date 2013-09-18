@@ -190,6 +190,14 @@ $(document).ready(function() {
             <td><a href="{% url astrometry.net.views.image.new_fits_file jobid=job.id %}">new-image.fits</a></td>
         </tr>
         <tr>
+            <td>Reference stars nearby (RA,Dec table):</td>
+            <td><a href="{% url astrometry.net.views.image.rdls_file jobid=job.id %}">rdls.fits</a></td>
+        </tr>
+        <tr>
+          <td>Stars detected in your images (x,y table):</td>
+          <td><a href="{% url astrometry.net.views.image.axy_file jobid=job.id %}">axy.fits</a></td>
+        </tr>
+        <tr>
             <td>KMZ (<a href="http://www.google.com/sky/">Google Sky</a>):</td>
             <td><a href="{% url astrometry.net.views.image.kml_file jobid=job.id %}?ignore=.kmz">image.kmz</a></td>
         </tr>
