@@ -21,7 +21,13 @@ except:
     def dist2deg(dist):
         return distsq2deg(dist**2)
 
-
+def match_xy(x1,y1, x2,y2, R, **kwargs):
+    '''
+    Like match_radec, except for plain old 2-D points.
+    '''
+    I,d = match(np.vstack((x1,y1)).T, np.vstack((x2,y2)).T, R, **kwargs)
+    return I[:,0],I[:,1],d
+    
 # Copied from "celestial.py" by Sjoert van Velzen.
 def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
                 nearest=False):
