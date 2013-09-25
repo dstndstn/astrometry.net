@@ -504,7 +504,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			qc[1] /= totalweight;
 			logverb("Moved quad center to (%.1f, %.1f)\n", qc[0], qc[1]);
 
-			if (order == 1) {
+			if (FALSE && (order == 1)) {
 				tan_t newtan;
 				fit_tan_wcs_weighted(matchxyz, matchxy, weights, Nmatch, &newtan, NULL);
 				newtan.imagew = W;
