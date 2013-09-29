@@ -63,8 +63,6 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
     table: use Lanczos3 look-up table?
 
     '''
-    # Adapted from detection/sdss-demo.py
-
     ### DEBUG
     #ps = PlotSequence('resample')
     ps = None
@@ -134,19 +132,17 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
                 raise SmallOverlapError()
 
     if spline:
+        # spline inputs  -- pixel coords in the 'target' image
+        #    (xx, yy)
         # spline outputs -- pixel coords in the 'input' image
-
-        #rr,dd = targetwcs.pixelxy2radec(xx + 1, yy + 1)
-        #ok,Xo,Yo = wcs.radec2pixelxy(rr, dd)
-        # del rr
-        # del dd
-        #rr,dd = 
-        ok,Xo,Yo = wcs.radec2pixelxy(
+        #    (XX, YY)
+        # We use vectorized radec <-> pixelxy functions here
+        ok,XX,YY = wcs.radec2pixelxy(
             *targetwcs.pixelxy2radec(
                 xx[np.newaxis,:] + 1,
                 yy[:,np.newaxis] + 1))
-        Xo -= 1.
-        Yo -= 1.
+        XX -= 1.
+        YY -= 1.
         del ok
 
         if ps:
@@ -157,15 +153,16 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
             expand_axes()
             ps.savefig()
     
-        xspline = interp.RectBivariateSpline(xx, yy, Xo.T)
-        yspline = interp.RectBivariateSpline(xx, yy, Yo.T)
-        del Xo
-        del Yo
+        xspline = interp.RectBivariateSpline(xx, yy, XX.T)
+        yspline = interp.RectBivariateSpline(xx, yy, YY.T)
+        del XX
+        del YY
 
     else:
         margin = 0
 
-    # Now, build the full pixel grid we want to interpolate...
+    # Now, build the full pixel grid (in the ouput image) we want to
+    # interpolate...
     ixo = np.arange(max(0, x0-margin), min(W, x1+margin+1), dtype=int)
     iyo = np.arange(max(0, y0-margin), min(H, y1+margin+1), dtype=int)
 
@@ -173,8 +170,10 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
         raise NoOverlapError()
 
     if spline:
-        # And run the interpolator.  [xy]spline() does a meshgrid-like broadcast,
-        # so fxi,fyi have shape n(iyo),n(ixo)
+        # And run the interpolator.
+        # [xy]spline() does a meshgrid-like broadcast, so fxi,fyi have
+        # shape n(iyo),n(ixo)
+        #
         # f[xy]i: floating-point pixel coords in the input image
         fxi = xspline(ixo, iyo).T.astype(np.float32)
         fyi = yspline(ixo, iyo).T.astype(np.float32)
@@ -198,20 +197,11 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
             ps.savefig()
 
     else:
-        # fxi = np.empty((len(iyo),len(ixo)))
-        # fyi = np.empty((len(iyo),len(ixo)))
-        # fxo = (ixo).astype(float) + 1.
-        # fyo = np.empty_like(fxo)
-        # for i,y in enumerate(iyo):
-        #     fyo[:] = y + 1.
-        #     # Assume 1-d vectorized pixel<->radec
-        #     ra,dec = targetwcs.pixelxy2radec(fxo, fyo)
-        #     ok,x,y = wcs.radec2pixelxy(ra, dec)
-        #     fxi[i,:] = x - 1.
-        #     fyi[i,:] = y - 1.
-
+        # Use 2-d broadcasting pixel <-> radec functions here.
+        # This can be rather expensive!
         ok,fxi,fyi = wcs.radec2pixelxy(
-            *targetwcs.pixelxy2radec(ixo[np.newaxis,:] + 1., iyo[:,np.newaxis] + 1.))
+            *targetwcs.pixelxy2radec(ixo[np.newaxis,:] + 1.,
+                                     iyo[:,np.newaxis] + 1.))
         del ok
         fxi -= 1.
         fyi -= 1.
@@ -221,19 +211,10 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
     # print 'fxi', fxi.shape
     # print 'fyi', fyi.shape
 
-    # # i[xy]i: int coords in the input image
-    # ixi = np.round(fxi).astype(int)
-    # iyi = np.round(fyi).astype(int)
-    # # Keep only in-bounds pixels.
-    # I = np.flatnonzero((ixi >= 0) * (iyi >= 0) * (ixi < w) * (iyi < h))
-    # fxi = fxi.flat[I]
-    # fyi = fyi.flat[I]
-    # ixi = ixi.flat[I]
-    # iyi = iyi.flat[I]
-
     # Keep only in-bounds pixels.
     ## HACK -- 0.51
-    I = np.flatnonzero((fxi >= -0.5) * (fyi >= -0.5) * (fxi < w-0.51) * (fyi < h-0.51))
+    I = np.flatnonzero((fxi >= -0.5) * (fyi >= -0.5) *
+                       (fxi < w-0.51) * (fyi < h-0.51))
     fxi = fxi.flat[I]
     fyi = fyi.flat[I]
     # i[xy]i: int coords in the input image
@@ -272,13 +253,10 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
     assert(np.all(iyi < h))
 
     if len(Limages):
-        fxi -= ixi
-        fyi -= iyi
-        dx = fxi.astype(np.float32)
-        dy = fyi.astype(np.float32)
+        dx = (fxi - ixi).astype(np.float32)
+        dy = (fyi - iyi).astype(np.float32)
         del fxi
         del fyi
-
         # print 'dx', dx.min(), dx.max()
         # print 'dy', dy.min(), dy.max()
 
@@ -295,7 +273,9 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
             # iyi = iyi.astype(np.int)
             # print 'ixi/iyi', ixi.shape, ixi.dtype, iyi.shape, iyi.dtype
             # print 'dx/dy', dx.shape, dx.dtype, dy.shape, dy.dtype
-            rtn = lanczos3_interpolate(ixi, iyi, dx, dy, laccs, [lim.astype(np.float32) for lim in Limages])
+            rtn = lanczos3_interpolate(ixi, iyi, dx, dy, laccs,
+                                       [lim.astype(np.float32)
+                                        for lim in Limages])
             # print 'rtn:', rtn
         else:
             _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, Limages,
