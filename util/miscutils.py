@@ -65,7 +65,12 @@ def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
 
 def clip_polygon(poly1, poly2):
     '''
-    Returns a new polygon resulting from taking poly1 and clipping it to lie inside poly2.
+    Returns a new polygon resulting from taking poly1 and clipping it
+    to lie inside poly2.
+
+    WARNING, the polygons must be listed in CLOCKWISE order.
+
+    WARNING, the clipping polygon, poly2, must be CONVEX.
     '''
     # from clipper import Clipper, Point, PolyType, ClipType, PolyFillType
     # '''

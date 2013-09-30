@@ -32,11 +32,14 @@ def merge_tables(TT, columns=None):
                 print 'Difference:', cols.symmetric_difference(T.get_columns())
             assert(len(cols.symmetric_difference(T.get_columns())) == 0)
         cols = list(cols)
-        # ordered set
-        #cols = []
-        #for c in TT[0].get_columns():
-        #    if not c in cols:
-        #        cols.append(c)
+
+        # Reorder the columns to match their order in TT[0].
+        ocols = []
+        for c in TT[0].get_columns():
+            if c in cols and not c in ocols:
+                ocols.append(c)
+        cols = ocols
+
     else:
         for i,T in enumerate(TT):
             # ensure they all have the requested columns
