@@ -138,6 +138,7 @@ def upload_common(request, url=None, file=None):
                     ('use_sextractor', bool),
                     ('crpix_center', bool),
                     ('parity', int),
+                    ('tweak_order', int),
                     ]:
         if key in json:
             subargs[key] = typ(json[key])

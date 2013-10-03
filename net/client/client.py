@@ -275,6 +275,7 @@ if __name__ == '__main__':
     parser.add_option('--radius', dest='radius', type=float, help='Search radius around RA,Dec center')
     parser.add_option('--downsample', dest='downsample_factor', type=int, help='Downsample image by this factor')
     parser.add_option('--parity', dest='parity', choices=('0','1'), help='Parity (flip) of image')
+    parser.add_option('--tweak-order', dest='tweak_order', type=int, help='SIP distortion order (default: 2)')
     parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--substatus', '-s', dest='sub_id', help='Get status of a submission')
@@ -346,7 +347,7 @@ if __name__ == '__main__':
                 kwargs.update(scale_upper=opt.scale_upper)
                 
         for key in ['scale_units', 'center_ra', 'center_dec', 'radius',
-                    'downsample_factor',]:
+                    'downsample_factor', 'tweak_order']:
             if getattr(opt, key) is not None:
                 kwargs[key] = getattr(opt, key)
         if opt.parity is not None:
