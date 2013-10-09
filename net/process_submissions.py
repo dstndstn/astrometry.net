@@ -216,10 +216,8 @@ def dojob(job, userimage, log=None):
         #'--odds-to-tune': 1e9,
 
         # Other things we might want include...
-        # --use-sextractor
         # --invert
         # -g / --guess-scale: try to guess the image scale from the FITS headers
-        # --crpix-center: set the WCS reference point to the image center
         # --crpix-x <pix>: set the WCS reference point to the given position
         # --crpix-y <pix>: set the WCS reference point to the given position
         # -w / --width <pixels>: specify the field width
@@ -231,8 +229,13 @@ def dojob(job, userimage, log=None):
     if hasattr(img,'sourcelist'):
         # image is a source list; use --xylist
         axyargs['--xylist'] = img.sourcelist.get_fits_path()
-        axyargs['--width'] = img.width
-        axyargs['--height'] = img.height
+        w,h = img.width, img.height
+        if sub.image_width:
+            w = sub.image_width
+        if sub.image_height:
+            h = sub.image_height
+        axyargs['--width' ] = w
+        axyargs['--height'] = h
     else:
         axyargs['--image'] = df.get_path()
 
@@ -249,6 +252,9 @@ def dojob(job, userimage, log=None):
 
     if sub.use_sextractor:
         axyflags.append('--use-sextractor')
+
+    if sub.crpix_center:
+        axyflags.append('--crpix-center')
 
     cmd = 'augment-xylist '
     for (k,v) in axyargs.items():

@@ -120,6 +120,7 @@ def upload_common(request, url=None, file=None):
         original_filename=original_filename,
         license=license,
         publicly_visible=publicly_visible,
+        via_api = True,
         )
     if url is not None:
         subargs.update(url=url)
@@ -139,6 +140,8 @@ def upload_common(request, url=None, file=None):
                     ('crpix_center', bool),
                     ('parity', int),
                     ('tweak_order', int),
+                    ('image_width', int),
+                    ('image_height', int),
                     ]:
         if key in json:
             subargs[key] = typ(json[key])

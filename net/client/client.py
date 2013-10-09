@@ -160,6 +160,7 @@ class Client(object):
                                 ('downsample_factor', None, int),
                                 ('tweak_order', None, int),
                                 ('crpix_center', None, bool),
+                                # image_width, image_height
                                 ]:
             if key in kwargs:
                 val = kwargs.pop(key)

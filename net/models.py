@@ -1070,6 +1070,13 @@ class Submission(Hideable):
     use_sextractor = models.BooleanField(default=False)
     crpix_center = models.BooleanField(default=False)
 
+    # NOTE, these are ONLY to hold user-set (via API) image width/height;
+    # they OVERRIDE the actual size of the image.  ONLY valid for xylists.
+    image_width  = models.IntegerField(blank=True, null=True, default=0)
+    image_height = models.IntegerField(blank=True, null=True, default=0)
+
+    via_api = models.BooleanField(default=False)
+
     #source_type = models.CharField(max_length=5, choices=SOURCE_TYPE_CHOICES, default='image')
     original_filename = models.CharField(max_length=256)
     album = models.ForeignKey('Album', blank=True, null=True)
