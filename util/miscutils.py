@@ -6,6 +6,8 @@ def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
     '''
     Patch masked pixels by iteratively averaging non-masked neighboring pixels.
 
+    WARNING: this modifies BOTH the "img" and "mask" arrays!
+
     mask: True for good pixels
     required: if non-None: True for pixels you want to be patched.
     dxdy: Pixels to average in, relative to pixels to be patched.

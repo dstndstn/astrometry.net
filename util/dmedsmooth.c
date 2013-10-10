@@ -63,7 +63,7 @@ int dmedsmooth(const float *image,
     /* get grids */
     sp = halfbox;
     nxgrid = MAX(1, nx / sp) + 2;
-    printf("nxgrid %i\n", nxgrid);
+    //printf("nxgrid %i\n", nxgrid);
     // "xgrid" are the centers.
     // "xlo" are the (inclusive) lower-bounds
     // "xhi" are the (inclusive) upper-bounds
@@ -83,7 +83,7 @@ int dmedsmooth(const float *image,
     }
 
     nygrid = MAX(1, ny / sp) + 2;
-    printf("nygrid %i\n", nygrid);
+    //printf("nygrid %i\n", nygrid);
     ylo = (int *) malloc(nygrid * sizeof(int));
     yhi = (int *) malloc(nygrid * sizeof(int));
     ygrid = (int *) malloc(nygrid * sizeof(int));

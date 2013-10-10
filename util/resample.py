@@ -94,11 +94,11 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
         margin = splineMargin
         step = splineStep
         xlo = max(0, x0-margin)
-        xhi = min(W, x1+margin)
+        xhi = min(W, x1+margin+1)
         nx = np.ceil(float(xhi - xlo) / step) + 1
         xx = np.linspace(xlo, xhi, nx)
         ylo = max(0, y0-margin)
-        yhi = min(H, y1+margin)
+        yhi = min(H, y1+margin+1)
         ny = np.ceil(float(yhi - ylo) / step) + 1
         yy = np.linspace(ylo, yhi, ny)
 
@@ -198,7 +198,7 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
 
     else:
         # Use 2-d broadcasting pixel <-> radec functions here.
-        # This can be rather expensive!
+        # This can be rather expensive, with lots of WCS calls!
         ok,fxi,fyi = wcs.radec2pixelxy(
             *targetwcs.pixelxy2radec(ixo[np.newaxis,:] + 1.,
                                      iyo[:,np.newaxis] + 1.))
