@@ -244,7 +244,7 @@ int simplexy_run(simplexy_t* s) {
 			float* medianfiltered;
 			medianfiltered = malloc(nx * ny * sizeof(float));
 			bgfree = medianfiltered;
-			dmedsmooth(s->image, nx, ny, s->halfbox, medianfiltered);
+			dmedsmooth(s->image, NULL, nx, ny, s->halfbox, medianfiltered);
 
 			if (s->bgimgfn) {
 				logverb("Writing background (median-filtered) image \"%s\"\n", s->bgimgfn);

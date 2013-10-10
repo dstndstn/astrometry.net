@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 #include <sys/param.h>
@@ -38,7 +39,8 @@
 
 float dselip(unsigned long k, unsigned long n, float *arr);
 
-int dmedsmooth(float *image,
+int dmedsmooth(const float *image,
+               const uint8_t *masked,
                int nx,
                int ny,
                int halfbox,
@@ -106,10 +108,24 @@ int dmedsmooth(float *image,
         for (i=0; i<nxgrid; i++) {
             nb = 0;
             for (jp=ylo[j]; jp<=yhi[j]; jp++) {
-                float* imageptr = image + xlo[i] + jp * nx;
-                for (ip=xlo[i]; ip<=xhi[i]; ip++, imageptr++) {
-                    float f = (*imageptr);
-                    if (isfinite(f)) {
+                const float* imageptr = image + xlo[i] + jp * nx;
+                float f;
+                if (masked) {
+                    const uint8_t* maskptr = masked + xlo[i] + jp * nx;
+                    for (ip=xlo[i]; ip<=xhi[i]; ip++, imageptr++, maskptr++) {
+                        if (*maskptr)
+                            continue;
+                        f = (*imageptr);
+                        if (!isfinite(f))
+                            continue;
+                        arr[nb] = f;
+                        nb++;
+                    }
+                } else {
+                    for (ip=xlo[i]; ip<=xhi[i]; ip++, imageptr++) {
+                        f = (*imageptr);
+                        if (!isfinite(f))
+                            continue;
                         arr[nb] = f;
                         nb++;
                     }

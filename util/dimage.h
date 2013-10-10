@@ -94,8 +94,8 @@ int dcen3x3(float *image, float *xcen, float *ycen);
 int dsigma(float *image, int nx, int ny, int sp, int gridsize, float *sigma);
 int dsigma_u8(uint8_t *image, int nx, int ny, int sp, int gridsize, float *sigma);
 
-int dmedsmooth(float *image,
-	       int nx, int ny, int halfbox, float *smooth);
+int dmedsmooth(const float *image, const uint8_t *masked,
+               int nx, int ny, int halfbox, float *smooth);
 
 int dallpeaks(float *image, int nx, int ny, int *objects, float *xcen,
               float *ycen, int *npeaks, float dpsf, float sigma,
