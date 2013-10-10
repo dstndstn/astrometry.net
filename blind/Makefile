@@ -300,6 +300,7 @@ tests: $(ALL_TEST_FILES)
 .PHONY: tests
 
 test_codefile: codefile.o quad-utils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
+ALL_TEST_EXTRA_OBJS += codefile.o
 
 test_2mass: 2mass.o 2mass-fits.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += 2mass-fits.o 2mass.o

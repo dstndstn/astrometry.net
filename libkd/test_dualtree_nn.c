@@ -85,7 +85,7 @@ void test_nn_1(CuTest* tc) {
     ykd = kdtree_build(NULL, ydata, NY, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);
 
     t0 = timenow();
-    dualtree_nearestneighbour(xkd, ykd, maxr2, &nearest_d2, &nearest_ind, 0);
+    dualtree_nearestneighbour(xkd, ykd, maxr2, &nearest_d2, &nearest_ind, 0, 1);
     printf("Dualtree took %g ms\n", 1000.0*(timenow() - t0));
 
     for (j=0; j<NY; j++) {
