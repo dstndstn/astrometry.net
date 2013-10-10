@@ -253,6 +253,66 @@ void log_set_level(int lvl);
         return med;
     }
 
+    static int median_smooth(PyObject* np_image,
+                             PyObject* np_mask,
+                             int halfbox,
+                             PyObject* np_smooth) {
+        if (!PyArray_Check(np_image) ||
+            !PyArray_Check(np_smooth) ||
+            !PyArray_ISNOTSWAPPED(np_image) ||
+            !PyArray_ISNOTSWAPPED(np_smooth ) ||
+            !PyArray_ISFLOAT(np_image) ||
+            !PyArray_ISFLOAT(np_smooth ) ||
+            (PyArray_ITEMSIZE(np_image) != sizeof(float)) ||
+            (PyArray_ITEMSIZE(np_smooth ) != sizeof(float)) ||
+            !(PyArray_NDIM(np_image) == 2) ||
+            !(PyArray_NDIM(np_smooth ) == 2) ||
+            !PyArray_ISCONTIGUOUS(np_image) ||
+            !PyArray_ISCONTIGUOUS(np_smooth ) ||
+            !PyArray_ISWRITEABLE(np_smooth)) {
+            ERR("median_smooth: array type checks failed for image/smooth\n");
+            return -1;
+        }
+        if (np_mask != Py_None) {
+            if (!PyArray_Check(np_mask) ||
+                !PyArray_ISNOTSWAPPED(np_mask) ||
+                !PyArray_ISBOOL(np_mask) ||
+                (PyArray_ITEMSIZE(np_mask) != sizeof(uint8_t)) ||
+                !(PyArray_NDIM(np_mask) == 2) ||
+                !PyArray_ISCONTIGUOUS(np_mask)) {
+                ERR("median_smooth: array type checks failed for mask\n");
+                return -1;
+            }
+        }
+        npy_intp NX, NY;
+        const float* image;
+        float* smooth;
+        const uint8_t* maskimg = NULL;
+
+        NY = PyArray_DIM(np_image, 0);
+        NX = PyArray_DIM(np_image, 1);
+        if ((PyArray_DIM(np_smooth, 0) != NY) ||
+            (PyArray_DIM(np_smooth, 1) != NX)) {
+            ERR("median_smooth: 'smooth' array is wrong shape\n");
+            return -1;
+        }
+        image = PyArray_DATA(np_image);
+        smooth = PyArray_DATA(np_smooth);
+
+        if (np_mask != Py_None) {
+            if ((PyArray_DIM(np_mask, 0) != NY) ||
+                (PyArray_DIM(np_mask, 1) != NX)) {
+                ERR("median_smooth: 'mask' array is wrong shape\n");
+                return -1;
+            }
+            maskimg = PyArray_DATA(np_mask);
+        }
+
+        dmedsmooth(image, maskimg, (int)NX, (int)NY, halfbox, smooth);
+
+        return 0;
+    }
+
     #define LANCZOS_INTERP_FUNC lanczos5_interpolate
     #define L 5
         static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
