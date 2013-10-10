@@ -54,6 +54,10 @@ ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
 ANFILES_DEPS += $(QFITS_LIB)
 endif
 
+SIMPLEXY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o \
+	dpeaks.o dselip.o dsigma.o dsmooth.o image2xy.o simplexy.o radix.o ctmf.o
+ANUTILS_OBJ += $(SIMPLEXY_OBJ)
+
 ifndef NO_QFITS
 include $(COMMON)/makefile.qfits
 endif
@@ -470,7 +474,8 @@ ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
 	test_scamp_catalog test_starutil test_svd test_hd \
 	test_tycho2 test_anwcs test_sip-utils test_errors test_multiindex \
-	test_convolve_image test_qsort_r test_wcs test_big_tables test_quadfile
+	test_convolve_image test_qsort_r test_wcs test_big_tables test_quadfile \
+	test_dfind test_ctmf test_dsmooth test_dcen3x3 test_simplexy
 # test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
@@ -482,6 +487,24 @@ DEP_OBJ += $(ALL_TEST_FILES_O)
 
 tests: $(ALL_TEST_FILES)
 .PHONY: tests
+
+TEST_DFIND_OBJS := dfind.o
+ALL_TEST_EXTRA_OBJS += $(TEST_DFIND_OBJS)
+test_dfind: $(TEST_DFIND_OBJS) $(ANUTILS_LIB) $(GSL_LIB)
+
+TEST_CTMF_OBJS := ctmf.o
+ALL_TEST_EXTRA_OBJS += $(TEST_CTMF_OBJS)
+test_ctmf: $(TEST_CTMF_OBJS)
+
+TEST_DSMOOTH_OBJS := dsmooth.o
+ALL_TEST_EXTRA_OBJS += $(TEST_DSMOOTH_OBJS)
+test_dsmooth: $(TEST_DSMOOTH_OBJS)
+
+test_dcen3x3: dcen3x3.o
+ALL_TEST_EXTRA_OBJS += dcen3x3.o
+
+test_simplexy: $(SIMPLEXY_OBJ) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+ALL_TEST_EXTRA_OBJS += $(SIMPLEXY_OBJ)
 
 test_quadfile: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

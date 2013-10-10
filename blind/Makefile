@@ -155,9 +155,6 @@ PIPELINE_MAIN_OBJ := $(addsuffix .o,$(PIPELINE))
 PROSPECTUS_MAIN_OBJ := $(addsuffix .o,$(PROSPECTUS))
 FITS_UTILS_MAIN_OBJ := $(addsuffix .o,$(FITS_UTILS))
 
-SIMPLEXY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o \
-	dpeaks.o dselip.o dsigma.o dsmooth.o image2xy.o simplexy.o radix.o ctmf.o
-
 IMAGE2XY := image2xy
 
 INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) $(PROGS)
@@ -179,7 +176,7 @@ PLOT_INSTALL_H := plotannotations.h plotfill.h plotgrid.h plotimage.h \
 
 ALL_OBJ := $(UTIL_OBJS) $(KDTREE_OBJS) $(QFITS_OBJ) \
 	$(PIPELINE_MAIN_OBJ) $(PROSPECTUS_MAIN_OBJ) $(FITS_UTILS_MAIN_OBJ) \
-	$(OTHER_OBJS) $(2MASSOBJ) $(SIMPLEXY_OBJ)
+	$(OTHER_OBJS) $(2MASSOBJ)
 ALL_EXECS :=
 
 ALL_OBJ += $(PLOTSTUFF)
@@ -283,27 +280,15 @@ solver_test_2.o: solver.c
 #######################################
 
 # Add the basename of your test sources here...
-ALL_TEST_FILES = test_dfind test_ctmf test_dsmooth test_2mass \
+ALL_TEST_FILES = test_2mass \
 	test_usnob test_nomad test_matchfile test_blindutils \
-	test_dcen3x3 test_resort-xylist test_simplexy test_tweak \
+	test_resort-xylist test_tweak \
 	test_multiindex2 test_codefile
 
 ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=
 
 # Add the dependencies here...
-TEST_DFIND_OBJS := dfind.o
-ALL_TEST_EXTRA_OBJS += $(TEST_DFIND_OBJS)
-test_dfind: $(TEST_DFIND_OBJS) $(ANUTILS_LIB) $(GSL_LIB)
-
-TEST_CTMF_OBJS := ctmf.o
-ALL_TEST_EXTRA_OBJS += $(TEST_CTMF_OBJS)
-test_ctmf: $(TEST_CTMF_OBJS)
-
-TEST_DSMOOTH_OBJS := dsmooth.o
-ALL_TEST_EXTRA_OBJS += $(TEST_DSMOOTH_OBJS)
-test_dsmooth: $(TEST_DSMOOTH_OBJS)
-
 test_multiindex2: test_multiindex2.o solver.o verify.o \
 	tweak2.o tweak.o matchfile.o matchobj.o quad-utils.o \
 	$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
@@ -331,12 +316,6 @@ ALL_TEST_EXTRA_OBJS += matchfile.o matchobj.o
 test_blindutils: blindutils.o $(ANUTILS_LIB) $(GSL_LIB)
 ALL_TEST_EXTRA_OBJS += blindutils.o
 
-test_dcen3x3: dcen3x3.o
-ALL_TEST_EXTRA_OBJS += dcen3x3.o
-
-test_simplexy: $(SIMPLEXY_OBJ) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-ALL_TEST_EXTRA_OBJS += $(SIMPLEXY_OBJ)
-
 test_resort-xylist: resort-xylist.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += resort-xylist.o
 
@@ -362,7 +341,7 @@ demo_dsmooth: demo_dsmooth.o dsmooth.o \
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg $(LDLIBS)
 
 control-program: control-program.o \
-		$(BACKEND_OBJS) $(SIMPLEXY_OBJ) \
+		$(BACKEND_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 ALL_OBJ += control-program.o
@@ -543,14 +522,14 @@ ALL_OBJ += verify-main.o
 solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o \
 		image2xy-files.o resort-xylist.o tabsort.o cut-table.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
-		$(SIMPLEXY_OBJ) $(CFITS_DEP) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+		$(CFITS_DEP) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(CFITS_LIB) $(LDLIBS)
 
 ALL_OBJ += cut-table.o
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o cut-table.o fits-guess-scale.o \
 		image2xy-files.o resort-xylist.o blindutils.o \
-		$(SIMPLEXY_OBJ) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_DEP)
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_DEP)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 
 ALL_OBJ += augment-xylist-main.o
