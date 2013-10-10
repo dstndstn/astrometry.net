@@ -168,25 +168,30 @@ int dmedsmooth(float *image,
                 xmsize = xgrid[nxgrid - 1] - xgrid[nxgrid - 2];
 
             for (jp = jst;jp <= jnd;jp++) {
-                dy = (float)(jp - ygrid[j]) / (float)ymsize;
-                ykernel = 0.;
-                if ((dy > -1.5) && (dy <= -0.5))
-                    ykernel = 0.5 * (dy + 1.5) * (dy + 1.5);
-                else if ((dy > -0.5) && (dy < 0.5))
-                    ykernel = 0.75 - (dy * dy);
-                else if ((dy >= 0.5) && (dy < 1.5))
+                // Interpolate with a kernel that is two parabolas spliced
+                // together: in [-1.5, -0.5] and [0.5, 1.5], 0.5 * (|y|-1.5)^2
+                // so at +- 0.5 it has value 0.5.
+                // at +- 1.5 it has value 0.
+                // in [-0.5, 0.5]: 0.75 - (y^2)
+                // so at +- 0.5 it has value 0.5
+                // at 0 it has value 0.75
+                dy = fabs((float)(jp - ygrid[j]) / (float)ymsize);
+                if ((dy >= 0.5) && (dy < 1.5))
                     ykernel = 0.5 * (dy - 1.5) * (dy - 1.5);
-                for (ip = ist;ip <= ind;ip++) {
-                    dx = ((float) ip - xgrid[i]);
-                    xkernel = 0.;
-                    if (dx > -1.5*xmsize && dx <= -0.5*xmsize)
-                        xkernel = 0.5 * (dx / xmsize + 1.5) * (dx / xmsize + 1.5);
-                    else if (dx > -0.5*xmsize && dx < 0.)
-                        xkernel = -(dx * dx / xmsize / xmsize - 0.75);
-                    else if (dx < 0.5*xpsize && dx >= 0.)
-                        xkernel = -(dx * dx / xpsize / xpsize - 0.75);
-                    else if (dx >= 0.5*xpsize && dx < 1.5*xpsize)
-                        xkernel = 0.5 * (dx / xpsize - 1.5) * (dx / xpsize - 1.5);
+                else if (dy < 0.5)
+                    ykernel = 0.75 - (dy * dy);
+                else
+                    // ykernel = 0
+                    continue;
+                for (ip = ist; ip <= ind; ip++) {
+                    dx = fabs((float)(ip - xgrid[i]) / (float)xmsize);
+                    if ((dx >= 0.5) && (dx < 1.5))
+                        xkernel = 0.5 * (dx - 1.5) * (dx - 1.5);
+                    else if (dx < 0.5)
+                        xkernel = 0.75 - (dx * dx);
+                    else
+                        // xkernel = 0
+                        continue;
                     smooth[ip + jp*nx] += xkernel * ykernel * grid[i + j * nxgrid];
                 }
             }
