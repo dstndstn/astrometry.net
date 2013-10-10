@@ -151,7 +151,8 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	mathutil.h permutedsort.h qidxfile.h \
 	quadfile.h rdlist.h scamp-catalog.h fit-wcs.h sip-utils.h sip.h sip_qfits.h \
 	starkd.h starutil.h starutil.inc starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
-	xylist.h coadd.h convolve-image.h resample.h multiindex.h scamp.h
+	xylist.h coadd.h convolve-image.h resample.h multiindex.h scamp.h \
+	ctmf.h dimage.h image2xy.h radix.h simplexy-common.h simplexy.h
 
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
@@ -165,7 +166,8 @@ ALL_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 
 # svn.c depends on all the .c and .h files in ANUTILS_OBJ
 SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
-SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(subst .o,.h,$(SVN_C_DEPS))
+SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(ANUTILS_H)
+#$(subst .o,.h,$(SVN_C_DEPS))
 
 DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 DEP_PREREQS :=

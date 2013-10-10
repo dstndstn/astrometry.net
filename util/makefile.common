@@ -32,6 +32,7 @@ endif
 %.h: ;
 %.awk: ;
 %.inc: ;
+%.ph: ;
 makefile.%: ;
 Makefile: ;
 
