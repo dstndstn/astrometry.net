@@ -1,22 +1,22 @@
 /*
-  This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Michael Blanton, Keir Mierle, David W. Hogg,
-  Sam Roweis and Dustin Lang.
-  Copyright 2013 Dustin Lang.
+ This file is part of the Astrometry.net suite.
+ Copyright 2006, 2007 Michael Blanton, Keir Mierle, David W. Hogg,
+ Sam Roweis and Dustin Lang.
+ Copyright 2013 Dustin Lang.
 
-  The Astrometry.net suite is free software; you can redistribute
-  it and/or modify it under the terms of the GNU General Public License
-  as published by the Free Software Foundation, version 2.
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
 
-  The Astrometry.net suite is distributed in the hope that it will be
-  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the Astrometry.net suite ; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-*/
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,14 +49,14 @@ int dmedsmooth(float *image,
     int ypsize, ymsize, xpsize, xmsize;
     float dx, dy, xkernel, ykernel;
 
-        float *arr = NULL;
-        int *xgrid = NULL;
-        int *ygrid = NULL;
-        float *grid = NULL;
-        int *xlo = NULL;
-        int *xhi = NULL;
-        int *ylo = NULL;
-        int *yhi = NULL;
+    float *arr = NULL;
+    int *xgrid = NULL;
+    int *ygrid = NULL;
+    float *grid = NULL;
+    int *xlo = NULL;
+    int *xhi = NULL;
+    int *ylo = NULL;
+    int *yhi = NULL;
 
     /* get grids */
     sp = halfbox;
