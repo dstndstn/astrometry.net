@@ -77,7 +77,7 @@ int dmedsmooth(float *image,
     for (i = 0;i < nxgrid;i++) {
         xlo[i] = MAX(xgrid[i] - sp, 0);
         xhi[i] = MIN(xgrid[i] + sp, nx-1);
-        printf("xlo[%i],xhi[%i] = %i,%i\n", i, i, xlo[i], xhi[i]);
+        //printf("xlo[%i],xhi[%i] = %i,%i\n", i, i, xlo[i], xhi[i]);
     }
 
     nygrid = MAX(1, ny / sp) + 2;
@@ -105,16 +105,21 @@ int dmedsmooth(float *image,
     for (j=0; j<nygrid; j++) {
         for (i=0; i<nxgrid; i++) {
             nb = 0;
-            for (jp=ylo[j]; jp<=yhi[j]; jp++)
-                for (ip=xlo[i]; ip<=xhi[i]; ip++) {
-                    arr[nb] = image[ip + jp * nx];
-                    nb++;
+            for (jp=ylo[j]; jp<=yhi[j]; jp++) {
+                float* imageptr = image + xlo[i] + jp * nx;
+                for (ip=xlo[i]; ip<=xhi[i]; ip++, imageptr++) {
+                    float f = (*imageptr);
+                    if (isfinite(f)) {
+                        arr[nb] = f;
+                        nb++;
+                    }
                 }
+            }
             if (nb > 1) {
                 nm = nb / 2;
                 grid[i + j*nxgrid] = dselip(nm, nb, arr);
             } else {
-                grid[i + j*nxgrid] = image[(long) xlo[i] + ((long) ylo[j]) * nx];
+                grid[i + j*nxgrid] = image[(long)xlo[i] + ((long)ylo[j]) * nx];
             }
         }
     }
