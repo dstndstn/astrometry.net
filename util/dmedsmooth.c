@@ -168,16 +168,14 @@ int dmedsmooth(float *image,
                 xmsize = xgrid[nxgrid - 1] - xgrid[nxgrid - 2];
 
             for (jp = jst;jp <= jnd;jp++) {
-                dy = ((float) jp - ygrid[j]);
+                dy = (float)(jp - ygrid[j]) / (float)ymsize;
                 ykernel = 0.;
-                if (dy > -1.5*ymsize && dy <= -0.5*ymsize)
-                    ykernel = 0.5 * (dy / ymsize + 1.5) * (dy / ymsize + 1.5);
-                else if (dy > -0.5*ymsize && dy < 0.)
-                    ykernel = -(dy * dy / ymsize / ymsize - 0.75);
-                else if (dy < 0.5*ypsize && dy >= 0.)
-                    ykernel = -(dy * dy / ypsize / ypsize - 0.75);
-                else if (dy >= 0.5*ypsize && dy < 1.5*ypsize)
-                    ykernel = 0.5 * (dy / ypsize - 1.5) * (dy / ypsize - 1.5);
+                if ((dy > -1.5) && (dy <= -0.5))
+                    ykernel = 0.5 * (dy + 1.5) * (dy + 1.5);
+                else if ((dy > -0.5) && (dy < 0.5))
+                    ykernel = 0.75 - (dy * dy);
+                else if ((dy >= 0.5) && (dy < 1.5))
+                    ykernel = 0.5 * (dy - 1.5) * (dy - 1.5);
                 for (ip = ist;ip <= ind;ip++) {
                     dx = ((float) ip - xgrid[i]);
                     xkernel = 0.;
