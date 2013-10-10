@@ -32,6 +32,8 @@
 #include "resample.h"
 #include "keywords.h"
 
+#include "dimage.h"
+
 #define true 1
 #define false 0
 
@@ -2513,3 +2515,4 @@ sip_t.__getnewargs__ = sip_t_getnewargs
 
 %include "fitsioutils.h"
 
+%include "dimage.h"
