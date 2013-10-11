@@ -54,7 +54,9 @@ static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
     static const int Nunits = 2*(L+1); //12; //2*(L+1);
     //static const int Nlut = Nunits * Nlutunit;
     //static float lut[24576];
-    static float lut[Nunits*Nlutunit];
+    //static float lut[Nunits*Nlutunit];
+    // HACK -- 2048 here == Nlutunit... some versions of gcc don't believe Nunits*Nlutunit is constant
+    static float lut[2*(L+1)*2048];
     static int initialized = 0;
 
     if (!initialized) {
