@@ -136,8 +136,8 @@ install: $(LIBKD_INSTALL) $(LIBKD)
 install-spherematch: spherematch_c.so
 	mkdir -p '$(INSTALL_DIR)/python/astrometry/libkd'
 	@for x in spherematch_c.so spherematch.py __init__.py; do \
-		echo cp $$x '$(INSTALL_DIR)/python/astrometry/libkd'; \
-		cp $$x '$(INSTALL_DIR)/python/astrometry/libkd'; \
+		echo cp $$x '$(PY_BASE_INSTALL_DIR)/libkd'; \
+		cp $$x '$(PY_BASE_INSTALL_DIR)/libkd'; \
 	done
 
 

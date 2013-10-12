@@ -15,6 +15,20 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
+
+INSTALL_DIR ?= /usr/local/astrometry
+#export INSTALL_DIR
+
+# Installation subdirs
+
+PY_BASE_INSTALL_DIR := $(INSTALL_DIR)/lib/python/astrometry
+INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include
+LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
+BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
+PY_BASE_LINK_DIR := ../lib/python/astrometry
+
+
+
 # only set CC if it hasn't already been set
 # (this allows the user to override it)
 ## can't use "CC ?= gcc" because CC gets a default value

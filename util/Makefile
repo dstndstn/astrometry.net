@@ -283,14 +283,12 @@ PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py healpix.py sip.py \
 
 PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py
 
-PY_INSTALL_DIR := $(INSTALL_DIR)/python/astrometry/util
-BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
-INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include
-LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
-LINK_DIR := ../python/astrometry/util
+PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/util
+LINK_DIR := $(PY_BASE_LINK_DIR)/util
 
 install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(ANUTILS_LIB)
 	@echo Installing in base directory '$(INSTALL_DIR)'
+	@echo Installing python in base directory '$(PY_INSTALL_DIR)'
 	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
 		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \

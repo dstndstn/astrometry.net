@@ -209,6 +209,9 @@ simplexy: image2xy
 # Another suggested solution was:
 # echo '$(INSTALL_DIR)' | python -c "print open('../etc/backend.cfg-dist').read().replace('add_path /usr/local/astrometry', 'add_path '+raw_input());" > '$(INSTALL_DIR)/etc/backend.cfg'
 
+PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/blind
+LINK_DIR := $(PY_BASE_LINK_DIR)/blind
+
 install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	@echo Installing in directory '$(INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/bin'

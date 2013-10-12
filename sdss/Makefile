@@ -6,7 +6,7 @@ COMMON := $(BASEDIR)/util
 include $(COMMON)/makefile.common
 
 INSTALL_DIR ?= /usr/local/astrometry
-MY_DIR := $(INSTALL_DIR)/python/astrometry/sdss
+MY_DIR := $(PY_BASE_INSTALL_DIR)/sdss
 
 _cutils.so cutils.py: cutils.i
 	python setup.py -v build_ext --inplace

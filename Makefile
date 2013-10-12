@@ -15,12 +15,10 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-#
-# This is where programs and data files will be installed.
-#
-INSTALL_DIR ?= /usr/local/astrometry
-export INSTALL_DIR
 
+# To set the install directory:
+#   make install INSTALL_DIR=/path/to/dir
+# or see util/makefile.common
 
 # Turn off optimisation?  If the following line is commented-out, the default
 # is to turn optimization on.  See util/makefile.common for details.
@@ -110,12 +108,12 @@ install-core:
 	mkdir -p '$(INSTALL_DIR)/include'
 	mkdir -p '$(INSTALL_DIR)/lib'
 	mkdir -p '$(INSTALL_DIR)/examples'
-	mkdir -p '$(INSTALL_DIR)/python/astrometry'
-	mkdir -p '$(INSTALL_DIR)/python/astrometry/sdss'
+	mkdir -p '$(INSTALL_DIR)/lib/python/astrometry'
+	mkdir -p '$(INSTALL_DIR)/lib/python/astrometry/sdss'
 	mkdir -p '$(INSTALL_DIR)/ups'
 	cp ups/astrometry_net.table-dist '$(INSTALL_DIR)/ups/astrometry_net.table'
 	cp ups/astrometry_net.cfg.template '$(INSTALL_DIR)/ups'
-	cp __init__.py '$(INSTALL_DIR)/python/astrometry'
+	cp __init__.py '$(INSTALL_DIR)/lib/python/astrometry'
 	cp CREDITS LICENSE README '$(INSTALL_DIR)/doc'
 	cp report.txt '$(INSTALL_DIR)/doc'
 	cp demo/* '$(INSTALL_DIR)/examples'

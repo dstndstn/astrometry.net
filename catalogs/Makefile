@@ -61,10 +61,8 @@ HEADERS := brightstars.h constellations.h ngc2000.h ngcic-accurate.h
 
 PYTHON_INSTALL := __init__.py ngc2000.py 
 
-PY_INSTALL_DIR := $(INSTALL_DIR)/python/astrometry/catalogs
-INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include
-LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
-LINK_DIR := ../python/astrometry/catalogs
+PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/catalogs
+LINK_DIR := $(PY_BASE_LINK_DIR)/catalogs
 
 # MISC_OBJ := grab-stellarium-constellations.o 
 
