@@ -2,7 +2,7 @@ import sys
 import pyfits
 import numpy
 
-from astrometry.util.pyfits_utils import pyfits_writeto
+from astrometry.util.fits import pyfits_writeto
 
 def is_sdss_idr(hdu):
 	hdr = hdu.header

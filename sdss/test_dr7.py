@@ -10,7 +10,7 @@ import pylab as plt
 
 import astrometry.sdss
 from astrometry.sdss import DR7
-from astrometry.util.pyfits_utils import fits_table
+from astrometry.util.fits import fits_table
 
 if __name__ == '__main__':
 	sdss = DR7()

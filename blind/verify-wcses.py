@@ -1,5 +1,5 @@
 from astrometry.util.healpix import *
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 from numpy import *
 from pyfits import *

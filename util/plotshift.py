@@ -125,7 +125,7 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=Fa
 
 
 if __name__ == '__main__':
-	from astrometry.util.pyfits_utils import fits_table
+	from astrometry.util.fits import fits_table
 	
 	parser = OptionParser('usage: %prog [options] <image xy> <reference xy> <plot name>')
 	parser.add_option('-X', dest='xcol', help='Name of X column in image table')

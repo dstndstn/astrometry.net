@@ -6,7 +6,7 @@
 # ------------
 # - column is x, row is y; this is at odds with some online documentation
 
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 from numpy import *
 import pyfits
 from glob import glob

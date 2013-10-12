@@ -7,7 +7,7 @@ from math import *
 from numpy import *
 from pylab import *
 from scipy.ndimage.filters import *
-from astrometry.util.pyfits_utils import pyfits_writeto
+from astrometry.util.fits import pyfits_writeto
 
 def normalized_hough(x, y, imgw, imgh, rlo, rhi, tlo, thi, nr, nt):
 	houghimg = zeros((nr, nt)).astype(int)

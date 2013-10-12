@@ -12,7 +12,7 @@ import numpy
 import pyfits
 from numpy import *
 from numpy.random import rand
-from astrometry.util.pyfits_utils import pyfits_writeto
+from astrometry.util.fits import pyfits_writeto
 
 # Returns a numpy array of booleans
 def hist_remove_lines(x, binwidth, binoffset, logcut):

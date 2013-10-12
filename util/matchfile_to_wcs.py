@@ -1,6 +1,6 @@
 import pyfits
 from optparse import OptionParser
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 def match_to_wcs(matchfn, row, wcsfn, imgw=0, imgh=0):
 	m = table_fields(matchfn)

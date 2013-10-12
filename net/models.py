@@ -21,7 +21,7 @@ from log import *
 from astrometry.util.starutil_numpy import ra2hmsstring, dec2dmsstring
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 from astrometry.util.image2pnm import image2pnm
 from astrometry.util import util as anutil
 from astrometry.net.tmpfile import *

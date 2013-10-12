@@ -5,7 +5,7 @@ from optparse import OptionParser
 import pyfits
 from numpy import *
 
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 from astrometry.util.healpix import *
 from astrometry.util.starutil_numpy import *
 

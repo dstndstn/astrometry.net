@@ -3,7 +3,7 @@ if __name__ == '__main__':
 	matplotlib.use('Agg')
 import unittest
 import pyfits
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 from astrometry.blind.plotstuff import *
 import numpy as np
 import pylab as plt

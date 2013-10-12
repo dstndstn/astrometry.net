@@ -1,6 +1,6 @@
 from xml.dom import minidom, Node
 from numpy import *
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 def siap_parse_result(fn=None):
 	dom1 = minidom.parse(fn)

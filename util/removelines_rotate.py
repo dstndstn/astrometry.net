@@ -9,7 +9,7 @@ from pylab import *
 from optparse import OptionParser
 
 from removelines import hist_remove_lines
-from astrometry.util.pyfits_utils import pyfits_writeto
+from astrometry.util.fits import pyfits_writeto
 
 if __name__ == '__main__':
 	try:

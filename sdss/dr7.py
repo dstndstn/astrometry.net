@@ -4,7 +4,7 @@ import pyfits
 from common import *
 
 from astrometry.util.miscutils import *
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 class DR7(SdssDR):
 	def __init__(self, **kwargs):

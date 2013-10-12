@@ -6,7 +6,7 @@ from astrometry.util.index import *
 from astrometry.util.plotutils import *
 from astrometry.libkd.spherematch import match
 from astrometry.util.starutil_numpy import *
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 from optparse import *
 

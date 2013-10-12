@@ -1,7 +1,7 @@
 import pyfits
 from numpy import *
 from ngc2000 import ngc2000, ngc2000accurate
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 if __name__ == '__main__':
 

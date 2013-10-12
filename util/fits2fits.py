@@ -7,7 +7,7 @@ import logging
 if __name__ == '__main__':
 	# According to the python sys.path documentation, the directory containing
 	# the main script appears as sys.path[0].
-	utildir = sys.path[0]
+    utildir = sys.path[0]
 	assert(os.path.basename(utildir) == 'util')
 	andir = os.path.dirname(utildir)
 	#assert(os.path.basename(andir) == 'astrometry')
@@ -19,7 +19,7 @@ if __name__ == '__main__':
 	import pyfits
 
 import pyfits
-from astrometry.util.pyfits_utils import pyfits_writeto
+from astrometry.util.fits import pyfits_writeto
 
 def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 	"""

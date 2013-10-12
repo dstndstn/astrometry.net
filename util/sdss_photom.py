@@ -5,7 +5,7 @@
 # http://www.sdss.org/dr7/algorithms/fluxcal.html
 
 
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 from numpy import *
 import numpy as np
 import pyfits

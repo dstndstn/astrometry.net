@@ -1,6 +1,6 @@
 import os
 import pyfits
-from astrometry.util.pyfits_utils import fits_table
+from astrometry.util.fits import fits_table
 import numpy as np
 import logging
 import urlparse

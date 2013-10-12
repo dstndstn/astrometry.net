@@ -3,7 +3,7 @@ import sys
 from optparse import OptionParser
 import numpy as np
 
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 if __name__ == '__main__':
     p = OptionParser(usage='Usage: %prog [options] <input-text-file> <output-fits-table>')

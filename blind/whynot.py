@@ -3,7 +3,7 @@
 from astrometry.util.index import *
 from astrometry.util.sip import *
 from astrometry.util.starutil_numpy import *
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 from astrometry.libkd.spherematch import match
 
 from numpy import *

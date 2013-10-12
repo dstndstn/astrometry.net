@@ -1,4 +1,4 @@
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 from numpy import *
 from scipy.ndimage.filters import gaussian_filter
 

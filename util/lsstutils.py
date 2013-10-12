@@ -1,11 +1,11 @@
 from lsst.afw.detection import SourceSet, Source
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 sourceset_fields = ['FlagForDetection', "XAstrom", "XAstromErr", "YAstrom", "YAstromErr",
 					"PsfFlux", "ApFlux", "Ixx", "IxxErr", "Iyy",
 					"IyyErr", "Ixy", "IxyErr"]
 
-# eg, from astrometry.util.pyfits_utils : fits_table() or text_table()
+# eg, from astrometry.util.fits : fits_table() or text_table()
 def sourceset_from_table(t):
 	N = len(t)
 	ss = SourceSet()

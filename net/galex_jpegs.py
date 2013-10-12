@@ -1,6 +1,6 @@
 import os
 
-from astrometry.util.pyfits_utils import fits_table
+from astrometry.util.fits import fits_table
 from astrometry.util.util import Tan
 from astrometry.blind import plotstuff as ps
 from astrometry.util.starutil_numpy import *

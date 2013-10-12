@@ -1,4 +1,4 @@
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 from pyfits import *
 
 # Returns "gain", "dark_variance", and "skyErr"

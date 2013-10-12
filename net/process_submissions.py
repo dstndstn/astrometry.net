@@ -50,7 +50,7 @@ from astrometry.util.run_command import run_command
 
 from astrometry.util.util import Tan
 from astrometry.util import util as anutil
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 #import astrometry.net.settings as settings

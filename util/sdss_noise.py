@@ -1,5 +1,5 @@
 from astrometry.util.miscutils import *
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 # Produces a (cut-out of) the inverse-variance noise image, from columns
 # [x0,x1] and rows [y0,y1] (inclusive).  Default is the whole image.

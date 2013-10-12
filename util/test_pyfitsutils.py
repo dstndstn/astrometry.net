@@ -1,4 +1,4 @@
-from pyfits_utils import *
+from fits import *
 import numpy as np
 import unittest
 

@@ -1,4 +1,4 @@
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 from astrometry.util.sdss_psf import *
 from pylab import *
 

@@ -24,7 +24,7 @@ import numpy
 import pyfits
 from numpy import *
 from numpy.random import rand
-from astrometry.util.pyfits_utils import *
+from astrometry.util.fits import *
 
 def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 	p = pyfits.open(infile)
