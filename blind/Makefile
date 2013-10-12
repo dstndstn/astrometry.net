@@ -212,6 +212,9 @@ simplexy: image2xy
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/blind
 LINK_DIR := $(PY_BASE_LINK_DIR)/blind
 
+PYTHON_EXECS := plotann.py
+PYTHON_INSTALL := $(PYTHON_EXECS) __init__.py
+
 install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	@echo Installing in directory '$(INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/bin'
@@ -246,6 +249,8 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	done
 
 
+PYTHON_EXTRA_INSTALL := plotstuff.py plotstuff_c.py _plotstuff_c.so
+
 install-extra: $(INSTALL_CAIRO_EXECS)
 	@echo Installing in directory '$(INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/bin'
@@ -257,6 +262,11 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 	@for x in $(PLOT_INSTALL_H); do \
 		echo cp $$x '$(INSTALL_DIR)/include'; \
 		cp $$x '$(INSTALL_DIR)/include'; \
+	done
+	mkdir -p '$(PY_INSTALL_DIR)'
+	@for x in $(PYTHON_EXTRA_INSTALL); do \
+		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
 
 test-solver: test-solver.o solver_test.o verify.o matchfile.o \
@@ -623,14 +633,6 @@ catalog-dists: catalog-dists.o 2mass-fits.o usnob-fits.o usnob.o \
 
 add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB) $(LDLIBS)
-
-PYTHON_EXECS := plotann.py
-PYTHON_INSTALL := $(PYTHON_EXECS)
-
-PY_INSTALL_DIR := $(INSTALL_DIR)/python/astrometry/blind
-BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
-LINK_DIR := ../python/astrometry/blind
-
 
 plotstuff.o: plotstuff.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<

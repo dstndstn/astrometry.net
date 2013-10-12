@@ -110,6 +110,7 @@ fix-bb: fix-bb.o $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 DEP_OBJ += fix-bb.o checktree.o
 
 LIBKD_INSTALL := fix-bb checktree
+PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/libkd
 
 .PHONY: install
 install: $(LIBKD_INSTALL) $(LIBKD)
@@ -134,10 +135,10 @@ install: $(LIBKD_INSTALL) $(LIBKD)
 
 .PHONY: install-spherematch
 install-spherematch: spherematch_c.so
-	mkdir -p '$(INSTALL_DIR)/python/astrometry/libkd'
+	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in spherematch_c.so spherematch.py __init__.py; do \
-		echo cp $$x '$(PY_BASE_INSTALL_DIR)/libkd'; \
-		cp $$x '$(PY_BASE_INSTALL_DIR)/libkd'; \
+		echo cp $$x '$(PY_INSTALL_DIR)'; \
+		cp $$x '$(PY_INSTALL_DIR)'; \
 	done
 
 
