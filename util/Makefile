@@ -273,7 +273,7 @@ ALL_OBJ += hpsplit.o
 PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py healpix.py sip.py \
 	starutil.py starutil_numpy.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
-	filetype.py pyfits_utils.py fix_sdss_idr.py removelines.py \
+	filetype.py fits.py fix_sdss_idr.py removelines.py \
 	uniformize.py lsstutils.py casjobs.py \
 	sdss_das.py sdss_filenames.py sdss_get_catalog.py sdss_noise.py \
 	sdss_psf.py sdss_psfield.py sdss_radec_to_rcf.py sqlcl.py \
