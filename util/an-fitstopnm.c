@@ -325,6 +325,8 @@ int main(int argc, char *argv[]) {
 		logverb("Mapping input pixel range [%f, %f]\n", minval, maxval);
 		logverb("Writing output..\n");
 		fprintf(fout, "P5 %i %i %i\n", nx, ny, maxpix);
+        // Convert and write out chunks of "n" pixels at a time,
+        // starting at "i".
 		i = 0;
 		while (i < (nx*ny)) {
 			int n;

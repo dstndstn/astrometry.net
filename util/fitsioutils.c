@@ -319,11 +319,11 @@ int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
         const char* asrc = src;
         int64_t ival = 0;
         double  dval = 0;
-        anbool src_is_int = TRUE;
 
         // this loop is over elements of the array, if the column contains an array.
         // (ie, for scalar columns, arraysize is 1.)
         for (j=0; j<arraysize; j++) {
+            anbool src_is_int = TRUE;
             switch (srctype) {
             case TFITS_BIN_TYPE_A:
             case TFITS_BIN_TYPE_X:

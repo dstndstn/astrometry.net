@@ -73,6 +73,7 @@ static int fits_get_atom_size(tfits_type type) {
 	return atomsize;
 }
 
+//////////////////// copied from fitsioutils.c !!! ///////////////////
 static 
 int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
                         const void* vsrc, int srcstride, tfits_type srctype,
@@ -94,11 +95,12 @@ int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
         const char* asrc = src;
         int64_t ival = 0;
         double  dval = 0;
-        int src_is_int = 1;
 
-        // this loop is over elements of the array, if the column contains an array.
-        // (ie, for scalar columns, arraysize is 1.)
+        // this loop is over elements of the array, if the column
+        // contains an array.  (ie, for scalar columns, arraysize is
+        // 1.)
         for (j=0; j<arraysize; j++) {
+            int src_is_int = 1;
             switch (srctype) {
             case TFITS_BIN_TYPE_A:
             case TFITS_BIN_TYPE_X:
