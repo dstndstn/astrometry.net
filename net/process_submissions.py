@@ -353,9 +353,18 @@ def dojob(job, userimage, log=None):
     return job.id
 
 def try_dosub(sub, max_retries):
+    subid = sub.id
     try:
         return dosub(sub)
     except DatabaseError as e:
+        import traceback
+        print 'Caught DatabaseError while processing Submission', sub
+        traceback.print_exc(None, sys.stdout)
+
+        # Try...
+        django.db.connection.close()
+        sub = Submission.objects.get(id=subid)
+
         if (sub.processing_retries < max_retries):
             print 'Retrying processing Submission %s' % str(sub)
             sub.processing_retries += 1
@@ -577,6 +586,8 @@ def create_source_list(df):
             w = int(math.ceil(fits.x.max()))
             h = int(math.ceil(fits.y.max()))
             logmsg('w %i, h %i' % (w, h))
+            if w < 1 or h < 1:
+                raise RuntimeError('Source list must contain POSITIVE x,y coordinates')
             img.width = w
             img.height = h
             img.save()
@@ -692,6 +703,8 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
                 if res.successful():
                     print 'result:', res.get(),
             print
+        if len(jobresults):
+            print 'Still waiting for', len(jobresults), 'Jobs'
 
         if (len(newsubs) + len(newuis)) == 0:
             time.sleep(refresh_rate)
