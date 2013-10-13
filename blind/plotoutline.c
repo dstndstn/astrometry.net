@@ -41,68 +41,19 @@ void* plot_outline_init(plot_args_t* plotargs) {
 	return args;
 }
 
-struct walk_token2 {
-	cairo_t* cairo;
-	dl* radecs;
-};
-
-static void walk_callback2(const anwcs_t* wcs, double ix, double iy, double ra, double dec, void* token) {
-	struct walk_token2* walk = token;
-	dl_append(walk->radecs, ra);
-	dl_append(walk->radecs, dec);
+static void walk_callback(const anwcs_t* wcs, double ix, double iy,
+                          double ra, double dec, void* token) {
+    dl* radecs = (dl*)token;
+	dl_append(radecs, ra);
+	dl_append(radecs, dec);
 }
-
-// Returns 0 if the whole line was traced without breaks.
-// Otherwise, returns the index of the point on the far side of the
-// break.
-static int trace_line(anwcs_t* wcs, cairo_t* cairo, dl* rd, int istart, int idir, int iend,
-					  anbool firstmove) {
-	int i;
-	double lastra=0, lastdec=0;
-	double first = TRUE;
-	//logverb("trace_line: start %i, dir %i, end %i\n", istart, idir, iend);
-	for (i = istart; i != iend; i += idir) {
-		double x,y,ra,dec;
-		ra  = dl_get(rd, 2*i+0);
-		dec = dl_get(rd, 2*i+1);
-
-		//logverb("tracing: i=%i, ra,dec = %g,%g\n", i, ra, dec);
-
-		if (anwcs_radec2pixelxy(wcs, ra, dec, &x, &y))
-			// ?
-			continue;
-
-		//logverb("  x,y %g,%g\n", x, y);
-
-		if (first) {
-			if (firstmove)
-				cairo_move_to(cairo, x, y);
-			else
-				cairo_line_to(cairo, x, y);
-		} else {
-			if (anwcs_is_discontinuous(wcs, lastra, lastdec, ra, dec)) {
-				logmsg("plotoutline: discontinuous: (%g,%g) -- (%g,%g)\n", lastra, lastdec, ra, dec);
-				return i;
-			}
-			cairo_line_to(cairo, x, y);
-		}
-		lastra = ra;
-		lastdec = dec;
-		first = FALSE;
-	}
-	return 0;
-}
-
 
 int plot_outline_plot(const char* command,
 					cairo_t* cairo, plot_args_t* pargs, void* baton) {
 	plotoutline_t* args = (plotoutline_t*)baton;
-	struct walk_token2 token2;
-	double degstep = 1;
 	dl* rd;
-	int brk, end;
-	dl* rd2;
 	int i;
+    pl* lists;
 
 	assert(args->stepsize > 0);
 	assert(args->wcs);
@@ -113,123 +64,38 @@ int plot_outline_plot(const char* command,
 	logverb("Plotting outline of WCS: image size is %g x %g\n",
 			anwcs_imagew(args->wcs), anwcs_imageh(args->wcs));
 
-	token2.cairo = cairo;
-	token2.radecs = dl_new(256);
-	anwcs_walk_image_boundary(args->wcs, args->stepsize, walk_callback2, &token2);
-	logverb("Outline: walked in %i steps\n", dl_size(token2.radecs)/2);
-	rd = token2.radecs;
+    rd = dl_new(256);
+	anwcs_walk_image_boundary(args->wcs, args->stepsize, walk_callback, rd);
+	logverb("Outline: walked in %i steps\n", dl_size(rd)/2);
 
 	// avoid special case when there is a break between
 	// the beginning and end of the list.
 	dl_append(rd, dl_get(rd, 0));
 	dl_append(rd, dl_get(rd, 1));
 
-	// DEBUG
-	/*
-	for (i=0; i<dl_size(rd)/2; i++) {
-		double ra,dec,x,y, lx,ly;
-		ra  = dl_get(rd, 2*i+0);
-		dec = dl_get(rd, 2*i+1);
-		if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y)) {
-			logverb("oops!\n");
-			continue;
-		}
-		if (i == 0) {
-			lx = ly = 0;
-		}
-
-		logverb("%4i %8.1f %8.1f --> %6.1f, %6.1f  (d %g)\n", i, ra, dec, x, y, hypot(x-lx,y-ly));
-		lx = x;
-		ly = y;
-	}
-	 */
-
-	end = dl_size(rd)/2;
-	brk = trace_line(pargs->wcs, cairo, rd, 0, 1, end, TRUE);
-	logdebug("tracing line 1: brk=%i\n", brk);
-
-	if (brk) {
-		int brk2;
-		int brk3;
-		// back out the path.
-		cairo_new_path(cairo);
-		// trace segment 1 backwards to 0
-		brk2 = trace_line(pargs->wcs, cairo, rd, brk-1, -1, -1, TRUE);
-		logdebug("traced line 1 backwards: brk2=%i\n", brk2);
-		assert(brk2 == 0);
-
-		// catch edge case: there is a break between the beginning and end of the list.
-		//if (anwcs_is_discontinuous(wcs, dl_get(lastra, lastdec, ra, dec)) {
-		
-
-		// trace segment 2: from end of list backward, until we
-		// hit brk2 (worst case, we [should] hit brk)
-		brk2 = trace_line(pargs->wcs, cairo, rd, end-1, -1, -1, FALSE);
-		logdebug("traced segment 2: brk2=%i\n", brk2);
-		if (args->fill) {
-			// trace segment 3: from brk2 to brk.
-			// 1-pixel steps.
-			degstep = arcsec2deg(anwcs_pixel_scale(pargs->wcs));
-			rd2 = anwcs_walk_discontinuity(pargs->wcs,
-										   dl_get(rd, 2*(brk2+1)+0), dl_get(rd, 2*(brk2+1)+1),
-										   dl_get(rd, 2*(brk2  )+0), dl_get(rd, 2*(brk2  )+1),
-										   dl_get(rd, 2*(brk -1)+0), dl_get(rd, 2*(brk -1)+1),
-										   dl_get(rd, 2*(brk   )+0), dl_get(rd, 2*(brk   )+1),
-										   degstep, NULL);
-			for (i=0; i<dl_size(rd2)/2; i++) {
-				double x,y,ra,dec;
-				ra  = dl_get(rd2, 2*i+0);
-				dec = dl_get(rd2, 2*i+1);
-				if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
-					// oops.
-					continue;
-				cairo_line_to(cairo, x, y);
-			}
-			dl_free(rd2);
-			cairo_close_path(cairo);
-		}
-
+    lists = anwcs_walk_outline(pargs->wcs, rd, args->fill);
+    dl_free(rd);
+    for (i=0; i<pl_size(lists); i++) {
+        dl* xy = pl_get(lists, i);
+        int j;
+        for (j=0; j<dl_size(xy)/2; j++) {
+            double x,y;
+            x = dl_get(xy, j*2+0);
+            y = dl_get(xy, j*2+1);
+            if (j == 0) {
+                cairo_move_to(cairo, x, y);
+            } else {
+                cairo_line_to(cairo, x, y);
+            }
+        }
+        cairo_close_path(cairo);
 		if (args->fill)
 			cairo_fill(cairo);
 		else
 			cairo_stroke(cairo);
-
-		// trace segments 4+5: from brk to brk2.
-		if (brk2 > brk) {
-			// (tracing the outline on the far side)
-			brk3 = trace_line(pargs->wcs, cairo, rd, brk, 1, brk2, TRUE);
-			logdebug("traced segment 4/5: brk3=%i\n", brk3);
-			assert(brk3 == 0);
-			// trace segment 6: from brk2 to brk.
-			// (walking the discontinuity on the far side)
-			if (args->fill) {
-				rd2 = anwcs_walk_discontinuity(pargs->wcs,
-											   dl_get(rd, 2*(brk2  )+0), dl_get(rd, 2*(brk2  )+1),
-											   dl_get(rd, 2*(brk2+1)+0), dl_get(rd, 2*(brk2+1)+1),
-											   dl_get(rd, 2*(brk   )+0), dl_get(rd, 2*(brk   )+1),
-											   dl_get(rd, 2*(brk -1)+0), dl_get(rd, 2*(brk -1)+1),
-											   degstep, NULL);
-				for (i=0; i<dl_size(rd2)/2; i++) {
-					double x,y,ra,dec;
-					ra  = dl_get(rd2, 2*i+0);
-					dec = dl_get(rd2, 2*i+1);
-					if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
-						// oops.
-						continue;
-					cairo_line_to(cairo, x, y);
-				}
-				dl_free(rd2);
-				cairo_close_path(cairo);
-			}
-		}
-	}
-	dl_free(token2.radecs);
-
-	if (args->fill)
-		cairo_fill(cairo);
-	else
-		cairo_stroke(cairo);
-
+        dl_free(xy);
+    }
+    pl_free(lists);
 	return 0;
 }
 

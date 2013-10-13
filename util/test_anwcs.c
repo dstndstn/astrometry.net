@@ -28,6 +28,94 @@
 #include "sip_qfits.h"
 #include "errors.h"
 #include "ioutils.h"
+#include "log.h"
+
+struct walk_token2 {
+	dl* radecs;
+};
+
+static void walk_callback2(const anwcs_t* wcs, double ix, double iy,
+                           double ra, double dec, void* token) {
+	struct walk_token2* walk = token;
+	dl_append(walk->radecs, ra);
+	dl_append(walk->radecs, dec);
+}
+
+void test_walk_outline(CuTest* tc) {
+	anwcs_t* plotwcs = anwcs_create_allsky_hammer_aitoff(180., 0., 400, 200);
+    tan_t tanwcs;
+    tanwcs.crval[0] = 10.;
+    tanwcs.crval[1] =  0.;
+    tanwcs.crpix[0] = 25.;
+    tanwcs.crpix[1] = 25.;
+    tanwcs.cd[0][0] = 1.;
+    tanwcs.cd[0][1] = 0.;
+    tanwcs.cd[1][0] = 0.;
+    tanwcs.cd[1][1] = 1.;
+    tanwcs.imagew = 50.;
+    tanwcs.imageh = 50.;
+    tanwcs.sin = 0;
+
+    anwcs_t* wcs = anwcs_new_tan(&tanwcs);
+
+	struct walk_token2 token2;
+	dl* rd;
+    double stepsize = 1000;
+
+    log_init(LOG_ALL);
+
+    /*
+     token2.radecs = dl_new(256);
+     anwcs_walk_image_boundary(wcs, stepsize, walk_callback2, &token2);
+     rd = token2.radecs;
+     logverb("Outline: walked in %i steps\n", dl_size(rd)/2);
+     // close
+     dl_append(rd, dl_get(rd, 0));
+     dl_append(rd, dl_get(rd, 1));
+     int i;
+     for (i=0; i<dl_size(rd)/2; i++) {
+     double ra,dec;
+     ra  = dl_get(rd, 2*i+0);
+     dec = dl_get(rd, 2*i+1);
+     printf("outline step %i: (%.2f, %.2f)\n", i, ra, dec);
+     }
+     */
+
+    rd = dl_new(256);
+    dl_append(rd, 10.);
+    dl_append(rd,  0.);
+
+    dl_append(rd, 350.);
+    dl_append(rd,  0.);
+
+    dl_append(rd, 350.);
+    dl_append(rd,  10.);
+
+    dl_append(rd,  10.);
+    dl_append(rd,  10.);
+
+    dl_append(rd,  10.);
+    dl_append(rd,   0.);
+
+    pl* lists = anwcs_walk_outline(plotwcs, rd, 100);
+
+    printf("\n\n\n");
+
+    printf("%i lists\n", pl_size(lists));
+    int i;
+    for (i=0; i<pl_size(lists); i++) {
+        dl* plotlist = pl_get(lists, i);
+        printf("List %i: length %i\n", i, dl_size(plotlist));
+        int j;
+        for (j=0; j<dl_size(plotlist)/2; j++) {
+            printf("  %.2f, %.2f\n",
+                   dl_get(plotlist, j*2+0),
+                   dl_get(plotlist, j*2+1));
+        }
+        printf("\n");
+    }
+
+}
 
 void test_discontinuity(CuTest* tc) {
 	double ra3,dec3,ra4,dec4;
@@ -36,6 +124,55 @@ void test_discontinuity(CuTest* tc) {
 	isit = anwcs_find_discontinuity(wcs, 3., 15., 346, 15.,
 									&ra3, &dec3, &ra4, &dec4);
 	CuAssertIntEquals(tc, 0, isit);
+
+	isit = anwcs_find_discontinuity(wcs, 170., 0., 190., 0.,
+									&ra3, &dec3, &ra4, &dec4);
+	CuAssertIntEquals(tc, 1, isit);
+    printf("RA,Dec 3: %g,%g; RA,Dec 4: %g,%g\n", ra3,dec3,ra4,dec4);
+    CuAssertDblEquals(tc, 180.,  ra3, 1e-6);
+    CuAssertDblEquals(tc,   0., dec3, 1e-6);
+    CuAssertDblEquals(tc,-180.,  ra4, 1e-6);
+    CuAssertDblEquals(tc,   0., dec4, 1e-6);
+
+	isit = anwcs_find_discontinuity(wcs, 190., 0., 170., 0.,
+									&ra3, &dec3, &ra4, &dec4);
+	CuAssertIntEquals(tc, 1, isit);
+    printf("RA,Dec 3: %g,%g; RA,Dec 4: %g,%g\n", ra3,dec3,ra4,dec4);
+    CuAssertDblEquals(tc,-180.,  ra3, 1e-6);
+    CuAssertDblEquals(tc,   0., dec3, 1e-6);
+    CuAssertDblEquals(tc, 180.,  ra4, 1e-6);
+    CuAssertDblEquals(tc,   0., dec4, 1e-6);
+
+    anwcs_free(wcs);
+
+	wcs = anwcs_create_allsky_hammer_aitoff(90., 0., 400, 200);
+
+	isit = anwcs_find_discontinuity(wcs, 275., 0., 265., 0.,
+									&ra3, &dec3, &ra4, &dec4);
+	CuAssertIntEquals(tc, 1, isit);
+    printf("RA,Dec 3: %g,%g; RA,Dec 4: %g,%g\n", ra3,dec3,ra4,dec4);
+    CuAssertDblEquals(tc, -90.,  ra3, 1e-6);
+    CuAssertDblEquals(tc,   0., dec3, 1e-6);
+    CuAssertDblEquals(tc, 270.,  ra4, 1e-6);
+    CuAssertDblEquals(tc,   0., dec4, 1e-6);
+
+    anwcs_free(wcs);
+
+
+
+	wcs = anwcs_create_allsky_hammer_aitoff(180., 0., 400, 200);
+
+	isit = anwcs_find_discontinuity(wcs, 10., 0., 350., 0.,
+									&ra3, &dec3, &ra4, &dec4);
+	CuAssertIntEquals(tc, 1, isit);
+    printf("RA,Dec 3: %g,%g; RA,Dec 4: %g,%g\n", ra3,dec3,ra4,dec4);
+    CuAssertDblEquals(tc,-360.,  ra3, 1e-6);
+    CuAssertDblEquals(tc,   0., dec3, 1e-6);
+    CuAssertDblEquals(tc,-360.,  ra4, 1e-6);
+    CuAssertDblEquals(tc,   0., dec4, 1e-6);
+
+    anwcs_free(wcs);
+
 }
 
 void test_wcslib_equals_tan(CuTest* tc) {
@@ -71,12 +208,13 @@ void test_wcslib_equals_tan(CuTest* tc) {
 		}
 		CuAssertPtrNotNull(tc, anwcs);
 
-		printf("ANWCS:\n");
-		anwcs_print(anwcs, stdout);
+        /*
+         printf("ANWCS:\n");
+         anwcs_print(anwcs, stdout);
 	
-		printf("TAN:\n");
-		tan_print_to(tan, stdout);
-
+         printf("TAN:\n");
+         tan_print_to(tan, stdout);
+         */
 		/* this wcs has:
 		 crval=(83.7132, -5.10104)
 		 crpix=(221.593, 169.656)

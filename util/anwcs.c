@@ -1078,10 +1078,26 @@ anbool anwcs_find_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
 		if (ends_with(wcslib->ctype[0], "AIT")) {
 			// Hammer-Aitoff -- wraps at 180 deg from CRVAL0
 			double ra0 = fmod(wcslib->crval[0] + 180.0, 360.0);
-			// RA1, RA2 are closer wrapping-around than by crossing RA0.
-			if (MIN(fabs(ra1 - ra2), 360-fabs(ra1-ra2)) < (fabs(ra1-ra0) + fabs(ra2-ra0)))
-				return FALSE;
-			/*
+            //printf("ra0 %g, ra1 %g, ra2 %g\n", ra0, ra1, ra2);
+            double dr1 = fmod(fmod(ra1 - ra0, 360.) + 360., 360.);
+            double dr2 = fmod(fmod(ra2 - ra0, 360.) + 360., 360.);
+            //printf("dr1,dr2 %g, %g\n", dr1, dr2);
+            if (fabs(dr1 - dr2) <
+                MIN(fabs(360. + dr1 - dr2), fabs(360. + dr2 - dr1)))
+                return FALSE;
+
+            /*
+             printf("d1 = %g, d2 = %g, d3 = %g, d4 = %g\n",
+             fabs(ra1 - ra2), 360-fabs(ra1-ra2), 
+             fabs(ra1-ra0), fabs(ra2-ra0));
+             */
+			// If ra1 to ra0 to ra2 is less than ra1 to ra2,, RA2 are closer wrapping-around than by crossing RA0.
+            /*
+             if (MIN(fabs(ra1 - ra2), 360-fabs(ra1-ra2)) <
+             (fabs(ra1-ra0) + fabs(ra2-ra0)))
+             return FALSE;
+             */
+             /*
 			 if (ra1
 			 // RA1, RA2 are on the same side of RA0
 			 if ((ra1 - ra0) * (ra2 - ra0) > 0) {
@@ -1097,8 +1113,10 @@ anbool anwcs_find_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
 				//double fulldist = deg_between_radec(ra1, dec1, ra2, dec2);
 				double dr1 = MIN(fabs(ra1 - ra0), fabs(ra1 - ra0 + 360));
 				double dr2 = MIN(fabs(ra2 - ra0), fabs(ra2 - ra0 + 360));
-				logverb("ra0 = %g.  ra1=%g, dr1=%g;   ra2=%g, dr2=%g\n",
-						ra0, ra1, dr1, ra2, dr2);
+                /*
+                 logverb("ra0 = %g.  ra1=%g, dr1=%g;   ra2=%g, dr2=%g\n",
+                 ra0, ra1, dr1, ra2, dr2);
+                 */
 				if (pdec3)
 					*pdec3 = dec1 + (dec2 - dec1) * dr1 / (dr1 + dr2);
 				if (pdec4)
@@ -1306,6 +1324,160 @@ dl* anwcs_walk_discontinuity(const anwcs_t* wcs,
 
 	return radecs;
 }
+
+// Returns 0 if the whole line was traced without breaks.
+// Otherwise, returns the index of the point on the far side of the
+// break.
+static int trace_line(const anwcs_t* wcs, const dl* rd,
+                      int istart, int idir, int iend,
+					  anbool firstmove, dl* plotrd) {
+	int i;
+	double lastra=0, lastdec=0;
+	double first = TRUE;
+    logverb("trace_line: %i to %i by %i\n", istart, iend, idir);
+	for (i = istart; i != iend; i += idir) {
+		double x,y,ra,dec;
+		ra  = dl_get_const(rd, 2*i+0);
+		dec = dl_get_const(rd, 2*i+1);
+		logverb("tracing: i=%i, ra,dec = %g,%g\n", i, ra, dec);
+		if (anwcs_radec2pixelxy(wcs, ra, dec, &x, &y))
+			// ?
+			continue;
+		if (first) {
+            logdebug("plot to (%.2f, %.2f)\n", ra, dec);
+            dl_append(plotrd, x);
+            dl_append(plotrd, y);
+		} else {
+			if (anwcs_is_discontinuous(wcs, lastra, lastdec, ra, dec)) {
+                logverb("discont: (%.2f, %.2f) -- (%.2f, %.2f)\n",
+                       lastra, lastdec, ra, dec);
+                logverb("return %i\n", i);
+				return i;
+			} else {
+                logverb("not discontinuous\n");
+            }
+            logdebug("plot to (%.2f, %.2f)\n", ra, dec);
+            dl_append(plotrd, x);
+            dl_append(plotrd, y);
+		}
+		lastra = ra;
+		lastdec = dec;
+		first = FALSE;
+	}
+	return 0;
+}
+
+pl* anwcs_walk_outline(const anwcs_t* wcs, const dl* rd, int fill) {
+    pl* lists = pl_new(2);
+    dl* rd2;
+	int brk, end;
+    double degstep;
+    int i;
+    dl* plotrd = dl_new(256);
+
+	end = dl_size(rd)/2;
+	brk = trace_line(wcs, rd, 0, 1, end, TRUE, plotrd);
+	logdebug("tracing line 1: brk=%i\n", brk);
+
+	if (brk) {
+		int brk2;
+		int brk3;
+		// back out the path.
+        logdebug("Cancel path\n");
+        dl_remove_all(plotrd);
+        logdebug("trace segment 1 back to 0\n");
+		// trace segment 1 backwards to 0
+		brk2 = trace_line(wcs, rd, brk-1, -1, -1, TRUE, plotrd);
+		logdebug("traced line 1 backwards: brk2=%i\n", brk2);
+		assert(brk2 == 0);
+
+		// trace segment 2: from end of list backward, until we
+		// hit brk2 (worst case, we [should] hit brk)
+        logdebug("trace segment 2: end back to brk2=%i\n", brk2);
+		brk2 = trace_line(wcs, rd, end-1, -1, -1, FALSE, plotrd);
+		logdebug("traced segment 2: brk2=%i\n", brk2);
+
+        if (fill) {
+			// trace segment 3: from brk2 to brk.
+			// 1-pixel steps.
+            logdebug("trace segment 3: brk2=%i to brk=%i\n", brk2, brk);
+            logdebug("walking discontinuity: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f)\n",
+             dl_get_const(rd, 2*(brk2+1)+0), dl_get_const(rd, 2*(brk2+1)+1),
+             dl_get_const(rd, 2*(brk2  )+0), dl_get_const(rd, 2*(brk2  )+1),
+             dl_get_const(rd, 2*(brk -1)+0), dl_get_const(rd, 2*(brk -1)+1),
+             dl_get_const(rd, 2*(brk   )+0), dl_get_const(rd, 2*(brk   )+1));
+
+			degstep = arcsec2deg(anwcs_pixel_scale(wcs));
+			rd2 = anwcs_walk_discontinuity
+                (wcs,
+                 dl_get_const(rd, 2*(brk2+1)+0), dl_get_const(rd, 2*(brk2+1)+1),
+                 dl_get_const(rd, 2*(brk2  )+0), dl_get_const(rd, 2*(brk2  )+1),
+                 dl_get_const(rd, 2*(brk -1)+0), dl_get_const(rd, 2*(brk -1)+1),
+                 dl_get_const(rd, 2*(brk   )+0), dl_get_const(rd, 2*(brk   )+1),
+                 degstep, NULL);
+			for (i=0; i<dl_size(rd2)/2; i++) {
+				double x,y,ra,dec;
+				ra  = dl_get(rd2, 2*i+0);
+				dec = dl_get(rd2, 2*i+1);
+				if (anwcs_radec2pixelxy(wcs, ra, dec, &x, &y))
+					// oops.
+					continue;
+                logdebug("plot to (%.2f, %.2f)\n", ra, dec);
+                dl_append(plotrd, x);
+                dl_append(plotrd, y);
+			}
+			dl_free(rd2);
+            logdebug("close_path\n");
+        }
+
+        // stroke
+        pl_append(lists, plotrd);
+        plotrd = dl_new(256);
+
+		// trace segments 4+5: from brk to brk2.
+		if (brk2 > brk) {
+            logdebug("trace segments 4+5: from brk=%i to brk2=%i\n",brk,brk2);
+			// (tracing the outline on the far side)
+			brk3 = trace_line(wcs, rd, brk, 1, brk2, TRUE, plotrd);
+			logdebug("traced segment 4/5: brk3=%i\n", brk3);
+			assert(brk3 == 0);
+			// trace segment 6: from brk2 to brk.
+			// (walking the discontinuity on the far side)
+			if (fill) {
+                logdebug("walking discontinuity: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f)\n",
+                         dl_get_const(rd, 2*(brk2  )+0), dl_get_const(rd, 2*(brk2  )+1),
+                         dl_get_const(rd, 2*(brk2+1)+0), dl_get_const(rd, 2*(brk2+1)+1),
+                         dl_get_const(rd, 2*(brk   )+0), dl_get_const(rd, 2*(brk   )+1),
+                         dl_get_const(rd, 2*(brk -1)+0), dl_get_const(rd, 2*(brk -1)+1));
+				rd2 = anwcs_walk_discontinuity
+                    (wcs,
+                     dl_get_const(rd, 2*(brk2  )+0), dl_get_const(rd, 2*(brk2  )+1),
+                     dl_get_const(rd, 2*(brk2+1)+0), dl_get_const(rd, 2*(brk2+1)+1),
+                     dl_get_const(rd, 2*(brk   )+0), dl_get_const(rd, 2*(brk   )+1),
+                     dl_get_const(rd, 2*(brk -1)+0), dl_get_const(rd, 2*(brk -1)+1),
+                     degstep, NULL);
+				for (i=0; i<dl_size(rd2)/2; i++) {
+					double x,y,ra,dec;
+					ra  = dl_get(rd2, 2*i+0);
+					dec = dl_get(rd2, 2*i+1);
+					if (anwcs_radec2pixelxy(wcs, ra, dec, &x, &y))
+						// oops.
+						continue;
+                    logdebug("plot to (%.2f, %.2f)\n", ra, dec);
+                    dl_append(plotrd, x);
+                    dl_append(plotrd, y);
+				}
+				dl_free(rd2);
+                logdebug("close_path\n");
+			}
+		}
+    }
+    // stroke
+    pl_append(lists, plotrd);
+    return lists;
+}
+
+
 
 sip_t* anwcs_get_sip(const anwcs_t* wcs) {
     if (wcs->type == ANWCS_TYPE_SIP)
