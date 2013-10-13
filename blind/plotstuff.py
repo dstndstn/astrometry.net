@@ -147,6 +147,7 @@ class Plotstuff(object):
 				self.line_to_xy(x, y)
 		
 	def get_image_as_numpy(self, flip=False, out=None):
+        # Caution: possible memory-handling problem with using "out"
 		return self.pargs.get_image_as_numpy(flip, out)
 
 	def set_image_from_numpy(self, img, flip=False):

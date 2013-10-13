@@ -273,7 +273,8 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 		dim[1] = self->W;
 		dim[2] = 4;
 		img = cairo_image_surface_get_data(self->target);
-        if (out == Py_None) {
+        // Possible memory problems here...
+        if (out == Py_None || out == NULL) {
     		npimg = PyArray_EMPTY(3, dim, NPY_UBYTE, 0);
             assert(npimg);
         } else {
