@@ -265,7 +265,7 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 
 
 %extend plot_args {
-	PyObject* get_image_as_numpy(int flip) {
+	PyObject* get_image_as_numpy(int flip, PyObject* out) {
 		npy_intp dim[3];
 		unsigned char* img;
 		PyObject* npimg;
@@ -273,7 +273,12 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 		dim[1] = self->W;
 		dim[2] = 4;
 		img = cairo_image_surface_get_data(self->target);
-		npimg = PyArray_EMPTY(3, dim, NPY_UBYTE, 0);
+        if (out == Py_None) {
+    		npimg = PyArray_EMPTY(3, dim, NPY_UBYTE, 0);
+            assert(npimg);
+        } else {
+            npimg = out;
+        }
 		if (flip) {
 			cairoutils_argb32_to_rgba_flip(img, PyArray_DATA(npimg), self->W, self->H);
 		} else {
