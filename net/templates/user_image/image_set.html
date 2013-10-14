@@ -1,7 +1,6 @@
 <div class="image_set">
 {% spaceless %}
 {% for image in images %}
-    <!--<img class="image_container" src="{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}" />-->
     <div class="thumbnail_container
     {% if thumbnail_size == 'small' %}
         thumbnail_small

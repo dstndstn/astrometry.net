@@ -398,7 +398,6 @@ class Image(models.Model):
 
     # Reverse mappings:
     #  userimage_set -> UserImage
-
     #  image_thumbnail_set -> Image
     #  image_display_set -> Image
 

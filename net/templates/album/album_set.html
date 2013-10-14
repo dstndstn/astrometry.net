@@ -9,7 +9,7 @@
             {% if images.0 %}
             <div class="image_frame loading_container">
                 <div class="image_container" 
-                     style="background-image: url('{% url astrometry.net.views.image.serve_image id=images.0.image.thumbnail.id %}')">
+                     style="background-image: url('{% url astrometry.net.views.image.serve_image id=images.0.image.get_thumbnail.id %}')">
                 </div>
             </div>
             {% else %}

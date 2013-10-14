@@ -184,7 +184,7 @@ Submission {{ sub.id }}
 <tr>
 <td>
     <a href="{% url astrometry.net.views.image.user_image image.id %}">
-    <img src="{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}" />
+    <img src="{% url astrometry.net.views.image.serve_image id=image.image.get_thumbnail.id %}" />
     </a>
 </td>
 <td>

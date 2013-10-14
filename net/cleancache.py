@@ -31,7 +31,55 @@ def clean_dfs():
         # print '  submissions:', df.submissions.all()
         # print '  cached:', df.cachedfile_set.all()
 
+
+def unlink_resized_fits():
+    uis = UserImage.objects.filter(image__disk_file__file_type='FITS image data')
+    print uis.count(), 'UserImages are FITS'
+    for ui in uis:
+        im = ui.image
+        im.display_image = None
+        im.thumbnail = None
+        im.save()
+    print 'Updated', len(uis), 'UserImages'
+
+
+def delete_orphaned_images():
+    print 'Checking for orphaned Images...'
+    ndel = 0
+    for im in Image.objects.all():
+        used = (im.userimage_set.count() +
+                im.image_thumbnail_set.count() +
+                im.image_display_set.count())
+        print 'Image', im.id, 'used', used, 'times'
+        if used > 0:
+            continue
+        im.delete()
+        ndel += 1
+    print 'Deleted', ndel, 'Images'
+
+def delete_orphaned_diskfiles():
+    ndel = 0
+    for df in DiskFile.objects.all():
+        used = (df.image_set.count() + 
+                df.submissions.count() +
+                df.cachedfile_set.count())
+        print 'DiskFile', df.file_hash, 'used', used, 'times'
+        if used > 0:
+            continue
+        os.remove(df.get_path())
+        df.delete()
+        ndel += 1
+    print 'Deleted', ndel, 'DiskFiles'
+
 if __name__ == '__main__':
+
+    # Remove resized FITS image to retro-fix bug in an-fitstopnm
+    unlink_resized_fits()
+
+    # then remove orphaned Image objects
+    delete_orphaned_images()
+    # and orphaned DiskFiles
+    delete_orphaned_diskfiles()
 
     # clean_dfs()
     # 
@@ -54,6 +102,8 @@ if __name__ == '__main__':
     # print 'Total of', nbytes, 'bytes'
         
 
+
+def clean_cache():
     cfs = CachedFile.objects.all()
     print cfs.count(), 'CachedFiles'
     cfs = cfs.filter(key__contains='galex')

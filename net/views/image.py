@@ -72,9 +72,9 @@ class UserImageForm(forms.ModelForm):
                     self.fields['album'].initial = album.id
 
 def user_image(req, user_image_id=None):
-    image = get_object_or_404(UserImage, pk=user_image_id)
+    uimage = get_object_or_404(UserImage, pk=user_image_id)
 
-    job = image.get_best_job() 
+    job = uimage.get_best_job() 
     calib = None
     if job:
         calib = job.calibration
@@ -84,8 +84,9 @@ def user_image(req, user_image_id=None):
     tag_form = get_session_form(req.session, TagForm)
 
     images = {}
-    images['original_display'] = reverse('astrometry.net.views.image.serve_image', kwargs={'id':image.image.display_image.id})
-    images['original'] = reverse('astrometry.net.views.image.serve_image', kwargs={'id':image.image.id})
+    dim = uimage.image.get_display_image()
+    images['original_display'] = reverse('astrometry.net.views.image.serve_image', kwargs={'id':dim.id})
+    images['original'] = reverse('astrometry.net.views.image.serve_image', kwargs={'id':uimage.image.id})
     image_type = 'original'
     if job:
         if job.calibration:
@@ -111,18 +112,18 @@ def user_image(req, user_image_id=None):
     if req.user.is_authenticated():
         selected_flags = [flagged_ui.flag for flagged_ui in
             FlaggedUserImage.objects.filter(
-                user_image=image,
+                user_image=uimage,
                 user=req.user,
             )
         ]
     else:
         selected_flags = None
         
-    logmsg(image.get_absolute_url())
+    logmsg(uimage.get_absolute_url())
     context = {
         'request': req,
-        'display_image': image.image.get_display_image(),
-        'image': image,
+        'display_image': dim,
+        'image': uimage,
         'job': job,
         'calib': calib,
         'comment_form': comment_form,
@@ -136,7 +137,7 @@ def user_image(req, user_image_id=None):
         'selected_flags': selected_flags,
     }
 
-    if image.is_public() or (req.user.is_authenticated() and image.user == req.user):
+    if uimage.is_public() or (req.user.is_authenticated() and uimage.user == req.user):
         template = 'user_image/view.html'
     #elif SharedHideable.objects.filter(shared_with=req.user.id, hideable=image).count():
     #    template = 'user_image/view.html'
