@@ -156,7 +156,7 @@ config: util/os-features-config.h util/makefile.os-features
 	$(MAKE) -C util config
 .PHONY: config
 
-RELEASE_VER := 0.44
+RELEASE_VER := 0.45
 SP_RELEASE_VER := 0.3
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
@@ -249,11 +249,6 @@ snapshot:
 	tar cf snapshot.tar $$SSD; \
 	gzip --best -c snapshot.tar > $$SSD.tar.gz; \
 	bzip2 --best -c snapshot.tar > $$SSD.tar.bz2
-
-#mv snapshot astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}')
-#tar cf snapshot.tar astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}')
-#gzip --best -c snapshot.tar > astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}').tar.gz
-#bzip2 --best snapshot.tar > astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}').tar.bz2
 
 test:
 	$(MAKE) -C blind test
