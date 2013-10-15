@@ -201,14 +201,6 @@ fitsutils: $(FITS_UTILS)
 simplexy: image2xy
 .PHONY: simplexy
 
-# Problem with "+" in INSTALL_DIR...
-#$(SED) "s+add_path /usr/local/astrometry/+add_path $(INSTALL_DIR)/+" < ../etc/backend.cfg-dist > $(INSTALL_DIR)/etc/backend.cfg
-# awk fails because it interprets special characters in the replacement text;
-#   make install INSTALL_DIR='/tmp/123+45$%^&*('    fails.
-# $(AWK) '{sub("INSTALL_DIR", ENVIRON["INSTALL_DIR"]); printf "%s\n", "$$0"}' < ../etc/backend.cfg-dist > '$(INSTALL_DIR)/etc/backend.cfg'
-# Another suggested solution was:
-# echo '$(INSTALL_DIR)' | python -c "print open('../etc/backend.cfg-dist').read().replace('add_path /usr/local/astrometry', 'add_path '+raw_input());" > '$(INSTALL_DIR)/etc/backend.cfg'
-
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/blind
 LINK_DIR := $(PY_BASE_LINK_DIR)/blind
 
