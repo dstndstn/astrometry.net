@@ -17,7 +17,8 @@
 
 
 INSTALL_DIR ?= /usr/local/astrometry
-#export INSTALL_DIR
+# Put INSTALL_DIR in the environment of commands run by Make.
+export INSTALL_DIR
 
 # Installation subdirs
 
