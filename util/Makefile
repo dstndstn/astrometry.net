@@ -478,8 +478,8 @@ ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_dfind test_ctmf test_dsmooth test_dcen3x3 test_simplexy
 # test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
-ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-ALL_TEST_EXTRA_LDFLAGS = $(WCSLIB_LIB)
+ALL_TEST_LIBS = $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) 
+ALL_TEST_EXTRA_LDFLAGS = $(WCSLIB_LIB) -lm
 
 include $(COMMON)/makefile.tests
 

@@ -214,6 +214,7 @@ LINK_DIR := $(PY_BASE_LINK_DIR)/blind
 
 PYTHON_EXECS := plotann.py
 PYTHON_INSTALL := $(PYTHON_EXECS) __init__.py
+CONF_BASE_DIR := $(INSTALL_DIR)
 
 install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	@echo Installing in directory '$(INSTALL_DIR)'
@@ -223,8 +224,7 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
 	mkdir -p '$(INSTALL_DIR)/etc'
-
-	python -c "import os; print open('../etc/backend.cfg-dist').read().replace('INSTALL_DIR', os.environ['INSTALL_DIR'])" > '$(INSTALL_DIR)/etc/backend.cfg'
+	python -c "import os; print open('../etc/backend.cfg-dist').read().replace('INSTALL_DIR', '$(CONF_BASE_DIR)')" > '$(INSTALL_DIR)/etc/backend.cfg'
 	mkdir -p '$(INSTALL_DIR)/include'
 	@for x in $(INSTALL_H); do \
 		echo cp $$x '$(INSTALL_DIR)/include'; \
@@ -235,7 +235,6 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 		echo cp $$x '$(INSTALL_DIR)/lib'; \
 		cp $$x '$(INSTALL_DIR)/lib'; \
 	done
-
 	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
 		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
@@ -299,7 +298,7 @@ ALL_TEST_FILES = test_2mass \
 	test_multiindex2 test_codefile
 
 ALL_TEST_EXTRA_OBJS :=
-ALL_TEST_LIBS :=
+ALL_TEST_EXTRA_LDFLAGS := -lm
 
 # Add the dependencies here...
 test_multiindex2: test_multiindex2.o solver.o verify.o \

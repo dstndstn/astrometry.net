@@ -20,7 +20,7 @@
 ALL_TEST_FILES ?=
 ALL_TEST_EXTRA_OBJS ?=
 ALL_TEST_LIBS ?=
-ALL_TEST_EXTRA_LDFLAGS ?=
+ALL_TEST_EXTRA_LDFLAGS ?= -lm
 
 ### Next, include this file.
 
