@@ -75,7 +75,10 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
         J = inds[I]
         d = distsq2deg(dists2[I])
     else:
-        (inds,dists) = match(xyz1, xyz2, r, notself, indexlist)
+        X = match(xyz1, xyz2, r, notself, indexlist)
+        if indexlist:
+            return X
+        (inds,dists) = X
         dist_in_deg = dist2deg(dists)
         I,J = inds[:,0], inds[:,1]
         d = dist_in_deg[:,0]
