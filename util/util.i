@@ -735,6 +735,9 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
   }
 }
 
+    // healpix_radec_bounds
+%apply double *OUTPUT { double *ralo, double *rahi, double *declo, double *dechi };
+
 %include "healpix.h"
 %include "healpix-utils.h"
 
