@@ -30,7 +30,7 @@ def match_xy(x1,y1, x2,y2, R, **kwargs):
     
 # Copied from "celestial.py" by Sjoert van Velzen.
 def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
-                nearest=False):
+                nearest=False, indexlist=False):
     '''
     (m1,m2,d12) = match_radec(ra1,dec1, ra2,dec2, radius_in_deg)
 
@@ -40,11 +40,17 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
 
     ra1,dec1 (and 2): RA,Dec in degrees of points to match.
        Must be scalars or numpy arrays.
-    radius_in_deg: search radius in degrees.
+
+       radius_in_deg: search radius in degrees.
+
     notself: if True, avoids returning 'identity' matches;
         ASSUMES that ra1,dec1 == ra2,dec2.
+
     nearest: if True, returns only the nearest match in (ra2,dec2)
         for each point in (ra1,dec1).
+
+    indexlist: returns a list of length len(ra1), containing None or a
+    list of ints of matched points in ra2,dec2.  Returns this list.
         
     Returns:
 
@@ -69,7 +75,7 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
         J = inds[I]
         d = distsq2deg(dists2[I])
     else:
-        (inds,dists) = match(xyz1, xyz2, r, notself)
+        (inds,dists) = match(xyz1, xyz2, r, notself, indexlist)
         dist_in_deg = dist2deg(dists)
         I,J = inds[:,0], inds[:,1]
         d = dist_in_deg[:,0]
@@ -167,7 +173,7 @@ def _freetrees(kd1, kd2):
     if kd2 != kd1:
         spherematch_c.kdtree_free(kd2)
 
-def match(x1, x2, radius, notself=False, permuted=True):
+def match(x1, x2, radius, notself=False, permuted=True, indexlist=False):
     '''
     (indices,dists) = match(x1, x2, radius):
 
@@ -261,8 +267,13 @@ def match(x1, x2, radius, notself=False, permuted=True):
 
     '''
     (kd1,kd2) = _buildtrees(x1, x2)
-    (inds,dists) = spherematch_c.match(kd1, kd2, radius, notself, permuted)
+    if indexlist:
+        inds = spherematch_c.match2(kd1, kd2, radius, notself, permuted)
+    else:
+        (inds,dists) = spherematch_c.match(kd1, kd2, radius, notself, permuted)
     _freetrees(kd1, kd2)
+    if indexlist:
+        return inds
     return (inds,dists)
 
 def match_naive(x1, x2, radius, notself=False):

@@ -146,6 +146,76 @@ static PyObject* spherematch_kdtree_n(PyObject* self, PyObject* args) {
     return PyInt_FromLong(kdtree_n(kd));
 }
 
+struct dualtree_results2 {
+    kdtree_t *kd1;
+    kdtree_t *kd2;
+    PyObject* indlist;
+    anbool permute;
+};
+
+static void callback_dualtree2(void* v, int ind1, int ind2, double dist2) {
+    struct dualtree_results2* dt = v;
+    PyObject* lst;
+    if (dt->permute) {
+        ind1 = kdtree_permute(dt->kd1, ind1);
+        ind2 = kdtree_permute(dt->kd2, ind2);
+    }
+    lst = PyList_GET_ITEM(dt->indlist, ind1);
+    if (!lst) {
+        lst = PyList_New(1);
+        // SetItem steals a ref -- that's what we want.
+        PyList_SetItem(dt->indlist, ind1, lst);
+    }
+    PyList_Append(lst, PyInt_FromLong(ind2));
+}
+
+static PyObject* spherematch_match2(PyObject* self, PyObject* args) {
+    int i, N;
+    long p1, p2;
+    struct dualtree_results2 dtresults;
+    kdtree_t *kd1, *kd2;
+    double rad;
+    PyObject* indlist;
+	anbool notself;
+	anbool permute;
+	
+	// So that ParseTuple("b") with a C "anbool" works
+	assert(sizeof(anbool) == sizeof(unsigned char));
+
+    if (!PyArg_ParseTuple(args, "lldbb", &p1, &p2, &rad, &notself, &permute)) {
+        PyErr_SetString(PyExc_ValueError, "spherematch_c.match: need five args: two kdtree identifiers (ints), search radius (float), notself (boolean), permuted (boolean)");
+        return NULL;
+    }
+    // Nasty!
+    kd1 = (kdtree_t*)p1;
+    kd2 = (kdtree_t*)p2;
+    
+    N = kdtree_n(kd1);
+    indlist = PyList_New(N);
+    assert(indlist);
+
+    dtresults.kd1 = kd1;
+    dtresults.kd2 = kd2;
+    dtresults.indlist = indlist;
+    dtresults.permute = permute;
+
+    dualtree_rangesearch(kd1, kd2, 0.0, rad, notself, NULL,
+                         callback_dualtree2, &dtresults,
+                         NULL, NULL);
+
+    // set empty slots to None, not NULL.
+    for (i=0; i<N; i++) {
+        if (PyList_GET_ITEM(indlist, i))
+            continue;
+        Py_INCREF(Py_None);
+        PyList_SetItem(indlist, i, Py_None);
+    }
+
+    return indlist;
+}
+
+
+
 struct dualtree_results {
     il* inds1;
     il* inds2;
@@ -570,6 +640,8 @@ static PyMethodDef spherematchMethods[] = {
 	 "Apply kd-tree permutation array to (get from kd-tree indices back to original)"},
 
     { "match", spherematch_match, METH_VARARGS,
+      "find matching data points" },
+    { "match2", spherematch_match2, METH_VARARGS,
       "find matching data points" },
     { "nearest", spherematch_nn, METH_VARARGS,
       "find nearest neighbours" },
