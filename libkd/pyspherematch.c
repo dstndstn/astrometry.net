@@ -165,8 +165,10 @@ static void callback_dualtree2(void* v, int ind1, int ind2, double dist2) {
         lst = PyList_New(1);
         // SetItem steals a ref -- that's what we want.
         PyList_SetItem(dt->indlist, ind1, lst);
+        PyList_SET_ITEM(lst, 0, PyInt_FromLong(ind2));
+    } else {
+        PyList_Append(lst, PyInt_FromLong(ind2));
     }
-    PyList_Append(lst, PyInt_FromLong(ind2));
 }
 
 static PyObject* spherematch_match2(PyObject* self, PyObject* args) {
@@ -208,7 +210,7 @@ static PyObject* spherematch_match2(PyObject* self, PyObject* args) {
         if (PyList_GET_ITEM(indlist, i))
             continue;
         Py_INCREF(Py_None);
-        PyList_SetItem(indlist, i, Py_None);
+        PyList_SET_ITEM(indlist, i, Py_None);
     }
 
     return indlist;
