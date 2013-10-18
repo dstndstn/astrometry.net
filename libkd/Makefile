@@ -109,7 +109,7 @@ fix-bb: fix-bb.o $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 DEP_OBJ += fix-bb.o checktree.o
 
-LIBKD_INSTALL := fix-bb checktree
+LIBKD_INSTALL := #fix-bb checktree
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/libkd
 
 .PHONY: install
