@@ -105,7 +105,7 @@ NOT_INSTALLED_PIPELINE := blind agreeable certifiable usnobtofits hpowned \
 	startree2 uniformize-catalog \
 	local-index index-info control-program
 
-PIPELINE := wcsinfo wcs-grab fits-guess-scale new-wcs get-wcs \
+PIPELINE := wcs-grab fits-guess-scale new-wcs get-wcs \
 	solve-field query-starkd
 
 PROGS := astrometry-engine image2xy fit-wcs \
@@ -552,9 +552,6 @@ startree2rdls: startree2rdls.o \
 
 agreeable: agreeable.o matchfile.o matchobj.o solvedfile.o solvedclient.o verify.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
-
-wcsinfo: wcsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
-		$(QFITS_LIB) $(GSL_LIB)
 
 index-info: index-info.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 

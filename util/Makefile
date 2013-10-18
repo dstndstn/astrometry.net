@@ -130,7 +130,7 @@ CFLAGS += -I.
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-QFITS_UTILS := column-merge subtable fitsgetext
+QFITS_UTILS := column-merge subtable fitsgetext wcsinfo
 
 PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file		\
 	tycho2tofits fits-flip-endian search-index hpsplit wcs-to-tan	\
@@ -212,6 +212,9 @@ ALL_OBJ += wcs-rd2xy-main.o
 column-merge: column-merge.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
 fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+
+wcsinfo: wcsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
+		$(QFITS_LIB) $(GSL_LIB)
 
 subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
