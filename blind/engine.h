@@ -16,8 +16,8 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-#ifndef BACKEND_H
-#define BACKEND_H
+#ifndef ENGINE_H
+#define ENGINE_H
 
 #include <stdio.h>
 
@@ -26,7 +26,7 @@
 #include "an-bool.h"
 #include "index.h"
 
-struct backend {
+struct engine {
     // search paths (directories)
 	sl* index_paths;
 
@@ -52,7 +52,7 @@ struct backend {
     char* cancelfn;
     char* solvedfn;
 };
-typedef struct backend backend_t;
+typedef struct engine engine_t;
 
 struct job_t {
 	dl* scales;
@@ -66,19 +66,19 @@ struct job_t {
 };
 typedef struct job_t job_t;
 
-backend_t* backend_new();
-void backend_add_search_path(backend_t* backend, char* path);
-char* backend_find_index(backend_t*, char* name);
+engine_t* engine_new();
+void engine_add_search_path(engine_t* engine, char* path);
+char* engine_find_index(engine_t*, char* name);
 // note that "path" must be a full path name.
-int backend_add_index(backend_t* backend, char* path);
+int engine_add_index(engine_t* engine, char* path);
 // look in all the search path directories for index files.
-int backend_autoindex_search_paths(backend_t* backend);
-int backend_parse_config_file_stream(backend_t* backend, FILE* fconf);
-int backend_parse_config_file(backend_t* backend, const char* fn);
-int backend_run_job(backend_t* backend, job_t* job);
-void backend_free(backend_t* backend);
+int engine_autoindex_search_paths(engine_t* engine);
+int engine_parse_config_file_stream(engine_t* engine, FILE* fconf);
+int engine_parse_config_file(engine_t* engine, const char* fn);
+int engine_run_job(engine_t* engine, job_t* job);
+void engine_free(engine_t* engine);
 
-job_t* backend_read_job_file(backend_t* backend, const char* jobfn);
+job_t* engine_read_job_file(engine_t* engine, const char* jobfn);
 int job_set_base_dir(job_t* job, const char* dir);
 int job_set_input_base_dir(job_t* job, const char* dir);
 int job_set_output_base_dir(job_t* job, const char* dir);

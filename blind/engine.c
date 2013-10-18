@@ -48,20 +48,20 @@
 #include "log.h"
 #include "qfits.h"
 #include "errors.h"
-#include "backend.h"
+#include "engine.h"
 #include "tic.h"
 #include "healpix.h"
 #include "sip-utils.h"
 #include "multiindex.h"
 
-void backend_add_search_path(backend_t* backend, char* path) {
-    sl_append(backend->index_paths, path);
+void engine_add_search_path(engine_t* engine, char* path) {
+    sl_append(engine->index_paths, path);
 }
 
-char* backend_find_index(backend_t* backend, char* name) {
+char* engine_find_index(engine_t* engine, char* name) {
     int j;
 
-    for (j=-1; j<sl_size(backend->index_paths); j++) {
+    for (j=-1; j<sl_size(engine->index_paths); j++) {
         char* path;
         if (j == -1)
             if (strlen(name) && name[0] == '/') {
@@ -71,7 +71,7 @@ char* backend_find_index(backend_t* backend, char* name) {
                 continue;
             }
         else
-            asprintf_safe(&path, "%s/%s", sl_get(backend->index_paths, j), name);
+            asprintf_safe(&path, "%s/%s", sl_get(engine->index_paths, j), name);
         
         logverb("Trying path %s...\n", path);
         if (index_is_file_index(path))
@@ -81,11 +81,11 @@ char* backend_find_index(backend_t* backend, char* name) {
     return NULL;
 }
 
-int backend_autoindex_search_paths(backend_t* backend) {
+int engine_autoindex_search_paths(engine_t* engine) {
     int i;
     // Search the paths specified and add any indexes that are found.
-    for (i=0; i<sl_size(backend->index_paths); i++) {
-        char* path = sl_get(backend->index_paths, i);
+    for (i=0; i<sl_size(engine->index_paths); i++) {
+        char* path = sl_get(engine->index_paths, i);
         DIR* dir = opendir(path);
         sl* tryinds;
         int j;
@@ -136,7 +136,7 @@ int backend_autoindex_search_paths(backend_t* backend) {
         for (j=sl_size(tryinds)-1; j>=0; j--) {
             char* path = sl_get(tryinds, j);
             logverb("Trying to add index \"%s\".\n", path);
-            if (backend_add_index(backend, path))
+            if (engine_add_index(engine, path))
                 logmsg("Failed to add index \"%s\".\n", path);
         }
         sl_free2(tryinds);
@@ -144,11 +144,11 @@ int backend_autoindex_search_paths(backend_t* backend) {
     return 0;
 }
 
-static int add_index(backend_t* backend, index_t* ind) {
+static int add_index(engine_t* engine, index_t* ind) {
 	int k;
     // check that an index with the same id and healpix isn't already listed.
-    for (k=0; k<pl_size(backend->indexes); k++) {
-		index_t* m = pl_get(backend->indexes, k);
+    for (k=0; k<pl_size(engine->indexes); k++) {
+		index_t* m = pl_get(engine->indexes, k);
         if (m->indexid == ind->indexid &&
             m->healpix == ind->healpix) {
             logmsg("Warning: encountered two index files with the same INDEXID = %i and HEALPIX = %i: \"%s\" and \"%s\".  Keeping both.\n",
@@ -158,29 +158,29 @@ static int add_index(backend_t* backend, index_t* ind) {
         }
     }
 
-	pl_append(backend->indexes, ind);
+	pl_append(engine->indexes, ind);
 
     // <= smallest we've seen?
-	if (ind->index_scale_lower < backend->sizesmallest) {
-		backend->sizesmallest = ind->index_scale_lower;
-        bl_remove_all(backend->ismallest);
-		il_append(backend->ismallest, pl_size(backend->indexes) - 1);
-	} else if (ind->index_scale_lower == backend->sizesmallest) {
-		il_append(backend->ismallest, pl_size(backend->indexes) - 1);
+	if (ind->index_scale_lower < engine->sizesmallest) {
+		engine->sizesmallest = ind->index_scale_lower;
+        bl_remove_all(engine->ismallest);
+		il_append(engine->ismallest, pl_size(engine->indexes) - 1);
+	} else if (ind->index_scale_lower == engine->sizesmallest) {
+		il_append(engine->ismallest, pl_size(engine->indexes) - 1);
     }
 
     // >= largest we've seen?
-	if (ind->index_scale_upper > backend->sizebiggest) {
-		backend->sizebiggest = ind->index_scale_upper;
-        bl_remove_all(backend->ibiggest);
-		il_append(backend->ibiggest, pl_size(backend->indexes) - 1);
-	} else if (ind->index_scale_upper == backend->sizebiggest) {
-		il_append(backend->ibiggest, pl_size(backend->indexes) - 1);
+	if (ind->index_scale_upper > engine->sizebiggest) {
+		engine->sizebiggest = ind->index_scale_upper;
+        bl_remove_all(engine->ibiggest);
+		il_append(engine->ibiggest, pl_size(engine->indexes) - 1);
+	} else if (ind->index_scale_upper == engine->sizebiggest) {
+		il_append(engine->ibiggest, pl_size(engine->indexes) - 1);
 	}
 	return 0;
 }
 
-int backend_add_index(backend_t* backend, char* path) {
+int engine_add_index(engine_t* engine, char* path) {
     int k;
     index_t* ind = NULL;
     char* quadpath = index_get_quad_filename(path);
@@ -189,8 +189,8 @@ int backend_add_index(backend_t* backend, char* path) {
     free(quadpath);
 
     // check that an index with the same filename hasn't already been added.
-    for (k=0; k<pl_size(backend->indexes); k++) {
-		ind = pl_get(backend->indexes, k);
+    for (k=0; k<pl_size(engine->indexes); k++) {
+		ind = pl_get(engine->indexes, k);
         // ind->indexname is a path to the quad filename; strip off directory component.
         char* mbase = basename_safe(ind->indexname);
         anbool eq = streq(base, mbase);
@@ -204,32 +204,32 @@ int backend_add_index(backend_t* backend, char* path) {
     free(base);
 
 	t0 = timenow();
-	ind = index_load(path, backend->inparallel ? 0 : INDEX_ONLY_LOAD_METADATA, NULL);
+	ind = index_load(path, engine->inparallel ? 0 : INDEX_ONLY_LOAD_METADATA, NULL);
 	debug("index_load(\"%s\") took %g ms\n", path, 1000 * (timenow() - t0));
 	if (!ind) {
 		ERROR("Failed to load index from path %s", path);
 		return -1;
 	}
-	if (add_index(backend, ind)) {
+	if (add_index(engine, ind)) {
 		ERROR("Failed to add index \"%s\"", path);
 		return -1;
 	}
-	pl_append(backend->free_indexes, ind);
+	pl_append(engine->free_indexes, ind);
     return 0;
 }
 
-static void add_index_to_blind(backend_t* backend, blind_t* bp,
+static void add_index_to_blind(engine_t* engine, blind_t* bp,
                                int i) {
 	index_t* index;
-	index = pl_get(backend->indexes, i);
-    if (backend->inparallel) {
+	index = pl_get(engine->indexes, i);
+    if (engine->inparallel) {
         blind_add_loaded_index(bp, index);
     } else {
         blind_add_index(bp, index->indexname);
     }
 }
 
-int backend_parse_config_file(backend_t* backend, const char* fn) {
+int engine_parse_config_file(engine_t* engine, const char* fn) {
 	FILE* fconf;
     int rtn;
 	fconf = fopen(fn, "r");
@@ -237,12 +237,12 @@ int backend_parse_config_file(backend_t* backend, const char* fn) {
 		SYSERROR("Failed to open config file \"%s\"", fn);
         return -1;
 	}
-    rtn = backend_parse_config_file_stream(backend, fconf);
+    rtn = engine_parse_config_file_stream(engine, fconf);
 	fclose(fconf);
     return rtn;
 }
 
-int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
+int engine_parse_config_file_stream(engine_t* engine, FILE* fconf) {
     sl* indices = sl_new(16);
     sl* mindices = sl_new(16);
     anbool auto_index = FALSE;
@@ -285,20 +285,20 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
         } else if (is_word(line, "autoindex", &nextword)) {
             auto_index = TRUE;
 		} else if (is_word(line, "inparallel", &nextword)) {
-			backend->inparallel = TRUE;
+			engine->inparallel = TRUE;
 		} else if (is_word(line, "minwidth ", &nextword)) {
-			backend->minwidth = atof(nextword);
+			engine->minwidth = atof(nextword);
 		} else if (is_word(line, "maxwidth ", &nextword)) {
-			backend->maxwidth = atof(nextword);
+			engine->maxwidth = atof(nextword);
 		} else if (is_word(line, "cpulimit ", &nextword)) {
-			backend->cpulimit = atof(nextword);
+			engine->cpulimit = atof(nextword);
 		} else if (is_word(line, "depths ", &nextword)) {
-            if (parse_depth_string(backend->default_depths, nextword)) {
+            if (parse_depth_string(engine->default_depths, nextword)) {
                 rtn = -1;
                 goto done;
             }
 		} else if (is_word(line, "add_path ", &nextword)) {
-            backend_add_search_path(backend, nextword);
+            engine_add_search_path(engine, nextword);
 		} else {
 			ERROR("Didn't understand this config file line: \"%s\"", line);
 			// unknown config line is a firing offense
@@ -312,13 +312,13 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
         char* path;
         logverb("Trying index %s...\n", ind);
 
-        path = backend_find_index(backend, ind);
+        path = engine_find_index(engine, ind);
         if (!path) {
             logmsg("Couldn't find index \"%s\".\n", ind);
             rtn = -1;
             goto done;
         }
-        if (backend_add_index(backend, path))
+        if (engine_add_index(engine, path))
             logmsg("Failed to add index \"%s\".\n", path);
 		free(path);
     }
@@ -344,7 +344,7 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
 			logverb("Trying multi-index %s + %s...\n", skdt, s);
 			free(s);
 		}
-		skdtpath = backend_find_index(backend, skdt);
+		skdtpath = engine_find_index(engine, skdt);
         if (!skdtpath) {
             logmsg("Couldn't find skdt \"%s\".\n", skdt);
             rtn = -1;
@@ -352,7 +352,7 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
         }
 		for (j=0; j<sl_size(words); j++) {
 			ind = sl_get(words, j);
-			path = backend_find_index(backend, ind);
+			path = engine_find_index(engine, ind);
 			if (!path) {
 				logmsg("Couldn't find index \"%s\".\n", path);
 				rtn = -1;
@@ -373,19 +373,19 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
 		}
 		for (j=0; j<multiindex_n(mi); j++) {
 			index_t* ind = multiindex_get(mi, j);
-			if (add_index(backend, ind)) {
+			if (add_index(engine, ind)) {
 				ERROR("Failed to add index \"%s\"", sl_get(words, j));
 				return -1;
 			}
 		}
-		pl_append(backend->free_mindexes, mi);
+		pl_append(engine->free_mindexes, mi);
         sl_free2(words);
         free(skdt);
         free(skdtpath);
     }
 
     if (auto_index) {
-        backend_autoindex_search_paths(backend);
+        engine_autoindex_search_paths(engine);
     }
 
  done:
@@ -420,7 +420,7 @@ static double job_imageh(job_t* job) {
     return job->bp.solver.field_maxy;
 }
 
-int backend_run_job(backend_t* backend, job_t* job) {
+int engine_run_job(engine_t* engine, job_t* job) {
     blind_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
     
@@ -433,10 +433,10 @@ int backend_run_job(backend_t* backend, job_t* job) {
         goto finish;
     }
 
-    app_min_default = deg2arcsec(backend->minwidth) / job_imagew(job);
-    app_max_default = deg2arcsec(backend->maxwidth) / job_imagew(job);
+    app_min_default = deg2arcsec(engine->minwidth) / job_imagew(job);
+    app_max_default = deg2arcsec(engine->maxwidth) / job_imagew(job);
 
-    if (backend->inparallel)
+    if (engine->inparallel)
         bp->indexes_inparallel = TRUE;
 
 	if (job->use_radec_center) {
@@ -494,8 +494,8 @@ int backend_run_job(backend_t* backend, job_t* job) {
 
 			// Select the indices that should be checked.
             indexlist = il_new(16);
-			for (k = 0; k < pl_size(backend->indexes); k++) {
-				index_t* index = pl_get(backend->indexes, k);
+			for (k = 0; k < pl_size(engine->indexes); k++) {
+				index_t* index = pl_get(engine->indexes, k);
                 if (!index_overlaps_scale_range(index, fmin, fmax))
                     continue;
                 il_append(indexlist, k);
@@ -504,10 +504,10 @@ int backend_run_job(backend_t* backend, job_t* job) {
 			// Use the (list of) smallest or largest indices if no other one fits.
 			if (!il_size(indexlist)) {
                 il* list = NULL;
-                if (fmin > backend->sizebiggest) {
-                    list = backend->ibiggest;
-                } else if (fmax < backend->sizesmallest) {
-                    list = backend->ismallest;
+                if (fmin > engine->sizebiggest) {
+                    list = engine->ibiggest;
+                } else if (fmax < engine->sizesmallest) {
+                    list = engine->ismallest;
                 } else {
                     assert(0);
                 }
@@ -516,7 +516,7 @@ int backend_run_job(backend_t* backend, job_t* job) {
 
             for (k=0; k<il_size(indexlist); k++) {
                 int ii = il_get(indexlist, k);
-				index_t* index = pl_get(backend->indexes, ii);
+				index_t* index = pl_get(engine->indexes, ii);
                 anbool inrange = TRUE;
 				if (job->use_radec_center)
 					inrange = index_is_within_range(index, job->ra_center, job->dec_center, job->search_radius);
@@ -525,7 +525,7 @@ int backend_run_job(backend_t* backend, job_t* job) {
                             index->indexname, job->search_radius, job->ra_center, job->dec_center);
 					continue;
 				}
-				add_index_to_blind(backend, bp, ii);
+				add_index_to_blind(engine, bp, ii);
             }
 
             il_free(indexlist);
@@ -908,56 +908,56 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
 
 
 
-backend_t* backend_new() {
-	backend_t* backend = calloc(1, sizeof(backend_t));
-	backend->index_paths = sl_new(10);
-    backend->indexes = pl_new(16);
-    backend->free_indexes = pl_new(16);
-    backend->free_mindexes = pl_new(16);
-	backend->ismallest = il_new(4);
-	backend->ibiggest = il_new(4);
-	backend->default_depths = il_new(4);
-	backend->sizesmallest = HUGE_VAL;
-	backend->sizebiggest = -HUGE_VAL;
+engine_t* engine_new() {
+	engine_t* engine = calloc(1, sizeof(engine_t));
+	engine->index_paths = sl_new(10);
+    engine->indexes = pl_new(16);
+    engine->free_indexes = pl_new(16);
+    engine->free_mindexes = pl_new(16);
+	engine->ismallest = il_new(4);
+	engine->ibiggest = il_new(4);
+	engine->default_depths = il_new(4);
+	engine->sizesmallest = HUGE_VAL;
+	engine->sizebiggest = -HUGE_VAL;
 
 	// Default scale estimate: field width, in degrees:
-	backend->minwidth = 0.1;
-	backend->maxwidth = 180.0;
-    backend->cpulimit = 600.0;
-	return backend;
+	engine->minwidth = 0.1;
+	engine->maxwidth = 180.0;
+    engine->cpulimit = 600.0;
+	return engine;
 }
 
-void backend_free(backend_t* backend) {
+void engine_free(engine_t* engine) {
 	int i;
-    if (!backend)
+    if (!engine)
         return;
-    if (backend->free_indexes) {
-        for (i=0; i<pl_size(backend->free_indexes); i++) {
-            index_t* ind = pl_get(backend->free_indexes, i);
+    if (engine->free_indexes) {
+        for (i=0; i<pl_size(engine->free_indexes); i++) {
+            index_t* ind = pl_get(engine->free_indexes, i);
             index_free(ind);
         }
-        pl_free(backend->free_indexes);
+        pl_free(engine->free_indexes);
     }
-    if (backend->free_mindexes) {
-        for (i=0; i<pl_size(backend->free_mindexes); i++) {
-            multiindex_t* mi = pl_get(backend->free_mindexes, i);
+    if (engine->free_mindexes) {
+        for (i=0; i<pl_size(engine->free_mindexes); i++) {
+            multiindex_t* mi = pl_get(engine->free_mindexes, i);
             multiindex_free(mi);
         }
-        pl_free(backend->free_mindexes);
+        pl_free(engine->free_mindexes);
     }
-	pl_free(backend->indexes);
-    if (backend->ismallest)
-        il_free(backend->ismallest);
-    if (backend->ibiggest)
-        il_free(backend->ibiggest);
-    if (backend->default_depths)
-        il_free(backend->default_depths);
-    if (backend->index_paths)
-        sl_free2(backend->index_paths);
-    free(backend);
+	pl_free(engine->indexes);
+    if (engine->ismallest)
+        il_free(engine->ismallest);
+    if (engine->ibiggest)
+        il_free(engine->ibiggest);
+    if (engine->default_depths)
+        il_free(engine->default_depths);
+    if (engine->index_paths)
+        sl_free2(engine->index_paths);
+    free(engine);
 }
 
-job_t* backend_read_job_file(backend_t* backend, const char* jobfn) {
+job_t* engine_read_job_file(engine_t* engine, const char* jobfn) {
     qfits_header* hdr;
     job_t* job;
     blind_t* bp;
@@ -981,36 +981,36 @@ job_t* backend_read_job_file(backend_t* backend, const char* jobfn) {
     blind_set_field_file(bp, jobfn);
 
     // If the job has no scale estimate, search everything provided
-    // by the backend
+    // by the engine
     if (!dl_size(job->scales) || job->include_default_scales) {
         double arcsecperpix;
-        arcsecperpix = deg2arcsec(backend->minwidth) / job_imagew(job);
+        arcsecperpix = deg2arcsec(engine->minwidth) / job_imagew(job);
         dl_append(job->scales, arcsecperpix);
-        arcsecperpix = deg2arcsec(backend->maxwidth) / job_imagew(job);
+        arcsecperpix = deg2arcsec(engine->maxwidth) / job_imagew(job);
         dl_append(job->scales, arcsecperpix);
     }
 
     // The job can only decrease the CPU limit.
-    if ((bp->cpulimit == 0.0) || bp->cpulimit > backend->cpulimit) {
-        logverb("Decreasing CPU time limit to the backend's limit of %g seconds\n",
-                backend->cpulimit);
-        bp->cpulimit = backend->cpulimit;
+    if ((bp->cpulimit == 0.0) || bp->cpulimit > engine->cpulimit) {
+        logverb("Decreasing CPU time limit to the engine's limit of %g seconds\n",
+                engine->cpulimit);
+        bp->cpulimit = engine->cpulimit;
     }
 
     // If the job didn't specify depths, set defaults.
     if (il_size(job->depths) == 0) {
-        if (backend->inparallel) {
+        if (engine->inparallel) {
             // no limit.
             il_append(job->depths, 0);
             il_append(job->depths, 0);
         } else
-            il_append_list(job->depths, backend->default_depths);
+            il_append_list(job->depths, engine->default_depths);
     }
 
-    if (backend->cancelfn)
-        blind_set_cancel_file(bp, backend->cancelfn);
-    if (backend->solvedfn)
-        blind_set_solved_file(bp, backend->solvedfn);
+    if (engine->cancelfn)
+        blind_set_cancel_file(bp, engine->cancelfn);
+    if (engine->solvedfn)
+        blind_set_solved_file(bp, engine->solvedfn);
 
     return job;
 }

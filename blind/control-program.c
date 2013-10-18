@@ -144,7 +144,7 @@ int main(int argc, char** args) {
 	int i, I, c;
     sl* imagefiles;
 
-	backend_t* backend;
+	engine_t* engine;
     solver_t* solver;
     double hprange;
 
@@ -204,31 +204,31 @@ int main(int argc, char** args) {
         free(mydir);
     }
 
-	backend = backend_new();
+	engine = engine_new();
 
     logmsg("Reading config file %s and loading indexes...\n", configfn);
-	if (backend_parse_config_file(backend, configfn)) {
+	if (engine_parse_config_file(engine, configfn)) {
         logerr("Failed to parse (or encountered an error while interpreting) config file \"%s\"\n", configfn);
 		exit( -1);
 	}
 
-	if (!pl_size(backend->indexes)) {
+	if (!pl_size(engine->indexes)) {
 		logerr("You must list at least one index in the config file (%s)\n", configfn);
 		exit( -1);
 	}
     free(configfn);
 
-    logmsg("Loaded %i indexes.\n", pl_size(backend->indexes));
+    logmsg("Loaded %i indexes.\n", pl_size(engine->indexes));
 
     // For a control program you almost certainly want to be using small enough
     // indexes that they fit in memory!
 	// Maybe not -- maybe most of them won't be loaded because of healpix constraints...
-    if (!backend->inparallel) {
+    if (!engine->inparallel) {
         logerr("Forcing indexes_inparallel.\n");
-        backend->inparallel = TRUE;
+        engine->inparallel = TRUE;
     }
 
-    // I assume that the backend config file only contains indexes that cover
+    // I assume that the engine config file only contains indexes that cover
     // the range of scales you are interested in.
 
     // Furthermore, I assume the range of scales is small enough so that if we
@@ -326,9 +326,9 @@ int main(int argc, char** args) {
 			radecdeg2xyzarr(racenter, deccenter, centerxyz);
 
         // Which indexes should we use?  Use the WCS or RA,Dec estimate to decide.
-        N = pl_size(backend->indexes);
+        N = pl_size(engine->indexes);
         for (i=0; i<N; i++) {
-            index_t* index = pl_get(backend->indexes, i);
+            index_t* index = pl_get(engine->indexes, i);
 			if (!index_is_within_range(index, racenter, deccenter, dist2deg(hprange)))
 				continue;
 			logmsg("Adding index %s\n", index->indexname);
@@ -355,7 +355,7 @@ int main(int argc, char** args) {
 			 // could do this:
 			 solver_clear_indexes(solver);
 			 for (i=0; i<N; i++) {
-			 index_t* index = pl_get(backend->indexes);
+			 index_t* index = pl_get(engine->indexes);
 			 solver_add_index(solver, index);
 			 }
 			 */
@@ -396,7 +396,7 @@ int main(int argc, char** args) {
     }
 
     sl_free2(imagefiles);
-	backend_free(backend);
+	engine_free(engine);
     solver_free(solver);
     return 0;
 }

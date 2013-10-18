@@ -50,7 +50,7 @@
 #include "log.h"
 #include "qfits.h"
 #include "errors.h"
-#include "backend.h"
+#include "engine.h"
 #include "an-opts.h"
 #include "gslutils.h"
 
@@ -60,7 +60,7 @@ static an_option_t myopts[] = {
 	{'h', "help", no_argument, NULL, "print this help"},
 	{'v', "verbose", no_argument, NULL, "+verbose"},
 	{'c', "config",  required_argument, "file",
-	 "Use this config file (default: \"astrometry.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable); 'none' for no config file"},
+	 "Use this config file (default: \"astrometry.cfg\" in the directory ../etc/ relative to the directory containing the \"astrometry-engine\" executable); 'none' for no config file"},
 	{'d', "base-dir",  required_argument, "dir", 
 	 "set base directory of all output filenames."},
 	{'C', "cancel",  required_argument, "file", 
@@ -101,7 +101,7 @@ int main(int argc, char** args) {
 	int c;
 	char* configfn = NULL;
 	int i;
-	backend_t* backend;
+	engine_t* engine;
     char* mydir = NULL;
     char* basedir = NULL;
     char* me;
@@ -120,7 +120,7 @@ int main(int argc, char** args) {
 
 	char* datalog = NULL;
 
-	backend = backend_new();
+	engine = engine_new();
 
 	while (1) {
 		c = opts_getopt(opts, argc, args);
@@ -131,7 +131,7 @@ int main(int argc, char** args) {
 			datalog = optarg;
 			break;
 		case 'p':
-			backend->inparallel = TRUE;
+			engine->inparallel = TRUE;
 			break;
 		case 'i':
 			sl_append(inds, optarg);
@@ -210,7 +210,7 @@ int main(int argc, char** args) {
             fin = stdin;
     }
 
-    // directory containing the 'backend' executable:
+    // directory containing the 'engine' executable:
     me = find_executable(args[0], NULL);
     if (!me)
         me = strdup(args[0]);
@@ -244,7 +244,7 @@ int main(int argc, char** args) {
     }
 
 	if (!streq(configfn, "none")) {
-		if (backend_parse_config_file(backend, configfn)) {
+		if (engine_parse_config_file(engine, configfn)) {
 			logerr("Failed to parse (or encountered an error while interpreting) config file \"%s\"\n", configfn);
 			exit( -1);
 		}
@@ -261,7 +261,7 @@ int main(int argc, char** args) {
 				exit(-1);
 			}
 			for (c=0; c<myglob.gl_pathc; c++) {
-				if (backend_add_index(backend, myglob.gl_pathv[c])) {
+				if (engine_add_index(engine, myglob.gl_pathv[c])) {
 					ERROR("Failed to add index \"%s\"", myglob.gl_pathv[c]);
 					exit(-1);
 				}
@@ -270,7 +270,7 @@ int main(int argc, char** args) {
 		}
 	}
 
-	if (!pl_size(backend->indexes)) {
+	if (!pl_size(engine->indexes)) {
 		logerr("\n\n"
 			   "---------------------------------------------------------------------\n"
 			   "You must list at least one index in the config file (%s)\n\n"
@@ -280,21 +280,21 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 
-	if (backend->minwidth <= 0.0 || backend->maxwidth <= 0.0) {
+	if (engine->minwidth <= 0.0 || engine->maxwidth <= 0.0) {
 		logerr("\"minwidth\" and \"maxwidth\" in the config file %s must be positive!\n", configfn);
 		exit(-1);
 	}
 
     free(configfn);
 
-    if (!il_size(backend->default_depths)) {
-        parse_depth_string(backend->default_depths,
+    if (!il_size(engine->default_depths)) {
+        parse_depth_string(engine->default_depths,
                            "10 20 30 40 50 60 70 80 90 100 "
                            "110 120 130 140 150 160 170 180 190 200");
     }
 
-    backend->cancelfn = cancelfn;
-    backend->solvedfn = solvedfn;
+    engine->cancelfn = cancelfn;
+    engine->solvedfn = solvedfn;
 
     i = optind;
     while (1) {
@@ -316,7 +316,7 @@ int main(int argc, char** args) {
         }
         gettimeofday(&tv1, NULL);
         logmsg("Reading file \"%s\"...\n", jobfn);
-        job = backend_read_job_file(backend, jobfn);
+        job = engine_read_job_file(engine, jobfn);
         if (!job) {
             ERROR("Failed to read job file \"%s\"", jobfn);
             exit(-1);
@@ -327,7 +327,7 @@ int main(int argc, char** args) {
 	  job_set_output_base_dir(job, basedir);
 	}
 
-		if (backend_run_job(backend, job))
+		if (engine_run_job(engine, job))
 			logerr("Failed to run_job()\n");
 
 		job_free(job);
@@ -335,7 +335,7 @@ int main(int argc, char** args) {
 		logverb("Spent %g seconds on this field.\n", millis_between(&tv1, &tv2)/1000.0);
 	}
 
-	backend_free(backend);
+	engine_free(engine);
     sl_free2(strings);
 	sl_free2(inds);
 

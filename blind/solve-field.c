@@ -67,8 +67,8 @@ static an_option_t options[] = {
      "use this config file for the \"astrometry-engine\" program"},
     {'\x89', "config", required_argument, "filename",
      "use this config file for the \"astrometry-engine\" program"},
-	{'(', "backend-batch",  no_argument, NULL,
-	 "run backend once, rather than once per input file"},
+	{'(', "batch",  no_argument, NULL,
+	 "run astrometry-engine once, rather than once per input file"},
 	{'f', "files-on-stdin", no_argument, NULL,
      "read filenames to solve on stdin, one per line"},
 	{'p', "no-plots",       no_argument, NULL,
@@ -100,7 +100,7 @@ static an_option_t options[] = {
     {'U', "index-xyls",     required_argument, "filename",
      "output filename for xylist containing the image coordinate of stars from the index"},
 	{'@', "just-augment",   no_argument, NULL,
-	 "just write the augmented xylist files; don't run backend."},
+	 "just write the augmented xylist files; don't run astrometry-engine."},
 	{'\x88', "timestamp", no_argument, NULL,
 	 "add timestamps to log messages"},
 };
@@ -517,14 +517,14 @@ static char* none_is_null(char* in) {
     return streq(in, "none") ? NULL : in;
 }
 
-static void run_backend(sl* backendargs) {
+static void run_engine(sl* engineargs) {
 	char* cmd;
-	cmd = sl_implode(backendargs, " ");
+	cmd = sl_implode(engineargs, " ");
 	logmsg("Solving...\n");
 	logverb("Running:\n  %s\n", cmd);
 	fflush(NULL);
 	if (run_command_get_outputs(cmd, NULL, NULL)) {
-		ERROR("backend failed.  Command that failed was:\n  %s", cmd);
+		ERROR("engine failed.  Command that failed was:\n  %s", cmd);
 		exit(-1);
 	}
 	free(cmd);
@@ -543,7 +543,7 @@ struct solve_field_args {
 typedef struct solve_field_args solve_field_args_t;
 
 
-// This runs after "backend" is run on the file.
+// This runs after "astrometry-engine" is run on the file.
 static void after_solved(augment_xylist_t* axy,
 						 solve_field_args_t* sf,
 						 anbool makeplots,
@@ -711,7 +711,7 @@ int main(int argc, char** args) {
 	int i, j, f;
     int inputnum;
 	int rtn;
-	sl* backendargs;
+	sl* engineargs;
 	int nbeargs;
 	anbool fromstdin = FALSE;
 	anbool overwrite = FALSE;
@@ -736,7 +736,7 @@ int main(int argc, char** args) {
     char* scampconfig = NULL;
     char* index_xyls;
 	anbool just_augment = FALSE;
-	anbool backend_batch = FALSE;
+	anbool engine_batch = FALSE;
 	bl* batchaxy = NULL;
 	bl* batchsf = NULL;
 	sl* outfiles;
@@ -749,8 +749,8 @@ int main(int argc, char** args) {
 
     me = find_executable(args[0], NULL);
 
-	backendargs = sl_new(16);
-	append_executable(backendargs, "backend", me);
+	engineargs = sl_new(16);
+	append_executable(engineargs, "astrometry-engine", me);
 
 	// output filenames.
 	outfiles = sl_new(16);
@@ -831,7 +831,7 @@ int main(int argc, char** args) {
 			allaxy->assume_fits_image = TRUE;
 			break;
 		case '(':
-			backend_batch = TRUE;
+			engine_batch = TRUE;
 			break;
 		case '@':
 			just_augment = TRUE;
@@ -855,7 +855,7 @@ int main(int argc, char** args) {
 			help = TRUE;
 			break;
         case 'v':
-            sl_append(backendargs, "--verbose");
+            sl_append(engineargs, "--verbose");
             verbose = TRUE;
 			allaxy->verbosity++;
             loglvl++;
@@ -868,8 +868,8 @@ int main(int argc, char** args) {
             break;
 		case 'b':
 		case '\x89':
-			sl_append(backendargs, "--config");
-			append_escape(backendargs, optarg);
+			sl_append(engineargs, "--config");
+			append_escape(engineargs, optarg);
 			break;
 		case 'f':
 			fromstdin = TRUE;
@@ -921,7 +921,7 @@ int main(int argc, char** args) {
         logmsg("Do you really want to save the new FITS file to the file named \"%s\" ??\n", newfits);
     }
 
-	if (backend_batch) {
+	if (engine_batch) {
 		batchaxy = bl_new(16, sizeof(augment_xylist_t));
 		batchsf  = bl_new(16, sizeof(solve_field_args_t));
 	}
@@ -943,8 +943,8 @@ int main(int argc, char** args) {
         }
 	}
 
-	// number of backend args not specific to a particular file
-	nbeargs = sl_size(backendargs);
+	// number of engine args not specific to a particular file
+	nbeargs = sl_size(engineargs);
 
 	f = optind;
     inputnum = 0;
@@ -999,9 +999,9 @@ int main(int argc, char** args) {
 
         cmdline = sl_new(16);
 
-		if (!backend_batch) {
+		if (!engine_batch) {
 			// Remove arguments that might have been added in previous trips through this loop
-			sl_remove_from(backendargs,  nbeargs);
+			sl_remove_from(engineargs,  nbeargs);
 		}
 
 		// Choose the base path/filename for output files.
@@ -1268,15 +1268,15 @@ int main(int argc, char** args) {
                 makeplots = FALSE;
         }
 
-		append_escape(backendargs, axy->outfn);
+		append_escape(engineargs, axy->outfn);
 
 		if (file_readable(axy->wcsfn))
 			axy->wcs_last_mod = file_get_last_modified_time(axy->wcsfn);
 		else
 			axy->wcs_last_mod = 0;
 
-		if (!backend_batch) {
-			run_backend(backendargs);
+		if (!engine_batch) {
+			run_engine(engineargs);
 			after_solved(axy, sf, makeplots, me, verbose,
 						 axy->tempdir, tempdirs, tempfiles, plotscale, bgfn);
 		} else {
@@ -1290,7 +1290,7 @@ int main(int argc, char** args) {
 		free(base);
         sl_free2(cmdline);
 
-		if (!backend_batch) {
+		if (!engine_batch) {
 			free(axy->fitsimgfn);
 			free(axy->solvedinfn);
 			// erm.
@@ -1305,8 +1305,8 @@ int main(int argc, char** args) {
         logmsg("\n");
 	}
 
-	if (backend_batch) {
-		run_backend(backendargs);
+	if (engine_batch) {
+		run_engine(engineargs);
 		for (i=0; i<bl_size(batchaxy); i++) {
 			augment_xylist_t* axy = bl_access(batchaxy, i);
 			solve_field_args_t* sf = bl_access(batchsf, i);
@@ -1332,7 +1332,7 @@ int main(int argc, char** args) {
 	sl_free2(outfiles);
 	sl_free2(tempfiles);
 	sl_free2(tempdirs);
-	sl_free2(backendargs);
+	sl_free2(engineargs);
     free(me);
     augment_xylist_free_contents(allaxy);
 

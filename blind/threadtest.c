@@ -1,11 +1,11 @@
 
 #include <pthread.h>
 
-#include "backend.h"
+#include "engine.h"
 #include "log.h"
 #include "fitsioutils.h"
 
-backend_t* be;
+engine_t* be;
 
 //pthread_mutex_t read_job_mutex;
 
@@ -15,10 +15,10 @@ void* threadfunc(void* arg) {
 	logverb("Hello from thread-land!\n");
     
     //pthread_mutex_lock(&read_job_mutex);
-    job_t* job = backend_read_job_file(be, jobfn);
+    job_t* job = engine_read_job_file(be, jobfn);
     //pthread_mutex_unlock(&read_job_mutex);
 
-    backend_run_job(be, job);
+    engine_run_job(be, job);
     job_free(job);
     return NULL;
 }
@@ -37,8 +37,8 @@ int main(int argc, char** args) {
 
 	logverb("Hello world!\n");
 
-    be = backend_new();
-    backend_parse_config_file(be, "astrometry.cfg");
+    be = engine_new();
+    engine_parse_config_file(be, "astrometry.cfg");
 
     pthread_mutex_init(&read_job_mutex, NULL);
 
@@ -51,7 +51,7 @@ int main(int argc, char** args) {
 
     pthread_mutex_destroy(&read_job_mutex);
 
-    backend_free(be);
+    engine_free(be);
 
     return 0;
 }
