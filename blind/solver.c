@@ -1490,7 +1490,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, anbool fake
 		/*
 		 Good test case:
 		 http://antwrp.gsfc.nasa.gov/apod/image/0912/Geminid2007_pacholka850wp.jpg
-		 solve-field --backend-config backend.cfg Geminid2007_pacholka850wp.xy \
+		 solve-field --config backend.cfg Geminid2007_pacholka850wp.xy \
 		 --scale-low 10 --scale-units degwidth -v --no-tweak --continue --new-fits none \
 		 -o 4 --crpix-center --depth 40-45
 

@@ -60,7 +60,7 @@ static an_option_t myopts[] = {
 	{'h', "help", no_argument, NULL, "print this help"},
 	{'v', "verbose", no_argument, NULL, "+verbose"},
 	{'c', "config",  required_argument, "file",
-	 "Use this config file (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable); 'none' for no config file"},
+	 "Use this config file (default: \"astrometry.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable); 'none' for no config file"},
 	{'d', "base-dir",  required_argument, "dir", 
 	 "set base directory of all output filenames."},
 	{'C', "cancel",  required_argument, "file", 
@@ -95,7 +95,7 @@ static void close_datalogfid() {
 }
 
 int main(int argc, char** args) {
-    char* default_configfn = "backend.cfg";
+    char* default_configfn = "astrometry.cfg";
     char* default_config_path = "../etc";
 
 	int c;

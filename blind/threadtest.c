@@ -38,7 +38,7 @@ int main(int argc, char** args) {
 	logverb("Hello world!\n");
 
     be = backend_new();
-    backend_parse_config_file(be, "backend.cfg");
+    backend_parse_config_file(be, "astrometry.cfg");
 
     pthread_mutex_init(&read_job_mutex, NULL);
 

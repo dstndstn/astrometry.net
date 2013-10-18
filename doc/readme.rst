@@ -331,7 +331,7 @@ Install them::
 
 Next, you can (optionally) configure the solver by editing the file::
 
-   INSTALL_DIR/etc/backend.cfg
+   INSTALL_DIR/etc/astrometry.cfg
 
 
 
@@ -485,7 +485,7 @@ Tricks and Tips
 
 will make it give up after 30 seconds.
 
-(Note, however, that the "backend" configuration file (backend.cfg)
+(Note, however, that the "backend" configuration file (astrometry.cfg)
 puts a limit on the CPU time that is spent on an image; solve-field
 can reduce this but not increase it.)
 
@@ -864,15 +864,15 @@ supplied about your fields on the command-line and adds FITS headers
 encoding this information.  We call this file an "augmented xylist";
 we use the filename suffix ".axy".  "solve-field" then calls the
 "backend" program, passing it your axy file.  "backend" reads a config
-file (by default /usr/local/astrometry/etc/backend.cfg) that describes
+file (by default /usr/local/astrometry/etc/astrometry.cfg) that describes
 things like where to find index files, whether to load all the index
 files at once or run them one at a time, how long to spend on each
 field, and so on.  If you want to force only a certain set of index
-files to load, you can copy the backend.cfg file to a local version
+files to load, you can copy the astrometry.cfg file to a local version
 and change the list of index files that are loaded, and then tell
 solve-field to use this config file::
 
-   $ solve-field --backend-config mybackend.cfg ...
+   $ solve-field --config myastrometry.cfg ...
 
 
 SExtractor

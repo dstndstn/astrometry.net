@@ -29,7 +29,7 @@
 #include <sys/param.h>
 #include <math.h>
 
-#include "backend.h"
+#include "engine.h"
 #include "solver.h"
 #include "index.h"
 #include "starxy.h"
@@ -55,7 +55,7 @@ static const char* OPTIONS = "hvc:a:A:W:H:";
 
 static void print_help(const char* progname) {
 	printf("Usage:   %s\n"
-	       "   [-c <backend config file>]  (default: \"../etc/backend.cfg\" relative to this executable)\n"
+	       "   [-c <astrometry config file>]  (default: \"../etc/astrometry.cfg\" relative to this executable)\n"
            "   [-a <minimum field width>] in arcminutes, default %g\n"
            "   [-A <maximum field width>] in arcminutes, default %g\n"
            "   [-W <image width> ] in pixels, default %i\n"
@@ -200,7 +200,7 @@ int main(int argc, char** args) {
             me = strdup(args[0]);
         mydir = strdup(dirname(me));
         free(me);
-        configfn = resolve_path("../etc/backend.cfg", mydir);
+        configfn = resolve_path("../etc/astrometry.cfg", mydir);
         free(mydir);
     }
 
