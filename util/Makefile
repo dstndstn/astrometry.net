@@ -132,9 +132,13 @@ PYTHON_LIBS := _sip.so _healpix.so
 
 QFITS_UTILS := fits-column-merge subtable fitsgetext wcsinfo
 
-PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file		\
-	tycho2tofits fits-flip-endian search-index hpsplit wcs-to-tan	\
+PROGS := an-fitstopnm an-pnmtofits downsample-fits \
+	fits-flip-endian hpsplit wcs-to-tan	\
 	get-healpix $(QFITS_UTILS)
+
+#tycho2tofits 
+#search-index 
+#pad-file
 
 MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy
 

@@ -145,8 +145,8 @@ $(ENGINE_SO): $(ENGINE_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 # old and miscellaneous executables that aren't part of the pipeline.
 OLDEXECS := plotquads rawstartree checkquads
 
-CAIROEXECS := plotquad plotxy plot-constellations plotstuff \
-	whynot
+CAIROEXECS := plotquad plotxy plot-constellations plotstuff 
+# whynot
 
 OLDEXECS_OBJS := catalog.o verify.o matchfile.o \
 	$(UTIL_OBJS)
