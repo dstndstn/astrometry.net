@@ -94,7 +94,7 @@ OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	nomad.o nomad-fits.o \
 	blindutils.o \
-	backend-main.o backend.o plotquad.o plotxy.o add-text.o tweak2.o
+	engine-main.o engine.o plotquad.o plotxy.o add-text.o tweak2.o
 
 2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
 
@@ -108,21 +108,20 @@ PIPELINE := usnobtofits hpowned \
 	startree2 uniformize-catalog build-index query-starkd \
 	local-index index-info 
 
-PROGS := backend image2xy control-program fit-wcs
+PROGS := astrometry-engine image2xy control-program fit-wcs
 
 PROSPECTUS := quadidx codeprojections quadscales quadsperstar \
 	quadcenters startree2rdls
 
 ANLIBS := $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
-BACKEND_LIB := libbackend.a
+ENGINE_LIB := libastrometry.a
+ENGINE_SO := libastrometry.so
 
-BACKEND_SO := libbackend.so
+INSTALL_LIB := $(ENGINE_LIB) $(ENGINE_SO)
 
-INSTALL_LIB := $(BACKEND_LIB) $(BACKEND_SO)
-
-BACKEND_OBJS := \
-		backend.o blindutils.o blind.o solver.o quad-utils.o \
+ENGINE_OBJS := \
+		engine.o blindutils.o blind.o solver.o quad-utils.o \
 		matchfile.o matchobj.o solvedclient.o solvedfile.o tweak2.o \
 		verify.o tweak.o 
 
@@ -131,14 +130,14 @@ PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o \
 		plotannotations.o plotgrid.o plotoutline.o plotindex.o plotradec.o \
 		plothealpix.o plotmatch.o matchfile.o matchobj.o
 
-$(BACKEND_LIB): $(BACKEND_OBJS)
+$(ENGINE_LIB): $(ENGINE_OBJS)
 	-rm -f $@
-	$(AR) rc $@ $(BACKEND_OBJS)
+	$(AR) rc $@ $(ENGINE_OBJS)
 	$(RANLIB) $@
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
-$(BACKEND_SO): $(BACKEND_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
+$(ENGINE_SO): $(ENGINE_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^ $(LDLIBS)
 
@@ -161,7 +160,7 @@ INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) $(PROGS)
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
 INSTALL_H := 2mass-fits.h 2mass.h allquads.h augment-xylist.h axyfile.h \
-	backend.h blind.h blindutils.h build-index.h catalog.h \
+	engine.h blind.h blindutils.h build-index.h catalog.h \
 	codefile.h codetree.h fits-guess-scale.h hpquads.h \
 	image2xy-files.h matchfile.h matchobj.h merge-index.h \
 	new-wcs.h nomad-fits.h nomad.h quad-builder.h quad-utils.h \
@@ -184,7 +183,7 @@ ALL_OBJ += $(PLOTSTUFF)
 all: $(QFITS_LIB) $(LIBKD_LIB) \
 	$(ANUTILS_LIB) $(ANFILES_LIB) \
 	$(PROGS) $(PIPELINE) $(PROSPECTUS) $(FITS_UTILS) fitsverify \
-	$(BACKEND_LIB) $(BACKEND_SO)
+	$(ENGINE_LIB) $(ENGINE_SO)
 
 cairo: $(CAIROEXECS)
 .PHONY: cairo
@@ -216,7 +215,7 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
 	mkdir -p '$(INSTALL_DIR)/etc'
-	python -c "import os; print open('../etc/backend.cfg-dist').read().replace('INSTALL_DIR', '$(CONF_BASE_DIR)')" > '$(INSTALL_DIR)/etc/backend.cfg'
+	python -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('INSTALL_DIR', '$(CONF_BASE_DIR)')" > '$(INSTALL_DIR)/etc/astrometry.cfg'
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
 		echo cp $$x '$(INCLUDE_INSTALL_DIR)'; \
@@ -346,7 +345,7 @@ demo_dsmooth: demo_dsmooth.o dsmooth.o \
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg $(LDLIBS)
 
 control-program: control-program.o \
-		$(BACKEND_OBJS) \
+		$(ENGINE_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 ALL_OBJ += control-program.o
@@ -499,11 +498,12 @@ ALL_OBJ += local-index.o
 index-to-table: index-to-table.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
-threadtest: threadtest.o $(BACKEND_LIB) \
+threadtest: threadtest.o $(ENGINE_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
-backend: backend-main.o $(BACKEND_LIB) \
+astrometry-engine: engine-main.o $(ENGINE_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
+
 ### TWEAK_DEBUG_PLOTS
 #backend: backend-main.o $(BACKEND_LIB) \
 #		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) \
@@ -723,7 +723,7 @@ clean:
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) deps $(FITS_UTILS) $(ALL_OBJ) $(IMAGE2XY) \
 		$(NODEP_OBJS) plot-constellations fitsverify plotquad plotxy \
 		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
-		$(BACKEND_LIB) $(BACKEND_SO) _plotstuff_c.so *.o *~ *.dep deps
+		$(ENGINE_LIB) $(ENGINE_SO) _plotstuff_c.so *.o *~ *.dep deps
 	rm -Rf build
 
 

@@ -22,7 +22,7 @@
 #include "bl.h"
 
 /*
- Shared between 'augment-xylist' and 'backend': description of a field
+ Shared between 'augment-xylist' and 'astrometry-engine': description of a field
  to be solved.
 
  Uses FITS header cards:
