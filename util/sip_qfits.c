@@ -302,18 +302,16 @@ static anbool read_polynomial(const qfits_header* hdr, const char* format,
 		for (j=0; (i+j)<=order; j++) {
 			if (skip_zero && i+j < 1)
 				continue;
-			// FIXME - should we try to read it and not fail if it doesn't exist,
-			// or not read it at all?  Is it reasonable for linear terms to exist
-			// and be non-zero?
 			if (skip_linear && (i+j < 2))
 				continue;
 			sprintf(key, format, i, j);
 			val = qfits_header_getdouble(hdr, key, nil);
 			if (val == nil) {
-                ERROR("SIP: warning: key \"%s\" not found; setting to zero.", key);
+                // don't warn if linear terms are "missing"
+                if (i+j >= 2) {
+                    ERROR("SIP: warning: key \"%s\" not found; setting to zero.", key);
+                }
 				val=0.0;
-				//fprintf(stderr, "SIP: key \"%s\" not found.\n", key);
-				//return FALSE;
 			}
 			data[i*datastride + j] = val;
 		}

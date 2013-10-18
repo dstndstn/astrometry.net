@@ -134,7 +134,7 @@ static void add_text(cairos_t* cairos,
 		break;
 	}
 
-	logverb("halign=%c, width=%f\n", halign, textents.width);
+	//logverb("halign=%c, width=%f\n", halign, textents.width);
 	switch (halign) {
 	case 'L':
 		break;
