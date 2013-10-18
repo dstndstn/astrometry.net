@@ -62,8 +62,11 @@ static an_option_t options[] = {
      "place all output files in the specified directory"},
     {'o', "out", required_argument, "base-filename",
      "name the output files with this base name"},
+    // DEPRECATED
     {'b', "backend-config", required_argument, "filename",
-     "use this config file for the \"backend\" program"},
+     "use this config file for the \"astrometry-engine\" program"},
+    {'\x89', "config", required_argument, "filename",
+     "use this config file for the \"astrometry-engine\" program"},
 	{'(', "backend-batch",  no_argument, NULL,
 	 "run backend once, rather than once per input file"},
 	{'f', "files-on-stdin", no_argument, NULL,
@@ -864,6 +867,7 @@ int main(int argc, char** args) {
             outbase = optarg;
             break;
 		case 'b':
+		case '\x89':
 			sl_append(backendargs, "--config");
 			append_escape(backendargs, optarg);
 			break;
