@@ -189,16 +189,16 @@ Building Index Files
 
 Finally!  The real deal.
 
-*build-index* has a daunting number of options, but don't panic::
+*build-astrometry-index* has a daunting number of options, but don't panic::
 
-    > build-index
+    > build-astrometry-index
     You must specify input & output filenames.
     This program is part of the Astrometry.net suite.
     For details, visit  http://astrometry.net .
     Subversion URL svn+ssh://astrometry.net/svn/trunk/src/astrometry/util/
     Revision 22921, date 2013-06-02 15:07:59 -0400 (Sun, 02 Jun 2013).
     
-    Usage: build-index
+    Usage: build-astrometry-index
           (
              -i <input-FITS-catalog>  input: source RA,DEC, etc
         OR,
@@ -309,7 +309,7 @@ in my thesis I used scale 2 (4 to 5.6 arcmin features) to recognize
 Sloan Digital Sky Survey images, which are 13-by-9 arcminutes.  Scales
 3, 4, and 1 also yielded solutions when they were included.
 
-You will run build-index once for each scale.
+You will run build-astrometry-index once for each scale.
 
 Presets in the range -5 to 19 are available.  The scales for the presets are listed in the `Getting Index Files <http://astrometry.net/doc/readme.html#getting-index-files>`_ documentation.
 
@@ -328,7 +328,7 @@ Which column in your FITS table input should we use to
 determine which stars are bright?  (We preferentially select bright
 stars to include in the index files.)  Typically this will be something like::
 
-    build-index -S J_mag [...]
+    build-astrometry-index -S J_mag [...]
 
 By default, we assume that SMALL values of the sorting column are
 bright -- that is, it works for MAGs.  If you have linear FLUX-like
@@ -342,30 +342,30 @@ than a lower limit, using the ``-B`` flag.
     [-H <big healpix>]; default is all-sky
     [-s <big healpix Nside>]; default is 1
 
-You need to tell build-index which
+You need to tell build-astrometry-index which
 part of the sky it is indexing.  By default, it assumes you are
 building an all-sky index.
 
 If you have split your reference catalog into 12 pieces (healpix
 Nside = 1) using *hpsplit* as described above, then you will run
-*build-index* once for each healpix tile FITS table and scale,
+*build-astrometry-index* once for each healpix tile FITS table and scale,
 specifying the tile number with ``-H`` and the Nside with ``-s`` (default
 is 1), and specifying the scale with ``-P``::
 
     # Healpix 0, scales 2-4
-    build-index -i catalog-hp00.fits -H 0 -s 1 -P 2 -o myindex-02-00.fits [...]
-    build-index -i catalog-hp00.fits -H 0 -s 1 -P 3 -o myindex-03-00.fits [...]
-    build-index -i catalog-hp00.fits -H 0 -s 1 -P 4 -o myindex-04-00.fits [...]
+    build-astrometry-index -i catalog-hp00.fits -H 0 -s 1 -P 2 -o myindex-02-00.fits [...]
+    build-astrometry-index -i catalog-hp00.fits -H 0 -s 1 -P 3 -o myindex-03-00.fits [...]
+    build-astrometry-index -i catalog-hp00.fits -H 0 -s 1 -P 4 -o myindex-04-00.fits [...]
     # Healpix 1, scales 2-4
-    build-index -i catalog-hp01.fits -H 1 -s 1 -P 2 -o myindex-02-01.fits [...]
-    build-index -i catalog-hp01.fits -H 1 -s 1 -P 3 -o myindex-03-01.fits [...]
-    build-index -i catalog-hp01.fits -H 1 -s 1 -P 4 -o myindex-04-01.fits [...]
+    build-astrometry-index -i catalog-hp01.fits -H 1 -s 1 -P 2 -o myindex-02-01.fits [...]
+    build-astrometry-index -i catalog-hp01.fits -H 1 -s 1 -P 3 -o myindex-03-01.fits [...]
+    build-astrometry-index -i catalog-hp01.fits -H 1 -s 1 -P 4 -o myindex-04-01.fits [...]
 
     ...
     # Healpix 11, scales 2-4
-    build-index -i catalog-hp11.fits -H 1 -s 1 -P 2 -o myindex-02-11.fits [...]
-    build-index -i catalog-hp11.fits -H 1 -s 1 -P 3 -o myindex-03-11.fits [...]
-    build-index -i catalog-hp11.fits -H 1 -s 1 -P 4 -o myindex-04-11.fits [...]
+    build-astrometry-index -i catalog-hp11.fits -H 1 -s 1 -P 2 -o myindex-02-11.fits [...]
+    build-astrometry-index -i catalog-hp11.fits -H 1 -s 1 -P 3 -o myindex-03-11.fits [...]
+    build-astrometry-index -i catalog-hp11.fits -H 1 -s 1 -P 4 -o myindex-04-11.fits [...]
 
 You probably want to do that using a loop in your shell; for example, in bash::
 
@@ -373,7 +373,7 @@ You probably want to do that using a loop in your shell; for example, in bash::
       for ((SCALE=2; SCALE<=4; SCALE++)); do
         HH=$(printf %02i $HP)
         SS=$(printf %02i $SCALE)
-        build-index -i catalog-hp${HH}.fits -H $HP -s 1 -P $SCALE -o myindex-${HH}-${SS}.fits [...]
+        build-astrometry-index -i catalog-hp${HH}.fits -H $HP -s 1 -P $SCALE -o myindex-${HH}-${SS}.fits [...]
       done
     done
 
@@ -382,7 +382,7 @@ You probably want to do that using a loop in your shell; for example, in bash::
     [-E]: scan through the catalog, checking which healpixes are occupied.
 
 If your catalog only covers a small part of the sky, be sure to set
-the ``-E`` flag, so that ``build-index`` only tries to select features in
+the ``-E`` flag, so that ``build-astrometry-index`` only tries to select features in
 the part of the sky that your index covers.
 
 **Unique ID**::
@@ -413,10 +413,10 @@ You probably don't need to set any of the options below here
 
 I would recommend naming your RA and Dec columns "RA" and "DEC", but
 if for some reason you don't want to do that, you need to tell
-``build-index`` what they're called at this point, using the ``-A``
+``build-astrometry-index`` what they're called at this point, using the ``-A``
 and ``-D`` options::
 
-    build-index -A Alpha_J2000 -D Delta_J2000 [...]
+    build-astrometry-index -A Alpha_J2000 -D Delta_J2000 [...]
 
 **Indexing Details**::
 
