@@ -11,7 +11,6 @@ LDFLAGS := $(LDFLAGS_DEF)
 LDFLAGS += -fPIC
 CFLAGS += $(CFLAGS_DEF)
 
-
 LIB := libqfits.a
 
 HEADERS := \
@@ -35,8 +34,8 @@ HEADERS := \
 INSTALL_DIR ?= ..
 
 install: $(LIB)
-	$(CP) $(LIB) '$(INSTALL_DIR)/lib'
-	$(CP) $(HEADERS) '$(INSTALL_DIR)/include'
+	$(CP) $(LIB) '$(LIB_INSTALL_DIR)'
+	$(CP) $(HEADERS) '$(INCLUDE_INSTALL_DIR)'
 .PHONY: install
 
 # Programs we use

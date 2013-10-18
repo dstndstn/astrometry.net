@@ -27,7 +27,7 @@ INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include/astrometry
 LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
 BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
 PY_BASE_LINK_DIR := ../lib/python/astrometry
-CONF_BASE_DIR := $(INSTALL_DIR)
+CONF_BASE_DIR ?= $(INSTALL_DIR)/etc
 
 
 
