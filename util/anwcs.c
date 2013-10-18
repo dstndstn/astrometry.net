@@ -259,7 +259,8 @@ static int wcslib_pixelxy2radec(const anwcslib_t* anwcslib, double px, double py
 	 int stat[]);
 	 */
 	if (code) {
-		ERROR("Wcslib's wcsp2s() failed: code=%i, status=%i (%s); (x,y)=(%g,%g)", code, status, wcs_errmsg[status], px, py);
+		//ERROR("Wcslib's wcsp2s() failed: code=%i, status=%i (%s); (x,y)=(%g,%g)", code, status, wcs_errmsg[status], px, py);
+        logverb("Wcslib's wcsp2s() failed: code=%i, status=%i (%s); (x,y)=(%g,%g)", code, status, wcs_errmsg[status], px, py);
 		return -1;
 	}
 	if (ra)  *ra  = world[wcs->lng];
@@ -1487,19 +1488,27 @@ sip_t* anwcs_get_sip(const anwcs_t* wcs) {
 
 anwcs_t* anwcs_create_allsky_hammer_aitoff(double refra, double refdec,
 										   int W, int H) {
-	return anwcs_create_hammer_aitoff(refra, refdec, 1.0, W, H);
+	return anwcs_create_hammer_aitoff(refra, refdec, 1.0, W, H, TRUE);
+}
+
+anwcs_t* anwcs_create_allsky_hammer_aitoff2(double refra, double refdec,
+										   int W, int H) {
+	return anwcs_create_hammer_aitoff(refra, refdec, 1.0, W, H, FALSE);
 }
 
 
 anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
 									double zoomfactor,
-									int W, int H) {
+									int W, int H, anbool yflip) {
 	qfits_header* hdr;
 	double xscale = -360. / (double)W;
-	double yscale = -180. / (double)H;
+	double yscale =  180. / (double)H;
 	char* str = NULL;
 	int Nstr = 0;
 	anwcs_t* anwcs = NULL;
+
+    if (yflip)
+        yscale *= -1.;
 
 	xscale /= zoomfactor;
 	yscale /= zoomfactor;

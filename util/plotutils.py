@@ -34,10 +34,10 @@ class PlotSequence(object):
 			return lst[0]
 		return lst
 
-	def savefig(self):
+	def savefig(self, **kwargs):
 		import pylab as plt
 		for fn in self._getnextlist():
-			plt.savefig(fn)
+			plt.savefig(fn, **kwargs)
 			print 'saved', fn
 
 def loghist(x, y, nbins=100,

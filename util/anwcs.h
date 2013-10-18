@@ -81,10 +81,12 @@ anwcs_t* anwcs_create_box_upsidedown(double ra, double dec, double width, int W,
 
 anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
 									double zoomfactor,
-									int W, int H);
+									int W, int H, anbool yflip);
 
 anwcs_t* anwcs_create_allsky_hammer_aitoff(double refra, double refdec,
 										   int W, int H);
+anwcs_t* anwcs_create_allsky_hammer_aitoff2(double refra, double refdec,
+                                            int W, int H);
 
 int anwcs_write(const anwcs_t* wcs, const char* filename);
 
