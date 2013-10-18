@@ -503,6 +503,8 @@ threadtest: threadtest.o $(ENGINE_LIB) \
 
 astrometry-engine: engine-main.o $(ENGINE_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
+
 
 ### TWEAK_DEBUG_PLOTS
 #backend: backend-main.o $(BACKEND_LIB) \

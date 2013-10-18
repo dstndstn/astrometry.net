@@ -107,9 +107,9 @@ able to compile and use the core parts of the solver, but you will
 miss out on some eye-candy.
 
 Grab the code:
-  $ wget http://astrometry.net/downloads/astrometry.net-0.43.tar.bz2
-  $ tar xjf astrometry.net-0.43.tar.bz2
-  $ cd astrometry.net-0.43
+  $ wget http://astrometry.net/downloads/astrometry.net-0.45.tar.bz2
+  $ tar xjf astrometry.net-0.45.tar.bz2
+  $ cd astrometry.net-0.45
 
 Build the solving system:
   $ make
@@ -199,7 +199,7 @@ index-200.tar.bz2             2.0  -  2.8              10,058
 --------------------------------------------------------------
 
 Download the index files you need and put them in the top-level
-(astrometry-0.43) source directory.
+(astrometry-0.45) source directory.
 
 Install them:
    $ make install-indexes
@@ -208,7 +208,7 @@ Install them:
 
 
 Next, you can (optionally) configure the solver by editing the file
-   INSTALL_DIR/etc/backend.cfg
+   INSTALL_DIR/etc/astrometry.cfg
 
 
 AUTO-CONFIGURATION
@@ -378,7 +378,7 @@ TRICKS AND TIPS
 
 will make it give up after 30 seconds.
 
-(Note, however, that the "backend" configuration file (backend.cfg)
+(Note, however, that the "backend" configuration file (astrometry.cfg)
 puts a limit on the CPU time that is spent on an image; solve-field
 can reduce this but not increase it.)
 
@@ -756,15 +756,15 @@ supplied about your fields on the command-line and adds FITS headers
 encoding this information.  We call this file an "augmented xylist";
 we use the filename suffix ".axy".  "solve-field" then calls the
 "backend" program, passing it your axy file.  "backend" reads a config
-file (by default /usr/local/astrometry/etc/backend.cfg) that describes
+file (by default /usr/local/astrometry/etc/astrometry.cfg) that describes
 things like where to find index files, whether to load all the index
 files at once or run them one at a time, how long to spend on each
 field, and so on.  If you want to force only a certain set of index
-files to load, you can copy the backend.cfg file to a local version
+files to load, you can copy the astrometry.cfg file to a local version
 and change the list of index files that are loaded, and then tell
 solve-field to use this config file:
 
-   $ solve-field --backend-config mybackend.cfg ...
+   $ solve-field --backend-config myastrometry.cfg ...
 
 
 SOURCE EXTRACTION USING SEXTRACTOR
