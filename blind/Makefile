@@ -205,7 +205,6 @@ LINK_DIR := $(PY_BASE_LINK_DIR)/blind
 
 PYTHON_EXECS := plotann.py
 PYTHON_INSTALL := $(PYTHON_EXECS) __init__.py
-CONF_BASE_DIR := $(INSTALL_DIR)
 
 install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	@echo Installing in directory '$(INSTALL_DIR)'
@@ -214,8 +213,8 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 		echo cp $$x '$(INSTALL_DIR)/bin'; \
 		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
-	mkdir -p '$(INSTALL_DIR)/etc'
-	python -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('INSTALL_DIR', '$(CONF_BASE_DIR)')" > '$(INSTALL_DIR)/etc/astrometry.cfg'
+	mkdir -p '$(CONF_BASE_DIR)'
+	python -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('INSTALL_DIR', '$(CONF_BASE_DIR)')" > '$(CONF_BASE_DIR)/astrometry.cfg'
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
 		echo cp $$x '$(INCLUDE_INSTALL_DIR)'; \
