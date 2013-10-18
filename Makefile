@@ -105,7 +105,7 @@ install-core:
 	mkdir -p '$(INSTALL_DIR)/data'
 	mkdir -p '$(INSTALL_DIR)/bin'
 	mkdir -p '$(INSTALL_DIR)/doc'
-	mkdir -p '$(INSTALL_DIR)/include'
+	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/lib'
 	mkdir -p '$(INSTALL_DIR)/examples'
 	mkdir -p '$(INSTALL_DIR)/lib/python/astrometry'

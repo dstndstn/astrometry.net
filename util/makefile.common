@@ -23,7 +23,7 @@ export INSTALL_DIR
 # Installation subdirs
 
 PY_BASE_INSTALL_DIR := $(INSTALL_DIR)/lib/python/astrometry
-INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include
+INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include/astrometry
 LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
 BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
 PY_BASE_LINK_DIR := ../lib/python/astrometry

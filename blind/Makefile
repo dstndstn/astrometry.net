@@ -217,10 +217,10 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	done
 	mkdir -p '$(INSTALL_DIR)/etc'
 	python -c "import os; print open('../etc/backend.cfg-dist').read().replace('INSTALL_DIR', '$(CONF_BASE_DIR)')" > '$(INSTALL_DIR)/etc/backend.cfg'
-	mkdir -p '$(INSTALL_DIR)/include'
+	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
-		echo cp $$x '$(INSTALL_DIR)/include'; \
-		cp $$x '$(INSTALL_DIR)/include'; \
+		echo cp $$x '$(INCLUDE_INSTALL_DIR)'; \
+		cp $$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
 	mkdir -p '$(INSTALL_DIR)/lib'
 	@for x in $(INSTALL_LIB); do \
@@ -249,10 +249,10 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 		echo cp $$x '$(INSTALL_DIR)/bin'; \
 		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
-	mkdir -p '$(INSTALL_DIR)/include'
+	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(PLOT_INSTALL_H); do \
-		echo cp $$x '$(INSTALL_DIR)/include'; \
-		cp $$x '$(INSTALL_DIR)/include'; \
+		echo cp $$x '$(INCLUDE_INSTALL_DIR)'; \
+		cp $$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
 	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_EXTRA_INSTALL); do \

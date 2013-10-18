@@ -120,10 +120,10 @@ install: $(LIBKD_INSTALL) $(LIBKD)
 		echo cp $$x '$(INSTALL_DIR)/bin'; \
 		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
-	mkdir -p '$(INSTALL_DIR)/include'
+	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
-		echo cp $$x '$(INSTALL_DIR)/include'; \
-		cp $$x '$(INSTALL_DIR)/include'; \
+		echo cp $$x '$(INCLUDE_INSTALL_DIR)'; \
+		cp $$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
 	mkdir -p '$(INSTALL_DIR)/lib'
 	@for x in $(LIBKD); do \
