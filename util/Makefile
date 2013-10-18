@@ -50,7 +50,8 @@ ANFILES_OBJ :=
 ifndef NO_QFITS
 ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
 	starxy.o qidxfile.o quadfile.o scamp.o scamp-catalog.o \
-	hd.o
+	hd.o \
+	tabsort.o wcs-xy2rd.o wcs-rd2xy.o
 ANFILES_DEPS += $(QFITS_LIB)
 endif
 
@@ -129,8 +130,13 @@ CFLAGS += -I.
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian search-index hpsplit wcs-to-tan get-healpix
-MAIN_PROGS := wcs-resample
+QFITS_UTILS := column-merge subtable fitsgetext
+
+PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file		\
+	tycho2tofits fits-flip-endian search-index hpsplit wcs-to-tan	\
+	get-healpix $(QFITS_UTILS)
+
+MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy
 
 # tycho2tostellarium build-hd-tree
 
@@ -152,7 +158,8 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	quadfile.h rdlist.h scamp-catalog.h fit-wcs.h sip-utils.h sip.h sip_qfits.h \
 	starkd.h starutil.h starutil.inc starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
 	xylist.h coadd.h convolve-image.h resample.h multiindex.h scamp.h \
-	ctmf.h dimage.h image2xy.h radix.h simplexy-common.h simplexy.h
+	ctmf.h dimage.h image2xy.h radix.h simplexy-common.h simplexy.h \
+	tabsort.h wcs-rd2xy.h wcs-xy2rd.h
 
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
@@ -184,6 +191,32 @@ $(ANFILES_LIB): $(ANFILES_OBJ) $(ANFILES_DEPS)
 
 svn.c: $(SVN_C_DEPS)
 	echo "//" >> svn.c
+
+ifdef WCSTOOLS_EXISTS
+  WCSTOOLS_LIB ?= libwcs.a
+endif
+
+WCS_LIB := $(WCSTOOLS_LIB) $(WCSLIB_LIB)
+WCS_LIB_DEP :=
+
+wcs-xy2rd: wcs-xy2rd-main.o wcs-xy2rd.o $(UTIL_OBJS) \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
+ALL_OBJ += wcs-xy2rd-main.o
+
+wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
+ALL_OBJ += wcs-rd2xy-main.o
+
+column-merge: column-merge.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+
+fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+
+subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+
+tabsort: tabsort-main.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+ALL_OBJ += tabsort-main.o
 
 resample: resample-main.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) $(WCS_LIB_DEP)

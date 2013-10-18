@@ -74,11 +74,11 @@ ALL_WCSLIB_TARGETS :=
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
-QFITS_UTILS := fitsgetext subtable tabsort column-merge \
-		resort-xylist fits-dedup
+QFITS_UTILS := resort-xylist
 
-CFITS_UTILS := tablist modhead fitscopy tabmerge fitstomatlab liststruc \
+CFITS_UTILS := tablist modhead fitscopy tabmerge liststruc \
 		listhead imcopy imarith imstat
+# fitstomatlab 
 
 FITS_UTILS := $(QFITS_UTILS) $(CFITS_UTILS)
 
@@ -87,28 +87,29 @@ MISC_EXECS := project-usnob diffractionFlag_check \
 
 UTIL_OBJS := 
 
-OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
-	codefile.o verify.o \
+OTHER_OBJS := usnob.o usnob-fits.o catalog.o codefile.o verify.o \
 	solver.o matchfile.o matchobj.o solvedclient.o solvedfile.o pnpoly.o \
 	tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
-	nomad.o nomad-fits.o \
-	blindutils.o \
-	engine-main.o engine.o plotquad.o plotxy.o add-text.o tweak2.o
+	nomad.o nomad-fits.o blindutils.o \
+	engine-main.o engine.o plotquad.o plotxy.o tweak2.o
+#add-text.o 
 
 2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
 
-PIPELINE := usnobtofits hpowned \
-	startree hpquads codetree unpermute-quads unpermute-stars blind \
-	solvedserver printsolved xylist2fits mergesolved rdlsinfo xylsinfo \
-	wcsinfo subwcs wcs-grab fits-guess-scale agreeable new-wcs get-wcs \
-	augment-xylist solve-field wcs-xy2rd wcs-rd2xy \
-	certifiable 2masstofits nomadtofits \
-	merge-index index-to-table setsolved \
-	startree2 uniformize-catalog build-index query-starkd \
-	local-index index-info 
+NOT_INSTALLED_PIPELINE := blind agreeable certifiable usnobtofits hpowned \
+	startree hpquads codetree unpermute-quads unpermute-stars \
+	solvedserver printsolved mergesolved subwcs \
+	2masstofits nomadtofits \
+	augment-xylist merge-index index-to-table setsolved \
+	startree2 uniformize-catalog \
+	local-index index-info control-program
 
-PROGS := astrometry-engine image2xy control-program fit-wcs
+PIPELINE := wcsinfo wcs-grab fits-guess-scale new-wcs get-wcs \
+	solve-field query-starkd
+
+PROGS := astrometry-engine image2xy fit-wcs \
+	build-astrometry-index 
 
 PROSPECTUS := quadidx codeprojections quadscales quadsperstar \
 	quadcenters startree2rdls
@@ -144,7 +145,7 @@ $(ENGINE_SO): $(ENGINE_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 # old and miscellaneous executables that aren't part of the pipeline.
 OLDEXECS := plotquads rawstartree checkquads
 
-CAIROEXECS := plotquad plotxy plot-constellations add-text plotstuff \
+CAIROEXECS := plotquad plotxy plot-constellations plotstuff \
 	whynot
 
 OLDEXECS_OBJS := catalog.o verify.o matchfile.o \
@@ -165,9 +166,9 @@ INSTALL_H := 2mass-fits.h 2mass.h allquads.h augment-xylist.h axyfile.h \
 	image2xy-files.h matchfile.h matchobj.h merge-index.h \
 	new-wcs.h nomad-fits.h nomad.h quad-builder.h quad-utils.h \
 	resort-xylist.h solvedclient.h \
-	solvedfile.h solver.h tabsort.h tweak.h uniformize-catalog.h \
+	solvedfile.h solver.h tweak.h uniformize-catalog.h \
 	unpermute-quads.h unpermute-stars.h usnob-fits.h usnob.h verify.h \
-	wcs-rd2xy.h wcs-xy2rd.h tweak2.h
+	tweak2.h
 
 PLOT_INSTALL_H := plotannotations.h plotfill.h plotgrid.h plotimage.h \
 	plotoutline.h plotstuff.h plotxy.h
@@ -365,9 +366,6 @@ rdls2hpls: rdls2hpls.o \
 rdlstohealpix: rdlstohealpix.o \
 		$(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
-xylist2fits: xylist2fits.o \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
 certifiable: certifiable.o matchfile.o matchobj.o solvedfile.o \
 		$(UTILS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
@@ -379,23 +377,6 @@ ALL_OBJ += fits-guess-scale-main.o
 get-wcs: get-wcs.o \
 		$(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
-
-ifdef WCSTOOLS_EXISTS
-  WCSTOOLS_LIB ?= libwcs.a
-endif
-
-WCS_LIB := $(WCSTOOLS_LIB) $(WCSLIB_LIB)
-WCS_LIB_DEP :=
-
-wcs-xy2rd: wcs-xy2rd-main.o wcs-xy2rd.o $(UTIL_OBJS) \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
-ALL_OBJ += wcs-xy2rd-main.o
-
-wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
-ALL_OBJ += wcs-rd2xy-main.o
 
 fit-wcs: fit-wcs-main.o tweak2.o tweak.o verify.o matchobj.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
@@ -458,10 +439,12 @@ uniformize-catalog: uniformize-catalog-main.o uniformize-catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 ALL_OBJ += uniformize-catalog-main.o uniformize-catalog.o
 
-build-index: build-index-main.o build-index.o uniformize-catalog.o startree2.o hpquads.o \
+build-astrometry-index: build-index-main.o build-index.o uniformize-catalog.o startree2.o hpquads.o \
 		quad-builder.o quad-utils.o codefile.o codetree.o unpermute-stars.o \
 		unpermute-quads.o merge-index.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
+
 ALL_OBJ += build-index-main.o build-index.o uniformize-catalog.o quad-utils.o
 
 hpquads: hpquads-main.o hpquads.o quad-builder.o quad-utils.o codefile.o pnpoly.o \
@@ -489,7 +472,7 @@ ALL_OBJ += merge-index-main.o
 
 local-index: local-index.o build-index.o codetree.o startree2.o codetree.o \
 		hpquads.o uniformize-catalog.o merge-index.o unpermute-quads.o unpermute-stars.o \
-		quad-builder.o quad-utils.o codefile.o wcs-xy2rd.o \
+		quad-builder.o quad-utils.o codefile.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += local-index.o
@@ -526,14 +509,14 @@ ALL_OBJ += dstnthing.o
 ALL_OBJ += verify-main.o
 
 solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o \
-		image2xy-files.o resort-xylist.o tabsort.o cut-table.o \
-		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
+		image2xy-files.o resort-xylist.o cut-table.o \
+		fits-guess-scale.o new-wcs.o \
 		$(CFITS_DEP) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(CFITS_LIB) $(LDLIBS)
 
 ALL_OBJ += cut-table.o
 
-augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o cut-table.o fits-guess-scale.o \
+augment-xylist: augment-xylist-main.o augment-xylist.o cut-table.o fits-guess-scale.o \
 		image2xy-files.o resort-xylist.o blindutils.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_DEP)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
@@ -569,10 +552,6 @@ startree2rdls: startree2rdls.o \
 
 agreeable: agreeable.o matchfile.o matchobj.o solvedfile.o solvedclient.o verify.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
-
-rdlsinfo: rdlsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-xylsinfo: xylsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
 wcsinfo: wcsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
 		$(QFITS_LIB) $(GSL_LIB)
@@ -684,18 +663,6 @@ index-stats: index-stats.o \
 quadsperstar: quadsperstar.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) \
 		$(QFITS_LIB)
-
-fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-fits-dedup: fits-dedup.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-tabsort: tabsort-main.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-ALL_OBJ += tabsort-main.o
-
-column-merge: column-merge.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
 resort-xylist: resort-xylist-main.o resort-xylist.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
