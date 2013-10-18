@@ -222,6 +222,10 @@ int main(int argc, char** args) {
         int i;
         sl* trycf = sl_new(4);
         sl_appendf(trycf, "%s/%s/%s", mydir, default_config_path, default_configfn);
+        // if I'm in /usr/bin, look for config file in /etc
+        if (streq(mydir, "/usr/bin")) {
+            sl_appendf(trycf, "/etc/%s", default_configfn);
+        }
         sl_appendf(trycf, "%s/%s", mydir, default_configfn);
         sl_appendf(trycf, "./%s", default_configfn);
         sl_appendf(trycf, "./%s/%s", default_config_path, default_configfn);
