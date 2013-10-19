@@ -215,7 +215,7 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
 	mkdir -p '$(CONF_BASE_DIR)'
-	python -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('INSTALL_DIR', '$(CONF_BASE_DIR)')" > '$(CONF_BASE_DIR)/astrometry.cfg'
+	python -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('DATA_INSTALL_DIR', '$(DATA_INSTALL_DIR)')" > '$(CONF_BASE_DIR)/astrometry.cfg'
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
 		echo cp $$x '$(INCLUDE_INSTALL_DIR)'; \

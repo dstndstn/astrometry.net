@@ -8,7 +8,7 @@ include $(COMMON)/makefile.common
 MY_DIR := $(PY_BASE_INSTALL_DIR)/sdss
 
 _cutils.so cutils.py: cutils.i
-	python setup.py -v build_ext --inplace
+	python setup.py build_ext -v --inplace --build-temp .
 
 INSTALL_PY := __init__.py common.py dr7.py dr8.py runList-dr8.par \
 	dr9.py runList-dr9.par \

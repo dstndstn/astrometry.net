@@ -102,7 +102,7 @@ install: all report.txt
 	-$(MAKE) -C blind install-extra
 
 install-core:
-	mkdir -p '$(INSTALL_DIR)/data'
+	mkdir -p '$(DATA_INSTALL_DIR)'
 	mkdir -p '$(BIN_INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/doc'
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
@@ -124,26 +124,26 @@ install-core:
 	$(MAKE) -C sdss install
 
 install-indexes:
-	mkdir -p '$(INSTALL_DIR)/data'
+	mkdir -p '$(DATA_INSTALL_DIR)'
 	@for x in `ls index-*.tar.bz2 2>/dev/null`; do \
-		echo Installing $$x in '$(INSTALL_DIR)/data'...; \
-		echo tar xvjf $$x -C '$(INSTALL_DIR)/data'; \
-		tar xvjf $$x -C '$(INSTALL_DIR)/data'; \
+		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
+		echo tar xvjf $$x -C '$(DATA_INSTALL_DIR)'; \
+		tar xvjf $$x -C '$(DATA_INSTALL_DIR)'; \
 	done
 	@for x in `ls index-*.bz2 | grep -v tar.bz2 2>/dev/null`; do \
-		echo Installing $$x in '$(INSTALL_DIR)/data'...; \
-		echo "cp $$x '$(INSTALL_DIR)/data' && bunzip2 --force '$(INSTALL_DIR)/data/'$$x;"; \
-		cp $$x '$(INSTALL_DIR)/data' && bunzip2 --force '$(INSTALL_DIR)/data/'$$x; \
+		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
+		echo "cp $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x;"; \
+		cp $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x; \
 	done
 	@for x in `ls index-*.tar.gz 2>/dev/null`; do \
-		echo Installing $$x in '$(INSTALL_DIR)/data'...; \
-		echo tar xvzf $$x -C '$(INSTALL_DIR)/data'; \
-		tar xvzf $$x -C '$(INSTALL_DIR)/data'; \
+		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
+		echo tar xvzf $$x -C '$(DATA_INSTALL_DIR)'; \
+		tar xvzf $$x -C '$(DATA_INSTALL_DIR)'; \
 	done
 	@for x in `ls index-*.fits 2>/dev/null`; do \
-		echo Installing $$x in '$(INSTALL_DIR)/data'...; \
-		echo "cp $$x '$(INSTALL_DIR)/data'" \
-		cp $$x '$(INSTALL_DIR)/data' \
+		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
+		echo "cp $$x '$(DATA_INSTALL_DIR)'" \
+		cp $$x '$(DATA_INSTALL_DIR)' \
 	done
 
 reconfig:
