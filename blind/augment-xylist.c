@@ -690,7 +690,6 @@ int augment_xylist(augment_xylist_t* axy,
         anbool iscompressed = FALSE;
 		char* line;
 		char pnmtype;
-		int maxval;
 		char typestr[256];
 		anbool want_pnm = TRUE;
 
@@ -781,8 +780,6 @@ int augment_xylist(augment_xylist_t* axy,
 			}
 			line += strlen(pnmfn) + 1;
 			// "PBM raw, 750 by 864"
-			//if (sscanf(line, " P%cM %255s %d by %d maxval %d",
-			//&pnmtype, typestr, &axy->W, &axy->H, &maxval) != 5) {
 			if (sscanf(line, " P%cM %255s %d by %d",
 					   &pnmtype, typestr, &axy->W, &axy->H) != 4) {
 				ERROR("Failed to parse output from pnmfile: \"%s\"\n", line);
