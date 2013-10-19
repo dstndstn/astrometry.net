@@ -110,7 +110,9 @@ install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS)
 
 clean:
 	rm -f $(LIBCAT) $(OBJS) $(DEPS) *.dep deps \
-		grab-stellarium-constellations
+		grab-stellarium-constellations \
+		ngc2000names.c ngc2000entries.py ngc2000.py ngc2000entries.c \
+		ngcic-accurate-entries.c
 
 test:
 .PHONY: test

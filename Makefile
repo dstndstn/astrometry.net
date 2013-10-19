@@ -264,6 +264,7 @@ clean:
 	-rm gsl-an/config.h
 	$(MAKE) -C libkd clean
 	$(MAKE) -C blind clean
+	$(MAKE) -C sdss clean
 
 realclean: clean
 

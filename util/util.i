@@ -147,8 +147,8 @@ void log_set_level(int lvl);
 
         // Pseudocode from wikipedia's 'Selection algorithm' page
         L = 0;
-        R = N-1;
-        mid = N/2;
+        R = (int)(N-1);
+        mid = (int)(N/2);
         while (L < R) {
             int ipivot;
             int i,j;

@@ -252,7 +252,7 @@ _healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o erro
 _util.so util.py: util.i \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 	WCSLIB_LIB="$(WCSLIB_LIB)" GSL_LIB="$(GSL_LIB)" \
-	python setup-util.py -v build_ext -v --inplace 
+	python setup-util.py build_ext -v --inplace --build-temp .
 
 PYUTIL := _util.so util.py
 pyutil: $(PYUTIL)
@@ -265,7 +265,7 @@ index_wrap.c: index.i index.h
 
 _index_util.so _index_c.so: index_wrap.c index_pyutils.c \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-	python setup-index.py build_ext --inplace
+	python setup-index.py build_ext -v --inplace --build-temp .
 
 coadd: coadd-main.o $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) $(WCS_LIB_DEP)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
@@ -613,9 +613,8 @@ clean:
 		$(DEPS) deps cairoutils.o $(PYTHON_LIBS) \
 		grab-stellarium-constellations \
 		$(PROGS) $(MAIN_PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
-		cairoutils.dep makefile.os-features *.o *~ *.dep *.so deps
-	rm -Rf build
-
+		cairoutils.dep makefile.os-features *.o *~ *.dep *.so deps \
+		os-features.log os-features-makefile.log report.txt
 
 # Try to compensate for clang's lack of -MG to handle generated header
 # files by making everything depend explicitly on os-features-config.h.

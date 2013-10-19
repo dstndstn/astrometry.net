@@ -253,6 +253,7 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 		echo cp $$x '$(INCLUDE_INSTALL_DIR)'; \
 		cp $$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
+	$(MAKE) $(PYTHON_EXTRA_INSTALL)
 	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_EXTRA_INSTALL); do \
 		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
@@ -624,7 +625,7 @@ plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) $(ANUTILS_DIR)
 _plotstuff_c.so: plotstuff_wrap.c $(PLOTSTUFF) $(CATS_LIB) \
 		$(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	python setup.py -v build_ext -v --inplace
+	python setup.py build_ext -v --inplace --build-temp .
 
 plotxy.o: plotxy.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) -c -o $@ $<
@@ -688,8 +689,8 @@ clean:
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) deps $(FITS_UTILS) $(ALL_OBJ) $(IMAGE2XY) \
 		$(NODEP_OBJS) plot-constellations fitsverify plotquad plotxy \
 		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
-		$(ENGINE_LIB) $(ENGINE_SO) _plotstuff_c.so *.o *~ *.dep deps
-	rm -Rf build
+		$(ENGINE_LIB) $(ENGINE_SO) _plotstuff_c.so *.o *~ *.dep deps \
+		plotstuff
 
 
 
