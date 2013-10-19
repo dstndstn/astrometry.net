@@ -214,8 +214,8 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 		echo cp $$x '$(INSTALL_DIR)/bin'; \
 		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
-	mkdir -p '$(CONF_BASE_DIR)'
-	python -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('DATA_INSTALL_DIR', '$(DATA_INSTALL_DIR)')" > '$(CONF_BASE_DIR)/astrometry.cfg'
+	mkdir -p '$(ETC_INSTALL_DIR)'
+	python -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('DATA_INSTALL_DIR', '$(DATA_FINAL_DIR)')" > '$(ETC_INSTALL_DIR)/astrometry.cfg'
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
 		echo cp $$x '$(INCLUDE_INSTALL_DIR)'; \

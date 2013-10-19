@@ -28,9 +28,20 @@ LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
 BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
 DATA_INSTALL_DIR := $(INSTALL_DIR)/data
 PY_BASE_LINK_DIR := ../lib/python/astrometry
-CONF_BASE_DIR ?= $(INSTALL_DIR)/etc
+ETC_INSTALL_DIR ?= $(INSTALL_DIR)/etc
 
+# If your build system stages an install in one place (say, a temp
+# dir) and then copies everything to the final install place, (eg,
+# debian), set *_INSTALL_DIR to the staging place and *_FINAL_DIR to
+# the final destination directory.
 
+# This should rarely be used, since hardly anything should care that
+# it's going to be moved after being staged.
+# (ie, the only place it's used at the moment is in blind/Makefile when
+#  putting the final data directory in the config file etc/astrometry.cfg)
+
+FINAL_DIR ?= $(INSTALL_DIR)
+DATA_FINAL_DIR ?= $(FINAL_DIR)/data
 
 
 # only set CC if it hasn't already been set
