@@ -13,7 +13,7 @@ from setuputils import *
 numpy_inc = get_numpy_include_dirs()
 
 c_swig_module = Extension('_util',
-						  sources = ['util.i'],
+						  sources = ['util.i', 'lanczos.i'],
 						  include_dirs = numpy_inc +
 						  ['../qfits-an/include',
 						   '../libkd',
@@ -33,7 +33,7 @@ setup(cmdclass={'build_ext': an_build_ext},
       version = '1.0',
       description = '',
       author = 'Astrometry.net (Dustin Lang)',
-      author_email = 'dstn@astro.princeton.edu',
+      author_email = 'dstn@cmu.edu',
       url = 'http://astrometry.net',
       py_modules = [ 'util' ],
 	  ext_modules = [c_swig_module])

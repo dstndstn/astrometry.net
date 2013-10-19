@@ -10,8 +10,8 @@ static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
         NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
     int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
 
-    int32_t *ixi, *iyi;
-    float *dx, *dy;
+    const int32_t *ixi, *iyi;
+    const float *dx, *dy;
 
     /*
      dx,dy are in [-0.5, 0.5].
@@ -94,7 +94,7 @@ static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
     Py_INCREF(itype);
     np_ixi = PyArray_CheckFromAny(np_ixi, itype, 1, 1, req, NULL);
     np_iyi = PyArray_CheckFromAny(np_iyi, itype, 1, 1, req, NULL);
-    // itype refcount = 0
+    // At this point, itype refcount = 0
     Py_INCREF(dtype);
     Py_INCREF(dtype);
     np_dx  = PyArray_CheckFromAny(np_dx,  dtype, 1, 1, req, NULL);
@@ -127,16 +127,19 @@ static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
         return -1;
     }
 
-    ixi = PyArray_DATA(np_ixi);
-    iyi = PyArray_DATA(np_iyi);
-    dx  = PyArray_DATA(np_dx);
-    dy  = PyArray_DATA(np_dy);
-
     for (i=0; i<Nimages; i++) {
-        PyObject* np_inimg = PyList_GetItem(linputs, i);
-        PyObject* np_outimg = PyList_GetItem(loutputs, i);
-        float *inimg, *outimg;
+        PyObject* np_inimg;
+        PyObject* np_outimg;
+        const float *inimg;
+        float *outimg;
 
+        ixi = PyArray_DATA(np_ixi);
+        iyi = PyArray_DATA(np_iyi);
+        dx  = PyArray_DATA(np_dx);
+        dy  = PyArray_DATA(np_dy);
+
+        np_inimg  = PyList_GetItem(linputs,  i);
+        np_outimg = PyList_GetItem(loutputs, i);
         Py_INCREF(dtype);
         Py_INCREF(dtype);
         np_inimg  = PyArray_CheckFromAny(np_inimg,   dtype, 2, 2, req, NULL);
@@ -161,33 +164,28 @@ static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
             int tx0, ty0;
             float acc = 0.;
             float nacc;
-            float* ly;
+            const float* ly;
             int ix,iy;
             tx0 = (int)((-(dx[j]+L) - lut0) * Nlutunit);
             ty0 = (int)((-(dy[j]+L) - lut0) * Nlutunit);
-            //printf("tx0, ty0 = %i,%i\n", tx0, ty0);
             // clip
             tx0 = MAX(0, MIN(Nlutunit-1, tx0));
             ty0 = MAX(0, MIN(Nlutunit-1, ty0));
             tx0 *= Nunits;
             ty0 *= Nunits;
-
             ly = lut + ty0;
-
             iy = *iyi;
             ix = *ixi;
             // special-case pixels near the image edges.
             if (ix < L || ix >= (W-L) || iy < L || iy >= (H-L)) {
-                //if (ix < L || ix >= (W-L)) {
                 iy -= L;
                 // Lanczos kernel in y direction
-                for (v=0; v<2*L+1; v++,
-                         iy++, ly++) {
+                for (v=0; v<2*L+1; v++, iy++, ly++) {
                     float accx = 0;
                     int clipiy = MAX(0, MIN((int)(H-1), iy));
                     int ix = *ixi - L;
-                    float* lx = lut + tx0;
-                    float* inpix = inimg + clipiy * W;
+                    const float* lx = lut + tx0;
+                    const float* inpix = inimg + clipiy * W;
                     // Lanczos kernel in x direction
                     for (u=0; u<2*L+1; u++, ix++, lx++) {
                         int clipix = MAX(0, MIN((int)(W-1), ix));
@@ -202,8 +200,8 @@ static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
                          iy++, ly++) {
                     float accx = 0;
                     int ix = *ixi - L;
-                    float* lx = lut + tx0;
-                    float* inpix = inimg + iy * W + ix;
+                    const float* lx = lut + tx0;
+                    const float* inpix = inimg + iy * W + ix;
                     // Lanczos kernel in x direction
                     for (u=0; u<2*L+1; u++,
                              lx++, inpix++) {
@@ -214,15 +212,11 @@ static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
             }
             nacc = lut[tx0 + Nunits-1] * lut[ty0 + Nunits-1];
             *outimg = acc / nacc;
-            //*outimg = acc;
         }
-
         Py_DECREF(np_inimg);
         Py_DECREF(np_outimg);
     }
-
     Py_DECREF(dtype);
-
     Py_DECREF(np_ixi);
     Py_DECREF(np_iyi);
     Py_DECREF(np_dx);
