@@ -191,7 +191,12 @@ int dmedsmooth(const float *image,
                 // in [-0.5, 0.5]: 0.75 - (y^2)
                 // so at +- 0.5 it has value 0.5
                 // at 0 it has value 0.75
-                dy = fabs((float)(jp - ygrid[j]) / (float)ymsize);
+                dy = (float)(jp - ygrid[j]);
+                if (dy >= 0) {
+                    dy /= (float)ypsize;
+                } else {
+                    dy /= (float)(-ymsize);
+                }
                 if ((dy >= 0.5) && (dy < 1.5))
                     ykernel = 0.5 * (dy - 1.5) * (dy - 1.5);
                 else if (dy < 0.5)
