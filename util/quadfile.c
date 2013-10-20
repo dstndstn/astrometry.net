@@ -22,7 +22,7 @@
 #include <assert.h>
 
 #include "quadfile.h"
-#include "qfits.h"
+#include "qfits_header.h"
 #include "fitsioutils.h"
 #include "starutil.h"
 #include "ioutils.h"

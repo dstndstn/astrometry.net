@@ -19,6 +19,9 @@
 #include <math.h>
 #include <string.h>
 
+#include "qfits_rw.h"
+#include "qfits_tools.h"
+
 #include "sip_qfits.h"
 #include "an-bool.h"
 #include "fitsioutils.h"

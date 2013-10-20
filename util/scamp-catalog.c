@@ -22,7 +22,7 @@
 #include "scamp-catalog.h"
 #include "fitstable.h"
 #include "fitsioutils.h"
-#include "qfits.h"
+#include "qfits_header.h"
 #include "errors.h"
 #include "log.h"
 

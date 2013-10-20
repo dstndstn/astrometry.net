@@ -25,7 +25,6 @@
 
 #include "wcs-resample.h"
 #include "sip_qfits.h"
-#include "qfits.h"
 #include "starutil.h"
 #include "bl.h"
 #include "boilerplate.h"

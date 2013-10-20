@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "qfits_header.h"
 #include "tycho2-fits.h"
 #include "fitsioutils.h"
 

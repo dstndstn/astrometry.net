@@ -25,16 +25,17 @@
 #include <math.h>
 #include <sys/param.h>
 
-#include "qfits.h"
 #include "qfits_convert.h"
+#include "qfits_error.h"
+#include "qfits_std.h"
+#include "qfits_tools.h"
+
 #include "anqfits.h"
 #include "fitsioutils.h"
 #include "ioutils.h"
 #include "keywords.h"
 #include "an-endian.h"
 #include "errors.h"
-#include "qfits_error.h"
-#include "qfits_std.h"
 #include "log.h"
 #include "errors.h"
 

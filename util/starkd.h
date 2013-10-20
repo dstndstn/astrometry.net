@@ -24,7 +24,6 @@
 #include <stdio.h>
 
 #include "kdtree.h"
-#include "qfits.h"
 #include "kdtree_fits_io.h"
 #include "fitstable.h"
 #include "keywords.h"

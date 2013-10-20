@@ -23,7 +23,6 @@
 
 #include "anwcs.h"
 #include "an-bool.h"
-#include "qfits.h"
 #include "starutil.h"
 #include "bl.h"
 #include "xylist.h"

@@ -19,7 +19,7 @@
 #ifndef BLIND_SCAMP_H
 #define BLIND_SCAMP_H
 
-#include "qfits.h"
+#include "qfits_header.h"
 #include "sip.h"
 #include "starxy.h"
 

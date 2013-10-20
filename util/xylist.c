@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <errors.h>
 
+#include "qfits_header.h"
 #include "xylist.h"
 #include "fitstable.h"
 #include "fitsioutils.h"
@@ -127,7 +128,7 @@ xylist_t* xylist_open(const char* fn) {
 
     hdr = fitstable_get_primary_header(ls->table);
 	ls->antype = fits_get_dupstring(hdr, "AN_FILE");
-	ls->nfields = qfits_query_n_ext(fn);
+	ls->nfields = fitstable_n_extensions(ls->table);
     ls->include_flux = TRUE;
     ls->include_background = TRUE;
 	assert(is_reading(ls));

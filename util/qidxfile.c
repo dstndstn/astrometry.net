@@ -20,7 +20,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "qfits.h"
+#include "qfits_header.h"
 #include "fitsioutils.h"
 #include "starutil.h"
 #include "ioutils.h"

@@ -29,9 +29,12 @@
 #include <libwcs/wcs.h>
 #endif
 
+#include "qfits_std.h"
+#include "qfits_header.h"
+#include "qfits_rw.h"
+
 #include "anwcs.h"
 #include "anqfits.h"
-#include "qfits_std.h"
 #include "errors.h"
 #include "log.h"
 #include "sip.h"

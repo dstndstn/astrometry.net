@@ -119,7 +119,6 @@ EOF
 
 
 #include "fitsioutils.h"
-#include "qfits.h"
 
 static void write_fits_float_image(const float* img, int nx, int ny, const char* fn) {
 	if (fits_write_float_image(img, nx, ny, fn)) exit(-1);

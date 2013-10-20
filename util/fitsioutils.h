@@ -21,7 +21,9 @@
 
 #include <stdint.h>
 
-#include "qfits.h"
+#include "qfits_header.h"
+#include "qfits_image.h"
+#include "qfits_table.h"
 #include "keywords.h"
 #include "an-bool.h"
 

@@ -24,7 +24,6 @@
 
 #include "xylist.h"
 #include "starutil.h"
-#include "qfits.h"
 #include "fitstable.h"
 
 #define AN_FILETYPE_RDLS "RDLS"

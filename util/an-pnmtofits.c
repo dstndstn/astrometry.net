@@ -27,8 +27,6 @@
 #include <arpa/inet.h>
 #endif
 
-#include "qfits_image.h"
-
 #include "log.h"
 #include "errors.h"
 #include "fitsioutils.h"
