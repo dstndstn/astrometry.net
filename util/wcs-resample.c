@@ -26,7 +26,7 @@
 #include "wcs-resample.h"
 #include "sip_qfits.h"
 #include "an-bool.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "starutil.h"
 #include "bl.h"
 #include "boilerplate.h"
@@ -44,7 +44,7 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
 
     anwcs_t* inwcs;
     anwcs_t* outwcs;
-    qfitsloader qinimg;
+    anqfits_t* anqin;
     qfitsdumper qoutimg;
     float* inimg;
     float* outimg;
@@ -79,26 +79,19 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
     outH = anwcs_imageh(outwcs);
 
     // read input image.
-    memset(&qinimg, 0, sizeof(qinimg));
-    qinimg.filename = (char*)infitsfn;
-    // primary extension
-    qinimg.xtnum = infitsext;
-    // first pixel plane
-    qinimg.pnum = 0;
-    // read as floats
-    qinimg.ptype = PTYPE_FLOAT;
-
-    if (qfitsloader_init(&qinimg) ||
-        qfits_loadpix(&qinimg)) {
-        ERROR("Failed to read pixels from input FITS image \"%s\"", infitsfn);
-		return -1;
+    anqin = anqfits_open(infitsfn);
+    if (!anqin) {
+        ERROR("Failed to open \"%s\"", infitsfn);
+        return -1;
     }
-
-    // lx, ly, fbuf
-    inimg = qinimg.fbuf;
-    assert(inimg);
-    inW = qinimg.lx;
-    inH = qinimg.ly;
+    inimg = (float*)anqfits_readpix(anqin, infitsext, 0, 0, 0, 0, 0,
+                                    PTYPE_FLOAT, NULL, &inW, &inH);
+    anqfits_close(anqin);
+    anqin = NULL;
+    if (!inimg) {
+        ERROR("Failed to read pixels from \"%s\"", infitsfn);
+        return -1;
+    }
 
     if (zero_inf) {
         int i;
@@ -141,9 +134,7 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
         logmsg("Output image bounds: %g to %g\n", pmin, pmax);
         outpixmin = pmin;
         outpixmax = pmax;
-	 }
-
-    qfitsloader_free_buffers(&qinimg);
+    }
 
     // prepare output image.
     memset(&qoutimg, 0, sizeof(qoutimg));

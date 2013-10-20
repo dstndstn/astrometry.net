@@ -24,7 +24,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
-#include "qfits.h"
+#include "anqfits.h"
 #include "ioutils.h"
 #include "fitsioutils.h"
 #include "permutedsort.h"
@@ -40,6 +40,7 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
     int* perm = NULL;
     unsigned char* map = NULL;
     size_t mapsize = 0;
+    anqfits_t* anq = NULL;
 
     fin = fopen(infn, "rb");
     if (!fin) {
@@ -54,19 +55,21 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
     }
 
 	// copy the main header exactly.
-	if (qfits_get_hdrinfo(infn, 0, &start, &size)) {
-		ERROR("Failed to read primary FITS header.");
+    anq = anqfits_open(infn);
+    if (!anq) {
+        ERROR("Failed to open \"%s\"", infn);
         goto bailout;
-	}
-
+    }
+    start = anqfits_header_start(anq, 0);
+    size  = anqfits_header_size (anq, 0);
     if (pipe_file_offset(fin, start, size, fout)) {
         ERROR("Failed to copy primary FITS header.");
         goto bailout;
     }
 
-	nextens = qfits_query_n_ext(infn);
+	nextens = anqfits_n_ext(anq);
     //logverb("Sorting %i extensions.\n", nextens);
-	for (ext=1; ext<=nextens; ext++) {
+	for (ext=1; ext<nextens; ext++) {
 		int c;
 		qfits_table* table;
 		qfits_col* col;
@@ -80,16 +83,15 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
 		int hdrstart, hdrsize, datsize, datstart;
 		int i;
 
-		if (qfits_get_hdrinfo(infn, ext, &hdrstart, &hdrsize) ||
-			qfits_get_datinfo(infn, ext, &datstart, &datsize)) {
-			ERROR("Couldn't get extension %i header or data extent.", ext);
-            goto bailout;
-        }
-		if (!qfits_is_table(infn, ext)) {
+        hdrstart = anqfits_header_start(anq, ext);
+        hdrsize  = anqfits_header_size (anq, ext);
+        datstart = anqfits_data_start  (anq, ext);
+        datsize  = anqfits_data_size   (anq, ext);
+		if (!anqfits_is_table(anq, ext)) {
             ERROR("Extention %i isn't a table. Skipping.\n", ext);
 			continue;
 		}
-		table = qfits_table_open(infn, ext);
+		table = anqfits_get_table(anq, ext);
 		if (!table) {
 			ERROR("Failed to open table: file %s, extension %i. Skipping.", infn, ext);
 			continue;
@@ -175,6 +177,7 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
         goto bailout;
 	}
 	fclose(fin);
+    anqfits_close(anq);
 	return 0;
 
  bailout:
