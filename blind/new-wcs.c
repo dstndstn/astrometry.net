@@ -21,8 +21,7 @@
 #include <sys/types.h>
 #include <regex.h>
 
-#include "qfits.h"
-#include "qfits_error.h"
+#include "anqfits.h"
 #include "an-bool.h"
 #include "fitsioutils.h"
 #include "ioutils.h"
@@ -107,12 +106,12 @@ int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
         goto bailout;
 	}
 
-	inhdr = qfits_header_read(infn);
+	inhdr = anqfits_get_header2(infn, 0);
 	if (!inhdr) {
 		ERROR("Failed to read FITS header from input file \"%s\"", infn);
         goto bailout;
 	}
-	wcshdr = qfits_header_read(wcsfn);
+	wcshdr = anqfits_get_header2(wcsfn, 0);
 	if (!wcshdr) {
 		ERROR("Failed to read FITS header from WCS file \"%s\"", wcsfn);
         goto bailout;
@@ -253,13 +252,18 @@ int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
     if (copydata) {
 		int datsize, datstart;
         FILE* infid = NULL;
-		if (qfits_get_datinfo(infn, 0, &datstart, &datsize)) {
-			ERROR("Couldn't find size of FITS data block.");
+        anqfits_t* anq = NULL;
+        anq = anqfits_open(infn);
+        if (!anq) {
+            ERROR("Failed to open file \"%s\"", infn);
             goto bailout;
-		}
+        }
+        datstart = anqfits_data_start(anq, 0);
+        datsize  = anqfits_data_size (anq, 0);
         infid = fopen(infn, "rb");
         if (!infid) {
             SYSERROR("Failed to open input file \"%s\"", infn);
+            anqfits_close(anq);
             goto bailout;
         }
         logverb("Copying from offset %i to offset %i (length %i) of the input file to the output.\n",
@@ -267,13 +271,17 @@ int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
         if (pipe_file_offset(infid, datstart, datsize, outfid)) {
             ERROR("Failed to copy the data block");
             fclose(infid);
+            anqfits_close(anq);
             goto bailout;
         }
         fclose(infid);
 		if (fits_pad_file(outfid)) {
             ERROR("Failed to pad FITS file \"%s\"", outfn);
+            anqfits_close(anq);
             goto bailout;
         }
+        anqfits_close(anq);
+        anq = NULL;
     }
     
     if (fclose(outfid)) {

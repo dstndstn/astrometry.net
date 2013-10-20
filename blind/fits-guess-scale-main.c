@@ -22,7 +22,6 @@
 #include <string.h>
 #include <math.h>
 
-#include "qfits.h"
 #include "fits-guess-scale.h"
 #include "fitsioutils.h"
 #include "log.h"

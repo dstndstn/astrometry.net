@@ -34,13 +34,13 @@
 #include <unistd.h>
 #include <libgen.h>
 #include <getopt.h>
+#include <math.h>
 #include <assert.h>
 
 #include "ioutils.h"
 #include "bl.h"
 #include "an-bool.h"
 #include "solver.h"
-#include "math.h"
 #include "fitsioutils.h"
 #include "blindutils.h"
 #include "sip_qfits.h"
@@ -50,7 +50,6 @@
 #include "fits-guess-scale.h"
 #include "image2xy-files.h"
 #include "resort-xylist.h"
-#include "qfits.h"
 #include "an-opts.h"
 #include "augment-xylist.h"
 #include "log.h"
@@ -705,7 +704,7 @@ int augment_xylist(augment_xylist_t* axy,
 				want_pnm = FALSE;
 				// We need to get image W,H from the FITS header.
 				logverb("Reading FITS image \"%s\" to find image size\n", axy->imagefn);
-				hdr = qfits_header_readext(axy->imagefn, axy->extension);
+				hdr = anqfits_get_header2(axy->imagefn, axy->extension);
 				axy->W = qfits_header_getint(hdr, "NAXIS1", -1);
 				axy->H = qfits_header_getint(hdr, "NAXIS2", -1);
 				qfits_header_destroy(hdr);
@@ -1109,7 +1108,7 @@ int augment_xylist(augment_xylist_t* axy,
         goto cleanup;
 
 	// start piling FITS headers in there.
-	hdr = qfits_header_read(xylsfn);
+	hdr = anqfits_get_header2(xylsfn, 0);
 	if (!hdr) {
 		ERROR("Failed to read FITS header from file %s", xylsfn);
 		exit(-1);
@@ -1125,7 +1124,7 @@ int augment_xylist(augment_xylist_t* axy,
             addwh = FALSE;
         } else {
             // Look for IMAGEW and IMAGEH headers in first extension, else bail.
-            qfits_header* hdr2 = qfits_header_readext(xylsfn, 1);
+            qfits_header* hdr2 = anqfits_get_header2(xylsfn, 1);
             axy->W = qfits_header_getint(hdr2, "IMAGEW", 0);
             axy->H = qfits_header_getint(hdr2, "IMAGEH", 0);
             qfits_header_destroy(hdr2);

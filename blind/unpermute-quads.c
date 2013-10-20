@@ -27,7 +27,7 @@
 #include "quadfile.h"
 #include "fitsioutils.h"
 #include "codekd.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "log.h"
 #include "errors.h"
 #include "boilerplate.h"

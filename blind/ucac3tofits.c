@@ -29,7 +29,7 @@
 
 #include "ucac3-fits.h"
 #include "ucac3.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "healpix.h"
 #include "starutil.h"
 #include "fitsioutils.h"

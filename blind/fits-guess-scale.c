@@ -23,7 +23,7 @@
 #include <math.h>
 
 #include "fits-guess-scale.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "sip.h"
 #include "sip_qfits.h"
 #include "starutil.h"
@@ -34,7 +34,7 @@ int fits_guess_scale(const char* infn,
                      sl** p_methods, dl** p_scales) {
 	qfits_header* hdr;
 
-	hdr = qfits_header_read(infn);
+	hdr = anqfits_get_header2(infn, 0);
 	if (!hdr) {
 		ERROR("Failed to read FITS header");
         return -1;

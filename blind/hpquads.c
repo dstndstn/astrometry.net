@@ -35,7 +35,7 @@
 #include "kdtree.h"
 #include "tic.h"
 #include "fitsioutils.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "permutedsort.h"
 #include "bt.h"
 #include "starkd.h"

@@ -21,7 +21,6 @@
 
 #include <stdio.h>
 
-#include "qfits.h"
 #include "nomad.h"
 #include "fitstable.h"
 

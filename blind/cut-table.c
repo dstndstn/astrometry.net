@@ -24,7 +24,7 @@
 #include <sys/mman.h>
 
 #include "fitstable.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "ioutils.h"
 #include "fitsioutils.h"
 #include "errors.h"

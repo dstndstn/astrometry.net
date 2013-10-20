@@ -29,7 +29,6 @@
 
 #include "an-bool.h"
 #include "sip_qfits.h"
-#include "qfits.h"
 #include "starutil.h"
 #include "bl.h"
 #include "xylist.h"

@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 
-#include "qfits.h"
+#include "qfits_header.h"
 #include "usnob.h"
 #include "fitstable.h"
 

@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 #include "starutil.h"
-#include "qfits.h"
+#include "qfits_header.h"
 #include "fitsbin.h"
 #include "quadfile.h"
 #include "starkd.h"

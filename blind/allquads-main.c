@@ -33,7 +33,6 @@
 #include "quadfile.h"
 #include "kdtree.h"
 #include "fitsioutils.h"
-#include "qfits.h"
 #include "starkd.h"
 #include "boilerplate.h"
 #include "errors.h"

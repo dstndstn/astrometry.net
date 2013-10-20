@@ -20,7 +20,7 @@
 
 #include "fitsioutils.h"
 #include "ioutils.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "errors.h"
 #include "log.h"
 #include "an-bool.h"
@@ -158,7 +158,7 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 		free(txt);
 	} else {
 		char* ct;
-		hdr = qfits_header_readext(wcsinfn, ext);
+		hdr = anqfits_get_header2(wcsinfn, ext);
 
 		ct = fits_get_dupstring(hdr, "CTYPE1");
 		if ((ct && streq(ct, "RA---TPV")) || forcetan) {

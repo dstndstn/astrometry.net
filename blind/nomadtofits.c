@@ -28,7 +28,7 @@
 
 #include "nomad.h"
 #include "nomad-fits.h"
-#include "qfits.h"
+#include "qfits_header.h"
 #include "healpix.h"
 #include "starutil.h"
 #include "fitsioutils.h"

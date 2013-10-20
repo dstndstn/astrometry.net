@@ -83,6 +83,8 @@ off_t anqfits_data_size(const anqfits_t* qf, int ext);
 int anqfits_get_data_start_and_size(const anqfits_t* qf, int ext,
 									off_t* pstart, off_t* psize);
 
+int anqfits_is_table(const anqfits_t* qf, int ext);
+
 qfits_header* anqfits_get_header(const anqfits_t* qf, int ext);
 qfits_header* anqfits_get_header2(const char* fn, int ext);
 

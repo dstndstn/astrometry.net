@@ -29,7 +29,7 @@
 #include <assert.h>
 
 #include "usnob.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "healpix.h"
 #include "starutil.h"
 #include "usnob-fits.h"

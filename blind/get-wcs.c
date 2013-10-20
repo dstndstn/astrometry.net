@@ -29,7 +29,6 @@
 #include <string.h>
 #include <math.h>
 
-#include "qfits.h"
 #include "sip.h"
 #include "sip_qfits.h"
 #include "fitsioutils.h"

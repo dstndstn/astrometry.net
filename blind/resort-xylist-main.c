@@ -22,7 +22,6 @@
 #include <string.h>
 #include <assert.h>
 
-#include "qfits.h"
 #include "an-bool.h"
 #include "resort-xylist.h"
 #include "fitsioutils.h"

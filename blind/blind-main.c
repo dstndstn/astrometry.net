@@ -19,7 +19,6 @@
 #include <ctype.h>
 #include <math.h>
 
-#include "qfits_cache.h"
 #include "fitsioutils.h"
 #include "boilerplate.h"
 #include "blind.h"
@@ -78,8 +77,6 @@ int main(int argc, char *argv[]) {
 		solver_cleanup(sp);
 		blind_cleanup(bp);
 	}
-
-	qfits_cache_purge(); // for valgrind
 	return 0;
 }
 

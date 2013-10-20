@@ -46,7 +46,7 @@
 #include "fits-guess-scale.h"
 #include "image2xy-files.h"
 #include "resort-xylist.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "an-opts.h"
 #include "augment-xylist.h"
 

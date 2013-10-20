@@ -46,7 +46,7 @@
 #include "os-features.h"
 #include "blind.h"
 #include "log.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "errors.h"
 #include "engine.h"
 #include "tic.h"
@@ -963,7 +963,7 @@ job_t* engine_read_job_file(engine_t* engine, const char* jobfn) {
     blind_t* bp;
 
     // Read primary header.
-    hdr = qfits_header_read(jobfn);
+    hdr = anqfits_get_header2(jobfn, 0);
     if (!hdr) {
         ERROR("Failed to parse FITS header from file \"%s\"", jobfn);
         return NULL;

@@ -22,7 +22,6 @@
 
 #include <stdio.h>
 
-#include "qfits.h"
 #include "ucac4.h"
 #include "fitstable.h"
 

@@ -37,7 +37,6 @@
 #include "rdlist.h"
 #include "qidxfile.h"
 #include "verify.h"
-#include "qfits.h"
 #include "ioutils.h"
 #include "starkd.h"
 #include "codekd.h"

@@ -25,7 +25,7 @@
 // DEBUG
 #include <sys/mman.h>
 
-#include "qfits.h"
+#include "anqfits.h"
 #include "ioutils.h"
 #include "fitsioutils.h"
 #include "permutedsort.h"
@@ -45,6 +45,7 @@ int resort_xylist(const char* infn, const char* outfn,
     int start, size, nextens, ext;
     int (*compare)(const void*, const void*);
     fitstable_t* tab = NULL;
+    anqfits_t* anq = NULL;
 
     if (ascending)
         compare = compare_doubles_asc;
@@ -69,17 +70,20 @@ int resort_xylist(const char* infn, const char* outfn,
     }
 
 	// copy the main header exactly.
-	if (qfits_get_hdrinfo(infn, 0, &start, &size)) {
-		ERROR("Failed to read primary FITS header.");
+    anq = anqfits_open(infn);
+    if (!anq) {
+        ERROR("Failed to open file \"%s\"", infn);
         goto bailout;
-	}
+    }
+    start = anqfits_header_start(anq, 0);
+    size  = anqfits_header_size (anq, 0);
 
     if (pipe_file_offset(fin, start, size, fout)) {
         ERROR("Failed to copy primary FITS header.");
         goto bailout;
     }
 
-	nextens = qfits_query_n_ext(infn);
+	nextens = anqfits_n_ext(anq);
 
     tab = fitstable_open(infn);
     if (!tab) {
@@ -87,17 +91,17 @@ int resort_xylist(const char* infn, const char* outfn,
         goto bailout;
     }
 
-	for (ext=1; ext<=nextens; ext++) {
+	for (ext=1; ext<nextens; ext++) {
 		int hdrstart, hdrsize, datsize, datstart;
 		int i, N;
         int rowsize;
 
-		if (qfits_get_hdrinfo(infn, ext, &hdrstart, &hdrsize) ||
-			qfits_get_datinfo(infn, ext, &datstart, &datsize)) {
-			ERROR("Couldn't get extension %i header or data extent.", ext);
-            goto bailout;
-        }
-		if (!qfits_is_table(infn, ext)) {
+        hdrstart = anqfits_header_start(anq, ext);
+        hdrsize  = anqfits_header_size (anq, ext);
+        datstart = anqfits_data_start  (anq, ext);
+        datsize  = anqfits_data_size   (anq, ext);
+
+        if (!anqfits_is_table(anq, ext)) {
             ERROR("Extention %i isn't a table. Skipping", ext);
 			continue;
 		}

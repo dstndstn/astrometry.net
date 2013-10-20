@@ -47,6 +47,7 @@
 #include "an-opts.h"
 #include "log.h"
 #include "errors.h"
+#include "anqfits.h"
 #include "sip_qfits.h"
 #include "sip-utils.h"
 #include "wcs-rd2xy.h"
@@ -650,12 +651,12 @@ static void after_solved(augment_xylist_t* axy,
 
 		if (axy->fitsimgfn) {
 			//hdrfile = axy->fitsimgfn;
-			imageheader = qfits_header_read(axy->fitsimgfn);
+			imageheader = anqfits_get_header2(axy->fitsimgfn, 0);
 		}
 		if (axy->xylsfn) {
 			char val[32];
 			//hdrfile = axy->xylsfn;
-			imageheader = qfits_header_read(axy->xylsfn);
+			imageheader = anqfits_get_header2(axy->xylsfn, 0);
 			// Set NAXIS=2, NAXIS1=IMAGEW, NAXIS2=IMAGEH
 			fits_header_mod_int(imageheader, "NAXIS", 2, NULL);
 			sprintf(val, "%i", axy->W);

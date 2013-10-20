@@ -27,7 +27,7 @@
 #include "kdtree_internal.h"
 #include "kdtree_mem.h"
 #include "fitsioutils.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "ioutils.h"
 #include "errors.h"
 #include "fitsbin.h"
@@ -189,43 +189,6 @@ KD_DECLARE(kdtree_read_fits, int, (kdtree_fits_t* io, kdtree_t* kd));
 KD_DECLARE(kdtree_write_fits, int, (kdtree_fits_t* io, const kdtree_t* kd,
                                     const qfits_header* inhdr, anbool flip_endian,
 									FILE* fid));
-/*
- sl* kdtree_fits_list_trees(kdtree_fits_t* io) {
-    sl* s = sl_new(4);
-    fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
-	qfits_header* header;
-    int ndim, ndata, nnodes;
-	unsigned int tt;
-    char* fn = fb->filename;
-    int i, N;
-
-    // Look in the primary header...
-    header = fitsbin_get_primary_header(fb);
-    if (is_tree_header_ok(header, &ndim, &ndata, &nnodes, &tt, 1)) {
-        sl_append(s, NULL);
-    }
-    N = qfits_query_n_ext(fn);
-    for (i=1; i<=N; i++) {
-        char* name;
-        header = qfits_header_readext(fn, i);
-        if (!header) {
-            ERROR("Failed to read FITS header for extension %i in file %s", i, fn);
-            continue;
-        }
-        name = fits_get_dupstring(header, "KDT_NAME");
-        if (!name)
-            goto next;
-        if (!is_tree_header_ok(header, &ndim, &ndata, &nnodes, &tt, 0)) {
-            free(name);
-            goto next;
-        }
-        sl_append(s, name);
-    next:
-        qfits_header_destroy(header);
-    }
-    return s;
-}
- */
 
 static qfits_header* find_tree(const char* treename, const fitsbin_t* fb,
                                int* ndim, int* ndata, int* nnodes,

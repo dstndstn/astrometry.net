@@ -30,7 +30,7 @@
 
 #include "ucac4-fits.h"
 #include "ucac4.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "healpix.h"
 #include "starutil.h"
 #include "fitsioutils.h"

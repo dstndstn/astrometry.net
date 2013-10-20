@@ -189,6 +189,23 @@ int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
 
 
 
+int anqfits_is_table(const anqfits_t* qf, int ext) {
+    const qfits_header* hdr;
+    int ttype;
+    hdr = anqfits_get_header_const(qf, ext);
+    if (!hdr) {
+        printf("Failed to read header of ext %i", ext);
+        return -1;
+    }
+    ttype = qfits_is_table_header(hdr);
+    if (ttype == QFITS_ASCIITABLE) {
+        return 1;
+    }
+    if (ttype == QFITS_BINTABLE) {
+        return 1;
+    }
+    return 0;
+}
 
 
 int anqfits_n_ext(const anqfits_t* qf) {

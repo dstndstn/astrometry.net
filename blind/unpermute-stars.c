@@ -28,7 +28,7 @@
 #include "starutil.h"
 #include "quadfile.h"
 #include "fitsioutils.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "starkd.h"
 #include "boilerplate.h"
 #include "log.h"

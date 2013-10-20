@@ -22,7 +22,6 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-#include "qfits.h"
 #include "fitsbin.h"
 #include "bl.h"
 #include "an-bool.h"

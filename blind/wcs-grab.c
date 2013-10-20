@@ -24,7 +24,7 @@
 #include "sip_qfits.h"
 #include "fitsioutils.h"
 #include "boilerplate.h"
-#include "qfits.h"
+#include "anqfits.h"
 
 const char* OPTIONS = "hv";
 
@@ -67,7 +67,7 @@ int main(int argc, char** args) {
     outfn = args[optind+2];
 
     logmsg("Reading extension %i from file \"%s\"\n", ext, infn);
-    hdr = qfits_header_readext(infn, ext);
+    hdr = anqfits_get_header2(infn, ext);
     if (!hdr) {
         ERROR("Failed to read header from extension %i of file \"%s\"\n", ext, infn);
         exit(-1);

@@ -19,7 +19,7 @@
 #ifndef TWOMASS_FITS_H
 #define TWOMASS_FITS_H
 
-#include "qfits.h"
+#include "anqfits.h"
 #include "2mass.h"
 #include "fitstable.h"
 #include "ioutils.h"

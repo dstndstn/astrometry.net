@@ -184,7 +184,7 @@ release:
 SP_RELEASE_DIR := pyspherematch-$(SP_RELEASE_VER)
 SP_RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER)/astrometry
 SP_RELEASE_SUBDIRS := gsl-an qfits-an util libkd catalogs
-SP_RELEASE_REMOVE := FAQ
+SP_RELEASE_REMOVE :=
 SP_ONLY := pyspherematch-only
 
 release-pyspherematch:
