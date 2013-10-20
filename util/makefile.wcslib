@@ -28,6 +28,7 @@ endif
 
 WCSLIB_INC ?= $(shell pkg-config --cflags wcslib 2>/dev/null)
 WCSLIB_LIB ?= $(shell pkg-config --libs wcslib 2>/dev/null)
-WCSLIB_LIB_DEP ?=
+WCSLIB_SLIB ?=
 
-#WCSLIB_LIB ?= $(shell pkg-config --static wcslib 2>/dev/null)
+#WCSLIB_LIB ?=
+#WCSLIB_SLIB ?= $(shell pkg-config --static wcslib 2>/dev/null)

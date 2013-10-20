@@ -27,5 +27,5 @@ endif
 
 CFITS_INC ?= $(shell pkg-config --cflags cfitsio 2>/dev/null)
 CFITS_LIB ?= $(shell pkg-config --libs cfitsio 2>/dev/null)
-CFITS_DEP :=
+CFITS_SLIB :=
 

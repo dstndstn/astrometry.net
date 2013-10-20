@@ -37,6 +37,8 @@ of these; see :ref:`getting-index-files`.
 Installing
 ==========
 
+See :ref:`build`.
+
 The short version::
 
    make

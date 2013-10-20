@@ -16,28 +16,22 @@
 
 BASEDIR := ..
 COMMON := $(BASEDIR)/util
-CATALOGS := $(BASEDIR)/catalogs
 
+CATALOGS := $(BASEDIR)/catalogs
 CATS_INC := -I$(CATALOGS)
-CATS_LIB_DEP := $(CATALOGS)/libcatalogs.a
+CATS_SLIB := $(CATALOGS)/libcatalogs.a
 CATS_LIB :=
 
 .PHONY: all
 all:
 
 include $(COMMON)/makefile.common
-#include $(COMMON)/makefile.utils
 include $(COMMON)/makefile.anfiles
-#include $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.cfitsio
-#include $(COMMON)/makefile.libkd
-#include $(COMMON)/makefile.gsl
 include $(COMMON)/makefile.png
 include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.zlib
-#include $(COMMON)/makefile.wcslib
-
 include $(COMMON)/makefile.netpbm
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -57,17 +51,16 @@ ENGINE_LIB := libastrometry.a
 ENGINE_SO := libastrometry.so
 
 LDFLAGS := $(LDFLAGS_DEF)
-LDFLAGS += -fPIC
 
 LDLIBS := $(LDLIBS_DEF)
 LDLIBS += $(ANFILES_LIB)
 
-LIB_DEP := $(ENGINE_LIB)
-LIB_DEP += $(CAT_LIB_DEP)
-LIB_DEP += $(ANFILES_LIB_DEP)
+SLIB := $(ENGINE_LIB)
+SLIB += $(CAT_SLIB)
+SLIB += $(ANFILES_SLIB)
 
-CAIRO_LIB_DEP := $(LIB_DEP)
-CAIRO_LIB_DEP += $(COMMON)/cairoutils.o
+CAIRO_SLIB := $(SLIB)
+CAIRO_SLIB += $(COMMON)/cairoutils.o
 
 CAIRO_LIBS := $(LDLIBS)
 CAIRO_LIBS += $(CAIRO_LIB)
@@ -76,21 +69,14 @@ CAIRO_LIBS += $(NETPBM_LIB)
 CAIRO_LIBS += $(JPEG_LIB)
 
 CFLAGS += $(CFLAGS_DEF)
-#CFLAGS += $(ANUTILS_INC)
+CFLAGS += $(CATS_INC)
 CFLAGS += $(ANFILES_INC)
-#CFLAGS += $(LIBKD_INC)
-#CFLAGS += $(GSL_INC)
-#CFLAGS += $(QFITS_INC)
 CFLAGS += $(CFITS_INC)
 CFLAGS += $(ZLIB_INC)
-#CFLAGS += $(WCSLIB_INC)
-CFLAGS += $(CATS_INC)
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
 ALL_WCSLIB_TARGETS :=
-
-SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
 QFITS_UTILS := 
 #resort-xylist
@@ -112,11 +98,8 @@ OTHER_OBJS := usnob.o usnob-fits.o catalog.o codefile.o verify.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	nomad.o nomad-fits.o blindutils.o \
 	engine-main.o engine.o plotquad.o plotxy.o tweak2.o
-#add-text.o 
 
-2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
-
-NOT_INSTALLED_PIPELINE := blind agreeable certifiable usnobtofits hpowned \
+NOT_INSTALLED_PIPELINE := blind agreeable certifiable usnobtofits \
 	startree hpquads codetree unpermute-quads unpermute-stars \
 	solvedserver printsolved mergesolved subwcs \
 	2masstofits nomadtofits \
@@ -124,11 +107,16 @@ NOT_INSTALLED_PIPELINE := blind agreeable certifiable usnobtofits hpowned \
 	startree2 uniformize-catalog \
 	local-index index-info control-program
 
-PIPELINE := wcs-grab get-wcs solve-field
+PIPELINE := wcs-grab solve-field
 
 MAIN_PROGS := image2xy new-wcs fits-guess-scale fit-wcs
+# hpquads
 
-PROGS := astrometry-engine build-astrometry-index  $(MAIN_PROGS)
+SIMPLE_PROGS := nomadtofits usnobtofits wcs-grab get-wcs
+# hpowned
+
+PROGS := astrometry-engine build-astrometry-index \
+	$(MAIN_PROGS) $(SIMPLE_PROGS)
 
 PROSPECTUS := quadidx codeprojections quadscales quadsperstar \
 	quadcenters startree2rdls
@@ -146,6 +134,15 @@ ENGINE_OBJS := \
 ENGINE_OBJS += new-wcs.o fits-guess-scale.o cut-table.o \
 	resort-xylist.o
 
+# Conversion routines
+ENGINE_OBJS += 2mass-fits.o 2mass.o nomad-fits.o nomad.o ucac3-fits.o ucac3.o \
+	ucac4-fits.o ucac4.o usnob-fits.o usnob.o
+
+BUILD_INDEX_OBJS := build-index.o uniformize-catalog.o startree2.o hpquads.o \
+	quad-builder.o quad-utils.o codefile.o codetree.o unpermute-stars.o \
+	unpermute-quads.o merge-index.o 
+ENGINE_OBJS += $(BUILD_INDEX_OBJS)
+
 #augment-xylist.o
 
 # see also setup.py dependency list...
@@ -158,7 +155,7 @@ $(ENGINE_LIB): $(ENGINE_OBJS)
 	$(AR) rc $@ $(ENGINE_OBJS)
 	$(RANLIB) $@
 
-$(ENGINE_SO): $(ENGINE_OBJS) $(LIB_DEP)
+$(ENGINE_SO): $(ENGINE_OBJS) $(SLIB)
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^ $(LDLIBS)
 
 # old and miscellaneous executables that aren't part of the pipeline.
@@ -192,15 +189,21 @@ PLOT_INSTALL_H := plotannotations.h plotfill.h plotgrid.h plotimage.h \
 
 ALL_OBJ := $(UTIL_OBJS) $(KDTREE_OBJS) $(QFITS_OBJ) \
 	$(PIPELINE_MAIN_OBJ) $(PROSPECTUS_MAIN_OBJ) $(FITS_UTILS_MAIN_OBJ) \
-	$(OTHER_OBJS) $(2MASSOBJ)
+	$(OTHER_OBJS)
 ALL_EXECS :=
 
 ALL_OBJ += $(PLOTSTUFF)
 
-all: $(QFITS_LIB_DEP) $(LIBKD_LIB_FILE) \
+all: $(QFITS_SLIB) $(LIBKD_LIB_FILE) \
 	$(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) \
 	$(PROGS) $(PIPELINE) $(FITS_UTILS) fitsverify \
 	$(ENGINE_LIB) $(ENGINE_SO)
+
+$(MAIN_PROGS): %: %-main.o $(SLIB)
+ALL_OBJ += $(addsuffix -main.o,$(MAIN_PROGS))
+
+$(SIMPLE_PROGS): %: %.o $(SLIB)
+ALL_OBJ += $(addsuffix .o,$(SIMPLE_PROGS))
 
 cairo: $(CAIROEXECS)
 .PHONY: cairo
@@ -214,8 +217,8 @@ prospectus_progs: $(PROSPECTUS)
 .PHONY: fitsutils
 fitsutils: $(FITS_UTILS)
 
-#simplexy: image2xy
-#.PHONY: simplexy
+simplexy: image2xy
+.PHONY: simplexy
 
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/blind
 LINK_DIR := $(PY_BASE_LINK_DIR)/blind
@@ -276,12 +279,8 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
 
-test-solver: test-solver.o solver_test.o $(LIB_DEP)
-#verify.o matchfile.o $(LIB_DEP)
-#		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-test-solver-2: test-solver-2.o solver_test_2.o $(LIB_DEP)
-#verify.o matchfile.o quad-utils.o codefile.o \
-#		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
+test-solver: test-solver.o solver_test.o $(SLIB)
+test-solver-2: test-solver-2.o solver_test_2.o $(SLIB)
 
 NODEP_OBJS += solver_test.o solver_test_2.o
 ALL_OBJ += test-solver.o test-solver-2.o
@@ -306,51 +305,17 @@ ALL_TEST_FILES = test_2mass \
 	test_usnob test_nomad test_matchfile test_blindutils \
 	test_resort-xylist test_tweak \
 	test_multiindex2 test_codefile
+$(ALL_TEST_FILES): $(SLIB)
 
 ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_EXTRA_LDFLAGS := -lm
+ALL_TEST_LIBS := $(SLIB)
 
 # Add the dependencies here...
-test_multiindex2: test_multiindex2.o $(LIB_DEP)
-#ALL_TEST_EXTRA_OBJS += solver.o verify.o tweak2.o tweak.o quad-utils.o
+#test_multiindex2: test_multiindex2.o $(SLIB)
 
 tests: $(ALL_TEST_FILES)
 .PHONY: tests
-
-test_codefile: $(LIB_DEP)
-#codefile.o quad-utils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
-#ALL_TEST_EXTRA_OBJS += codefile.o
-
-test_2mass: $(LIB_DEP)
-#2mass.o 2mass-fits.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-#ALL_TEST_EXTRA_OBJS += 2mass-fits.o 2mass.o
-
-test_usnob: $(LIB_DEP)
-#usnob-fits.o usnob.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-#ALL_TEST_EXTRA_OBJS += usnob-fits.o usnob.o
-
-test_nomad: $(LIB_DEP)
-#nomad-fits.o nomad.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-#ALL_TEST_EXTRA_OBJS += nomad-fits.o nomad.o
-
-test_matchfile: $(LIB_DEP)
-#matchfile.o matchobj.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-#ALL_TEST_EXTRA_OBJS += matchfile.o matchobj.o
-
-test_blindutils: $(LIB_DEP)
-#blindutils.o $(ANUTILS_LIB) $(GSL_LIB)
-#ALL_TEST_EXTRA_OBJS += blindutils.o
-
-test_resort-xylist: $(LIB_DEP)
-#resort-xylist.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-#ALL_TEST_EXTRA_OBJS += resort-xylist.o
-
-test_tweak: $(LIB_DEP)
-#test_tweak.o tweak.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-#ALL_TEST_EXTRA_OBJS += tweak.o
-
-#ALL_TEST_LIBS += $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) 
-ALL_TEST_LIBS := $(LIB_DEP)
 
 include $(COMMON)/makefile.tests
 
@@ -364,286 +329,86 @@ ALL_EXECS += $(ALL_TEST_FILES) test
 # END OF KEIR'S SUPER SIMPLE TESTING FRAMEWORK
 ######################################################
 
-demo_dsmooth: demo_dsmooth.o $(CAIRO_LIB_DEP)
-#dsmooth.o \
-#	$(COMMON)/cairoutils.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) 
+demo_dsmooth: demo_dsmooth.o $(CAIRO_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(CAIRO_LIBS)
 
-control-program: control-program.o $(LIB_DEP)
-# 		$(ENGINE_OBJS) \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
-# 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
+control-program: control-program.o $(SLIB)
 ALL_OBJ += control-program.o
 
-
-$(MAIN_PROGS): %: %-main.o $(LIB_DEP)
-
-ALL_OBJ += $(addsuffix -main.o,$(MAIN_PROGS))
-
-image2xy: image2xy-main.o image2xy-files.o $(CFITS_DEP) $(LIB_DEP)
+image2xy: image2xy-main.o image2xy-files.o $(CFITS_SLIB) $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 
-fit-wcs: fit-wcs-main.o $(LIB_DEP)
+fit-wcs: fit-wcs-main.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
-
-# # qfits is only needed for writing debugging images...
-# image2xy: image2xy-main.o $(LIB_DEP) #image2xy-files.o $(SIMPLEXY_OBJ) $(CFITS_DEP) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# #	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 
 ALL_OBJ += image2xy-files.o
 
-#new-wcs: new-wcs-main.o new-wcs.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-#ALL_OBJ += new-wcs-main.o
-
-# rdls2hpls: rdls2hpls.o \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# 
-# rdlstohealpix: rdlstohealpix.o \
-# 		$(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# 
-# certifiable: certifiable.o matchfile.o matchobj.o solvedfile.o \
-# 		$(UTILS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-# fits-guess-scale: fits-guess-scale-main.o fits-guess-scale.o \
-# 		$(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-#ALL_OBJ += fits-guess-scale-main.o
-
-get-wcs: get-wcs.o $(LIB_DEP)
-
-#fit-wcs: fit-wcs-main.o tweak2.o tweak.o verify.o matchobj.o $(UTIL_OBJS) \
-#		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
-#	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
-#ALL_OBJ += fit-wcs-main.o
-
-wcs-pv2sip: wcs-pv2sip.o tweak.o $(LIB_DEP)
+wcs-pv2sip: wcs-pv2sip.o tweak.o $(SLIB)
 ALL_OBJ += wcs-pv2sip.o
 
-hpgrid: hpgrid.o $(LIB_DEP)
+hpgrid: hpgrid.o $(SLIB)
 
-$(CFITS_UTILS) :: %: %.o $(CFITS_DEP)
+$(CFITS_UTILS) :: %: %.o $(CFITS_SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 
-fitsverify: ftverify.c fvrf_data.c fvrf_file.c fvrf_head.c fvrf_key.c fvrf_misc.c $(CFITS_DEP)
+fitsverify: ftverify.c fvrf_data.c fvrf_file.c fvrf_head.c fvrf_key.c fvrf_misc.c $(CFITS_SLIB)
 	$(CC) -DSTANDALONE -trigraphs $(CFITS_INC) -o $@ $^ $(CFITS_LIB) -lm
 
-$(OLDEXECS) :: %: %.o $(OLDEXECS_OBJS) $(LIB_DEP)
+$(OLDEXECS) :: %: %.o $(OLDEXECS_OBJS) $(SLIB)
 
-# catalog_analysis: catalog_analysis.o pnpoly.o $(ANUTILS_LIB) $(GSL_LIB)
-
-nomadtofits: nomadtofits.o nomad-fits.o nomad.o $(LIB_DEP)
-ALL_OBJ += nomadtofits.o nomad-fits.o nomad.o
-
-ucac3tofits: ucac3tofits.o ucac3-fits.o ucac3.o $(LIB_DEP)
+ucac3tofits: ucac3tofits.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) -lbz2
-ALL_OBJ += ucac3tofits.o ucac3-fits.o ucac3.o
+ALL_OBJ += ucac3tofits.o
 
-ucac4tofits: ucac4tofits.o ucac4-fits.o ucac4.o $(LIB_DEP)
+ucac4tofits: ucac4tofits.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) -lbz2
-ALL_OBJ += ucac4tofits.o ucac4-fits.o ucac4.o
+ALL_OBJ += ucac4tofits.o
 
-#read_nomad: read_nomad.o nomad.o
+2masstofits: 2masstofits.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) $(ZLIB_LIB)
 
-2masstofits: $(2MASSOBJ) $(LIB_DEP)
-	$(CC) -o $@ $(LDFLAGS) $^ $(ZLIB_LIB) $(LDLIBS)
-
-#diffractionFlag_check: diffractionFlag_check.o usnob-fits.o usnob.o \
-#		$(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-#
-#project-usnob: project-usnob.o usnob-fits.o usnob.o \
-#		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-usnobtofits: usnobtofits.o usnob-fits.o usnob.o $(LIB_DEP)
-ALL_OBJ += usnobtofits.o usnob-fits.o usnob.o
-
-hpowned: hpowned.o $(LIB_DEP)
-
-# startree: startree.o catalog.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# 
-# startree2: startree2-main.o startree2.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# ALL_OBJ += startree2-main.o startree2.o
-# 
-# uniformize-catalog: uniformize-catalog-main.o uniformize-catalog.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# ALL_OBJ += uniformize-catalog-main.o uniformize-catalog.o
-
-BUILD_INDEX_OBJS := build-index.o uniformize-catalog.o startree2.o hpquads.o \
-	quad-builder.o quad-utils.o codefile.o codetree.o unpermute-stars.o \
-	unpermute-quads.o merge-index.o 
-
-build-astrometry-index: build-index-main.o $(BUILD_INDEX_OBJS) $(LIB_DEP)
+build-astrometry-index: build-index-main.o $(SLIB) #$(BUILD_INDEX_OBJS) $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
-ALL_OBJ += build-index-main.o $(BUILD_INDEX_OBJS)
+ALL_OBJ += build-index-main.o
 
-hpquads: hpquads-main.o hpquads.o quad-builder.o quad-utils.o codefile.o \
-	pnpoly.o $(LIB_DEP)
-ALL_OBJ += hpquads-main.o quad-builder.o hpquads.o
-
-# allquads: allquads-main.o allquads.o quad-builder.o quad-utils.o codefile.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-# codetree: codetree-main.o codetree.o codefile.o quad-utils.o \
-# 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# ALL_OBJ += codetree-main.o
-# 
-# unpermute-stars: unpermute-stars-main.o unpermute-stars.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# ALL_OBJ += unpermute-stars-main.o
-# 
-# unpermute-quads: unpermute-quads-main.o unpermute-quads.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# ALL_OBJ += unpermute-quads-main.o
-
-# merge-index: merge-index-main.o merge-index.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# ALL_OBJ += merge-index-main.o
-
-# local-index: local-index.o build-index.o codetree.o startree2.o codetree.o \
-# 		hpquads.o uniformize-catalog.o merge-index.o unpermute-quads.o unpermute-stars.o \
-# 		quad-builder.o quad-utils.o codefile.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
-# ALL_OBJ += local-index.o
-
-# index-to-table: index-to-table.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# 
-# threadtest: threadtest.o $(ENGINE_LIB) \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
-
-astrometry-engine: engine-main.o $(LIB_DEP)
+astrometry-engine: engine-main.o $(SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
-# $(ENGINE_LIB) \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
-# 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
-
-
-### TWEAK_DEBUG_PLOTS
-#backend: backend-main.o $(BACKEND_LIB) \
-#		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) \
-#		$(PLOTSTUFF) $(COMMON)/cairoutils.o
-#	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB)
-
-# verify: verify-main.o verify.o verify2.o matchfile.o matchobj.o $(PLOTSTUFF) $(COMMON)/cairoutils.o \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
-# 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
-# 
-# keirthing: keirthing.o tweak.o \
-# 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-# 
-# dstnthing: dstnthing.o tweak2.o tweak.o matchfile.o matchobj.o verify.o $(PLOTSTUFF) \
-# 		$(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) 
-# 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
-# ALL_OBJ += dstnthing.o
-# 
-# ALL_OBJ += verify-main.o
-
-solve-field: solve-field.o augment-xylist.o image2xy-files.o $(LIB_DEP) $(CFITS_DEP)
+solve-field: solve-field.o augment-xylist.o image2xy-files.o $(SLIB) $(CFITS_SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
-
-# solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o \
-# 		image2xy-files.o resort-xylist.o cut-table.o \
-# 		fits-guess-scale.o new-wcs.o \
-# 		$(CFITS_DEP) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(CFITS_LIB) $(LDLIBS)
-# 
-# ALL_OBJ += cut-table.o
-
 ALL_OBJ += solve-field.o image2xy-files.o
 
 augment-xylist: augment-xylist-main.o augment-xylist.o image2xy-files.o \
-		$(LIB_DEP) $(CFITS_DEP)
+		$(SLIB) $(CFITS_SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
-
 ALL_OBJ += augment-xylist-main.o augment-xylist.o
-
-# blind: blind-main.o blind.o solver.o quad-utils.o matchfile.o matchobj.o \
-# 		solvedclient.o solvedfile.o tweak2.o verify.o \
-# 		tweak.o \
-# 		$(UTIL_OBJS) \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
-# 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^ $(LDLIBS)
-# 	mv $@.tmp $@
-
-# tweak: tweak-main.o verify.o matchfile.o \
-# 		$(COMMON)/cairoutils.o $(PLOTSTUFF) \
-# 		$(UTIL_OBJS) \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
-# 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
-
-# whynot: whynot.o matchfile.o matchobj.o codefile.o solvedclient.o \
-# 		solvedfile.o verify.o quad-utils.o \
-# 		$(PLOTSTUFF) $(COMMON)/cairoutils.o $(CATS_LIB) \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) 
-# 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
-# ALL_OBJ += whynot.o
-
-# quadcenters: quadcenters.o \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
-# 
-# startree2rdls: startree2rdls.o \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
-# 
-# agreeable: agreeable.o matchfile.o matchobj.o solvedfile.o solvedclient.o verify.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
-# 
-# index-info: index-info.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-# subwcs: subwcs.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
-# 		$(QFITS_LIB) $(GSL_LIB)
-# ALL_OBJS += subwcs.o
-
-wcs-grab: wcs-grab.o $(LIB_DEP)
-ALL_OBJ += wcs-grab.o
-
-# printsolved: printsolved.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) 
-# 
-# setsolved: setsolved.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) 
-# 
-# mergesolved: mergesolved.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# 
-# solvedserver: solvedserver.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) \
-# 		$(QFITS_LIB)
-# 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
 $(COMMON)/cairoutils.o:
 	$(MAKE) -C $(COMMON) cairoutils.o
 
 plotquad.o: plotquad.c
 	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC)
-
-plotquad: plotquad.o $(CAIRO_LIB_DEP)
+plotquad: plotquad.o $(CAIRO_SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CAIRO_LIBS)
-
-# onepixel: onepixel.o $(COMMON)/cairoutils.o
-# 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(LDLIBS)
-
-
-# plot-xy-and-quad: plot-xy-and-quad.o matchfile.o $(COMMON)/cairoutils.o \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) 
-# 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(LDLIBS)
 
 plot-constellations.o: plot-constellations.c
 	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) $(CATS_INC)
-
-plot-constellations: plot-constellations.o $(CAIRO_LIB_DEP) $(CATS_LIB_DEP)
+plot-constellations: plot-constellations.o $(CAIRO_SLIB) $(CATS_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(CATS_LIB) $(CAIRO_LIBS)
-
-# catalog-dists: catalog-dists.o 2mass-fits.o usnob-fits.o usnob.o \
-# 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-# add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB) $(LDLIBS)
 
 plotstuff.o: plotstuff.c
 	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC)
-
-plotstuff: plotstuff-main.o $(PLOTSTUFF) $(CAIRO_LIB_DEP) $(CATS_LIB_DEP)
+plotstuff: plotstuff-main.o $(PLOTSTUFF) $(CAIRO_SLIB) $(CATS_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(CATS_LIB) $(CAIRO_LIBS) 
 ALL_OBJ += plotstuff-main.o
+
+plotxy.o: plotxy.c
+	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) 
+plotxy-main.o: plotxy-main.c
+	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC)
+plotxy: plotxy-main.o $(PLOTSTUFF) $(CATS_SLIB) $(CAIRO_SLIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIBS)
+ALL_OBJ += plotxy-main.o
 
 PLOTSTUFF_SRCS = $(subst .o,.c,$(PLOTSTUFF))
 PLOTSTUFF_HDRS = $(subst .o,.h,$(PLOTSTUFF))
@@ -657,52 +422,13 @@ pyplotstuff: _plotstuff_c.so
 plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) $(ANUTILS_DIR)/sip.h $(ANUTILS_DIR)/anwcs.h
 	swig -python $(ANUTILS_INC) $(QFITS_INC) $<
 
-_plotstuff_c.so: plotstuff_wrap.c $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_LIB_DEP)
+_plotstuff_c.so: plotstuff_wrap.c $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	python setup.py build_ext -v --inplace --build-temp .
-
-plotxy.o: plotxy.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) 
-
-plotxy-main.o: plotxy-main.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC)
-
-plotxy: plotxy-main.o $(PLOTSTUFF) $(CATS_LIB_DEP) $(CAIRO_LIB_DEP)
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIBS)
-ALL_OBJ += plotxy-main.o
 
 test_plotstuff-main.c: test_plotstuff.c
 	$(AN_SHELL) $(MAKE_TESTS) $^ > $@
-test_plotstuff: test_plotstuff-main.o test_plotstuff.o $(COMMON)/cutest.o $(PLOTSTUFF) $(CATS_LIB_DEP) $(CAIRO_LIB_DEP)
+test_plotstuff: test_plotstuff-main.o test_plotstuff.o $(COMMON)/cutest.o $(PLOTSTUFF) $(CATS_SLIB) $(CAIRO_SLIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIBS)
-
-#quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# 
-# codeprojections: codeprojections.o $(UTIL_OBJS) $(ANLIBS)
-# 
-# quadscales: quadscales.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(LIBKD_LIB) \
-# 		$(QFITS_LIB)
-# 
-# index-stats: index-stats.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(LIBKD_LIB) \
-# 		$(QFITS_LIB)
-# 
-# quadsperstar: quadsperstar.o \
-# 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) \
-# 		$(QFITS_LIB)
-
-# resort-xylist: resort-xylist-main.o resort-xylist.o $(UTIL_OBJS) \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-#ALL_OBJ += resort-xylist-main.o
-
-# bgsubtract: bgsubtract.o ctmf.o $(COMMON)/cairoutils.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-# 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(LDLIBS)
-
-# usnob-scamp-catalog: usnob-scamp-catalog.o usnob-fits.o usnob.o $(UTIL_OBJS) \
-# 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-# create-scamp-catalog: create-scamp-catalog.o \
-# 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
 DEP_OBJ := $(ALL_OBJ)
 DEP_PREREQS := $(QFITS_LIB)

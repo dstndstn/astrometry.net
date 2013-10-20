@@ -35,16 +35,6 @@ all:
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.anfiles
 
-### DEBUG
-state:
-	echo "ANFILES_INC: $(ANFILES_INC)"
-	echo "ANFILES_LIB: $(ANFILES_LIB)"
-	echo "ANFILES_LIB_DEP: $(ANFILES_LIB_DEP)"
-	echo "QFITS_INC: $(QFITS_INC)"
-	echo "QFITS_LIB: $(QFITS_LIB)"
-	echo "ANUTILS_LIB: $(ANUTILS_LIB)"
-	echo "ANUTILS_LIB_DEP: $(ANUTILS_LIB_DEP)"
-
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	permutedsort.o ioutils.o sip-utils.o fit-wcs.o sip.o md5.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
@@ -167,17 +157,17 @@ $(ANFILES_LIB_FILE): $(ANFILES_OBJ) $(ANFILES_DEPS)
 svn.c: $(SVN_C_DEPS)
 	echo "//" >> svn.c
 
-$(MAIN_PROGS): %: %-main.o $(ANFILES_LIB_DEP)
-$(PROGS): %: %.o $(ANFILES_LIB_DEP)
+$(MAIN_PROGS): %: %-main.o $(ANFILES_SLIB)
+$(PROGS): %: %.o $(ANFILES_SLIB)
 
 DEP_OBJ += $(addsuffix -main.o,$(MAIN_PROGS))
 DEP_OBJ += $(addsuffix .o,$(PROGS))
 
-an-pnmtofits: an-pnmtofits.o $(ANFILES_LIB_DEP)
+an-pnmtofits: an-pnmtofits.o $(ANFILES_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
 ALL_OBJ += an-pnmtofits.o
 
-_util.so util.py: util.i lanczos.i $(ANFILES_LIB_DEP)
+_util.so util.py: util.i lanczos.i $(ANFILES_SLIB)
 	WCSLIB_LIB="$(WCSLIB_LIB)" GSL_LIB="$(GSL_LIB)" \
 	python setup-util.py build_ext -v --inplace --build-temp .
 
@@ -190,7 +180,7 @@ py: $(PYUTIL)
 index_wrap.c: index.i index.h
 	swig -python -I. $<
 
-_index_util.so _index_c.so: index_wrap.c index_pyutils.c $(ANFILES_LIB_DEP)
+_index_util.so _index_c.so: index_wrap.c index_pyutils.c $(ANFILES_SLIB)
 	python setup-index.py build_ext -v --inplace --build-temp .
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py healpix.py sip.py \
@@ -393,7 +383,7 @@ ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_dfind test_ctmf test_dsmooth test_dcen3x3 test_simplexy
 # test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
-ALL_TEST_LIBS = $(ANFILES_LIB_DEP)
+ALL_TEST_LIBS = $(ANFILES_SLIB)
 ALL_TEST_EXTRA_LDFLAGS = 
 
 include $(COMMON)/makefile.tests
@@ -405,7 +395,7 @@ tests: $(ALL_TEST_FILES)
 
 TEST_DFIND_OBJS := dfind.o
 ALL_TEST_EXTRA_OBJS += $(TEST_DFIND_OBJS)
-test_dfind: $(TEST_DFIND_OBJS) $(ANUTILS_LIB) $(GSL_LIB_DEP)
+test_dfind: $(TEST_DFIND_OBJS) $(ANFILES_SLIB)
 
 TEST_CTMF_OBJS := ctmf.o
 ALL_TEST_EXTRA_OBJS += $(TEST_CTMF_OBJS)
@@ -418,7 +408,7 @@ test_dsmooth: $(TEST_DSMOOTH_OBJS)
 test_dcen3x3: dcen3x3.o
 ALL_TEST_EXTRA_OBJS += dcen3x3.o
 
-test_simplexy: $(SIMPLEXY_OBJ) $(ANFILES_LIB_DEP)
+test_simplexy: $(SIMPLEXY_OBJ) $(ANFILES_SLIB)
 ALL_TEST_EXTRA_OBJS += $(SIMPLEXY_OBJ)
 
 NORMAL_TESTS := test_quadfile test_big_tables test_qsort_r \
@@ -428,7 +418,7 @@ NORMAL_TESTS := test_quadfile test_big_tables test_qsort_r \
 	test_healpix test_log test_ioutils test_scamp_catalog test_starutil \
 	test_svd
 
-$(NORMAL_TESTS): $(ANFILES_LIB_DEP)
+$(NORMAL_TESTS): $(ANFILES_SLIB)
 
 ### /TESTS
 

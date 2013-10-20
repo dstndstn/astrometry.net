@@ -1,0 +1,269 @@
+Building/installing the Astrometry.net code
+===========================================
+
+The short version::
+
+   make
+   make py
+   make extra
+   make install  # to put it in /usr/local/astrometry
+   # or:
+   make install INSTALL_DIR=/some/other/place
+
+
+The long version:
+
+Prerequisites
+-------------
+
+For full functionality, you will need:
+  * GNU build tools (gcc/clang, make, etc.)
+  * cairo
+  * netpbm
+  * libpng
+  * libjpeg
+  * libz
+  * python (probably >= 2.4)
+  * numpy
+  * pyfits: http://www.stsci.edu/resources/software_hardware/pyfits (version >= 3.1)
+  * cfitsio: http://heasarc.gsfc.nasa.gov/fitsio/
+ 
+
+Ubuntu or Debian-like systems:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+::
+
+    $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
+                           libpng12-dev libjpeg-dev python-numpy \
+                           python-pyfits python-dev zlib1g-dev \
+                           swig cfitsio-dev
+
+RHEL / RedHat-like distributions:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+::
+
+    $ sudo yum install cairo.x86_64 cairo-devel.x86_64 netpbm.x86_64 \
+                       netpbm-devel.x86_64 fontconfig-devel.x86_64 \
+                       libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64 \
+					   zlib-devel libjpeg-devel
+
+I don't know what the *cfitsio* packages is called -- anyone?
+
+Mac OS X using homebrew:
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+These instructions *Worked For Me* as of September 2012 on OSX 10.8.
+
+First set up homebrew:
+  * grab `XCode <https://developer.apple.com/xcode/>`_ (from the Apps Store.  Free, but you still need a credit card.  Argh.)
+  * grab `XCode Command-line utilities <https://developer.apple.com/downloads/index.action>`_
+  * grab `XQuartz <http://xquartz.macosforge.org/landing/>`_
+  * grab `Homebrew <http://mxcl.github.com/homebrew/>`_
+  * grab `pip <http://www.pip-installer.org/en/latest/installing.html>`_ if you don't have it already
+
+Get homebrew dependencies that need special instructions::
+
+    $ brew install --HEAD --use-gcc netpbm
+
+Optionally, grab some other handy homebrew packages::
+
+    $ brew install cfitsio --with-examples
+    $ brew install md5sha1sum     # OSX doesn't come with this?!  For shame
+ 
+Get our fork of homebrew-science and install::
+
+    $ brew tap camphogg/science     # homebrew/science development is slow!
+    $ brew install astrometry.net
+
+Or::
+
+    $ brew install --HEAD astrometry.net
+
+if you like to live dangerously (but trendily).
+
+
+Mac OS X using Fink:
+^^^^^^^^^^^^^^^^^^^^
+
+Use apt-get install as per the Debian instructions above (leaving out
+``zlib1g-dev`` because it's already included with OSX).  Note that to
+use Fink you will need to add something like this in your
+``~/.profile`` or ``~/.bashrc`` file::
+
+    . /sw/bin/init.sh
+    export CFLAGS="-I/usr/local/include -I/sw/include"
+    export LDFLAGS="-L/usr/local/lib -L/sw/lib"
+
+Getting/Building
+----------------
+
+
+If you don't have and can't get these libraries, you should still be
+able to compile and use the core parts of the solver, but you will
+miss out on some eye-candy.
+
+Grab the code::
+
+    $ wget http://astrometry.net/downloads/astrometry.net-$VERSION.tar.bz2
+    $ tar xjf astrometry.net-$VERSION.tar.bz2
+    $ cd astrometry.net-$VERSION
+
+Build the solving system::
+
+  $ make
+
+If you installed the libraries listed above, build the plotting code::
+
+  $ make extra
+
+Install it::
+
+  $ make install
+
+You might see some error message during compilation; see the section
+ERROR MESSAGES below for fixes to common problems.
+
+By default it will be installed in  ``/usr/local/astrometry`` .
+You can override this by either:
+ * editing the top-level Makefile (look for INSTALL_DIR); or
+ * defining INSTALL_DIR on the command-line:
+        For bash shell::
+
+          $ export INSTALL_DIR=/path/to/astrometry
+          $ make install
+
+        or::
+
+          $ INSTALL_DIR=/path/to/astrometry make install
+
+        For tcsh shell::
+
+          $ setenv INSTALL_DIR /path/to/astrometry
+          $ make install
+
+The astrometry solver is composed of several executables.  You may
+want to add the INSTALL_DIR/bin directory to your path:
+
+   For bash shell::
+
+     $ export PATH="$PATH:/usr/local/astrometry/bin"
+
+   For tcsh shell::
+
+     $ setenv PATH "$PATH:/usr/local/astrometry/bin"
+
+
+Auto-config
+-----------
+
+We use a do-it-yourself auto-config system that tries to detect what
+is available on your machine.  It is called ``os-features``, and it
+works by trying to compile, link, and run a number of executables to
+detect:
+
+ * whether the "netpbm" library is available
+ * whether certain GNU-specific function calls exist
+
+You can change the flags used to compile and link "netpbm" by either:
+
+ *editing util/makefile.netpbm
+ *setting NETPBM_INC or NETPBM_LIB, like this::
+
+    $ make NETPBM_INC="-I/tmp" NETPBM_LIB="-L/tmp -lnetpbm"
+
+You can see whether netpbm was successfully detected by::
+
+    $ cat util/makefile.os-features 
+    # This file is generated by util/Makefile.
+    HAVE_NETPBM := yes
+
+You can force a re-detection either by deleting util/makefile.os-features
+and util/os-features-config.h, or running::
+
+  $ make reconfig
+
+(which just deletes those files)
+
+
+Overriding Things
+-----------------
+
+For most of the libraries we use, there is a file called
+``util/makefile.*`` where we try to auto-configure where the headers
+and libraries can be found.  We use ``pkg-config`` when possible, but
+you can override things.
+
+``*_INC`` are the compile flags (eg, for the include files).
+
+``*_LIB`` is for libraries.
+
+``*_SLIB``, when used, is for static libraries (.a files).
+
+gsl:
+^^^^
+
+You can either use your system's GSL (GNU scientific library)
+libraries, or the subset we ship.  (You don't need to do anything
+special to use the shipped version.)
+
+System::
+
+    make SYSTEM_GSL=yes
+
+Or specify static lib::
+
+    make SYSTEM_GSL=yes GSL_INC="-I/to/gsl/include" GSL_SLIB="/to/gsl/lib/libgsl.a"
+
+Or specify dynamic lib::
+
+    make SYSTEM_GSL=yes GSL_INC="-I/to/gsl/include" GSL_LIB="-L/to/gsl/lib -lgsl"
+
+
+
+cfitsio:
+^^^^^^^^
+
+For dynamic libs::
+
+    make CFITS_INC="-I/to/cfitsio/include" CFITS_LIB="-L/to/cfitsio/lib -lcfitsio"
+
+Or for static lib::
+
+    make CFITS_INC="-I/to/cfitsio" CFITS_SLIB="/to/cfitsio/lib/libcfitsio.a"
+
+
+netpbm:
+^^^^^^^
+
+::
+
+    make NETPBM_INC="-I/to/netpbm" NETPBM_LIB="-L/to/netpbm/lib -lnetpbm"
+
+wcslib:
+^^^^^^^
+
+Ditto, with ``WCSLIB_INC``, ``WCSLIB_LIB``, ``WCS_SLIB``
+
+cairo:
+^^^^^^
+
+``CAIRO_INC``, ``CAIRO_LIB``
+
+jpeg:
+^^^^^
+
+``JPEG_INC``, ``JPEG_LIB``
+
+png:
+^^^^
+
+``PNG_INC``, ``PNG_LIB``
+
+
+zlib:
+^^^^^
+
+``ZLIB_INC``, ``ZLIB_LIB``
+

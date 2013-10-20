@@ -63,9 +63,8 @@ LDLIBS += $(ANUTILS_LIB)
 
 LIBKD := libkd.a
 
-LIB_DEP := $(LIBKD)
-LIB_DEP += $(ANUTILS_LIB_DEP)
-LIB_DEP += $(QFITS_LIB_DEP)
+SLIB := $(LIBKD)
+SLIB += $(ANUTILS_SLIB)
 
 LIBKD_NOIO := libkd-noio.a
 
@@ -99,7 +98,7 @@ pyspherematch: spherematch_c.so
 
 PYSPHEREMATCH_OBJ := pyspherematch.o
 
-spherematch_c.so: pyspherematch.c setup.py $(LIB_DEP)
+spherematch_c.so: pyspherematch.c setup.py $(SLIB)
 	python setup.py build --force --build-base build --build-platlib build/lib
 	cp build/lib/spherematch_c.so $@
 
@@ -111,9 +110,9 @@ ifeq ($(MAKECMDGOALS),pyspherematch)
   DEP_OBJ += $(PYSPHEREMATCH_OBJ)
 endif
 
-checktree: checktree.o $(LIB_DEP)
+checktree: checktree.o $(SLIB)
 
-fix-bb: fix-bb.o $(LIB_DEP)
+fix-bb: fix-bb.o $(SLIB)
 
 DEP_OBJ += fix-bb.o checktree.o
 
@@ -154,14 +153,14 @@ install-spherematch: spherematch_c.so
 
 ALL_TEST_FILES = test_libkd test_libkd_io test_dualtree_nn
 ALL_TEST_EXTRA_OBJS =
-ALL_TEST_LIBS = $(LIB_DEP)
+ALL_TEST_LIBS = $(SLIB)
 
 include $(COMMON)/makefile.tests
 
 test_libkd: $(LIBKD_NOIO) $(ANUTILS_LIB)
 
-test_libkd_io: $(LIB_DEP)
-test_dualtree_nn: $(LIB_DEP)
+test_libkd_io: $(SLIB)
+test_dualtree_nn: $(SLIB)
 
 DEP_OBJ += $(ALL_TEST_FILES_O) $(ALL_TEST_FILES_MAIN_O)
 

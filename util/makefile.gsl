@@ -16,9 +16,9 @@
 
 ifeq ($(SYSTEM_GSL),yes)
 
-GSL_INC ?=
-GSL_LIB ?= -lgsl
-GSL_LIB_DEP ?=
+GSL_INC ?= $(shell pkg-config --cflags gsl 2>/dev/null)
+GSL_LIB ?= $(shell pkg-config --libs   gsl 2>/dev/null)
+GSL_SLIB ?=
 
 else
 
@@ -32,7 +32,7 @@ GSL_INC ?= -I$(GSL_DIR)
 GSL_LIB ?=
 
 # file dependencies for GSL
-GSL_LIB_DEP ?= $(GSL_LIB_FILE)
+GSL_SLIB ?= $(GSL_LIB_FILE)
 
 $(GSL_LIB_FILE):
 	$(MAKE) -C $(GSL_DIR)
