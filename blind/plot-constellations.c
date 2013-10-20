@@ -730,7 +730,7 @@ int main(int argc, char** args) {
                 if (print_common_only || common_only)
                     text = strdup(bs->common_name);
                 else
-                    asprintf(&text, "%s (%s)", bs->common_name, bs->name);
+                    asprintf_safe(&text, "%s (%s)", bs->common_name, bs->name);
             else
                 text = strdup(bs->name);
 
@@ -915,7 +915,7 @@ int main(int argc, char** args) {
 						hd->hd, hd->ra, hd->dec, px, py);
                 continue;
 			}
-            asprintf(&txt, "HD %i", hd->hd);
+            asprintf_safe(&txt, "HD %i", hd->hd);
             if (!justlist) {
                 cairo_text_extents_t textents;
                 cairo_text_extents(cairo, txt, &textents);

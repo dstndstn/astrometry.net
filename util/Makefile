@@ -42,6 +42,8 @@ state:
 	echo "ANFILES_LIB_DEP: $(ANFILES_LIB_DEP)"
 	echo "QFITS_INC: $(QFITS_INC)"
 	echo "QFITS_LIB: $(QFITS_LIB)"
+	echo "ANUTILS_LIB: $(ANUTILS_LIB)"
+	echo "ANUTILS_LIB_DEP: $(ANUTILS_LIB_DEP)"
 
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	permutedsort.o ioutils.o sip-utils.o fit-wcs.o sip.o md5.o \
@@ -172,7 +174,7 @@ DEP_OBJ += $(addsuffix -main.o,$(MAIN_PROGS))
 DEP_OBJ += $(addsuffix .o,$(PROGS))
 
 an-pnmtofits: an-pnmtofits.o $(ANFILES_LIB_DEP)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
+	$(CC) -o $@ $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
 ALL_OBJ += an-pnmtofits.o
 
 _util.so util.py: util.i lanczos.i $(ANFILES_LIB_DEP)

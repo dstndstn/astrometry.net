@@ -23,26 +23,15 @@ ANFILES_LIB_DEP := $(ANFILES_LIB_FILE)
 $(ANFILES_LIB_FILE): $(addprefix $(ANFILES_DIR)/,$(ANFILES_OBJ))
 	$(MAKE) -C $(ANFILES_DIR) libanfiles.a
 
-# Astrometry.net files depends on:
+# Astrometry.net files ("anfiles") depends on:
 #  libkd
-#  qfits
-#  anutils
-
-ifndef NO_QFITS
-include $(COMMON)/makefile.qfits
-endif
+#  anutils (+ qfits)
 
 ifndef NO_KDTREE
 include $(COMMON)/makefile.libkd
 endif
 
 include $(COMMON)/makefile.utils
-
-ifndef NO_QFITS
-ANFILES_INC += $(QFITS_INC)
-ANFILES_LIB += $(QFITS_LIB)
-ANFILES_LIB_DEP += $(QFITS_LIB_DEP)
-endif
 
 ifndef NO_KDTREE
 ANFILES_INC += $(LIBKD_INC)
