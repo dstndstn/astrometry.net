@@ -86,6 +86,7 @@ CFLAGS += $(CAIRO_INC)
 CFLAGS += $(JPEG_INC)
 CFLAGS += $(PNG_INC)
 CFLAGS += $(NETPBM_INC)
+CFLAGS += $(ANFILES_CFLAGS)
 CFLAGS += $(ANFILES_INC)
 CFLAGS += -I.
 
@@ -168,7 +169,8 @@ an-pnmtofits: an-pnmtofits.o $(ANFILES_SLIB)
 ALL_OBJ += an-pnmtofits.o
 
 _util.so util.py: util.i lanczos.i $(ANFILES_SLIB)
-	WCSLIB_LIB="$(WCSLIB_LIB)" GSL_LIB="$(GSL_LIB)" \
+	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
+	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
 	python setup-util.py build_ext -v --inplace --build-temp .
 
 PYUTIL := _util.so util.py

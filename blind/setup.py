@@ -15,68 +15,37 @@ from distutils.core import setup, Extension
 import numpy
 numpy_inc = numpy.get_include()
 
-netpbm_inc = os.environ.get('NETPBM_INC', '')
-netpbm_lib = os.environ.get('NETPBM_LIB', '-lnetpbm')
+def strlist(s, split=' '):
+    lst = s.split(split)
+    lst = [i.strip() for i in lst]
+    lst = [i for i in lst if len(i)]
+    return lst
 
-jpeg_inc = os.environ.get('JPEG_INC', '')
-jpeg_lib = os.environ.get('JPEG_LIB', '-ljpeg')
+link = ' '.join([os.environ.get('LDFLAGS', ''),
+                 os.environ.get('LDLIBS', ''),])
+link = strlist(link)
+objs = strlist(os.environ.get('SLIB', ''))
+inc = strlist(os.environ.get('INC', ''), split='-I')
+cflags = strlist(os.environ.get('CFLAGS', ''))
 
-extra_inc_dirs = []
-compile_args = []
-
-# Pull "-I/dir" into extra_inc_dirs
-for w in (' '.join([netpbm_inc, jpeg_inc])).split(' '):
-	#print 'word "%s"' % w
-	if len(w) == 0:
-		continue
-	if w.startswith('-I'):
-		extra_inc_dirs.append(w[2:])
-	else:
-		compile_args.append(w)
-
-extra_link_dirs = []
-extra_link_libs = []
-link_args = []
-
-for w in (' '.join([netpbm_lib, jpeg_lib])).split(' '):
-	#print 'word "%s"' % w
-	if len(w) == 0:
-		continue
-	if w.startswith('-L'):
-		extra_link_dirs.append(w[2:])
-	elif w.startswith('-l'):
-		extra_link_libs.append(w[2:])
-	else:
-		link_args.append(w)
+print 'link:', link
+print 'objs:', objs
+print 'inc:', inc
+print 'cflags:', cflags
 
 c_module = Extension('_plotstuff_c',
                      sources = ['plotstuff_wrap.c'],
-                     include_dirs = ([
-						 '../qfits-an/include',
-						 '../libkd',
-						 '../util', '.'] +
-									 get_include_dirs('cairo') +
-									 [numpy_inc] +
-									 extra_inc_dirs),
-					 extra_objects = [
+                     include_dirs = [numpy_inc] + inc,
+                     extra_objects = [
 						 'plotstuff.o', 'plotfill.o', 'plotxy.o',
 						 'plotimage.o', 'plotannotations.o',
 						 'plotgrid.o', 'plotoutline.o', 'plotindex.o',
 						 'plotradec.o', 'plothealpix.o', 'plotmatch.o',
 						 'matchfile.o', 'matchobj.o',
-						 '../catalogs/libcatalogs.a',
-						'../util/cairoutils.o',
-						 '../util/libanfiles.a',
-						 '../libkd/libkd.a',
-						 '../util/libanutils.a',
-						 '../qfits-an/lib/libqfits.a',
-						 '../gsl-an/libgsl-an.a',
-						 ],
-					 libraries=reduce(lambda x,y: x+y, [get_libs(x,req) for x,req in [('cairo',True), ('wcslib',False)]]) + ['jpeg'] + extra_link_libs,
-					 library_dirs=reduce(lambda x,y: x+y, [get_lib_dirs(x,req) for x,req in [('cairo',True), ('wcslib',False)]]) + extra_link_dirs,
-		     extra_compile_args=compile_args,
-		     extra_link_args=link_args,
-					 )
+						 ] + objs,
+                         extra_compile_args = cflags,
+                         extra_link_args=link,
+                         )
 
 setup(cmdclass={'build_ext': an_build_ext},
 	  name = 'Plotting stuff in python',

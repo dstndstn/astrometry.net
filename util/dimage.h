@@ -32,7 +32,7 @@ int dfind2(const int* image, int nx, int ny, int* objectimg, int* p_nobjects);
 int dfind2_u8(const unsigned char* image, int nx, int ny, int* objectimg, int* p_nobjects);
 
 float dselip(unsigned long k, unsigned long n, const float *arr);
-void dselip_cleanup();
+void dselip_cleanup(void);
 
 int dsmooth(float *image, int nx, int ny, float sigma, float *smooth);
 

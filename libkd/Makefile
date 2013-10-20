@@ -48,6 +48,7 @@ INTERNAL_SOURCES := kdtree_internal.c kdtree_internal_fits.c
 
 CFLAGS := $(CFLAGS_DEF)
 CFLAGS += $(QFITS_INC)
+CFLAGS += $(ANUTILS_CFLAGS)
 CFLAGS += $(ANUTILS_INC)
 
 # Track memory usage?

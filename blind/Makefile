@@ -56,11 +56,11 @@ LDLIBS := $(LDLIBS_DEF)
 LDLIBS += $(ANFILES_LIB)
 
 SLIB := $(ENGINE_LIB)
-SLIB += $(CAT_SLIB)
+SLIB += $(CATS_SLIB)
 SLIB += $(ANFILES_SLIB)
 
-CAIRO_SLIB := $(SLIB)
-CAIRO_SLIB += $(COMMON)/cairoutils.o
+CAIRO_SLIB := $(COMMON)/cairoutils.o
+CAIRO_SLIB += $(SLIB)
 
 CAIRO_LIBS := $(LDLIBS)
 CAIRO_LIBS += $(CAIRO_LIB)
@@ -70,6 +70,7 @@ CAIRO_LIBS += $(JPEG_LIB)
 
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CATS_INC)
+CFLAGS += $(ANFILES_CFLAGS)
 CFLAGS += $(ANFILES_INC)
 CFLAGS += $(CFITS_INC)
 CFLAGS += $(ZLIB_INC)
@@ -419,10 +420,15 @@ py: pyplotstuff
 pyplotstuff: _plotstuff_c.so 
 .PHONY: pyplotstuff
 
-plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) $(ANUTILS_DIR)/sip.h $(ANUTILS_DIR)/anwcs.h
+plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) \
+		$(ANUTILS_DIR)/sip.h $(ANUTILS_DIR)/anwcs.h
 	swig -python $(ANUTILS_INC) $(QFITS_INC) $<
 
 _plotstuff_c.so: plotstuff_wrap.c $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
+	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS) $(CAIRO_LIBS)" \
+	SLIB="$(CAIRO_SLIB)" \
+	INC="$(ANFILES_INC) $(CAIRO_INC) $(NETPBM_INC)" \
+	CFLAGS="$(ANFILES_CFLAGS)" \
 	python setup.py build_ext -v --inplace --build-temp .
 
 test_plotstuff-main.c: test_plotstuff.c
