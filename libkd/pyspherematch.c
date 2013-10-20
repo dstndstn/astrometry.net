@@ -50,8 +50,8 @@ static PyObject* spherematch_kdtree_build(PyObject* self, PyObject* args) {
         return NULL;
     }
 
-    N = PyArray_DIM(x, 0);
-    D = PyArray_DIM(x, 1);
+    N = (int)PyArray_DIM(x, 0);
+    D = (int)PyArray_DIM(x, 1);
 
     if (D > 10) {
         PyErr_SetString(PyExc_ValueError, "maximum dimensionality is 10: maybe you need to transpose your array?");
@@ -436,7 +436,7 @@ static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
     PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
     Py_XDECREF(dtype);
   }
-  N = PyArray_DIM(pyI, 0);
+  N = (int)PyArray_DIM(pyI, 0);
 
   dims[0] = N;
   dims[1] = D;

@@ -406,8 +406,8 @@ plotoutline_args.__setattr__ = plotoutline_setattr
 		if (self->img) {
 			free(self->img);
 		}
-		self->H = PyArray_DIM(yarr, 0);
-		self->W = PyArray_DIM(yarr, 1);
+		self->H = (int)PyArray_DIM(yarr, 0);
+		self->W = (int)PyArray_DIM(yarr, 1);
 		//printf("Allocating new %i x %i image\n", self->W, self->H);
 		self->img = malloc(self->W * self->H * 4);
 		N = self->W * self->H;
