@@ -205,7 +205,12 @@ int dmedsmooth(const float *image,
                     // ykernel = 0
                     continue;
                 for (ip = ist; ip <= ind; ip++) {
-                    dx = fabs((float)(ip - xgrid[i]) / (float)xmsize);
+                    dx = (float)(ip - xgrid[i]);
+                    if (dx >= 0) {
+                        dx /= (float)xpsize;
+                    } else {
+                        dx /= (float)(-xmsize);
+                    }
                     if ((dx >= 0.5) && (dx < 1.5))
                         xkernel = 0.5 * (dx - 1.5) * (dx - 1.5);
                     else if (dx < 0.5)
