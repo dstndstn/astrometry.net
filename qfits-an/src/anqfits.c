@@ -803,10 +803,8 @@ void* anqfits_readpix(const anqfits_t* qf, int ext,
                       void* output,
                       int* pW, int* pH) {
     const anqfits_image_t* img = anqfits_get_image_const(qf, ext);
-
-    off_t NX, NY;
-    off_t planesize;
-
+    //off_t NX, NY;
+    //off_t planesize;
     off_t start;
     off_t size;
 
@@ -870,10 +868,9 @@ void* anqfits_readpix(const anqfits_t* qf, int ext,
         return NULL;
     }
 
-    NX = x1 - x0;
-    NY = y1 - y0;
-
-    planesize = img->width * img->height * (off_t)img->bpp;
+    //NX = x1 - x0;
+    //NY = y1 - y0;
+    //planesize = img->width * img->height * (off_t)img->bpp;
 
     f = fopen(qf->filename, "rb");
     if (!f) {
