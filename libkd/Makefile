@@ -22,8 +22,9 @@ all:
 .PHONY: all
 
 include $(COMMON)/makefile.common
+include $(COMMON)/makefile.libkd
 include $(COMMON)/makefile.utils
-include $(COMMON)/makefile.anfiles
+#include $(COMMON)/makefile.anfiles
 include $(COMMON)/makefile.qfits
 
 INTERNALS := \
@@ -55,9 +56,16 @@ CFLAGS += $(ANUTILS_INC)
 LDFLAGS := $(LDFLAGS_DEF)
 
 LDLIBS := $(LDLIBS_DEF)
-LDLIBS += -lm
+LDLIBS += $(LIBKD_LIB)
+LDLIBS += $(QFITS_LIB)
+LDLIBS += $(ANUTILS_LIB)
+#LDLIBS += -lm
 
 LIBKD := libkd.a
+
+LIB_DEP := $(LIBKD)
+LIB_DEP += $(ANUTILS_LIB_DEP)
+LIB_DEP += $(QFITS_LIB_DEP)
 
 LIBKD_NOIO := libkd-noio.a
 
@@ -91,7 +99,7 @@ pyspherematch: spherematch_c.so
 
 PYSPHEREMATCH_OBJ := pyspherematch.o
 
-spherematch_c.so: pyspherematch.c setup.py $(LIBKD) $(QFITS_LIB) $(ANUTILS_LIB)
+spherematch_c.so: pyspherematch.c setup.py $(LIB_DEP)
 	python setup.py build --force --build-base build --build-platlib build/lib
 	cp build/lib/spherematch_c.so $@
 
@@ -103,9 +111,9 @@ ifeq ($(MAKECMDGOALS),pyspherematch)
   DEP_OBJ += $(PYSPHEREMATCH_OBJ)
 endif
 
-checktree: checktree.o $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+checktree: checktree.o $(LIB_DEP)
 
-fix-bb: fix-bb.o $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+fix-bb: fix-bb.o $(LIB_DEP)
 
 DEP_OBJ += fix-bb.o checktree.o
 
@@ -146,15 +154,14 @@ install-spherematch: spherematch_c.so
 
 ALL_TEST_FILES = test_libkd test_libkd_io test_dualtree_nn
 ALL_TEST_EXTRA_OBJS =
-ALL_TEST_LIBS = $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_TEST_LIBS = $(LIB_DEP)
 
 include $(COMMON)/makefile.tests
 
 test_libkd: $(LIBKD_NOIO) $(ANUTILS_LIB)
 
-test_libkd_io: $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_dualtree_nn: $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+test_libkd_io: $(LIB_DEP)
+test_dualtree_nn: $(LIB_DEP)
 
 DEP_OBJ += $(ALL_TEST_FILES_O) $(ALL_TEST_FILES_MAIN_O)
 
@@ -181,7 +188,6 @@ include $(COMMON)/makefile.deps
 # Borrowed from makefile.deps
 %_noio.dep : %.c
 	$(CC) $(DEP_ARGS) $< -MT $(addsuffix .o, $(basename $@)) $(DEP_OUT) $@
-
 
 cflags:
 	echo $(CFLAGS)

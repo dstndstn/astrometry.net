@@ -16,12 +16,14 @@
 
 LIBKD_DIR := $(BASEDIR)/libkd
 LIBKD_INC := -I$(LIBKD_DIR)
-LIBKD_LIB := $(LIBKD_DIR)/libkd.a
-LIBKD_NOIO_LIB := $(LIBKD_DIR)/libkd-noio.a
+LIBKD_LIB_FILE := $(LIBKD_DIR)/libkd.a
+LIBKD_NOIO_LIB_FILE := $(LIBKD_DIR)/libkd-noio.a
+LIBKD_LIB_DEP := $(LIBKD_LIB_FILE)
+LIBKD_LIB :=
 
-$(LIBKD_LIB):
+$(LIBKD_LIB_FILE):
 	$(MAKE) -C $(LIBKD_DIR) libkd.a
 
-$(LIBKD_NOIO_LIB):
+$(LIBKD_NOIO_LIB_FILE):
 	$(MAKE) -C $(LIBKD_DIR) libkd-noio.a
 

@@ -17,5 +17,9 @@
 QFITS_DIR := $(BASEDIR)/qfits-an
 QFITS_SRCDIR := $(QFITS_DIR)/src
 QFITS_INC := -I$(QFITS_DIR)/include
-QFITS_LIB := $(QFITS_DIR)/lib/libqfits.a
+QFITS_LIB := 
+QFITS_LIB_DEP := $(QFITS_DIR)/lib/libqfits.a
+
+$(QFITS_LIB_FILE):
+	$(MAKE) -C $(QFITS_DIR) libqfits.a
 

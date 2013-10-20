@@ -52,7 +52,11 @@ subdirs: thirdparty
 	$(MAKE) -C libkd
 	$(MAKE) -C blind
 
-thirdparty: qfits-an gsl-an
+thirdparty: qfits-an
+
+ifneq ($(SYSTEM_GSL),yes)
+thirdparty: gsl-an
+endif
 
 doc:
 	$(MAKE) -C doc html
@@ -77,9 +81,7 @@ extra:
 	$(MAKE) -C blind cairo
 
 # Targets that create python bindings (requiring swig)
-py:
-	$(MAKE) -C qfits-an
-	$(MAKE) -C gsl-an
+py: thirdparty
 	$(MAKE) -C catalogs
 	$(MAKE) -C util pyutil
 	$(MAKE) -C util cairoutils.o
@@ -87,9 +89,7 @@ py:
 	$(MAKE) -C libkd pyspherematch
 	$(MAKE) -C sdss
 
-pyutil:
-	$(MAKE) -C qfits-an
-	$(MAKE) -C gsl-an
+pyutil: thirdparty
 	$(MAKE) -C util pyutil
 
 install: all report.txt

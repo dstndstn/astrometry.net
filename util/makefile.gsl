@@ -14,14 +14,27 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
+ifeq ($(SYSTEM_GSL),yes)
+
+GSL_INC ?=
+GSL_LIB ?= -lgsl
+GSL_LIB_DEP ?=
+
+else
+
 GSL_DIR := $(BASEDIR)/gsl-an
+GSL_LIB_FILE := $(GSL_DIR)/libgsl-an.a
 
 # flags needed to compile gsl
 GSL_INC ?= -I$(GSL_DIR)
 
 # flags needed to link gsl
-GSL_LIB ?= $(GSL_DIR)/libgsl-an.a
+GSL_LIB ?=
 
-$(GSL_LIB):
+# file dependencies for GSL
+GSL_LIB_DEP ?= $(GSL_LIB_FILE)
+
+$(GSL_LIB_FILE):
 	$(MAKE) -C $(GSL_DIR)
 
+endif

@@ -13,7 +13,7 @@ from setuputils import *
 numpy_inc = get_numpy_include_dirs()
 
 c_swig_module = Extension('_util',
-						  sources = ['util.i', 'lanczos.i'],
+						  sources = ['util.i'],
 						  include_dirs = numpy_inc +
 						  ['../qfits-an/include',
 						   '../libkd',

@@ -33,24 +33,30 @@ all:
 #   export NO_QFITS
 
 include $(COMMON)/makefile.common
+include $(COMMON)/makefile.anfiles
 
-ANUTILS_LIB := libanutils.a
+### DEBUG
+state:
+	echo "ANFILES_INC: $(ANFILES_INC)"
+	echo "ANFILES_LIB: $(ANFILES_LIB)"
+	echo "ANFILES_LIB_DEP: $(ANFILES_LIB_DEP)"
+	echo "QFITS_INC: $(QFITS_INC)"
+	echo "QFITS_LIB: $(QFITS_LIB)"
+
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	permutedsort.o ioutils.o sip-utils.o fit-wcs.o sip.o md5.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
-	gslutils.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
-	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o wcs-resample.o
+	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o \
+	wcs-resample.o gslutils.o
 
-ANFILES_LIB := libanfiles.a
 # Things that it depends on but that aren't linked in
 ANFILES_DEPS :=
 ANFILES_OBJ := 
 
 ifndef NO_QFITS
 ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
-	starxy.o qidxfile.o quadfile.o scamp.o scamp-catalog.o \
-	hd.o \
+	starxy.o qidxfile.o quadfile.o scamp.o scamp-catalog.o hd.o \
 	tabsort.o wcs-xy2rd.o wcs-rd2xy.o
 ANFILES_DEPS += $(QFITS_LIB)
 endif
@@ -59,20 +65,14 @@ SIMPLEXY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o \
 	dpeaks.o dselip.o dsigma.o dsmooth.o image2xy.o simplexy.o radix.o ctmf.o
 ANUTILS_OBJ += $(SIMPLEXY_OBJ)
 
-ifndef NO_QFITS
-include $(COMMON)/makefile.qfits
-endif
-ifndef NO_KDTREE
-include $(COMMON)/makefile.libkd
-endif
-
 include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.png
-include $(COMMON)/makefile.gsl
-include $(COMMON)/makefile.wcslib
-
 include $(COMMON)/makefile.netpbm
+
+ANUTILS_LIB_FILE := libanutils.a
+ANFILES_LIB_FILE := libanfiles.a
+
 # D'oh
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),reconfig)
@@ -93,74 +93,44 @@ CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CAIRO_INC)
 CFLAGS += $(JPEG_INC)
 CFLAGS += $(PNG_INC)
-CFLAGS += $(GSL_INC)
-CFLAGS += $(WCSLIB_INC)
 CFLAGS += $(NETPBM_INC)
-
-ifdef WCSLIB_EXISTS
-  ifdef NOWCSLIB
-  else
-    CFLAGS += -DWCSLIB_EXISTS
-  endif
-endif
-
-####
-# WCSTOOLS_EXISTS := 1
-
-ifdef WCSTOOLS_EXISTS
-  CFLAGS += -DWCSTOOLS_EXISTS
-  WCSTOOLS_LIB ?= libwcs.a
-endif
-
-WCS_LIB := $(WCSTOOLS_LIB) $(WCSLIB_LIB)
-WCS_LIB_DEP :=
+CFLAGS += $(ANFILES_INC)
+CFLAGS += -I.
 
 LDFLAGS += $(LDFLAGS_DEF)
 
 LDLIBS := $(LDLIBS_DEF)
-LDLIBS += -lm
+LDLIBS += $(ANFILES_LIB)
 
-ifndef NO_QFITS
-CFLAGS += $(QFITS_INC)
-endif
-ifndef NO_KDTREE
-CFLAGS += $(LIBKD_INC)
-endif
-CFLAGS += -I.
-
-PYTHON_LIBS := _sip.so _healpix.so
+SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
 QFITS_UTILS := fits-column-merge subtable fitsgetext wcsinfo
 
 PROGS := an-fitstopnm an-pnmtofits downsample-fits \
-	fits-flip-endian hpsplit wcs-to-tan	\
+	fits-flip-endian hpsplit wcs-to-tan	query-starkd \
 	get-healpix $(QFITS_UTILS)
 
-#tycho2tofits 
-#search-index 
-#pad-file
+# tycho2tofits search-index pad-file resample tycho2tostellarium build-hd-tree
 
 MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy
 
-# tycho2tostellarium build-hd-tree
 
-all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS) $(MAIN_PROGS)
+
+all: $(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) $(PROGS) $(MAIN_PROGS)
 
 # Things that it depends on but that aren't linked in
 ANUTILS_DEPS :=
 
-# ANUTILS_OBJ -- in makefile.utils
-
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
-	an-thread.h anwcs.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph  bt.h cairoutils.h \
-	codekd.h \
-	errors.h fitsbin.h fitsfile.h fitsioutils.h \
+	an-thread.h anwcs.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph  bt.h \
+	cairoutils.h \
+	codekd.h errors.h fitsbin.h fitsfile.h fitsioutils.h \
 	fitstable.h os-features-config.h os-features.h gslutils.h hd.h \
 	healpix-utils.h healpix.h index.h intmap.h ioutils.h keywords.h log.h \
-	mathutil.h permutedsort.h qidxfile.h \
-	quadfile.h rdlist.h scamp-catalog.h fit-wcs.h sip-utils.h sip.h sip_qfits.h \
-	starkd.h starutil.h starutil.inc starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
+	mathutil.h permutedsort.h qidxfile.h quadfile.h rdlist.h scamp-catalog.h \
+	fit-wcs.h sip-utils.h sip.h sip_qfits.h starkd.h starutil.h starutil.inc \
+	starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
 	xylist.h coadd.h convolve-image.h resample.h multiindex.h scamp.h \
 	ctmf.h dimage.h image2xy.h radix.h simplexy-common.h simplexy.h \
 	tabsort.h wcs-rd2xy.h wcs-xy2rd.h
@@ -178,17 +148,16 @@ ALL_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 # svn.c depends on all the .c and .h files in ANUTILS_OBJ
 SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
 SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(ANUTILS_H)
-#$(subst .o,.h,$(SVN_C_DEPS))
 
 DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 DEP_PREREQS :=
 
-$(ANUTILS_LIB): $(ANUTILS_OBJ) $(ANUTILS_DEPS) 
+$(ANUTILS_LIB_FILE): $(ANUTILS_OBJ) $(ANUTILS_DEPS) 
 	-rm -f $@
 	$(AR) rc $@ $(ANUTILS_OBJ)
 	$(RANLIB) $@
 
-$(ANFILES_LIB): $(ANFILES_OBJ) $(ANFILES_DEPS)
+$(ANFILES_LIB_FILE): $(ANFILES_OBJ) $(ANFILES_DEPS)
 	-rm -f $@
 	$(AR) rc $@ $(ANFILES_OBJ)
 	$(RANLIB) $@
@@ -196,61 +165,17 @@ $(ANFILES_LIB): $(ANFILES_OBJ) $(ANFILES_DEPS)
 svn.c: $(SVN_C_DEPS)
 	echo "//" >> svn.c
 
-ifdef WCSTOOLS_EXISTS
-  WCSTOOLS_LIB ?= libwcs.a
-endif
+$(MAIN_PROGS): %: %-main.o $(ANFILES_LIB_DEP)
+$(PROGS): %: %.o $(ANFILES_LIB_DEP)
 
-WCS_LIB := $(WCSTOOLS_LIB) $(WCSLIB_LIB)
-WCS_LIB_DEP :=
+DEP_OBJ += $(addsuffix -main.o,$(MAIN_PROGS))
+DEP_OBJ += $(addsuffix .o,$(PROGS))
 
-wcs-xy2rd: wcs-xy2rd-main.o wcs-xy2rd.o $(UTIL_OBJS) \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
-ALL_OBJ += wcs-xy2rd-main.o
+an-pnmtofits: an-pnmtofits.o $(ANFILES_LIB_DEP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
+ALL_OBJ += an-pnmtofits.o
 
-wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
-ALL_OBJ += wcs-rd2xy-main.o
-
-fits-column-merge: fits-column-merge.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-wcsinfo: wcsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
-		$(QFITS_LIB) $(GSL_LIB)
-
-subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-tabsort: tabsort-main.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-ALL_OBJ += tabsort-main.o
-
-resample: resample-main.o \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) $(WCS_LIB_DEP)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
-ALL_OBJ += resampe.o
-
-tycho2tofits: tycho2tofits.o \
-		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_OBJ += tycho2tofits.o
-
-tycho2tostellarium: tycho2tostellarium.o $(ANUTILS_LIB) $(QFITS_LIB)
-
-SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
-
-_sip.so: sip-utils.o gslutils.o sip.o starutil.o mathutil.o sip_qfits.o \
-		fitsioutils.o errors.o ioutils.o bl.o os-features.o an-endian.o \
-		log.o tic.o $(QFITS_LIB) $(GSL_LIB)
-	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
-
-_healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o errors.o ioutils.o bl.o log.o tic.o os-features.o
-	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
-
-#util.py util_wrap.c: util.i $(ANUTILS_H)
-#	swig -python -I. $<
-
-_util.so util.py: util.i \
-		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
+_util.so util.py: util.i lanczos.i $(ANFILES_LIB_DEP)
 	WCSLIB_LIB="$(WCSLIB_LIB)" GSL_LIB="$(GSL_LIB)" \
 	python setup-util.py build_ext -v --inplace --build-temp .
 
@@ -263,52 +188,8 @@ py: $(PYUTIL)
 index_wrap.c: index.i index.h
 	swig -python -I. $<
 
-_index_util.so _index_c.so: index_wrap.c index_pyutils.c \
-		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+_index_util.so _index_c.so: index_wrap.c index_pyutils.c $(ANFILES_LIB_DEP)
 	python setup-index.py build_ext -v --inplace --build-temp .
-
-coadd: coadd-main.o $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) $(WCS_LIB_DEP)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
-ALL_OBJ += coadd.o coadd-main.o
-
-wcs-resample: wcs-resample-main.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
-	$(CC) -o $@ $^ $(LDFLAGS) $(WCS_LIB) $(LDLIBS)
-ALL_OBJ += wcs-resample-main.o
-
-fit-wcs: fit-wcs-main.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
-	$(CC) -o $@ $^ $(LDFLAGS) $(WCS_LIB) $(LDLIBS)
-ALL_OBJ += fit-wcs-main.o
-
-get-healpix: get-healpix.o $(ANUTILS_LIB) $(GSL_LIB)
-ALL_OBJ += get-healpix.o
-
-wcs-to-tan: wcs-to-tan.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
-	$(CC) -o $@ $^ $(LDFLAGS) $(WCS_LIB) $(LDLIBS)
-ALL_OBJ += wcs-to-tan.o
-
-pad-file: pad-file.o $(ANUTILS_LIB)
-ALL_OBJ += pad-file.o
-
-an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_OBJ += an-fitstopnm.o
-
-an-pnmtofits: an-pnmtofits.o $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
-ALL_OBJ += an-pnmtofits.o
-
-downsample-fits: downsample-fits.o $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_OBJ += downsample-fits.o
-
-fits-flip-endian: fits-flip-endian.o $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_OBJ += fits-flip-endian.o
-
-search-index: search-index.o \
-		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_OBJ += search-index.o
-
-hpsplit: hpsplit.o \
-		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_OBJ += hpsplit.o
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py healpix.py sip.py \
 	starutil.py starutil_numpy.py \
@@ -318,15 +199,16 @@ PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py healpix.py sip.py \
 	sdss_das.py sdss_filenames.py sdss_get_catalog.py sdss_noise.py \
 	sdss_psf.py sdss_psfield.py sdss_radec_to_rcf.py sqlcl.py \
 	usnob_catalog.py usnob_get_image.py usnob_get_region.py \
-	find_data_file.py plotshift.py plotutils.py miscutils.py multiproc.py yanny.py \
-	$(PYTHON_LIBS)
+	find_data_file.py plotshift.py plotutils.py miscutils.py multiproc.py \
+	yanny.py
 
 PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py
 
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/util
 LINK_DIR := $(PY_BASE_LINK_DIR)/util
 
-install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(ANUTILS_LIB)
+install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) \
+		$(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE)
 	@echo Installing in base directory '$(INSTALL_DIR)'
 	@echo Installing python in base directory '$(PY_INSTALL_DIR)'
 	mkdir -p '$(PY_INSTALL_DIR)'
@@ -349,7 +231,7 @@ install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) $(AN
 		echo cp $$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 		cp $$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
-	@for x in $(ANFILES_LIB) $(ANUTILS_LIB); do \
+	@for x in $(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE); do \
 		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
 		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
 	done
@@ -473,14 +355,9 @@ ALL_TARGETS := os-features-test.o \
 	os-features-test-netpbm-make \
 	os-features-config.h
 
-
-
 ifndef NO_QFITS
 DEP_PREREQS += $(QFITS_LIB)
 endif
-
-PROG_MAIN_OBJS := $(addsuffix .o,$(PROGS)) $(addsuffix -main.o,$(MAIN_PROGS))
-DEP_OBJ += $(PROG_MAIN_OBJS)
 
 hd1.fits: henry-draper.tsv build-hd-tree
 	build-hd-tree -s -R 16 henry-draper.tsv $@
@@ -504,22 +381,18 @@ catalog.dat:
 suppl_1.dat:
 	wget -c http://www.astro.ku.dk/~cf/CD/data/suppl_1.dat
 
-build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
-		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_OBJ += build-hd-tree.o
-
 ### TESTS
 
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
-	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
-	test_scamp_catalog test_starutil test_svd test_hd \
+	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log \
+	test_scamp_catalog test_starutil test_svd test_hd test_ioutils \
 	test_tycho2 test_anwcs test_sip-utils test_errors test_multiindex \
 	test_convolve_image test_qsort_r test_wcs test_big_tables test_quadfile \
 	test_dfind test_ctmf test_dsmooth test_dcen3x3 test_simplexy
 # test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
-ALL_TEST_LIBS = $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) 
-ALL_TEST_EXTRA_LDFLAGS = $(WCSLIB_LIB) -lm
+ALL_TEST_LIBS = $(ANFILES_LIB_DEP)
+ALL_TEST_EXTRA_LDFLAGS = 
 
 include $(COMMON)/makefile.tests
 
@@ -530,7 +403,7 @@ tests: $(ALL_TEST_FILES)
 
 TEST_DFIND_OBJS := dfind.o
 ALL_TEST_EXTRA_OBJS += $(TEST_DFIND_OBJS)
-test_dfind: $(TEST_DFIND_OBJS) $(ANUTILS_LIB) $(GSL_LIB)
+test_dfind: $(TEST_DFIND_OBJS) $(ANUTILS_LIB) $(GSL_LIB_DEP)
 
 TEST_CTMF_OBJS := ctmf.o
 ALL_TEST_EXTRA_OBJS += $(TEST_CTMF_OBJS)
@@ -543,65 +416,22 @@ test_dsmooth: $(TEST_DSMOOTH_OBJS)
 test_dcen3x3: dcen3x3.o
 ALL_TEST_EXTRA_OBJS += dcen3x3.o
 
-test_simplexy: $(SIMPLEXY_OBJ) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+test_simplexy: $(SIMPLEXY_OBJ) $(ANFILES_LIB_DEP)
 ALL_TEST_EXTRA_OBJS += $(SIMPLEXY_OBJ)
 
-test_quadfile: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+NORMAL_TESTS := test_quadfile test_big_tables test_qsort_r \
+	test_convolve_image test_multiindex test_errors test_sip-utils \
+	test_anwcs test_wcs test_tycho2 test_hd test_fitstable test_fitsbin \
+	test_fitsioutils test_xylist test_rdlist test_bl test_bt test_endian \
+	test_healpix test_log test_ioutils test_scamp_catalog test_starutil \
+	test_svd
 
-test_big_tables: $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_qsort_r: $(ANUTILS_LIB)
-
-test_convolve_image: $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_multiindex: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_errors: $(ANUTILS_LIB)
-
-test_sip-utils: $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-
-test_anwcs: $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB)
-
-test_wcs: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB)
-
-test_tycho2: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_hd: $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_fitstable: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_fitsbin: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_fitsioutils: $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_xylist: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_rdlist: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_bl: $(ANUTILS_LIB)
-
-test_bt: $(ANUTILS_LIB)
-
-test_endian: $(ANUTILS_LIB)
-
-test_healpix: $(ANUTILS_LIB)
-
-test_log: $(ANUTILS_LIB)
-
-test_ioutils: $(ANUTILS_LIB)
-
-test_scamp_catalog: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-test_starutil: $(ANUTILS_LIB)
-
-test_svd: $(ANUTILS_LIB) $(GSL_LIB)
+$(NORMAL_TESTS): $(ANFILES_LIB_DEP)
 
 ### /TESTS
 
-# we'll just tack this on here... It depends on cairo, libjpeg, etc, so it's not part
-# of the anX.a libraries.
+# we'll just tack this on here... It depends on cairo, libjpeg, etc,
+# so it's not part of the anX.a libraries.
 ifeq ($(MAKECMDGOALS),cairoutils.o)
   include cairoutils.dep
 endif
@@ -609,8 +439,8 @@ endif
 .PHONY: clean
 
 clean:
-	rm -f $(ANUTILS_LIB) $(ANFILES_LIB) $(ALL_OBJ) \
-		$(DEPS) deps cairoutils.o $(PYTHON_LIBS) \
+	rm -f $(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) $(ALL_OBJ) \
+		$(DEPS) deps cairoutils.o \
 		grab-stellarium-constellations \
 		$(PROGS) $(MAIN_PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
 		cairoutils.dep makefile.os-features *.o *~ *.dep *.so deps \

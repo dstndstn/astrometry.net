@@ -50,5 +50,5 @@ test.c: $(MAKE_TESTS) $(TEST_SOURCES)
 	$(AN_SHELL) $(MAKE_TESTS) $(TEST_SOURCES) > $@
 
 test: test.o $(COMMON)/cutest.o $(ALL_TEST_FILES_O) $(sort $(ALL_TEST_EXTRA_OBJS)) $(ALL_TEST_LIBS)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(ALL_TEST_EXTRA_LDFLAGS)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(ALL_TEST_EXTRA_LDFLAGS) $(LDLIBS)
 

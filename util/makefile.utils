@@ -16,8 +16,33 @@
 
 ANUTILS_DIR := $(BASEDIR)/util
 ANUTILS_INC := -I$(ANUTILS_DIR)
-ANUTILS_LIB := $(ANUTILS_DIR)/libanutils.a
+ANUTILS_LIB_FILE := $(ANUTILS_DIR)/libanutils.a
+ANUTILS_LIB := 
+ANUTILS_LIB_DEP := $(ANUTILS_LIB_FILE)
 
-$(ANUTILS_LIB): #$(addprefix $(ANUTILS_DIR)/,$(ANUTILS_OBJ))
+$(ANUTILS_LIB_FILE):
 	$(MAKE) -C $(ANUTILS_DIR) libanutils.a
+
+include $(COMMON)/makefile.gsl
+include $(COMMON)/makefile.wcslib
+
+ifdef WCSLIB_EXISTS
+  ifdef NOWCSLIB
+  else
+    ANUTILS_INC += -DWCSLIB_EXISTS
+  endif
+endif
+
+# WCSTOOLS_EXISTS := 1
+ifdef WCSTOOLS_EXISTS
+  ANUTILS_INC += -DWCSTOOLS_EXISTS
+  WCSTOOLS_LIB ?= libwcs.a
+endif
+
+WCS_LIB := $(WCSTOOLS_LIB) $(WCSLIB_LIB)
+WCS_LIB_DEP := $(WCSLIB_LIB_DEP)
+
+ANUTILS_INC += $(GSL_INC) $(WCSLIB_INC)
+ANUTILS_LIB_DEP += $(ANUTILS_LIB) $(GSL_LIB_DEP) $(WCS_LIB_DEP)
+ANUTILS_LIB += $(GSL_LIB) $(WCS_LIB) -lm
 
