@@ -63,7 +63,7 @@ int main(int argc, char** args) {
 	int rtn = -1;
     int loglvl = LOG_MSG;
     int siporder = 0;
-    int W, H;
+    int W=0, H=0;
     anbool crpix_center = FALSE;
     int i;
 
