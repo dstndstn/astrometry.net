@@ -41,13 +41,13 @@ install: $(QFITS_LIB_FILE) $(HEADERS)
 	done
 .PHONY: install
 
-clean:
-	rm -f $(QFITS_LIB_FILE) $(OBJS) $(DEPS) deps
-.PHONY: clean
-
 DEP_OBJ := $(OBJS)
 
 ifneq ($(MAKECMDGOALS),clean)
 include $(COMMON)/makefile.deps
 endif
+
+clean:
+	rm -f $(QFITS_LIB_FILE) $(OBJS) *.dep *~ deps
+.PHONY: clean
 
