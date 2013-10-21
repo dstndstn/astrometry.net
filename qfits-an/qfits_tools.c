@@ -93,7 +93,9 @@ char* qfits_pretty_string_r(const char * s, char* pretty) {
     int             i,j;
 	int slen;
     pretty[0] = '\0';
-	if (!s) return;
+	if (!s) {
+        return NULL;
+    }
     if (s[0] != '\'') {
 		strcpy(pretty, s);
 		return pretty;

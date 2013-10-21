@@ -17,6 +17,13 @@ COMMON := $(BASEDIR)/util
 
 include $(COMMON)/makefile.common
 
+CFLAGS += $(CFLAGS_DEF)
+CFLAGS += -I.
+
+LDFLAGS += $(LDFLAGS_DEF)
+
+LDLIBS := $(LDLIBS_DEF)
+
 $(QFITS_LIB_FILE): $(OBJS)
 	-rm -f $@
 	$(AR) rc $@ $^
