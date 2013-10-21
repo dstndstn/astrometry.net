@@ -331,6 +331,7 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	anbool is_tan;
 	anbool skip_linear;
 	anbool skip_zero;
+    char pretty[FITS_LINESZ];
 
 	memset(&sip, 0, sizeof(sip_t));
 
@@ -338,7 +339,7 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	expect  = "RA---TAN-SIP";
 	expect2 = "RA---SIN-SIP";
 	str = qfits_header_getstr(hdr, key);
-	str = qfits_pretty_string(str);
+	str = qfits_pretty_string_r(str, pretty);
 	if (!str) {
 		ERROR("SIP header: no key \"%s\"", key);
 		return NULL;
@@ -360,7 +361,7 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 		expect = "DEC--TAN-SIP";
 	}
 	str = qfits_header_getstr(hdr, key);
-	str = qfits_pretty_string(str);
+	str = qfits_pretty_string_r(str, pretty);
 	if (!str || strncmp(str, expect, strlen(expect))) {
 		ERROR("SIP header: incorrect key \"%s\": expected \"%s\", got \"%s\"", key, expect, str);
 		return NULL;

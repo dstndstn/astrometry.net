@@ -183,6 +183,8 @@ index_wrap.c: index.i index.h
 	swig -python -I. $<
 
 _index_util.so _index_c.so: index_wrap.c index_pyutils.c $(ANFILES_SLIB)
+	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
+	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
 	python setup-index.py build_ext -v --inplace --build-temp .
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py healpix.py sip.py \

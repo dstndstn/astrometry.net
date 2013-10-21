@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-#include "qfits.h"
+#include "qfits_header.h"
 #include "fitsbin.h"
 
 struct qidxfile {

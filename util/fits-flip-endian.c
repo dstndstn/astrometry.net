@@ -22,7 +22,7 @@
 #include <string.h>
 
 #include "an-bool.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "bl.h"
 #include "ioutils.h"
 #include "errors.h"
@@ -53,6 +53,7 @@ int main(int argc, char *argv[]) {
     int i;
     char* progname = argv[0];
     int Next;
+    anqfits_t* anq;
 
     exts = il_new(16);
     sizes = il_new(16);
@@ -93,8 +94,13 @@ int main(int argc, char *argv[]) {
             exit(-1);
         }
     }
-
-    Next = qfits_query_n_ext(infn);
+    
+    anq = anqfits_open(infn);
+    if (!anq) {
+        ERROR("Failed to open input file %s", infn);
+        exit(-1);
+    }
+    Next = anqfits_n_ext(anq);
     if (Next == -1) {
         ERROR("Couldn't determine how many extensions are in file %s", infn);
         exit(-1);
@@ -105,7 +111,7 @@ int main(int argc, char *argv[]) {
     for (i=0; i<il_size(exts); i++) {
         int e = il_get(exts, i);
         int s = il_get(sizes, i);
-        if (e < 0 || e > Next) {
+        if (e < 0 || e >= Next) {
             logerr("Extension %i is not valid: must be in [%i, %i]\n", e, 0, Next);
             exit(-1);
         }
@@ -128,7 +134,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    for (i=0; i<=Next; i++) {
+    for (i=0; i<Next; i++) {
         int hdrstart, hdrlen, datastart, datalen;
         int ind;
         int size;
@@ -139,11 +145,10 @@ int main(int argc, char *argv[]) {
             size = il_get(sizes, ind);
         }
 
-        if (qfits_get_hdrinfo(infn, i, &hdrstart,  &hdrlen ) ||
-            qfits_get_datinfo(infn, i, &datastart, &datalen)) {
-            ERROR("Error getting extents of extension %i", i);
-            exit(-1);
-        }
+        hdrstart = anqfits_header_start(anq, i);
+        hdrlen   = anqfits_header_size (anq, i);
+        datastart = anqfits_data_start(anq, i);
+        datalen   = anqfits_data_size (anq, i);
 
         if (hdrlen) {
             if (pipe_file_offset(fin, hdrstart, hdrlen, fout)) {
@@ -180,6 +185,7 @@ int main(int argc, char *argv[]) {
         }
     }
     fclose(fin);
+    anqfits_close(anq);
     if (!tostdout)
         fclose(fout);
     il_free(exts);

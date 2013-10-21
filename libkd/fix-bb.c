@@ -27,6 +27,7 @@
 #include "ioutils.h"
 #include "fitsioutils.h"
 #include "errors.h"
+#include "anqfits.h"
 
 void printHelp(char* progname) {
 	printf("\nUsage: %s <input> <output>\n"
@@ -52,6 +53,7 @@ int main(int argc, char** args) {
     anbool verbose = FALSE;
     char* err;
     anbool force_quad = FALSE;
+    anqfits_t* anq = NULL;
 
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -168,7 +170,6 @@ int main(int argc, char** args) {
 
     if (verbose)
         printf("Finding extra extensions...\n");
-    Next = qfits_query_n_ext(infn);
 
     fin = fopen(infn, "rb");
     if (!fin) {
@@ -181,14 +182,21 @@ int main(int argc, char** args) {
         exit(-1);
     }
 
+    anq = anqfits_open(infn);
+    if (!anq) {
+        ERROR("Failed to open input file %s for reading", infn);
+        exit(-1);
+    }
+    Next = anqfits_n_ext(anq);
+
     for (i=0; i<Next; i++) {
         int hoffset, hlength;
         int doffset, dlength;
         int ext = i+1;
 
-        if (qfits_is_table(infn, ext)) {
+        if (anqfits_is_table(anq, ext)) {
             qfits_table* table;
-            table = qfits_table_open(infn, ext);
+            table = anqfits_get_table(anq, ext);
             if (table &&
                 (table->nc == 1) &&
                 kdtree_fits_column_is_kdtree(table->col[0].tlabel))
@@ -196,11 +204,11 @@ int main(int argc, char** args) {
         }
         if (verbose)
             printf("Extension %i is not part of the kdtree.  Copying it verbatim.\n", ext);
-        if (qfits_get_hdrinfo(infn, ext, &hoffset, &hlength) ||
-            qfits_get_datinfo(infn, ext, &doffset, &dlength)) {
-            ERROR("Failed to get header or data offset & length for extension %i", ext);
-            exit(-1);
-        }
+
+        hoffset = anqfits_header_start(anq, i);
+        hlength = anqfits_header_size (anq, i);
+        doffset = anqfits_data_start(anq, i);
+        dlength = anqfits_data_size (anq, i);
 
         if (pipe_file_offset(fin, hoffset, hlength, fout) ||
             pipe_file_offset(fin, doffset, dlength, fout)) {
@@ -213,7 +221,7 @@ int main(int argc, char** args) {
         SYSERROR("Failed to close output file %s", outfn);
         exit(-1);
     }
-
+    anqfits_close(anq);
     kdtree_fits_close(kd);
     errors_free();
 

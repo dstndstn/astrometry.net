@@ -621,6 +621,7 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
     //double default_image_fraction = 1.0;
     char* fn;
     double val;
+    char pretty[FITS_LINESZ+1];
 
     blind_init(bp);
     // must be in this order because init_parameters handily zeros out sp
@@ -694,7 +695,7 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
     job->include_default_scales = qfits_header_getboolean(hdr, "ANAPPDEF", 0);
 
     sp->parity = PARITY_BOTH;
-	pstr = qfits_pretty_string(qfits_header_getstr(hdr, "ANPARITY"));
+	pstr = qfits_pretty_string_r(qfits_header_getstr(hdr, "ANPARITY"), pretty);
 	if (pstr && streq(pstr, "NEG"))
 		sp->parity = PARITY_FLIP;
 	else if (pstr && streq(pstr, "POS"))
@@ -809,10 +810,13 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
 		if (hi == -1)
 			break;
         if ((lo <= 0) || (lo > hi)) {
+            char pretty1[FITS_LINESZ+1];
+            char pretty2[FITS_LINESZ+1];
             logerr("Field range %i to %i is invalid: min must be >= 1, max must be >= min.\n", lo, hi);
+            qfits_pretty_string_r(qfits_header_getstr(hdr, lokey), pretty1);
+            qfits_pretty_string_r(qfits_header_getstr(hdr, hikey), pretty2);
             logmsg("  (FITS headers: \"%s = %s\", \"%s = %s\")\n",
-                   lokey, qfits_pretty_string(qfits_header_getstr(hdr, lokey)),
-                   hikey, qfits_pretty_string(qfits_header_getstr(hdr, hikey)));
+                   lokey, pretty1, hikey, pretty2);
             goto bailout;
         }
 
@@ -829,8 +833,8 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
 		if (fld == -1)
 			break;
         if (fld <= 0) {
-            logerr("Field %i is invalid: must be >= 1.  (FITS header: \"%s = %s\")\n", fld, key,
-                   qfits_pretty_string(qfits_header_getstr(hdr, key)));
+            qfits_pretty_string_r(qfits_header_getstr(hdr, key), pretty);
+            logerr("Field %i is invalid: must be >= 1.  (FITS header: \"%s = %s\")\n", fld, key, pretty);
             goto bailout;
         }
 

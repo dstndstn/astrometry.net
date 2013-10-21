@@ -21,7 +21,6 @@
 
 #include <stdio.h>
 
-#include "qfits.h"
 #include "anqfits.h"
 #include "bl.h"
 #include "an-bool.h"

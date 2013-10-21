@@ -25,7 +25,6 @@
 #include <math.h>
 
 #include "an-bool.h"
-#include "qfits.h"
 #include "log.h"
 #include "errors.h"
 #include "mathutil.h"
@@ -33,6 +32,7 @@
 #include "ioutils.h"
 #include "anqfits.h"
 #include "qfits_convert.h"
+#include "qfits_header.h"
 
 static const char* OPTIONS = "hvs:e:";
 

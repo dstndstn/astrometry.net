@@ -105,32 +105,6 @@ qfits_table* qfits_table_copy(const qfits_table* t) {
 }
 
 
-/*----------------------------------------------------------------------------*/
-/**
-  @brief    Identify a file as containing a FITS table in extension.
-  @param    filename    Name of the FITS file to examine.
-  @param    xtnum        Extension number to check (starting from 1).
-  @return    int 1 if the extension contains a table, 0 else.
-  Examines the requested extension and identifies the presence of a FITS table.
- */
-/*----------------------------------------------------------------------------*/
-int qfits_is_table(const char * filename, int xtnum)
-{
-    char    *    value ;
-    int            ttype ;
-    
-    ttype = QFITS_INVALIDTABLE ;
-    value = qfits_query_ext(filename, "XTENSION", xtnum);
-    if (value==NULL) return ttype ;
-    
-    value = qfits_pretty_string(value);
-    if (!strcmp(value, "TABLE")) {
-        ttype = QFITS_ASCIITABLE;
-    } else if (!strcmp(value, "BINTABLE")) {
-        ttype = QFITS_BINTABLE;
-    }
-    return ttype;
-}    
 
 int qfits_is_table_header(const qfits_header* hdr) {
     char* value;
@@ -651,51 +625,6 @@ qfits_table * qfits_table_open2(const qfits_header* hdr, off_t offset_beg, size_
     
     /* Return  */
     return tload;
-}
-
-/*----------------------------------------------------------------------------*/
-/**
-  @brief    Read a FITS extension.
-  @param    filename    Name of the FITS file to examine.
-  @param    xtnum        Extension number to read (starting from 1).
-  @return    Pointer to newly allocated qfits_table structure.
-
-  Read a FITS table from a given file name and extension, and return a
-  newly allocated qfits_table structure. 
- */
-/*----------------------------------------------------------------------------*/
-qfits_table * qfits_table_open(
-        const char  *   filename, 
-        int             xtnum)
-{
-	qfits_header* hdr;
-    off_t               offset_beg;
-    size_t              data_size;
-	qfits_table* t;
-	
-	/* See if 'filename' is a fits file  */
-    if (qfits_is_fits(filename) != 1) {
-        qfits_error("[%s] is not FITS", filename);
-        return NULL;
-    }
-
-    /* Initialize offset_beg */
-    if (qfits_get_datinfo_long(filename, xtnum, &offset_beg, &data_size)!=0) {
-        qfits_error("cannot find data start in [%s]:[%d]", filename, xtnum);
-        return NULL;
-    }
-
-	hdr = qfits_header_readext(filename, xtnum);
-	if (!hdr) {
-		qfits_error("Failed to read extension %i of file %s\n", xtnum, filename);
-		return NULL;
-	}
-
-	t = qfits_table_open2(hdr, offset_beg, data_size, filename, xtnum);
-
-	qfits_header_destroy(hdr);
-
-	return t;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1707,67 +1636,6 @@ int * qfits_query_column_nulls(
     return out_array;    
 }
 
-/*----------------------------------------------------------------------------*/
-/**
-  @brief    Save a table to a FITS file with a given FITS header.
-  @param    array            Data array.
-  @param    table            table
-  @param    fh              FITS header to insert in the output file.
-  @return   -1 in error case, 0 otherwise
- */
-/*----------------------------------------------------------------------------*/
-int qfits_save_table_hdrdump(
-        const void          **  array,
-        const qfits_table   *   table,
-        const qfits_header  *   fh)
-{
-    FILE        *   outfile;
-    const char  *   md5hash;
-    char            md5card[81];
-
-    /* Open the destination file */
-    if ((outfile = fopen(table->filename, "w")) == NULL) {
-		qfits_error("cannot open file [%s]: %s", table->filename, strerror(errno));
-        return -1;
-    }
-    /* Write the fits header in the file 'outname' */
-    if (qfits_header_dump(fh, outfile) == -1) {
-        qfits_error("cannot dump header in file");
-        fclose(outfile);
-        return -1;
-    }
-    /* Append the extension */
-    if (table->tab_t == QFITS_BINTABLE) {
-        if (qfits_table_append_bin_xtension(outfile, table, array) == -1) {
-            qfits_error("in writing fits table");
-            fclose(outfile);
-            return -1;
-        }
-    } else if (table->tab_t == QFITS_ASCIITABLE) {
-        if (qfits_table_append_ascii_xtension(outfile, table, array) == -1) {
-            qfits_error("in writing fits table");
-            fclose(outfile);
-            return -1;
-        }
-    } else {
-        qfits_error("Unrecognized table type");
-        fclose(outfile);
-        return -1;
-    }
-    fclose(outfile);
-    /* Update MD5 keyword */
-    if (strcmp(table->filename, "STDOUT")) {
-        md5hash = qfits_datamd5(table->filename);
-        if (md5hash==NULL) {
-            qfits_error("computing MD5 signature for output file %s", 
-                    table->filename);
-            return -1;
-        }
-        sprintf(md5card, "DATAMD5 = '%s' / MD5 checksum", md5hash);
-        qfits_replace_card(table->filename, "DATAMD5", md5card);
-    }
-    return 0;
-}
 
 /*----------------------------------------------------------------------------*/
 /**

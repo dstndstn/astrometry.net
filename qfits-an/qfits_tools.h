@@ -67,7 +67,7 @@ char * qfits_query_ext(const char *, const char *, int);
 char * qfits_query_hdr(const char *, const char *);
 
 
-void qfits_pretty_string_r(const char* in, char* out);
+char* qfits_pretty_string_r(const char* in, char* out);
 int qfits_query_ext_r(const char* filename,
 					  const char* keyword,
 					  int extension,

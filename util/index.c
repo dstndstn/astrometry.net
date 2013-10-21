@@ -24,6 +24,7 @@
 #include "tic.h"
 
 #include "anqfits.h"
+#include "qfits_rw.h"
 #include "starutil.h"
 
 anbool index_overlaps_scale_range(index_t* meta,

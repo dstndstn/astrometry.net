@@ -66,7 +66,7 @@ html:
 	$(MAKE) -C doc html
 
 qfits-an:
-	$(MAKE) -C qfits-an/src
+	$(MAKE) -C qfits-an
 
 gsl-an:
 	$(MAKE) -C gsl-an
@@ -173,7 +173,7 @@ release:
 
 	(cd $(RELEASE_DIR)/util  && swig -python -I. util.i)
 	(cd $(RELEASE_DIR)/util  && swig -python -I. index.i)
-	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../qfits-an/src plotstuff.i)
+	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../qfits-an plotstuff.i)
 	(cd $(RELEASE_DIR)/sdss  && swig -python -I. cutils.i)
 
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
@@ -240,7 +240,7 @@ snapshot:
 
 	(cd snapshot/util  && swig -python -I. util.i)
 	(cd snapshot/util  && swig -python -I. index.i)
-	(cd snapshot/blind && swig -python -I. -I../util -I../qfits-an/src plotstuff.i)
+	(cd snapshot/blind && swig -python -I. -I../util -I../qfits-an plotstuff.i)
 	(cd snapshot/sdss  && swig -python -I. cutils.i)
 
 	SSD=astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}'); \

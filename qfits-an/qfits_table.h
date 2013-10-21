@@ -231,7 +231,6 @@ typedef struct qfits_table
 
 qfits_table* qfits_table_copy(const qfits_table* t);
 
-int qfits_is_table(const char * filename, int xtnum);
 qfits_header * qfits_table_prim_header_default(void);
 qfits_header * qfits_table_ext_header_default(const qfits_table *);
 qfits_table * qfits_table_new(const char *, int, int, int, int);

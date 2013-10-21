@@ -13,6 +13,7 @@
 #include "qfits_keywords.h"
 #include "qfits_std.h"
 #include "qfits_image.h"
+#include "qfits_tools.h"
 
 typedef struct {
     int naxis;

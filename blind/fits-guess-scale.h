@@ -20,7 +20,7 @@
 #define FITS_GUESS_SCALE_H
 
 #include "bl.h"
-#include "qfits.h"
+#include "qfits_header.h"
 
 int fits_guess_scale(const char* infn,
                      sl** p_methods, dl** p_scales);

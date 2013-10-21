@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 
-#include "qfits.h"
+#include "qfits_header.h"
 
 int fitsfile_pad_with(FILE* fid, char pad);
 

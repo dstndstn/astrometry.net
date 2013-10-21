@@ -42,49 +42,27 @@ struct fitsext {
 typedef struct fitsext fitsext_t;
 
 qfits_header* fitsbin_get_header(const fitsbin_t* fb, int ext) {
-	if (fb->fits)
-		return anqfits_get_header(fb->fits, ext);
-	return qfits_header_readext(fb->filename, ext);
+	assert(fb->fits);
+    return anqfits_get_header(fb->fits, ext);
 }
 
 int fitsbin_get_datinfo(fitsbin_t* fb, int ext, off_t* pstart, off_t* psize) {
-	int istart, isize;
-	if (fb->fits) {
-		if (pstart)
-			*pstart = anqfits_data_start(fb->fits, ext);
-		if (psize)
-			*psize = anqfits_data_size(fb->fits, ext);
-		return 0;
-	}
-	if (qfits_get_datinfo(fb->filename, ext, &istart, &isize) == -1) {
-		ERROR("error getting start/size for ext %i in file %s.\n", ext, fb->filename);
-		return -1;
-	}
-	if (pstart)
-		*pstart = istart;
-	if (psize)
-		*psize = isize;
-	return 0;
+	assert(fb->fits);
+    if (pstart)
+        *pstart = anqfits_data_start(fb->fits, ext);
+    if (psize)
+        *psize = anqfits_data_size(fb->fits, ext);
+    return 0;
 }
 
 const qfits_table* fitsbin_get_table_const(fitsbin_t* fb, int ext) {
-	if (fb->fits)
-		return anqfits_get_table_const(fb->fits, ext);
-	// cache 'em...
-	if (!fb->tables)
-		fb->tables = calloc(fb->Next, sizeof(qfits_table*));
-	assert(ext >= 0);
-	assert(ext < fb->Next);
-	if (fb->tables[ext])
-		return fb->tables[ext];
-	fb->tables[ext] = qfits_table_open(fb->filename, ext);
-	return fb->tables[ext];
+	assert(fb->fits);
+    return anqfits_get_table_const(fb->fits, ext);
 }
 
 int fitsbin_n_ext(const fitsbin_t* fb) {
-	if (fb->fits)
-		return anqfits_n_ext(fb->fits);
-	return qfits_query_n_ext(fb->filename);
+	assert(fb->fits);
+    return anqfits_n_ext(fb->fits);
 }
 
 FILE* fitsbin_get_fid(fitsbin_t* fb) {

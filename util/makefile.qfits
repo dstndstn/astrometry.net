@@ -15,10 +15,10 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 QFITS_DIR := $(BASEDIR)/qfits-an
-QFITS_SRCDIR := $(QFITS_DIR)/src
-QFITS_INC := -I$(QFITS_DIR)/include
+QFITS_SRCDIR := $(QFITS_DIR)
+QFITS_INC := -I$(QFITS_DIR)
 QFITS_LIB := 
-QFITS_SLIB := $(QFITS_DIR)/lib/libqfits.a
+QFITS_SLIB := $(QFITS_DIR)/libqfits.a
 
 $(QFITS_LIB_FILE):
 	$(MAKE) -C $(QFITS_DIR) libqfits.a

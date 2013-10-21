@@ -20,7 +20,7 @@
 #define SCAMP_CATALOG_H
 
 #include "fitstable.h"
-#include "qfits.h"
+#include "qfits_header.h"
 #include "an-bool.h"
 
 struct scamp_catalog {

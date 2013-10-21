@@ -21,7 +21,7 @@
 #include <sys/param.h>
 #include <errno.h>
 
-#include "qfits.h"
+#include "anqfits.h"
 #include "fitsioutils.h"
 #include "boilerplate.h"
 
@@ -54,6 +54,8 @@ int main(int argc, char** args) {
     char* buffer;
     qfits_header* hdr;
     qfits_header* tablehdr;
+    anqfits_t* anqa = NULL;
+    anqfits_t* anqb = NULL;
 
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -74,8 +76,20 @@ int main(int argc, char** args) {
     bfn = args[optind+1];
     outfn = args[optind+2];
 
-    atable = qfits_table_open(afn, 1);
-    btable = qfits_table_open(bfn, 1);
+    anqa = anqfits_open(afn);
+    if (!anqa) {
+        fprintf(stderr, "Failed to open file \"%s\": %s.\n", afn, strerror(errno));
+        exit(-1);
+    }
+
+    anqb = anqfits_open(bfn);
+    if (!anqb) {
+        fprintf(stderr, "Failed to open file \"%s\": %s.\n", bfn, strerror(errno));
+        exit(-1);
+    }
+
+    atable = anqfits_get_table(anqa, 1);
+    btable = anqfits_get_table(anqb, 1);
 
     if (!atable) {
         fprintf(stderr, "Failed to read a FITS table from ext 1 of file \"%s\".\n", afn);
@@ -121,14 +135,10 @@ int main(int argc, char** args) {
         exit(-1);
     }
 
-    if (qfits_get_datinfo(afn, 1, &aoff, &asize)) {
-        fprintf(stderr, "Failed to get offset & size of extension 1 data in file \"%s\".\n", afn);
-        exit(-1);
-    }
-    if (qfits_get_datinfo(bfn, 1, &boff, &bsize)) {
-        fprintf(stderr, "Failed to get offset & size of extension 1 data in file \"%s\".\n", afn);
-        exit(-1);
-    }
+    aoff  = anqfits_data_start(anqa, 1);
+    asize = anqfits_data_size (anqa, 1);
+    boff  = anqfits_data_start(anqb, 1);
+    bsize = anqfits_data_size (anqb, 1);
 
     if (fseek(afid, aoff, SEEK_SET)) {
         fprintf(stderr, "Failed to seek to start of data in file \"%s\": %s\n", afn, strerror(errno));
@@ -163,7 +173,7 @@ int main(int argc, char** args) {
         exit(-1);
     }
 
-    hdr = qfits_header_read(afn);
+    hdr = anqfits_get_header2(afn, 0);
     if (!hdr) {
         fprintf(stderr, "Failed to read primary header from \"%s\".\n", afn);
         exit(-1);
@@ -213,6 +223,9 @@ int main(int argc, char** args) {
 
     fclose(afid);
     fclose(bfid);
+
+    anqfits_close(anqa);
+    anqfits_close(anqb);
 
     qfits_table_close(atable);
     qfits_table_close(btable);

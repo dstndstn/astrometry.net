@@ -187,7 +187,17 @@ int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
 }
 
 
-
+int qfits_is_table(const char* filename, int ext) {
+    int rtn;
+    anqfits_t* anq = anqfits_open_hdu(filename, ext);
+    if (!anq) {
+        fprintf(stderr, "qfits_is_table: failed to open \"%s\"", filename);
+        return -1;
+    }
+    rtn = anqfits_is_table(anq, ext);
+    anqfits_close(anq);
+    return rtn;
+}
 
 int anqfits_is_table(const anqfits_t* qf, int ext) {
     const qfits_header* hdr;
@@ -286,10 +296,51 @@ qfits_header* anqfits_get_header_only(const char* fn, int ext) {
     return hdr;
 }
 
+// copied from util/ioutils.c
+static char* file_get_contents_offset(const char* fn, int offset, int size) {
+    char* buf;
+    FILE* fid;
+    fid = fopen(fn, "rb");
+    if (!fid) {
+        fprintf(stderr, "file_get_contents_offset: failed to open file \"%s\": %s\n", fn, strerror(errno));
+        return NULL;
+    }
+    buf = malloc(size);
+    if (!buf) {
+        fprintf(stderr, "file_get_contents_offset: couldn't malloc %lu bytes.\n", (long)size);
+        return NULL;
+    }
+	if (offset) {
+		if (fseeko(fid, offset, SEEK_SET)) {
+			fprintf(stderr, "file_get_contents_offset: failed to fseeko: %s.\n", strerror(errno));
+			return NULL;
+		}
+	}
+	if (fread(buf, 1, size, fid) != size) {
+        fprintf(stderr, "file_get_contents_offset: failed to read %lu bytes: %s\n", (long)size, strerror(errno));
+        free(buf);
+        return NULL;
+    }
+	fclose(fid);
+    return buf;
+}
+
+
 const qfits_header* anqfits_get_header_const(const anqfits_t* qf, int ext) {
     assert(ext >= 0 && ext < qf->Nexts);
-    if (!qf->exts[ext].header)
-        qf->exts[ext].header = qfits_header_readext(qf->filename, ext);
+    if (!qf->exts[ext].header) {
+        off_t start, size;
+        char* str;
+        start = anqfits_header_start(qf, ext);
+        size  = anqfits_header_size (qf, ext);
+        str = file_get_contents_offset(qf->filename, (int)start, (int)size);
+        if (!str) {
+            fprintf(stderr, "anqfits_get_header_const: failed to read \"%s\" offset %i size %i\n", qf->filename, (int)start, (int)size);
+            return NULL;
+        }
+        qf->exts[ext].header = qfits_header_read_hdr_string
+            ((unsigned char*)str, (int)size);
+    }
     return qf->exts[ext].header;
 }
 

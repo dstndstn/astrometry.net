@@ -20,7 +20,7 @@
 #define CODE_KD_H
 
 #include "kdtree.h"
-#include "qfits.h"
+#include "qfits_header.h"
 #include "anqfits.h"
 
 #define AN_FILETYPE_CODETREE "CKDT"

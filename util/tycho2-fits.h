@@ -21,7 +21,6 @@
 
 #include <stdio.h>
 
-#include "qfits.h"
 #include "tycho2.h"
 #include "fitstable.h"
 
