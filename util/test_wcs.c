@@ -79,7 +79,6 @@ static void tst_rd2xy(double ra, double dec, double xtrue, double ytrue,
 static void tst_xy2rd(double x, double y, double ratrue, double dectrue,
 					  anwcs_t* an1, sip_t* sip1, tan_t* tan1, CuTest* tc) {
 	double ra, dec;
-	anbool ok;
 	int err;
 
 	if (an1) {

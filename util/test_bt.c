@@ -17,6 +17,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "bt.h"
 #include "cutest.h"

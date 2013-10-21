@@ -34,13 +34,14 @@ struct walk_token2 {
 	dl* radecs;
 };
 
+/*
 static void walk_callback2(const anwcs_t* wcs, double ix, double iy,
                            double ra, double dec, void* token) {
 	struct walk_token2* walk = token;
 	dl_append(walk->radecs, ra);
 	dl_append(walk->radecs, dec);
 }
-
+ */
 void test_walk_outline(CuTest* tc) {
 	anwcs_t* plotwcs = anwcs_create_allsky_hammer_aitoff(180., 0., 400, 200);
     tan_t tanwcs;
@@ -56,11 +57,12 @@ void test_walk_outline(CuTest* tc) {
     tanwcs.imageh = 50.;
     tanwcs.sin = 0;
 
-    anwcs_t* wcs = anwcs_new_tan(&tanwcs);
-
-	struct walk_token2 token2;
 	dl* rd;
-    double stepsize = 1000;
+    /*
+     anwcs_t* wcs = anwcs_new_tan(&tanwcs);
+     struct walk_token2 token2;
+     double stepsize = 1000;
+     */
 
     log_init(LOG_ALL);
 

@@ -349,9 +349,7 @@ void print_node(double z, double phi, int Nside) {
 
 void test_healpix_distance_to_radec(CuTest *ct) {
 	double d;
-	double xyz[3];
 	double rd[2];
-	double ra,dec;
 
 	d = healpix_distance_to_radec(4, 1, 0, 0, NULL);
     CuAssertDblEquals(ct, 0, d, 0);

@@ -54,8 +54,10 @@ void test_compute_inverse(CuTest* tc) {
 		for (x=0; x<=sip_imagew(wcs); x+=dx) {
 			double ra,dec;
 			double x2, y2;
+            anbool ok;
 			sip_pixelxy2radec(wcs, x, y, &ra, &dec);
-			sip_radec2pixelxy(wcs, ra, dec, &x2, &y2);
+			ok = sip_radec2pixelxy(wcs, ra, dec, &x2, &y2);
+            CuAssertTrue(tc, ok);
 			CuAssertDblEquals(tc, x, x2, 1e-2);
 			CuAssertDblEquals(tc, y, y2, 1e-2);
 			printf("x,y %g,%g --> error %g,%g\n", x,y, x2-x, y2-y);
