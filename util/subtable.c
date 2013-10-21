@@ -216,6 +216,8 @@ int main(int argc, char *argv[]) {
 	}
 	fclose(fin);
 
+    anqfits_close(anq);
+
 	pl_free(cols);
 	return 0;
 }

@@ -23,6 +23,9 @@
 
 #include "cutest.h"
 
+#include "qfits_header.h"
+#include "qfits_rw.h"
+
 #include "fitsioutils.h"
 #include "qfits_header.h"
 
