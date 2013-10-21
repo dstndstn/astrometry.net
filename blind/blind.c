@@ -53,7 +53,7 @@
 #include "index.h"
 #include "log.h"
 #include "tic.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "errors.h"
 #include "scamp-catalog.h"
 #include "permutedsort.h"

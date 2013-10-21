@@ -31,7 +31,7 @@
 #include "fitsioutils.h"
 #include "anwcs.h"
 #include "coadd.h"
-#include "qfits.h"
+#include "anqfits.h"
 #include "mathutil.h"
 #include "convolve-image.h"
 #include "resample.h"

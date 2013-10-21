@@ -46,10 +46,12 @@ INSTALL_H := kdtree.h kdtree_fits_io.h dualtree.h \
 # These are #included by other source files.
 INTERNAL_SOURCES := kdtree_internal.c kdtree_internal_fits.c
 
+INC := $(QFITS_INC)
+INC += $(ANUTILS_INC)
+
 CFLAGS := $(CFLAGS_DEF)
-CFLAGS += $(QFITS_INC)
 CFLAGS += $(ANUTILS_CFLAGS)
-CFLAGS += $(ANUTILS_INC)
+CFLAGS += $(INC)
 
 # Track memory usage?
 #CFLAGS += -DKDTREE_MEM_TRACK
@@ -60,7 +62,6 @@ LDLIBS := $(LDLIBS_DEF)
 LDLIBS += $(LIBKD_LIB)
 LDLIBS += $(QFITS_LIB)
 LDLIBS += $(ANUTILS_LIB)
-#LDLIBS += -lm
 
 LIBKD := libkd.a
 
@@ -100,6 +101,10 @@ pyspherematch: spherematch_c.so
 PYSPHEREMATCH_OBJ := pyspherematch.o
 
 spherematch_c.so: pyspherematch.c setup.py $(SLIB)
+	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" \
+	SLIB="$(SLIB)" \
+	INC="$(INC)" \
+	CFLAGS="$(ANUTILS_CFLAGS)" \
 	python setup.py build --force --build-base build --build-platlib build/lib
 	cp build/lib/spherematch_c.so $@
 

@@ -422,7 +422,7 @@ pyplotstuff: _plotstuff_c.so
 
 plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) \
 		$(ANUTILS_DIR)/sip.h $(ANUTILS_DIR)/anwcs.h
-	swig -python $(ANUTILS_INC) $(QFITS_INC) $<
+	swig -python $(ANFILES_INC) $<
 
 _plotstuff_c.so: plotstuff_wrap.c $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS) $(CAIRO_LIBS)" \

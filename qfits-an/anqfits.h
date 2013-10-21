@@ -14,6 +14,7 @@
 #include "qfits_std.h"
 #include "qfits_image.h"
 #include "qfits_tools.h"
+#include "qfits_time.h"
 
 typedef struct {
     int naxis;
