@@ -4,7 +4,7 @@
 #include "fitsioutils.h"
 #include "permutedsort.h"
 #include "an-endian.h"
-#include "qfits.h"
+#include "qfits_header.h"
 
 #include "cutest.h"
 

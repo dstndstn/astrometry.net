@@ -2,7 +2,7 @@
 
 #include "xylist.h"
 #include "fitsioutils.h"
-#include "qfits.h"
+#include "qfits_header.h"
 #include "log.h"
 
 #include "cutest.h"

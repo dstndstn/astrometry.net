@@ -17,7 +17,7 @@
 */
 
 #include "scamp-catalog.h"
-#include "qfits.h"
+#include "qfits_header.h"
 
 #include "cutest.h"
 

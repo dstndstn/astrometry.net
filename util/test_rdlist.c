@@ -1,6 +1,6 @@
 #include "rdlist.h"
 #include "fitsioutils.h"
-#include "qfits.h"
+#include "qfits_header.h"
 
 #include "cutest.h"
 
