@@ -237,8 +237,6 @@ qfits_table * qfits_table_new(const char *, int, int, int, int);
 int qfits_col_fill(qfits_col *, int, int, int, tfits_type, const char *, 
         const char *, const char *, const char *, int, float, int, float, int);
 
-qfits_table * qfits_table_open(const char* filename, int extension);
-
 qfits_table * qfits_table_open2(const qfits_header* hdr, off_t offset_beg, size_t data_size,
 								const char* filename, int xtnum);
 
@@ -282,8 +280,6 @@ int * qfits_query_column_nulls(const qfits_table *, int, const int *, int *,
 /*----------------------------------------------------------------------------*/
 int qfits_compute_table_width(const qfits_table * th);
 
-int qfits_save_table_hdrdump(const void **, const qfits_table *, 
-        const qfits_header *);
 int qfits_table_append_xtension(FILE *, const qfits_table *, const void **);
 int qfits_table_append_xtension_hdr(FILE *, const qfits_table *, const void **,
         const qfits_header *);

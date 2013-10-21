@@ -38,27 +38,9 @@
                         Function ANSI prototypes
  -----------------------------------------------------------------------------*/
 
-qfits_header * qfits_header_read(const char *);
-qfits_header * qfits_header_read_hdr(const char *);
 qfits_header * qfits_header_read_hdr_string(const unsigned char *, int);
-qfits_header * qfits_header_readext(const char *, int);
 void qfits_zeropad(const char *);
 int qfits_is_fits(const char *);
-int qfits_get_hdrinfo(const char *, int, int *, int *);
-int qfits_get_datinfo(const char *, int, int *, int *);
-
-int qfits_get_hdrinfo_long(
-        const char  *   filename,
-        int             xtnum,
-        off_t       *   seg_start,
-        size_t      *   seg_size);
-
-int qfits_get_datinfo_long(
-        const char  *   filename,
-        int             xtnum, 
-        off_t       *   seg_start,
-        size_t      *   seg_size);
-
 int is_blank_line(const char * s);
 
 #endif
