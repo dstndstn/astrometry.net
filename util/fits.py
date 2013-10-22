@@ -389,11 +389,10 @@ class tabledata(object):
                     newX = np.append(val, val2, axis=0)
                 self.set(name, newX)
                 self._length = len(newX)
-            except Exception as e:
+            except Exception:
                 print 'exception appending element "%s"' % name
-                #print 'exception:', e
-                #raise Exception('exception appending element "%s"' % name)
-
+                raise
+                
     def write_to(self, fn, columns=None, header='default', primheader=None,
                  use_fitsio=True, append=False):
 
