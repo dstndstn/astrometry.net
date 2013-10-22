@@ -39,10 +39,10 @@ Backups of Astrometry.net stuff
 
   (There is a snapshot dump of the nova database there too.)
 
-  There is a script to dump the nova database::
+  There is a snapshot (snapshot-2013-10-14.tgz) on bbq, as well as daily
+  backups, in ``bbq:/export/bbq1/nova/nova-data``::
 
-    nova@oven:~/database-backups$ ./backup-nova.sh
-
-  which runs in a daily cron job.  However, it does not get backed up
-  to a different machine.
+    # Backup nova@broiler nova.astrometry.net data
+    0 4 * * * rsync -ar /data2/nova/nova-data nova-data-rsync:nova-data-backup/
+    0 4 * * * pg_dump an-nova | ssh nova-data-rsync 'cat > nova-data-backup/nova-database/an-nova.sql && cd nova-data-backup/nova-database && git commit -a -m "database snapshot: $(date)"'
 
