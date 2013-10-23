@@ -99,6 +99,7 @@ install: all report.txt
 	@echo png libraries and headers installed.  You will lose out on some eye-candy
 	@echo but will still be able to solve images.
 	@echo
+	-$(MAKE) extra
 	-$(MAKE) -C blind install-extra
 
 install-core:
