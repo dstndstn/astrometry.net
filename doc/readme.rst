@@ -39,7 +39,6 @@ Installing
 
 See :ref:`build`.
 
-
 .. _getting-index-files:
 
 Getting Index Files
@@ -94,56 +93,57 @@ http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp2.png
 | Index Filename         |   Range of skymark diameters |
 |                        |         (arcminutes)         |
 +========================+==============================+
-| index-4219.fits.bz2    |      1400  - 2000            |
+| index-4219.fits        |      1400  - 2000            |
 +------------------------+------------------------------+
-| index-4218.fits.bz2    |      1000  - 1400            |
+| index-4218.fits        |      1000  - 1400            |
 +------------------------+------------------------------+
-| index-4217.fits.bz2    |       680  - 1000            |
+| index-4217.fits        |       680  - 1000            |
 +------------------------+------------------------------+
-| index-4216.fits.bz2    |       480  -  680            |
+| index-4216.fits        |       480  -  680            |
 +------------------------+------------------------------+
-| index-4215.fits.bz2    |       340  -  480            |
+| index-4215.fits        |       340  -  480            |
 +------------------------+------------------------------+
-| index-4214.fits.bz2    |       240  -  340            |
+| index-4214.fits        |       240  -  340            |
 +------------------------+------------------------------+
-| index-4213.fits.bz2    |       170  -  240            |
+| index-4213.fits        |       170  -  240            |
 +------------------------+------------------------------+
-| index-4212.fits.bz2    |       120  -  170            |
+| index-4212.fits        |       120  -  170            |
 +------------------------+------------------------------+
-| index-4211.fits.bz2    |        85  -  120            |
+| index-4211.fits        |        85  -  120            |
 +------------------------+------------------------------+
-| index-4210.fits.bz2    |        60  -   85            |
+| index-4210.fits        |        60  -   85            |
 +------------------------+------------------------------+
-| index-4209.fits.bz2    |        42  -   60            |
+| index-4209.fits        |        42  -   60            |
 +------------------------+------------------------------+
-| index-4208.fits.bz2    |        30  -   42            |
+| index-4208.fits        |        30  -   42            |
 +------------------------+------------------------------+
-| index-4207-*.fits.bz2  |        22  -   30            |
+| index-4207-*.fits      |        22  -   30            |
 +------------------------+------------------------------+
-| index-4206-*.fits.bz2  |        16  -   22            |
+| index-4206-*.fits      |        16  -   22            |
 +------------------------+------------------------------+
-| index-4205-*.fits.bz2  |        11  -   16            |
+| index-4205-*.fits      |        11  -   16            |
 +------------------------+------------------------------+
-| index-4204-*.fits.bz2  |         8  -   11            |
+| index-4204-*.fits      |         8  -   11            |
 +------------------------+------------------------------+
-| index-4203-*.fits.bz2  |         5.6  -  8.0          |
+| index-4203-*.fits      |         5.6  -  8.0          |
 +------------------------+------------------------------+
-| index-4202-*.fits.bz2  |         4.0  -  5.6          |
+| index-4202-*.fits      |         4.0  -  5.6          |
 +------------------------+------------------------------+
-| index-4201-*.fits.bz2  |         2.8  -  4.0          |
+| index-4201-*.fits      |         2.8  -  4.0          |
 +------------------------+------------------------------+
-| index-4200-*.fits.bz2  |         2.0  -  2.8          |
+| index-4200-*.fits      |         2.0  -  2.8          |
 +------------------------+------------------------------+
 
-Download the index files you need and put them in the top-level
-(astrometry-$VERSION) source directory.
+Download the index files you need and then either:
 
-Install them::
+* Copy the files to the ``data`` directory wherever you installed the
+  Astrometry.net code (``INSTALL_DIR/data``, perhaps
+  ``/usr/local/astrometry/data``); OR
 
-   $ make install-indexes
+* Copy the files to the top-level (astrometry-$VERSION) source
+  directory, and run::
 
-(Or you can extract them into the ``INSTALL_DIR/data`` directory by hand.)
-
+      $ make install-indexes
 
 Next, you can (optionally) configure the solver by editing the file::
 

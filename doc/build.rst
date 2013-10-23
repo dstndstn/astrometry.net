@@ -1,3 +1,5 @@
+.. _build:
+
 Building/installing the Astrometry.net code
 ===========================================
 
