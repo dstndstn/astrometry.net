@@ -35,3 +35,16 @@ def unpickle_from_file(fn):
 	# necessary?
 	f.close()
 	return data
+
+def get_svn_version():
+    from run_command import run_command
+    version = {}
+    rtn,out,err = run_command('svn info')
+    assert(rtn == 0)
+    lines = out.split('\n')
+    lines = [l for l in lines if len(l)]
+    for l in lines:
+        words = l.split(':', 1)
+        words = [w.strip() for w in words]
+        version[words[0]] = words[1]
+    return version
