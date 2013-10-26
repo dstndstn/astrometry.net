@@ -290,7 +290,7 @@ def myjobs(request):
 def submission_status(req, sub_id):
     sub = get_object_or_404(Submission, pk=sub_id)
     jobs = []
-    jobcals = {}
+    jobcals = []
     for job in sub.get_best_jobs():
         if job is None:
             jobs.append(None)
@@ -298,7 +298,7 @@ def submission_status(req, sub_id):
             jobs.append(job.id)
             cal = job.calibration
             if cal is not None:
-                jobcals[job.id] = cal.id
+                jobcals.append((job.id, cal.id))
 
     json_response = {
         'user':sub.user.id,
