@@ -15,9 +15,10 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 LIBKD_DIR := $(BASEDIR)/libkd
-LIBKD_INC := -I$(LIBKD_DIR)
 LIBKD_LIB_FILE := $(LIBKD_DIR)/libkd.a
 LIBKD_NOIO_LIB_FILE := $(LIBKD_DIR)/libkd-noio.a
+
+LIBKD_INC := -I$(LIBKD_DIR)
 LIBKD_SLIB := $(LIBKD_LIB_FILE)
 LIBKD_LIB :=
 
@@ -27,3 +28,9 @@ $(LIBKD_LIB_FILE):
 $(LIBKD_NOIO_LIB_FILE):
 	$(MAKE) -C $(LIBKD_DIR) libkd-noio.a
 
+include $(COMMON)/makefile.anutils
+
+LIBKD_INC += $(ANUTILS_INC)
+LIBKD_CFLAGS += $(ANUTILS_CFLAGS)
+LIBKD_SLIB += $(ANUTILS_SLIB)
+LIBKD_LIB += $(ANUTILS_LIB)

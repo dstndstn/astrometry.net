@@ -28,6 +28,7 @@
 #include "qfits_byteswap.h"
 
 #include "ioutils.h"
+#include "errors.h"
 
 #if 0
 #define qdebug( code ) { code }
@@ -374,29 +375,41 @@ int anqfits_n_ext(const anqfits_t* qf) {
 
 off_t anqfits_header_start(const anqfits_t* qf, int ext) {
     assert(ext >= 0 && ext < qf->Nexts);
-    if (ext >= qf->Nexts)
+    if (ext < 0 || ext >= qf->Nexts) {
+        ERROR("Failed to get header start for file \"%s\" ext %i: ext not in range [0, %i)",
+              qf->filename, ext, qf->Nexts);
         return -1;
+    }
     return (off_t)qf->exts[ext].hdr_start * (off_t)FITS_BLOCK_SIZE;
 }
 
 off_t anqfits_header_size(const anqfits_t* qf, int ext) {
     assert(ext >= 0 && ext < qf->Nexts);
-    if (ext >= qf->Nexts)
+    if (ext < 0 || ext >= qf->Nexts) {
+        ERROR("Failed to get header size for file \"%s\" ext %i: ext not in range [0, %i)",
+              qf->filename, ext, qf->Nexts);
         return -1;
+    }
     return (off_t)qf->exts[ext].hdr_size * (off_t)FITS_BLOCK_SIZE;
 }
 
 off_t anqfits_data_start(const anqfits_t* qf, int ext) {
     assert(ext >= 0 && ext < qf->Nexts);
-    if (ext >= qf->Nexts)
+    if (ext < 0 || ext >= qf->Nexts) {
+        ERROR("Failed to get data start for file \"%s\" ext %i: ext not in range [0, %i)",
+              qf->filename, ext, qf->Nexts);
         return -1;
+    }
     return (off_t)qf->exts[ext].data_start * (off_t)FITS_BLOCK_SIZE;
 }
 
 off_t anqfits_data_size(const anqfits_t* qf, int ext) {
     assert(ext >= 0 && ext < qf->Nexts);
-    if (ext >= qf->Nexts)
+    if (ext < 0 || ext >= qf->Nexts) {
+        ERROR("Failed to get data size for file \"%s\" ext %i: ext not in range [0, %i)",
+              qf->filename, ext, qf->Nexts);
         return -1;
+    }
     return (off_t)qf->exts[ext].data_size * (off_t)FITS_BLOCK_SIZE;
 }
 
@@ -408,7 +421,22 @@ int anqfits_get_data_start_and_size(const anqfits_t* qf, int ext,
             return -1;
     }
     if (psize) {
-        *psize = anqfits_data_start(qf, ext);
+        *psize = anqfits_data_size(qf, ext);
+        if (*psize == -1)
+            return -1;
+    }
+    return 0;
+}
+
+int anqfits_get_header_start_and_size(const anqfits_t* qf, int ext,
+                                    off_t* pstart, off_t* psize) {
+    if (pstart) {
+        *pstart = anqfits_header_start(qf, ext);
+        if (*pstart == -1)
+            return -1;
+    }
+    if (psize) {
+        *psize = anqfits_header_size(qf, ext);
         if (*psize == -1)
             return -1;
     }
@@ -484,9 +512,13 @@ const qfits_header* anqfits_get_header_const(const anqfits_t* qf, int ext) {
         char* str;
         start = anqfits_header_start(qf, ext);
         size  = anqfits_header_size (qf, ext);
+        if ((start == -1) || (size == -1)) {
+            ERROR("failed to get header start + size for file \"%s\" extension %i", qf->filename, ext);
+            return NULL;
+        }
         str = file_get_contents_offset(qf->filename, (int)start, (int)size);
         if (!str) {
-            fprintf(stderr, "anqfits_get_header_const: failed to read \"%s\" offset %i size %i\n", qf->filename, (int)start, (int)size);
+            ERROR("failed to read \"%s\" extension %i: offset %i size %i\n", qf->filename, ext, (int)start, (int)size);
             return NULL;
         }
         qf->exts[ext].header = qfits_header_read_hdr_string
@@ -537,8 +569,10 @@ const qfits_table* anqfits_get_table_const(const anqfits_t* qf, int ext) {
             qfits_error("Failed to get header for ext %i\n", ext);
             return NULL;
         }
-        begin = anqfits_data_start(qf, ext);
-        size = anqfits_data_size(qf, ext);
+        if (anqfits_get_data_start_and_size(qf, ext, &begin, &size)) {
+            ERROR("failed to get data start and size");
+            return NULL;
+        }
 
         qf->exts[ext].table = qfits_table_open2(hdr, begin, size, qf->filename, ext);
     }

@@ -128,7 +128,8 @@ xylist_t* xylist_open(const char* fn) {
 
     hdr = fitstable_get_primary_header(ls->table);
 	ls->antype = fits_get_dupstring(hdr, "AN_FILE");
-	ls->nfields = fitstable_n_extensions(ls->table);
+    // not including primary extension...
+	ls->nfields = fitstable_n_extensions(ls->table) - 1;
     ls->include_flux = TRUE;
     ls->include_background = TRUE;
 	assert(is_reading(ls));

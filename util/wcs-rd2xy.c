@@ -94,7 +94,7 @@ int wcs_rd2xy(const char* wcsfn, int wcsext,
         rd_t rd;
 
         if (!rdlist_read_field_num(rdls, fieldnum, &rd)) {
-			ERROR("Failed to read rdls field %i", fieldnum);
+			ERROR("Failed to read rdls file \"%s\" field %i", rdlsfn, fieldnum);
             goto bailout;
         }
 

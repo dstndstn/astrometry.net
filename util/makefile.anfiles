@@ -30,9 +30,9 @@ $(ANFILES_LIB_FILE): $(addprefix $(ANFILES_DIR)/,$(ANFILES_OBJ))
 
 ifndef NO_KDTREE
 include $(COMMON)/makefile.libkd
-endif
-
+else
 include $(COMMON)/makefile.anutils
+endif
 
 ifndef NO_KDTREE
 ANFILES_INC += $(LIBKD_INC)
