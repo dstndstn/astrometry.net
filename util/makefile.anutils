@@ -31,7 +31,6 @@ $(ANUTILS_LIB_FILE):
 #  gsl
 #  wcslib (optional)
 
-include $(COMMON)/makefile.anbase
 include $(COMMON)/makefile.gsl
 include $(COMMON)/makefile.wcslib
 
@@ -42,6 +41,8 @@ ANUTILS_SLIB += $(ANBASE_SLIB)
 
 ifndef NO_QFITS
 include $(COMMON)/makefile.qfits
+else
+include $(COMMON)/makefile.anbase
 endif
 
 ifdef WCSLIB_EXISTS

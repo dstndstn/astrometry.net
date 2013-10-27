@@ -23,8 +23,8 @@ all:
 
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.libkd
-include $(COMMON)/makefile.qfits
-include $(COMMON)/makefile.anutils
+#include $(COMMON)/makefile.qfits
+#include $(COMMON)/makefile.anutils
 
 INTERNALS := \
 	kdint_ddd.o \
