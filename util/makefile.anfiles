@@ -32,7 +32,7 @@ ifndef NO_KDTREE
 include $(COMMON)/makefile.libkd
 endif
 
-include $(COMMON)/makefile.utils
+include $(COMMON)/makefile.anutils
 
 ifndef NO_KDTREE
 ANFILES_INC += $(LIBKD_INC)

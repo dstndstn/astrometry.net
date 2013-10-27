@@ -183,8 +183,6 @@ void fits_add_double_size(qfits_header* header);
 
 int fits_find_column(const qfits_table* table, const char* colname);
 
-int fits_get_atom_size(tfits_type type);
-
 int fits_find_table_column(const char* fn, const char* colname,
 						   off_t* start, off_t* size, int* extension);
 
@@ -194,22 +192,6 @@ int fits_add_column(qfits_table* table, int column, tfits_type type,
 					int ncopies, const char* units, const char* label);
 
 int fits_offset_of_column(qfits_table* table, int colnum);
-
-/**
- Converts data between different FITS types.
-
- Does NO checking, rounding, or anything smart - just uses C casts.
-
- ASSUMES the data have already been flipped to the local host's endianness.
- */
-int fits_convert_data(void* dest, int deststride, tfits_type desttype,
-                      const void* src, int srcstride, tfits_type srctype,
-                      int arraysize, size_t N);
-
-int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
-                        const void* vsrc, int srcstride, tfits_type srctype,
-                        int arraysize, size_t N,
-                        double bzero, double bscale);
 
 // write single column fields:
 int fits_write_data_A(FILE* fid, char value);

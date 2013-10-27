@@ -809,31 +809,36 @@ sl* fid_get_lines(FILE* fid, anbool include_newlines) {
 }
 
 char* file_get_contents_offset(const char* fn, int offset, int size) {
-    char* buf;
-    FILE* fid;
+    char* buf = NULL;
+    FILE* fid = NULL;
     fid = fopen(fn, "rb");
     if (!fid) {
-        fprintf(stderr, "file_get_contents_offset: failed to open file \"%s\": %s\n", fn, strerror(errno));
-        return NULL;
+        SYSERROR("failed to open file \"%s\"");
+        goto bailout;
     }
     buf = malloc(size);
     if (!buf) {
-        fprintf(stderr, "file_get_contents_offset: couldn't malloc %lu bytes.\n", (long)size);
-        return NULL;
+        SYSERROR("failed to malloc %i bytes", size);
+        goto bailout;
     }
 	if (offset) {
 		if (fseeko(fid, offset, SEEK_SET)) {
-			fprintf(stderr, "file_get_contents_offset: failed to fseeko: %s.\n", strerror(errno));
-			return NULL;
+			SYSERROR("failed to fseeko to %i in file \"%s\"", offset, fn);
+            goto bailout;
 		}
 	}
 	if (fread(buf, 1, size, fid) != size) {
-        fprintf(stderr, "file_get_contents_offset: failed to read %lu bytes: %s\n", (long)size, strerror(errno));
-        free(buf);
-        return NULL;
+        SYSERROR("failed to read %i bytes from \"%s\"", size, fn);
+        goto bailout;
     }
 	fclose(fid);
     return buf;
+ bailout:
+    if (fid)
+        fclose(fid);
+    if (buf)
+        free(buf);
+    return NULL;
 }
 
 void* file_get_contents(const char* fn, size_t* len, anbool addzero) {

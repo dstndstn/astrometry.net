@@ -35,12 +35,16 @@ all:
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.anfiles
 
-ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
-	permutedsort.o ioutils.o sip-utils.o fit-wcs.o sip.o md5.o \
+ANBASE_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
+	permutedsort.o ioutils.o md5.o	boilerplate.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
-	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
-	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o \
-	wcs-resample.o gslutils.o
+	sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o \
+	intmap.o histogram.o histogram2d.o
+
+ANBASE_DEPS :=
+
+ANUTILS_OBJ :=  sip-utils.o fit-wcs.o sip.o \
+	tycho2.o anwcs.o wcs-resample.o gslutils.o
 
 # Things that it depends on but that aren't linked in
 ANFILES_DEPS :=
@@ -62,6 +66,7 @@ include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.png
 include $(COMMON)/makefile.netpbm
 
+ANBASE_LIB_FILE := libanbase.a
 ANUTILS_LIB_FILE := libanutils.a
 ANFILES_LIB_FILE := libanfiles.a
 
@@ -109,7 +114,7 @@ MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy
 
 
 
-all: $(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) $(PROGS) $(MAIN_PROGS)
+all: $(ANBASE_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) $(PROGS) $(MAIN_PROGS)
 
 # Things that it depends on but that aren't linked in
 ANUTILS_DEPS :=
@@ -136,7 +141,7 @@ endif
 
 ## ANFILES_DEPS, ANFILES_OBJ -- in makefile.anfiles
 
-ALL_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
+ALL_OBJ := $(ANBASE_OBJ) $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 
 # svn.c depends on all the .c and .h files in ANUTILS_OBJ
 SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
@@ -144,6 +149,11 @@ SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(ANUTILS_H)
 
 DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 DEP_PREREQS :=
+
+$(ANBASE_LIB_FILE): $(ANBASE_OBJ) $(ANBASE_DEPS) 
+	-rm -f $@
+	$(AR) rc $@ $(ANBASE_OBJ)
+	$(RANLIB) $@
 
 $(ANUTILS_LIB_FILE): $(ANUTILS_OBJ) $(ANUTILS_DEPS) 
 	-rm -f $@

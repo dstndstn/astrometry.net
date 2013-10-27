@@ -16,13 +16,19 @@ BASEDIR := ..
 COMMON := $(BASEDIR)/util
 
 include $(COMMON)/makefile.common
+include $(COMMON)/makefile.anbase
+
+INC := $(ANBASE_INC)
 
 CFLAGS += $(CFLAGS_DEF)
+CFLAGS += $(ANBASE_CFLAGS)
 CFLAGS += -I.
+CFLAGS += $(INC)
 
 LDFLAGS += $(LDFLAGS_DEF)
 
 LDLIBS := $(LDLIBS_DEF)
+LDLIBS += $(ANBASE_LIB)
 
 $(QFITS_LIB_FILE): $(OBJS)
 	-rm -f $@

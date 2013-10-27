@@ -16,6 +16,29 @@
 #include "qfits_tools.h"
 #include "qfits_time.h"
 
+
+int fits_get_atom_size(tfits_type type);
+
+
+/**
+ Converts data between different FITS types.
+
+ Does NO checking, rounding, or anything smart - just uses C casts.
+
+ ASSUMES the data have already been flipped to the local host's endianness.
+ */
+int fits_convert_data(void* dest, int deststride, tfits_type desttype,
+                      const void* src, int srcstride, tfits_type srctype,
+                      int arraysize, size_t N);
+
+int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
+                        const void* vsrc, int srcstride, tfits_type srctype,
+                        int arraysize, size_t N,
+                        double bzero, double bscale);
+
+
+
+
 typedef struct {
     int naxis;
     off_t width;

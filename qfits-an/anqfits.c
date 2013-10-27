@@ -27,6 +27,8 @@
 #include "qfits_convert.h"
 #include "qfits_byteswap.h"
 
+#include "ioutils.h"
+
 #if 0
 #define qdebug( code ) { code }
 #define debug printf
@@ -35,8 +37,156 @@
 #define debug(args...)
 #endif
 
+int fits_get_atom_size(tfits_type type) {
+	int atomsize = -1;
+	switch (type) {
+	case TFITS_BIN_TYPE_A:
+	case TFITS_BIN_TYPE_X:
+	case TFITS_BIN_TYPE_L:
+	case TFITS_BIN_TYPE_B:
+		atomsize = 1;
+		break;
+	case TFITS_BIN_TYPE_I:
+		atomsize = 2;
+		break;
+	case TFITS_BIN_TYPE_J:
+	case TFITS_BIN_TYPE_E:
+		atomsize = 4;
+		break;
+	case TFITS_BIN_TYPE_K:
+	case TFITS_BIN_TYPE_D:
+		atomsize = 8;
+		break;
+	default:
+		break;
+	}
+	return atomsize;
+}
+
+int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
+                        const void* vsrc, int srcstride, tfits_type srctype,
+                        int arraysize, size_t N,
+                        double bzero, double bscale) {
+	size_t i;
+    int j;
+    char* dest = vdest;
+    const char* src = vsrc;
+    int destatomsize = fits_get_atom_size(desttype);
+    int srcatomsize = fits_get_atom_size(srctype);
+    anbool scaling = (bzero != 0.0) || (bscale != 1.0);
+
+    // this loop is over rows of data
+    for (i=0; i<N; i++) {
+        // store local pointers so we can stride over the array, without
+        // affecting the row stride.
+        char* adest = dest;
+        const char* asrc = src;
+        int64_t ival = 0;
+        double  dval = 0;
+
+        // this loop is over elements of the array, if the column contains an array.
+        // (ie, for scalar columns, arraysize is 1.)
+        for (j=0; j<arraysize; j++) {
+            anbool src_is_int = TRUE;
+            switch (srctype) {
+            case TFITS_BIN_TYPE_A:
+            case TFITS_BIN_TYPE_X:
+            case TFITS_BIN_TYPE_B:
+                ival = *((uint8_t*)asrc);
+                break;
+            case TFITS_BIN_TYPE_L:
+                // these are actually the characters 'T' and 'F'.
+                ival = *((uint8_t*)asrc);
+                if (ival == 'T')
+                    ival = 1;
+                else
+                    ival = 0;
+                break;
+            case TFITS_BIN_TYPE_I:
+                ival = *((int16_t*)asrc);
+                break;
+            case TFITS_BIN_TYPE_J:
+                ival = *((int32_t*)asrc);
+                break;
+            case TFITS_BIN_TYPE_K:
+                ival = *((int64_t*)asrc);
+                break;
+            case TFITS_BIN_TYPE_E:
+                dval = *((float*)asrc);
+                src_is_int = FALSE;
+                break;
+            case TFITS_BIN_TYPE_D:
+                dval = *((double*)asrc);
+                src_is_int = FALSE;
+                break;
+            default:
+                fprintf(stderr, "fits_convert_data: unknown source type %i\n", srctype);
+                assert(0);
+                return -1;
+            }
+
+            if (scaling) {
+                if (src_is_int) {
+                    src_is_int = FALSE;
+                    dval = ival;
+                }
+                dval = (bzero + dval * bscale);
+            }
+
+            switch (desttype) {
+            case TFITS_BIN_TYPE_A:
+            case TFITS_BIN_TYPE_X:
+            case TFITS_BIN_TYPE_B:
+                *((uint8_t*)adest) = (src_is_int ? ival : dval);
+                break;
+            case TFITS_BIN_TYPE_L:
+                *((char*)adest) = (src_is_int ? ival : dval) ? 'T' : 'F';
+                break;
+            case TFITS_BIN_TYPE_I:
+                *((int16_t*)adest) = (src_is_int ? ival : dval);
+                break;
+            case TFITS_BIN_TYPE_J:
+                *((int32_t*)adest) = (src_is_int ? ival : dval);
+                break;
+            case TFITS_BIN_TYPE_K:
+                *((int64_t*)adest) = (src_is_int ? ival : dval);
+                break;
+            case TFITS_BIN_TYPE_E:
+                *((float*)adest) = (src_is_int ? ival : dval);
+                break;
+            case TFITS_BIN_TYPE_D:
+                *((double*)adest) = (src_is_int ? ival : dval);
+                break;
+            default:
+                fprintf(stderr, "fits_convert_data: unknown destination type %i\n", desttype);
+                assert(0);
+                return -1;
+            }
+
+            asrc  += srcatomsize;
+            adest += destatomsize;
+        }
+
+        dest += deststride;
+        src  +=  srcstride;
+    }
+    return 0;
+}
+
+
+int fits_convert_data(void* vdest, int deststride, tfits_type desttype,
+                      const void* vsrc, int srcstride, tfits_type srctype,
+                      int arraysize, size_t N) {
+    return fits_convert_data_2(vdest, deststride, desttype,
+                               vsrc, srcstride, srctype,
+                               arraysize, N, 0.0, 1.0);
+}
+
+
+
 
 // from ioutils.c
+/*
 static
 void get_mmap_size(size_t start, size_t size, off_t* mapstart, size_t* mapsize, int* pgap) {
 	int ps = getpagesize();
@@ -185,7 +335,7 @@ int fits_convert_data_2(void* vdest, int deststride, tfits_type desttype,
     }
     return 0;
 }
-
+ */
 
 int qfits_is_table(const char* filename, int ext) {
     int rtn;
@@ -296,6 +446,7 @@ qfits_header* anqfits_get_header_only(const char* fn, int ext) {
     return hdr;
 }
 
+/*
 // copied from util/ioutils.c
 static char* file_get_contents_offset(const char* fn, int offset, int size) {
     char* buf;
@@ -324,7 +475,7 @@ static char* file_get_contents_offset(const char* fn, int offset, int size) {
 	fclose(fid);
     return buf;
 }
-
+ */
 
 const qfits_header* anqfits_get_header_const(const anqfits_t* qf, int ext) {
     assert(ext >= 0 && ext < qf->Nexts);
@@ -493,10 +644,12 @@ const anqfits_image_t* anqfits_get_image_const(const anqfits_t* qf, int ext) {
 
 
 
+/*
 static int starts_with(const char* str, const char* start) {
     int len = strlen(start);
     return strncmp(str, start, len) == 0;
 }
+ */
 
 static const char* blankline = "                                                                                ";
 
