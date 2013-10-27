@@ -813,7 +813,7 @@ char* file_get_contents_offset(const char* fn, int offset, int size) {
     FILE* fid = NULL;
     fid = fopen(fn, "rb");
     if (!fid) {
-        SYSERROR("failed to open file \"%s\"");
+        SYSERROR("failed to open file \"%s\"", fn);
         goto bailout;
     }
     buf = malloc(size);

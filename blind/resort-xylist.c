@@ -92,14 +92,13 @@ int resort_xylist(const char* infn, const char* outfn,
     }
 
 	for (ext=1; ext<nextens; ext++) {
-		int hdrstart, hdrsize, datsize, datstart;
+		int hdrstart, hdrsize, datstart;
 		int i, N;
         int rowsize;
 
         hdrstart = anqfits_header_start(anq, ext);
         hdrsize  = anqfits_header_size (anq, ext);
         datstart = anqfits_data_start  (anq, ext);
-        datsize  = anqfits_data_size   (anq, ext);
 
         if (!anqfits_is_table(anq, ext)) {
             ERROR("Extention %i isn't a table. Skipping", ext);

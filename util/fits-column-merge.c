@@ -49,8 +49,8 @@ int main(int argc, char** args) {
     FILE* afid;
     FILE* bfid;
     FILE* outfid;
-    int aoff, asize;
-    int boff, bsize;
+    int aoff;
+    int boff;
     char* buffer;
     qfits_header* hdr;
     qfits_header* tablehdr;
@@ -136,9 +136,7 @@ int main(int argc, char** args) {
     }
 
     aoff  = anqfits_data_start(anqa, 1);
-    asize = anqfits_data_size (anqa, 1);
     boff  = anqfits_data_start(anqb, 1);
-    bsize = anqfits_data_size (anqb, 1);
 
     if (fseek(afid, aoff, SEEK_SET)) {
         fprintf(stderr, "Failed to seek to start of data in file \"%s\": %s\n", afn, strerror(errno));
