@@ -64,7 +64,7 @@ def removelines(infile, outfile, xcol='X', ycol='Y', cut=None, **kwargs):
 
 	p[1].header.add_history('This xylist was filtered by the "removelines.py" program')
 	p[1].header.add_history('to remove horizontal and vertical lines of sources')
-	p[1].header.update('REMLINEN', len(x) - len(xc), 'Number of sources removed by "removelines.py"')
+	p[1].header['REMLINEN'] = (len(x) - len(xc), 'Number of sources removed by "removelines.py"')
 
 	p[1].data = p[1].data[I]
 	pyfits_writeto(p, outfile)
