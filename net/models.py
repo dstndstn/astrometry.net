@@ -1069,6 +1069,8 @@ class Submission(Hideable):
     use_sextractor = models.BooleanField(default=False)
     crpix_center = models.BooleanField(default=False)
 
+    invert = models.BooleanField(default=False)
+    
     # NOTE, these are ONLY to hold user-set (via API) image width/height;
     # they OVERRIDE the actual size of the image.  ONLY valid for xylists.
     image_width  = models.IntegerField(blank=True, null=True, default=0)

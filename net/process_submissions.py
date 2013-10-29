@@ -256,6 +256,9 @@ def dojob(job, userimage, log=None):
     if sub.crpix_center:
         axyflags.append('--crpix-center')
 
+    if sub.invert:
+        axyflags.append('--invert')
+        
     cmd = 'augment-xylist '
     for (k,v) in axyargs.items():
         if v:

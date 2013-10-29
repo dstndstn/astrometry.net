@@ -318,6 +318,15 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 </tr> 
 <tr> 
     <td class="leftcolumn">
+        <div class="setting_title">Invert:</div>
+        <div class="setting_description">Set this if your image is black-on-white (inverted) rather than white-on-black.</div>
+    </td> 
+    <td>
+        {{ form.invert }} Invert image {{ form.invert.errors }}<br />
+    </td>
+</tr> 
+<tr> 
+    <td class="leftcolumn">
         <div class="setting_title">SourceExtractor:</div>
         <div class="setting_description">We can detect stars using 
           <a href="http://www.astromatic.net/software/sextractor">SExtractor</a>,
