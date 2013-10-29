@@ -100,6 +100,7 @@ class SubmissionForm(forms.ModelForm):
             'scale_upper','scale_est','scale_err','positional_error',
             'center_ra','center_dec','radius', 'tweak_order', 'downsample_factor',
             'use_sextractor', 'crpix_center',
+            'invert',
             #'source_type'
             )
         widgets = {
@@ -116,6 +117,7 @@ class SubmissionForm(forms.ModelForm):
             'downsample_factor': forms.TextInput(attrs={'size':'5'}),
             'use_sextractor': forms.CheckboxInput(),
             'crpix_center': forms.CheckboxInput(),
+            'invert': forms.CheckboxInput(),
             'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
             #'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
             'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
