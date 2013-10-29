@@ -117,8 +117,16 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
 			else
 				sort_func = compare_floats_asc;
 			break;
+        case TFITS_BIN_TYPE_K:
+            data = realloc(data, table->nr * sizeof(int64_t));
+			if (descending)
+				sort_func = compare_int64_desc;
+			else
+				sort_func = compare_int64_asc;
+			break;
+
 		default:
-			ERROR("Column %s is neither FITS type D nor E.  Skipping.", colname);
+			ERROR("Column %s is neither FITS type D, E, nor K.  Skipping.", colname);
 			continue;
 		}
 

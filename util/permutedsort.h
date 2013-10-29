@@ -56,19 +56,18 @@ void permutation_apply(const int* perm, int Nperm, const void* inarray,
   Some sort functions that might come in handy:
  */
 int compare_doubles_asc(const void* v1, const void* v2);
-
-int compare_floats_asc(const void* v1, const void* v2);
-
-int compare_ints_asc(const void* v1, const void* v2);
-
 int compare_doubles_desc(const void* v1, const void* v2);
 
+int compare_floats_asc(const void* v1, const void* v2);
 int compare_floats_desc(const void* v1, const void* v2);
 
+int compare_int64_asc(const void* v1, const void* v2);
+int compare_int64_desc(const void* v1, const void* v2);
+
+int compare_ints_asc(const void* v1, const void* v2);
 int compare_ints_desc(const void* v1, const void* v2);
 
 int compare_uchars_asc(const void* v1, const void* v2);
-
 int compare_uchars_desc(const void* v1, const void* v2);
 
 #endif

@@ -132,6 +132,19 @@ int compare_floats_desc(const void* v1, const void* v2) {
 	COMPARE(f1, f2, >, <);
 }
 
+int compare_int64_asc(const void* v1, const void* v2) {
+	int64_t f1 = *(int64_t*)v1;
+	int64_t f2 = *(int64_t*)v2;
+	COMPARE(f1, f2, <, >);
+}
+
+int compare_int64_desc(const void* v1, const void* v2) {
+	int64_t f1 = *(int64_t*)v1;
+	int64_t f2 = *(int64_t*)v2;
+	COMPARE(f1, f2, >, <);
+}
+
+
 #undef COMPARE
 
 int compare_ints_asc(const void* v1, const void* v2) {
