@@ -125,7 +125,7 @@ def run_pnmfile(fn):
     filein.close()
     out = fileout.read().strip()
     logmsg('pnmfile output: ' + out)
-    pat = re.compile(r'P(?P<pnmtype>[BGP])M .*, (?P<width>\d*) by (?P<height>\d*) *maxval (?P<maxval>\d*)')
+    pat = re.compile(r'P(?P<pnmtype>[BGP])M .*, (?P<width>\d*) by (?P<height>\d*)( *maxval (?P<maxval>\d*))?')
     match = pat.search(out)
     if not match:
         logmsg('No match.')
@@ -133,7 +133,11 @@ def run_pnmfile(fn):
     w = int(match.group('width'))
     h = int(match.group('height'))
     pnmtype = match.group('pnmtype')
-    maxval = int(match.group('maxval'))
+    mv = match.group('maxval')
+    if mv is None:
+        maxval = 1
+    else:
+        maxval = int(mv)
     logmsg('Type %s, w %i, h %i, maxval %i' % (pnmtype, w, h, maxval))
     return (w, h, pnmtype, maxval)
 
