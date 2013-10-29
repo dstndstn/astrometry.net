@@ -60,11 +60,17 @@ const uint32 ct = 65536;
 // ------------------------------------------------------------------------------------------------
 // ---- Visual C++ eccentricities
 
+/*
 #if _WINDOWS
 #define finline __forceinline
 #else
 #define finline inline
 #endif
+ */
+// 
+// Let the compiler figure it out -- otherwise we get missing symbols
+// in a non-optimized build
+#define finline static
 
 // ================================================================================================
 // flip a float for sorting

@@ -75,6 +75,12 @@ anbool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* yc
     if (!xyls) {
         goto bail;
     }
+
+    if (fitstable_n_extensions(xyls->table) < 2) {
+        ERROR("FITS file does not have any extensions");
+        goto bail;
+    }
+
     if (xcolumn)
         xylist_set_xname(xyls, xcolumn);
     if (ycolumn)
