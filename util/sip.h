@@ -212,6 +212,8 @@ void tan_iwc2pixelxy(const tan_t* tan, double iwcx, double iwcy,
 					 double *px, double* py);
 void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz);
 
+void tan_iwc2radec(const tan_t* tan, double x, double y, double *p_ra, double *p_dec);
+
 /**
  Subtracts off CRPIX, multiplies by CD matrix.
  Results are in degrees.
@@ -227,6 +229,11 @@ anbool sip_xyzarr2iwc(const sip_t* sip, const double* xyz,
 					double* iwcx, double* iwcy);
 anbool sip_radec2iwc(const sip_t* sip, double ra, double dec,
 				   double* iwcx, double* iwcy);
+
+void sip_iwc2pixelxy(const sip_t* sip, double iwcx, double iwcy,
+					 double *px, double* py);
+
+void sip_iwc2radec(const sip_t* sip, double x, double y, double *p_ra, double *p_dec);
 
 void   sip_print(const sip_t*);
 void   sip_print_to(const sip_t*, FILE* fid);

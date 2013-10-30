@@ -171,6 +171,12 @@ void tan_pixelxy2iwc(const tan_t* tan, double px, double py, double *iwcx, doubl
 		*iwcy = y;
 }
 
+void tan_iwc2radec(const tan_t* tan, double x, double y, double *p_ra, double *p_dec) {
+    double xyz[3];
+    tan_iwc2xyzarr(tan, x, y, xyz);
+    xyzarr2radecdeg(xyz, p_ra, p_dec);
+}
+
 void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz)
 {
 	double rx, ry, rz;
@@ -233,36 +239,28 @@ void tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz)
 	tan_iwc2xyzarr(tan, x, y, xyz);
 }
 
-// RA,Dec in degrees to Pixels.
-anbool sip_radec2pixelxy(const sip_t* sip, double ra, double dec, double *px, double *py)
-{
-	double u, v;
-	double U, V;
-
-	if (!tan_radec2pixelxy(&(sip->wcstan), ra, dec, px, py))
-		return FALSE;
-
-	if (!has_distortions(sip))
-		return TRUE;
-
-	// Subtract crpix, invert SIP distortion, add crpix.
-
-	// Sanity check:
-	if (sip->a_order != 0 && sip->ap_order == 0) {
-		fprintf(stderr, "suspicious inversion; no inverse SIP coeffs "
-				"yet there are forward SIP coeffs\n");
-	}
-
-	U = *px - sip->wcstan.crpix[0];
-	V = *py - sip->wcstan.crpix[1];
-
-	sip_calc_inv_distortion(sip, U, V, &u, &v);
-	//printf("dx,dy %g,%g --> %g,%g\n", U, V, u, v);
-
-	*px = u + sip->wcstan.crpix[0];
-	*py = v + sip->wcstan.crpix[1];
-	return TRUE;
+void sip_iwc2pixelxy(const sip_t* sip, double u, double v,
+					 double *px, double* py) {
+    double x,y;
+    tan_iwc2pixelxy(&(sip->wcstan), u, v, &x, &y);
+    sip_pixel_undistortion(sip, x, y, px, py);
 }
+
+// SIP:  (RA,Dec) --> IWC --> x,y --> x',y'
+
+// RA,Dec in degrees to Pixels.
+anbool sip_radec2pixelxy(const sip_t* sip, double ra, double dec, double *px, double *py) {
+	double x,y;
+	if (!tan_radec2pixelxy(&(sip->wcstan), ra, dec, &x, &y))
+		return FALSE;
+    sip_pixel_undistortion(sip, x, y, px, py);
+    return TRUE;
+}
+
+void sip_iwc2radec(const sip_t* sip, double x, double y, double *p_ra, double *p_dec) {
+    tan_iwc2radec(&(sip->wcstan), x, y, p_ra, p_dec);
+}
+
 
 // RA,Dec in degrees to Pixels.
 anbool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *px, double *py) {
@@ -388,6 +386,17 @@ void sip_pixel_distortion(const sip_t* sip, double x, double y, double* X, doubl
 }
 
 void sip_pixel_undistortion(const sip_t* sip, double x, double y, double* X, double *Y) {
+	if (!has_distortions(sip)) {
+        *X = x;
+        *Y = y;
+        return;
+    }
+	// Sanity check:
+	if (sip->a_order != 0 && sip->ap_order == 0) {
+		fprintf(stderr, "suspicious inversion; no inverse SIP coeffs "
+				"yet there are forward SIP coeffs\n");
+	}
+
 	// Get pixel coordinates relative to reference pixel
 	double u = x - sip->wcstan.crpix[0];
 	double v = y - sip->wcstan.crpix[1];
