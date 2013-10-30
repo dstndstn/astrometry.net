@@ -31,7 +31,10 @@ if __name__ == '__main__':
 	if opt.sub:
 		sub = Submission.objects.all().get(id=opt.sub)
 		print 'Submission', sub
-		print 'Path', sub.disk_file.get_path()
+		if sub.disk_file is None:
+			print '  no disk file'
+		else:
+			print 'Path', sub.disk_file.get_path()
 		uis = sub.user_images.all()
 		print 'UserImages:', len(uis)
 		for ui in uis:

@@ -364,7 +364,6 @@ def try_dosub(sub, max_retries):
     try:
         return dosub(sub)
     except DatabaseError as e:
-        import traceback
         print 'Caught DatabaseError while processing Submission', sub
         traceback.print_exc(None, sys.stdout)
 
@@ -388,7 +387,6 @@ def try_dosub(sub, max_retries):
     except:
         print 'Caught exception while processing Submission', sub
         traceback.print_exc(None, sys.stdout)
-        # FIXME -- sub.set_status()...
         sub.set_error_message(
             'Caught exception while processing Submission: ' +  str(sub) + '\n'
             + traceback.format_exc(None))
@@ -543,7 +541,6 @@ def create_image(df):
         img.height = h
         img.save()
     except:
-        import traceback
         logmsg('file is not an image file: ' + traceback.format_exc())
         img = None
     return img
@@ -577,7 +574,6 @@ def create_source_list(df):
             fits = fits_table(fitsfn)
             source_type = 'text'
         except Exception as e:
-            import traceback
             logmsg('Traceback:\n' + traceback.format_exc())
             logmsg('fitsfn: %s' % fitsfn)
             logmsg(e)
