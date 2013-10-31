@@ -448,7 +448,7 @@ class AsTrans(SdssFile):
 		return self.munu_to_pixel_single(mu, nu, color)
 
 	def radec_to_pixel_single_c(self, ra, dec):
-		return cutils.radec_to_pixel(ra, dec, self._cached)
+		return cutils.radec_to_pixel(float(ra), float(dec), self._cached)
 
 	def radec_to_pixel(self, ra, dec, color=0):
 		mu, nu = self.radec_to_munu(ra, dec)
@@ -563,7 +563,7 @@ class AsTrans(SdssFile):
 		dx = 1.
 		# FIXME -- should just update the ones that aren't zero
 		# FIXME -- should put in some failsafe...
-		while max(np.abs(np.atleast_1d(dx))) > 1e-10:
+		while np.max(np.abs(np.atleast_1d(dx))) > 1e-10:
 			xp    = x + h0 + h1 * x + h2 * x**2 + h3 * x**3
 			dxpdx = 1 +      h1     + h2 * 2*x +  h3 * 3*x**2
 			dx = (xprime - xp) / dxpdx

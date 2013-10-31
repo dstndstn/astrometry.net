@@ -22,21 +22,21 @@ class PlotSequence(object):
 	def skipto(self, n):
 		self.ploti = n
 
-	def _getnextlist(self):
+	def getnextlist(self):
 		lst = ['%s-%s.%s' % (self.basefn, self.format % self.ploti, suff)
 				for suff in self.suffixes]
 		self.ploti += 1
 		return lst
 
 	def getnext(self):
-		lst = self._getnextlist()
+		lst = self.getnextlist()
 		if len(lst) == 1:
 			return lst[0]
 		return lst
 
 	def savefig(self, **kwargs):
 		import pylab as plt
-		for fn in self._getnextlist():
+		for fn in self.getnextlist():
 			plt.savefig(fn, **kwargs)
 			print 'saved', fn
 
