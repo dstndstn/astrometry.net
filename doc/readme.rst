@@ -44,16 +44,14 @@ See :ref:`build`.
 Getting Index Files
 ===================
 
-Get pre-cooked index files from: <http://broiler.astrometry.net/~dstn/4200>_
+Get pre-cooked index files from: <http://data.astrometry.net/4200>_
 (these are built from the 2MASS catalog).
 
-Or, for wide-angle images, <http://broiler.astrometry.net/~dstn/4100>_
+Or, for wide-angle images, <http://data.astrometry.net/4100>_
 (these are built from the Tycho-2 catalog).
 
-We used to have the "4000-series" files:
-(http://broiler.astrometry.net/~dstn/4000), but these suffer from a
-bug where parts of the sky do are not covered by the reference
-catalog.
+We used to have the "4000-series" files, but these suffer from a bug
+where parts of the sky do are not covered by the reference catalog.
 
 Each index file is designed to solve images within a narrow range of
 scales.  The index files designed to solve small (angular size) images
