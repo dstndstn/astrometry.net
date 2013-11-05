@@ -851,32 +851,20 @@ class SkyLocation(models.Model):
         user_images = UserImage.objects.all_visible()
 
         from django.db.models import Q
-        q1 = Q(jobs__calibration__sky_location__nside = self.nside)
-        q2 = Q(jobs__calibration__sky_location__healpix = self.healpix)
         # add neighbors at current scale
         neighbours = anutil.healpix_get_neighbours(self.healpix, self.nside)
-        for hp in neighbours:
-            q2 = q2 | Q(jobs__calibration__sky_location__healpix = hp)
-        q1 = q1 & q2
-
+        q1 = Q(jobs__calibration__sky_location__nside = self.nside,
+               jobs__calibration__sky_location__healpix__in = neighbours + [self.healpix])
         # next bigger scale
         q2 = Q(jobs__calibration__sky_location__nside = self.nside/2,
                jobs__calibration__sky_location__healpix = self.healpix / 4)
-
         # next smaller scale
-        q3 = Q(jobs__calibration__sky_location__nside = self.nside * 2)
-        q4 = None
         neighbours = set()
         for i in range(4):
             n = anutil.healpix_get_neighbours(self.healpix*4+i, self.nside*2)
             neighbours.update(n)
-        for hp in neighbours:
-            q5 = Q(jobs__calibration__sky_location__healpix = hp)
-            if q4 is None:
-                q4 = q5
-            else:
-                q4 = q4 | q5
-        q3 = q3 & q4
+        q3 = Q(jobs__calibration__sky_location__nside = self.nside * 2,
+               jobs__calibration__sky_location__healpix__in = list(neighbours))
         return user_images.filter(q1 | q2 | q3)
 
 class FlaggedUserImage(models.Model):
