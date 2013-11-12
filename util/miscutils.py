@@ -63,7 +63,15 @@ def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
         mask.flat[I] = (pn > 0)
         #print 'Patched', np.sum(pn > 0)
     return True
-    
+
+def polygon_area(poly):
+	xx,yy = poly
+	x,y = np.mean(xx), np.mean(yy)
+	area = 0.
+	for dx0,dy0,dx1,dy1 in zip(xx-x, yy-y, xx[1:]-x, yy[1:]-y):
+		# area: 1/2 cross product
+		area += dx0 * dy1 - dx1 * dy0
+	return 0.5 * area
 
 def clip_polygon(poly1, poly2):
     '''

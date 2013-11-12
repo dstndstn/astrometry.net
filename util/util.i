@@ -1034,6 +1034,10 @@ anwcs.get_cd = anwcs_get_cd
         return sip_xyzarr2pixelxy($self, xyz, p_x, p_y);
     }
 
+    anbool is_inside(double ra, double dec) {
+       return sip_is_inside_image($self, ra, dec);
+    }
+
     void set_a_term(int i, int j, double val) {
         checkorder(i, j);
         $self->a[i][j] = val;
