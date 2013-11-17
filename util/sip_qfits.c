@@ -481,14 +481,47 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
 						   &(tan.cd[0][0]), &(tan.cd[0][1]),
 						   &(tan.cd[1][0]), &(tan.cd[1][1]) };
 		int i;
-
-		for (i=0; i<sizeof(keys)/sizeof(char*); i++) {
+        for (i=0; i<4; i++) {
 			*(vals[i]) = qfits_header_getdouble(hdr, keys[i], nil);
 			if (*(vals[i]) == nil) {
 				ERROR("TAN header: missing or invalid value for \"%s\"", keys[i]);
 				return NULL;
 			}
 		}
+        // Try CD
+        int gotcd = 1;
+        char* complaint = NULL;
+        for (i=4; i<8; i++) {
+			*(vals[i]) = qfits_header_getdouble(hdr, keys[i], nil);
+			if (*(vals[i]) == nil) {
+                asprintf_safe(&complaint, "TAN header: missing or invalid value for key \"%s\"", keys[i]);
+                gotcd = 0;
+                break;
+            }
+        }
+        if (!gotcd) {
+            double cdelt1,cdelt2;
+            // Try CDELT
+            char* key;
+            key = "CDELT1";
+            cdelt1 = qfits_header_getdouble(hdr, key, nil);
+            if (cdelt1 == nil) {
+				ERROR("%s; also tried but didn't find \"%s\"", key);
+                free(complaint);
+				return NULL;
+			}
+            key = "CDELT2";
+            cdelt2 = qfits_header_getdouble(hdr, key, nil);
+            if (cdelt2 == nil) {
+				ERROR("%s; also tried but didn't find \"%s\"", key);
+                free(complaint);
+				return NULL;
+			}
+            tan.cd[0][0] = cdelt1;
+            tan.cd[0][1] = 0.0;
+            tan.cd[1][0] = 0.0;
+            tan.cd[1][1] = cdelt2;
+        }
 	}
 
 	if (swap == 1) {

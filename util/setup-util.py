@@ -36,6 +36,7 @@ c_swig_module = Extension('_util',
 						  extra_objects = objs,
                           extra_compile_args = cflags,
                           extra_link_args=link,
+                          depends=objs,
 	)
 
 setup(cmdclass={'build_ext': an_build_ext},
