@@ -4,11 +4,11 @@ Backups of Astrometry.net stuff
 -------------------------------
 
 * **Subversion** (svn) repo.  dstn maintains a mirror 
-  (at ``dstn@cs.toronto.edu:svn-backup-astrometry``)
+  (at ``dstn@astro.cs.toronto.edu:svn-backup-astrometry``)
   using the code in ``trunk/scripts/svnsync``
   (`here <http://trac.astrometry.net/browser/trunk/scripts/svnsync>`_).
   It is updated and md5sum-checked hourly, via a cron job on
-  ``apps3.cs.toronto.edu``::
+  ``astro.cs.toronto.edu``::
 
     # Sync hourly
     @hourly   /u/dstn/svn-backup-astrometry/sync.sh
