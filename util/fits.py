@@ -419,7 +419,19 @@ class tabledata(object):
 
             if header == 'default':
                 header = None
-            fits.write(arrays, names=columns, header=header)
+            try:
+                fits.write(arrays, names=columns, header=header)
+            except:
+                print 'Failed to write FITS table'
+                print 'Columns:'
+                for c,a in zip(columns, arrays):
+                    print '  ', c, type(a),
+                    try:
+                        print a.dtype, a.shape,
+                    except:
+                        pass
+                    print
+                raise
             return
 
 
