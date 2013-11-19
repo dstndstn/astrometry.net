@@ -66,7 +66,7 @@ static void sample_percentiles(const float* img, int nx, int ny, int margin,
 	int i;
 	float* pix;
 
-	fprintf(stderr, "Computing image percentiles...\n");
+	//fprintf(stderr, "Computing image percentiles...\n");
 	n = (nx - 2*margin) * (ny - 2*margin);
 	np = MIN(n, NPIX);
 	pix = malloc(np * sizeof(float));
