@@ -24,12 +24,15 @@
 #include "anqfits.h"
 #include "fitsioutils.h"
 #include "boilerplate.h"
+#include "ioutils.h"
 
-char* OPTIONS = "h";
+char* OPTIONS = "hs:";
 
 void printHelp(char* progname) {
     boilerplate_help_header(stdout);
-	printf("\n\n%s  <input-file-1> <input-file-2> <output-file>\n"
+	printf("\n\n%s  [options] <input-file-1> <input-file-2> <output-file>\n"
+           "Options:\n"
+           "   [-s]: suffix to add for duplicate column names in table 2\n"
            "\n",
 		   progname);
 }
@@ -42,6 +45,7 @@ int main(int argc, char** args) {
     char* afn;
     char* bfn;
     char* outfn;
+    char* suffix = NULL;
     qfits_table* atable;
     qfits_table* btable;
     qfits_table* outtable;
@@ -59,6 +63,9 @@ int main(int argc, char** args) {
 
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
+        case 's':
+            suffix = optarg;
+            break;
         case 'h':
             printHelp(args[0]);
             exit(0);
@@ -119,7 +126,11 @@ int main(int argc, char** args) {
         for (j=0; j<btable->nc; j++) {
             if (strcmp(atable->col[i].tlabel, btable->col[j].tlabel) == 0) {
                 fprintf(stderr, "Input tables both have a column named \"%s\".\n", atable->col[i].tlabel);
-                exit(-1);
+                if (!suffix) {
+                    exit(-1);
+                }
+                sprintf(btable->col[j].tlabel, "%s%s", atable->col[i].tlabel, suffix);
+                printf("Changed name to \"%s\"\n", btable->col[j].tlabel);
             }
         }
     }

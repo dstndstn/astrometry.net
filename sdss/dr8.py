@@ -1,9 +1,15 @@
 import os
-import pyfits
 from astrometry.util.fits import fits_table
 import numpy as np
 import logging
 import urlparse
+import tempfile
+
+fitsio = None
+try:
+    import fitsio
+except:
+    import pyfits
 
 from common import *
 from dr7 import *
@@ -144,6 +150,21 @@ class DR8(DR7):
 
     def getDRNumber(self):
         return 8
+
+    def useLocalTree(self):
+        pobj = os.environ['BOSS_PHOTOOBJ']
+        redux = os.environ['PHOTO_REDUX']
+        
+        self.filenames.update(
+            photoObj = os.path.join(pobj, '%(rerun)s', '%(run)i', '%(camcol)i',
+                                    'photoObj-%(run)06i-%(camcol)i-%(field)04i.fits'),
+            frame = os.path.join(pobj, 'frames', '%(rerun)s', '%(run)i', '%(camcol)i',
+                                    'frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2'),
+            psField = os.path.join(redux, '%(rerun)s', '%(run)i', 'objcs', '%(camcol)i',
+                                   'psField-%(run)06i-%(camcol)i-%(field)04i.fit'),
+            fpM = os.path.join(redux, '%(rerun)s', '%(run)i', 'objcs', '%(camcol)i',
+                               'fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit.gz'),
+            )
     
     def __init__(self, **kwargs):
         '''
@@ -236,6 +257,7 @@ class DR8(DR7):
         if skipExisting and os.path.exists(outfn):
             return outfn
 
+        print 'Did not find file:', outfn
         url = self.get_url(filetype, run, camcol, field, band=band)
         #print 'URL:', url
         if self.curl:
@@ -298,24 +320,54 @@ class DR8(DR7):
         else:
             fn = filename
         #print 'reading file', fn
-        p = pyfits.open(fn)
-        #print 'got', len(p), 'HDUs'
-        # in nanomaggies
-        f.image = p[0].data
-        f.header = p[0].header
-        # converts counts -> nanomaggies
-        f.calib = p[1].data
-        # table with val,x,y -- binned; use bilinear interpolation to expand
-        sky = p[2].data
-        f.sky = sky.field('allsky')[0]
+        if fitsio:
+            tempfn = None
+            if fn.endswith('.bz2'):
+                fid,tempfn = tempfile.mkstemp()
+                os.close(fid)
+                os.system('bunzip2 -cd %s > %s' % (fn, tempfn))
+                fn = tempfn
+                #print 'temp fn', tempfn
+
+            # for i in range(4):
+            #     X = fitsio.read(fn, ext=i)
+            #     print 'HDU', i, ':', type(X)
+            #     try:
+            #         print 'Dtype:', X.dtype
+            #     except:
+            #         print 'no dtype'
+
+            f.image, f.header = fitsio.read(fn, header=True)
+            f.calib = fitsio.read(fn, ext=1)
+            sky = fitsio.read(fn, ext=2, columns=['allsky', 'xinterp', 'yinterp'])
+            #print 'sky', type(sky)
+            # ... supposed to be a recarray, but it's not...
+            f.sky, f.skyxi, f.skyyi = sky.tolist()[0]
+            
+            tab = fits_table(fn, hdu=3)
+            if tempfn is not None:
+                os.remove(tempfn)
+                #pass
+        else:
+            p = pyfits.open(fn)
+            # in nanomaggies
+            f.image = p[0].data
+            f.header = p[0].header
+            # converts counts -> nanomaggies
+            f.calib = p[1].data
+            # table with val,x,y -- binned; use bilinear interpolation to expand
+            sky = p[2].data
+            # table -- asTrans structure
+            tab = fits_table(p[3].data)
+
+            f.sky = sky.field('allsky')[0]
+            f.skyxi = sky.field('xinterp')[0]
+            f.skyyi = sky.field('yinterp')[0]
+
         #print 'sky shape', f.sky.shape
         if len(f.sky.shape) != 2:
             f.sky = f.sky.reshape((-1, 256))
-        f.skyxi = sky.field('xinterp')[0]
-        f.skyyi = sky.field('yinterp')[0]
         #print 'p3:', p[3]
-        # table -- asTrans structure
-        tab = fits_table(p[3].data)
         assert(len(tab) == 1)
         tab = tab[0]
         # DR7 has NODE, INCL in radians...

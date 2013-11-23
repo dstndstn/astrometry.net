@@ -17,6 +17,8 @@ if __name__ == '__main__':
                  help='Formats: (f=float32, d=float64, s=string, j=int32, k=int64)')
     p.add_option('-n', dest='fnull', action='append', default=['null'],
                  help='Floating-point null value string (eg, "NaN", "null")')
+    p.add_option('-N', dest='inull', action='append', default=['null'],
+                 help='Integer null value string (eg, "null")')
     p.set_defaults(separator=None, maxcols=None, skiplines=0)
     (opt,args) = p.parse_args()
     if len(args) != 2:
@@ -34,6 +36,7 @@ if __name__ == '__main__':
         coltypes = [typemap[c] for c in opt.format]
 
     fnulls = dict([(x, np.nan) for x in opt.fnull])
+    inulls = dict([(x, -1) for x in opt.inull])
     
     #T = text_table_fields(textfn, split=opt.separator, maxcols=opt.maxcols,
     #                      skiplines=opt.skiplines, headerline=opt.header,
@@ -41,7 +44,8 @@ if __name__ == '__main__':
     fnulls[''] = np.nan
     T = streaming_text_table(textfn, split=opt.separator, maxcols=opt.maxcols,
                              skiplines=opt.skiplines, headerline=opt.header,
-                             coltypes=coltypes, floatvalmap=fnulls)
+                             coltypes=coltypes, floatvalmap=fnulls,
+                             intvalmap=inulls)
     T.write_to(fitsfn)
 
     
