@@ -21,8 +21,30 @@ class Frame(SdssFile):
         super(Frame, self).__init__(*args, **kwargs)
         self.filetype = 'frame'
         self.image = None
+
+        self.image_proxy = None
+
+    def getImageShape(self):
+        if self.image_proxy is not None:
+            # fitsio fits.FITSHDU object
+            H,W = self.image_proxy.get_info()['dims']
+            H = int(H)
+            W = int(W)
+        else:
+            H,W = self.image.shape
+        return H,W
+
+    def getImageSlice(self, slice):
+        if self.image_proxy is not None:
+            #print 'reading slice from image proxy:', slice
+            return self.image_proxy[slice]
+        return self.image[slice]
+
     #def __str__(self):
     def getImage(self):
+        if self.image is None and self.image_proxy is not None:
+            self.image = self.image_proxy.read()
+            self.image_proxy = None
         return self.image
     def getHeader(self):
         return self.header
@@ -165,6 +187,9 @@ class DR8(DR7):
             fpM = os.path.join(redux, '%(rerun)s', '%(run)i', 'objcs', '%(camcol)i',
                                'fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit.gz'),
             )
+
+    def saveUnzippedFiles(self, basedir):
+        self.unzip_dir = basedir
     
     def __init__(self, **kwargs):
         '''
@@ -173,6 +198,9 @@ class DR8(DR7):
         basedir : (string) - local directory where data will be stored.
         '''
         DR7.__init__(self, **kwargs)
+
+        self.unzip_dir = None
+
         # Local filenames
         self.filenames.update({
             'frame': 'frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits',
@@ -203,7 +231,7 @@ class DR8(DR7):
             }
 
         self.processcmds = {
-            'frame': 'bunzip2 -cd %(input)s > %(output)s',
+            'frame': 'bunzip2 -cd %(input)s > %(output)s.tmp && mv %(output)s.tmp %(output)s',
             'fpM': 'gunzip -cd %(input)s > %(output)s',
             'idR': 'gunzip -cd %(input)s > %(output)s',
             }
@@ -237,10 +265,10 @@ class DR8(DR7):
             I *= (self.runlist.startfield <= field) * (self.runlist.endfield >= field)
         I = np.flatnonzero(I)
         reruns = np.unique(self.runlist.rerun[I])
-        #print 'Reruns:', reruns
+        #OBprint 'Reruns:', reruns
         if len(reruns) == 0:
             return None
-        return reruns[0]
+        return reruns[-1]
 
     def get_url(self, filetype, run, camcol, field, band=None):
         rerun = self.get_rerun(run, field)
@@ -321,23 +349,58 @@ class DR8(DR7):
             fn = filename
         #print 'reading file', fn
         if fitsio:
+
+            print 'Frame filename', fn
+            # eg /clusterfs/riemann/raid006/dr10/boss/photoObj/frames/301/2825/1/frame-u-002825-1-0126.fits.bz2
+
             tempfn = None
-            if fn.endswith('.bz2'):
+            keep = False
+            cmd = None
+            # bunzip2
+            filetype = 'frame'
+            if filetype in self.processcmds:
+                cmd = self.processcmds[filetype]
+
+            if cmd is not None and self.unzip_dir is not None:
+                udir = os.path.join(self.unzip_dir, '%i' % run, '%i' % camcol)
+                if not os.path.exists(udir):
+                    try:
+                        os.makedirs(udir)
+                    except:
+                        pass
+                tempfn = os.path.join(udir, os.path.basename(fn).replace('.bz2', ''))
+                #print 'Checking', tempfn
+                if os.path.exists(tempfn):
+                    print 'File exists:', tempfn
+                    fn = tempfn
+                    cmd = None
+                else:
+                    print 'Saving to', tempfn
+                    keep = True
+
+            elif cmd is not None and self.unzip_dir is None:
                 fid,tempfn = tempfile.mkstemp()
                 os.close(fid)
-                os.system('bunzip2 -cd %s > %s' % (fn, tempfn))
+
+            if cmd is not None:
+                cmd = cmd % dict(input = fn, output = tempfn)
+                self.logger.debug('cmd: %s' % cmd)
+                (rtn,out,err) = run_command(cmd)
+                if rtn:
+                    print 'Command failed: command', cmd
+                    print 'Output:', out
+                    print 'Error:', err
+                    print 'Return val:', rtn
+                    return None
                 fn = tempfn
-                #print 'temp fn', tempfn
 
-            # for i in range(4):
-            #     X = fitsio.read(fn, ext=i)
-            #     print 'HDU', i, ':', type(X)
-            #     try:
-            #         print 'Dtype:', X.dtype
-            #     except:
-            #         print 'no dtype'
+            #f.image, f.header = fitsio.read(fn, header=True)
+            #print 'Reading header...'
+            f.header = fitsio.read_header(fn, 0)
+            #print 'Reading image HDU...'
+            # Allow later reading of just the ROI slice...
+            f.image_proxy = fitsio.FITS(fn)[0]
 
-            f.image, f.header = fitsio.read(fn, header=True)
             f.calib = fitsio.read(fn, ext=1)
             sky = fitsio.read(fn, ext=2, columns=['allsky', 'xinterp', 'yinterp'])
             #print 'sky', type(sky)
@@ -345,9 +408,9 @@ class DR8(DR7):
             f.sky, f.skyxi, f.skyyi = sky.tolist()[0]
             
             tab = fits_table(fn, hdu=3)
-            if tempfn is not None:
+            if not keep and tempfn is not None:
                 os.remove(tempfn)
-                #pass
+
         else:
             p = pyfits.open(fn)
             # in nanomaggies
@@ -367,7 +430,6 @@ class DR8(DR7):
         #print 'sky shape', f.sky.shape
         if len(f.sky.shape) != 2:
             f.sky = f.sky.reshape((-1, 256))
-        #print 'p3:', p[3]
         assert(len(tab) == 1)
         tab = tab[0]
         # DR7 has NODE, INCL in radians...
