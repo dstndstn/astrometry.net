@@ -685,7 +685,7 @@ static double get_tolerance(solver_t* solver) {
  fieldtop - the maximum field star number to build quads out of.
  dimquad, solver, tol2 - passed to try_all_codes.
  */
-static void add_stars(pquad* pq, int* field, int fieldoffset,
+static void add_stars(const pquad* pq, int* field, int fieldoffset,
                       int n_to_add, int adding, int fieldtop,
                       int dimquad,
                       solver_t* solver, double tol2) {

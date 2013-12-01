@@ -27,6 +27,7 @@
 #include "fitsioutils.h"
 #include "errors.h"
 #include "log.h"
+#include "ioutils.h"
 
 #include "anqfits.h"
 
@@ -502,18 +503,17 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
         if (!gotcd) {
             double cdelt1,cdelt2;
             // Try CDELT
-            char* key;
-            key = "CDELT1";
+            char* key = "CDELT1";
             cdelt1 = qfits_header_getdouble(hdr, key, nil);
             if (cdelt1 == nil) {
-				ERROR("%s; also tried but didn't find \"%s\"", key);
+				ERROR("%s; also tried but didn't find \"%s\"", complaint, key);
                 free(complaint);
 				return NULL;
 			}
             key = "CDELT2";
             cdelt2 = qfits_header_getdouble(hdr, key, nil);
             if (cdelt2 == nil) {
-				ERROR("%s; also tried but didn't find \"%s\"", key);
+				ERROR("%s; also tried but didn't find \"%s\"", complaint, key);
                 free(complaint);
 				return NULL;
 			}
