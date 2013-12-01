@@ -1092,7 +1092,8 @@ bailout:
 }
 
 /**
- This functions tries different permutations of the non-backbone stars C [, D [,E ] ]
+ This functions tries different permutations of the non-backbone
+ stars C [, D [,E ] ]
  */
 static void try_permutations(const int* origstars, int dimquad,
 							 const double* origcode,
@@ -1129,7 +1130,7 @@ static void try_permutations(const int* origstars, int dimquad,
 	 AB EDC
 
 	 This call will try to put each star in "slot" in turn, then for
-	 ecah one recurse to slot in the rest of the stars.
+	 each one recurse to "slot" in the rest of the stars.
 
 	 Note that we are filling stars[2], stars[3], etc; the first two
 	 elements are already filled by stars A and B.
@@ -1147,7 +1148,9 @@ static void try_permutations(const int* origstars, int dimquad,
 		// Check cx <= dx, if we're a "dx".
 		if (slot > 0 && solver->index->cx_less_than_dx) {
 			if (code[2*(slot - 1) +0] > origcode[2*i +0] + solver->cxdx_margin) {
-				debug("cx <= dx check failed: %g > %g + %g\n", code[2*(slot - 1) +0], origcode[2*i +0], solver->cxdx_margin);
+				debug("cx <= dx check failed: %g > %g + %g\n",
+                      code[2*(slot - 1) +0], origcode[2*i +0],
+                      solver->cxdx_margin);
 				solver->num_cxdx_skipped++;
 				continue;
 			}
@@ -1159,7 +1162,8 @@ static void try_permutations(const int* origstars, int dimquad,
 		code[2*slot +1] = origcode[2*i +1];
 
 		// Check meanx <= 1/2.
-		if (solver->index->cx_less_than_dx && solver->index->meanx_less_than_half) {
+		if (solver->index->cx_less_than_dx &&
+            solver->index->meanx_less_than_half) {
 			// Check the "cx + dx <= 1" condition (for quads); in general,
 			// combined with the "cx <= dx" condition, this means that the
 			// mean(x) <= 1/2.
@@ -1169,7 +1173,8 @@ static void try_permutations(const int* origstars, int dimquad,
 				meanx += code[2*j];
 			meanx /= (slot+1);
 			if (meanx > 0.5 + solver->cxdx_margin) {
-				debug("meanx <= 0.5 check failed: %g > 0.5 + %g\n", meanx, solver->cxdx_margin);
+				debug("meanx <= 0.5 check failed: %g > 0.5 + %g\n", 
+                      meanx, solver->cxdx_margin);
 				solver->num_meanx_skipped++;
 				continue;
 			}
@@ -1190,9 +1195,10 @@ static void try_permutations(const int* origstars, int dimquad,
 #endif
 				
 			// Search with the code we've built.
-			*presult = kdtree_rangesearch_options_reuse(solver->index->codekd->tree,
-														*presult, code, tol2, options);
-			//debug("      trying ABCD = [%i %i %i %i]: %i results.\n", fstars[A], fstars[B], fstars[C], fstars[D], result->nres);
+			*presult = kdtree_rangesearch_options_reuse
+                (solver->index->codekd->tree, *presult, code, tol2, options);
+			//debug("      trying ABCD = [%i %i %i %i]: %i results.\n",
+            //fstars[A], fstars[B], fstars[C], fstars[D], result->nres);
 
 			if ((*presult)->nres) {
 				double pixvals[DQMAX*2];
@@ -1201,7 +1207,8 @@ static void try_permutations(const int* origstars, int dimquad,
 					setx(pixvals, j, field_getx(solver, stars[j]));
 					sety(pixvals, j, field_gety(solver, stars[j]));
 				}
-				resolve_matches(*presult, pixvals, stars, dimquad, solver, current_parity);
+				resolve_matches(*presult, pixvals, stars, dimquad, solver,
+                                current_parity);
 			}
 			if (unlikely(solver->quit_now))
 				return;
@@ -1245,7 +1252,6 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
 			continue;
 		}
 
-
 		debug("        stars [");
 		for (i=0; i<dimquads; i++)
 			debug("%s%i", (i?" ":""), star[i]);
@@ -1254,7 +1260,8 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
 		// Quick-n-dirty scale estimate based on two stars.
 		//abscale = distsq(starxyz, starxyz+3, 3) / distsq(field, field+2, 2);
 		// in (rad per pix)**2
-		abscale = square(distsq2rad(distsq(starxyz, starxyz+3, 3))) / distsq(field, field+2, 2);
+		abscale = square(distsq2rad(distsq(starxyz, starxyz+3, 3))) / 
+            distsq(field, field+2, 2);
 		if (abscale > solver->abscale_high ||
 			abscale < solver->abscale_low) {
 			solver->num_abscale_skipped++;
@@ -1314,7 +1321,8 @@ void solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip) {
 	solver_handle_hit(solver, mo, sip, TRUE);
 }
 
-static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, anbool fake_match) {
+static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
+                             anbool fake_match) {
 	double match_distance_in_pixels2;
     anbool solved;
 	double logaccept;
@@ -1344,10 +1352,13 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, anbool fake
 		logverb("Got a new best match: logodds %g.\n", mo->logodds);
 	}
 
-	if (mo->logodds >= sp->logratio_totune && mo->logodds < sp->logratio_tokeep) {
-		logverb("Trying to tune up this solution (logodds = %g; %g)...\n", mo->logodds, exp(mo->logodds));
+	if (mo->logodds >= sp->logratio_totune &&
+        mo->logodds < sp->logratio_tokeep) {
+		logverb("Trying to tune up this solution (logodds = %g; %g)...\n",
+                mo->logodds, exp(mo->logodds));
 		solver_tweak2(sp, mo, 1, NULL);
-		logverb("After tuning, logodds = %g (%g)\n", mo->logodds, exp(mo->logodds));
+		logverb("After tuning, logodds = %g (%g)\n",
+                mo->logodds, exp(mo->logodds));
 
 		// Since we tuned up this solution, we can't just accept the
 		// resulting log-odds at face value.
@@ -1361,7 +1372,8 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, anbool fake
 					   sp->logratio_stoplooking,
 					   sp->distance_from_quad_bonus,
 					   fake_match);
-			logverb("Checking tuned result: logodds = %g (%g)\n", mo->logodds, exp(mo->logodds));
+			logverb("Checking tuned result: logodds = %g (%g)\n",
+                    mo->logodds, exp(mo->logodds));
 		}
 	}
 
@@ -1415,7 +1427,8 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, anbool fake
 			sip_pixel_undistortion(sp->predistort, x, y, &dx, &dy);
 			matchxy[2*Ngood + 0] = dx;
 			matchxy[2*Ngood + 1] = dy;
-			memcpy(matchxyz + 3*Ngood, mo->refxyz + 3*mo->theta[i], 3*sizeof(double));
+			memcpy(matchxyz + 3*Ngood, mo->refxyz + 3*mo->theta[i],
+                   3*sizeof(double));
 			weights[Ngood] = verify_logodds_to_weight(mo->matchodds[i]);
 
 			double xx,yy;
@@ -1441,15 +1454,17 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, anbool fake
 				sip.wcstan.crpix[0] = sp->crpix[0];
 				sip.wcstan.crpix[1] = sp->crpix[1];
 				// find matching crval...
-				sip_pixel_distortion(sp->predistort, sp->crpix[0], sp->crpix[1], &dx, &dy);
+				sip_pixel_distortion(sp->predistort,
+                                     sp->crpix[0], sp->crpix[1], &dx, &dy);
 				tan_pixelxy2radecarr(&mo->wcstan, dx, dy, sip.wcstan.crval);
 
 			} else {
 				// keep TAN WCS's crval but distort the crpix.
 				sip.wcstan.crval[0] = mo->wcstan.crval[0];
 				sip.wcstan.crval[1] = mo->wcstan.crval[1];
-				sip_pixel_undistortion(sp->predistort, mo->wcstan.crpix[0], mo->wcstan.crpix[1],
-									   sip.wcstan.crpix + 0, sip.wcstan.crpix + 1);
+				sip_pixel_undistortion(sp->predistort,
+                                       mo->wcstan.crpix[0], mo->wcstan.crpix[1],
+									   sip.wcstan.crpix+0, sip.wcstan.crpix+1);
 			}
 
 			tweak2_from_correspondences(matchxy, matchxyz, weights, Ngood, &sip);
@@ -1469,8 +1484,10 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, anbool fake
 								 &mo->wcstan, NULL);
 			if (sp->set_crpix) {
 				tan_t wcs2;
-				fit_tan_wcs_move_tangent_point(matchxyz, matchxy, Ngood, sp->crpix, &mo->wcstan, &wcs2);
-				fit_tan_wcs_move_tangent_point(matchxyz, matchxy, Ngood, sp->crpix, &wcs2, &mo->wcstan);
+				fit_tan_wcs_move_tangent_point(matchxyz, matchxy, Ngood,
+                                               sp->crpix, &mo->wcstan, &wcs2);
+				fit_tan_wcs_move_tangent_point(matchxyz, matchxy, Ngood,
+                                               sp->crpix, &wcs2, &mo->wcstan);
 			}
 		}
 
@@ -1484,8 +1501,10 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, anbool fake
 	} else if (!sip && sp->set_crpix) {
 		tan_t wcs2;
 		tan_t wcs3;
-		fit_tan_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, sp->crpix, &(mo->wcstan), &wcs2);
-		fit_tan_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, sp->crpix, &wcs2, &wcs3);
+		fit_tan_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads,
+                                       sp->crpix, &(mo->wcstan), &wcs2);
+		fit_tan_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads,
+                                       sp->crpix, &wcs2, &wcs3);
 		memcpy(&(mo->wcstan), &wcs3, sizeof(tan_t));
 		/*
 		 Good test case:
