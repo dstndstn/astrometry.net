@@ -90,7 +90,8 @@ void test_nn_1(CuTest* tc) {
 
     for (j=0; j<NY; j++) {
         int jj = kdtree_permute(ykd, j); 
-       CuAssertIntEquals(tc, true_nearest_ind[jj], kdtree_permute(xkd, nearest_ind[j]));
+        CuAssertIntEquals(tc, true_nearest_ind[jj], kdtree_permute(xkd, nearest_ind[j]));
+        //CuAssertIntEquals(tc, true_nearest_ind[jj], nearest_ind[j]);
         CuAssertDblEquals(tc, true_nearest_d2[jj],  nearest_d2[j], 1e-6);
     }
 

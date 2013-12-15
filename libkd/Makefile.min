@@ -1,0 +1,68 @@
+all:
+.PHONY: all
+
+include ../util/makefile.common
+
+INTERNALS := \
+	kdint_ddd.o \
+	kdint_fff.o \
+	kdint_ddu.o \
+	kdint_duu.o \
+	kdint_dds.o \
+	kdint_dss.o
+
+KD := kdtree.o kdtree_dim.o kdtree_mem.o
+KD_FITS := kdtree_fits_io.o
+DT := dualtree.o dualtree_rangesearch.o dualtree_nearestneighbour.o
+
+CFLAGS += -I../util
+
+libkd-min.a: $(DT) $(KD_FITS) $(KD) $(INTERNALS)
+	-rm -f $@
+	$(AR) rc $@ $^
+	$(RANLIB) $@
+
+#UTIL := cutest.o ioutils.o os-features.o mathutil.o fitsioutils.o
+#ANQF := anqfits.o
+#UTILO := $(addprefix ../util/,$(UTIL))
+#ANQFO := $(addprefix ../qfits-an/,$(ANQF))
+
+ALL_TEST_FILES := test_dualtree_nn test_libkd test_libkd_io
+
+all: libkd-min.a $(ALL_TEST_FILES)
+
+ALL_TEST_OBJS := libkd-min.a \
+	../util/ioutils.o ../util/os-features.o \
+	../util/mathutil.o ../util/fitsioutils.o \
+	../qfits-an/anqfits.o ../qfits-an/qfits_tools.o ../qfits-an/qfits_table.o \
+	../qfits-an/qfits_float.o ../qfits-an/qfits_error.o \
+	../qfits-an/qfits_time.o \
+	../qfits-an/qfits_card.o \
+	../qfits-an/qfits_header.o \
+	../qfits-an/qfits_rw.o \
+	../qfits-an/qfits_memory.o \
+	../qfits-an/qfits_convert.o \
+	../qfits-an/qfits_byteswap.o \
+	../util/fitsbin.o ../util/bl.o ../util/an-endian.o \
+	../util/fitsfile.o ../util/log.o \
+	../util/errors.o ../util/tic.o
+
+COMMON := ../util
+
+ALL_TEST_FILES_C = $(addsuffix .c, $(ALL_TEST_FILES))
+ALL_TEST_FILES_O = $(addsuffix .o, $(ALL_TEST_FILES))
+ALL_TEST_FILES_MAIN_C = $(addsuffix -main.c, $(ALL_TEST_FILES))
+ALL_TEST_FILES_MAIN_O = $(addsuffix -main.o, $(ALL_TEST_FILES))
+$(ALL_TEST_FILES_MAIN_C): %-main.c: $(MAKE_TESTS)
+$(ALL_TEST_FILES_MAIN_C): %-main.c: %.c
+	$(AN_SHELL) $(MAKE_TESTS) $^ > $@
+MAKE_TESTS := $(COMMON)/make-tests.sh
+
+$(ALL_TEST_FILES): %: %-main.o %.o $(COMMON)/cutest.o $(ALL_TEST_OBJS)
+
+TEST_SOURCES = $(ALL_TEST_FILES_C)
+test.c: $(MAKE_TESTS) $(TEST_SOURCES)
+	$(AN_SHELL) $(MAKE_TESTS) $(TEST_SOURCES) > $@
+
+# test_dt_nn: test_dualtree_nn.o libkd-min.a \
+# 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
