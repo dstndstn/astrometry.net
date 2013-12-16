@@ -29,7 +29,7 @@ UTILO := ../util/ioutils.o ../util/os-features.o \
 	../util/errors.o ../util/tic.o
 
 INC := -I../util -I../qfits-an
-CFLAGS += $(INC)
+CFLAGS += $(INC) -g -O0
 
 libkd-min.a: $(DT) $(KD_FITS) $(KD) $(INTERNALS) $(QFITSO) $(UTILO)
 	-rm -f $@
