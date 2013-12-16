@@ -29,6 +29,18 @@ all:
 BASEDIR := .
 COMMON := $(BASEDIR)/util
 
+# The internal Astrometry.net dependency stack, top to bottom, is:
+#
+#  blind/libastrometry.a  -- astrometry.net core
+#    catalogs/libcatalogs.a
+#    util/libanfiles.a  -- astrometry.net index files, etc
+#      libkd/libkd.a -- kd-trees
+#        util/libanutils.a  -- utilities
+#          gsl-an/libgsl-an.a OR system gsl -- GNU scientific library
+#          [wcslib] -- optional
+#          qfits-an/libqfits.a -- FITS files
+#            util/libanbase.a  -- basic stuff
+
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.cfitsio

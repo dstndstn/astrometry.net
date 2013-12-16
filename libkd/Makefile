@@ -104,8 +104,7 @@ spherematch_c.so: pyspherematch.c setup.py $(SLIB)
 	SLIB="$(SLIB)" \
 	INC="$(INC)" \
 	CFLAGS="$(ANUTILS_CFLAGS)" \
-	python setup.py build --force --build-base build --build-platlib build/lib
-	cp build/lib/spherematch_c.so $@
+	python setup.py build_ext --inplace --force --build-temp .
 
 # pyspherematch.c includes Python.h
 ifeq ($(MAKECMDGOALS),spherematch_c.so)

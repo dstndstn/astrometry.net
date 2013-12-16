@@ -21,8 +21,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-// numpy - this should be in site-packages/numpy/core/include
-#include "arrayobject.h"
+#include "numpy/arrayobject.h"
 
 #include "kdtree.h"
 #include "kdtree_fits_io.h"

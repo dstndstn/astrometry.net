@@ -4,6 +4,7 @@ import os.path
 
 from numpy.distutils.misc_util import get_numpy_include_dirs
 numpy_inc = get_numpy_include_dirs()
+print 'Numpy inc:', numpy_inc
 
 def strlist(s, split=' '):
     lst = s.split(split)
@@ -14,19 +15,19 @@ def strlist(s, split=' '):
 link = ' '.join([os.environ.get('LDFLAGS', ''),
                  os.environ.get('LDLIBS', ''),])
 link = strlist(link)
-objs = strlist(os.environ.get('SLIB', ''))
+#objs = strlist(os.environ.get('SLIB', ''))
 inc = strlist(os.environ.get('INC', ''), split='-I')
 cflags = strlist(os.environ.get('CFLAGS', ''))
 
 print 'link:', link
-print 'objs:', objs
+#print 'objs:', objs
 print 'inc:', inc
 print 'cflags:', cflags
 
 c_module = Extension('spherematch_c',
                      sources = ['pyspherematch.c'],
                      include_dirs = numpy_inc + inc,
-                     extra_objects = objs,
+                     extra_objects = ['libkd-min.a'],
                      extra_compile_args = cflags,
                      extra_link_args=link,
     )

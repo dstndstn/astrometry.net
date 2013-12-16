@@ -28,12 +28,17 @@ UTILO := ../util/ioutils.o ../util/os-features.o \
 	../util/fitsfile.o ../util/log.o \
 	../util/errors.o ../util/tic.o
 
-CFLAGS += -I../util
+INC := -I../util -I../qfits-an
+CFLAGS += $(INC)
 
 libkd-min.a: $(DT) $(KD_FITS) $(KD) $(INTERNALS) $(QFITSO) $(UTILO)
 	-rm -f $@
 	$(AR) rc $@ $^
 	$(RANLIB) $@
+
+spherematch_c.so: pyspherematch.c setup-min.py libkd-min.a
+	INC="$(INC)" CFLAGS="$(CFLAGS)" \
+	python setup-min.py build_ext --inplace --build-temp . --force
 
 ALL_TEST_FILES := test_dualtree_nn test_libkd test_libkd_io
 
