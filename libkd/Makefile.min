@@ -15,37 +15,31 @@ KD := kdtree.o kdtree_dim.o kdtree_mem.o
 KD_FITS := kdtree_fits_io.o
 DT := dualtree.o dualtree_rangesearch.o dualtree_nearestneighbour.o
 
+QFITSO := ../qfits-an/anqfits.o ../qfits-an/qfits_tools.o \
+	../qfits-an/qfits_table.o ../qfits-an/qfits_float.o \
+	../qfits-an/qfits_error.o ../qfits-an/qfits_time.o \
+	../qfits-an/qfits_card.o ../qfits-an/qfits_header.o \
+	../qfits-an/qfits_rw.o ../qfits-an/qfits_memory.o \
+	../qfits-an/qfits_convert.o ../qfits-an/qfits_byteswap.o
+
+UTILO := ../util/ioutils.o ../util/os-features.o \
+	../util/mathutil.o ../util/fitsioutils.o \
+	../util/fitsbin.o ../util/bl.o ../util/an-endian.o \
+	../util/fitsfile.o ../util/log.o \
+	../util/errors.o ../util/tic.o
+
 CFLAGS += -I../util
 
-libkd-min.a: $(DT) $(KD_FITS) $(KD) $(INTERNALS)
+libkd-min.a: $(DT) $(KD_FITS) $(KD) $(INTERNALS) $(QFITSO) $(UTILO)
 	-rm -f $@
 	$(AR) rc $@ $^
 	$(RANLIB) $@
-
-#UTIL := cutest.o ioutils.o os-features.o mathutil.o fitsioutils.o
-#ANQF := anqfits.o
-#UTILO := $(addprefix ../util/,$(UTIL))
-#ANQFO := $(addprefix ../qfits-an/,$(ANQF))
 
 ALL_TEST_FILES := test_dualtree_nn test_libkd test_libkd_io
 
 all: libkd-min.a $(ALL_TEST_FILES)
 
-ALL_TEST_OBJS := libkd-min.a \
-	../util/ioutils.o ../util/os-features.o \
-	../util/mathutil.o ../util/fitsioutils.o \
-	../qfits-an/anqfits.o ../qfits-an/qfits_tools.o ../qfits-an/qfits_table.o \
-	../qfits-an/qfits_float.o ../qfits-an/qfits_error.o \
-	../qfits-an/qfits_time.o \
-	../qfits-an/qfits_card.o \
-	../qfits-an/qfits_header.o \
-	../qfits-an/qfits_rw.o \
-	../qfits-an/qfits_memory.o \
-	../qfits-an/qfits_convert.o \
-	../qfits-an/qfits_byteswap.o \
-	../util/fitsbin.o ../util/bl.o ../util/an-endian.o \
-	../util/fitsfile.o ../util/log.o \
-	../util/errors.o ../util/tic.o
+ALL_TEST_OBJS := libkd-min.a
 
 COMMON := ../util
 
