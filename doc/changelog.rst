@@ -17,3 +17,8 @@ Version 0.46:
 
 * Add more Intermediate World Coords options to WCS classes
 
+Version 0.47:
+-------------
+
+* *solve-field*: add "focalmm" as a supported image scale type.
+
