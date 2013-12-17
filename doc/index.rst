@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 1
 
    readme
+   changelog
    build
    build-index
    oaq
