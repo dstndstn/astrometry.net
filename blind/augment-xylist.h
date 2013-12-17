@@ -29,6 +29,7 @@
 #define SCALE_UNITS_DEG_WIDTH 0
 #define SCALE_UNITS_ARCMIN_WIDTH 1
 #define SCALE_UNITS_ARCSEC_PER_PIX 2
+#define SCALE_UNITS_FOCAL_MM 3
 
 struct augment_xylist_s {
     char* tempdir;

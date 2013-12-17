@@ -94,6 +94,7 @@ void augment_xylist_print_special_opts(an_option_t* opt, bl* opts, int index,
                 "     choices:  \"degwidth\", \"degw\", \"dw\"   : width of the image, in degrees (default)\n"
                 "               \"arcminwidth\", \"amw\", \"aw\" : width of the image, in arcminutes\n"
                 "               \"arcsecperpix\", \"app\": arcseconds per pixel\n"
+                "               \"focalmm\": 35-mm (width-based) equivalent focal length\n"
                 );
     } else if (!strcmp(opt->name, "depth")) {
         fprintf(fid, "%s",
@@ -558,6 +559,8 @@ int parse_scale_units(const char* units) {
 	} else if (strcaseeq(units, "arcsecperpix") ||
 			   strcaseeq(units, "app")) {
 		return SCALE_UNITS_ARCSEC_PER_PIX;
+	} else if (strcaseeq(units, "focalmm")) {
+		return SCALE_UNITS_FOCAL_MM;
 	}
 	return -1;
 }
@@ -1195,6 +1198,13 @@ int augment_xylist(augment_xylist_t* axy,
 			logverb("Scale range: %g to %g arcsec/pixel\n", axy->scalelo, axy->scalehi);
 			appl = axy->scalelo;
 			appu = axy->scalehi;
+			break;
+		case SCALE_UNITS_FOCAL_MM:
+			logverb("Scale range: %g to %g mm focal length\n", axy->scalelo, axy->scalehi);
+            // "35 mm" film is 36 mm wide.
+			appu = rad2arcsec(atan(36. / (2. * axy->scalelo))) / (double)axy->W;
+			appl = rad2arcsec(atan(36. / (2. * axy->scalehi))) / (double)axy->W;
+			logverb("Image width %i pixels; arcsec per pixel range %g %g\n", axy->W, appl, appu);
 			break;
 		default:
 			ERROR("Unknown scale unit code %i\n", axy->scaleunit);
