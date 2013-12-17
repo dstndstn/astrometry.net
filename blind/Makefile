@@ -198,7 +198,7 @@ ALL_OBJ += $(PLOTSTUFF)
 all: $(QFITS_SLIB) $(LIBKD_LIB_FILE) \
 	$(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) \
 	$(PROGS) $(PIPELINE) $(FITS_UTILS) fitsverify \
-	$(ENGINE_LIB) $(ENGINE_SO)
+	$(ENGINE_LIB) $(ENGINE_SO) augment-xylist
 
 $(MAIN_PROGS): %: %-main.o $(SLIB)
 ALL_OBJ += $(addsuffix -main.o,$(MAIN_PROGS))
