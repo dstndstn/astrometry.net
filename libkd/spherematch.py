@@ -179,6 +179,8 @@ def _freetrees(kd1, kd2):
 def match(x1, x2, radius, notself=False, permuted=True, indexlist=False):
     '''
     (indices,dists) = match(x1, x2, radius):
+    OR
+    inds = match(x1, x2, radius, indexlist=True):
 
     Given an N1 x D1 array x1,
     and   an N2 x D2 array x2,
@@ -196,6 +198,10 @@ def match(x1, x2, radius, notself=False, permuted=True, indexlist=False):
     celestial positions; in particular, there is no RA wrapping at 0,
     and no special handling at the poles.  If you want to match
     celestial coordinates like RA,Dec, see the match_radec function.
+
+    If "indexlist" is True, the return value is a python list with one
+    element per data point in the first tree; that element is a python
+    list containing the indices of points matched in the second tree.
 
     The "indices" return value has a row for each match; the matched
     points are:

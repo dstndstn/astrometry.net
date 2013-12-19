@@ -231,7 +231,8 @@ class DR8(DR7):
             }
 
         self.processcmds = {
-            'frame': 'bunzip2 -cd %(input)s > %(output)s.tmp && mv %(output)s.tmp %(output)s',
+            #'frame': 'bunzip2 -cd %(input)s > %(output)s.tmp && mv %(output)s.tmp %(output)s',
+            'frame': 'TMPFILE=$(mktemp %(output)s.tmp.XXXXXX) && bunzip2 -cd %(input)s > $TMPFILE && mv $TMPFILE %(output)s',
             'fpM': 'gunzip -cd %(input)s > %(output)s',
             'idR': 'gunzip -cd %(input)s > %(output)s',
             }
@@ -265,7 +266,7 @@ class DR8(DR7):
             I *= (self.runlist.startfield <= field) * (self.runlist.endfield >= field)
         I = np.flatnonzero(I)
         reruns = np.unique(self.runlist.rerun[I])
-        #OBprint 'Reruns:', reruns
+        #print 'Run', run, '-> reruns:', reruns
         if len(reruns) == 0:
             return None
         return reruns[-1]
@@ -384,7 +385,8 @@ class DR8(DR7):
 
             if cmd is not None:
                 cmd = cmd % dict(input = fn, output = tempfn)
-                self.logger.debug('cmd: %s' % cmd)
+                #self.logger.debug('cmd: %s' % cmd)
+                print 'command:', cmd
                 (rtn,out,err) = run_command(cmd)
                 if rtn:
                     print 'Command failed: command', cmd
@@ -392,6 +394,10 @@ class DR8(DR7):
                     print 'Error:', err
                     print 'Return val:', rtn
                     return None
+
+                print out
+                print err
+
                 fn = tempfn
 
             #f.image, f.header = fitsio.read(fn, header=True)
