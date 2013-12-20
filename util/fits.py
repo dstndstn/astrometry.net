@@ -17,13 +17,29 @@ def pyfits_writeto(p, filename, **kwargs):
 
 def merge_tables(TT, columns=None):
     assert(len(TT) > 0)
-    if columns in [None, 'minimal']:
+    if columns in [None, 'minimal', 'fillzero']:
         cols = set(TT[0].get_columns())
+        types = {}
+        if columns == 'fillzero':
+            for c in cols:
+                types[c] = TT[0].get(c).dtype
+                print 'col', c, 'is', types[c]
+                
         for T in TT[1:]:
-            if columns == 'minimal' and len(cols.symmetric_difference(T.get_columns())):
-                cols = cols.intersection(T.get_columns())
+            if columns == 'minimal':
+                if len(cols.symmetric_difference(T.get_columns())):
+                    cols = cols.intersection(T.get_columns())
                 continue
-    
+
+            if columns == 'fillzero':
+                newcols = set(T.get_columns()) - cols
+                for c in newcols:
+                    # Assume numpy arrays
+                    types[c] = T.get(c).dtype
+                    print 'col', c, 'is', types[c]
+                cols = cols.union(T.get_columns())
+                continue
+
             # They must have the same set of columns
             if len(cols.symmetric_difference(T.get_columns())):
                 print 'Tables to merge must have the same set of columns.'
@@ -37,6 +53,10 @@ def merge_tables(TT, columns=None):
         ocols = []
         for c in TT[0].get_columns():
             if c in cols and not c in ocols:
+                ocols.append(c)
+        # (for fillzero) -- add the rest of the columns (not in TT[0])
+        for c in cols:
+            if not c in ocols:
                 ocols.append(c)
         cols = ocols
 
@@ -52,9 +72,22 @@ def merge_tables(TT, columns=None):
         cols = columns
     N = sum([len(T) for T in TT])
     td = tabledata()
+
     for col in cols:
         if col.startswith('_'):
             continue
+
+        if columns == 'fillzero':
+            vv = []
+            for T in TT:
+                if col in T.get_columns():
+                    vv.append(T.get(col))
+                else:
+                    vv.append(np.zeros(len(T), types[col]))
+            V = np.concatenate(vv)
+            td.set(col, V)
+            continue
+
         v0 = TT[0].getcolumn(col)
         if isinstance(v0, np.ndarray):
             V = np.concatenate([T.getcolumn(col) for T in TT])
