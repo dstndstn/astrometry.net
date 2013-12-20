@@ -308,6 +308,13 @@ class SdssFile(object):
 
 
 def munu_to_radec_rad(mu, nu, node, incl):
+    '''
+    Converts SDSS survey coords (mu,nu) into RA,Dec.
+
+    This function requires mu, nu, node, incl to be in RADIANS.
+
+    See munu_to_radec_deg for DEGREES.
+    '''
     ra = node + np.arctan2(np.sin(mu - node) * np.cos(nu) * np.cos(incl) -
                            np.sin(nu) * np.sin(incl),
                            np.cos(mu - node) * np.cos(nu))
@@ -316,6 +323,13 @@ def munu_to_radec_rad(mu, nu, node, incl):
     return ra,dec
 
 def munu_to_radec_deg(mu, nu, node, incl):
+    '''
+    Converts SDSS survey coords (mu,nu) into RA,Dec.
+
+    This function requires mu, nu, node, incl to be in DEGREES.
+
+    See munu_to_radec_rad for RADIANS.
+    '''
     mu, nu = np.deg2rad(mu), np.deg2rad(nu)
     node, incl = np.deg2rad(node), np.deg2rad(incl)
     ra,dec = munu_to_radec_rad(mu, nu, node, incl)
