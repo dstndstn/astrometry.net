@@ -107,9 +107,9 @@ able to compile and use the core parts of the solver, but you will
 miss out on some eye-candy.
 
 Grab the code:
-  $ wget http://astrometry.net/downloads/astrometry.net-0.45.tar.bz2
-  $ tar xjf astrometry.net-0.45.tar.bz2
-  $ cd astrometry.net-0.45
+  $ wget http://astrometry.net/downloads/astrometry.net-0.46.tar.bz2
+  $ tar xjf astrometry.net-0.46.tar.bz2
+  $ cd astrometry.net-0.46
 
 Build the solving system:
   $ make
@@ -199,7 +199,7 @@ index-200.tar.bz2             2.0  -  2.8              10,058
 --------------------------------------------------------------
 
 Download the index files you need and put them in the top-level
-(astrometry-0.45) source directory.
+(astrometry-0.46) source directory.
 
 Install them:
    $ make install-indexes

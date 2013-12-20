@@ -359,7 +359,7 @@ class DR8(DR7):
             cmd = None
             # bunzip2
             filetype = 'frame'
-            if filetype in self.processcmds:
+            if filetype in self.processcmds and fn.endswith('.bz2'):
                 cmd = self.processcmds[filetype]
 
             if cmd is not None and self.unzip_dir is not None:
