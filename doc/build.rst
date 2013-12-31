@@ -3,7 +3,13 @@
 Building/installing the Astrometry.net code
 ===========================================
 
-The short version::
+Grab the code::
+
+   wget http://astrometry.net/downloads/astrometry.net-0.46.tar.bz2
+   tar xjf astrometry.net-0.46.tar.bz2
+   cd astrometry.net-0.46
+
+Build it.  The short version::
 
    make
    make py
@@ -101,16 +107,9 @@ use Fink you will need to add something like this in your
 Getting/Building
 ----------------
 
-
 If you don't have and can't get these libraries, you should still be
 able to compile and use the core parts of the solver, but you will
 miss out on some eye-candy.
-
-Grab the code::
-
-    $ wget http://astrometry.net/downloads/astrometry.net-$VERSION.tar.bz2
-    $ tar xjf astrometry.net-$VERSION.tar.bz2
-    $ cd astrometry.net-$VERSION
 
 Build the solving system::
 
