@@ -46,7 +46,7 @@ include $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.cfitsio
 
 .PHONY: all
-all: README subdirs
+all: subdirs
 
 check: pkgconfig
 .PHONY: check
@@ -174,8 +174,8 @@ RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
 RELEASE_SUBDIRS := qfits-an gsl-an util libkd blind demo catalogs etc ups sdss
 
-README: README.in
-	$(SED) 's/$$VERSION/$(RELEASE_VER)/g' $< > $@
+#README: README.in
+#	$(SED) 's/$$VERSION/$(RELEASE_VER)/g' $< > $@
 
 release:
 	-rm -R $(RELEASE_DIR) $(RELEASE_DIR).tar $(RELEASE_DIR).tar.gz $(RELEASE_DIR).tar.bz2
