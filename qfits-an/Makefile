@@ -5,7 +5,7 @@ FILES := anqfits qfits_card qfits_convert qfits_error qfits_header \
 
 OBJS := $(addsuffix .o,$(FILES))
 SRCS := $(addsuffix .c,$(FILES))
-HEADERS := $(addsuffix .h,$(FILES))
+HEADERS := $(addsuffix .h,$(FILES)) qfits_keywords.h qfits_std.h
 
 QFITS_LIB_FILE := libqfits.a
 

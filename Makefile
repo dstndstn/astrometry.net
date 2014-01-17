@@ -126,7 +126,7 @@ install-core:
 	cp ups/astrometry_net.table-dist '$(INSTALL_DIR)/ups/astrometry_net.table'
 	cp ups/astrometry_net.cfg.template '$(INSTALL_DIR)/ups'
 	cp __init__.py '$(PY_BASE_INSTALL_DIR)'
-	cp CREDITS LICENSE README '$(INSTALL_DIR)/doc'
+	cp CREDITS LICENSE README.md '$(INSTALL_DIR)/doc'
 	cp report.txt '$(INSTALL_DIR)/doc'
 	cp demo/* '$(INSTALL_DIR)/examples'
 	$(MAKE) -C util  install
@@ -173,9 +173,6 @@ SP_RELEASE_VER := 0.3
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
 RELEASE_SUBDIRS := qfits-an gsl-an util libkd blind demo catalogs etc ups sdss
-
-#README: README.in
-#	$(SED) 's/$$VERSION/$(RELEASE_VER)/g' $< > $@
 
 release:
 	-rm -R $(RELEASE_DIR) $(RELEASE_DIR).tar $(RELEASE_DIR).tar.gz $(RELEASE_DIR).tar.bz2
