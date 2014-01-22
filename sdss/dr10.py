@@ -15,7 +15,7 @@ class DR10(DR9):
 		
 		basedir : (string) - local directory where data will be stored.
 		'''
-		DR9.__init__(self, **kwargs)
+		super(DR9, self).__init__(**kwargs)
 		self.dasurl = 'http://data.sdss3.org/sas/dr10/boss/'
 
 	def getDRNumber(self):
