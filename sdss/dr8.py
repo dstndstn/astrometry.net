@@ -271,15 +271,16 @@ class DR8(DR7):
             return None
         return reruns[-1]
 
-    def get_url(self, filetype, run, camcol, field, band=None):
-        rerun = self.get_rerun(run, field)
+    def get_url(self, filetype, run, camcol, field, band=None, rerun=None):
+        if rerun is None:
+            rerun = self.get_rerun(run, field)
         path = self.daspaths[filetype]
         url = urlparse.urljoin(self.dasurl, path % dict(
             run=run, camcol=camcol, field=field, rerun=rerun, band=band))
         return url
     
     def retrieve(self, filetype, run, camcol, field=None, band=None, skipExisting=True,
-                 tempsuffix='.tmp'):
+                 tempsuffix='.tmp', rerun=None):
         outfn = self.getPath(filetype, run, camcol, field, band)
         if outfn is None:
             return None
@@ -287,7 +288,7 @@ class DR8(DR7):
             return outfn
 
         print 'Did not find file:', outfn
-        url = self.get_url(filetype, run, camcol, field, band=band)
+        url = self.get_url(filetype, run, camcol, field, band=band, rerun=rerun)
         #print 'URL:', url
         if self.curl:
             cmd = "curl -o '%(outfn)s' '%(url)s'"
