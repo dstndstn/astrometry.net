@@ -99,9 +99,8 @@ def user_image(req, user_image_id=None):
             images['redgreen_display'] = reverse('red_green_image', kwargs={'job_id':job.id,'size':'display'})
             images['redgreen'] = reverse('red_green_image', kwargs={'job_id':job.id,'size':'full'})
             image_type = 'annotated'
-        else:
-            images['extraction_display'] = reverse('astrometry.net.views.image.extraction_image', kwargs={'job_id':job.id,'size':'display'})
-            images['extraction'] = reverse('astrometry.net.views.image.extraction_image', kwargs={'job_id':job.id,'size':'full'})
+        images['extraction_display'] = reverse('astrometry.net.views.image.extraction_image', kwargs={'job_id':job.id,'size':'display'})
+        images['extraction'] = reverse('astrometry.net.views.image.extraction_image', kwargs={'job_id':job.id,'size':'full'})
 
     image_type = req.GET.get('image', image_type)
     if image_type in images:
