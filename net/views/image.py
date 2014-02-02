@@ -746,6 +746,14 @@ def axy_file(req, jobid=None):
     res['Content-Disposition'] = 'attachment; filename=axy.fits'
     return res
 
+def corr_file(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    f = open(job.get_corr_file())
+    res = HttpResponse(f)
+    res['Content-Type'] = 'application/fits' 
+    res['Content-Disposition'] = 'attachment; filename=corr.fits'
+    return res
+
 def new_fits_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
     wcsfn = job.get_wcs_file()

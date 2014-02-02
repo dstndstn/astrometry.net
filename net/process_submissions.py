@@ -203,6 +203,7 @@ def dojob(job, userimage, log=None):
     slo,shi = sub.get_scale_bounds()
     # Note, this must match Job.get_wcs_file().
     wcsfile = 'wcs.fits'
+    corrfile = 'corr.fits'
     axyflags = []
     axyargs = {
         '--out': axypath,
@@ -210,6 +211,7 @@ def dojob(job, userimage, log=None):
         '--scale-high': shi,
         '--scale-units': sub.scale_units,
         '--wcs': wcsfile,
+        '--corr': corrfile,
         '--rdls': 'rdls.fits',
         '--pixel-error': sub.positional_error,
         '--ra': sub.center_ra,

@@ -198,6 +198,10 @@ $(document).ready(function() {
           <td><a href="{% url astrometry.net.views.image.axy_file jobid=job.id %}">axy.fits</a></td>
         </tr>
         <tr>
+          <td>Correspondences between image and reference stars (table):</td>
+          <td><a href="{% url astrometry.net.views.image.corr_file jobid=job.id %}">corr.fits</a></td>
+        </tr>
+        <tr>
             <td>KMZ (<a href="http://www.google.com/sky/">Google Sky</a>):</td>
             <td><a href="{% url astrometry.net.views.image.kml_file jobid=job.id %}?ignore=.kmz">image.kmz</a></td>
         </tr>

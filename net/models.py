@@ -768,6 +768,9 @@ class Job(models.Model):
     def get_axy_file(self):
         return os.path.join(self.get_dir(), 'job.axy')
         
+    def get_corr_file(self):
+        return os.path.join(self.get_dir(), 'corr.fits')
+
     def get_wcs_file(self):
         return os.path.join(self.get_dir(), 'wcs.fits')
 
