@@ -22,7 +22,8 @@ class Migration(SchemaMigration):
             ('version', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['net.EnhanceVersion'])),
             ('nside', self.gf('django.db.models.fields.IntegerField')()),
             ('healpix', self.gf('django.db.models.fields.IntegerField')()),
-            ('wcs', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['net.TanWCS'])),
+            ('wcs', self.gf('django.db.models.fields.related.ForeignKey')(default=None, to=orm['net.TanWCS'], null=True)),
+            ('maxweight', self.gf('django.db.models.fields.FloatField')(default=0.0)),
         ))
         db.send_create_signal('net', ['EnhancedImage'])
 
@@ -142,9 +143,10 @@ class Migration(SchemaMigration):
             'cals': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'enhanced_images'", 'symmetrical': 'False', 'db_table': "'enhancedimage_calibration'", 'to': "orm['net.Calibration']"}),
             'healpix': ('django.db.models.fields.IntegerField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'maxweight': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
             'nside': ('django.db.models.fields.IntegerField', [], {}),
             'version': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['net.EnhanceVersion']"}),
-            'wcs': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['net.TanWCS']"})
+            'wcs': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'to': "orm['net.TanWCS']", 'null': 'True'})
         },
         'net.enhanceversion': {
             'Meta': {'object_name': 'EnhanceVersion'},

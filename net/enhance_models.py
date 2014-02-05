@@ -29,7 +29,7 @@ class EnhancedImage(models.Model):
                                   related_name='enhanced_images',
                                   db_table='enhancedimage_calibration')
 
-    maxweight = models.FloatField()
+    maxweight = models.FloatField(default=0.)
 
     def __str__(self):
         return 'EnhancedImage(ver %s, nside %i, hp %i)' % (self.version.name,
