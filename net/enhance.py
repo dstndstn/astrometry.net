@@ -42,36 +42,98 @@ def runcals(hp, calI):
     xyz1 = np.array(healpix_to_xyz(hp, nside, 1., 0.))
     xyz2 = np.array(healpix_to_xyz(hp, nside, 0., 1.))
     xyz3 = np.array(healpix_to_xyz(hp, nside, 1., 1.))
+
+    print 'xyz0', xyz0
+    print 'xyz1', xyz1
+    print 'xyz2', xyz2
+    print 'xyz3', xyz3
+
+    plt.clf()
+    rd = []
+    for xyz in [xyz0, xyz1, xyz3, xyz2, xyz0]:
+        rd.append(xyztoradec(xyz))
+    rd = np.array(rd)
+    plt.plot(rd[:,0], rd[:,1], 'b.-')
+    plt.text(rd[0,0], rd[0,1], '0,0')
+    plt.text(rd[3,0], rd[3,1], '0,1')
+    plt.text(rd[1,0], rd[1,1], '1,0')
+    plt.text(rd[2,0], rd[2,1], '1,1')
+    r0,d0 = rd.min(axis=0)
+    r1,d1 = rd.max(axis=0)
+    setRadecAxes(r0,r1, d0,d1)
+    ps.savefig()
     
     d1 = xyz1 - xyz0
     #d2 = xyz2 - xyz0
-    d2 = np.cross(xyz0, d1)
+    #d2 = np.cross(xyz0, d1)
     print 'd1', d1
-    print 'xyz2-xyz0:', xyz2-xyz0
-    print 'd2', d2
+    #print 'xyz2-xyz0:', xyz2-xyz0
+    #print 'd2', d2
     
-    d3 = xyz3 - xyz0
-    # this should be only different in z
-    print 'd3', d3
+    #d3 = xyz3 - xyz0
+    # this should be only different in z [nope, not so]
+    #print 'd3', d3
+
+    r,d = healpix_to_radecdeg(hp, nside, 0.5, 0.5)
+
+    r0,d0 = xyztoradec(xyz0)
+    up = np.array([-np.sin(np.deg2rad(d0))*np.cos(deg2rad(r0)),
+                   -np.sin(np.deg2rad(d0))*np.sin(deg2rad(r0)),
+                    np.cos(np.deg2rad(d0))])
     
-    d2 /= np.sqrt(np.sum(d2**2))
-    d3 /= np.sqrt(np.sum(d3**2))
-    
-    print 'dot', np.sum(d2 * d3)
-    theta = np.arccos(np.sum(d2*d3))
+    d1 /= np.sqrt(np.sum(d1**2))
+    #d2 /= np.sqrt(np.sum(d2**2))
+    #d3 /= np.sqrt(np.sum(d3**2))
+
+    print 'xyz dot up', np.sum(xyz0 * up)
+
+    theta = np.pi/2. - np.arccos(np.sum(d1 * up))
     #theta = np.deg2rad(45.)
     print 'theta', np.rad2deg(theta)
-    
-    r,d = healpix_to_radecdeg(hp, nside, 0.5, 0.5)
     
     pscale = topscale / 2**level
     print 'pixscale', pscale
     pscale /= 3600.
     
-    wcs = Tan(r, d, 0., 0.,
+    wcs = Tan(r, d, 500., 500.,
               pscale * np.cos(theta), -pscale * np.sin(theta),
-              pscale * np.sin(theta),  pscale * np.sin(theta),
+              pscale * np.sin(theta),  pscale * np.cos(theta),
               1000,1000)
+
+    #t2 = np.deg2rad(45.)
+    #t2 = np.pi/2. - theta
+    #wcs2 = Tan(r, d, 500., 500.,
+    #           pscale * np.cos(t2), -pscale * np.sin(t2),
+    #           pscale * np.sin(t2),  pscale * np.cos(t2),
+    #           1000,1000)
+
+    plt.clf()
+    rd = []
+    for xyz in [xyz0, xyz1, xyz3, xyz2, xyz0]:
+        rd.append(xyztoradec(xyz))
+    rd = np.array(rd)
+    plt.plot(rd[:,0], rd[:,1], 'b.-')
+    plt.text(rd[0,0], rd[0,1], '0,0')
+    plt.text(rd[3,0], rd[3,1], '0,1')
+    plt.text(rd[1,0], rd[1,1], '1,0')
+    plt.text(rd[2,0], rd[2,1], '1,1')
+
+    rd2 = []
+    for x,y in [(1,1),(1000,1),(1000,1000), (1,1000)]:
+        rd2.append(wcs.pixelxy2radec(x,y))
+    rd2 = np.array(rd2)
+    plt.plot(rd2[:,0], rd2[:,1], 'r.-')
+
+    # rd2 = []
+    # for x,y in [(1,1),(1000,1),(1000,1000), (1,1000)]:
+    #     rd2.append(wcs2.pixelxy2radec(x,y))
+    # rd2 = np.array(rd2)
+    # plt.plot(rd2[:,0], rd2[:,1], 'g.-')
+
+    r0,d0 = rd.min(axis=0) - 0.1
+    r1,d1 = rd.max(axis=0) + 0.1
+    setRadecAxes(r0,r1, d0,d1)
+    ps.savefig()
     
     xy = np.array([wcs.xyz2pixelxy(xyz[0], xyz[1], xyz[2]) for xyz in
                    [xyz0, xyz1, xyz2, xyz3]])
@@ -82,34 +144,42 @@ def runcals(hp, calI):
     xhi,yhi = xy.max(axis=0)
     
     W,H = int(np.ceil(xhi - xlo)), int(np.ceil(yhi - ylo))
-    hpwcs = Tan(r, d, 1.-xlo, 1.-ylo,
+    hpwcs = Tan(r, d, 501.-xlo, 501.-ylo,
                 pscale * np.cos(theta), -pscale * np.sin(theta),
-                pscale * np.sin(theta),  pscale * np.sin(theta),
+                pscale * np.sin(theta),  pscale * np.cos(theta),
                 float(W), float(H))
     
     xy = np.array([hpwcs.xyz2pixelxy(xyz[0], xyz[1], xyz[2]) for xyz in
                    [xyz0, xyz1, xyz2, xyz3]])
+    xy = xy[:,1:]
     print 'xy', xy
+
+    print 'Healpix WCS:', hpwcs
+    print 'Image size', W, H
     
-    # plt.clf()
-    # plt.plot(xy[:,1], xy[:,2], 'r.-')
-    # plt.axis('scaled')
-    # plt.savefig('hp.png')
+    plt.clf()
+    ii = np.array([0, 1, 3, 2, 0])
+    plt.plot(xy[ii,0], xy[ii,1], 'r.-')
+    plt.axis('scaled')
+    ps.savefig()
     
     ############################
 
-    enhI = np.zeros((H,W), np.float32)
-    enhN = np.zeros((H,W), np.int32)
+    enhI = np.random.permutation(H*W).reshape((H,W)).astype(np.float32)
+    enhW = np.zeros((H,W), np.float32)
     
     for cali in calI:
         cal = cals[cali]
         wcsfn = cal.get_wcs_file()
         print 'WCS file:', wcsfn
         df = cal.job.user_image.image.disk_file
+        print 'Original filename:', cal.job.user_image.original_file_name
+        print 'Submission:', cal.job.user_image.submission
         print 'DiskFile', df
         ft = df.file_type
         fn = df.get_path()
         if 'JPEG' in ft:
+            print 'Reading', fn
             I = plt.imread(fn)
             print 'Read', I.shape, I.dtype
         else:
@@ -149,7 +219,7 @@ def runcals(hp, calI):
         rankenh = np.empty_like(EI)
         rankenh[EI] = np.arange(len(EI))
 
-        wenh = enhN[Yo, Xo]
+        wenh = enhW[Yo, Xo]
 
         weightFactor = 2.
 
@@ -161,20 +231,27 @@ def runcals(hp, calI):
 
         Enew = enh[EI[rankC]]
         enhI[Yo,Xo] = Enew
-        enhN[Yo,Xo] += 1
+        enhW[Yo,Xo] += 1.
 
         resam = np.zeros((H,W), np.float32)
         resam[Yo,Xo] = img
 
+        Ilo,Ihi = [np.percentile(I, p) for p in [5, 95]]
         plt.clf()
         plt.subplot(2,2,1)
-        plt.imshow(I, interpolation='nearest', origin='lower')
+        plt.imshow(np.clip((I - Ilo)/float(Ihi-Ilo), 0., 1.),
+                   interpolation='nearest', origin='lower')
+        plt.title('Image')
         plt.subplot(2,2,2)
-        plt.imshow(resam, interpolation='nearest', origin='lower')
+        plt.imshow(np.clip((resam - Ilo)/float(Ihi-Ilo), 0., 1.),
+                   interpolation='nearest', origin='lower')
+        plt.title('Resampled image')
         plt.subplot(2,2,3)
-        plt.imshow(enhN, interpolation='nearest', origin='lower')
+        plt.imshow(enhW, interpolation='nearest', origin='lower')
+        plt.title('E Weight')
         plt.subplot(2,2,4)
         plt.imshow(enhI, interpolation='nearest', origin='lower')
+        plt.title('E Image')
         ps.savefig()
 
 
