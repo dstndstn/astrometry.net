@@ -23,14 +23,11 @@ class EnhancedImage(models.Model):
     nside = models.IntegerField()
     healpix = models.IntegerField()
 
-    wcs = models.ForeignKey('TanWCS')
+    wcs = models.ForeignKey('TanWCS', null=True, default=None)
 
     cals = models.ManyToManyField('Calibration',
                                   related_name='enhanced_images',
                                   db_table='enhancedimage_calibration')
-
-    #image  = models.ForeignKey('DiskFile')
-    #weight = models.ForeignKey('DiskFile')
 
     def __str__(self):
         return 'EnhancedImage(ver %s, nside %i, hp %i)' % (self.version.name,
@@ -45,13 +42,22 @@ class EnhancedImage(models.Model):
         return os.path.join(self.get_dir(), 'enhance-image.fits')
     def get_weight_path(self):
         return os.path.join(self.get_dir(), 'enhance-weight.fits')
-        
-    def init(self):
-        hp = self.healpix
-        nside = self.nside
 
-        topscale = self.version.topscale
+    def read_files(self):
+        enhI = fitsio.read(self.get_image_path())
+        enhW = fitsio.read(self.get_weight_path())
+        return enhI, enhW
 
+    def write_files(self, enhI, enhW):
+        imfn = self.get_image_path()
+        fitsio.write(imfn, enhI, clobber=True, compress='GZIP')
+        print 'Wrote', imfn
+        wfn = self.get_weight_path()
+        fitsio.write(wfn, enhW, clobber=True, compress='GZIP')
+        print 'Wrote', wfn
+
+    @classmethod
+    def get_healpix_wcs(clazz, nside, hp, topscale):
         # healpix corners
         xyz0 = np.array(healpix_to_xyz(hp, nside, 0., 0.))
         xyz1 = np.array(healpix_to_xyz(hp, nside, 1., 0.))
@@ -71,7 +77,7 @@ class EnhancedImage(models.Model):
 
         pscale = topscale / nside
         pscale /= 3600.
-        wcs = Tan(r, d, 500., 500.,
+        wcs = Tan(r0, d0, 500., 500.,
                   pscale * np.cos(theta), -pscale * np.sin(theta),
                   pscale * np.sin(theta),  pscale * np.cos(theta),
                   1000,1000)
@@ -87,16 +93,26 @@ class EnhancedImage(models.Model):
         # here comes from 500 above.
         W,H = int(np.ceil(xhi - xlo)), int(np.ceil(yhi - ylo))
 
-        wcsargs = (r, d, 501.-xlo, 501.-ylo,
-                   pscale * np.cos(theta), -pscale * np.sin(theta),
-                   pscale * np.sin(theta),  pscale * np.cos(theta),
-                   float(W), float(H))
-        hpwcs = Tan(*wcsargs)
+        hpwcs = Tan(r0, d0, 501.-xlo, 501.-ylo,
+                    pscale * np.cos(theta), -pscale * np.sin(theta),
+                    pscale * np.sin(theta),  pscale * np.cos(theta),
+                    float(W), float(H))
 
         hpxy = np.array([hpwcs.xyz2pixelxy(xyz[0], xyz[1], xyz[2]) for xyz in
                          [xyz0, xyz1, xyz3, xyz2]])
         hpxy = hpxy[:,1:]
-    
+
+        return hpwcs, hpxy
+
+        
+    def init(self):
+        hp = self.healpix
+        nside = self.nside
+        topscale = self.version.topscale
+
+        hpwcs,hpxy = EnhancedImage.get_healpix_wcs(nside, hp, topscale)
+        H,W = hpwcs.get_height(), hpwcs.get_width()
+
         bands = 3
 
         enhI = np.zeros((H,W,bands), np.float32)
@@ -112,22 +128,19 @@ class EnhancedImage(models.Model):
         enhW[enhM] = 1e-3
 
         mydir = self.get_dir()
+        print 'My directory:', mydir
         if not os.path.exists(mydir):
+            print 'Does not exist'
             try:
-                os.makedirs(mydirs)
+                os.makedirs(mydir)
+                print 'Created'
             except:
+                import traceback
+                print 'Failed to create dir:'
+                traceback.print_exc()
                 pass
 
-        imfn = self.get_image_path()
-        fitsio.write(imfn, enhI)
-        print 'Wrote', imfn
-
-        wfn = self.get_weight_path()
-        fitsio.write(wfn, enhW)
-        print 'Wrote', wfn
-
-        #**dict(zip(['crval1','crval2','crpix1','crpix2',
-        #'cd11','cd12','cd21','cd22','imagew','imageh'], wcsargs)))
+        self.write_files(enhI, enhW)
 
         dbwcs = TanWCS()
         dbwcs.set_from_tanwcs(hpwcs)

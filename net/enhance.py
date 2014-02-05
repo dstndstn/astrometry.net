@@ -71,6 +71,8 @@ def addcal(cal, version):
         print 'Reading', fn
         I = plt.imread(fn)
         print 'Read', I.shape, I.dtype
+        if len(I.shape) == 2:
+            I = I[:,:,np.newaxis].repeat(3, axis=2)
         assert(len(I.shape) == 3)
         u = np.unique(I.ravel())
         print 'Number of unique pixel values:', len(u)
@@ -86,6 +88,8 @@ def addcal(cal, version):
     print 'Pixscale', tan.get_pixscale()
     nside = 2 ** int(np.round(np.log2(topscale / tan.get_pixscale())))
     print 'Nside', nside
+    nside = np.clip(nside, 1, 10)
+    print 'Nside', nside
 
     r1,d1 = healpix_to_radecdeg(0, nside, 0., 0.)
     r2,d2 = healpix_to_radecdeg(0, nside, 0.5, 0.5)
@@ -98,33 +102,53 @@ def addcal(cal, version):
     hh = healpix_rangesearch_radec(r, d, radius, nside)
     #print 'Healpixes in range:', hh
     for hp in hh:
+        print 'Healpix', hp
+        # Check for actual overlap before (possibly) creating EnhancedImage
+        hpwcs,nil = EnhancedImage.get_healpix_wcs(nside, hp, topscale)
+        try:
+            Yo,Xo,Yi,Xi,nil = resample_with_wcs(hpwcs, wcs, [], 3)
+        except NoOverlapError:
+            print 'No actual overlap'
+            continue
+        print len(Yo), 'resampled pixels'
+        if len(Yo) == 0:
+            continue
 
         en,created = EnhancedImage.objects.get_or_create(
             version=version, nside=nside, healpix=hp)
             
-        if created:
-            print 'No EnhancedImage for this nside/healpix yet'
+        if created or en.wcs is None:
+            if created:
+                print 'No EnhancedImage for this nside/healpix yet'
+            else:
+                print 'Re-initializing', en
             en.init()
             en.save()
         else:
             print 'EnhancedImage exists:', en
-            if cal in en.cals:
+            try:
+                #print 'Cals:', en.cals.all()
+                en.cals.get(id=cal.id)
                 print 'This calibration has already been added to this EnhancedImage'
                 continue
+            except:
+                #print 'Checking whether this cal has been added to this EnhancedImage:'
+                #import traceback
+                #traceback.print_exc()
+                pass
 
         hpwcs = en.wcs.to_tanwcs()
-        Yo,Xo,Yi,Xi,nil = resample_with_wcs(hpwcs, wcs, [], 3)
 
-        enhI = fitsio.read(en.get_image_path())
-        enhW = fitsio.read(en.get_weight_path())
+        enhI,enhW = en.read_files()
         enhM = (enhW > 0)
 
         # Cut to pixels within healpix
-        print len(Yo), 'resampled pixels'
         K = enhM[Yo, Xo]
         Xo,Yo = Xo[K],Yo[K]
         Xi,Yi = Xi[K],Yi[K]
         print len(Yo), 'resampled within healpix'
+        if len(Yo) == 0:
+            continue
 
         assert(len(enhI.shape) == 3)
         # RGB
@@ -160,8 +184,18 @@ def addcal(cal, version):
 
         enhW[Yo,Xo] += 1.
 
+        en.write_files(enhI, enhW)
+
         en.cals.add(cal)
+        #print 'Cals in this EnhancedImage:', en.cals
         en.save()
+
+
+
+print 'DELETING ALL'
+EnhanceVersion.objects.all().delete()
+EnhancedImage.objects.all().delete()
+print 'ok'
 
 
 enver,created = EnhanceVersion.objects.get_or_create(name='v1', topscale=topscale)
@@ -176,9 +210,9 @@ shi = topscale / 2.**(level-0.5)
 
 ncals = cals.count()
 for ical in range(ncals):
-    cal = cals[i]
+    cal = cals[ical]
     print 'Cal', cal
-    pixscale = cal.raw_tan.get_pixel_scale()
+    pixscale = cal.raw_tan.get_pixscale()
     if pixscale < slo or pixscale > shi:
         print 'Skipping: pixscale', pixscale
         continue
