@@ -173,6 +173,7 @@ def addcal(cal, version):
         enhW[Yo,Xo] += 1.
 
         en.write_files(enhI, enhW)
+        en.maxweight = enhW.max()
 
         en.cals.add(cal)
         #print 'Cals in this EnhancedImage:', en.cals

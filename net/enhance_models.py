@@ -29,6 +29,8 @@ class EnhancedImage(models.Model):
                                   related_name='enhanced_images',
                                   db_table='enhancedimage_calibration')
 
+    maxweight = models.FloatField()
+
     def __str__(self):
         return 'EnhancedImage(ver %s, nside %i, hp %i)' % (self.version.name,
                                                            self.nside, self.healpix)
@@ -141,6 +143,7 @@ class EnhancedImage(models.Model):
                 pass
 
         self.write_files(enhI, enhW)
+        self.maxweight = 0.
 
         dbwcs = TanWCS()
         dbwcs.set_from_tanwcs(hpwcs)
