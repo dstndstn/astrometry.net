@@ -77,7 +77,7 @@ def addcal(cal, version):
     print 'Pixscale', tan.get_pixscale()
     nside = 2 ** int(np.round(np.log2(topscale / tan.get_pixscale())))
     print 'Nside', nside
-    nside = np.clip(nside, 1, 10)
+    nside = np.clip(nside, 1, 2**10)
     print 'Nside', nside
 
     r1,d1 = healpix_to_radecdeg(0, nside, 0., 0.)
@@ -89,7 +89,6 @@ def addcal(cal, version):
     r,d,radius = tan.get_center_radecradius()
     radius = np.hypot(radius, hpradius)
     hh = healpix_rangesearch_radec(r, d, radius, nside)
-    #print 'Healpixes in range:', hh
     for hp in hh:
         print 'Healpix', hp
         # Check for actual overlap before (possibly) creating EnhancedImage
