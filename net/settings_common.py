@@ -23,6 +23,8 @@ TYCHO2_KD = '/data2/nova/tycho2.kd'
 DATADIR = os.path.join(WEB_DIR, 'data', 'files')
 JOBDIR = os.path.join(WEB_DIR, 'data', 'jobs')
 
+ENHANCE_DIR = os.path.join(WEB_DIR, 'data', 'files', 'enhance')
+
 TEMPDIR = '/tmp'
 
 AUTH_PROFILE_MODULE = 'net.UserProfile'

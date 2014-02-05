@@ -18,6 +18,8 @@ from astrometry.net.settings import *
 from wcs import *
 from log import *
 
+from enhance_models import *
+
 from astrometry.util.starutil_numpy import ra2hmsstring, dec2dmsstring
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
@@ -1233,3 +1235,4 @@ class UserProfile(models.Model):
         self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
 
         return super(UserProfile, self).save(*args, **kwargs)
+
