@@ -75,7 +75,7 @@ def addcal(cal, version, hpmod, hpnum):
     print 'Pixscale', tan.get_pixscale()
     nside = 2 ** int(np.round(np.log2(topscale / tan.get_pixscale())))
     print 'Nside', nside
-    nside = np.clip(nside, 1, 2**10)
+    nside = int(np.clip(nside, 1, 2**10))
     print 'Nside', nside
 
     r1,d1 = healpix_to_radecdeg(0, nside, 0., 0.)
