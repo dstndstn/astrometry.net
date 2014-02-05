@@ -697,6 +697,9 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
 %apply double *OUTPUT { double *dx, double *dy };
 %apply double *OUTPUT { double *ra, double *dec };
 
+// healpix_to_xyz
+%apply double *OUTPUT { double *p_x, double *p_y, double *p_z };
+
 // for int healpix_get_neighbours(int hp, int* neigh, int nside)
 // --> list of neigh
 // swap the int* neighbours arg for tempneigh

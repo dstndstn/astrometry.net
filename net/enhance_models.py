@@ -13,6 +13,10 @@ from astrometry.util.starutil_numpy import *
 from astrometry.util.resample import *
 from astrometry.util.miscutils import *
 
+import logging
+
+log = logging.getLogger('enhance_models')
+
 class EnhanceVersion(models.Model):
     name = models.CharField(max_length=64)
     topscale = models.FloatField()
@@ -46,6 +50,9 @@ class EnhancedImage(models.Model):
         return os.path.join(self.get_dir(), 'enhance-weight.fits')
 
     def read_files(self):
+        imfn = self.get_image_path()
+        wfn = self.get_weight_path()
+        log.debug('Reading files %s and %s' % (imfn, wfn))
         enhI = fitsio.read(self.get_image_path())
         enhW = fitsio.read(self.get_weight_path())
         return enhI, enhW
@@ -53,10 +60,10 @@ class EnhancedImage(models.Model):
     def write_files(self, enhI, enhW):
         imfn = self.get_image_path()
         fitsio.write(imfn, enhI, clobber=True, compress='GZIP')
-        print 'Wrote', imfn
+        #print 'Wrote', imfn
         wfn = self.get_weight_path()
         fitsio.write(wfn, enhW, clobber=True, compress='GZIP')
-        print 'Wrote', wfn
+        #print 'Wrote', wfn
 
     @classmethod
     def get_healpix_wcs(clazz, nside, hp, topscale):
@@ -130,12 +137,12 @@ class EnhancedImage(models.Model):
         enhW[enhM] = 1e-3
 
         mydir = self.get_dir()
-        print 'My directory:', mydir
+        # print 'My directory:', mydir
         if not os.path.exists(mydir):
-            print 'Does not exist'
+            # print 'Does not exist'
             try:
                 os.makedirs(mydir)
-                print 'Created'
+                # print 'Created'
             except:
                 import traceback
                 print 'Failed to create dir:'
@@ -147,7 +154,7 @@ class EnhancedImage(models.Model):
 
         dbwcs = TanWCS()
         dbwcs.set_from_tanwcs(hpwcs)
-        print 'Database WCS:', dbwcs
+        # print 'Database WCS:', dbwcs
         dbwcs.save()
 
         self.wcs = dbwcs
