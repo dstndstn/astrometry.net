@@ -4,14 +4,9 @@ import fitsio
 
 from django.db import models
 
-import settings #from astrometry.net.settings import *
-#from astrometry.net.models import *
-from astrometry.net.wcs import *
+import settings
 
 from astrometry.util.util import *
-from astrometry.util.starutil_numpy import *
-from astrometry.util.resample import *
-from astrometry.util.miscutils import *
 
 import logging
 
@@ -115,6 +110,10 @@ class EnhancedImage(models.Model):
 
         
     def init(self):
+        import os
+        from astrometry.util.miscutils import point_in_poly
+        from astrometry.net.wcs import TanWCS
+
         hp = self.healpix
         nside = self.nside
         topscale = self.version.topscale
