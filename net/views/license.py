@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from astrometry.net.models import *
 from astrometry.net import settings
 from astrometry.net.util import NoBulletsRenderer
-from log import *
+from astrometry.net.log import *
 from django import forms
 from django.http import HttpResponseRedirect
 

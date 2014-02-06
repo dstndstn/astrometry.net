@@ -21,7 +21,7 @@ from astrometry.net.models import *
 from astrometry.net import settings
 from astrometry.net.log import *
 from astrometry.net.tmpfile import *
-from sdss_image import plot_sdss_image
+from astrometry.net.sdss_image import plot_sdss_image
 
 from astrometry.blind.plotstuff import *
 from astrometry.util import image2pnm

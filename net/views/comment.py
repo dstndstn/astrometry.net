@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 from astrometry.net.models import *
 from astrometry.net import settings
 from astrometry.net.util import store_session_form
-from log import *
+from astrometry.net.log import *
 from django import forms
 from django.http import HttpResponseRedirect
 import simplejson

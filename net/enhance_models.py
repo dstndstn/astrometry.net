@@ -5,7 +5,7 @@ import fitsio
 from django.db import models
 
 import settings #from astrometry.net.settings import *
-from astrometry.net.models import *
+#from astrometry.net.models import *
 from astrometry.net.wcs import *
 
 from astrometry.util.util import *

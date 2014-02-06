@@ -9,7 +9,7 @@ from django.db.models import Count
 from astrometry.net.models import *
 from astrometry.net import settings
 from astrometry.net.util import get_page, store_session_form
-from log import *
+from astrometry.net.log import *
 from django import forms
 from django.http import HttpResponseRedirect
 import simplejson
