@@ -92,6 +92,7 @@ urlpatterns += patterns('astrometry.net.views.image',
 
 urlpatterns += patterns('astrometry.net.views.enhance',
     (r'^enhance_ui/(?P<user_image_id>' + idpattern + r')/?$', 'enhanced_ui'),
+    url(r'^enhanced_image_(?P<size>full|display)/(?P<job_id>' + idpattern + r')/?$', 'enhanced_image', name='enhanced_image'),
 )
 
 urlpatterns += patterns('astrometry.net.views.album',

@@ -3,6 +3,8 @@ import astrometry.net
 import astrometry.net.secrets.django_db as secrets
 from astrometry.net.util import dict_pack
 
+os.environ['MPLCONFIGDIR'] = '/home/nova/.matplotlib'
+
 DATE_FORMAT = 'Y-m-d'
 DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z'
 TIME_FORMAT = 'H:i:s\Z'

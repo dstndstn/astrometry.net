@@ -1,8 +1,11 @@
+import os
 import numpy as np
+import tempfile
 
 import fitsio
 
 from django.db import models
+from django.db import transaction
 
 import settings
 
@@ -15,6 +18,9 @@ log = logging.getLogger('enhance_models')
 class EnhanceVersion(models.Model):
     name = models.CharField(max_length=64)
     topscale = models.FloatField()
+
+    def __str__(self):
+        return 'EnhanceVersion(%s)' % self.name
 
 class EnhancedImage(models.Model):
     version = models.ForeignKey('EnhanceVersion')
@@ -44,26 +50,56 @@ class EnhancedImage(models.Model):
     def get_weight_path(self):
         return os.path.join(self.get_dir(), 'enhance-weight.fits')
 
+    def get_imw_path(self):
+        return os.path.join(self.get_dir(), 'enhance.fits')
+
     def read_files(self):
-        imfn = self.get_image_path()
-        wfn = self.get_weight_path()
-        log.debug('Reading files %s and %s' % (imfn, wfn))
-        enhI = fitsio.read(self.get_image_path())
-        enhW = fitsio.read(self.get_weight_path())
+        # imfn = self.get_image_path()
+        # wfn = self.get_weight_path()
+        # log.debug('Reading files %s and %s' % (imfn, wfn))
+        # enhI = fitsio.read(self.get_image_path())
+        # enhW = fitsio.read(self.get_weight_path())
+        # return enhI, enhW
+        fn = self.get_imw_path()
+        log.debug('Reading %s' % fn)
+        fits = fitsio.FITS(fn, 'r')
+        print 'Read', len(fits), 'HDUs'
+        enhI = fits[0].read()
+        enhW = fits[1].read()
+        log.debug('Read image %s and weight %s' % (str(enhI.shape), str(enhW.shape)))
         return enhI, enhW
 
-    def write_files(self, enhI, enhW):
-        imfn = self.get_image_path()
-        fitsio.write(imfn, enhI, clobber=True, compress='GZIP')
-        #print 'Wrote', imfn
-        wfn = self.get_weight_path()
-        fitsio.write(wfn, enhW, clobber=True, compress='GZIP')
-        #print 'Wrote', wfn
+    def write_files(self, enhI, enhW, temp=False):
+        if temp:
+            mydir = self.get_dir()
+            f,fn = tempfile.mkstemp(dir=mydir, suffix='.tmp')
+            os.close(f)
+        else:
+            fn = self.get_imw_path()
+
+        fits = fitsio.FITS(fn, 'rw', clobber=True)
+        fits.write_image(enhI)
+        fits.write_image(enhW)
+        fits.close()
+        return fn
+        #imfn = self.get_image_path()
+        #fitsio.write(imfn, enhI, clobber=True, compress='GZIP')
+        #wfn = self.get_weight_path()
+        #fitsio.write(wfn, enhW, clobber=True, compress='GZIP')
+
+    def move_temp_files(self, tempfn):
+        #imfn = self.get_image_path()
+        #wfn = self.get_weight_path()
+        #os.rename(imfn + '.tmp', imfn)
+        #os.rename(wfn + '.tmp', wfn)
+        fn = self.get_imw_path()
+        os.rename(tempfn, fn)
 
     def init(self):
         import os
         from astrometry.util.miscutils import point_in_poly
         from astrometry.net.wcs import TanWCS
+        from scipy.ndimage.morphology import binary_dilation
 
         hp = self.healpix
         nside = self.nside
@@ -79,11 +115,14 @@ class EnhancedImage(models.Model):
         xx,yy = np.meshgrid(np.arange(W), np.arange(H))
         # inside-healpix mask.
         enhM = point_in_poly(xx, yy, hpxy-1.)
+        # grow ?
+        enhM = binary_dilation(enhM, np.ones((3,3)))
+
         del xx
         del yy
         npix = np.sum(enhM)
         for b in range(bands):
-            enhI[:,:,b][enhM] = np.random.permutation(npix)
+            enhI[:,:,b][enhM] = np.random.permutation(npix) / float(npix)
         enhW[enhM] = 1e-3
 
         mydir = self.get_dir()
@@ -99,30 +138,30 @@ class EnhancedImage(models.Model):
                 traceback.print_exc()
                 pass
 
-        self.write_files(enhI, enhW)
-        self.maxweight = 0.
-
+        tempfn = self.write_files(enhI, enhW, temp=True)
         dbwcs = TanWCS()
         dbwcs.set_from_tanwcs(hpwcs)
-        # print 'Database WCS:', dbwcs
         dbwcs.save()
+        with transaction.commit_on_success():
+            self.move_temp_files(tempfn)
+            self.maxweight = 0.
+            self.wcs = dbwcs
+            self.save()
 
-        self.wcs = dbwcs
 
 
-
-
-def get_healpixes_touching_wcs(tan, topscale=256.):
+def get_healpixes_touching_wcs(tan, nside=None, topscale=256.):
     '''
     tan: TanWCS database object.
     '''
     from astrometry.util.starutil_numpy import degrees_between
 
-    #print 'Pixscale', tan.get_pixscale()
-    nside = 2 ** int(np.round(np.log2(topscale / tan.get_pixscale())))
-    #print 'Nside', nside
-    nside = int(np.clip(nside, 1, 2**10))
-    #print 'Nside', nside
+    if nside is None:
+        # print 'Pixscale', tan.get_pixscale()
+        nside = 2 ** int(np.round(np.log2(topscale / tan.get_pixscale())))
+        # print 'Nside', nside
+        nside = int(np.clip(nside, 1, 2**10))
+        # print 'Nside', nside
 
     r1,d1 = healpix_to_radecdeg(0, nside, 0., 0.)
     r2,d2 = healpix_to_radecdeg(0, nside, 0.5, 0.5)

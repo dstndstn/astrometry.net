@@ -165,12 +165,13 @@ def addcal(cal, version, hpmod, hpnum):
 
         enhW[Yo,Xo] += 1.
 
-        en.write_files(enhI, enhW)
-        en.maxweight = enhW.max()
-
-        en.cals.add(cal)
-        #print 'Cals in this EnhancedImage:', en.cals
-        en.save()
+        tempfn = en.write_files(enhI, enhW, temp=True)
+        maxw = enhW.max()
+        with transaction.commit_on_success():
+            en.move_temp_files(tempfn)
+            en.maxweight = maxw
+            en.cals.add(cal)
+            en.save()
 
 
 
@@ -180,6 +181,14 @@ if __name__ == '__main__':
     parser.add_option('-v', dest='verbose', default=False, action='store_true')
     parser.add_option('-D', dest='delete', action='store_true',
                       help='Delete all database entries before beginning?')
+
+    parser.add_option('--version', default='v1',
+                      help='Set enhanced image set version: default %default')
+
+    parser.add_option('--mincal', type=int,
+                      help='Start at this Calibration id number')
+    parser.add_option('--maxcal', type=int,
+                      help='Stop at this Calibration id number')
 
     parser.add_option('--mod', dest='mod', type=int, default=0,
                       help='Split processing into this many pieces')
@@ -197,16 +206,29 @@ if __name__ == '__main__':
     logging.basicConfig(level=lvl, format='%(message)s', stream=sys.stdout)
     
     if opt.delete:
-        print 'DELETING ALL'
-        EnhanceVersion.objects.all().delete()
-        EnhancedImage.objects.all().delete()
-        print 'ok'
+        #print 'DELETING ALL'
+        #EnhanceVersion.objects.all().delete()
+        #EnhancedImage.objects.all().delete()
+        #print 'ok'
 
-    enver,created = EnhanceVersion.objects.get_or_create(name='v1', topscale=topscale)
+        todel = EnhanceVersion.objects.all()
+        if opt.version:
+            todel = todel.filter(name=opt.version)
+        print 'Deleting', todel
+        todel.delete()
+
+    enver,created = EnhanceVersion.objects.get_or_create(name=opt.version,
+                                                         topscale=topscale)
     print 'Version:', enver
 
     cals = Calibration.objects.all()
     print 'Calibrations:', cals.count()
+    if opt.mincal:
+        cals = cals.filter(id__gte=opt.mincal)
+        print 'Cut to', cals.count(), 'with id >=', opt.mincal
+    if opt.maxcal:
+        cals = cals.filter(id__lte=opt.maxcal)
+        print 'Cut to', cals.count(), 'with id <=', opt.maxcal
     cals = cals.select_related('raw_tan')
 
     # level = 9

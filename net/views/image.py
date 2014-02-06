@@ -36,6 +36,8 @@ from astrometry.net.util import get_page, get_session_form, NoBulletsRenderer
 from astrometry.net.views.tag import TagForm, TagSearchForm
 from astrometry.net.views.license import LicenseForm
 
+from astrometry.net.views.enhance import *
+
 from string import strip
 import simplejson
 
@@ -101,6 +103,8 @@ def user_image(req, user_image_id=None):
             images['galex'] = reverse('galex_image', kwargs={'calid':job.calibration.id,'size':'full'})
             images['redgreen_display'] = reverse('red_green_image', kwargs={'job_id':job.id,'size':'display'})
             images['redgreen'] = reverse('red_green_image', kwargs={'job_id':job.id,'size':'full'})
+            images['enhanced_display'] = reverse('enhanced_image', kwargs={'job_id':job.id,'size':'display'})
+            images['enhanced'] = reverse('enhanced_image', kwargs={'job_id':job.id,'size':'full'})
             image_type = 'annotated'
         images['extraction_display'] = reverse('astrometry.net.views.image.extraction_image', kwargs={'job_id':job.id,'size':'display'})
         images['extraction'] = reverse('astrometry.net.views.image.extraction_image', kwargs={'job_id':job.id,'size':'full'})

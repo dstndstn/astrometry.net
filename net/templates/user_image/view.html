@@ -256,6 +256,7 @@ $(document).ready(function() {
                     <a href="?image=annotated" title="annotated" class="image_link">annotated</a> |
                     <a href="?image=sdss" title="sdss" class="image_link">SDSS</a> |
                     <a href="?image=galex" title="galex" class="image_link">GALEX</a> |
+                    <a href="?image=enhanced" title="enhanced" class="image_link">Enhance!</a> |
                     <a href="?image=extraction" title="extraction" class="image_link">extraction</a>
                     {% else %}
                         {% if job %}
@@ -264,7 +265,10 @@ $(document).ready(function() {
                     {% endif %}
                 </div>
                 <div id="fullsize_link_block">
+{% comment %}
                     <a href="{{ fullsize_url }}" id="fullsize_link">fullsize ({{image.image.width}}x{{image.image.height}} pixels)</a>
+{% endcomment %}
+                    <a href="{{ fullsize_url }}" id="fullsize_link">fullsize</a>
                 </div>
             </div>
         </div>
