@@ -42,16 +42,16 @@ class EnhancedImage(models.Model):
 
     def get_dir(self):
         return os.path.join(settings.ENHANCE_DIR, self.version.name,
-                            'nside-%i' % self.nside, 'hpk-%i' % (self.healpix / 1000),
-                            'hp-%i' % (self.healpix))
+                            'nside-%i' % self.nside, 'hpk-%i' % (self.healpix / 1000))
+    #'hp-%i' % (self.healpix))
 
-    def get_image_path(self):
-        return os.path.join(self.get_dir(), 'enhance-image.fits')
-    def get_weight_path(self):
-        return os.path.join(self.get_dir(), 'enhance-weight.fits')
+    # def get_image_path(self):
+    #     return os.path.join(self.get_dir(), 'enhance-image.fits')
+    # def get_weight_path(self):
+    #     return os.path.join(self.get_dir(), 'enhance-weight.fits')
 
     def get_imw_path(self):
-        return os.path.join(self.get_dir(), 'enhance.fits')
+        return os.path.join(self.get_dir(), 'enhance-hp%i.fits' % self.healpix)
 
     def read_files(self):
         # imfn = self.get_image_path()
