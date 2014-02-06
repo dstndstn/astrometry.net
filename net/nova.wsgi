@@ -8,6 +8,8 @@ path = os.path.dirname(path)
 if path not in sys.path:
     sys.path.append(path)
 
+print >> sys.stderr, 'nova.wsgi -- hello!'
+
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
 path = os.path.dirname(__file__)
@@ -29,7 +31,12 @@ logging.basicConfig(filename=logfn, level=logging.DEBUG)
 
 try:
     import django.core.handlers.wsgi
+    print >> sys.stderr, 'running django handler...'
     application = django.core.handlers.wsgi.WSGIHandler()
+    print >> sys.stderr, 'application:', application
+    #for x in application:
+    #    print >> sys.stderr, 'line:', x
+    print >> sys.stderr, 'ran django handler.'
 except:
     import traceback
     logging.error('Exception in WSGI handler:\n' + traceback.format_exc())

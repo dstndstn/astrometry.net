@@ -72,22 +72,8 @@ def addcal(cal, version, hpmod, hpnum):
     wcs = Sip(wcsfn)
     #print 'WCS', wcs
 
-    print 'Pixscale', tan.get_pixscale()
-    nside = 2 ** int(np.round(np.log2(topscale / tan.get_pixscale())))
+    nside,hh = get_healpixes_touching_wcs(tan, topscale=topscale)
     print 'Nside', nside
-    nside = int(np.clip(nside, 1, 2**10))
-    print 'Nside', nside
-
-    r1,d1 = healpix_to_radecdeg(0, nside, 0., 0.)
-    r2,d2 = healpix_to_radecdeg(0, nside, 0.5, 0.5)
-    hpradius = degrees_between(r1,d1, r2,d2)
-    # HACK -- padding for squished parallelograms
-    hpradius *= 1.5
-
-    r,d,radius = tan.get_center_radecradius()
-    radius = np.hypot(radius, hpradius)
-    hh = healpix_rangesearch_radec(r, d, radius, nside)
-    hh.sort()
     print 'Healpixes:', hh
 
     if hpmod:
@@ -97,7 +83,7 @@ def addcal(cal, version, hpmod, hpnum):
     for hp in hh:
         print 'Healpix', hp
         # Check for actual overlap before (possibly) creating EnhancedImage
-        hpwcs,nil = EnhancedImage.get_healpix_wcs(nside, hp, topscale)
+        hpwcs,nil = get_healpix_wcs(nside, hp, topscale)
         try:
             Yo,Xo,Yi,Xi,nil = resample_with_wcs(hpwcs, wcs, [], 3)
         except NoOverlapError:

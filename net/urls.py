@@ -90,6 +90,10 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^corr_file/(?P<jobid>' + idpattern + r')/?$', 'corr_file'),
 )
 
+urlpatterns += patterns('astrometry.net.views.enhance',
+    (r'^enhance_ui/(?P<user_image_id>' + idpattern + r')/?$', 'enhanced_ui'),
+)
+
 urlpatterns += patterns('astrometry.net.views.album',
     (r'^albums/(?P<album_id>' + idpattern + r')/?$', 'album'),
     (r'^albums/(?P<album_id>' + idpattern + r')/delete/?$', 'delete'),

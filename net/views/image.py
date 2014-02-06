@@ -39,6 +39,9 @@ from astrometry.net.views.license import LicenseForm
 from string import strip
 import simplejson
 
+# repeat this import to override somebody else's import of the datetime module
+from datetime import datetime, timedelta
+
 class UserImageForm(forms.ModelForm):
     album = forms.ChoiceField(choices=(), required=False)
     class Meta:

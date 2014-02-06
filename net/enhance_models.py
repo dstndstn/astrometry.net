@@ -60,55 +60,6 @@ class EnhancedImage(models.Model):
         fitsio.write(wfn, enhW, clobber=True, compress='GZIP')
         #print 'Wrote', wfn
 
-    @classmethod
-    def get_healpix_wcs(clazz, nside, hp, topscale):
-        # healpix corners
-        xyz0 = np.array(healpix_to_xyz(hp, nside, 0., 0.))
-        xyz1 = np.array(healpix_to_xyz(hp, nside, 1., 0.))
-        xyz2 = np.array(healpix_to_xyz(hp, nside, 0., 1.))
-        xyz3 = np.array(healpix_to_xyz(hp, nside, 1., 1.))
-
-        # healpix center
-        r0,d0 = healpix_to_radecdeg(hp, nside, 0.5, 0.5)
-        # unit vector tangent to center, in direction of +Dec
-        up = np.array([-np.sin(np.deg2rad(d0))*np.cos(deg2rad(r0)),
-                        -np.sin(np.deg2rad(d0))*np.sin(deg2rad(r0)),
-                        np.cos(np.deg2rad(d0))])
-        # find the angle between +Dec and the healpix edge (0,0)--(1,0)
-        d1 = xyz1 - xyz0
-        d1 /= np.sqrt(np.sum(d1**2))
-        theta = np.pi/2. - np.arccos(np.sum(d1 * up))
-
-        pscale = topscale / nside
-        pscale /= 3600.
-        wcs = Tan(r0, d0, 500., 500.,
-                  pscale * np.cos(theta), -pscale * np.sin(theta),
-                  pscale * np.sin(theta),  pscale * np.cos(theta),
-                  1000,1000)
-            
-        xy = np.array([wcs.xyz2pixelxy(xyz[0], xyz[1], xyz[2]) for xyz in
-                       [xyz0, xyz1, xyz2, xyz3]])
-        # ok,x,y -> x,y
-        xy = xy[:,1:]
-        xlo,ylo = xy.min(axis=0)
-        xhi,yhi = xy.max(axis=0)
-        
-        # Make the WCS just barely contain the healpix -- magic 501
-        # here comes from 500 above.
-        W,H = int(np.ceil(xhi - xlo)), int(np.ceil(yhi - ylo))
-
-        hpwcs = Tan(r0, d0, 501.-xlo, 501.-ylo,
-                    pscale * np.cos(theta), -pscale * np.sin(theta),
-                    pscale * np.sin(theta),  pscale * np.cos(theta),
-                    float(W), float(H))
-
-        hpxy = np.array([hpwcs.xyz2pixelxy(xyz[0], xyz[1], xyz[2]) for xyz in
-                         [xyz0, xyz1, xyz3, xyz2]])
-        hpxy = hpxy[:,1:]
-
-        return hpwcs, hpxy
-
-        
     def init(self):
         import os
         from astrometry.util.miscutils import point_in_poly
@@ -118,7 +69,7 @@ class EnhancedImage(models.Model):
         nside = self.nside
         topscale = self.version.topscale
 
-        hpwcs,hpxy = EnhancedImage.get_healpix_wcs(nside, hp, topscale)
+        hpwcs,hpxy = get_healpix_wcs(nside, hp, topscale)
         H,W = hpwcs.get_height(), hpwcs.get_width()
 
         bands = 3
@@ -157,3 +108,83 @@ class EnhancedImage(models.Model):
         dbwcs.save()
 
         self.wcs = dbwcs
+
+
+
+
+def get_healpixes_touching_wcs(tan, topscale=256.):
+    '''
+    tan: TanWCS database object.
+    '''
+    from astrometry.util.starutil_numpy import degrees_between
+
+    #print 'Pixscale', tan.get_pixscale()
+    nside = 2 ** int(np.round(np.log2(topscale / tan.get_pixscale())))
+    #print 'Nside', nside
+    nside = int(np.clip(nside, 1, 2**10))
+    #print 'Nside', nside
+
+    r1,d1 = healpix_to_radecdeg(0, nside, 0., 0.)
+    r2,d2 = healpix_to_radecdeg(0, nside, 0.5, 0.5)
+    hpradius = degrees_between(r1,d1, r2,d2)
+    # HACK -- padding for squished parallelograms
+    hpradius *= 1.5
+
+    r,d,radius = tan.get_center_radecradius()
+    radius = np.hypot(radius, hpradius)
+    hh = healpix_rangesearch_radec(r, d, radius, nside)
+    hh.sort()
+    #print 'Healpixes:', hh
+    return (nside, hh)
+
+        
+def get_healpix_wcs(nside, hp, topscale):
+    '''
+    Returns a WCS object for the given healpix
+    '''
+    # healpix corners
+    xyz0 = np.array(healpix_to_xyz(hp, nside, 0., 0.))
+    xyz1 = np.array(healpix_to_xyz(hp, nside, 1., 0.))
+    xyz2 = np.array(healpix_to_xyz(hp, nside, 0., 1.))
+    xyz3 = np.array(healpix_to_xyz(hp, nside, 1., 1.))
+
+    # healpix center
+    r0,d0 = healpix_to_radecdeg(hp, nside, 0.5, 0.5)
+    # unit vector tangent to center, in direction of +Dec
+    up = np.array([-np.sin(np.deg2rad(d0))*np.cos(deg2rad(r0)),
+                    -np.sin(np.deg2rad(d0))*np.sin(deg2rad(r0)),
+                    np.cos(np.deg2rad(d0))])
+    # find the angle between +Dec and the healpix edge (0,0)--(1,0)
+    d1 = xyz1 - xyz0
+    d1 /= np.sqrt(np.sum(d1**2))
+    theta = np.pi/2. - np.arccos(np.sum(d1 * up))
+
+    pscale = topscale / nside
+    pscale /= 3600.
+    wcs = Tan(r0, d0, 500., 500.,
+              pscale * np.cos(theta), -pscale * np.sin(theta),
+              pscale * np.sin(theta),  pscale * np.cos(theta),
+              1000,1000)
+        
+    xy = np.array([wcs.xyz2pixelxy(xyz[0], xyz[1], xyz[2]) for xyz in
+                   [xyz0, xyz1, xyz2, xyz3]])
+    # ok,x,y -> x,y
+    xy = xy[:,1:]
+    xlo,ylo = xy.min(axis=0)
+    xhi,yhi = xy.max(axis=0)
+    
+    # Make the WCS just barely contain the healpix -- magic 501
+    # here comes from 500 above.
+    W,H = int(np.ceil(xhi - xlo)), int(np.ceil(yhi - ylo))
+
+    hpwcs = Tan(r0, d0, 501.-xlo, 501.-ylo,
+                pscale * np.cos(theta), -pscale * np.sin(theta),
+                pscale * np.sin(theta),  pscale * np.cos(theta),
+                float(W), float(H))
+
+    hpxy = np.array([hpwcs.xyz2pixelxy(xyz[0], xyz[1], xyz[2]) for xyz in
+                     [xyz0, xyz1, xyz3, xyz2]])
+    hpxy = hpxy[:,1:]
+
+    return hpwcs, hpxy
+
