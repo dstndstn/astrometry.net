@@ -9,6 +9,50 @@ from astrometry.net.models import *
 from astrometry.util.resample import *
 from astrometry.net.tmpfile import *
 
+def simple_histeq(pixels, getinverse=False, mx=256):
+    assert(pixels.dtype in [np.uint8, np.uint16])
+
+    if not getinverse:
+        h = np.bincount(pixels, minlength=mx)
+        # pixel value -> quantile map.
+        # If you imagine jittering the pixels so there are no repeats,
+        # this assigns the middle quantile to a pixel value.
+        quant = h * 0.5
+        cs = np.cumsum(h)
+        quant[1:] += cs[:-1]
+        quant /= float(cs[-1])
+        # quant = np.cumsum(h / float(h.sum()))
+        return quant[pixels]
+
+    # This inverse function has slightly weird properties -- it
+    # puts a ramp across each pixel value, so inv(0.) may produce
+    # values as small as -0.5, and inv(1.) may produce 255.5
+
+    h = np.bincount(pixels.astype(int)+1, minlength=mx+1)
+    quant = h[1:] * 0.5
+    cs = np.cumsum(h)
+    quant[1:] += cs[1:-1]
+    quant /= float(cs[-1])
+
+    # interp1d is fragile -- remove duplicate "yy" values that
+    # otherwise cause nans.
+    yy = cs / float(cs[-1])
+    xx = np.arange(mx + 1) - 0.5
+    I = np.append([0], 1 + np.flatnonzero(np.diff(yy)))
+    print 'mx:', mx
+    print 'xx:', len(xx)
+    print 'yy:', len(yy)
+    print 'I:', I.min(), I.max()
+    yy = yy[I]
+    xx = xx[I]
+    xx[-1] = mx-0.5
+    # print 'yy', yy[0], yy[-1]
+    # print 'xx', xx[0], xx[-1]
+    inv = interp1d(yy, xx, kind='linear')
+    return quant[pixels], inv
+
+
+
 def enhanced_ui(req, user_image_id=None):
     ui = UserImage.objects.get(id=user_image_id)
     job = ui.get_best_job()
@@ -31,7 +75,7 @@ def enhanced_image(req, job_id=None, size=None):
     for hp in hh:
         en = EIms.filter(nside=nside, healpix=hp, version=ver)
         if len(en):
-            ens.extent(list(en))
+            ens.extend(list(en))
 
     for dnside in range(1, 3):
         if len(ens) == 0:
@@ -53,19 +97,36 @@ def enhanced_image(req, job_id=None, size=None):
     #return HttpResponse(tt)
 
     targetwcs = tan.to_tanwcs()
-    print 'Target WCS:', targetwcs
-    print 'W,H', W,H
+    #print 'Target WCS:', targetwcs
+    #print 'W,H', W,H
+    logmsg('wcs:', str(targetwcs))
 
     if size == 'display':
-        image = ui
-        scale = float(image.image.get_display_image().width)/image.image.width
+        scale = float(ui.image.get_display_image().width)/ui.image.width
+        logmsg('scaling:', scale)
         targetwcs = targetwcs.scale(scale)
-        print 'Scaled to:', targetwcs
+        logmsg('scaled wcs:', str(targetwcs))
         H,W = targetwcs.get_height(), targetwcs.get_width()
+        img = ui.image.get_display_image()
 
     print tt
     ee = np.zeros((H,W,3), np.float32)
 
+    imgdata = None
+    df = img.disk_file
+    ft = df.file_type
+    fn = df.get_path()
+    if 'JPEG' in ft:
+        print 'Reading', fn
+        I = plt.imread(fn)
+        print 'Read', I.shape, I.dtype
+        if len(I.shape) == 2:
+            I = I[:,:,np.newaxis].repeat(3, axis=2)
+        assert(len(I.shape) == 3)
+        imgdata = I
+        #mapped = np.zeros_like(imgdata)
+        mapped = imgdata.copy()
+        
     for en in ens:
         logmsg('Resampling %s' % en)
         wcs = en.wcs.to_tanwcs()
@@ -73,22 +134,35 @@ def enhanced_image(req, job_id=None, size=None):
             Yo,Xo,Yi,Xi,nil = resample_with_wcs(targetwcs, wcs, [], 3)
         except OverlapError:
             continue
-        print len(Yo), 'pixels'
+        logmsg(len(Yo), 'pixels')
         enI,enW = en.read_files()
 
-        print 'Cals included in this Enhanced image:'
-        for c in en.cals.all():
-            print '  ', c
+        #print 'Cals included in this Enhanced image:'
+        #for c in en.cals.all():
+        #    print '  ', c
+        logmsg('en:', enI.min(), enI.max())
 
-        print 'en:', enI.min(), enI.max()
-
-        #mask = enW[Yi,Xi]
-        #Yo = Yo[mask]
-        #Xo = Xo[mask]
+        if imgdata is not None:
+            mask = (enW[Yi,Xi] > 0)
         # Might have to average the coverage here...
         for b in range(3):
             enI[:,:,b] /= enI[:,:,b].max()
             ee[Yo,Xo,b] += enI[Yi,Xi,b]
+            #ee[Yo[mask],Xo[mask],b] += enI[Yi[mask],Xi[mask],b]
+
+            if imgdata is not None:
+                data = (imgdata[Yo[mask],Xo[mask],b] / 255.).astype(np.float32)
+                data += np.random.uniform(1./255, size=data.shape)
+                DI = np.argsort(data)
+
+                EI = np.argsort(enI[Yi[mask], Xi[mask], b])
+                #print 'EI', len(EI), EI.dtype
+                Erank = np.zeros_like(EI)
+                #print 'Erank', len(Erank), Erank.dtype
+                Erank[EI] = np.arange(len(Erank))
+
+                #mapped[Yo[mask], Xo[mask], b] = (data[DI[Erank]] * 255).astype(mapped.dtype)
+
 
     print 'ee', ee.min(), ee.max()
 
@@ -97,6 +171,15 @@ def enhanced_image(req, job_id=None, size=None):
     im = np.clip(ee, 0., 1.)
     print 'im', im.shape, im.dtype
 
+    # mim = np.empty_like(im.rgb)
+    # for band in range(3):
+    #     qi,inv = simple_histeq((im.rgb[:,:,band][im.mask] * 255
+    #                             ).astype(np.uint8), getinverse=True)
+    #     mim[:,:,band] = inv(E[:,:,band] / float(E.max()))
+    # plt.imshow(np.clip(mim/255., 0., 1.), **ima)
+    # plt.xticks([]); plt.yticks([])
+    # plt.title('tone-mapped C', **targs)
+
     #plt.imsave(tempfn, im, origin='lower')
 
     dpi = 100
@@ -104,7 +187,21 @@ def enhanced_image(req, job_id=None, size=None):
     fig = plt.figure(figsize=figsize, frameon=False, dpi=dpi)
     plt.clf()
     plt.subplots_adjust(left=0, right=1, bottom=0, top=1)
-    plt.imshow(im, interpolation='nearest', origin='lower')
+
+    #if imgdata is not None:
+    #    plt.imshow(mapped, interpolation='nearest', origin='lower')
+    #else:
+    #    plt.imshow(im, interpolation='nearest', origin='lower')
+
+    #plt.imshow(im, interpolation='nearest', origin='lower')
+    #plt.imshow(im, interpolation='nearest')
+
+    plt.imshow(mapped, interpolation='nearest', origin='lower')
+    rdfn = job.get_rdls_file()
+    rd = fits_table(rdfn)
+    ok,x,y = targetwcs.radec2pixelxy(rd.ra, rd.dec)
+    plt.plot(x, y, 'o', mec='r', mfc='none', ms=10)
+
     plt.savefig(tempfn)
 
     print 'Wrote', tempfn
