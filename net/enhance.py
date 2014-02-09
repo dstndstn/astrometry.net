@@ -61,6 +61,10 @@ def addcal(cal, version, hpmod, hpnum):
         if len(I.shape) == 2:
             I = I[:,:,np.newaxis].repeat(3, axis=2)
         assert(len(I.shape) == 3)
+        if I.shape[2] > 3:
+            I = I.shape[:,:,:3]
+        # vertical FLIP to match WCS
+        I = I[::-1,:,:]
         u = np.unique(I.ravel())
         print 'Number of unique pixel values:', len(u)
         if I.dtype != np.uint8:
@@ -172,70 +176,6 @@ def addcal(cal, version, hpmod, hpnum):
             en.maxweight = maxw
             en.cals.add(cal)
             en.save()
-
-
-
-if __name__ == '__main__':
-    ver = 'v3'
-    enver,created = EnhanceVersion.objects.get_or_create(name=ver,
-                                                         topscale=topscale)
-    print 'Version:', enver
-
-    uis = UserImage.objects.all()
-    uis = uis.filter(id__in=[209355, 94560, 209357])
-
-    jobs = [ui.get_best_job() for ui in uis]
-
-    ps = PlotSequence('en')
-
-    for job in jobs:
-        cal = job.calibration
-        tan = cal.raw_tan
-        wcsfn = cal.get_wcs_file()
-        df = cal.job.user_image.image.disk_file
-        fn = df.get_path()
-        print 'Reading', fn
-        I = plt.imread(fn)
-        print 'Read', I.shape, I.dtype
-        if len(I.shape) == 2:
-            I = I[:,:,np.newaxis].repeat(3, axis=2)
-        assert(len(I.shape) == 3)
-        # FLIP
-        I = I[::-1, :, :]
-        wcs = Sip(wcsfn)
-
-        nside,hh = get_healpixes_touching_wcs(tan, topscale=topscale)
-
-        print 'Nside', nside
-        print 'Healpixes:', hh
-
-        #nside /= 2
-        #for hp in hh:
-
-        nside,hp = 128, 22839
-
-        if True:
-            hpwcs,nil = get_healpix_wcs(nside, hp, topscale)
-            try:
-                Yo,Xo,Yi,Xi,nil = resample_with_wcs(hpwcs, wcs, [], 3)
-            except NoOverlapError:
-                print 'No actual overlap'
-                continue
-
-            if len(Yo) == 0:
-                print 'No pixels overlap'
-                continue
-            hpimg = np.zeros((hpwcs.get_height(), hpwcs.get_width()), np.uint8)
-            hpimg[Yo,Xo] = I[Yi,Xi,0]
-
-            plt.clf()
-            plt.imshow(hpimg, interpolation='nearest', origin='lower')
-            plt.title('nside %i, hp %i' % (nside, hp))
-            ps.savefig()
-
-
-    sys.exit(0)
-
 
 if __name__ == '__main__':
     import optparse
@@ -396,3 +336,65 @@ if __name__ == '__main__':
         ps.savefig()
 
 '''
+if __name__ == '__main__':
+    ver = 'v3'
+    enver,created = EnhanceVersion.objects.get_or_create(name=ver,
+                                                         topscale=topscale)
+    print 'Version:', enver
+
+    uis = UserImage.objects.all()
+    uis = uis.filter(id__in=[209355, 94560, 209357])
+
+    jobs = [ui.get_best_job() for ui in uis]
+
+    ps = PlotSequence('en')
+
+    for job in jobs:
+        cal = job.calibration
+        tan = cal.raw_tan
+        wcsfn = cal.get_wcs_file()
+        df = cal.job.user_image.image.disk_file
+        fn = df.get_path()
+        print 'Reading', fn
+        I = plt.imread(fn)
+        print 'Read', I.shape, I.dtype
+        if len(I.shape) == 2:
+            I = I[:,:,np.newaxis].repeat(3, axis=2)
+        assert(len(I.shape) == 3)
+        # FLIP
+        I = I[::-1, :, :]
+        wcs = Sip(wcsfn)
+
+        nside,hh = get_healpixes_touching_wcs(tan, topscale=topscale)
+
+        print 'Nside', nside
+        print 'Healpixes:', hh
+
+        #nside /= 2
+        #for hp in hh:
+
+        nside,hp = 128, 22839
+
+        if True:
+            hpwcs,nil = get_healpix_wcs(nside, hp, topscale)
+            try:
+                Yo,Xo,Yi,Xi,nil = resample_with_wcs(hpwcs, wcs, [], 3)
+            except NoOverlapError:
+                print 'No actual overlap'
+                continue
+
+            if len(Yo) == 0:
+                print 'No pixels overlap'
+                continue
+            hpimg = np.zeros((hpwcs.get_height(), hpwcs.get_width()), np.uint8)
+            hpimg[Yo,Xo] = I[Yi,Xi,0]
+
+            plt.clf()
+            plt.imshow(hpimg, interpolation='nearest', origin='lower')
+            plt.title('nside %i, hp %i' % (nside, hp))
+            ps.savefig()
+
+
+    sys.exit(0)
+
+

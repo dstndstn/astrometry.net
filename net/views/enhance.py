@@ -123,6 +123,10 @@ def enhanced_image(req, job_id=None, size=None):
         if len(I.shape) == 2:
             I = I[:,:,np.newaxis].repeat(3, axis=2)
         assert(len(I.shape) == 3)
+        if I.shape[2] > 3:
+            I = I.shape[:,:,:3]
+        # vertical FLIP to match WCS
+        I = I[::-1,:,:]
         imgdata = I
         #mapped = np.zeros_like(imgdata)
         mapped = imgdata.copy()
