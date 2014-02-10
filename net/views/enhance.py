@@ -66,7 +66,7 @@ def enhanced_image(req, job_id=None, size=None):
     nside,hh = get_healpixes_touching_wcs(tan)
     tt = 'hello %s, job %s, nside %s, hh %s' % (ui, job, nside, hh)
 
-    ver = EnhanceVersion.objects.get(name='v2')
+    ver = EnhanceVersion.objects.get(name='v3')
     print 'Using', ver
 
     EIms = EnhancedImage.objects.filter(version=ver)
@@ -128,8 +128,7 @@ def enhanced_image(req, job_id=None, size=None):
         # vertical FLIP to match WCS
         I = I[::-1,:,:]
         imgdata = I
-        #mapped = np.zeros_like(imgdata)
-        mapped = imgdata.copy()
+        mapped = np.zeros_like(imgdata)
         
     for en in ens:
         logmsg('Resampling %s' % en)
@@ -138,73 +137,48 @@ def enhanced_image(req, job_id=None, size=None):
             Yo,Xo,Yi,Xi,nil = resample_with_wcs(targetwcs, wcs, [], 3)
         except OverlapError:
             continue
-        logmsg(len(Yo), 'pixels')
+        #logmsg(len(Yo), 'pixels')
         enI,enW = en.read_files()
-
         #print 'Cals included in this Enhanced image:'
         #for c in en.cals.all():
         #    print '  ', c
-        logmsg('en:', enI.min(), enI.max())
+        #logmsg('en:', enI.min(), enI.max())
 
         if imgdata is not None:
             mask = (enW[Yi,Xi] > 0)
-        # Might have to average the coverage here...
         for b in range(3):
             enI[:,:,b] /= enI[:,:,b].max()
-            ee[Yo,Xo,b] += enI[Yi,Xi,b]
-            #ee[Yo[mask],Xo[mask],b] += enI[Yi[mask],Xi[mask],b]
-
             if imgdata is not None:
-                data = (imgdata[Yo[mask],Xo[mask],b] / 255.).astype(np.float32)
-                data += np.random.uniform(1./255, size=data.shape)
-                DI = np.argsort(data)
+                idata = imgdata[Yo[mask],Xo[mask],b]
+                DI = np.argsort((idata + np.random.uniform(size=idata.shape))/255.)
 
                 EI = np.argsort(enI[Yi[mask], Xi[mask], b])
-                #print 'EI', len(EI), EI.dtype
                 Erank = np.zeros_like(EI)
-                #print 'Erank', len(Erank), Erank.dtype
                 Erank[EI] = np.arange(len(Erank))
 
-                #mapped[Yo[mask], Xo[mask], b] = (data[DI[Erank]] * 255).astype(mapped.dtype)
-
-
-    print 'ee', ee.min(), ee.max()
+                mapped[Yo[mask],Xo[mask],b] = idata[DI[Erank]]
+            else:
+                # Might have to average the coverage here...
+                ee[Yo,Xo,b] += enI[Yi,Xi,b]
+                # ee[Yo[mask],Xo[mask],b] += enI[Yi[mask],Xi[mask],b]
 
     tempfn = get_temp_file(suffix='.png')
 
-    im = np.clip(ee, 0., 1.)
-    print 'im', im.shape, im.dtype
-
-    # mim = np.empty_like(im.rgb)
-    # for band in range(3):
-    #     qi,inv = simple_histeq((im.rgb[:,:,band][im.mask] * 255
-    #                             ).astype(np.uint8), getinverse=True)
-    #     mim[:,:,band] = inv(E[:,:,band] / float(E.max()))
-    # plt.imshow(np.clip(mim/255., 0., 1.), **ima)
-    # plt.xticks([]); plt.yticks([])
-    # plt.title('tone-mapped C', **targs)
-
-    #plt.imsave(tempfn, im, origin='lower')
-
+    if imgdata is not None:
+        im = mapped
+    else:
+        im = np.clip(ee, 0., 1.)
     dpi = 100
     figsize = [x / float(dpi) for x in im.shape[:2][::-1]]
     fig = plt.figure(figsize=figsize, frameon=False, dpi=dpi)
     plt.clf()
     plt.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    plt.imshow(im, interpolation='nearest')
 
-    #if imgdata is not None:
-    #    plt.imshow(mapped, interpolation='nearest', origin='lower')
-    #else:
-    #    plt.imshow(im, interpolation='nearest', origin='lower')
-
-    #plt.imshow(im, interpolation='nearest', origin='lower')
-    #plt.imshow(im, interpolation='nearest')
-
-    plt.imshow(mapped, interpolation='nearest', origin='lower')
-    rdfn = job.get_rdls_file()
-    rd = fits_table(rdfn)
-    ok,x,y = targetwcs.radec2pixelxy(rd.ra, rd.dec)
-    plt.plot(x, y, 'o', mec='r', mfc='none', ms=10)
+    # rdfn = job.get_rdls_file()
+    # rd = fits_table(rdfn)
+    # ok,x,y = targetwcs.radec2pixelxy(rd.ra, rd.dec)
+    # plt.plot(x, y, 'o', mec='r', mfc='none', ms=10)
 
     plt.savefig(tempfn)
 
