@@ -7,7 +7,7 @@
 
 {% block title %}
 {{block.super}} &gt;
-<a href="{% url astrometry.net.views.user.user_albums user_id=display_user.id %}">Albums</a>
+<a href="{% url 'astrometry.net.views.user.user_albums' user_id=display_user.id %}">Albums</a>
 {% endblock %}
 
 {% block user_content %}

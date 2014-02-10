@@ -163,7 +163,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
                 Select an optional album to add the image(s) from this submission to.
             {% else %}
                 To create albums, please
-                <a href="{% url openid-login %}?next={{ request.path }}">Sign In</a>.
+                <a href="{% url 'openid-login' %}?next={{ request.path }}">Sign In</a>.
             {% endif %}
         </div>
     </td>
@@ -189,7 +189,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
                 By submitting anonymously, you agree that the content contained
                 in and resulting from this submission may be viewed publicly.
                 To change this setting, please
-                <a href="{% url openid-login %}?next={{ request.path }}">Sign In</a>.
+                <a href="{% url 'openid-login' %}?next={{ request.path }}">Sign In</a>.
             {% endif %}
         </div>
     </td>
@@ -213,7 +213,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
                 By submitting anonymously, you agree that your submitted image
                 will be governed by
                 {% include 'license/license_link.html' with license=default_license %}.
-                To change this license setting, please <a href="{% url openid-login %}?next={{ request.path }}">Sign In</a>.
+                To change this license setting, please <a href="{% url 'openid-login' %}?next={{ request.path }}">Sign In</a>.
             {% endif %}
         </div>
     </td>

@@ -16,7 +16,7 @@
 {% endblock %}
 
 {% block title %}
-    <a href="{% url astrometry.net.views.user.dashboard %}">Dashboard</a>{% endblock %}
+    <a href="{% url 'dashboard' %}">Dashboard</a>{% endblock %}
 {% block content %}
 {% if user.is_authenticated %}
 <div id="dashboard">

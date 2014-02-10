@@ -1,10 +1,10 @@
 <ul class="view_menu">
-    <li><a href="{% url astrometry.net.views.user.user_profile display_user.id %}">Profile</a></li>
+    <li><a href="{% url 'user-profile' display_user.id %}">Profile</a></li>
     {% if display_user == user %}
-    <li><a href="{% url astrometry.net.views.user.dashboard_profile %}">Edit Profile</a></li>
+    <li><a href="{% url 'astrometry.net.views.user.dashboard_profile' %}">Edit Profile</a></li>
     {% endif %}
-    <li><a href="{% url astrometry.net.views.user.user_images display_user.id %}">Images</a></li>
-    <li><a href="{% url astrometry.net.views.user.user_albums display_user.id %}">Albums</a></li>
-    <li><a href="{% url astrometry.net.views.user.user_submissions display_user.id %}">Submissions</a></li>
+    <li><a href="{% url 'astrometry.net.views.user.user_images' display_user.id %}">Images</a></li>
+    <li><a href="{% url 'astrometry.net.views.user.user_albums' display_user.id %}">Albums</a></li>
+    <li><a href="{% url 'astrometry.net.views.user.user_submissions' display_user.id %}">Submissions</a></li>
     {{ request_user }} 
 </ul>

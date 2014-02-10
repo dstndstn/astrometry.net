@@ -128,7 +128,7 @@ $(document).ready(function() {
         Submitted by {% include 'user/display_name.html' with user=image.user %}<br />
         <div class="indent">on <span class="timestamp">{{ image.submission.submitted_on }}</span></div>
         <div class="indent">as 
-            "<a href="{% url astrometry.net.views.image.serve_image id=image.image.id %}?filename={{ image.original_file_name }}">
+            "<a href="{% url 'serve_image' id=image.image.id %}?filename={{ image.original_file_name }}">
                 {% include 'user_image/filename.html' with filename=image.original_file_name %}
             </a>"
             (<a href="{{ image.submission.get_absolute_url }}">Submission {{ image.submission.id }}</a>)
@@ -183,39 +183,39 @@ $(document).ready(function() {
         </tr>
         <tr>
             <td>WCS file:</td>
-            <td><a href="{% url astrometry.net.views.image.wcs_file jobid=job.id %}">wcs.fits</a></td>
+            <td><a href="{% url 'wcs-file' jobid=job.id %}">wcs.fits</a></td>
         </tr>
         <tr>
             <td>New FITS image:</td>
-            <td><a href="{% url astrometry.net.views.image.new_fits_file jobid=job.id %}">new-image.fits</a></td>
+            <td><a href="{% url 'new-fits-file' jobid=job.id %}">new-image.fits</a></td>
         </tr>
         <tr>
             <td>Reference stars nearby (RA,Dec table):</td>
-            <td><a href="{% url astrometry.net.views.image.rdls_file jobid=job.id %}">rdls.fits</a></td>
+            <td><a href="{% url 'rdls-file' jobid=job.id %}">rdls.fits</a></td>
         </tr>
         <tr>
           <td>Stars detected in your images (x,y table):</td>
-          <td><a href="{% url astrometry.net.views.image.axy_file jobid=job.id %}">axy.fits</a></td>
+          <td><a href="{% url 'axy-file' jobid=job.id %}">axy.fits</a></td>
         </tr>
         <tr>
           <td>Correspondences between image and reference stars (table):</td>
-          <td><a href="{% url astrometry.net.views.image.corr_file jobid=job.id %}">corr.fits</a></td>
+          <td><a href="{% url 'corr-file' jobid=job.id %}">corr.fits</a></td>
         </tr>
         <tr>
             <td>KMZ (<a href="http://www.google.com/sky/">Google Sky</a>):</td>
-            <td><a href="{% url astrometry.net.views.image.kml_file jobid=job.id %}?ignore=.kmz">image.kmz</a></td>
+            <td><a href="{% url 'kml-file' jobid=job.id %}?ignore=.kmz">image.kmz</a></td>
         </tr>
         </table>
         <br />
 
         <div id="on_the_sky">
-            <img src="{% url astrometry.net.views.image.onthesky_image zoom=0 calid=job.calibration.id %}" /><br />
+            <img src="{% url 'onthesky_image' zoom=0 calid=job.calibration.id %}" /><br />
             {% if calib.get_radius < 15 %}
-            <img src="{% url astrometry.net.views.image.onthesky_image zoom=1 calid=job.calibration.id %}" /><br />
+            <img src="{% url 'onthesky_image' zoom=1 calid=job.calibration.id %}" /><br />
             {% if calib.get_radius < 1.5 %}
-            <img src="{% url astrometry.net.views.image.onthesky_image zoom=2 calid=job.calibration.id %}" /><br />
+            <img src="{% url 'onthesky_image' zoom=2 calid=job.calibration.id %}" /><br />
             {% if calib.get_radius < 0.15 %}
-            <img src="{% url astrometry.net.views.image.onthesky_image zoom=3 calid=job.calibration.id %}" /><br />
+            <img src="{% url 'onthesky_image' zoom=3 calid=job.calibration.id %}" /><br />
             {% endif %}
             {% endif %}
             {% endif %}
@@ -282,7 +282,7 @@ $(document).ready(function() {
         {% if nearby_images %}
         <div id="nearby_images">
             <h3 style="display:inline-block">Nearby Images</h3>
-            (<a href="{% url astrometry.net.views.image.index_nearby user_image_id=image.id %}">View All</a>)
+            (<a href="{% url 'images-nearby' user_image_id=image.id %}">View All</a>)
             {% include 'user_image/image_set.html' with images=nearby_images|slice:'6' thumbnail_size='small' %}
         </div>
         {% endif %}

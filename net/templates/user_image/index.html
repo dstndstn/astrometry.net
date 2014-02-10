@@ -37,7 +37,7 @@
 {% endblock %}
 
 {% block title %}
-<a href="{% url astrometry.net.views.image.index %}">Images</a>
+<a href="{% url 'images' %}">Images</a>
 {% endblock %}
 
 {% block content %}
@@ -48,8 +48,8 @@
     <div id="search_block">
         <div id="search_menu">
             {% block search_menu %}
-            {% url astrometry.net.views.image.index_tag as tag_url %}
-            {% url astrometry.net.views.image.index_location as location_url %}
+            {% url 'images-tag' as tag_url %}
+            {% url 'images-location' as location_url %}
             {% with curr_url=request.path %}
             Search:
             <a {% if curr_url == tag_url %}class="selected" {% endif %}href="{{ tag_url }}">tag</a> |

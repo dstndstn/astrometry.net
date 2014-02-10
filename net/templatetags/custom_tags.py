@@ -1,5 +1,7 @@
 from django import template
 from django.utils.http import urlquote
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 import urllib
 import types
 
@@ -33,14 +35,24 @@ def paginator(context, page, text="", total_pages=9):
     
     page_numbers = [n for n in range(start, end+1) if n > 0 and n <= num_pages]
 
+    if page.has_next():
+        nextpage = page.next_page_number()
+    else:
+        nextpage = None
+
+    if page.has_previous():
+        prevpage = page.previous_page_number()
+    else:
+        prevpage = None
+
     return {
         "results_per_page": len(page.object_list),
         "total_results": page.paginator.count,
         "page": number,
         "pages": num_pages,
         "page_numbers": page_numbers,
-        "next": page.next_page_number(),
-        "previous": page.previous_page_number(),
+        "next": nextpage,
+        "previous": prevpage,
         "has_next": page.has_next(),
         "has_previous": page.has_previous(),
         "show_first": 1 not in page_numbers,

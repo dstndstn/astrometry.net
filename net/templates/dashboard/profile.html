@@ -9,10 +9,10 @@
 
 {% block title %}
 {{block.super}} &gt;
-<a href="{% url astrometry.net.views.user.dashboard_profile %}">Edit Profile</a>
+<a href="{% url 'astrometry.net.views.user.dashboard_profile' %}">Edit Profile</a>
 {% endblock %}
 {% block dashboard_content %}
-<form method="post" action="{% url astrometry.net.views.user.save_profile %}">
+<form method="post" action="{% url 'astrometry.net.views.user.save_profile' %}">
 {% csrf_token %}
 <table class="settings_table">
 <tr>
@@ -25,29 +25,6 @@
         {{ profile_form.display_name }} {{ profile_form.display_name.errors }}
     </td>
 </tr>
-<!--<tr>
-    <td class="leftcolumn">
-        <div class="setting_title">API Key:</div>
-        <div class="setting_description">
-            <p>
-                Astrometry.net allows you to access parts of the service through a JSON API.
-                Your API key is required to do so, but allows the service to track your
-                usage as if you were using the service through the website interface.
-            </p>
-            <p>
-                To access the Astrometry.net API, first create a session by sending a JSON 
-                request with your API key as the argument <span class="code">'apikey'</span> 
-                to <span class="code">{% url astrometry.net.api.api_login %}</span>. The
-                API will return a session key, which must be included in subsequent
-                requests sent to the API.
-            </p>
-        </div>
-    </td>
-    <td>
-        {% comment %}{% include 'dashboard/api_key_div.html' with apikey=profile.apikey %}{% endcomment %}
-        {% include 'user/api_key.html' with apikey=profile.apikey %}
-    </td>
-</tr>-->
 <tr>
     <td class="leftcolumn">
         <div class="setting_title">Default License:</div>

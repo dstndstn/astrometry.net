@@ -34,15 +34,15 @@
 
 {% block content %}
 <div id="blocks">
-    <a id="explore_block" class="block" href="{% url astrometry.net.views.home.explore %}">
+    <a id="explore_block" class="block" href="{% url 'explore' %}">
         <h1>Explore</h1>
         Browse images others have been uploading or search for photos of specific astronomical objects.
     </a>
-    <a id="share_block" class="block" href="{% url astrometry.net.views.submission.upload_file %}">
+    <a id="share_block" class="block" href="{% url 'upload-file' %}">
         <h1>Calibrate & Share</h1>
         Upload your own images to get accurate calibrations and share them with the world.
     </a>
-    <a id="create_block" class="block" href="{% url astrometry.net.views.home.api_help %}">
+    <a id="create_block" class="block" href="{% url 'api-help' %}">
         <h1>Create</h1>
         Take advantage of the API of this web service to program your own applications.
     </a>
@@ -57,7 +57,7 @@
 	</p>
 
 
-	<h2 style="display:inline-block">Recently Submitted Images</h2> (<a href="{% url astrometry.net.views.home.explore %}">See More</a>)
+	<h2 style="display:inline-block">Recently Submitted Images</h2> (<a href="{% url 'explore' %}">See More</a>)
 	{% include 'user_image/image_set.html' with images=images|slice:":8" thumbnail_size='medium' %}
 </div>
 <div style="clear: both"></div>

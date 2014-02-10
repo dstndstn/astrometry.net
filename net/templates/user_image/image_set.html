@@ -11,13 +11,10 @@
         thumbnail_large
     {% endif %}{% endif %}
     ">
-    <!--<div class="image_container" style="background-image: url('{% url serve_image id=image.image.get_thumbnail.id %}')"> 
-        <a href="{% url astrometry.net.views.image.user_image image.id %}"></a>
-    </div>-->
-        <a href="{% url astrometry.net.views.image.user_image image.id %}">
+        <a href="{% url 'user-image' image.id %}">
             {% with thumbnail=image.image.get_thumbnail %}
             {% with offset_x=thumbnail.get_thumbnail_offset_x offset_y=thumbnail.get_thumbnail_offset_y %}
-            <img class="image" src="{% url serve_image id=thumbnail.id %}"
+            <img class="image" src="{% url 'serve_image' id=thumbnail.id %}"
                  {% if thumbnail_size == 'small' %}
                  style="left: {% widthratio offset_x 235 100 %}px;
                         top: {% widthratio offset_y 235 100 %}px;

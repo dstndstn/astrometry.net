@@ -53,14 +53,14 @@ $(document).ready(function() {
             <div id="auth_status">
             {% if user.is_authenticated %}
                 Signed in as <span id="user_info">{{ user.get_profile.display_name }} ({{ user.email }})</span> |
-                <a href="{% url openid-logout %}">Sign Out</a>
+                <a href="{% url 'openid-logout' %}">Sign Out</a>
             {% else %}
                 Not signed in | 
-                <a href="{% url openid-login %}">Sign In</a>
+                <a href="{% url 'openid-login' %}">Sign In</a>
             {% endif %}
             </div>
             <div id="logo">
-                <a class="selected" href="{% url astrometry.net.views.home.home %}">
+                <a class="selected" href="{% url 'astrometry.net.views.home.home' %}">
                     <img src="http://astrometry.net/logo.png" alt="Astrometry.net logo" />
                 </a>
             </div>

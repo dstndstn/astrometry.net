@@ -1,50 +1,37 @@
 <ul>
 {% spaceless %}
-<li><a href="{% url astrometry.net.views.home.home %}">Home</a></li>
-<!--<li><a href="{% url astrometry.net.views.image.index %}">Images</a></li>-->
+<li><a href="{% url 'home' %}">Home</a></li>
 <li>
-    <a href="{% url astrometry.net.views.home.explore %}">Explore</a>
+    <a href="{% url 'explore' %}">Explore</a>
     <ul class="dropdown"> 
-        <li><a href="{% url astrometry.net.views.image.index %}">Images</a></li>
-        <li><a href="{% url astrometry.net.views.user.index %}">Users</a></li>
-        <li><a href="{% url astrometry.net.views.tag.index %}">Tags</a></li>
+        <li><a href="{% url 'images' %}">Images</a></li>
+        <li><a href="{% url 'users' %}">Users</a></li>
+        <li><a href="{% url 'tags' %}">Tags</a></li>
     </ul>
 </li>
 
 
 {% if user.is_authenticated %}
 <li>
-    <a href="{% url astrometry.net.views.user.dashboard %}">Dashboard</a>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
     <ul class="dropdown"> 
-        <li><a href="{% url astrometry.net.views.user.user_profile user_id=user.id %}">My Profile</a></li>
-        <li><a href="{% url astrometry.net.views.user.dashboard_profile %}">Edit Profile</a></li>
-        <li><a href="{% url astrometry.net.views.user.dashboard_user_images %}">My Images</a></li>
-        <li><a href="{% url astrometry.net.views.user.dashboard_albums %}">My Albums</a></li>
-        <li><a href="{% url astrometry.net.views.user.dashboard_submissions %}">My Submissions</a></li>
+        <li><a href="{% url 'user-profile' user_id=user.id %}">My Profile</a></li>
+        <li><a href="{% url 'astrometry.net.views.user.dashboard_profile' %}">Edit Profile</a></li>
+        <li><a href="{% url 'astrometry.net.views.user.dashboard_user_images' %}">My Images</a></li>
+        <li><a href="{% url 'astrometry.net.views.user.dashboard_albums' %}">My Albums</a></li>
+        <li><a href="{% url 'astrometry.net.views.user.dashboard_submissions' %}">My Submissions</a></li>
     </ul>
 </li>
 {% endif %}
-<li><a href="{% url astrometry.net.views.submission.upload_file %}">Upload</a></li>
-<li><a href="{% url astrometry.net.views.home.api_help %}">API</a></li>
-<li><a href="{% url astrometry.net.views.home.support %}">Support</a></li>
+<li><a href="{% url 'upload-file' %}">Upload</a></li>
+<li><a href="{% url 'api-help' %}">API</a></li>
+<li><a href="{% url 'support' %}">Support</a></li>
 {% endspaceless %}
 
-{% comment %}
-<!--
-<li><a href="{% url astrometry.net1.portal.tags.taglist %}">Tags</a></li>
--->
-{% endcomment %}
-
-{% comment %}
-<!--
-<li><a href="{% url astrometry.net1.portal.views.joblist %}">My images</a></li>
-<li><a href="{% url astrometry.net1.portal.accounts.userprefs %}">Set preferences</a></li>
--->
-{% endcomment %}
 </ul>
 
 <div id="search">
-<form method="get" action="{% url astrometry.net.views.image.index_tag %}">
+<form method="get" action="{% url 'images-tag' %}">
 <input type="text" name="query" id="search_query" autocomplete="off" />
 <input type="submit" value="Search" />
 </form>

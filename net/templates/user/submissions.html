@@ -8,7 +8,7 @@
 
 {% block title %}
 {{block.super}} &gt;
-<a href="{% url astrometry.net.views.user.user_submissions user_id=display_user.id%}">Submissions</a>
+<a href="{% url 'astrometry.net.views.user.user_submissions' user_id=display_user.id%}">Submissions</a>
 {% endblock %}
 {% block user_content %}
 {% include 'submission/paginated_list.html' with submission_page=submission_page %}

@@ -48,7 +48,7 @@ JOB_DIR = DATADIR + 'web-data/'
 #FIELD_DIR = '/home/gmaps/test/web-data/fields'
 FIELD_DIR = DATADIR + 'fields'
 
-BASE_URL = 'http://oven.cosmo.fas.nyu.edu:9000/'
+WSGI_APPLICATION = 'astrometry.net.wsgi.application'
 
 LOGIN_URL = '/signin'
 LOGIN_REDIRECT_URL = '/dashboard/'
@@ -56,6 +56,9 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 LOGFILE = LOG_DIR + 'django.log'
 PORTAL_LOGFILE = LOG_DIR + 'portal.log'
 VO_LOGFILE = LOG_DIR + 'vo.log'
+
+# http://stackoverflow.com/questions/20301338/django-openid-auth-typeerror-openid-yadis-manager-yadisservicemanager-object-is
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
 # must match fixtures/initial_data.json
 MACHINE_USERNAME = "an-machine"
@@ -73,6 +76,7 @@ DEFAULT_LICENSE_ID = 1
 SESSION_COOKIE_NAME = 'AstrometryTestSession'
 
 DEBUG = True
+#DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (

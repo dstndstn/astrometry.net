@@ -1,5 +1,5 @@
 <li class="tag">
-<a href="{% url astrometry.net.views.image.index_tag %}?query={{tag.text|urlencode}}&exact=on">{{ tag.text }}</a> 
+<a href="{% url 'images-tag' %}?query={{tag.text|urlencode}}&exact=on">{{ tag.text }}</a> 
 {% if recipient_owner %}
     {% if user == tag.tagger or user == recipient_owner %}
     <a class="tag_delete confirm" 

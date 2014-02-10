@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import patterns, include, url
+from django.conf.urls import patterns, include, url
 
 from astrometry.net import settings
 
@@ -11,9 +11,9 @@ urlpatterns = patterns('',
 
 urlpatterns += patterns('astrometry.net.views.home',
     (r'^/?$', 'home'),
-    (r'^support/?$', 'support'),
-    (r'^api_help/?$', 'api_help'),
-    (r'^explore/?$', 'explore'),
+    url(r'^support/?$', 'support', name='support'),
+    url(r'^api_help/?$', 'api_help', name='api-help'),
+    url(r'^explore/?$', 'explore', name='explore'),
 )
 
 urlpatterns += patterns('astrometry.net.openid_views',
@@ -35,15 +35,18 @@ idpattern = r'[0-9-]+'
 tagpattern = r'[\s|\S]+'
 
 urlpatterns += patterns('astrometry.net.views.submission',
-    (r'^upload/?$', 'upload_file'),
-    (r'^status/(?P<subid>' + subpattern + r')/?', 'status'),
-    (r'^joblog/(?P<jobid>' + jobpattern + r')/?', 'job_log_file'),
-    (r'^joblog2/(?P<jobid>' + jobpattern + r')/?', 'job_log_file2'),
+    url(r'^upload/?$', 'upload_file', name='upload-file'),
+    url(r'^status/(?P<subid>' + subpattern + r')/?', 'status',
+        name='sub-status'),
+    url(r'^joblog/(?P<jobid>' + jobpattern + r')/?', 'job_log_file',
+        name='job-log-file-1'),
+    url(r'^joblog2/(?P<jobid>' + jobpattern + r')/?', 'job_log_file2',
+        name='job-log-file-2'),
     (r'^submissions/(?P<user_id>' + idpattern + r')/?$', 'index'),
 )
 
 urlpatterns += patterns('astrometry.net.views.user',
-    (r'^dashboard/?$', 'dashboard'),
+    url(r'^dashboard/?$', 'dashboard', name='dashboard'),
     #(r'^dashboard/apikey/?$', 'get_api_key'),  # made redundant by inclusion of api key in dashboard profile
     (r'^dashboard/submissions/?$', 'dashboard_submissions'),
     (r'^dashboard/images/?$', 'dashboard_user_images'),
@@ -51,8 +54,9 @@ urlpatterns += patterns('astrometry.net.views.user',
     (r'^dashboard/create_album/?$', 'dashboard_create_album'),
     (r'^dashboard/profile/?$', 'dashboard_profile'),
     (r'^dashboard/profile/save/?$', 'save_profile'),
-    (r'^users/?$', 'index'),
-    (r'^users/(?P<user_id>' + idpattern + r')/?$', 'user_profile'),
+    url(r'^users/?$', 'index', name='users'),
+    url(r'^users/(?P<user_id>' + idpattern + r')/?$', 'user_profile',
+        name='user-profile'),
     (r'^users/(?P<user_id>' + idpattern + r')/images/?$', 'user_images'),
     (r'^users/(?P<user_id>' + idpattern + r')/albums/?$', 'user_albums'),
     (r'^users/(?P<user_id>' + idpattern + r')/submissions/?$', 'user_submissions'),
@@ -61,10 +65,11 @@ urlpatterns += patterns('astrometry.net.views.user',
 
 urlpatterns += patterns('astrometry.net.views.image',
     url(r'^annotated_(?P<size>full|display)/(?P<jobid>' + jobpattern + r')/?', 'annotated_image', name='annotated_image'),
-    (r'^user_images/?$', 'index'),
-    (r'^user_images/tag/?$', 'index_tag'),
-    (r'^user_images/location/?$', 'index_location'),
-    (r'^user_images/nearby/(?P<user_image_id>' + idpattern + r')/?$', 'index_nearby'),
+    url(r'^user_images/?$', 'index', name='images'),
+    url(r'^user_images/tag/?$', 'index_tag', name='images-tag'),
+    url(r'^user_images/location/?$', 'index_location', name='images-location'),
+    url(r'^user_images/nearby/(?P<user_image_id>' + idpattern + r')/?$', 'index_nearby',
+     name='images-nearby'),
     (r'^user_images/recent/?$', 'index_recent'),
     (r'^user_images/all/?$', 'index_all'),
     (r'^user_images/by_user/?$', 'index_by_user'),
@@ -72,9 +77,9 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^user_images/album/(?P<album_id>' + idpattern + r')/?$', 'index_album'),
     (r'^user_images/(?P<user_image_id>' + idpattern + r')/hide/?$', 'hide'),
     (r'^user_images/(?P<user_image_id>' + idpattern + r')/unhide/?$', 'unhide'),
-    (r'^user_images/(?P<user_image_id>' + idpattern + r')/?$', 'user_image'),
+    url(r'^user_images/(?P<user_image_id>' + idpattern + r')/?$', 'user_image', name='user-image'),
     (r'^user_images/(?P<user_image_id>' + idpattern + r')/edit/?$', 'edit'),
-    (r'^user_images/search/?$', 'search'),
+    url(r'^user_images/search/?$', 'search', name='image-search'),
     url(r'^image/(?P<id>' + imagepattern + r')/?$', 'serve_image', name='serve_image'),
     (r'^images/(?P<category>\w+)/(?P<id>' + idpattern + r')/?$', 'image_set'),
     url(r'^sky_plot/zoom(?P<zoom>[0-3])/(?P<calid>' + idpattern + r')/?$', 'onthesky_image', name='onthesky_image'),
@@ -82,12 +87,12 @@ urlpatterns += patterns('astrometry.net.views.image',
     url(r'^galex_image_(?P<size>full|display)/(?P<calid>' + idpattern + r')/?$', 'galex_image', name='galex_image'),
     url(r'^red_green_image_(?P<size>full|display)/(?P<job_id>' + idpattern + r')/?$', 'red_green_image', name='red_green_image'),
     url(r'^extraction_image_(?P<size>full|display)/(?P<job_id>' + idpattern + r')/?$', 'extraction_image', name='extraction_image'),
-    (r'^wcs_file/(?P<jobid>' + idpattern + r')/?$', 'wcs_file'),
-    (r'^new_fits_file/(?P<jobid>' + idpattern + r')/?$', 'new_fits_file'),
-    (r'^kml_file/(?P<jobid>' + idpattern + r')/?$', 'kml_file'),
-    (r'^rdls_file/(?P<jobid>' + idpattern + r')/?$', 'rdls_file'),
-    (r'^axy_file/(?P<jobid>' + idpattern + r')/?$', 'axy_file'),
-    (r'^corr_file/(?P<jobid>' + idpattern + r')/?$', 'corr_file'),
+    url(r'^wcs_file/(?P<jobid>' + idpattern + r')/?$', 'wcs_file', name='wcs-file'),
+    url(r'^new_fits_file/(?P<jobid>' + idpattern + r')/?$', 'new_fits_file', name='new-fits-file'),
+    url(r'^kml_file/(?P<jobid>' + idpattern + r')/?$', 'kml_file', name='kml-file'),
+    url(r'^rdls_file/(?P<jobid>' + idpattern + r')/?$', 'rdls_file', name='rdls-file'),
+    url(r'^axy_file/(?P<jobid>' + idpattern + r')/?$', 'axy_file', name='axy-file'),
+    url(r'^corr_file/(?P<jobid>' + idpattern + r')/?$', 'corr_file', name='corr-file'),
 )
 
 urlpatterns += patterns('astrometry.net.views.enhance',
@@ -102,7 +107,7 @@ urlpatterns += patterns('astrometry.net.views.album',
     (r'^albums/new/?$', 'new'),
 )
 urlpatterns += patterns('astrometry.net.views.tag',
-    (r'^tags/?$', 'index'),
+    url(r'^tags/?$', 'index', name='tags'),
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/(?P<tag_id>' + tagpattern + r')/delete/?$', 'delete'),
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/new/?$', 'new'),
     (r'^tags/autocomplete/?$', 'tag_autocomplete'),
@@ -154,5 +159,5 @@ if settings.DEBUG:
 
 # fallback
 urlpatterns += patterns('astrometry.net.views.home',
-                        (r'', 'home'),
+                        url(r'', 'home', name='home'),
                         )

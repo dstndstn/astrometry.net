@@ -7,11 +7,11 @@
 
 {% block title %}
 {{block.super}} &gt;
-<a href="{% url astrometry.net.views.user.dashboard_albums %}">My Albums</a>
+<a href="{% url 'astrometry.net.views.user.dashboard_albums' %}">My Albums</a>
 {% endblock %}
 
 {% block dashboard_content %}
-<div><a href="{% url astrometry.net.views.user.dashboard_create_album %}">Create New Album</a></div>
+<div><a href="{% url 'astrometry.net.views.user.dashboard_create_album' %}">Create New Album</a></div>
 <hr />
 {% include 'album/paginated_album_set.html' with album_page=album_page %}
 {% endblock %}

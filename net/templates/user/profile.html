@@ -49,14 +49,14 @@
     <div id="profile_images">
         <h2 style="display:inline-block">Recent Images</h2>
         {% if display_user.user_images.all %}  
-        (<a href="{% url astrometry.net.views.user.user_images user_id=display_user.id %}">View All</a>)
+        (<a href="{% url 'astrometry.net.views.user.user_images' user_id=display_user.id %}">View All</a>)
         {% endif %}
         {% include 'user_image/image_set.html' with images=recent_images|slice:":3" %}
     </div>
     <div id="profile_submissions">
         <h2 style="display:inline-block">Recent Submissions</h2>
         {% if display_user.submissions.all %}  
-        (<a href="{% url astrometry.net.views.user.user_submissions user_id=display_user.id %}">View All</a>)
+        (<a href="{% url 'astrometry.net.views.user.user_submissions' user_id=display_user.id %}">View All</a>)
         {% endif %}
         {% include 'submission/list.html' with submissions=recent_submissions %}
     </div>

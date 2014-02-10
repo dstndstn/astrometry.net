@@ -1,6 +1,6 @@
 <div id="comment_form_block">
 {% if user.is_authenticated %}
-    <form method="post" name="comment_form" action="{% url astrometry.net.views.comment.new category=category recipient_id=recipient_id %}">
+    <form method="post" name="comment_form" action="{% url 'astrometry.net.views.comment.new' category=category recipient_id=recipient_id %}">
     {% csrf_token %}
     <div>
         {{ comment_form.text }}<br />
@@ -18,6 +18,6 @@
     </span>
     </form>
 {% else %}
-    Please <a href="{% url openid-login %}?next={{next}}">Sign In</a> to post comments.
+    Please <a href="{% url 'openid-login' %}?next={{next}}">Sign In</a> to post comments.
 {% endif %}
 </div>

@@ -51,7 +51,7 @@ $(document).ready(function() {
 {% endblock %}
 
 {% block title %}
-<a href="{% url astrometry.net.views.image.search %}">Search</a>
+<a href="{% url 'image-search' %}">Search</a>
 {% if search_category == 'tag' and tags %}
     &gt; Tags:
     {% for tag in tags %}

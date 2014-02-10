@@ -20,7 +20,7 @@ class TagForm(forms.ModelForm):
                            max_length=4096)
     class Meta:
         model = Tag
-        exclude = ('text')
+        exclude = ('text',)
 
 @login_required
 def delete(req, category=None, recipient_id=None, tag_id=None):
@@ -105,11 +105,16 @@ class TagSearchForm(forms.Form):
 def index(req, tags=Tag.objects.all(), 
           template_name='tag/index.html', context={}):
 
+    logmsg('tags:', tags.count())
+
     form = TagSearchForm(req.GET)
     if form.is_valid():
         query = form.cleaned_data.get('query')
         if query:
             tags = tags.filter(text__icontains=query)
+            logmsg('query for "%s":' % query, tags.count())
+        else:
+            logmsg('no query')
 
     tags = tags.annotate(Count('user_images'))
     sort = req.GET.get('sort', 'freq')
@@ -121,6 +126,7 @@ def index(req, tags=Tag.objects.all(),
         order = '-user_images__count'
     
     tags = tags.order_by(order)
+    logmsg('tags:', tags.count())
     page_number = req.GET.get('page', 1)
     page = get_page(tags, 50, page_number)
     context.update({

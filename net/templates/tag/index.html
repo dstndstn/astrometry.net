@@ -34,7 +34,7 @@ $(document).ready(function() {
 {% endblock %}
 
 {% block title %}
-<a href="{% url astrometry.net.views.user.index %}">Tags</a>
+<a href="{% url 'users' %}">Tags</a>
 {% if tag_search_form.query.data %}
     &gt; Search: '{{ tag_search_form.query.data }}'
 {% endif %}
