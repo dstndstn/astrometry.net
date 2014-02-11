@@ -22,11 +22,11 @@ logging.basicConfig(filename=logfn, level=logging.DEBUG)
 
 if True:
     from django.core.wsgi import get_wsgi_application
-    print >> sys.stderr, 'running django handler...'
+    #print >> sys.stderr, 'running django handler...'
     application = get_wsgi_application()
-    print >> sys.stderr, 'django app:', application
+    #print >> sys.stderr, 'django app:', application
 
-if True:
+if False:
     class Wrapper(object):
         def __init__(self, app):
             self.app = app
