@@ -25,7 +25,7 @@ import logging
 
 topscale = 256.
 
-def addcal(cal, version, hpmod, hpnum):
+def addcal(cal, version, hpmod, hpnum, ps):
     tan = cal.raw_tan
     try:
         if not cal.job.user_image.publicly_visible:
@@ -43,7 +43,8 @@ def addcal(cal, version, hpmod, hpnum):
     # HACK
     #if not 'image' in ft:
     # HACK HACK HACK
-    if not 'JPEG' in ft:
+    if not ('JPEG' in ft or 'PNG image' in ft):
+        print 'Not JPEG/PNG:', ft
         return False
 
     wcsfn = cal.get_wcs_file()
@@ -54,7 +55,7 @@ def addcal(cal, version, hpmod, hpnum):
     #print 'DiskFile', df
     ft = df.file_type
     fn = df.get_path()
-    if 'JPEG' in ft:
+    if 'JPEG' in ft or 'PNG image' in ft:
         print 'Reading', fn
         I = plt.imread(fn)
         print 'Read', I.shape, I.dtype
@@ -84,7 +85,13 @@ def addcal(cal, version, hpmod, hpnum):
         hh = [h for h in hh if h % hpmod == hpnum]
         print 'Cut to healpixes:', hh
 
+    if ps:
+        plt.clf()
+        plt.imshow(I)
+        ps.savefig()
+
     for hp in hh:
+
         print 'Healpix', hp
         # Check for actual overlap before (possibly) creating EnhancedImage
         hpwcs,nil = get_healpix_wcs(nside, hp, topscale)
@@ -142,19 +149,69 @@ def addcal(cal, version, hpmod, hpnum):
 
         for b in range(3):
             data = (I[:,:,b] / 255.).astype(np.float32)
-            data += np.random.uniform(1./255, size=data.shape)
+            data += np.random.uniform(0., 1./255, size=data.shape)
 
             img = data[Yi, Xi]
             enh = enhI[Yo, Xo, b]
             wenh = enhW[Yo, Xo]
 
+            doplots = (ps is not None) and (hp == 152774) and (b == 2)
+
+            if doplots:
+                eh,ew = enhW.shape
+                rim = np.zeros((eh,ew))
+
+                dd = (I[:,:,b] / 255.).astype(np.float32)
+                print 'Hp', hp, 'band', b
+                print 'dd range:', dd.min(), dd.max()
+                print 'data range:', data.min(), data.max()
+                rim[Yo,Xo] = dd[Yi, Xi]
+                plt.clf()
+                plt.imshow(rim, interpolation='nearest', origin='lower')
+                plt.colorbar()
+                plt.title('dd (rim) hp %i, band %i' % (hp, b))
+                ps.savefig()
+
+                rim[Yo,Xo] = img
+                plt.clf()
+                plt.imshow(rim, interpolation='nearest', origin='lower')
+                plt.colorbar()
+                plt.title('img (rim)')
+                ps.savefig()
+
             II = np.argsort(img)
             rankimg = np.empty_like(II)
             rankimg[II] = np.arange(len(II))
 
+            if doplots:
+                eh,ew = enhW.shape
+                rim = np.zeros((eh,ew))
+                rim[Yo,Xo] = rankimg
+                plt.clf()
+                plt.imshow(rim, interpolation='nearest', origin='lower')
+                plt.colorbar()
+                plt.title('rankimg (rim)')
+                ps.savefig()
+
             EI = np.argsort(enh)
             rankenh = np.empty_like(EI)
             rankenh[EI] = np.arange(len(EI))
+
+            if doplots:
+                eh,ew = enhW.shape
+                rim = np.zeros((eh,ew))
+                rim[Yo,Xo] = enh
+                plt.clf()
+                plt.imshow(rim, interpolation='nearest', origin='lower')
+                plt.colorbar()
+                plt.title('enh (rim)')
+                ps.savefig()
+                rim[Yo,Xo] = rankenh
+                plt.clf()
+                plt.imshow(rim, interpolation='nearest', origin='lower')
+                plt.colorbar()
+                plt.title('rankenh (rim)')
+                ps.savefig()
 
             weightFactor = 2.
 
@@ -164,8 +221,25 @@ def addcal(cal, version, hpmod, hpnum):
             rankC = np.empty_like(II)
             rankC[II] = np.arange(len(II))
 
+            if doplots:
+                eh,ew = enhW.shape
+                rim = np.zeros((eh,ew))
+                rim[Yo,Xo] = rankC
+                plt.clf()
+                plt.imshow(rim, interpolation='nearest', origin='lower')
+                plt.colorbar()
+                plt.title('rankC (rim)')
+                ps.savefig()
+
             Enew = enh[EI[rankC]]
             enhI[Yo,Xo, b] = Enew
+
+            if doplots:
+                plt.clf()
+                plt.imshow(enhI, interpolation='nearest', origin='lower')
+                plt.colorbar()
+                plt.title('enhI')
+                ps.savefig()
 
         enhW[Yo,Xo] += 1.
 
@@ -197,6 +271,10 @@ if __name__ == '__main__':
     parser.add_option('--num', dest='num', type=int,
                       help='Process this number out of "--mod" pieces (0-indexed)')
 
+    parser.add_option('--plots', action='store_true')
+
+    parser.add_option('--reverse', action='store_true')
+
     opt,args = parser.parse_args()
 
     if opt.mod:
@@ -223,6 +301,11 @@ if __name__ == '__main__':
                                                          topscale=topscale)
     print 'Version:', enver
 
+    if opt.plots:
+        ps = PlotSequence('en')
+    else:
+        ps = None
+
     cals = Calibration.objects.all()
     print 'Calibrations:', cals.count()
     if opt.mincal:
@@ -231,8 +314,9 @@ if __name__ == '__main__':
     if opt.maxcal:
         cals = cals.filter(id__lte=opt.maxcal)
         print 'Cut to', cals.count(), 'with id <=', opt.maxcal
-    # Reverse order
-    cals = cals.order_by('-id')
+    if opt.reverse:
+        # Reverse order
+        cals = cals.order_by('-id')
     cals = cals.select_related('raw_tan')
 
     ncals = cals.count()
@@ -247,7 +331,7 @@ if __name__ == '__main__':
         #     print 'Skipping: pixscale', pixscale
         #     continue
 
-        addcal(cal, enver, opt.mod, opt.num)
+        addcal(cal, enver, opt.mod, opt.num, ps)
 
     sys.exit(0)
 
