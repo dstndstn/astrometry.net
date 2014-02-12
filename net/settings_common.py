@@ -76,7 +76,6 @@ DEFAULT_LICENSE_ID = 1
 SESSION_COOKIE_NAME = 'AstrometryTestSession'
 
 DEBUG = True
-#DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -275,7 +274,7 @@ LOGGING = {
     'loggers': {
         'django.db': {                                                                                                                      
             'handlers': ['console'],                                                                                                        
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,                                                                                                              
             },
         'django.request': {
