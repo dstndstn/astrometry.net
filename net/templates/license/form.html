@@ -1,7 +1,7 @@
 <div id="license_form_block">
 {% if user.is_authenticated %}
     {% block form_tag %}
-    <form method="post" name="license_form" action="{% url astrometry.net.views.license.edit licensable_type=licensable_type licensable_id=licensable_id %}">
+    <form method="post" name="license_form" action="{% url 'astrometry.net.views.license.edit' licensable_type=licensable_type licensable_id=licensable_id %}">
     {% endblock %}
     {% csrf_token %}
     <div>

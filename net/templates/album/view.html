@@ -34,10 +34,10 @@ Albums &gt;
 
 {% if user == album.user %}
 <div>
-    <a href="{% url astrometry.net.views.album.edit album_id=album.id %}">Edit Album</a> | 
+    <a href="{% url 'astrometry.net.views.album.edit' album_id=album.id %}">Edit Album</a> | 
     <a class="confirm"
        title="Are you sure you want to delete this album? (The images in it will not be deleted.)"
-       href="{% url astrometry.net.views.album.delete album_id=album.id %}?next={% url astrometry.net.views.user.dashboard_albums %}">Delete Album</a>
+       href="{% url 'astrometry.net.views.album.delete' album_id=album.id %}?next={% url astrometry.net.views.user.dashboard_albums %}">Delete Album</a>
     <hr />
 </div>
 {%endif %}

@@ -11,7 +11,7 @@ My API Key: {% include 'user/api_key.html' with apikey=apikey %}
 <p>
     To access the Astrometry.net API, first create a session by sending a JSON 
     request with your API key as the argument <span class="code">'apikey'</span> 
-    to <span class="code">{% url astrometry.net.api.api_login %}</span>. The
+    to <span class="code">{% url 'astrometry.net.api.api_login' %}</span>. The
     API will return a session key, which must be included in subsequent
     requests sent to the API.
 </p>

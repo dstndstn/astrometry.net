@@ -28,7 +28,7 @@ Jobs: {{ procsub.count_running_jobs }} running; {{ procsub.count_queued_jobs }} 
 <th>Success?</th></tr>
 {% for sub in procsub.subs.all %}
 <tr>
-<td><a href="{% url astrometry.net.views.submission.status subid=sub.submission.id %}">{{ sub.id }}</a></td>
+<td><a href="{% url 'astrometry.net.views.submission.status' subid=sub.submission.id %}">{{ sub.id }}</a></td>
 <td>{{ sub.finished }}</td>
 <td>{{ sub.get_start_time_string }}</td>
 <td>{{ sub.get_end_time_string }}</td>
@@ -48,7 +48,7 @@ Jobs: {{ procsub.count_running_jobs }} running; {{ procsub.count_queued_jobs }} 
 {% for job in procsub.jobs.all %}
 <tr>
 <td>{{ job.job.id }}</td>
-<td><a href="{% url astrometry.net.views.submission.status subid=job.job.user_image.submission.id %}">{{ job.job.user_image.submission.id }}</a>
+<td><a href="{% url 'astrometry.net.views.submission.status' subid=job.job.user_image.submission.id %}">{{ job.job.user_image.submission.id }}</a>
 <td>{{ job.finished }}</td>
 <td>{{ job.get_start_time_string }}</td>
 <td>{{ job.get_end_time_string }}</td>

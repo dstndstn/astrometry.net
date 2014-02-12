@@ -8,11 +8,11 @@
 
 {% block title %}
 {{block.super}} &gt;
-<a href="{% url astrometry.net.views.image.edit user_image_id=image.id %}">Edit</a>
+<a href="{% url 'astrometry.net.views.image.edit' user_image_id=image.id %}">Edit</a>
 {% endblock %}
 
 {% block content %}
-<form method="post" action="{% url astrometry.net.views.image.edit user_image_id=image.id %}">
+<form method="post" action="{% url 'astrometry.net.views.image.edit' user_image_id=image.id %}">
 {% csrf_token %}
 <table class="settings_table">
 <tr>
@@ -31,7 +31,7 @@
         <div class="setting_title">Album</div>
         <div class="setting_description">
             Select an album to move this image into. You can
-            <a href="{% url astrometry.net.views.user.dashboard_create_album %}">
+            <a href="{% url 'astrometry.net.views.user.dashboard_create_album' %}">
             create new albums</a> at your dashboard.
         </div>
     </td>
