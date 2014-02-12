@@ -1,6 +1,6 @@
 {% if user == recipient_owner %}
 <div id="tag_form_block">
-    <form method="post" name="tag_form" action="{% url astrometry.net.views.tag.new category=category recipient_id=recipient_id %}">
+    <form method="post" name="tag_form" action="{% url 'astrometry.net.views.tag.new' category=category recipient_id=recipient_id %}">
     {% csrf_token %}
     <div>
         {{ tag_form.text }}<br />

@@ -220,8 +220,8 @@ class ProcessSubmissions(models.Model):
 
 
 class QueuedThing(models.Model):
-    finished = models.BooleanField()
-    success = models.BooleanField()
+    finished = models.BooleanField(default=False)
+    success = models.BooleanField(default=False)
 
     class Meta:
         abstract = True

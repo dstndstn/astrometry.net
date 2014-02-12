@@ -241,7 +241,7 @@ $(document).ready(function() {
 <div id="left_block">
     {% if user == image.user %}
     <div>
-        <a href="{% url astrometry.net.views.image.edit user_image_id=image.id %}">Edit Image</a>
+        <a href="{% url 'astrometry.net.views.image.edit' user_image_id=image.id %}">Edit Image</a>
         <hr />
     </div>
     {% endif %}

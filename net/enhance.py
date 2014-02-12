@@ -62,7 +62,7 @@ def addcal(cal, version, hpmod, hpnum):
             I = I[:,:,np.newaxis].repeat(3, axis=2)
         assert(len(I.shape) == 3)
         if I.shape[2] > 3:
-            I = I.shape[:,:,:3]
+            I = I[:,:,:3]
         # vertical FLIP to match WCS
         I = I[::-1,:,:]
         u = np.unique(I.ravel())
@@ -231,11 +231,9 @@ if __name__ == '__main__':
     if opt.maxcal:
         cals = cals.filter(id__lte=opt.maxcal)
         print 'Cut to', cals.count(), 'with id <=', opt.maxcal
+    # Reverse order
+    cals = cals.order_by('-id')
     cals = cals.select_related('raw_tan')
-
-    # level = 9
-    # slo = topscale / 2.**(level+0.5)
-    # shi = topscale / 2.**(level-0.5)
 
     ncals = cals.count()
     for ical in range(ncals):
