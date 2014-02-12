@@ -580,14 +580,18 @@ def index(req, images=None,
         processing = form.cleaned_data.get('processing')
         failed = form.cleaned_data.get('failed')
         
+    stats = ['S', 'F', '']
     if calibrated is False:
-        images = images.exclude(jobs__status='S')
+        stats.remove('S')
     if processing is False:
-        images = images.exclude(jobs__status='')
+        stats.remove('')
     if failed is False:
-        images = images.exclude(jobs__status='F')
-
+        stats.remove('F')
+    if len(stats) < 3:
+        images = images.filter(jobs__status__in=stats)
+    #print 'index 1:', images.query
     images = images.order_by('-submission__submitted_on')
+    #print 'index 2:', images.query
     page_number = req.GET.get('page', 1)
     page = get_page(images, 27, page_number)
     context.update({
@@ -598,6 +602,7 @@ def index(req, images=None,
 
 def index_tag(req):
     images = UserImage.objects.public_only(req.user)
+    #print 'index_tag 1:', images.query
     form = TagSearchForm(req.GET)
     tag = None
     if form.is_valid():
@@ -614,6 +619,7 @@ def index_tag(req):
                 images = images.filter(tags__text__icontains=query)
 
     images = images.distinct()
+    #print 'index_tag 2:', images.query
 
     context = {
         'tag_search_form': form,

@@ -66,7 +66,7 @@ def enhanced_image(req, job_id=None, size=None):
     nside,hh = get_healpixes_touching_wcs(tan)
     tt = 'hello %s, job %s, nside %s, hh %s' % (ui, job, nside, hh)
 
-    ver = EnhanceVersion.objects.get(name='v3')
+    ver = EnhanceVersion.objects.get(name='v4')
     print 'Using', ver
 
     EIms = EnhancedImage.objects.filter(version=ver)
