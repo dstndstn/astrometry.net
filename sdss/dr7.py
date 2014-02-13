@@ -1,5 +1,4 @@
 import os
-import pyfits
 
 from common import *
 

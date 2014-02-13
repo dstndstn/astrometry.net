@@ -1,5 +1,10 @@
 import os
-import pyfits
+try:
+    import pyfits
+except:
+    class NoPyfits(object):
+        pass
+    pyfits = NoPyfits()
 import numpy as np
 
 def pyfits_writeto(p, filename, **kwargs):
