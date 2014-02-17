@@ -359,7 +359,7 @@ int kdtree_permute(const kdtree_t* tree, int ind);
 void kdtree_inverse_permutation(const kdtree_t* tree, int* invperm);
 
 /* Free results */
-void kdtree_free_query(kdtree_qres_t *kd);
+void kdtree_free_query(kdtree_qres_t *res);
 
 /* Free a tree; does not free kd->data */
 void kdtree_free(kdtree_t *kd);

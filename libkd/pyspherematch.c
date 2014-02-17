@@ -407,6 +407,63 @@ static PyObject* spherematch_kdtree_bbox(PyObject* self, PyObject* args) {
 }
 
 
+static PyObject* spherematch_kdtree_rangesearch(PyObject* self,
+                                                PyObject* args) {
+    double* X;
+    PyObject* rtn;
+    npy_intp dims[1];
+    long i;
+    kdtree_t* kd;
+    int D, N;
+    PyObject* pyO;
+    PyObject* pyI;
+    PyObject* pyInds;
+    PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE);
+    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+    double radius;
+    kdtree_qres_t* res;
+
+    if (!PyArg_ParseTuple(args, "lOd", &i, &pyO, &radius)) {
+        PyErr_SetString(PyExc_ValueError, "need three args: kdtree identifier (int), query point (numpy array of floats), and radius (double)");
+        return NULL;
+    }
+    // Nasty!
+    kd = (kdtree_t*)i;
+    D = kd->ndim;
+
+    Py_INCREF(dtype);
+    pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
+    if (!pyI) {
+        PyErr_SetString(PyExc_ValueError, "Failed to convert query point array to np array of float");
+        Py_XDECREF(dtype);
+        return NULL;
+    }
+    N = (int)PyArray_DIM(pyI, 0);
+    if (N != D) {
+        PyErr_SetString(PyExc_ValueError, "Query point must have size == dimension of tree");
+        Py_DECREF(pyI);
+        Py_DECREF(dtype);
+        return NULL;
+    }
+
+    X = PyArray_DATA(pyI);
+
+    res = kdtree_rangesearch_nosort(kd, X, radius*radius);
+    N = res->nres;
+    dims[0] = N;
+    res->inds = realloc(res->inds, N * sizeof(uint32_t));
+    pyInds = PyArray_SimpleNewFromData(1, dims, NPY_UINT32, res->inds);
+    res->inds = NULL;
+    kdtree_free_query(res);
+
+    Py_DECREF(pyI);
+    Py_DECREF(dtype);
+    rtn = Py_BuildValue("O", pyInds);
+    Py_DECREF(pyInds);
+    return rtn;
+}
+
+
 static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
   PyArrayObject* pyX;
   double* X;
@@ -434,6 +491,7 @@ static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
   if (!pyI) {
     PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
     Py_XDECREF(dtype);
+    return NULL;
   }
   N = (int)PyArray_DIM(pyI, 0);
 
@@ -483,6 +541,7 @@ static PyObject* spherematch_kdtree_permute(PyObject* self, PyObject* args) {
   if (!pyI) {
     PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
     Py_XDECREF(dtype);
+    return NULL;
   }
   N = PyArray_DIM(pyI, 0);
 
@@ -633,6 +692,9 @@ static PyMethodDef spherematchMethods[] = {
       "get bounding-box of this tree" },
     { "kdtree_n", spherematch_kdtree_n, METH_VARARGS,
       "N pts in tree" },
+
+    { "kdtree_rangesearch", spherematch_kdtree_rangesearch, METH_VARARGS,
+      "Rangesearch in a single kd-tree" },
 
     {"kdtree_get_positions", spherematch_kdtree_get_data, METH_VARARGS,
      "Retrieve the positions of given indices in this tree (np array of ints)" },
