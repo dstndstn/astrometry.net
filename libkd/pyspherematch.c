@@ -418,18 +418,27 @@ static PyObject* spherematch_kdtree_rangesearch(PyObject* self,
     PyObject* pyO;
     PyObject* pyI;
     PyObject* pyInds;
+    PyObject* pyDists = NULL;
     PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE);
-    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED
+        | NPY_ELEMENTSTRIDES;
     double radius;
     kdtree_qres_t* res;
+    int getdists, sortdists;
+    int opts;
 
-    if (!PyArg_ParseTuple(args, "lOd", &i, &pyO, &radius)) {
-        PyErr_SetString(PyExc_ValueError, "need three args: kdtree identifier (int), query point (numpy array of floats), and radius (double)");
+    if (!PyArg_ParseTuple(args, "lOdii", &i, &pyO, &radius,
+                          &getdists, &sortdists)) {
+        PyErr_SetString(PyExc_ValueError, "need five args: kdtree identifier (int), query point (numpy array of floats), radius (double), get distances (int 0/1), sort distances (int 0/1)");
         return NULL;
     }
     // Nasty!
     kd = (kdtree_t*)i;
     D = kd->ndim;
+
+    if (sortdists) {
+        getdists = 1;
+    }
 
     Py_INCREF(dtype);
     pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
@@ -448,17 +457,37 @@ static PyObject* spherematch_kdtree_rangesearch(PyObject* self,
 
     X = PyArray_DATA(pyI);
 
-    res = kdtree_rangesearch_nosort(kd, X, radius*radius);
+    opts = 0;
+    if (getdists) {
+        opts |= KD_OPTIONS_COMPUTE_DISTS;
+    }
+    if (sortdists) {
+        opts |= KD_OPTIONS_SORT_DISTS;
+    }
+
+    res = kdtree_rangesearch_options(kd, X, radius*radius, opts);
     N = res->nres;
     dims[0] = N;
     res->inds = realloc(res->inds, N * sizeof(uint32_t));
     pyInds = PyArray_SimpleNewFromData(1, dims, NPY_UINT32, res->inds);
     res->inds = NULL;
+
+    if (getdists) {
+        res->sdists = realloc(res->sdists, N * sizeof(double));
+        pyDists = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, res->sdists);
+        res->sdists = NULL;
+    }
+
     kdtree_free_query(res);
 
     Py_DECREF(pyI);
     Py_DECREF(dtype);
-    rtn = Py_BuildValue("O", pyInds);
+    if (getdists) {
+        rtn = Py_BuildValue("(OO)", pyInds, pyDists);
+        Py_DECREF(pyDists);
+    } else {
+        rtn = Py_BuildValue("O", pyInds);
+    }
     Py_DECREF(pyInds);
     return rtn;
 }

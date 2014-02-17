@@ -352,9 +352,9 @@ def tree_open(fn):
 def tree_close(kd):
     return spherematch_c.kdtree_close(kd)
 
-#def tree_search(kd, pos, radius):
-#    return spherematch_c.kdtree_rangesearch(kd, pos, radius)
-tree_search = spherematch_c.kdtree_rangesearch
+def tree_search(kd, pos, radius, getdists=False, sortdists=False):
+    return spherematch_c.kdtree_rangesearch(kd, pos, radius,
+                                            int(getdists), int(sortdists))
 
 def trees_match(kd1, kd2, radius, nearest=False, notself=False,
                 permuted=True, count=False):
