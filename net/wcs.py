@@ -19,6 +19,14 @@ class TanWCS(models.Model):
     #  calibrations_raw -> Calibration
     #  calibrations_tweaked -> Calibration
 
+    def __repr__(self):
+        return (('TanWCS(crval1=%.18g, crval2=%.18g, crpix1=%.18g, crpix2=%.18g, ' +
+                 'cd11=%.18g, cd12=%.18g, cd21=%.18g, cd22=%.18g, ' +
+                 'imagew=%.18g, imageh=%.18g, id=%i)') %
+                (self.crval1, self.crval2, self.crpix1, self.crpix2,
+                 self.cd11, self.cd12, self.cd21, self.cd22, self.imagew, self.imageh,
+                 self.id))
+
     def __init__(self, *args, **kwargs):
         filename = None
         if 'file' in kwargs:

@@ -22,6 +22,10 @@ class EnhanceVersion(models.Model):
     def __str__(self):
         return 'EnhanceVersion(%s)' % self.name
 
+    def __repr__(self):
+        return ('EnhanceVersion(name="%s", topscale=%g, id=%i)' %
+                (self.name, self.topscale, self.id))
+
 class EnhancedImage(models.Model):
     version = models.ForeignKey('EnhanceVersion')
 
