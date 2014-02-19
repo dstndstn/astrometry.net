@@ -5,6 +5,38 @@ p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(p)
 from astrometry.net.models import *
 
+'''
+Copying Enhance! results from superstaging to staging:
+
+- move superstaging's unionfs-fuse overlay "enhance/v4" directory to nova
+# pg_dump an-superstaging > superstaging.sql
+# In superstaging, delete() EnhanceVersion objects other than v4 (by hand)
+
+dropdb an-staging
+createdb an-staging
+pg_dump an-nova | psql an-staging
+python manage.py migrate
+
+pg_dump an-superstaging -t net_enhanceversion --data-only > ver.sql
+pg_dump an-superstaging -t enhancedimage_calibration --data-only > ecal.sql
+(cd ~/superstaging/net; python edump.py) > e.py
+
+psql an-staging < ver.sql
+python e.py
+psql an-staging < ecal.sql
+
+'''
+
+
+print '''
+import os
+import sys
+os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(p)
+from astrometry.net.models import *
+'''
+
 v = 'v4'
 
 ever = EnhanceVersion.objects.all().filter(name=v)
