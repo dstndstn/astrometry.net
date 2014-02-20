@@ -48,3 +48,25 @@ def get_svn_version():
         words = [w.strip() for w in words]
         version[words[0]] = words[1]
     return version
+
+def get_git_version():
+    from run_command import run_command
+    version = {}
+    rtn,out,err = run_command('git log --max-count=1 | head -n 1')
+    assert(rtn == 0)
+    lines = out.split('\n')
+    lines = [l for l in lines if len(l)]
+    for l in lines:
+        words = l.split(' ', 1)
+        words = [w.strip() for w in words]
+        version[words[0]] = words[1]
+
+    rtn,out,err = run_command('git describe')
+    assert(rtn == 0)
+    lines = out.split('\n')
+    lines = [l for l in lines if len(l)]
+    assert(len(lines) == 1)
+    version['describe'] = lines[0]
+
+    return version
+

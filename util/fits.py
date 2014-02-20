@@ -573,14 +573,18 @@ class tabledata(object):
             #print 'col', name, ': data length:', val.shape
         return cols
 
-    def add_columns_from(self, X):
+    def add_columns_from(self, X, dup=None):
         assert(len(self) == len(X))
         mycols = self.get_columns()
         for c in X.get_columns():
             if c in mycols:
-                print 'Not copying existing column', c
-                continue
-            self.set(c, X.get(c))
+                if dup is None:
+                    print 'Not copying existing column', c
+                    continue
+                else:
+                    self.set(dup + c, X.get(c))
+            else:
+                self.set(c, X.get(c))
 
 def normalize_column(X):
     try:
