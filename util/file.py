@@ -50,6 +50,10 @@ def get_svn_version():
     return version
 
 def get_git_version():
+    '''
+    eg,
+    {'commit': 'a5c7865efd188715a8436ef7be23e38448e2aa60', 'describe': 'v1.0'}
+    '''
     from run_command import run_command
     version = {}
     rtn,out,err = run_command('git log --max-count=1 | head -n 1')
@@ -62,11 +66,12 @@ def get_git_version():
         version[words[0]] = words[1]
 
     rtn,out,err = run_command('git describe')
-    assert(rtn == 0)
-    lines = out.split('\n')
-    lines = [l for l in lines if len(l)]
-    assert(len(lines) == 1)
-    version['describe'] = lines[0]
+    if rtn == 0:
+        # this can fail if there has been no "git tag"
+        lines = out.split('\n')
+        lines = [l for l in lines if len(l)]
+        assert(len(lines) == 1)
+        version['describe'] = lines[0]
 
     return version
 
