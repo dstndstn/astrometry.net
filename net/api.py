@@ -23,8 +23,8 @@ from log import *
 from tmpfile import *
 import settings
 
+# Content-type to return for JSON outputs.
 json_type = 'text/plain' # 'application/json'
-
 
 class HttpResponseErrorJson(HttpResponse):
     def __init__(self, errstring):
@@ -142,6 +142,7 @@ def upload_common(request, url=None, file=None):
                     ('tweak_order', int),
                     ('image_width', int),
                     ('image_height', int),
+                    ('positional_error', float),
                     ]:
         if key in json:
             subargs[key] = typ(json[key])
