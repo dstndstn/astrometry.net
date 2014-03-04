@@ -1,6 +1,31 @@
 from math import pi
 import numpy as np
 
+def parse_ranges(s):
+    '''
+    Parse PBS job array-style ranges: NNN,MMM-NNN,PPP
+
+    *s*: string
+
+    Returns: [ int, int, ... ]
+    '''
+    tiles = []
+    words = s.split()
+    for w in words:
+        for a in w.split(','):
+            if '-' in a:
+                aa = a.split('-')
+                if len(aa) != 2:
+                    raise RuntimeError('With an arg containing a dash, expect two parts, in word "%s"' % a)
+                start = int(aa[0])
+                end = int(aa[1])
+                for i in range(start, end+1):
+                    tiles.append(i)
+            else:
+                tiles.append(int(a))
+    return tiles
+
+        
 def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
                 required=None):
     '''
