@@ -139,7 +139,6 @@ def upload_common(request, url=None, file=None):
                     ('use_sextractor', bool),
                     ('crpix_center', bool),
                     ('parity', int),
-                    ('tweak_order', int),
                     ('image_width', int),
                     ('image_height', int),
                     ('positional_error', float),

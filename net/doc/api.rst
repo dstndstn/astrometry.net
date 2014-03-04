@@ -77,6 +77,13 @@ Arguments:
   * ``center_dec``: float, -90 to 90, in degrees.  The position of the center of the image.
   * ``radius``: float, in degrees.  Used with ``center_ra``,``center_dec`` to specify that you know roughly where your image is on the sky.
   * ``downsample_factor``: float, >1.  Downsample (bin) your image by this factor before performing source detection.  This often helps with saturated images, noisy images, and large images.  2 and 4 are commonly-useful values.
+  * ``tweak_order``: int.  Polynomial degree (order) for distortion correction.  Default is 2.  Higher orders may produce totally bogus results (high-order polynomials are strange beasts).
+  * ``use_sextractor``: boolean.  Use the `SourceExtractor <http://www.astromatic.net/software/sextractor>`_ program to detect stars, not our built-in program.
+  * ``crpix_center``: boolean.  Set the WCS reference position to be the center pixel in the image?  By default the center is the center of the quadrangle of stars used to identify the image.
+  * ``parity``: int, 0, 1 or 2.  Default 2 means "try both".  0 means that the sign of the determinant of the WCS CD matrix is positive, 1 means negative.  The short answer is, "try both and see which one works" if you are interested in using this option.  It results in searching half as many matches so can be helpful speed-wise.
+  * ``image_width``: int, only necessary if you are submitting an "x,y list" of source positions.
+  * ``image_height``: int, ditto.
+  * ``positional_error``: float, expected error on the positions of stars in your image.  Default is 1.
 
 Example:
 
