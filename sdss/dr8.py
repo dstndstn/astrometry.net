@@ -404,24 +404,15 @@ class DR8(DR7):
 
                 fn = tempfn
 
-            #f.image, f.header = fitsio.read(fn, header=True)
-            #print 'Reading header...'
-            print 'Actually reading', fn
             F = fitsio.FITS(fn, lower=True)
-            
             f.header = F[0].read_header()
-            #print 'Reading image HDU...'
-            # Allow later reading of just the ROI slice...
+            # Allow later reading of just the pixels of interest.
             f.image_proxy = F[0]
-
             f.calib = F[1].read()
-
             sky = F[2].read_columns(['allsky', 'xinterp', 'yinterp'])
             #print 'sky', type(sky)
             # ... supposed to be a recarray, but it's not...
             f.sky, f.skyxi, f.skyyi = sky.tolist()[0]
-            
-            #tab = fits_table(fn, hdu=3)
             tab = fits_table(F[3].read())
             if not keep and tempfn is not None:
                 os.remove(tempfn)
