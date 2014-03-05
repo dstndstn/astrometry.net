@@ -203,7 +203,7 @@ class DR8(DR7):
 
         # Local filenames
         self.filenames.update({
-            'frame': 'frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits',
+            'frame': 'frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2',
             'idR': 'idR-%(run)06i-%(band)s-%(camcol)i-%(field)04i.fits',
             'photoObj': 'photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
             'photoField': 'photoField-%(run)06i-%(camcol)i.fits',
@@ -225,14 +225,13 @@ class DR8(DR7):
             }
 
         self.dassuffix = {
-            'frame': '.bz2',
+        #'frame': '.bz2',
             'fpM': '.gz',
             'idR': '.Z',
             }
 
         self.processcmds = {
-            #'frame': 'bunzip2 -cd %(input)s > %(output)s.tmp && mv %(output)s.tmp %(output)s',
-            'frame': 'TMPFILE=$(mktemp %(output)s.tmp.XXXXXX) && bunzip2 -cd %(input)s > $TMPFILE && mv $TMPFILE %(output)s',
+        #'frame': 'TMPFILE=$(mktemp %(output)s.tmp.XXXXXX) && bunzip2 -cd %(input)s > $TMPFILE && mv $TMPFILE %(output)s',
             'fpM': 'gunzip -cd %(input)s > %(output)s',
             'idR': 'gunzip -cd %(input)s > %(output)s',
             }
@@ -314,6 +313,7 @@ class DR8(DR7):
 
         if tempsuffix is not None:
             #
+            self.logger.debug('Renaming %s to %s' % (oo, outfn+suff))
             os.rename(oo, outfn + suff)
 
         if filetype in self.processcmds:
@@ -349,7 +349,10 @@ class DR8(DR7):
             fn = self.getPath('frame', run, camcol, field, band)
         else:
             fn = filename
-        #print 'reading file', fn
+
+            #fn += '.bz2'
+        self.logger.debug('readFrame: fn %s' % fn)
+            
         if fitsio:
 
             print 'Frame filename', fn
@@ -386,7 +389,7 @@ class DR8(DR7):
 
             if cmd is not None:
                 cmd = cmd % dict(input = fn, output = tempfn)
-                #self.logger.debug('cmd: %s' % cmd)
+                self.logger.debug('cmd: %s' % cmd)
                 print 'command:', cmd
                 (rtn,out,err) = run_command(cmd)
                 if rtn:
@@ -403,18 +406,23 @@ class DR8(DR7):
 
             #f.image, f.header = fitsio.read(fn, header=True)
             #print 'Reading header...'
-            f.header = fitsio.read_header(fn, 0)
+            print 'Actually reading', fn
+            F = fitsio.FITS(fn, lower=True)
+            
+            f.header = F[0].read_header()
             #print 'Reading image HDU...'
             # Allow later reading of just the ROI slice...
-            f.image_proxy = fitsio.FITS(fn)[0]
+            f.image_proxy = F[0]
 
-            f.calib = fitsio.read(fn, ext=1)
-            sky = fitsio.read(fn, ext=2, columns=['allsky', 'xinterp', 'yinterp'])
+            f.calib = F[1].read()
+
+            sky = F[2].read_columns(['allsky', 'xinterp', 'yinterp'])
             #print 'sky', type(sky)
             # ... supposed to be a recarray, but it's not...
             f.sky, f.skyxi, f.skyyi = sky.tolist()[0]
             
-            tab = fits_table(fn, hdu=3)
+            #tab = fits_table(fn, hdu=3)
+            tab = fits_table(F[3].read())
             if not keep and tempfn is not None:
                 os.remove(tempfn)
 
