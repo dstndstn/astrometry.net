@@ -106,6 +106,14 @@ DEFTEST = $(CC) -dM -E - < /dev/null 2> /dev/null | grep "$(STR)" > /dev/null
 ARG := -shared
 SHAREDLIBFLAGS_DEF := $(shell $(CCTEST))
 
+# Filename suffix for shared libraries
+UNAME = $(shell uname -s)
+ifeq (CYGWIN,$(findstring CYGWIN,$(UNAME)))
+  SHAREDLIB_SUFFIX = dll
+else
+  SHAREDLIB_SUFFIX = so
+endif 
+
 ARG := -ffinite-math-only
 FLAGS_DEF += $(shell $(CCTEST))
 

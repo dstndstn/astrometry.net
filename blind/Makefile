@@ -47,8 +47,10 @@ NETPBM_INC :=
 NETPBM_LIB :=
 endif
 
+SO=$(SHAREDLIB_SUFFIX)
+
 ENGINE_LIB := libastrometry.a
-ENGINE_SO := libastrometry.so
+ENGINE_SO := libastrometry.$(SO)
 
 LDFLAGS := $(LDFLAGS_DEF)
 
@@ -259,7 +261,7 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	done
 
 
-PYTHON_EXTRA_INSTALL := plotstuff.py plotstuff_c.py _plotstuff_c.so
+PYTHON_EXTRA_INSTALL := plotstuff.py plotstuff_c.py _plotstuff_c.$(SO)
 
 install-extra: $(INSTALL_CAIRO_EXECS)
 	@echo Installing in directory '$(INSTALL_DIR)'
@@ -417,14 +419,14 @@ PLOTSTUFF_HDRS = $(subst .o,.h,$(PLOTSTUFF))
 py: pyplotstuff
 .PHONY: py
 
-pyplotstuff: _plotstuff_c.so 
+pyplotstuff: _plotstuff_c.$(SO)
 .PHONY: pyplotstuff
 
 plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) \
 		$(ANUTILS_DIR)/sip.h $(ANUTILS_DIR)/anwcs.h
 	swig -python $(ANFILES_INC) $<
 
-_plotstuff_c.so: plotstuff_wrap.c $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
+_plotstuff_c.$(SO): plotstuff_wrap.c $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS) $(CAIRO_LIBS)" \
 	SLIB="$(CAIRO_SLIB)" \
 	INC="$(ANFILES_INC) $(CAIRO_INC) $(NETPBM_INC)" \
@@ -449,7 +451,7 @@ clean:
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) deps $(FITS_UTILS) $(ALL_OBJ) \
 		$(NODEP_OBJS) plot-constellations fitsverify plotquad plotxy \
 		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
-		$(ENGINE_LIB) $(ENGINE_SO) _plotstuff_c.so *.o *~ *.dep deps \
+		$(ENGINE_LIB) $(ENGINE_SO) _plotstuff_c.$(SO) *.o *~ *.dep deps \
 		plotstuff
 
 
