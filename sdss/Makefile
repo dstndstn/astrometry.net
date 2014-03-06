@@ -1,11 +1,13 @@
-.PHONY: all
-all: _cutils.so cutils.py
-
-SO=$(SHAREDLIB_SUFFIX)
+all:
 
 BASEDIR := ..
 COMMON := $(BASEDIR)/util
 include $(COMMON)/makefile.common
+
+SO=$(SHAREDLIB_SUFFIX)
+
+.PHONY: all
+all: _cutils.$(SO) cutils.py
 
 MY_DIR := $(PY_BASE_INSTALL_DIR)/sdss
 

@@ -24,6 +24,8 @@ all:
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.libkd
 
+SO=$(SHAREDLIB_SUFFIX)
+
 INTERNALS := \
 	kdint_ddd.o \
 	kdint_fff.o \
@@ -92,12 +94,12 @@ $(LIBKD_NOIO): $(KD) $(INTERNALS_NOIO) $(DT)
 	$(AR) rc $@ $^
 	$(RANLIB) $@
 
-pyspherematch: spherematch_c.so
+pyspherematch: spherematch_c.$(SO)
 	@echo pyspherematch
 
 PYSPHEREMATCH_OBJ := pyspherematch.o
 
-spherematch_c.so: pyspherematch.c setup.py $(SLIB)
+spherematch_c.$(SO): pyspherematch.c setup.py $(SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" \
 	SLIB="$(SLIB)" \
 	INC="$(INC)" \
@@ -106,7 +108,7 @@ spherematch_c.so: pyspherematch.c setup.py $(SLIB)
 
 # pyspherematch.c includes Python.h -- so have to make sure to add Python.h include path
 # (otherwise, get an obscure message from numpy about needing a python built with unicode)
-ifeq ($(MAKECMDGOALS),spherematch_c.so)
+ifeq ($(MAKECMDGOALS),spherematch_c.$(SO))
   CFLAGS += $(shell python -c "from distutils.sysconfig import *; print '-I'+get_python_inc()")
   DEP_OBJ += $(PYSPHEREMATCH_OBJ)
 endif
@@ -146,9 +148,9 @@ install: $(LIBKD_INSTALL) $(LIBKD)
 	-$(MAKE) install-spherematch
 
 .PHONY: install-spherematch
-install-spherematch: spherematch_c.so
+install-spherematch: spherematch_c.$(SO)
 	mkdir -p '$(PY_INSTALL_DIR)'
-	@for x in spherematch_c.so spherematch.py __init__.py; do \
+	@for x in spherematch_c.$(SO) spherematch.py __init__.py; do \
 		echo cp $$x '$(PY_INSTALL_DIR)'; \
 		cp $$x '$(PY_INSTALL_DIR)'; \
 	done
@@ -178,7 +180,7 @@ clean:
 		fix-bb fix-bb.o \
 		$(INTERNALS) $(INTERNALS_NOIO) $(LIBKD_NOIO) $(DT) \
 		$(ALL_TESTS_CLEAN) \
-		$(PYSPHEREMATCH_OBJ) spherematch_c.so *~ *.dep deps
+		$(PYSPHEREMATCH_OBJ) spherematch_c.$(SO) *~ *.dep deps
 	-rm -Rf build
 
 .PHONY: tags
