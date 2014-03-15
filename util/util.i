@@ -2187,4 +2187,27 @@ sip_t.__getnewargs__ = sip_t_getnewargs
 
 
 %include "fitsioutils.h"
+
+// dcen3x3
+%apply double *OUTPUT { double *xcen, double *ycen };
+
 %include "dimage.h"
+
+%inline %{
+int dcen3x3b(float i0, float i1, float i2,
+             float i3, float i4, float i5,
+             float i6, float i7, float i8,
+             float *xcen, float *ycen) {
+float im[9];
+im[0] = i0;
+im[1] = i1;
+im[2] = i2;
+im[3] = i3;
+im[4] = i4;
+im[5] = i5;
+im[6] = i6;
+im[7] = i7;
+im[8] = i8;
+return dcen3x3(im, xcen, ycen);
+}
+%}
