@@ -355,7 +355,7 @@ class DR8(DR7):
             
         if fitsio:
 
-            print 'Frame filename', fn
+            #print 'Frame filename', fn
             # eg /clusterfs/riemann/raid006/dr10/boss/photoObj/frames/301/2825/1/frame-u-002825-1-0126.fits.bz2
 
             tempfn = None
