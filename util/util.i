@@ -2189,7 +2189,7 @@ sip_t.__getnewargs__ = sip_t_getnewargs
 %include "fitsioutils.h"
 
 // dcen3x3
-%apply double *OUTPUT { double *xcen, double *ycen };
+%apply float *OUTPUT { float *xcen, float *ycen };
 
 %include "dimage.h"
 
