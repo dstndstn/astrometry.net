@@ -136,6 +136,7 @@ def loghist(x, y, nbins=100,
 def plothist(x, y, nbins=100, log=False,
              doclf=True, docolorbar=True, dohot=True,
              plo=None, phi=None,
+             scale=None,
              imshowargs={}, **hist2dargs):
     if log:
         return loghist(x, y, nbins=nbins, doclf=doclf, docolorbar=docolorbar,
@@ -144,6 +145,8 @@ def plothist(x, y, nbins=100, log=False,
     if doclf:
         plt.clf()
     (H,xe,ye) = np.histogram2d(x, y, nbins, **hist2dargs)
+    if scale is not None:
+        H *= scale
     myargs = dict(extent=(min(xe), max(xe), min(ye), max(ye)),
                   aspect='auto',
                   interpolation='nearest', origin='lower')
