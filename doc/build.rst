@@ -59,6 +59,12 @@ RHEL / RedHat-like distributions:
 
 I don't know what the *cfitsio* packages is called -- anyone?
 
+CentOS 6.5 Detailed Instructions:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See these `instructions from James Chamberlain <http://plaidhat.com/code/astrometry.php>`_.
+
+
 Mac OS X using homebrew:
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
