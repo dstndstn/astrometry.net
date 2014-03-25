@@ -47,20 +47,8 @@ Ubuntu or Debian-like systems:
                            python-pyfits python-dev zlib1g-dev \
                            swig cfitsio-dev
 
-RHEL / RedHat-like distributions:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-::
-
-    $ sudo yum install cairo.x86_64 cairo-devel.x86_64 netpbm.x86_64 \
-                       netpbm-devel.x86_64 fontconfig-devel.x86_64 \
-                       libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64 \
-					   zlib-devel libjpeg-devel
-
-I don't know what the *cfitsio* packages is called -- anyone?
-
-CentOS 6.5 Detailed Instructions:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+CentOS 6.5 / Fedora / RedHat / RHEL -- Detailed Instructions:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 See these `instructions from James Chamberlain <http://plaidhat.com/code/astrometry.php>`_.
 
