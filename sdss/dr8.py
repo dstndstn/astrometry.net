@@ -351,7 +351,7 @@ class DR8(DR7):
             fn = filename
 
             #fn += '.bz2'
-        self.logger.debug('readFrame: fn %s' % fn)
+        #self.logger.debug('readFrame: fn %s' % fn)
             
         if fitsio:
 

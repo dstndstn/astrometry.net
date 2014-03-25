@@ -659,7 +659,15 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
             if columns is None:
                 columns = data.dtype.fields.keys()
         else:
-            dd = data.read(rows=rows, columns=columns, lower=True)
+            if data.get_exttype() == 'IMAGE_HDU':
+                # This can happen on empty tables (eg, empty SDSS photoObjs)
+                return None
+            try:
+                dd = data.read(rows=rows, columns=columns, lower=True)
+            except:
+                import sys
+                print >>sys.stderr, 'Error reading from FITS object', type(data), data, 'dataorfn', dataorfn
+                raise
             if dd is None:
                 return None
 
