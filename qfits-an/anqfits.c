@@ -532,8 +532,13 @@ const qfits_header* anqfits_get_header_const(const anqfits_t* qf, int ext) {
 // given extension.
 char* anqfits_header_get_data(const anqfits_t* qf, int ext, int* Nbytes) {
     FILE* fid;
-    int N, nr;
+    off_t N, nr;
     char* data;
+    off_t start;
+
+    start = anqfits_header_start(qf, ext);
+    if (start == -1)
+        return NULL;
     N = anqfits_header_size(qf, ext);
     if (N == -1)
         return NULL;
@@ -542,6 +547,13 @@ char* anqfits_header_get_data(const anqfits_t* qf, int ext, int* Nbytes) {
         return NULL;
     }
     data = malloc(N + 1);
+    if (start) {
+        if (fseeko(fid, start, SEEK_SET)) {
+            SYSERROR("Failed to seek to start of FITS header: byte %li in %s",
+                     (long int)start, qf->filename);
+            return NULL;
+        }
+    }
     nr = fread(data, 1, N, fid);
     fclose(fid);
     if (nr != N) {
