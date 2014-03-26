@@ -921,10 +921,18 @@ anwcs_t* anwcs_wcslib_from_string(const char* str, int len) {
 	qfits_header* qhdr;
 	int W, H;
 
-	// printf("Parsing string: length %i\n", len);
-	// printf("--------------------------\n");
-	// printf("%s\n", str);
-	// printf("--------------------------\n");
+	printf("Parsing string: length %i\n", len);
+	printf("--------------------------\n");
+	//printf("%s\n", str);
+    {
+        int i;
+        for (i=0; i<len; i+=80) {
+            char buf[81];
+            snprintf(buf, 81, str+i);
+            printf("%s\n", buf);
+        }
+    }
+	printf("--------------------------\n");
 	
 	qhdr = qfits_header_read_hdr_string((const unsigned char*)str, len);
 	if (!qhdr) {

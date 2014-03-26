@@ -31,6 +31,7 @@
 #include "errors.h"
 
 #if 0
+//#if 1
 #define qdebug( code ) { code }
 #define debug printf
 #else
@@ -723,16 +724,27 @@ static int parse_header_block(const char* buf, qfits_header* hdr, int* found_it)
 static size_t get_data_bytes(const qfits_header* hdr) {
     int naxis;
     size_t data_bytes;
+    size_t npix;
     int i;
     data_bytes = abs(qfits_header_getint(hdr, "BITPIX", 0) / 8);
     naxis = qfits_header_getint(hdr, "NAXIS", 0);
+    data_bytes *= qfits_header_getint(hdr, "GCOUNT", 1);
+    npix = 1;
     if (!naxis)
-        data_bytes = 0;
+        npix = 0;
     for (i=0; i<naxis; i++) {
         char key[32];
+        int nax;
         sprintf(key, "NAXIS%i", i+1);
-        data_bytes *= (size_t)qfits_header_getint(hdr, key, 0);
+        nax = qfits_header_getint(hdr, key, 0);
+        if (i == 0 && nax == 0) {
+            // random groups signature; skip naxis1
+        } else {
+            npix *= (size_t)nax;
+        }
     }
+    npix += qfits_header_getint(hdr, "PCOUNT", 0);
+    data_bytes *= npix;
     return data_bytes;
 }
 
@@ -971,8 +983,8 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
         qf->exts[i].hdr_size = qf->exts[i].data_start - qf->exts[i].hdr_start;
         if (i == qf->Nexts-1) {
             debug("st_size %zu, /block_size = %zu\n",
-                  (off_t)sta.st_size,
-                  (off_t)(sta.st_size / (size_t)FITS_BLOCK_SIZE));
+                  (size_t)sta.st_size,
+                  (size_t)(sta.st_size / (size_t)FITS_BLOCK_SIZE));
             qf->exts[i].data_size = ((sta.st_size/FITS_BLOCK_SIZE) -
                                      qf->exts[i].data_start);
         } else

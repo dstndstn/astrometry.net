@@ -30,7 +30,7 @@
 #include "fitsioutils.h"
 #include "errors.h"
 
-char* OPTIONS = "he:i:o:baDHM";
+char* OPTIONS = "he:i:o:baDHMv";
 
 void printHelp(char* progname) {
   fprintf(stderr, "%s    -i <input-file>\n"
@@ -41,7 +41,8 @@ void printHelp(char* progname) {
 	  "      [-M]: print sizes in megabytes (using floor(), not round()!)\n"
 	  "      [-D]: data blocks only\n"
 	  "      [-H]: header blocks only\n"
-	  "      -e <extension-number> ...\n\n",
+	  "      -e <extension-number> ...\n"
+      "      -v: +verbose\n\n",
 	  progname);
 }
 
@@ -66,11 +67,15 @@ int main(int argc, char *argv[]) {
   anbool dataonly = FALSE;
   anbool headeronly = FALSE;
   anqfits_t* anq = NULL;
+  int loglvl = LOG_MSG;
 
   exts = il_new(16);
 
   while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
     switch (argchar) {
+    case 'v':
+        loglvl++;
+        break;
     case 'D':
       dataonly = TRUE;
       break;
@@ -114,7 +119,9 @@ int main(int argc, char *argv[]) {
   }
 
   fits_use_error_system();
-  log_init(LOG_MSG);
+  log_init(loglvl);
+  log_to(stderr);
+  errors_log_to(stderr);
 
   if (infn) {
     anq = anqfits_open(infn);
