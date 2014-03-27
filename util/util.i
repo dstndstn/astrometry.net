@@ -863,6 +863,11 @@ def anwcs_get_header_string(self):
          'END'+' '*77)
 anwcs.getHeaderString = anwcs_get_header_string
 
+def anwcs_radec_bounds(self, stepsize=1000):
+    r0,r1,d0,d1 = anwcs_get_radec_bounds(self, stepsize)
+    return r0,r1,d0,d1
+anwcs.radec_bounds = anwcs_radec_bounds
+
 def anwcs_get_cd(self):
     return anwcs_get_cd_matrix(self)
 anwcs.get_cd = anwcs_get_cd
@@ -1022,6 +1027,9 @@ anwcs.get_cd = anwcs_get_cd
     }
     void iwc2pixelxy(double u, double v, double *p_x, double *p_y) {
         sip_iwc2pixelxy($self, u, v, p_x, p_y);
+    }
+    void pixelxy2iwc(double x, double y, double *p_x, double *p_y) {
+        sip_pixelxy2iwc($self, x, y, p_x, p_y);
     }
     void iwc2radec(double u, double v, double *p_ra, double *p_dec) {
         sip_iwc2radec($self, u, v, p_ra, p_dec);
@@ -1285,6 +1293,9 @@ Sip = sip_t
     void iwc2pixelxy(double u, double v, double *p_x, double *p_y) {
         tan_iwc2pixelxy($self, u, v, p_x, p_y);
     }
+    void pixelxy2iwc(double x, double y, double *p_x, double *p_y) {
+        tan_pixelxy2iwc($self, x, y, p_x, p_y);
+    }
     void iwc2radec(double u, double v, double *p_ra, double *p_dec) {
         tan_iwc2radec($self, u, v, p_ra, p_dec);
     }
@@ -1436,6 +1447,15 @@ static PyObject* tan_iwc2xy_wrapper(const tan_t* wcs,
 static PyObject* sip_iwc2xy_wrapper(const sip_t* wcs,
                                    PyObject* in1, PyObject* in2) {
     return broadcast_2to2((f_2to2)sip_iwc2pixelxy, wcs, in1, in2);
+}
+
+static PyObject* tan_xy2iwc_wrapper(const tan_t* wcs,
+                                   PyObject* in1, PyObject* in2) {
+    return broadcast_2to2((f_2to2)tan_pixelxy2iwc, wcs, in1, in2);
+}
+static PyObject* sip_xy2iwc_wrapper(const sip_t* wcs,
+                                   PyObject* in1, PyObject* in2) {
+    return broadcast_2to2((f_2to2)sip_pixelxy2iwc, wcs, in1, in2);
 }
 
 static PyObject* tan_iwc2rd_wrapper(const tan_t* wcs,
@@ -2073,6 +2093,11 @@ def tan_t_iwc2pixelxy(self, r, d):
 tan_t.iwc2pixelxy_single = tan_t.iwc2pixelxy
 tan_t.iwc2pixelxy = tan_t_iwc2pixelxy
 
+def tan_t_pixelxy2iwc(self, x,y):
+    return tan_xy2iwc_wrapper(self.this, x,y)
+tan_t.pixelxy2iwc_single = tan_t.pixelxy2iwc
+tan_t.pixelxy2iwc = tan_t_pixelxy2iwc
+
 def tan_t_radec2iwc(self, r, d):
     return tan_rd2iwc_wrapper(self.this, r, d)
 tan_t.radec2iwc_single = tan_t.radec2iwc
@@ -2097,6 +2122,11 @@ def sip_t_iwc2pixelxy(self, r, d):
     return sip_iwc2xy_wrapper(self.this, r, d)
 sip_t.iwc2pixelxy_single = sip_t.iwc2pixelxy
 sip_t.iwc2pixelxy = sip_t_iwc2pixelxy
+
+def sip_t_pixelxy2iwc(self, x,y):
+    return sip_xy2iwc_wrapper(self.this, x,y)
+sip_t.pixelxy2iwc_single = sip_t.pixelxy2iwc
+sip_t.pixelxy2iwc = sip_t_pixelxy2iwc
 
 def sip_t_radec2iwc(self, r, d):
     return sip_rd2iwc_wrapper(self.this, r, d)

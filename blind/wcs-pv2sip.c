@@ -20,7 +20,6 @@
 
 #include "fitsioutils.h"
 #include "ioutils.h"
-#include "anqfits.h"
 #include "errors.h"
 #include "log.h"
 #include "an-bool.h"
@@ -29,6 +28,9 @@
 #include "starutil.h"
 #include "starxy.h"
 #include "tweak.h"
+
+#include "anqfits.h"
+#include "qfits_rw.h"
 
 /*
  Scamp's copy of wcslib has  "raw_to_pv" in "proj.c".
@@ -105,18 +107,79 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	double* rddist = NULL;
 	int i, j;
 
+    /**
+     From http://iraf.noao.edu/projects/mosaic/tpv.html
+
+     p = PV1_
+
+     xi' = p0 +
+           p1 * xi + p2 * eta + p3 * r +
+           p4 * xi^2 + p5 * xi * eta + p6 * eta^2 +
+           p7 * xi^3 + p8 * xi^2 * eta + p9 * xi * eta^2 +
+              p10 * eta^3 + p11 * r^3 + 
+           p12 * xi^4 + p13 * xi^3 * eta + p14 * xi^2 * eta^2 +
+              p15 * xi * eta^3 + p16 * eta^4 +
+	       p17 * xi^5 + p18 * xi^4 * eta + p19 * xi^3 * eta^2 +
+	          p20 * xi^2 * eta^3 + p21 * xi * eta^4 + p22 * eta^5 + p23 * r^5 +
+           p24 * xi^6 + p25 * xi^5 * eta + p26 * xi^4 * eta^2 +
+              p27 * xi^3 * eta^3 + p28 * xi^2 * eta^4 + p29 * xi * eta^5 +
+              p30 * eta^6
+           p31 * xi^7 + p32 * xi^6 * eta + p33 * xi^5 * eta^2 +
+              p34 * xi^4 * eta^3 + p35 * xi^3 * eta^4 + p36 * xi^2 * eta^5 +
+              p37 * xi * eta^6 + p38 * eta^7 + p39 * r^7
+
+     p = PV2_
+     eta' = p0 +
+            p1 * eta + p2 * xi + p3 * r +
+            p4 * eta^2 + p5 * eta * xi + p6 * xi^2 +
+            p7 * eta^3 + p8 * eta^2 * xi + p9 * eta * xi^2 + p10 * xi^3 +
+                 p11 * r^3 +
+            p12 * eta^4 + p13 * eta^3 * xi + p14 * eta^2 * xi^2 +
+                 p15 * eta * xi^3 + p16 * xi^4 +
+            p17 * eta^5 + p18 * eta^4 * xi + p19 * eta^3 * xi^2 +
+	             p20 * eta^2 * xi^3 + p21 * eta * xi^4 + p22 * xi^5 +
+                 p23 * r^5 +
+            p24 * eta^6 + p25 * eta^5 * xi + p26 * eta^4 * xi^2 +
+                 p27 * eta^3 * xi^3 + p28 * eta^2 * xi^4 + p29 * eta * xi^5 +
+                 p30 * xi^6
+            p31 * eta^7 + p32 * eta^6 * xi + p33 * eta^5 * xi^2 +
+                 p34 * eta^4 * xi^3 + p35 * eta^3 * xi^4 + p36 * eta^2 * xi^5 +
+                 p37 * eta * xi^6 + p38 * xi^7 + p39 * r^7
+
+     Note the "cross-over" -- the xi' powers are in terms of xi,eta
+     while the eta' powers are in terms of eta,xi.
+     */
+
 	//           1  x  y  r x2 xy y2 x3 x2y xy2 y3 r3 x4 x3y x2y2 xy3 y4
 	//          x5 x4y x3y2 x2y3 xy4 y5 r5 x6 x5y x4y2, x3y3 x2y4 xy5 y6
 	//          x7 x6y x5y2 x4y3 x3y4 x2y5 xy6 y7 r7
-	int xp[] = { 0, 1, 0, 0, 2, 1, 0, 3,  2,  1, 0, 0, 4,  3,   2,  1, 0,
-				 5,  4,   3,   2,  1, 5, 0, 6,  5,   4,    3,   2,  1, 0,
-				 7,  6,   5,   4,   3,   2,  1, 0, 0};
-	int yp[] = { 0, 0, 1, 0, 0, 1, 2, 0,  1,  2, 3, 0, 0,  1,   2,  3, 4,
-				 0,  1,   2,   3,  4, 0, 0, 0,  1,   2,    3,   4,  5, 6,
-				 0,  1,   2,   3,   4,   5,  6, 7, 0};
-	int rp[] = { 0, 0, 0, 1, 0, 0, 0, 0,  0,  0, 0, 3, 0,  0,   0,  0, 0,
-				 0,  0,   0,   0,  0, 0, 5, 0,  0,   0,    0,   0,  0, 0,
-				 0,  0,   0,   0,   0,   0,  0, 0, 7};
+	int xp[] = {
+     0,
+     1, 0, 0,
+     2, 1, 0,
+     3, 2, 1, 0, 0,
+     4, 3, 2, 1, 0,
+     5, 4, 3, 2, 1, 0, 0,
+     6, 5, 4, 3, 2, 1, 0,
+     7, 6, 5, 4, 3, 2, 1, 0, 0};
+	int yp[] = {
+     0,
+     0, 1, 0,
+     0, 1, 2,
+     0, 1, 2, 3, 0,
+     0, 1, 2, 3, 4,
+     0, 1, 2, 3, 4, 5, 0,
+     0, 1, 2, 3, 4, 5, 6,
+     0, 1, 2, 3, 4, 5, 6, 7, 0};
+	int rp[] = {
+     0,
+     0, 0, 1,
+     0, 0, 0,
+     0, 0, 0, 0, 3,
+     0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 5,
+     0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 0, 0, 7};
 	double xpows[8];
 	double ypows[8];
 	double rpows[8];
@@ -181,10 +244,17 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 
 	for (i=0; i<sizeof(pv1)/sizeof(double); i++) {
 		char key[10];
+        double defaultval;
+
+        if (i == 1) {
+            defaultval = 1.0;
+        } else {
+            defaultval = 0.0;
+        }
 		sprintf(key, "PV1_%i", i);
-		pv1[i] = qfits_header_getdouble(hdr, key, 0.0);
+		pv1[i] = qfits_header_getdouble(hdr, key, defaultval);
 		sprintf(key, "PV2_%i", i);
-		pv2[i] = qfits_header_getdouble(hdr, key, 0.0);
+		pv2[i] = qfits_header_getdouble(hdr, key, defaultval);
 	}
 
 	xorig = malloc(Nxy * sizeof(double));
@@ -192,10 +262,14 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	rddist = malloc(2 * Nxy * sizeof(double));
 
 	for (j=0; j<Nxy; j++) {
-		xorig[j] = xy[2*j+0];
-		yorig[j] = xy[2*j+1];
 
-		tan_pixelxy2iwc(&tanwcs, xorig[j], yorig[j], &x, &y);
+        // x,y with respect to CRPIX?
+		xorig[j] = xy[2*j+0]; // + tanwcs.crpix[0];
+		yorig[j] = xy[2*j+1]; // + tanwcs.crpix[1];
+
+		tan_pixelxy2iwc(&tanwcs, 
+                        xorig[j], yorig[j],
+                        &x, &y);
 		r = sqrt(x*x + y*y);
 		xpows[0] = ypows[0] = rpows[0] = 1.0;
 		for (i=1; i<sizeof(xpows)/sizeof(double); i++) {
@@ -206,6 +280,7 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 		px = py = 0;
 		for (i=0; i<sizeof(xp)/sizeof(int); i++) {
 			px += pv1[i] * xpows[xp[i]] * ypows[yp[i]] * rpows[rp[i]];
+            // here's the "cross-over" mentioned above
 			py += pv2[i] * ypows[xp[i]] * xpows[yp[i]] * rpows[rp[i]];
 		}
 		tan_iwc2xyzarr(&tanwcs, px, py, xyz);

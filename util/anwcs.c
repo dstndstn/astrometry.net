@@ -928,7 +928,7 @@ anwcs_t* anwcs_wcslib_from_string(const char* str, int len) {
         int i;
         for (i=0; i<len; i+=80) {
             char buf[81];
-            snprintf(buf, 81, str+i);
+            snprintf(buf, 81, "%s", str+i);
             printf("%s\n", buf);
         }
     }
