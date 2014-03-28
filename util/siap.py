@@ -24,6 +24,8 @@ def siap_parse_result(fn=None):
 
 		ftmap = {'int':int,
 				 'double':float,
+                 'float':float,
+                 'char':str,
 				 }
 
 		fieldnames.append(name)
@@ -61,7 +63,7 @@ def siap_parse_result(fn=None):
 
 	t = tabledata()
 	for i,f in enumerate(fieldnames):
-		t.set(f, array([r[i] for r in datarows]))
+		t.set(str(f), array([r[i] for r in datarows]))
 	t._length = len(datarows)
 
 	return t
