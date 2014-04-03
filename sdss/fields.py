@@ -8,6 +8,12 @@ from astrometry.util.sdss_filenames import *
 from os.path import basename,dirname
 import numpy as np
 
+def get_photoobj_filename(rr, run, camcol, field):
+    fn = os.path.join(photoobjdir, rr, '%i'%run, '%i'%camcol,
+                      'photoObj-%06i-%i-%04i.fits' % (run, camcol, field))
+    return fn
+
+
 def read_photoobjs_in_wcs(wcs, margin, cols=None,
                           cutToPrimary=True,
                           wfn='window_flist.fits',
@@ -41,7 +47,8 @@ def read_photoobjs_in_wcs(wcs, margin, cols=None,
             log.debug('Rerun 157')
             continue
 
-        fn = get_photoobj_filename(rr, run, camcol, field)
+        fn = sdss.retrieve('photoObj', run, camcol, field, rerun=rr)
+        #fn = get_photoobj_filename(rr, run, camcol, field)
 
         T = fits_table(fn, columns=cols)
         if T is None:

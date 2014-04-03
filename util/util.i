@@ -113,7 +113,7 @@ void log_set_level(int lvl);
     }
 
 
-    static double flat_median_f(PyObject* np_arr) {
+    static double flat_percentile_f(PyObject* np_arr, double pct) {
         PyArray_Descr* dtype;
         npy_intp N;
         int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
@@ -148,7 +148,13 @@ void log_set_level(int lvl);
         // Pseudocode from wikipedia's 'Selection algorithm' page
         L = 0;
         R = (int)(N-1);
-        mid = (int)(N/2);
+        mid = (int)(pct * 0.01 * N);
+        if (mid < 0) {
+            mid = 0;
+        }
+        if (mid >= R) {
+            mid = R;
+        }
         while (L < R) {
             int ipivot;
             int i,j;
@@ -251,6 +257,10 @@ void log_set_level(int lvl);
         med = x[mid];
         free(x);
         return med;
+    }
+
+    static double flat_median_f(PyObject* np_arr) {
+        return flat_percentile_f(np_arr, 50.0);
     }
 
     static int median_smooth(PyObject* np_image,

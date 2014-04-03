@@ -2,6 +2,20 @@ from util import *
 import numpy as np
 import time
 
+X = np.random.uniform(1000., size=1001).astype(np.float32)
+
+med = flat_median_f(X)
+print 'Median', med
+print 'vs np ', np.median(X)
+
+for pct in [0., 1., 10., 25., 50., 75., 99., 100.]:
+    p1 = flat_percentile_f(X, pct)
+    p2 = np.percentile(X, pct)
+    print 'Percentile', pct
+    print '  ', p1
+    print 'vs', p2
+
+
 import fitsio
 #X = fitsio.read('nasty.fits')
 X = fitsio.read('dsky.fits')
