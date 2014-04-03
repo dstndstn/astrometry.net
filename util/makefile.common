@@ -115,7 +115,9 @@ UNAME = $(shell uname -s)
 ifneq (CYGWIN,$(findstring CYGWIN,$(UNAME)))
   SHAREDLIBFLAGS_DEF += -fPIC
 endif 
-PYTHON_SO_EXT := $(shell python -c "import sysconfig; print sysconfig.get_config_var('SO')")
+
+# Get the library suffix used by python distutils (.dll on cygwin, .so elsewhere)
+PYTHON_SO_EXT := $(shell python -c "from distutils import sysconfig; print sysconfig.get_config_var('SO')")
 
 ARG := -ffinite-math-only
 FLAGS_DEF += $(shell $(CCTEST))
