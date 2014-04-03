@@ -108,7 +108,8 @@ QFITS_UTILS := fits-column-merge subtable fitsgetext wcsinfo
 
 PROGS := an-fitstopnm an-pnmtofits downsample-fits \
 	fits-flip-endian hpsplit wcs-to-tan	query-starkd \
-	get-healpix $(QFITS_UTILS)
+	get-healpix $(QFITS_UTILS) tycho2tofits search-index \
+	pad-file build-hd-tree
 
 # tycho2tofits search-index pad-file resample tycho2tostellarium build-hd-tree
 
@@ -180,12 +181,12 @@ an-pnmtofits: an-pnmtofits.o $(ANFILES_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
 ALL_OBJ += an-pnmtofits.o
 
-_util.$(SO) util.py: util.i lanczos.i $(ANFILES_SLIB)
+_util$(PYTHON_SO_EXT) util.py: util.i lanczos.i $(ANFILES_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
 	python setup-util.py build_ext -v --inplace --build-temp .
 
-PYUTIL := _util.$(SO) util.py
+PYUTIL := _util$(PYTHON_SO_EXT) util.py
 pyutil: $(PYUTIL)
 .PHONY: pyutil
 py: $(PYUTIL)
@@ -194,7 +195,7 @@ py: $(PYUTIL)
 index_wrap.c: index.i index.h
 	swig -python -I. $<
 
-_index_util.$(SO) _index_c.$(SO): index_wrap.c index_pyutils.c $(ANFILES_SLIB)
+_index_util$(PYTHON_SO_EXT) _index_c$(PYTHON_SO_EXT): index_wrap.c index_pyutils.c $(ANFILES_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
 	python setup-index.py build_ext -v --inplace --build-temp .
@@ -244,7 +245,7 @@ install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) \
 		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
 	done
 	@echo "The following copy commands may fail; they are optional."
-	-cp _util.$(SO) '$(PY_INSTALL_DIR)'
+	-cp _util$(PYTHON_SO_EXT) '$(PY_INSTALL_DIR)'
 	-cp util.py '$(PY_INSTALL_DIR)'
 	@echo ok
 
@@ -451,7 +452,7 @@ clean:
 		$(DEPS) deps cairoutils.o \
 		grab-stellarium-constellations \
 		$(PROGS) $(MAIN_PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
-		cairoutils.dep makefile.os-features *.o *~ *.dep *.$(SO) deps \
+		cairoutils.dep makefile.os-features *.o *~ *.dep *$(PYTHON_SO_EXT) deps \
 		os-features.log os-features-makefile.log report.txt
 
 # Try to compensate for clang's lack of -MG to handle generated header

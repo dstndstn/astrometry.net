@@ -34,8 +34,6 @@ void printHelp(char* progname) {
 		   "\n", progname);
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 const char* OPTIONS = "hvq";
 

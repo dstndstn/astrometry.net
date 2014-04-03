@@ -598,6 +598,7 @@ static double correspondences_rms_arcsec(tweak_t* t, int weighted) {
 	return distsq2arcsec( err2 / totalweight );
 }
 
+#if 0
 // in arcseconds^2 on the sky (chi-sq)
 static double figure_of_merit(tweak_t* t, double *rmsX, double *rmsY) {
 	double sqerr = 0.0;
@@ -634,6 +635,7 @@ static double figure_of_merit2(tweak_t* t) {
     // convert to arcsec^2
     return sqerr * square(sip_pixel_scale(t->sip));
 }
+#endif
 
 static void invert_sip_polynomial(tweak_t* t) {
 	sip_compute_inverse_polynomials(t->sip, 0, 0, 0, 0, 0, 0);

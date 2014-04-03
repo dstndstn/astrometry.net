@@ -585,31 +585,47 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 			outdone = FALSE;
 			*outlines = sl_new(256);
 			outfd = outpipe[0];
+			assert(outfd<FD_SETSIZE);
 		}
 		if (errlines) {
 			close(errpipe[1]);
 			errdone = FALSE;
 			*errlines = sl_new(256);
 			errfd = errpipe[0];
+			assert(errfd<FD_SETSIZE);
 		}
 
 		// Read from child process's streams...
 		while (!outdone || !errdone) {
 			fd_set readset;
+#if !(defined(__CYGWIN__))
 			fd_set errset;
+#endif
 			int ready;
 			FD_ZERO(&readset);
+#if !(defined(__CYGWIN__))
 			FD_ZERO(&errset);
+#endif
 			//printf("outdone = %i, errdone = %i\n", outdone, errdone);
 			if (!outdone) {
 				FD_SET(outfd, &readset);
+#if !(defined(__CYGWIN__))
 				FD_SET(outfd, &errset);
+#endif
 			}
 			if (!errdone) {
 				FD_SET(errfd, &readset);
+#if !(defined(__CYGWIN__))
 				FD_SET(errfd, &errset);
+#endif
 			}
-			ready = select(MAX(outfd, errfd) + 1, &readset, NULL, &errset, NULL);
+			ready = select(MAX(outfd, errfd) + 1, &readset, NULL,
+#if !(defined(__CYGWIN__))
+			&errset,
+#else
+			NULL,
+#endif
+			NULL);
 			if (ready == -1) {
 				SYSERROR("select() failed");
 				return -1;

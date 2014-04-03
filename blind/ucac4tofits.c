@@ -54,8 +54,6 @@ void print_help(char* progname) {
 		   progname);
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 #define CHECK_BZERR() \
 	do { if (bzerr != BZ_OK) { ERROR("bzip2 error: code %i", bzerr);	\

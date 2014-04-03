@@ -70,8 +70,6 @@ char* solvedfile = NULL;
 double ratio_tosolve = 0.0;
 int ninfield_tosolve = 0;
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 enum modes {
 	MODE_BEST,

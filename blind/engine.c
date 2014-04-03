@@ -265,7 +265,7 @@ int engine_parse_config_file_stream(engine_t* engine, FILE* fconf) {
 		if (line[strlen(line) - 1] == '\n')
 			line[strlen(line) - 1] = '\0';
 		// skip leading whitespace:
-		while (*line && isspace(*line))
+		while (*line && isspace((unsigned)(*line)))
 			line++;
 		// skip comments
 		if (line[0] == '#')

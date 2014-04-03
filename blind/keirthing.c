@@ -11,8 +11,6 @@
 
 static const char* OPTIONS = "hW:H:X:Y:vo:";
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int main(int argc, char** args) {
 	int c;

@@ -1383,7 +1383,7 @@ pl* anwcs_walk_outline(const anwcs_t* wcs, const dl* rd, int fill) {
     pl* lists = pl_new(2);
     dl* rd2;
 	int brk, end;
-    double degstep;
+    double degstep = 0.0;
     int i;
     dl* plotrd = dl_new(256);
 

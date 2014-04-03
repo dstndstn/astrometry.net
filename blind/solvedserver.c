@@ -26,6 +26,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <signal.h>
+#include <assert.h>
 #include <sys/select.h>
 #include <fcntl.h>
 
@@ -51,8 +52,6 @@ static void sighandler(int sig) {
 	bailout = 1;
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int handle_request(FILE* fid) {
 	char buf[256];
@@ -251,6 +250,7 @@ int main(int argc, char** args) {
 			if (val > maxval)
 				maxval = val;
 		}
+		assert(maxval<FD_SETSIZE);
 		FD_SET(sock, &rset);
 		res = select(maxval+1, &rset, NULL, NULL, &timeout);
 		if (res == -1) {

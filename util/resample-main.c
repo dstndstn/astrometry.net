@@ -23,8 +23,6 @@ void printHelp(char* progname) {
 			"    [-q]: less verbose\n"
             "\n", progname);
 }
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 
 static double lanczos(double x, int order) {

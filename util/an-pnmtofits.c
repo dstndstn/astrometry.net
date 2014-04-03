@@ -143,8 +143,6 @@ static int read_pnm_row(FILE* fid, int W, int depth, int maxval, void* buffer) {
 
 	
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int main(int argc, char** args) {
     int argchar;

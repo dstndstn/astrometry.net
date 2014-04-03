@@ -32,8 +32,6 @@
 const char HelpString[] =
 "quadidx -f fname\n";
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int main(int argc, char *argv[]) {
 	int argidx, argchar;

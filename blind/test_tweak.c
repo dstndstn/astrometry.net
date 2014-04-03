@@ -64,7 +64,7 @@ static void set_grid(int GX, int GY, tan_t* tan, sip_t* sip,
 			x = xy[2*(i*GX+j) + 0] = gridx[j];
 			y = xy[2*(i*GX+j) + 1] = gridy[i];
 			sip_pixelxy2radec(sip, x, y, &ra, &dec);
-			tan_radec2pixelxy(tan, ra, dec, &x, &y);
+			if(!tan_radec2pixelxy(tan, ra, dec, &x, &y)) perror("tan_radec2pixelxy==FALSE");
 			tanxy[2*(i*GX+j) + 0] = x;
 			tanxy[2*(i*GX+j) + 1] = y;
 		}

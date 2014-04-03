@@ -617,7 +617,7 @@ void plotstuff_stack_arrow(plot_args_t* pargs, double x, double y,
 static void get_text_position(plot_args_t* pargs, cairo_t* cairo,
 							  const char* txt, double* px, double* py) {
     cairo_text_extents_t textents;
-    double l,r,t,b;
+    double l = 0.0,r,t = 0.0,b;
     double margin = 2.0;
 	double x, y;
 	x = *px;

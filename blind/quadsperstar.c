@@ -26,8 +26,6 @@
 
 #define OPTIONS "h"
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 void print_help(char* progname)
 {

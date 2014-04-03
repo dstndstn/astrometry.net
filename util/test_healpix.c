@@ -93,7 +93,9 @@ static void plot_hp_boundary(int hp, int nside, double start, double step, char*
 }
 
 static void hpmap(int nside, const char* fn) {
+#if 0
 	int nhp;
+#endif
 	double xyz[3];
 	double range;
 	int hps[9];
@@ -119,7 +121,11 @@ static void hpmap(int nside, const char* fn) {
 		plot_hp_boundary(i, nside, 0.005, 0.01, "b-");
 	}
 
+#if 0
 	nhp = healpix_get_neighbours_within_range(xyz, range, hps, nside);
+#else
+	(void)healpix_get_neighbours_within_range(xyz, range, hps, nside);
+#endif
 	assert(nhp >= 1);
 	assert(nhp <= 9);
 

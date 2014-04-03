@@ -6,7 +6,10 @@ typedef unsigned int word32;
 struct MD5Context {
     word32 buf[4];
     word32 bits[2];
+    union {
     unsigned char in[64];
+    word32 in32[16];
+    };
 };
 
 void MD5Init(struct MD5Context *context);

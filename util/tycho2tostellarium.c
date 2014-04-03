@@ -62,8 +62,6 @@ static int write_8(FILE* fout, void* p) {
 	return 0;
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int main(int argc, char** args) {
 	char* outfn = NULL;

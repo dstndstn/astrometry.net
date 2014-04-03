@@ -32,8 +32,6 @@ static void printHelp(char* progname) {
 	printf("%s  <FITS-file>\n\n", progname);
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int main(int argc, char *argv[]) {
 	char* progname = argv[0];

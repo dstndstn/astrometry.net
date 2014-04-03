@@ -47,7 +47,7 @@
 #include "log.h"
 #include "svn.h"
 
-const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:JF:V:O:";
+const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:g:JF:V:O:";
 
 void print_help(char* progname) {
     boilerplate_help_header(stdout);
@@ -73,14 +73,13 @@ void print_help(char* progname) {
            "   [-f <size>]: font size.\n"
            "   [-M]: show only NGC/IC and Messier numbers (no common names)\n"
            "   [-G <grid spacing in arcmin>]: plot RA,Dec grid\n"
+           "   [-g <r:g:b>]: grid color (default 0.2:0.2:0.2)\n"
            "   [-J]: print JSON output to stderr\n"
 		   "   [-V]: vertical alignment of text labels, \"C\"enter/\"T\"op/\"B\"ottom: default C\n"
 		   "   [-O]: horizontal alignment of text labels, \"L\"eft/\"C\"enter/\"R\"ight, default L\n"
            "\n", progname);
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 static int sort_by_mag(const void* v1, const void* v2) {
     const brightstar_t* s1 = v1;
@@ -259,6 +258,7 @@ int main(int argc, char** args) {
 
     anbool grid = FALSE;
     double gridspacing = 0.0;
+    double gridcolor[3] = { 0.2, 0.2, 0.2 };
 
     int loglvl = LOG_MSG;
 
@@ -285,6 +285,14 @@ int main(int argc, char** args) {
             break;
         case 'G':
             gridspacing = atof(optarg);
+            break;
+        case 'g':
+            {
+            char *tail = NULL;
+            gridcolor[0] = strtod(optarg,&tail);
+            if (*tail) { tail++; gridcolor[1] = strtod(tail,&tail); }
+            if (*tail) { tail++; gridcolor[2] = strtod(tail,&tail); }
+            }
             break;
         case 'D':
             HD = TRUE;
@@ -490,7 +498,7 @@ int main(int argc, char** args) {
         cairos->shapesmask = cairoshapesmask;
         cairos->imgW = (float)W/scale;
         cairos->imgH = (float)H/scale;
-    }
+//    }
 
     if (grid) {
         double ramin, ramax, decmin, decmax;
@@ -502,7 +510,7 @@ int main(int argc, char** args) {
         double px, py;
         int i;
 
-        cairo_set_source_rgba(cairo, 0.2, 0.2, 0.2, 1.0);
+        cairo_set_source_rgba(cairo, gridcolor[0], gridcolor[1], gridcolor[2], 1.0);
 
         sip_get_radec_bounds(&sip, 100, &ramin, &ramax, &decmin, &decmax);
 		logverb("Plotting grid lines from RA=%g to %g in steps of %g; Dec=%g to %g in steps of %g\n",
@@ -533,6 +541,7 @@ int main(int argc, char** args) {
 
         cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 1.0);
     }
+  }
 
     if (constell) {
         N = constellations_n();

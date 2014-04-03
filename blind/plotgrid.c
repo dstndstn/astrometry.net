@@ -298,10 +298,16 @@ void plot_grid_add_label(plot_args_t* pargs, double ra, double dec,
 						 double lval, const char* format) {
 	char label[32];
 	double x,y;
+#if 0
 	anbool ok;
+#endif
 	cairo_t* cairo = pargs->cairo;
 	pretty_label(format, lval, label);
+#if 0
 	ok = plotstuff_radec2xy(pargs, ra, dec, &x, &y);
+#else
+	(void)plotstuff_radec2xy(pargs, ra, dec, &x, &y);
+#endif
 	plotstuff_stack_text(pargs, cairo, label, x, y);
 	plotstuff_plot_stack(pargs, cairo);
 }

@@ -75,8 +75,6 @@ void print_help(char* progname) {
 		   "\n", progname);
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 struct foundquad {
 	//unsigned int stars[DQMAX];

@@ -71,7 +71,7 @@ int opts_getopt(bl* opts, int argc, char** argv) {
         an_option_t* opt = bl_access(opts, i);
         if (!opt->shortopt)
             continue;
-        if (iscntrl(opt->shortopt))
+        if (iscntrl((unsigned)(opt->shortopt)))
 			continue;
         optstring[j] = opt->shortopt;
         j++;

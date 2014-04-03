@@ -33,8 +33,6 @@
 
 static const char* OPTIONS = "hr:";
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 void print_help(char* progname)
 {

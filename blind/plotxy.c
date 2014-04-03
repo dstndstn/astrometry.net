@@ -72,7 +72,9 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	starxy_t* freexy = NULL;
 	int Nxy;
 	int i;
+#if 0
 	double t0;
+#endif
 
 	plotstuff_builtin_apply(cairo, pargs);
 
@@ -86,7 +88,9 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	}
 
 	if (args->fn) {
+#if 0
 		t0 = timenow();
+#endif
 		// Open xylist.
 		xyls = xylist_open(args->fn);
 		if (!xyls) {
@@ -173,7 +177,9 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	}
 
 	// Plot markers.
+#if 0
 	t0 = timenow();
+#endif
 	for (i=args->firstobj; i<Nxy; i++) {
 		double x = starxy_getx(xy, i);
 		double y = starxy_gety(xy, i);

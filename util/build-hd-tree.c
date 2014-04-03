@@ -93,8 +93,6 @@ void printHelp(char* progname) {
 		   "\n", progname);
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 // the Tycho-2 and cross-ref fields we care about...
 struct tyc {

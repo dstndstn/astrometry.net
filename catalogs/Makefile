@@ -51,7 +51,7 @@ stellarium-constellations.c:
 	-(./grab-stellarium-constellations > $@.tmp  &&  mv $@.tmp $@) || touch $@
 
 grab-stellarium-constellations: grab-stellarium-constellations.o \
-		starutil.o mathutil.o bl.o an-endian.o
+		starutil.o mathutil.o bl.o an-endian.o errors.o log.o ioutils.o qsort_reentrant.o tic.o
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
 

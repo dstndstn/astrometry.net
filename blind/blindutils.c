@@ -83,7 +83,7 @@ int parse_depth_string(il* depths, const char* str) {
         il_append(depths, hi);
         lasthi = hi;
         str += nread;
-        while ((*str == ',') || isspace(*str))
+        while ((*str == ',') || isspace((unsigned)(*str)))
             str++;
     }
     return 0;

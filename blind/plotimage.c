@@ -187,10 +187,16 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 		y = MIN(j * args->gridsize, H-1);
 		for (i=0; i<NX; i++) {
 			double ox,oy;
+#if 0
 			anbool ok;
+#endif
 			x = MIN(i * args->gridsize, W-1);
 			anwcs_pixelxy2radec(args->wcs, x+1, y+1, &ra, &dec);
+#if 0
 			ok = plotstuff_radec2xy(pargs, ra, dec, &ox, &oy);
+#else
+			(void)plotstuff_radec2xy(pargs, ra, dec, &ox, &oy);
+#endif
 			xs[j*NX+i] = ox-1;
 			ys[j*NX+i] = oy-1;
 			debug("image (%.1f,%.1f) -> radec (%.4f,%.4f), plot (%.1f,%.1f)\n", x, y, ra, dec, xs[j*NX+i], ys[j*NX+i]);

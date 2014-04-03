@@ -101,8 +101,6 @@ static void sample_percentiles(const float* img, int nx, int ny, int margin,
 							   
 
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 #define NBUF 1024
 

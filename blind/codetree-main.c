@@ -47,8 +47,6 @@ static void printHelp(char* progname) {
 		   "\n", progname);
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int main(int argc, char *argv[]) {
     int argidx, argchar;

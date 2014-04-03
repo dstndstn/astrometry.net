@@ -32,8 +32,6 @@ void printHelp(char* progname) {
 			"    [-v]: more verbose\n"
             "\n", progname);
 }
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 
 

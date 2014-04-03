@@ -44,6 +44,7 @@ static void walk_callback2(const anwcs_t* wcs, double ix, double iy,
  */
 void test_walk_outline(CuTest* tc) {
 	anwcs_t* plotwcs = anwcs_create_allsky_hammer_aitoff(180., 0., 400, 200);
+#if 0
     tan_t tanwcs;
     tanwcs.crval[0] = 10.;
     tanwcs.crval[1] =  0.;
@@ -56,6 +57,7 @@ void test_walk_outline(CuTest* tc) {
     tanwcs.imagew = 50.;
     tanwcs.imageh = 50.;
     tanwcs.sin = 0;
+#endif
 
 	dl* rd;
     /*

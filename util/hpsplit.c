@@ -67,8 +67,6 @@ void printHelp(char* progname) {
 		   "\n", progname);
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 struct cap_s {
 	double xyz[3];

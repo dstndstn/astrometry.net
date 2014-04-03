@@ -179,8 +179,6 @@ void makeplot(char* plotfn, char* bgimgfn, int W, int H,
 }
 
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int main(int argc, char** args) {
 	int c;

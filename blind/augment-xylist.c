@@ -1438,7 +1438,7 @@ static int parse_fields_string(il* fields, const char* str) {
         il_append(fields, lo);
         il_append(fields, hi);
         str += nread;
-        while ((*str == ',') || isspace(*str))
+        while ((*str == ',') || isspace((unsigned)(*str)))
             str++;
     }
     return 0;

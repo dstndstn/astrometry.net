@@ -75,8 +75,6 @@ static void hip_get_radec(unsigned char* hip, int star1,
     *dec = ifval.f;
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int main(int argc, char** args) {
     int c;

@@ -40,8 +40,6 @@
 
 #define OPTIONS "hd"
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 static void print_help(char* progname)
 {

@@ -105,20 +105,17 @@ DEFTEST = $(CC) -dM -E - < /dev/null 2> /dev/null | grep "$(STR)" > /dev/null
 
 ARG := -shared
 SHAREDLIBFLAGS_DEF := $(shell $(CCTEST))
+SHAREDLIB_SUFFIX = so
 
 # Cygwin peculiarities:
 # --.dll filename suffix for shared libraries (created by python distutils)
 # -- -fPIC produces warnings
 
 UNAME = $(shell uname -s)
-ifeq (CYGWIN,$(findstring CYGWIN,$(UNAME)))
-  # Cygwin:
-  SHAREDLIB_SUFFIX = dll
-else
-  # Everything else:
-  SHAREDLIB_SUFFIX = so
+ifneq (CYGWIN,$(findstring CYGWIN,$(UNAME)))
   SHAREDLIBFLAGS_DEF += -fPIC
 endif 
+PYTHON_SO_EXT := $(shell python -c "import sysconfig; print sysconfig.get_config_var('SO')")
 
 ARG := -ffinite-math-only
 FLAGS_DEF += $(shell $(CCTEST))
@@ -228,11 +225,12 @@ X := $(shell rm -f $(TMPFILE))
 # if it hasn't been set already (eg, in ../Makefile)
 OPTIMIZE ?= yes
 PROFILE ?= no
+ASSERT ?= -DNDEBUG
 
 ifeq ($(PROFILE),yes)
   FLAGS_DEF += -O2
   FLAGS_DEF += -pg -g
-  FLAGS_DEF += -DNDEBUG
+  FLAGS_DEF += $(ASSERT)
 else
 
 ifeq ($(OPTIMIZE),yes)
@@ -240,7 +238,7 @@ ifeq ($(OPTIMIZE),yes)
   FLAGS_DEF += -O3
   FLAGS_DEF += -fomit-frame-pointer
   # turn off asserts:
-  FLAGS_DEF += -DNDEBUG
+  FLAGS_DEF += $(ASSERT)
 
 else
   ifeq ($(OPTIMIZE),no)
@@ -253,7 +251,9 @@ endif
 
 endif
 
-FLAGS_DEF += -fPIC
+ifneq (CYGWIN,$(findstring CYGWIN,$(UNAME)))
+FLAGS_DEF += -fpic
+endif
 
 # profily!
 #FLAGS_DEF += -pg

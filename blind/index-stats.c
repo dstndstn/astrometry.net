@@ -36,8 +36,6 @@
 
 static const char* OPTIONS = "hvmM:";
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 void print_help(char* progname) {
 	boilerplate_help_header(stderr);

@@ -77,8 +77,6 @@ static void printHelp() {
 			SIMPLEXY_DEFAULT_MAXSIZE);
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int main(int argc, char *argv[]) {
     int argchar;

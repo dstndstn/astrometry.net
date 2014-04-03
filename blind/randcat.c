@@ -24,8 +24,6 @@ const char HelpString[] =
   "randcat -f fname -n numstars [-r/R RAmin/max] [-d/D DECmin/max]\n"
     "  -r -R -d -D set ra and dec limits in radians\n";
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
 int RANDSEED = 999;
 
