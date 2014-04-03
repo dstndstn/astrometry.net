@@ -30,7 +30,7 @@ def match_xy(x1,y1, x2,y2, R, **kwargs):
     
 # Copied from "celestial.py" by Sjoert van Velzen.
 def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
-                nearest=False, indexlist=False):
+                nearest=False, indexlist=False, count=False):
     '''
     (m1,m2,d12) = match_radec(ra1,dec1, ra2,dec2, radius_in_deg)
 
@@ -69,11 +69,22 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
         xyz2 = radectoxyz(ra2, dec2)
     r = deg2dist(radius_in_deg)
 
+    extra = ()
     if nearest:
-        (inds,dists2) = _nearest_func(xyz2, xyz1, r, notself=notself)
-        I = np.flatnonzero(inds >= 0)
-        J = inds[I]
-        d = distsq2deg(dists2[I])
+        X = _nearest_func(xyz2, xyz1, r, notself=notself, count=count)
+        if not count:
+            (inds,dists2) = X
+            I = np.flatnonzero(inds >= 0)
+            J = inds[I]
+            d = distsq2deg(dists2[I])
+        else:
+            #print 'X', X
+            #(inds,dists2,counts) = X
+            J,I,d,counts = X
+            extra = (counts,)
+            print 'I', I.shape, I.dtype
+            print 'J', J.shape, J.dtype
+            print 'counts', counts.shape, counts.dtype
     else:
         X = match(xyz1, xyz2, r, notself=notself, indexlist=indexlist)
         if indexlist:
@@ -83,7 +94,7 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
         I,J = inds[:,0], inds[:,1]
         d = dist_in_deg[:,0]
         
-    return (I, J, d)
+    return (I, J, d) + extra
 
 
 def cluster_radec(ra, dec, R, singles=False):
@@ -308,7 +319,7 @@ def match_naive(x1, x2, radius, notself=False):
     dists = array(dists)
     return (inds,dists)
 
-def nearest(x1, x2, maxradius, notself=False):
+def nearest(x1, x2, maxradius, notself=False, count=False):
     '''
     For each point in x2, returns the index of the nearest point in x1,
     if there is a point within 'maxradius'.
@@ -316,9 +327,12 @@ def nearest(x1, x2, maxradius, notself=False):
     (Note, this may be backward from what you want/expect!)
     '''
     (kd1,kd2) = _buildtrees(x1, x2)
-    (inds,dist2s) = spherematch_c.nearest(kd1, kd2, maxradius, notself)
+    if count:
+        X = spherematch_c.nearest2(kd1, kd2, maxradius, notself, count)
+    else:
+        X = spherematch_c.nearest(kd1, kd2, maxradius, notself)
     _freetrees(kd1, kd2)
-    return (inds,dist2s)
+    return X
 _nearest_func = nearest
 
 def tree_build_radec(ra=None, dec=None, xyz=None):
