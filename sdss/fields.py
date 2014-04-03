@@ -8,6 +8,68 @@ from astrometry.util.sdss_filenames import *
 from os.path import basename,dirname
 import numpy as np
 
+def read_photoobjs_in_wcs(wcs, margin, cols=None,
+                          cutToPrimary=True,
+                          wfn='window_flist.fits',
+                          sdss=None):
+    '''
+    Read photoObjs that are inside the given 'wcs', plus 'margin' in degrees.
+    '''
+    import logging
+    log = logging.getLogger('read_photoobjs_in_wcs')
+
+    ra,dec = wcs.radec_center()
+    rad = wcs.radius()
+    rad += np.hypot(14., 10.) / 2 / 60.
+    # a little extra margin
+    rad += margin
+
+    print 'Searching for run,camcol,fields with radius', rad, 'deg'
+    RCF = radec_to_sdss_rcf(ra, dec, radius=rad*60., tablefn=wfn)
+    log.debug('Found %i fields possibly in range' % len(RCF))
+
+    pixmargin = margin * 3600. / wcs.pixel_scale()
+    W,H = wcs.get_width(), wcs.get_height()
+    
+    TT = []
+    if sdss is None:
+        sdss = DR9()
+    for run,camcol,field,r,d in RCF:
+        log.debug('RCF %i/%i/%i' % (run, camcol, field))
+        rr = sdss.get_rerun(run, field=field)
+        if rr in [None, '157']:
+            log.debug('Rerun 157')
+            continue
+
+        fn = get_photoobj_filename(rr, run, camcol, field)
+
+        T = fits_table(fn, columns=cols)
+        if T is None:
+            log.debug('read 0 from %s' % fn)
+            continue
+        log.debug('read %i from %s' % (len(T), fn))
+
+        # while we're reading it, record its length for later...
+        #get_photoobj_length(rr, run, camcol, field)
+
+        ok,x,y = wcs.radec2pixelxy(T.ra, T.dec)
+        x -= 1
+        y -= 1
+        T.cut((x > -pixmargin) * (x < (W + pixmargin)) *
+              (y > -pixmargin) * (y < (H + pixmargin)))
+        if cutToPrimary:
+            T.cut((T.resolve_status & 256) > 0)
+            log.debug('cut to %i within target area and PRIMARY.' % len(T))
+        else:
+            log.debug('cut to %i within target area.' % len(T))
+        if len(T) == 0:
+            continue
+        TT.append(T)
+    if not len(TT):
+        return None
+    T = merge_tables(TT)
+    return T
+
 
 class RaDecToRcf(object):
 	def __init__(self, tablefn=None):
@@ -183,7 +245,7 @@ fitscopy s82.fits"[col RA=(ramin+ramax)/2;DEC=(decmin+decmax)/2;run;field;camcol
 
 '''
 
-if __name__ == '__main__':
+def main():
 	import sys
 	from optparse import OptionParser
 	
@@ -262,4 +324,8 @@ if __name__ == '__main__':
 	#	for b in 'ugriz':
 	#		sdss_das_get('fpC', None, r, c, f, b)
 
+
+
+if __name__ == '__main__':
+    main()
 

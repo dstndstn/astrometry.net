@@ -6,3 +6,5 @@ from dr10 import DR10
 from common import band_name, band_index, band_names, cas_flags
 from common import photo_flags1_info, photo_flags2_info, photo_flags1_map, photo_flags2_map
 from common import munu_to_radec_deg
+
+from fields import *

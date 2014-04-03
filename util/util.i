@@ -851,6 +851,10 @@ anwcs.imagew = property(anwcs.get_width,  anwcs.set_width,  None, 'image width')
 anwcs.imageh = property(anwcs.get_height, anwcs.set_height, None, 'image height')
 anwcs.writeto = anwcs.write_to
 
+# same API as tan_t
+anwcs.radec_center = anwcs.get_center
+anwcs.radius = anwcs.get_radius
+
 def anwcs_from_string(s):
     return anwcs_t(s, -1, len(s))
 
