@@ -370,10 +370,19 @@ static void wcslib_free(anwcslib_t* anwcslib) {
 
 static double wcslib_pixel_scale(const anwcslib_t* anwcslib) {
 	struct wcsprm* wcs = anwcslib->wcs;
-	double* cd = wcs->m_cd;
+	//double* cd = wcs->m_cd;
+    double* cd = wcs->cd;
 	double ps;
+    //printf("WCSlib pixel scale: cd %g,%g,%g,%g\n", cd[0], cd[1], cd[2], cd[3]);
 	// HACK -- assume "cd" elements are set...
 	ps = deg2arcsec(sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])));
+
+    if (ps == 0.0) {
+        // Try CDELT
+        //printf("WCSlib pixel scale: cdelt %g,%g\n", wcs->cdelt[0], wcs->cdelt[1]);
+        ps = deg2arcsec(sqrt(fabs(wcs->cdelt[0] * wcs->cdelt[1])));
+    }
+
 	assert(ps > 0.0);
 	return ps;
 }
@@ -921,6 +930,7 @@ anwcs_t* anwcs_wcslib_from_string(const char* str, int len) {
 	qfits_header* qhdr;
 	int W, H;
 
+    /*
 	printf("Parsing string: length %i\n", len);
 	printf("--------------------------\n");
 	//printf("%s\n", str);
@@ -933,6 +943,7 @@ anwcs_t* anwcs_wcslib_from_string(const char* str, int len) {
         }
     }
 	printf("--------------------------\n");
+     */
 	
 	qhdr = qfits_header_read_hdr_string((const unsigned char*)str, len);
 	if (!qhdr) {
