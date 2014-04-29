@@ -287,6 +287,7 @@ if __name__ == '__main__':
 
     if opt.ms:
         plot.markersize = opt.ms
+    plot.fontsize = opt.textsize
 
     plot.outfn = outfn
     img = plot.image
@@ -322,7 +323,6 @@ if __name__ == '__main__':
         ann.add_target(r, d, name)
 
     plot.color = opt.textcolor
-    plot.fontsize = opt.textsize
     plot.lw = opt.lw
     plot.valign = opt.valign
     plot.halign = opt.halign

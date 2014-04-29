@@ -376,6 +376,18 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			}
 			logverb("%i reference sources within the image.\n", Nin);
 			//logverb("CRPIX is (%g,%g)\n", sip.wcstan.crpix[0], sip.wcstan.crpix[1]);
+
+            if (Nin == 0) {
+				sip_free(sipout);
+				free(matchxy);
+				free(matchxyz);
+				free(weights);
+				free(fieldsigma2s);
+				free(indexpix);
+				free(indexin);
+                return NULL;
+            }
+
 			iscale = sip_pixel_scale(sipout);
 			ijitter = indexjitter / iscale;
 			//logverb("With pixel scale of %g arcsec/pixel, index adds jitter of %g pix.\n", iscale, ijitter);
