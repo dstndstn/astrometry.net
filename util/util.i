@@ -281,6 +281,17 @@ void log_set_level(int lvl);
             !PyArray_ISCONTIGUOUS(np_smooth ) ||
             !PyArray_ISWRITEABLE(np_smooth)) {
             ERR("median_smooth: array type checks failed for image/smooth\n");
+            ERR("check %i %i notswapped %i %i isfloat %i %i size %i %i ndim %i %i contig %i %i writable %i\n",
+                PyArray_Check(np_image), PyArray_Check(np_smooth),
+                PyArray_ISNOTSWAPPED(np_image), PyArray_ISNOTSWAPPED(np_smooth ),
+                PyArray_ISFLOAT(np_image), PyArray_ISFLOAT(np_smooth),
+                (PyArray_ITEMSIZE(np_image) == sizeof(float)),
+                (PyArray_ITEMSIZE(np_smooth) == sizeof(float)),
+                (PyArray_NDIM(np_image) == 2),
+                (PyArray_NDIM(np_smooth ) == 2),
+                PyArray_ISCONTIGUOUS(np_image),
+                PyArray_ISCONTIGUOUS(np_smooth),
+                PyArray_ISWRITEABLE(np_smooth));
             return -1;
         }
         if (np_mask != Py_None) {
@@ -2212,7 +2223,7 @@ def sip_t_setstate(self, s):
     (t, self.a_order, self.b_order, self.a, self.b,
      self.ap_order, self.bp_order, self.ap, self.bp) = s
     #self.wcstan.__setstate__(t)
-    # disturbingly, tan_t_setstate doesn't work because it resets self.this = ...
+    # disturbingly, tan_t_setstate does not work because it resets self.this = ...
     p0,p1,v0,v1,cd0,cd1,cd2,cd3,w,h,sin = t
     self.wcstan.set_crpix(p0,p1)
     self.wcstan.set_crval(v0,v1)
