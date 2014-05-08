@@ -360,8 +360,8 @@ def tree_save(kd, fn):
     rtn = spherematch_c.kdtree_write(kd, fn)
     return rtn
 
-def tree_open(fn):
-    return spherematch_c.kdtree_open(fn)
+def tree_open(fn, treename=None):
+    return spherematch_c.kdtree_open(fn, treename)
 
 def tree_close(kd):
     return spherematch_c.kdtree_close(kd)
@@ -427,6 +427,8 @@ def trees_match(kd1, kd2, radius, nearest=False, notself=False,
 tree_permute = spherematch_c.kdtree_permute
 tree_bbox = spherematch_c.kdtree_bbox
 tree_n = spherematch_c.kdtree_n
+tree_print = spherematch_c.kdtree_print
+tree_data = spherematch_c.kdtree_get_positions
 
 if __name__ == '__main__':
     import doctest

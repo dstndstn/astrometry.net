@@ -109,13 +109,24 @@ static PyObject* spherematch_kdtree_write(PyObject* self, PyObject* args) {
 static PyObject* spherematch_kdtree_open(PyObject* self, PyObject* args) {
     kdtree_t* kd;
     char* fn;
+    char* treename = NULL;
+    int n;
 
-    if (!PyArg_ParseTuple(args, "s", &fn)) {
-        PyErr_SetString(PyExc_ValueError, "need one args: kdtree filename");
+    n = PyTuple_Size(args);
+    if (!((n == 1) || (n == 2))) {
+        PyErr_SetString(PyExc_ValueError, "need one or two args: kdtree filename + optionally tree name");
         return NULL;
     }
-
-    kd = kdtree_fits_read(fn, NULL, NULL);
+    if (n == 1) {
+        if (!PyArg_ParseTuple(args, "s", &fn)) {
+            return NULL;
+        }
+    } else {
+        if (!PyArg_ParseTuple(args, "ss", &fn, &treename)) {
+            return NULL;
+        }
+    }
+    kd = kdtree_fits_read(fn, treename, NULL);
     return Py_BuildValue("k", kd);
 }
 
@@ -394,6 +405,9 @@ static PyObject* spherematch_kdtree_bbox(PyObject* self, PyObject* args) {
     double bblo[D];
     double bbhi[D];
     ok = kdtree_get_bboxes(kd, 0, bblo, bbhi);
+    if (!ok) {
+        Py_RETURN_NONE;
+    }
     assert(ok);
     bb = PyArray_DATA(bbox);
     for (j=0; j<D; j++) {
@@ -404,6 +418,20 @@ static PyObject* spherematch_kdtree_bbox(PyObject* self, PyObject* args) {
   rtn = Py_BuildValue("O", bbox);
   Py_DECREF(bbox);
   return rtn;
+}
+
+
+static PyObject* spherematch_kdtree_print(PyObject* self, PyObject* args) {
+  long i;
+  kdtree_t* kd;
+  if (!PyArg_ParseTuple(args, "l", &i)) {
+    PyErr_SetString(PyExc_ValueError, "need one arg: kdtree identifier (int)");
+    return NULL;
+  }
+  // Nasty!
+  kd = (kdtree_t*)i;
+  kdtree_print(kd);
+  Py_RETURN_NONE;
 }
 
 
@@ -501,10 +529,12 @@ static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
   long i;
   kdtree_t* kd;
   int k, D, N;
-  npy_int* I;
+  //npy_int* I;
+  npy_uint32* I;
   PyObject* pyO;
   PyObject* pyI;
-  PyArray_Descr* dtype = PyArray_DescrFromType(NPY_INT);
+  // this is the type returned by kdtree_rangesearch
+  PyArray_Descr* dtype = PyArray_DescrFromType(NPY_UINT32);
   int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
 
   if (!PyArg_ParseTuple(args, "lO", &i, &pyO)) {
@@ -532,8 +562,7 @@ static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
   I = PyArray_DATA(pyI);
 
   for (k=0; k<N; k++) {
-    npy_int ii = I[k];
-    kdtree_copy_data_double(kd, ii, 1, X);
+    kdtree_copy_data_double(kd, I[k], 1, X);
     X += D;
   }
   Py_DECREF(pyI);
@@ -721,6 +750,9 @@ static PyMethodDef spherematchMethods[] = {
       "get bounding-box of this tree" },
     { "kdtree_n", spherematch_kdtree_n, METH_VARARGS,
       "N pts in tree" },
+
+    { "kdtree_print", spherematch_kdtree_print, METH_VARARGS,
+      "Describe kdtree" },
 
     { "kdtree_rangesearch", spherematch_kdtree_rangesearch, METH_VARARGS,
       "Rangesearch in a single kd-tree" },
