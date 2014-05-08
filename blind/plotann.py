@@ -25,7 +25,7 @@ def match_kdtree_catalog(wcs, catfn):
     kd = tree_open(catfn)
     kd2 = tree_build_radec(np.array([rc]), np.array([dc]))
     r = deg2dist(rr)
-    I,J,d = trees_match(kd, kd2, r, permuted=False)
+    I,J,nil = trees_match(kd, kd2, r, permuted=False)
     # HACK
     #I2,J,d = trees_match(kd, kd2, r)
     xyz = spherematch_c.kdtree_get_positions(kd, I)

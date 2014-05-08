@@ -416,10 +416,12 @@ def trees_match(kd1, kd2, radius, nearest=False, notself=False,
     if nearest:
         rtn = spherematch_c.nearest2(kd2, kd1, radius, notself, count)
         # J,I,d,[count]
-        rtn = (rtn[1], rtn[0], distsq2deg(rtn[2]),) + rtn[3:]
+        rtn = (rtn[1], rtn[0], np.sqrt(rtn[2])) + rtn[3:]
+        #distsq2deg(rtn[2]),
     else:
         (inds,dists) = spherematch_c.match(kd1, kd2, radius, notself, permuted)
-        d = dist2deg(dists[:,0])
+        #d = dist2deg(dists[:,0])
+        d = dists[:,0]
         I,J = inds[:,0], inds[:,1]
         rtn = (I,J,d)
     return rtn
