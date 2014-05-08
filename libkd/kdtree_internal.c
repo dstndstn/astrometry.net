@@ -2577,7 +2577,7 @@ anbool MANGLE(kdtree_node_point_mindist2_exceeds)
 	double d2 = 0.0;
 
 	if (!bboxes(kd, node, &tlo, &thi, D)) {
-		ERROR("Error: kdtree does not have bounding boxes!");
+		//ERROR("Error: kdtree does not have bounding boxes!");
 		return FALSE;
 	}
 	for (d=0; d<D; d++) {
@@ -2755,12 +2755,12 @@ anbool MANGLE(kdtree_node_node_mindist2_exceeds)
 	assert(kd1->ndim == kd2->ndim);
 
 	if (!bboxes(kd1, node1, &tlo1, &thi1, D)) {
-		ERROR("Error: kdtree_node_node_mindist2_exceeds: kdtree does not have bounding boxes!");
+		//ERROR("Error: kdtree_node_node_mindist2_exceeds: kdtree does not have bounding boxes!");
 		return FALSE;
 	}
 
 	if (!bboxes(kd2, node2, &tlo2, &thi2, D)) {
-		ERROR("Error: kdtree_node_node_mindist2_exceeds: kdtree does not have bounding boxes!");
+		//ERROR("Error: kdtree_node_node_mindist2_exceeds: kdtree does not have bounding boxes!");
 		return FALSE;
 	}
 
