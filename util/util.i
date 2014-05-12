@@ -1023,6 +1023,13 @@ anwcs.get_cd = anwcs_get_cd
 
     double pixel_scale() { return sip_pixel_scale($self); }
 
+    void radec_center(double *p_ra, double *p_dec) {
+        sip_get_radec_center($self, p_ra, p_dec);
+    }
+    double radius() {
+        return sip_get_radius_deg($self);
+    }
+
     int write_to(const char* filename) {
         return sip_write_to_file($self, filename);
     }
