@@ -455,6 +455,9 @@ class tabledata(object):
             #for a,c in zip(arrays, columns):
             #   print 'Writing:', c, 'shape', getattr(a, 'shape', None), 'type', (getattr(a, 'dtype', type(a)))
 
+            arrays = [np.array(a) if isinstance(a,list) else a
+                      for a in arrays]
+
             if header == 'default':
                 header = None
             try:
