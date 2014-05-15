@@ -363,7 +363,7 @@ int engine_parse_config_file_stream(engine_t* engine, FILE* fconf) {
             free(path);
 		}
 
-		mi = multiindex_open(skdtpath, words);
+		mi = multiindex_open(skdtpath, words, 0);
 		if (!mi) {
 			char* s = sl_join(words, " / ");
 			logerr("Failed to open multiindex: %s + %s\n", skdt, s);

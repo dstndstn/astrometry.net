@@ -15,11 +15,41 @@
  along with the Astrometry.net suite ; if not, write to the Free Software
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
+#include <assert.h>
 
 #include "multiindex.h"
 #include "index.h"
 #include "log.h"
 #include "errors.h"
+
+int multiindex_unload_starkd(multiindex_t* mi) {
+    int i;
+    for (i=0; i<multiindex_n(mi); i++) {
+        index_t* ind = multiindex_get(mi, i);
+        ind->starkd = NULL;
+    }
+    if (mi->starkd) {
+        startree_close(mi->starkd);
+        mi->starkd = NULL;
+    }
+    return 0;
+}
+
+int multiindex_reload_starkd(multiindex_t* mi) {
+    int i;
+    assert(mi->fits);
+    assert(!(mi->starkd));
+    mi->starkd = startree_open_fits(mi->fits);
+    if (!mi->starkd) {
+        ERROR("Failed to open multi-index star kdtree");
+        return -1;
+    }
+    for (i=0; i<multiindex_n(mi); i++) {
+        index_t* ind = multiindex_get(mi, i);
+        ind->starkd = mi->starkd;
+    }
+    return 0;
+}
 
 // How many indices?
 int multiindex_n(const multiindex_t* mi) {
@@ -33,9 +63,13 @@ index_t* multiindex_get(const multiindex_t* mi, int i) {
 multiindex_t* multiindex_new(const char* skdtfn) {
 	multiindex_t* mi = calloc(1, sizeof(multiindex_t));
 	logverb("Reading star KD tree from %s...\n", skdtfn);
-	mi->starkd = startree_open(skdtfn);
-	if (!mi->starkd) {
-		ERROR("Failed to open star kd-tree \"%s\"", skdtfn);
+	mi->fits = anqfits_open(skdtfn);
+	if (!mi->fits) {
+		ERROR("Failed to open multiindex file \"%s\"", skdtfn);
+        goto bailout;
+	}
+    if (multiindex_reload_starkd(mi)) {
+		ERROR("Failed to open multiindex star kd-tree \"%s\"", skdtfn);
 		goto bailout;
 	}
 	mi->inds = pl_new(16);
@@ -45,7 +79,7 @@ bailout:
 	return NULL;
 }
 
-int multiindex_add_index(multiindex_t* mi, const char* fn) {
+int multiindex_add_index(multiindex_t* mi, const char* fn, int flags) {
 	anqfits_t* fits;
 	quadfile_t* quads = NULL;
 	codetree_t* codes = NULL;
@@ -78,6 +112,14 @@ int multiindex_add_index(multiindex_t* mi, const char* fn) {
 		ind->indexname = strdup(fn);
 
 	pl_append(mi->inds, ind);
+
+    if (flags & INDEX_ONLY_LOAD_METADATA) {
+        // don't let it unload the starkd!
+        ind->starkd = NULL;
+        index_unload(ind);
+        ind->starkd = mi->starkd;
+    }
+
 	return 0;
  bailout:
 	if (quads) {
@@ -93,17 +135,21 @@ int multiindex_add_index(multiindex_t* mi, const char* fn) {
 }
 
 
-multiindex_t* multiindex_open(const char* skdtfn, const sl* indfns) {
+multiindex_t* multiindex_open(const char* skdtfn, const sl* indfns,
+                              int flags) {
 	multiindex_t* mi = multiindex_new(skdtfn);
 	if (!mi)
 		return NULL;
 	int i;
 	for (i=0; i<sl_size(indfns); i++) {
 		const char* fn = sl_get_const(indfns, i);
-		if (multiindex_add_index(mi, fn)) {
+		if (multiindex_add_index(mi, fn, flags)) {
 			goto bailout;
 		}
 	}
+    if (flags & INDEX_ONLY_LOAD_METADATA) {
+        multiindex_unload_starkd(mi);
+    }
 	return mi;
  bailout:
 	multiindex_free(mi);

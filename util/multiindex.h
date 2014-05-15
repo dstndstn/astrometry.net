@@ -26,12 +26,41 @@
 typedef struct {
 	pl* inds;
 	startree_t* starkd;
+    // for the starkd:
+    anqfits_t* fits;
 } multiindex_t;
 
-multiindex_t* multiindex_open(const char* skdtfn, const sl* indfns);
+/*
+ * Opens a set of index files.
+ *
+ *   flags - If INDEX_ONLY_LOAD_METADATA, then only metadata will be
+ *               loaded.
+ */
+multiindex_t* multiindex_open(const char* skdtfn, const sl* indfns,
+                              int flags);
 
+/*
+ * Opens a single star-kdtree.
+ */
 multiindex_t* multiindex_new(const char* skdtfn);
-int multiindex_add_index(multiindex_t* mi, const char* indexfn);
+
+/*
+ * Adds an index files (quadfile and code-tree) to this multi-index.
+ *
+ *   flags - If INDEX_ONLY_LOAD_METADATA, then only metadata will be
+ *               loaded.
+ */
+int multiindex_add_index(multiindex_t* mi, const char* indexfn,
+                         int flags);
+
+/* Unloads the shared star kdtree -- ie, closes mem-maps, etc.
+ * None of the indices will be usable.
+ */
+int multiindex_unload_starkd(multiindex_t* mi);
+
+/* Reloads a previously unloaded shared star kdtree.
+ */
+int multiindex_reload_starkd(multiindex_t* mi);
 
 void multiindex_close(multiindex_t* mi);
 
