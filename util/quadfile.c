@@ -149,6 +149,16 @@ static quadfile_t* my_open(const char* fn, anqfits_t* fits) {
     }
     chunk = quads_chunk(qf);
 	qf->quadarray = chunk->data;
+
+    // close fd.
+    if (qf->fb->fid) {
+        if (fclose(qf->fb->fid)) {
+            ERROR("Failed to close quadfile FID");
+            goto bailout;
+        }
+        qf->fb->fid = NULL;
+    }
+
     return qf;
 
  bailout:
