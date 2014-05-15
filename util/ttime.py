@@ -46,6 +46,24 @@ def memusage():
                 ]:
         print key, ' '.join(mu.get(key, []))
 
+def get_file_descriptors():
+    procfn = '/proc/%d/fd' % os.getpid()
+    try:
+        t = os.listdir(procfn)
+        return t
+    except:
+        return None
+
+class FileDescriptorMeas(object):
+    def __init__(self):
+        fd = get_file_descriptors()
+        if fd is None:
+            self.fd0 = 0
+        else:
+            self.fd0 = len(fd)
+    def format_diff(self, other):
+        return 'Open files: %i' % self.fd0
+            
 class MemMeas(object):
     def __init__(self):
         self.mem0 = get_memusage()
