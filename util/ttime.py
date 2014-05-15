@@ -46,23 +46,31 @@ def memusage():
                 ]:
         print key, ' '.join(mu.get(key, []))
 
-def get_file_descriptors():
+def count_file_descriptors():
     procfn = '/proc/%d/fd' % os.getpid()
     try:
+        # Linux: /proc/PID/fd/*
         t = os.listdir(procfn)
-        return t
+        return len(t)
     except:
-        return None
+        pass
+
+    try:
+        # OSX: "lsof"
+        from run_command import run_command as rc
+        cmd = 'lsof -p %i' % os.getpid()
+        rtn,out,err = rc(cmd)
+        if rtn == 0:
+            return len(out.split('\n'))
+    except:
+        pass
+    return 0
 
 class FileDescriptorMeas(object):
     def __init__(self):
-        fd = get_file_descriptors()
-        if fd is None:
-            self.fd0 = 0
-        else:
-            self.fd0 = len(fd)
+        self.fds = count_file_descriptors()
     def format_diff(self, other):
-        return 'Open files: %i' % self.fd0
+        return 'Open files: %i' % self.fds
             
 class MemMeas(object):
     def __init__(self):
