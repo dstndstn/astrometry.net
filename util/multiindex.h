@@ -23,6 +23,39 @@
 #include "bl.h"
 #include "starkd.h"
 
+/**
+
+ About unloading and reloading multiindexes:
+
+ The multiindex object holds the star-kdtree, and the list of index
+ files.
+ 
+ The star-kdtree can be unloaded and reloaded.
+
+ AFTER calling multiindex_unload_starkd(), you can then call
+ index_unload() on individual index_t*s.
+
+ To reload, FIRST call multiindex_reload_starkd(), THEN index_reload()
+ on individual index_t*s.
+
+ We use a bit of sneakiness:
+
+ -- multiindex_unload_starkd() sets each of the index_t*'s starkd
+ pointers NULL.  Then when index_unload() is called, it doesn't try to
+ unload the starkd.
+
+ -- likewise, for reloading, multiindex_reload_starkd() sets the
+ index_t* starkd pointers, so upon index_reload(), it doesn't try to
+ reload the starkd.
+
+ -- we set index->fits to an anqfits_t for the file that contains the
+ codekd and quadfile.  Upon index_reload, it doesn't try to load the
+ starkd (if it did, it would try to read the star-kd from the wrong
+ file), and uses the index->fits object to read the quadfile and
+ codekd.
+
+ */
+
 typedef struct {
 	pl* inds;
 	startree_t* starkd;
@@ -56,11 +89,19 @@ int multiindex_add_index(multiindex_t* mi, const char* indexfn,
 /* Unloads the shared star kdtree -- ie, closes mem-maps, etc.
  * None of the indices will be usable.
  */
-int multiindex_unload_starkd(multiindex_t* mi);
+void multiindex_unload_starkd(multiindex_t* mi);
 
 /* Reloads a previously unloaded shared star kdtree.
  */
 int multiindex_reload_starkd(multiindex_t* mi);
+
+/* Calls multiindex_unload_starkd() and index_unload() on all
+ contained indexes.*/
+void multiindex_unload(multiindex_t* mi);
+
+/* Calls multiindex_reload_starkd() and index_reload() on all
+ contained indexes.*/
+int multiindex_reload(multiindex_t* mi);
 
 void multiindex_close(multiindex_t* mi);
 

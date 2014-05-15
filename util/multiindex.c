@@ -22,7 +22,7 @@
 #include "log.h"
 #include "errors.h"
 
-int multiindex_unload_starkd(multiindex_t* mi) {
+void multiindex_unload_starkd(multiindex_t* mi) {
     int i;
     for (i=0; i<multiindex_n(mi); i++) {
         index_t* ind = multiindex_get(mi, i);
@@ -32,7 +32,6 @@ int multiindex_unload_starkd(multiindex_t* mi) {
         startree_close(mi->starkd);
         mi->starkd = NULL;
     }
-    return 0;
 }
 
 int multiindex_reload_starkd(multiindex_t* mi) {
@@ -47,6 +46,29 @@ int multiindex_reload_starkd(multiindex_t* mi) {
     for (i=0; i<multiindex_n(mi); i++) {
         index_t* ind = multiindex_get(mi, i);
         ind->starkd = mi->starkd;
+    }
+    return 0;
+}
+
+void multiindex_unload(multiindex_t* mi) {
+    int i;
+    multiindex_unload_starkd(mi);
+    for (i=0; i<multiindex_n(mi); i++) {
+        index_t* ind = multiindex_get(mi, i);
+        index_unload(ind);
+    }
+}
+
+int multiindex_reload(multiindex_t* mi) {
+    int i;
+    if (multiindex_reload_starkd(mi)) {
+        return -1;
+    }
+    for (i=0; i<multiindex_n(mi); i++) {
+        index_t* ind = multiindex_get(mi, i);
+        if (index_reload(ind)) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -110,6 +132,9 @@ int multiindex_add_index(multiindex_t* mi, const char* fn, int flags) {
 	ind->fits = fits;
 	if (!ind->indexname)
 		ind->indexname = strdup(fn);
+    // shouldn't be needed, but set anyway
+    ind->quadfn = strdup(fn);
+    ind->codefn = strdup(fn);
 
 	pl_append(mi->inds, ind);
 

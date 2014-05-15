@@ -341,13 +341,13 @@ index_t* index_build_from(codetree_t* codekd, quadfile_t* quads, startree_t* sta
 	index->codekd = codekd;
 	index->quads = quads;
 	index->starkd = starkd;
-
 	set_meta(index);
 	return index;
 }
 
 index_t* index_load(const char* indexname, int flags, index_t* dest) {
 	index_t* allocd = NULL;
+    anbool singlefile;
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		logverb("Loading metadata for %s...\n", indexname);
@@ -358,6 +358,17 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 		memset(dest, 0, sizeof(index_t));
 
 	dest->indexname = strdup(indexname);
+
+    get_filenames(indexname, &(dest->quadfn), &(dest->codefn), &(dest->starfn),
+                  &singlefile);
+    if (singlefile) {
+        dest->fits = anqfits_open(dest->quadfn);
+        if (!dest->fits) {
+            ERROR("Failed to open FITS file %s", dest->quadfn);
+            goto bailout;
+        }
+    }
+
 	if (index_reload(dest)) {
 		goto bailout;
 	}
@@ -391,72 +402,50 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 }
 
 int index_reload(index_t* index) {
-	char *codetreefname=NULL, *quadfname=NULL, *startreefname=NULL;
-	anbool singlefile;
-	get_filenames(index->indexname, &quadfname, &codetreefname, &startreefname, &singlefile);
-	if (!index->fits) {
-		if (singlefile) {
-			if (!index->fits)
-				index->fits = anqfits_open(startreefname);
-			if (!index->fits) {
-				ERROR("Failed to open FITS file %s", startreefname);
-				return -1;
-			}
-		}
-	}
 	// Read .skdt file...
 	if (!index->starkd) {
 		if (index->fits)
 			index->starkd = startree_open_fits(index->fits);
 		else {
-			logverb("Reading star KD tree from %s...\n", startreefname);
-			index->starkd = startree_open(startreefname);
+			logverb("Reading star KD tree from %s...\n", index->starfn);
+			index->starkd = startree_open(index->starfn);
 		}
-		if (!index->starkd) {
-			ERROR("Failed to read star kdtree from file %s", startreefname);
-			goto bailout;
-		}
+        if (!index->starkd) {
+            ERROR("Failed to read star kdtree from file %s", index->starfn);
+            goto bailout;
+        }
 	}
-	free(startreefname);
-    startreefname = NULL;
 
 	// Read .quad file...
 	if (!index->quads) {
 		if (index->fits)
 			index->quads = quadfile_open_fits(index->fits);
 		else {
-			logverb("Reading quads file %s...\n", quadfname);
-			index->quads = quadfile_open(quadfname);
+			logverb("Reading quads file %s...\n", index->quadfn);
+			index->quads = quadfile_open(index->quadfn);
 		}
 		if (!index->quads) {
-			ERROR("Failed to read quads from %s", quadfname);
+			ERROR("Failed to read quads from %s", index->quadfn);
 			goto bailout;
 		}
 	}
-	free(quadfname);
-    quadfname = NULL;
 
 	// Read .ckdt file...
 	if (!index->codekd) {
 		if (index->fits)
 			index->codekd = codetree_open_fits(index->fits);
 		else {
-			logverb("Reading code KD tree from %s...\n", codetreefname);
-			index->codekd = codetree_open(codetreefname);
+			logverb("Reading code KD tree from %s...\n", index->codefn);
+			index->codekd = codetree_open(index->codefn);
 			if (!index->codekd) {
-				ERROR("Failed to read code kdtree from file %s", codetreefname);
+				ERROR("Failed to read code kdtree from file %s", index->codefn);
 				goto bailout;
 			}
 		}
 	}
-	free(codetreefname);
-	codetreefname = NULL;
 	return 0;
 
  bailout:
-    free(startreefname);
-    free(quadfname);
-    free(codetreefname);
 	return -1;
 }
 
@@ -506,7 +495,11 @@ int index_close_fds(index_t* ind) {
 void index_close(index_t* index) {
 	if (!index) return;
 	free(index->indexname);
+    free(index->quadfn);
+    free(index->codefn);
+    free(index->starfn);
 	free(index->cutband);
+    index->indexname = index->quadfn = index->codefn = index->starfn = NULL;
     index_unload(index);
 	if (index->fits)
 		anqfits_close(index->fits);
