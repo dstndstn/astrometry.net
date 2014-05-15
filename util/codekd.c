@@ -84,6 +84,9 @@ static codetree_t* my_open(const char* fn, anqfits_t* fits) {
 		goto bailout;
 	}
 
+    // kdtree_fits_t is a typedef of fitsbin_t
+    fitsbin_close_fd(io);
+
 	return s;
  bailout:
 	free(s);
