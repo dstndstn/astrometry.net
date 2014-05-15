@@ -673,7 +673,7 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
     $1 = tempstars;
 }
 // in the argout typemap we don't know about the swap (but that's ok)
-%typemap(argout) (const quadfile* qf, unsigned int quadid, unsigned int *stars) {
+%typemap(argout) (const quadfile_t* qf, unsigned int quadid, unsigned int *stars) {
   int i;
   int D;
   if (result == -1) {
