@@ -55,7 +55,7 @@ void anqfits_image_free(anqfits_image_t*);
 
 
 // Everything we know about a FITS extension.
-struct anqfits_ext_t {
+typedef struct {
 	// Offsets to header, in FITS blocks
 	// --> int works for ~12 TB files.
 	int hdr_start;
@@ -68,18 +68,14 @@ struct anqfits_ext_t {
 	qfits_header* header;
 	qfits_table* table;
     anqfits_image_t* image;
-};
-typedef struct anqfits_ext_t anqfits_ext_t;
+} anqfits_ext_t;
 
-struct anqfits_t {
+typedef struct {
     char* filename;
     int Nexts;    // # of extensions in file
 	anqfits_ext_t* exts;
     off_t filesize ; // File size in FITS blocks
-};
-typedef struct anqfits_t anqfits_t;
-
-
+} anqfits_t;
 
 
 anqfits_t* anqfits_open(const char* filename);

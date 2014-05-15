@@ -767,7 +767,7 @@ anqfits_t* anqfits_open(const char* filename) {
 anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
     anqfits_t* qf = NULL;
     // copied from qfits_cache.c: qfits_cache_add()
-    FILE* in = NULL;
+    FILE* fin = NULL;
     struct stat sta;
     size_t n_blocks;
     int found_it;
@@ -793,15 +793,15 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
     }
 
     /* Open input file */
-    in=fopen(filename, "r");
-    if (!in) {
+    fin=fopen(filename, "r");
+    if (!fin) {
         qdebug(printf("anqfits: cannot open file %s: %s\n",
                       filename, strerror(errno)););
         goto bailout;
     }
 
     /* Read first block in */
-    if (fread(buf, 1, FITS_BLOCK_SIZE, in) != FITS_BLOCK_SIZE) {
+    if (fread(buf, 1, FITS_BLOCK_SIZE, fin) != FITS_BLOCK_SIZE) {
         qdebug(printf("anqfits: error reading first block from %s: %s\n",
                       filename, strerror(errno)););
         goto bailout;
@@ -832,7 +832,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
         if (!firsttime) {
             // Read next FITS block
             debug("Reading next FITS block\n");
-            if (fread(buf, 1, FITS_BLOCK_SIZE, in) != FITS_BLOCK_SIZE) {
+            if (fread(buf, 1, FITS_BLOCK_SIZE, fin) != FITS_BLOCK_SIZE) {
                 qdebug(printf("anqfits: error reading file %s\n", filename););
                 goto bailout;
             }
@@ -890,7 +890,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
                 skip_blocks = qfits_blocks_needed(data_bytes);
                 off = skip_blocks;
                 off *= (size_t)FITS_BLOCK_SIZE;
-                seeked = fseeko(in, off, SEEK_CUR);
+                seeked = fseeko(fin, off, SEEK_CUR);
                 if (seeked == -1) {
                     qfits_error("anqfits: failed to fseeko in file %s: %s",
                                 filename, strerror(errno));
@@ -907,7 +907,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
             /* Look for extension start */
             found_it = 0;
             while (!found_it && !end_of_file) {
-                if (fread(buf, 1, FITS_BLOCK_SIZE, in) != FITS_BLOCK_SIZE) {
+                if (fread(buf, 1, FITS_BLOCK_SIZE, fin) != FITS_BLOCK_SIZE) {
                     /* Reached end of file */
                     end_of_file = 1;
                     break;
@@ -939,7 +939,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
 
             while (!found_it && !end_of_file) {
                 if (!firsttime) {
-                    if (fread(buf, 1, FITS_BLOCK_SIZE, in) != FITS_BLOCK_SIZE) {
+                    if (fread(buf, 1, FITS_BLOCK_SIZE, fin) != FITS_BLOCK_SIZE) {
                         qdebug(printf("anqfits: XTENSION without END in %s\n",
                                       filename););
                         end_of_file = 1;
@@ -982,8 +982,8 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
     hdr = NULL;
 
     /* Close file */
-    fclose(in);
-    in = NULL;
+    fclose(fin);
+    fin = NULL;
 
     // realloc
     qf->exts = realloc(qf->exts, qf->Nexts * sizeof(anqfits_ext_t));
@@ -1017,8 +1017,8 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
  bailout:
     if (hdr)
         qfits_header_destroy(hdr);
-    if (in)
-        fclose(in);
+    if (fin)
+        fclose(fin);
     if (qf) {
         free(qf->filename);
         free(qf->exts);
