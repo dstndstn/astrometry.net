@@ -198,6 +198,10 @@ void multiindex_close(multiindex_t* mi) {
 		pl_free(mi->inds);
 		mi->inds = NULL;
 	}
+    if (mi->fits) {
+        anqfits_close(mi->fits);
+        mi->fits = NULL;
+    }
 }
 
 void multiindex_free(multiindex_t* mi) {
