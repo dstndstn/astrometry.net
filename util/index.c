@@ -336,7 +336,7 @@ int index_dimquads(index_t* indx) {
 	return indx->dimquads;
 }
 
-index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd) {
+index_t* index_build_from(codetree* codekd, quadfile_t* quads, startree_t* starkd) {
 	index_t* index = calloc(1, sizeof(index_t));
 	index->codekd = codekd;
 	index->quads = quads;
@@ -377,10 +377,9 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 
 	if (flags & INDEX_ONLY_LOAD_METADATA) {
 		index_unload(dest);
-		// Actually, keep this open for faster reopening...
-		//if (dest->fits)
-		//anqfits_close(dest->fits);
-		//dest->fits = NULL;
+        // If we're using anqfits_t (dest->fits), keep that open for
+        // fast reopening.  anqfits_t doesn't keep a FILE* or anything
+        // open, so that's fine.
 	}
 
 	return dest;
@@ -420,11 +419,6 @@ int index_reload(index_t* index) {
 	}
 	free(startreefname);
     startreefname = NULL;
-
-	/*
-	 if (flags & INDEX_ONLY_LOAD_SKDT)
-	 return index;
-	 */
 
 	// Read .quad file...
 	if (!index->quads) {
@@ -513,17 +507,9 @@ void index_close(index_t* index) {
 	if (!index) return;
 	free(index->indexname);
 	free(index->cutband);
-	if (index->starkd)
-		startree_close(index->starkd);
-	if (index->codekd)
-		codetree_close(index->codekd);
-	if (index->quads)
-		quadfile_close(index->quads);
+    index_unload(index);
 	if (index->fits)
 		anqfits_close(index->fits);
-	index->starkd = NULL;
-	index->codekd = NULL;
-	index->quads = NULL;
 	index->fits = NULL;
 }
 

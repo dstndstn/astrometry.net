@@ -282,7 +282,6 @@ static startree_t* my_open(const char* fn, anqfits_t* fits) {
         goto bailout;
     }
 
-
     gettimeofday(&tv1, NULL);
     chunks = get_chunks(s, NULL);
     for (i=0; i<bl_size(chunks); i++) {
@@ -294,6 +293,9 @@ static startree_t* my_open(const char* fn, anqfits_t* fits) {
     bl_free(chunks);
     gettimeofday(&tv2, NULL);
     debug("reading chunks took %g ms\n", millis_between(&tv1, &tv2));
+
+    // kdtree_fits_t is a typedef of fitsbin_t
+    fitsbin_close_fd(io);
 
 	return s;
 

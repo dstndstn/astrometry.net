@@ -27,7 +27,7 @@
 #include "fitsbin.h"
 #include "anqfits.h"
 
-struct quadfile {
+typedef struct {
 	unsigned int numquads;
 	unsigned int numstars;
     int dimquads;
@@ -45,51 +45,50 @@ struct quadfile {
 	fitsbin_t* fb;
 	// when reading:
 	uint32_t* quadarray;
-};
-typedef struct quadfile quadfile;
+} quadfile_t;
 
-quadfile* quadfile_open(const char* fname);
-quadfile* quadfile_open_fits(anqfits_t* fits);
+quadfile_t* quadfile_open(const char* fname);
+quadfile_t* quadfile_open_fits(anqfits_t* fits);
 
-char* quadfile_get_filename(const quadfile* qf);
+char* quadfile_get_filename(const quadfile_t* qf);
 
-quadfile* quadfile_open_for_writing(const char* quadfname);
+quadfile_t* quadfile_open_for_writing(const char* quadfname);
 
-quadfile* quadfile_open_in_memory(void);
+quadfile_t* quadfile_open_in_memory(void);
 
-int quadfile_switch_to_reading(quadfile* qf);
+int quadfile_switch_to_reading(quadfile_t* qf);
 
-int quadfile_close(quadfile* qf);
+int quadfile_close(quadfile_t* qf);
 
 // Look at each quad, and ensure that the star ids it contains are all
 // less than the number of stars ("numstars").  Returns 0=ok, -1=problem
-int quadfile_check(const quadfile* qf);
+int quadfile_check(const quadfile_t* qf);
 
 // Copies the star ids of the stars that comprise quad "quadid".
 // There will be qf->dimquads such stars.
 // (this will be less than starutil.h : DQMAX, for ease of static
 // allocation of arrays that will hold quads of stars)
-int quadfile_get_stars(const quadfile* qf, unsigned int quadid,
+int quadfile_get_stars(const quadfile_t* qf, unsigned int quadid,
                        unsigned int* stars);
 
-int quadfile_write_quad(quadfile* qf, unsigned int* stars);
+int quadfile_write_quad(quadfile_t* qf, unsigned int* stars);
 
-int quadfile_dimquads(const quadfile* qf);
+int quadfile_dimquads(const quadfile_t* qf);
 
-int quadfile_nquads(const quadfile* qf);
+int quadfile_nquads(const quadfile_t* qf);
 
-int quadfile_fix_header(quadfile* qf);
+int quadfile_fix_header(quadfile_t* qf);
 
-int quadfile_write_header(quadfile* qf);
+int quadfile_write_header(quadfile_t* qf);
 
-double quadfile_get_index_scale_upper_arcsec(const quadfile* qf);
+double quadfile_get_index_scale_upper_arcsec(const quadfile_t* qf);
 
-double quadfile_get_index_scale_lower_arcsec(const quadfile* qf);
+double quadfile_get_index_scale_lower_arcsec(const quadfile_t* qf);
 
-qfits_header* quadfile_get_header(const quadfile* qf);
+qfits_header* quadfile_get_header(const quadfile_t* qf);
 
-int quadfile_write_header_to(quadfile* qf, FILE* fid);
+int quadfile_write_header_to(quadfile_t* qf, FILE* fid);
 
-int quadfile_write_all_quads_to(quadfile* qf, FILE* fid);
+int quadfile_write_all_quads_to(quadfile_t* qf, FILE* fid);
 
 #endif

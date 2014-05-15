@@ -149,16 +149,23 @@ off_t fitsbin_get_data_start(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     return chunk->header_end;
 }
 
+int fitsbin_close_fd(fitsbin_t* fb) {
+	if (!fb) return 0;
+    if (fb->fid) {
+		if (fclose(fb->fid)) {
+			SYSERROR("Error closing fitsbin file");
+            return -1;
+        }
+        fb->fid = NULL;
+    }
+    return 0;
+}
+
 int fitsbin_close(fitsbin_t* fb) {
     int i;
     int rtn = 0;
 	if (!fb) return rtn;
-    if (fb->fid) {
-		if (fclose(fb->fid)) {
-			SYSERROR("Error closing fitsbin file");
-            rtn = -1;
-        }
-    }
+    rtn = fitsbin_close_fd(fb);
     if (fb->primheader)
         qfits_header_destroy(fb->primheader);
     for (i=0; i<nchunks(fb); i++) {

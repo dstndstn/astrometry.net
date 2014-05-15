@@ -27,7 +27,7 @@
 #include "errors.h"
 #include "quad-utils.h"
 
-void quad_write(codefile* codes, quadfile* quads,
+void quad_write(codefile* codes, quadfile_t* quads,
 				unsigned int* quad, startree_t* starkd,
 				int dimquads, int dimcodes) {
 	double code[DCMAX];
@@ -37,7 +37,7 @@ void quad_write(codefile* codes, quadfile* quads,
 	quadfile_write_quad(quads, quad);
 }
 
-void quad_write_const(codefile* codes, quadfile* quads,
+void quad_write_const(codefile* codes, quadfile_t* quads,
 					  const unsigned int* quad, startree_t* starkd,
 					  int dimquads, int dimcodes) {
 	int k;

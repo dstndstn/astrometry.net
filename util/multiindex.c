@@ -46,11 +46,12 @@ bailout:
 }
 
 int multiindex_add_index(multiindex_t* mi, const char* fn) {
-	anqfits_t* fits = anqfits_open(fn);
-	quadfile* quads = NULL;
+	anqfits_t* fits;
+	quadfile_t* quads = NULL;
 	codetree* codes = NULL;
 	index_t* ind = NULL;
 	logverb("Reading index file \"%s\"...\n", fn);
+    fits = anqfits_open(fn);
 	if (!fits) {
 		ERROR("Failed to open FITS file \"%s\"", fn);
 		goto bailout;

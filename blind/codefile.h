@@ -85,11 +85,11 @@ qfits_header* codefile_get_header(const codefile* cf);
 
 
 
-void quad_write(codefile* codes, quadfile* quads,
+void quad_write(codefile* codes, quadfile_t* quads,
 				unsigned int* quad, startree_t* starkd,
 				int dimquads, int dimcodes);
 
-void quad_write_const(codefile* codes, quadfile* quads,
+void quad_write_const(codefile* codes, quadfile_t* quads,
 					  const unsigned int* quad, startree_t* starkd,
 					  int dimquads, int dimcodes);
 

@@ -40,7 +40,7 @@
 
 #define STARTREE_NAME "stars"
 
-struct startree_s {
+typedef struct {
 	kdtree_t* tree;
 	qfits_header* header;
 	int* inverse_perm;
@@ -52,9 +52,7 @@ struct startree_s {
 	// reading: tagged-along data (a FITS BINTABLE with one row per star,
 	// in the same order); access this via startree_get_tagalong() ONLY!
 	fitstable_t* tagalong;
-};
-typedef struct startree_s startree_t;
-
+} startree_t;
 
 startree_t* startree_open(const char* fn);
 

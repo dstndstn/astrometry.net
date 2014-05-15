@@ -115,9 +115,7 @@ int kdtree_fits_write_chunk_to(fitsbin_chunk_t* chunk, FILE* fid);
 
 int kdtree_fits_close(kdtree_t* io);
 
-
 int kdtree_fits_io_close(kdtree_fits_t* io);
-
 
 // flipped-endian writing...
 int kdtree_fits_write_chunk_flipped(kdtree_fits_t* io, fitsbin_chunk_t* chunk,

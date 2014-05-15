@@ -27,8 +27,8 @@
 
 /*
  * These routines handle loading of index files, which can consist of
- * several files (.skdt.fits , .ckdt.fits, .quad.fits), or a
- * single large file (.fits).
+ * several files (.skdt.fits , .ckdt.fits, .quad.fits), or a single
+ * large file (.fits).
  */
 
 #define DEFAULT_INDEX_JITTER 1.0  // arcsec
@@ -43,7 +43,7 @@
 typedef struct {
 	// The actual components of an index.
 	codetree* codekd;
-	quadfile* quads;
+	quadfile_t* quads;
 	startree_t* starkd;
 
 	// FITS file access
@@ -103,7 +103,8 @@ anbool index_overlaps_scale_range(index_t* indx, double quadlo, double quadhi);
 anbool index_is_within_range(index_t* indx, double ra, double dec, double radius_deg);
 
 /**
- Reads index metadata from the given 'filename' into the given 'indx' struct.
+ Reads index metadata from the given 'filename' into the given 'indx'
+ struct.
 
  This is done by basically loading the index, grabbing the metadata,
  and closing the index; therefore it checks for structural consistency
@@ -119,7 +120,6 @@ char* index_get_quad_filename(const char* indexname);
 char* index_get_qidx_filename(const char* indexname);
 
 #define INDEX_ONLY_LOAD_METADATA 2
-//#define INDEX_ONLY_LOAD_SKDT     4
 
 int index_get_quad_dim(const index_t* index);
 
@@ -129,22 +129,24 @@ int index_nquads(const index_t* index);
 
 int index_nstars(const index_t* index);
 
-index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd);
+index_t* index_build_from(codetree* codekd, quadfile_t* quads, startree_t* starkd);
 
 /**
  * Load an index from disk
  *
  * Parameters:
  *
- *   indexname - the base name of the index files; for example, if the index is
- *               in files 'myindex.ckdt.fits' and 'myindex.skdt.fits', then
- *               the indexname is just 'myindex'
+ *   indexname - the base name of the index files; for example, if the
+ *               index is in files 'myindex.ckdt.fits' and
+ *               'myindex.skdt.fits', then the indexname is just
+ *               'myindex'
  *
- *   flags     - If INDEX_ONLY_LOAD_METADATA, then only metadata will be
+ *   flags - If INDEX_ONLY_LOAD_METADATA, then only metadata will be
  *               loaded.
  *
- *   dest      - If NULL, a new index_t will be allocated and returned; otherwise,
- *               the results will be put in this index_t object.
+ *   dest - If NULL, a new index_t will be allocated and returned;
+ *               otherwise, the results will be put in this index_t
+ *               object.
  *
  * Returns:
  *
@@ -155,7 +157,8 @@ index_t* index_load(const char* indexname, int flags, index_t* dest);
 
 /**
  Close the quad, skdt, and ckdt files; makes it as though you did
- INDEX_ONLY_LOAD_METADATA.  You can re-open the files with index_reload().
+ INDEX_ONLY_LOAD_METADATA.  You can re-load the files with
+ index_reload().
  */
 void index_unload(index_t* index);
 
