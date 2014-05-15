@@ -336,7 +336,7 @@ int index_dimquads(index_t* indx) {
 	return indx->dimquads;
 }
 
-index_t* index_build_from(codetree* codekd, quadfile_t* quads, startree_t* starkd) {
+index_t* index_build_from(codetree_t* codekd, quadfile_t* quads, startree_t* starkd) {
 	index_t* index = calloc(1, sizeof(index_t));
 	index->codekd = codekd;
 	index->quads = quads;

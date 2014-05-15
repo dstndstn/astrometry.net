@@ -27,39 +27,37 @@
 
 #define CODETREE_NAME "codes"
 
-struct codetree {
+typedef struct {
 	kdtree_t* tree;
 	qfits_header* header;
 	int* inverse_perm;
-};
-typedef struct codetree codetree;
+} codetree_t;
 
+codetree_t* codetree_open(const char* fn);
 
-codetree* codetree_open(const char* fn);
+codetree_t* codetree_open_fits(anqfits_t* fits);
 
-codetree* codetree_open_fits(anqfits_t* fits);
+int codetree_get(codetree_t* s, unsigned int codeid, double* code);
 
-int codetree_get(codetree* s, unsigned int codeid, double* code);
+int codetree_N(codetree_t* s);
 
-int codetree_N(codetree* s);
+int codetree_nodes(codetree_t* s);
 
-int codetree_nodes(codetree* s);
+int codetree_D(codetree_t* s);
 
-int codetree_D(codetree* s);
+int codetree_get_permuted(codetree_t* s, int index);
 
-int codetree_get_permuted(codetree* s, int index);
+qfits_header* codetree_header(codetree_t* s);
 
-qfits_header* codetree_header(codetree* s);
-
-int codetree_close(codetree* s);
+int codetree_close(codetree_t* s);
 
 // for writing
-codetree* codetree_new(void);
+codetree_t* codetree_new(void);
 
-int codetree_append_to(codetree* s, FILE* fid);
+int codetree_append_to(codetree_t* s, FILE* fid);
 
-int codetree_write_to_file(codetree* s, const char* fn);
+int codetree_write_to_file(codetree_t* s, const char* fn);
 
-int codetree_write_to_file_flipped(codetree* s, const char* fn);
+int codetree_write_to_file_flipped(codetree_t* s, const char* fn);
 
 #endif

@@ -48,7 +48,7 @@ bailout:
 int multiindex_add_index(multiindex_t* mi, const char* fn) {
 	anqfits_t* fits;
 	quadfile_t* quads = NULL;
-	codetree* codes = NULL;
+	codetree_t* codes = NULL;
 	index_t* ind = NULL;
 	logverb("Reading index file \"%s\"...\n", fn);
     fits = anqfits_open(fn);

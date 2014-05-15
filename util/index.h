@@ -42,7 +42,7 @@
  */
 typedef struct {
 	// The actual components of an index.
-	codetree* codekd;
+	codetree_t* codekd;
 	quadfile_t* quads;
 	startree_t* starkd;
 
@@ -129,7 +129,7 @@ int index_nquads(const index_t* index);
 
 int index_nstars(const index_t* index);
 
-index_t* index_build_from(codetree* codekd, quadfile_t* quads, startree_t* starkd);
+index_t* index_build_from(codetree_t* codekd, quadfile_t* quads, startree_t* starkd);
 
 /**
  * Load an index from disk
