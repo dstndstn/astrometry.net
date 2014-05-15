@@ -90,11 +90,11 @@ multiindex_t* multiindex_new(const char* skdtfn) {
 		ERROR("Failed to open multiindex file \"%s\"", skdtfn);
         goto bailout;
 	}
+	mi->inds = pl_new(16);
     if (multiindex_reload_starkd(mi)) {
 		ERROR("Failed to open multiindex star kd-tree \"%s\"", skdtfn);
 		goto bailout;
 	}
-	mi->inds = pl_new(16);
 	return mi;
 bailout:
 	multiindex_free(mi);
