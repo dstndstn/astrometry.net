@@ -3,6 +3,7 @@
 #
 #
 setupRequired(cfitsio)
+setupRequired(gsl)
 setupOptional(wcslib)
 #
 # the symlink   "astrometry -> ." allows this to work.

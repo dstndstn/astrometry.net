@@ -4,10 +4,11 @@
 # This is copied to INSTALL_DIR/ups/astrometry_net.table
 #
 setupRequired(cfitsio)
+setupRequired(gsl)
 setupOptional(wcslib)
 #
 #
-envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
+envPrepend(PYTHONPATH, ${PRODUCT_DIR}/lib/python)
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envPrepend(PATH, ${PRODUCT_DIR}/bin)

@@ -39,6 +39,7 @@ def read_photoobjs_in_wcs(wcs, margin, cols=None,
     
     TT = []
     if sdss is None:
+        from astrometry.sdss import DR9
         sdss = DR9()
     for run,camcol,field,r,d in RCF:
         log.debug('RCF %i/%i/%i' % (run, camcol, field))
