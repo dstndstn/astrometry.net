@@ -42,8 +42,8 @@ int codetree_files(const char* codefn, const char* ckdtfn,
 				   int Nleaf, int datatype, int treetype,
 				   int buildopts,
 				   char** args, int argc) {
-    codefile* codes;
-    codetree *codekd = NULL;
+    codefile_t* codes;
+    codetree_t *codekd = NULL;
 
 	assert(codefn);
 	assert(ckdtfn);
@@ -76,11 +76,11 @@ int codetree_files(const char* codefn, const char* ckdtfn,
 	return 0;
 }
 
-codetree* codetree_build(codefile* codes,
+codetree_t* codetree_build(codefile_t* codes,
 						 int Nleaf, int datatype, int treetype,
 						 int buildopts,
 						 char** args, int argc) {
-	codetree* codekd;
+	codetree_t* codekd;
 	qfits_header* hdr;
 	int exttype = KDT_EXT_DOUBLE;
 	int tt;

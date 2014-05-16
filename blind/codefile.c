@@ -27,7 +27,7 @@
 #include "errors.h"
 #include "quad-utils.h"
 
-void quad_write(codefile* codes, quadfile_t* quads,
+void quad_write(codefile_t* codes, quadfile_t* quads,
 				unsigned int* quad, startree_t* starkd,
 				int dimquads, int dimcodes) {
 	double code[DCMAX];
@@ -37,7 +37,7 @@ void quad_write(codefile* codes, quadfile_t* quads,
 	quadfile_write_quad(quads, quad);
 }
 
-void quad_write_const(codefile* codes, quadfile_t* quads,
+void quad_write_const(codefile_t* codes, quadfile_t* quads,
 					  const unsigned int* quad, startree_t* starkd,
 					  int dimquads, int dimcodes) {
 	int k;
@@ -88,13 +88,13 @@ void codefile_compute_star_code(const double* starxyz, double* code, int dimquad
 
 #define CHUNK_CODES 0
 
-static fitsbin_chunk_t* codes_chunk(codefile* cf) {
+static fitsbin_chunk_t* codes_chunk(codefile_t* cf) {
     return fitsbin_get_chunk(cf->fb, CHUNK_CODES);
 }
 
 static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     qfits_header* primheader = fitsbin_get_primary_header(fb);
-	codefile* cf = chunk->userdata;
+	codefile_t* cf = chunk->userdata;
 
     cf->dimcodes = qfits_header_getint(primheader, "DIMCODES", 4);
     cf->numcodes = qfits_header_getint(primheader, "NCODES", -1);
@@ -119,9 +119,9 @@ static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	return 0;
 }
 
-static codefile* new_codefile(const char* fn, anbool writing, anbool inmem) {
+static codefile_t* new_codefile(const char* fn, anbool writing, anbool inmem) {
 	fitsbin_chunk_t chunk;
-	codefile* cf = calloc(1, sizeof(codefile));
+	codefile_t* cf = calloc(1, sizeof(codefile_t));
 	if (!cf) {
 		SYSERROR("Couldn't calloc a codefile struct");
 		return NULL;
@@ -153,7 +153,7 @@ static codefile* new_codefile(const char* fn, anbool writing, anbool inmem) {
 	return cf;
 }
 
-void codefile_get_code(const codefile* cf, int codeid, double* code) {
+void codefile_get_code(const codefile_t* cf, int codeid, double* code) {
 	int i;
 	if (codeid >= cf->numcodes) {
 		ERROR("Requested codeid %i, but number of codes is %i", codeid, cf->numcodes);
@@ -164,7 +164,7 @@ void codefile_get_code(const codefile* cf, int codeid, double* code) {
 		code[i] = cf->codearray[codeid * cf->dimcodes + i];
 }
 
-int codefile_close(codefile* cf) {
+int codefile_close(codefile_t* cf) {
     int rtn;
 	if (!cf) return 0;
 	rtn = fitsbin_close(cf->fb);
@@ -172,8 +172,8 @@ int codefile_close(codefile* cf) {
     return rtn;
 }
 
-codefile* codefile_open(const char* fn) {
-    codefile* cf = NULL;
+codefile_t* codefile_open(const char* fn) {
+    codefile_t* cf = NULL;
 
     cf = new_codefile(fn, FALSE, FALSE);
     if (!cf)
@@ -191,8 +191,8 @@ codefile* codefile_open(const char* fn) {
     return NULL;
 }
 
-static codefile* open_for_writing(const char* fn) {
-	codefile* cf;
+static codefile_t* open_for_writing(const char* fn) {
+	codefile_t* cf;
 	qfits_header* hdr;
 	if (fn)
 		cf = new_codefile(fn, TRUE, FALSE);
@@ -225,7 +225,7 @@ static codefile* open_for_writing(const char* fn) {
 	return NULL;
 }
 
-codefile* codefile_open_for_writing(const char* fn) {
+codefile_t* codefile_open_for_writing(const char* fn) {
 	if (!fn) {
 		ERROR("Non-NULL filename required");
 		return NULL;
@@ -233,11 +233,11 @@ codefile* codefile_open_for_writing(const char* fn) {
 	return open_for_writing(fn);
 }
 
-codefile* codefile_open_in_memory() {
+codefile_t* codefile_open_in_memory() {
 	return open_for_writing(NULL);
 }
 
-int codefile_switch_to_reading(codefile* cf) {
+int codefile_switch_to_reading(codefile_t* cf) {
 	if (codefile_fix_header(cf)) {
         ERROR("Failed to fix codes header");
 		return -1;
@@ -254,7 +254,7 @@ int codefile_switch_to_reading(codefile* cf) {
 	return 0;
 }
 
-int codefile_write_header(codefile* cf) {
+int codefile_write_header(codefile_t* cf) {
 	fitsbin_t* fb = cf->fb;
     fitsbin_chunk_t* chunk = codes_chunk(cf);
 	chunk->itemsize = cf->dimcodes * sizeof(double);
@@ -268,7 +268,7 @@ int codefile_write_header(codefile* cf) {
 	return 0;
 }
 
-int codefile_fix_header(codefile* cf) {
+int codefile_fix_header(codefile_t* cf) {
 	qfits_header* hdr;
 	fitsbin_t* fb = cf->fb;
     fitsbin_chunk_t* chunk = codes_chunk(cf);
@@ -295,7 +295,7 @@ int codefile_fix_header(codefile* cf) {
 	return 0;
 }
 
-int codefile_write_code(codefile* cf, double* code) {
+int codefile_write_code(codefile_t* cf, double* code) {
     fitsbin_chunk_t* chunk = codes_chunk(cf);
     if (fitsbin_write_item(cf->fb, chunk, code)) {
 		ERROR("Failed to write code");
@@ -305,10 +305,10 @@ int codefile_write_code(codefile* cf, double* code) {
 	return 0;
 }
 
-qfits_header* codefile_get_header(const codefile* cf) {
+qfits_header* codefile_get_header(const codefile_t* cf) {
 	return fitsbin_get_primary_header(cf->fb);
 }
 
-int codefile_dimcodes(const codefile* cf) {
+int codefile_dimcodes(const codefile_t* cf) {
 	return cf->dimcodes;
 }

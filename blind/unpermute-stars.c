@@ -34,8 +34,8 @@
 #include "log.h"
 #include "errors.h"
 
-int unpermute_stars(startree_t* treein, quadfile* qfin,
-					startree_t** p_treeout, quadfile* qfout,
+int unpermute_stars(startree_t* treein, quadfile_t* qfin,
+					startree_t** p_treeout, quadfile_t* qfout,
 					anbool dosweeps, anbool check,
 					char** args, int argc) {
 	startree_t* treeout;
@@ -239,8 +239,8 @@ int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
 						  const char* skdtoutfn, const char* quadoutfn,
 						  anbool dosweeps, anbool check,
 						  char** args, int argc) {
-    quadfile* qfin;
-	quadfile* qfout;
+    quadfile_t* qfin;
+	quadfile_t* qfout;
 	startree_t* treein;
 	startree_t* treeout;
 	fitstable_t* tagout = NULL;

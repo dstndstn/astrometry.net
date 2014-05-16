@@ -32,8 +32,8 @@
 #include "errors.h"
 #include "boilerplate.h"
 
-int unpermute_quads(quadfile* quadin, codetree* treein,
-					quadfile* quadout, codetree** p_treeout,
+int unpermute_quads(quadfile_t* quadin, codetree_t* treein,
+					quadfile_t* quadout, codetree_t** p_treeout,
 					char** args, int argc) {
 	int i;
 	qfits_header* codehdr;
@@ -43,7 +43,7 @@ int unpermute_quads(quadfile* quadin, codetree* treein,
 	int codehp = -1;
 	qfits_header* qouthdr;
 	qfits_header* qinhdr;
-	codetree* treeout;
+	codetree_t* treeout;
 	anbool allsky;
 
 	codehdr = codetree_header(treein);
@@ -145,10 +145,10 @@ int unpermute_quads(quadfile* quadin, codetree* treein,
 int unpermute_quads_files(const char* quadinfn, const char* ckdtinfn,
 						  const char* quadoutfn, const char* ckdtoutfn,
 						  char** args, int argc) {
-    quadfile* quadin;
-	quadfile* quadout;
-	codetree* treein;
-	codetree* treeout;
+    quadfile_t* quadin;
+	quadfile_t* quadout;
+	codetree_t* treein;
+	codetree_t* treeout;
 
 	logmsg("Reading code tree from %s ...\n", ckdtinfn);
 	treein = codetree_open(ckdtinfn);

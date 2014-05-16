@@ -36,7 +36,7 @@ void codefile_compute_field_code(const double* xy, double* code, int dimquads);
 
 
 
-struct codefile {
+typedef struct {
 	int numcodes;
 	int numstars;
 
@@ -57,39 +57,38 @@ struct codefile {
 
 	// when reading:
 	double* codearray;
-};
-typedef struct codefile codefile;
+} codefile_t;
 
-int codefile_close(codefile* cf);
+int codefile_close(codefile_t* cf);
 
-int codefile_dimcodes(const codefile* cf);
+int codefile_dimcodes(const codefile_t* cf);
 
-void codefile_get_code(const codefile* cf, int codeid, double* code);
+void codefile_get_code(const codefile_t* cf, int codeid, double* code);
 
-codefile* codefile_open(const char* fn);
+codefile_t* codefile_open(const char* fn);
 
-codefile* codefile_open_for_writing(const char* fname);
+codefile_t* codefile_open_for_writing(const char* fname);
 
-codefile* codefile_open_in_memory();
+codefile_t* codefile_open_in_memory();
 
 // when in-memory
-int codefile_switch_to_reading(codefile* cf);
+int codefile_switch_to_reading(codefile_t* cf);
 
-int codefile_write_header(codefile* cf);
+int codefile_write_header(codefile_t* cf);
 
-int codefile_write_code(codefile* cf, double* code);
+int codefile_write_code(codefile_t* cf, double* code);
 
-int codefile_fix_header(codefile* cf);
+int codefile_fix_header(codefile_t* cf);
 
-qfits_header* codefile_get_header(const codefile* cf);
+qfits_header* codefile_get_header(const codefile_t* cf);
 
 
 
-void quad_write(codefile* codes, quadfile_t* quads,
+void quad_write(codefile_t* codes, quadfile_t* quads,
 				unsigned int* quad, startree_t* starkd,
 				int dimquads, int dimcodes);
 
-void quad_write_const(codefile* codes, quadfile_t* quads,
+void quad_write_const(codefile_t* codes, quadfile_t* quads,
 					  const unsigned int* quad, startree_t* starkd,
 					  int dimquads, int dimcodes);
 

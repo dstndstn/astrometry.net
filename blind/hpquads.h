@@ -25,8 +25,8 @@
 #include "quadfile.h"
 
 int hpquads(startree_t* starkd,
-			codefile* codes,
-			quadfile* quads,
+			codefile_t* codes,
+			quadfile_t* quads,
 			int Nside,
 			double scale_min_arcmin,
 			double scale_max_arcmin,

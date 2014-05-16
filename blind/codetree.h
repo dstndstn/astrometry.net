@@ -25,7 +25,7 @@
 
 /**
  */
-codetree* codetree_build(codefile* codes,
+codetree_t* codetree_build(codefile_t* codes,
 						 int Nleaf, int datatype, int treetype,
 						 int buildopts,
 						 char** args, int argc);

@@ -302,8 +302,8 @@ static int build_quads(hpquads_t* me, int Nhptotry, il* hptotry, int R) {
 }
 
 int hpquads(startree_t* starkd,
-			codefile* codes,
-			quadfile* quads,
+			codefile_t* codes,
+			quadfile_t* quads,
 			int Nside,
 			double scale_min_arcmin,
 			double scale_max_arcmin,
@@ -621,8 +621,8 @@ int hpquads_files(const char* skdtfn,
 				  int sort_size,
 
 				  char** args, int argc) {
-	quadfile* quads;
-	codefile* codes;
+	quadfile_t* quads;
+	codefile_t* codes;
 	startree_t* starkd;
 	int rtn;
 

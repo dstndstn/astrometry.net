@@ -37,8 +37,8 @@ int unpermute_quads_files(const char* quadinfn, const char* ckdtinfn,
 						  const char* quadoutfn, const char* ckdtoutfn,
 						  char** args, int argc);
 
-int unpermute_quads(quadfile* quadin, codetree* ckdtin,
-					quadfile* quadout, codetree** ckdtout,
+int unpermute_quads(quadfile_t* quadin, codetree_t* ckdtin,
+					quadfile_t* quadout, codetree_t** ckdtout,
 					char** args, int argc);
 
 #endif

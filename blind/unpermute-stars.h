@@ -40,8 +40,8 @@ int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
 						  anbool sweep, anbool check,
 						  char** args, int argc);
 
-int unpermute_stars(startree_t* starkdin, quadfile* quadin,
-					startree_t** starkdout, quadfile* quadout,
+int unpermute_stars(startree_t* starkdin, quadfile_t* quadin,
+					startree_t** starkdout, quadfile_t* quadout,
 					anbool sweep, anbool check,
 					char** args, int argc);
 

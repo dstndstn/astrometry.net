@@ -54,12 +54,12 @@ static void add_boilerplate(index_params_t* p, qfits_header* hdr) {
 }
 
 static int step_hpquads(index_params_t* p,
-						codefile** p_codes, quadfile** p_quads,
+						codefile_t** p_codes, quadfile_t** p_quads,
 						char** p_codefn, char** p_quadfn, 
 						startree_t* starkd, const char* skdtfn,
 						sl* tempfiles) {
-	codefile* codes = NULL;
-	quadfile* quads = NULL;
+	codefile_t* codes = NULL;
+	quadfile_t* quads = NULL;
 	char* quadfn = NULL;
 	char* codefn = NULL;
 
@@ -113,10 +113,10 @@ static int step_hpquads(index_params_t* p,
 }
 
 static int step_codetree(index_params_t* p,
-						 codefile* codes, codetree** p_codekd,
+						 codefile_t* codes, codetree_t** p_codekd,
 						 const char* codefn, char** p_ckdtfn,
 						 sl* tempfiles) {
-	codetree* codekd = NULL;
+	codetree_t* codekd = NULL;
 	char* ckdtfn=NULL;
 
 	if (p->inmemory) {
@@ -148,13 +148,13 @@ static int step_codetree(index_params_t* p,
 }
 
 static int step_unpermute_quads(index_params_t* p,
-								quadfile* quads2, codetree* codekd,
-								quadfile** p_quads3, codetree** p_codekd2,
+								quadfile_t* quads2, codetree_t* codekd,
+								quadfile_t** p_quads3, codetree_t** p_codekd2,
 								const char* quad2fn, const char* ckdtfn,
 								char** p_quad3fn, char** p_ckdt2fn,
 								sl* tempfiles) {
-	quadfile* quads3 = NULL;
-	codetree* codekd2 = NULL;
+	quadfile_t* quads3 = NULL;
+	codetree_t* codekd2 = NULL;
 	char* quad3fn=NULL;
 	char* ckdt2fn=NULL;
 
@@ -201,7 +201,7 @@ static int step_unpermute_quads(index_params_t* p,
 }
 
 static int step_merge_index(index_params_t* p,
-							codetree* codekd2, quadfile* quads3,
+							codetree_t* codekd2, quadfile_t* quads3,
 							startree_t* starkd2,
 							index_t** p_index,
 							const char* ckdt2fn, const char* quad3fn,
@@ -227,8 +227,8 @@ static int step_merge_index(index_params_t* p,
 		*p_index = index;
 
 	} else {
-		quadfile* quad;
-		codetree* code;
+		quadfile_t* quad;
+		codetree_t* code;
 		startree_t* star;
 		qfits_header* hdr;
 
@@ -287,19 +287,19 @@ int build_index_shared_skdt(const char* skdtfn,
 	double* sortdata = NULL;
 	//int* uniperm = NULL;
 	int rtn = -1;
-	codefile* codes = NULL;
-	quadfile* quads = NULL;
+	codefile_t* codes = NULL;
+	quadfile_t* quads = NULL;
 	char* quadfn=NULL;
 	char* codefn=NULL;
-	codetree* codekd = NULL;
+	codetree_t* codekd = NULL;
 	char* ckdtfn=NULL;
 
 	startree_t* starkd2 = NULL;
-	quadfile* quads2 = NULL;
+	quadfile_t* quads2 = NULL;
 	char* quad2fn=NULL;
 
-	quadfile* quads3 = NULL;
-	codetree* codekd2 = NULL;
+	quadfile_t* quads3 = NULL;
+	codetree_t* codekd2 = NULL;
 	char* quad3fn=NULL;
 	char* ckdt2fn=NULL;
 
@@ -404,20 +404,20 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 	fitstable_t* startag = NULL;
 
 	// hpquads
-	codefile* codes = NULL;
-	quadfile* quads = NULL;
+	codefile_t* codes = NULL;
+	quadfile_t* quads = NULL;
 
 	// codetree
-	codetree* codekd = NULL;
+	codetree_t* codekd = NULL;
 
 	// unpermute-stars
 	startree_t* starkd2 = NULL;
-	quadfile* quads2 = NULL;
+	quadfile_t* quads2 = NULL;
 	fitstable_t* startag2 = NULL;
 
 	// unpermute-quads
-	quadfile* quads3 = NULL;
-	codetree* codekd2 = NULL;
+	quadfile_t* quads3 = NULL;
+	codetree_t* codekd2 = NULL;
 
 	//index_t* index = NULL;
 

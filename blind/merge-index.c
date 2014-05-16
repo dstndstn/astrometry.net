@@ -31,7 +31,7 @@
 #include "ioutils.h"
 #include "log.h"
 
-int merge_index(quadfile* quad, codetree* code, startree_t* star,
+int merge_index(quadfile_t* quad, codetree_t* code, startree_t* star,
 				const char* indexfn) {
     FILE* fout;
 	fitstable_t* tag = NULL;
@@ -94,7 +94,7 @@ int merge_index(quadfile* quad, codetree* code, startree_t* star,
 }
 
 int merge_index_open_files(const char* quadfn, const char* ckdtfn, const char* skdtfn,
-						   quadfile** quad, codetree** code, startree_t** star) {
+						   quadfile_t** quad, codetree_t** code, startree_t** star) {
 	logmsg("Reading code tree from %s ...\n", ckdtfn);
 	*code = codetree_open(ckdtfn);
 	if (!*code) {
@@ -123,8 +123,8 @@ int merge_index_open_files(const char* quadfn, const char* ckdtfn, const char* s
 
 int merge_index_files(const char* quadfn, const char* ckdtfn, const char* skdtfn,
 					  const char* indexfn) {
-    quadfile* quad = NULL;
-	codetree* code = NULL;
+    quadfile_t* quad = NULL;
+	codetree_t* code = NULL;
 	startree_t* star = NULL;
 	int rtn;
 
