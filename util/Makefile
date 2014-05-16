@@ -38,7 +38,7 @@ include $(COMMON)/makefile.anfiles
 SO=$(SHAREDLIB_SUFFIX)
 
 ANBASE_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
-	permutedsort.o ioutils.o md5.o	boilerplate.o \
+	permutedsort.o ioutils.o fileutils.o md5.o	boilerplate.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
 	sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o \
 	intmap.o histogram.o histogram2d.o
@@ -128,7 +128,8 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	cairoutils.h \
 	codekd.h errors.h fitsbin.h fitsfile.h fitsioutils.h \
 	fitstable.h os-features-config.h os-features.h gslutils.h hd.h \
-	healpix-utils.h healpix.h index.h intmap.h ioutils.h keywords.h log.h \
+	healpix-utils.h healpix.h index.h intmap.h ioutils.h fileutils.h \
+	keywords.h log.h \
 	mathutil.h permutedsort.h qidxfile.h quadfile.h rdlist.h scamp-catalog.h \
 	fit-wcs.h sip-utils.h sip.h sip_qfits.h starkd.h starutil.h starutil.inc \
 	starxy.h svn.h tic.h tycho2-fits.h tycho2.h \

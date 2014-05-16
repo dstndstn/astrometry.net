@@ -39,6 +39,7 @@
 #include <glob.h>
 
 #include "tic.h"
+#include "fileutils.h"
 #include "ioutils.h"
 #include "bl.h"
 #include "an-bool.h"

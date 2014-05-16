@@ -58,17 +58,6 @@ float get_cpu_usage(void);
  */
 char* find_file_in_dirs(const char** dirs, int ndirs, const char* filename, anbool allow_absolute);
 
-/*
- Removes '.' and '..' references from a path.
- Collapses '//' to '/'.
- Does NOT care whether the file actually exists.
- Does NOT resolve symlinks.
- Assumes '/' is the path separator.
-
- Returns a newly-allocated string which should be freed with free().
- */
-char* an_canonicalize_file_name(const char* fn);
-
 // Are strings s1 and s2 equal?
 anbool streq(const char* s1, const char* s2);
 anbool strcaseeq(const char* s1, const char* s2);
@@ -92,10 +81,6 @@ asprintf_safe(char** strp, const char* format, ...);
 int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines);
 
 void get_mmap_size(size_t start, size_t size, off_t* mapstart, size_t* mapsize, int* pgap);
-
-char* resolve_path(const char* filename, const char* basedir);
-
-char* find_executable(const char* progname, const char* sibling);
 
 // If "dir" is NULL, create temp file in $TMP, or /tmp if not set.
 char* create_temp_file(const char* fn, const char* dir);
