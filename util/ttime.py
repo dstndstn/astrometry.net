@@ -21,6 +21,15 @@ def get_memusage():
     except:
         pass
 
+    # /proc/meminfo ?
+    
+    procfn = '/proc/%d/maps' % os.getpid()
+    try:
+        t = open(procfn).readlines()
+        mu.update(mmaps=t)
+    except:
+        pass
+    
     return mu
 
 def get_procio():
@@ -45,6 +54,8 @@ def memusage():
                 # VmLck, VmHWM, VmExe, VmLib, VmPTE
                 ]:
         print key, ' '.join(mu.get(key, []))
+    if 'mmaps' in mu:
+        print 'Number of mmaps:', len(mu['mmaps'])
 
 def count_file_descriptors():
     procfn = '/proc/%d/fd' % os.getpid()
