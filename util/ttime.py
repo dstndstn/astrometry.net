@@ -1,4 +1,5 @@
 import os
+import re
 import resource
 
 def get_memusage():
@@ -27,6 +28,18 @@ def get_memusage():
     try:
         t = open(procfn).readlines()
         mu.update(mmaps=t)
+        rex = re.compile(r'(?P<addrlo>[0-9a-f]+)-(?P<addrhi>[0-9a-f]+) .*')
+        parsed = []
+        addrsum = 0
+        for line in t:
+            m = rex.match(line)
+            if m is not None:
+                parsed.append(m.groupdict())
+                try:
+                    addrsum += int(m.group('addrhi'), 16) - int(m.group('addrlo'), 16)
+                except:
+                    pass
+        mu.update(mmaps_parsed=parsed, mmaps_total=addrsum)
     except:
         pass
     
