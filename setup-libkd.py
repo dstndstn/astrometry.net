@@ -35,12 +35,20 @@ srcs = ([os.path.join('libkd',x) for x in libkd_srcs] +
     )
 
     
-ext = Extension('spherematch_c',
+ext = Extension('astrometry.libkd.spherematch_c',
                 sources = srcs,
                 include_dirs = numpy_inc + inc,
                 )
 
 setup(name='libkd',
       version='1.0',
+      author='Dustin Lang, Keir Mierle',
+      author_email='dstndstn@gmail.com',
+      url='http://astrometry.net',
       ext_modules=[ext],
-      )
+      py_modules=['astrometry.libkd.spherematch',
+                  'astrometry.util.starutil_numpy'],
+      package_dir={'astrometry':''},
+      data_files=[('tests', ['libkd/test_spherematch.py']),],
+    )
+

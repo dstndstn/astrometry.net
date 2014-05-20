@@ -84,6 +84,14 @@ ALL_WCSLIB_TARGETS :=
 QFITS_UTILS := 
 #resort-xylist
 
+# inc:
+# 	echo CFLAGS_DEF: $(CFLAGS_DEG)
+# 	echo CATS_INC: $(CATS_INC)
+# 	echo ANFILES_CFLAGS: $(ANFILES_CFLAGS)
+# 	echo ANFILES_INC: $(ANFILES_INC)
+# 	echo CFITS_INC: $(CFITS_INC)
+# 	echo ZLIB_INC: $(ZLIB_INC)
+
 CFITS_UTILS := tablist modhead fitscopy tabmerge liststruc \
 		listhead imcopy imarith imstat
 # fitstomatlab 

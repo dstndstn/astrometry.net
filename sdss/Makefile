@@ -22,7 +22,7 @@ _cutils$(PYTHON_SO_EXT) cutils.py: cutils.i
 	python setup.py build_ext -v --inplace --build-temp .
 
 INSTALL_PY := __init__.py common.py dr7.py dr8.py runList-dr8.par \
-	dr9.py runList-dr9.par dr10.py runList-dr10.par
+	dr9.py fields.py runList-dr9.par dr10.py runList-dr10.par
 
 INSTALL_LIB := cutils.py _cutils$(PYTHON_SO_EXT)
 
