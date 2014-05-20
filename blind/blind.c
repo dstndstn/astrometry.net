@@ -57,6 +57,7 @@
 #include "errors.h"
 #include "scamp-catalog.h"
 #include "permutedsort.h"
+#include "bl-sort.h"
 
 static anbool record_match_callback(MatchObj* mo, void* userdata);
 static time_t timer_callback(void* user_data);

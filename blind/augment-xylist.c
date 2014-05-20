@@ -38,6 +38,7 @@
 #include <assert.h>
 
 #include "ioutils.h"
+#include "fileutils.h"
 #include "bl.h"
 #include "an-bool.h"
 #include "solver.h"

@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006-2009 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2014 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -16,17 +17,18 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-/// Private header file shared between bl.inc and bl.c
+/* 
 
+ Sorting functions of bl.h, to factor out qsort dependency.
 
-//static
-InlineDeclare
-bl_node* find_node(const bl* list, int n, int* rtn_nskipped);
+ */
+#ifndef BL_SORT_H
+#define BL_SORT_H
 
-// data follows the bl_node*.
-#define NODE_DATA(node) ((void*)(((bl_node*)(node)) + 1))
-#define NODE_CHARDATA(node) ((char*)(((bl_node*)(node)) + 1))
-#define NODE_INTDATA(node) ((int*)(((bl_node*)(node)) + 1))
-#define NODE_DOUBLEDATA(node) ((double*)(((bl_node*)(node)) + 1))
+#include "bl.h"
 
-#define bl_free_node free
+void bl_sort(bl* list, int (*compare)(const void* v1, const void* v2));
+
+void  pl_sort(pl* list, int (*compare)(const void* v1, const void* v2));
+
+#endif

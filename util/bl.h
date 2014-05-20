@@ -93,6 +93,9 @@ void bl_reverse(bl* list);
 void bl_append_list(bl* list1, bl* list2);
 void bl_insert(bl* list, int indx, const void* data);
 void bl_set(bl* list, int indx, const void* data);
+void  bl_print_structure(bl* list);
+void  bl_copy(bl* list, int start, int length, void* vdest);
+
 /**
  * Inserts the given datum into the list in such a way that the list
  * stays sorted in ascending order according to the given comparison
@@ -118,10 +121,6 @@ int bl_insert_sorted(bl* list, const void* data, int (*compare)(const void* v1, 
 int bl_insert_unique_sorted(bl* list, const void* data,
                             int (*compare)(const void* v1, const void* v2));
 
-void bl_sort(bl* list, int (*compare)(const void* v1, const void* v2));
-
-void  bl_print_structure(bl* list);
-void  bl_copy(bl* list, int start, int length, void* vdest);
 /*
   Removes all the elements, but doesn't free the first block, which makes
   it slightly faster for the case when you're going to add more elements
@@ -220,6 +219,11 @@ void   sl_insert_sorted_nocopy(sl* list, const char* string);
 // inserts a copy of the string; returns the newly-allocated string.
 char* sl_insert_sorted(sl* list, const char* string);
 
+// Inserts the (newly-allocated) formatted string and returns it.
+char*
+ATTRIB_FORMAT(printf,2,3)
+sl_insert_sortedf(sl* list, const char* format, ...);
+
 void sl_remove_index_range(sl* list, int start, int length);
 
 void sl_remove(sl* list, int index);
@@ -281,11 +285,6 @@ char* sl_appendvf(sl* list, const char* format, va_list va);
 
 // Inserts the (newly-allocated) formatted string and returns it.
 char*
-ATTRIB_FORMAT(printf,2,3)
-sl_insert_sortedf(sl* list, const char* format, ...);
-
-// Inserts the (newly-allocated) formatted string and returns it.
-char*
 ATTRIB_FORMAT(printf,3,4)
 sl_insertf(sl* list, int index, const char* format, ...);
 
@@ -327,9 +326,7 @@ sl_insertf(sl* list, int index, const char* format, ...);
 
 //////// Special functions ////////
 void  pl_free_elements(pl* list);
-void  pl_sort(pl* list, int (*compare)(const void* v1, const void* v2));
 int pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, const void* v2));
-
 
 #ifdef INCLUDE_INLINE_SOURCE
 #define InlineDefine InlineDefineH

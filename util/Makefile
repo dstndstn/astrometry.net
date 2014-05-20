@@ -37,8 +37,8 @@ include $(COMMON)/makefile.anfiles
 
 SO=$(SHAREDLIB_SUFFIX)
 
-ANBASE_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
-	permutedsort.o ioutils.o fileutils.o md5.o	boilerplate.o \
+ANBASE_OBJ := starutil.o mathutil.o bl-sort.o bl.o bt.o healpix-utils.o \
+	healpix.o permutedsort.o ioutils.o fileutils.o md5.o boilerplate.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
 	sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o \
 	intmap.o histogram.o histogram2d.o

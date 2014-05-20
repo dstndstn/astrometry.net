@@ -40,6 +40,7 @@
 #include "an-bool.h"
 #include "bl.h"
 #include "ioutils.h"
+#include "fileutils.h"
 #include "xylist.h"
 #include "matchfile.h"
 #include "fitsioutils.h"

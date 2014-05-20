@@ -47,6 +47,10 @@ number* NLF(to_array)(nl* list) {
 	return arr;
 }
 
+#define InlineDefine InlineDefineC
+#include "bl-nl.inc"
+#undef InlineDefine
+
 static int NLF(compare_ascending)(const void* v1, const void* v2) {
     number i1 = *(number*)v1;
     number i2 = *(number*)v2;
@@ -62,10 +66,6 @@ static int NLF(compare_descending)(const void* v1, const void* v2) {
     else if (i1 < i2) return 1;
     else return 0;
 }
-
-#define InlineDefine InlineDefineC
-#include "bl-nl.inc"
-#undef InlineDefine
 
 void NLF(reverse)(nl* list) {
 	bl_reverse(list);
@@ -122,12 +122,6 @@ nl* NLF(merge_ascending)(nl* list1, nl* list2) {
 		NLF(append)(res, NLF(get)(list2, i2));
 	return res;
 }
-
-#if DEFINE_SORT
-void NLF(sort)(nl* list, int ascending) {
-	bl_sort(list, ascending ? NLF(compare_ascending) : NLF(compare_descending));
-}
-#endif
 
 void NLF(remove_all_reuse)(nl* list) {
 	bl_remove_all_but_first(list);

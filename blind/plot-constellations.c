@@ -31,6 +31,7 @@
 #include "sip_qfits.h"
 #include "starutil.h"
 #include "bl.h"
+#include "bl-sort.h"
 #include "xylist.h"
 #include "rdlist.h"
 #include "boilerplate.h"

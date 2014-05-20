@@ -25,14 +25,11 @@
 #include "bl.h"
 
 #include "keywords.h"
-// for qsort_r
-#include "os-features.h"
 
 #include "bl.ph"
 #include "log.h"
 
 static bl_node* bl_new_node(bl* list);
-static void bl_free_node(bl_node* node);
 static void bl_remove_from_node(bl* list, bl_node* node,
 								bl_node* prev, int index_in_node);
 
@@ -49,7 +46,10 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 // il_size
 // il_get
 
-#define DEFINE_SORT 1
+// NOTE!, if you make changes here, also see bl-sort.c !
+
+//#define DEFINE_SORT 1
+#define DEFINE_SORT 0
 #define nl il
 #define number int
 #define NL_PRINT(x) printf("%i", x)
@@ -101,128 +101,6 @@ Pure int bl_datasize(const bl* list) {
 	return list->datasize;
 }
 
-static void bl_sort_with_userdata(bl* list,
-								  int (*compare)(const void* v1, const void* v2, void* userdata),
-								  void* userdata);
-
-struct funcandtoken {
-	int (*compare)(const void* v1, const void* v2, void* userdata);
-	void* userdata;
-};
-static int QSORT_COMPARISON_FUNCTION(qcompare, void* token, const void* v1, const void* v2) {
-	struct funcandtoken* ft = token;
-	return ft->compare(v1, v2, ft->userdata);
-}
-
-static void bl_sort_rec(bl* list, void* pivot,
-						int (*compare)(const void* v1, const void* v2, void* userdata),
-						void* userdata) {
-	bl* less;
-	bl* equal;
-	bl* greater;
-	int i;
-    bl_node* node;
-
-	// Empty case
-	if (!list->head)
-		return;
-
-	// Base case: list with only one block.
-	if (list->head == list->tail) {
-		bl_node* node;
-		struct funcandtoken ft;
-		ft.compare = compare;
-		ft.userdata = userdata;
-		node = list->head;
-		QSORT_R(NODE_DATA(node), node->N, list->datasize, &ft, qcompare);
-		return;
-	}
-
-	less = bl_new(list->blocksize, list->datasize);
-	equal = bl_new(list->blocksize, list->datasize);
-	greater = bl_new(list->blocksize, list->datasize);
-	for (node=list->head; node; node=node->next) {
-		char* data = NODE_CHARDATA(node);
-		for (i=0; i<node->N; i++) {
-			int val = compare(data, pivot, userdata);
-			if (val < 0)
-				bl_append(less, data);
-			else if (val > 0)
-				bl_append(greater, data);
-			else
-				bl_append(equal, data);
-			data += list->datasize;
-		}
-	}
-
-    // recurse before freeing anything...
-	bl_sort_with_userdata(less, compare, userdata);
-	bl_sort_with_userdata(greater, compare, userdata);
-
-	for (node=list->head; node;) {
-        bl_node* next;
-		next = node->next;
-		bl_free_node(node);
-		node = next;
-    }
-	list->head = NULL;
-	list->tail = NULL;
-	list->N = 0;
-	list->last_access = NULL;
-	list->last_access_n = 0;
-
-	if (less->N) {
-		list->head = less->head;
-		list->tail = less->tail;
-		list->N = less->N;
-	}
-	if (equal->N) {
-		if (list->N) {
-			list->tail->next = equal->head;
-			list->tail = equal->tail;
-		} else {
-			list->head = equal->head;
-			list->tail = equal->tail;
-		}
-		list->N += equal->N;
-	}
-	if (greater->N) {
-		if (list->N) {
-			list->tail->next = greater->head;
-			list->tail = greater->tail;
-		} else {
-			list->head = greater->head;
-			list->tail = greater->tail;
-		}
-		list->N += greater->N;
-	}
-	// note, these are supposed to be "free", not "bl_free"; we've stolen
-	// the blocks, we're just freeing the headers.
-	free(less);
-	free(equal);
-	free(greater);
-}
-
-static void bl_sort_with_userdata(bl* list,
-								  int (*compare)(const void* v1, const void* v2, void* userdata),
-								  void* userdata) {
-	int ind;
-	int N = list->N;
-	if (N <= 1)
-		return;
-	// should do median-of-3/5/... to select pivot when N is large.
-	ind = rand() % N;
-	bl_sort_rec(list, bl_access(list, ind), compare, userdata);
-}
-
-static int sort_helper_bl(const void* v1, const void* v2, void* userdata) {
-	int (*compare)(const void* v1, const void* v2) = userdata;
-	return compare(v1, v2);
-}
-
-void bl_sort(bl* list, int (*compare)(const void* v1, const void* v2)) {
-	bl_sort_with_userdata(list, sort_helper_bl, compare);
-}
 
 void bl_split(bl* src, bl* dest, int split) {
     bl_node* node;
@@ -521,10 +399,6 @@ void bl_append_list(bl* list1, bl* list2) {
 	list1->N += list2->N;
 	// remove everything from list2 (to avoid sharing nodes)
 	clear_list(list2);
-}
-
-static void bl_free_node(bl_node* node) {
-	free(node);
 }
 
 static bl_node* bl_new_node(bl* list) {
@@ -995,18 +869,6 @@ void  pl_free_elements(pl* list) {
 	for (i=0; i<pl_size(list); i++) {
 		free(pl_get(list, i));
 	}
-}
-
-// dereference one level...
-static int sort_helper_pl(const void* v1, const void* v2, void* userdata) {
-	const void* p1 = *((const void**)v1);
-	const void* p2 = *((const void**)v2);
-	int (*compare)(const void* p1, const void* p2) = userdata;
-	return compare(p1, p2);
-}
-
-void  pl_sort(pl* list, int (*compare)(const void* v1, const void* v2)) {
-	bl_sort_with_userdata(list, sort_helper_pl, compare);
 }
 
 int pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, const void* v2)) {
