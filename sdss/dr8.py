@@ -170,6 +170,13 @@ class DR8(DR7):
     def nmgy_to_mag(nmgy):
         return 22.5 - 2.5 * np.log10(nmgy)
 
+    def readBZ2Frames(self):
+        '''
+        Call this if fitsio supports reading .bz2 files directly.
+        '''
+        del self.dassuffix['frame']
+        del self.processcmds['frame']
+        
     def getDRNumber(self):
         return 8
 
@@ -225,13 +232,13 @@ class DR8(DR7):
             }
 
         self.dassuffix = {
-        #'frame': '.bz2',
+            #'frame': '.bz2',
             'fpM': '.gz',
             'idR': '.Z',
             }
 
         self.processcmds = {
-        #'frame': 'TMPFILE=$(mktemp %(output)s.tmp.XXXXXX) && bunzip2 -cd %(input)s > $TMPFILE && mv $TMPFILE %(output)s',
+            'frame': 'TMPFILE=$(mktemp %(output)s.tmp.XXXXXX) && bunzip2 -cd %(input)s > $TMPFILE && mv $TMPFILE %(output)s',
             'fpM': 'gunzip -cd %(input)s > %(output)s',
             'idR': 'gunzip -cd %(input)s > %(output)s',
             }
@@ -286,8 +293,8 @@ class DR8(DR7):
         if skipExisting and os.path.exists(outfn):
             return outfn
 
-        print 'Did not find file:', outfn
         url = self.get_url(filetype, run, camcol, field, band=band, rerun=rerun)
+        #print 'Did not find file:', outfn
         #print 'URL:', url
         if self.curl:
             cmd = "curl -o '%(outfn)s' '%(url)s'"

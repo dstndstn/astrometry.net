@@ -40,6 +40,9 @@ def get_svn_version():
     from run_command import run_command
     version = {}
     rtn,out,err = run_command('svn info')
+    if rtn != 0:
+        import sys
+        print >>sys.stderr, 'Error getting SVN version: rtn', rtn, '\nOut:', out, '\nErr:', err
     assert(rtn == 0)
     lines = out.split('\n')
     lines = [l for l in lines if len(l)]
