@@ -201,7 +201,7 @@ _index_util$(PYTHON_SO_EXT) _index_c$(PYTHON_SO_EXT): index_wrap.c index_pyutils
 	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
 	python setup-index.py build_ext -v --inplace --build-temp .
 
-PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py healpix.py sip.py \
+PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py \
 	starutil.py starutil_numpy.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
 	filetype.py fits.py fix_sdss_idr.py removelines.py \
@@ -246,8 +246,7 @@ install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) \
 		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
 	done
 	@echo "The following copy commands may fail; they are optional."
-	-cp _util$(PYTHON_SO_EXT) '$(PY_INSTALL_DIR)'
-	-cp util.py '$(PY_INSTALL_DIR)'
+	-$(MAKE) py && cp _util$(PYTHON_SO_EXT) util.py '$(PY_INSTALL_DIR)'
 	@echo ok
 
 .PHONY: install

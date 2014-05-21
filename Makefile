@@ -113,6 +113,9 @@ install: all report.txt
 	@echo
 	-$(MAKE) extra
 	-$(MAKE) -C blind install-extra
+	@echo
+	@echo Errors in the previous make command are not fatal -- we try to build and install some optional code.
+	@echo
 
 install-core:
 	mkdir -p '$(DATA_INSTALL_DIR)'
