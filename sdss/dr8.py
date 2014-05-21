@@ -170,13 +170,6 @@ class DR8(DR7):
     def nmgy_to_mag(nmgy):
         return 22.5 - 2.5 * np.log10(nmgy)
 
-    def readBZ2Frames(self):
-        '''
-        Call this if fitsio supports reading .bz2 files directly.
-        '''
-        del self.dassuffix['frame']
-        del self.processcmds['frame']
-        
     def getDRNumber(self):
         return 8
 
@@ -197,6 +190,12 @@ class DR8(DR7):
 
     def saveUnzippedFiles(self, basedir):
         self.unzip_dir = basedir
+
+    def setFitsioReadBZ2(self, to=True):
+        '''
+        Call this if fitsio supports reading .bz2 files directly.
+        '''
+        self.readBz2 = to
     
     def __init__(self, **kwargs):
         '''
@@ -207,6 +206,7 @@ class DR8(DR7):
         DR7.__init__(self, **kwargs)
 
         self.unzip_dir = None
+        self.readBz2 = False
 
         # Local filenames
         self.filenames.update({
@@ -237,12 +237,16 @@ class DR8(DR7):
             'idR': '.Z',
             }
 
+        # called in retrieve()
         self.processcmds = {
-            'frame': 'TMPFILE=$(mktemp %(output)s.tmp.XXXXXX) && bunzip2 -cd %(input)s > $TMPFILE && mv $TMPFILE %(output)s',
             'fpM': 'gunzip -cd %(input)s > %(output)s',
             'idR': 'gunzip -cd %(input)s > %(output)s',
             }
 
+        self.postprocesscmds = {
+            'frame': 'TMPFILE=$(mktemp %(output)s.tmp.XXXXXX) && bunzip2 -cd %(input)s > $TMPFILE && mv $TMPFILE %(output)s',
+            }
+        
         y = read_yanny(self._get_runlist_filename())
         y = y['RUNDATA']
         rl = runlist()
@@ -258,6 +262,60 @@ class DR8(DR7):
         #self.logger.debug('debug test')
         #self.logger.info('info test')
         #self.logger.warning('warning test')
+
+    def _unzip_frame(self, fn, run, camcol):
+        if self.readBz2:
+            return None,True
+        if not fitsio:
+            # pyfits can read .bz2
+            return None,True
+
+        tempfn = None
+        keep = False
+
+        filetype = 'frame'
+        if not(filetype in self.postprocesscmds and fn.endswith('.bz2')):
+            return None,True
+        
+        cmd = self.postprocesscmds[filetype]
+
+        if self.unzip_dir is not None:
+            udir = os.path.join(self.unzip_dir, '%i' % run, '%i' % camcol)
+            if not os.path.exists(udir):
+                try:
+                    os.makedirs(udir)
+                except:
+                    pass
+            tempfn = os.path.join(udir, os.path.basename(fn).replace('.bz2', ''))
+            #print 'Checking', tempfn
+            if os.path.exists(tempfn):
+                print 'File exists:', tempfn
+                return tempfn,True
+            else:
+                print 'Saving to', tempfn
+                keep = True
+
+        else:
+            fid,tempfn = tempfile.mkstemp()
+            os.close(fid)
+
+        cmd = cmd % dict(input = fn, output = tempfn)
+        self.logger.debug('cmd: %s' % cmd)
+        print 'command:', cmd
+        (rtn,out,err) = run_command(cmd)
+        if rtn:
+            print 'Command failed: command', cmd
+            print 'Output:', out
+            print 'Error:', err
+            print 'Return val:', rtn
+            raise RuntimeError('Command failed (return val %i): %s' % (rtn, cmd))
+
+        print out
+        print err
+        return tempfn,keep
+
+
+        
         
     def _get_runlist_filename(self):
         return self._get_data_file('runList-dr8.par')
@@ -288,6 +346,7 @@ class DR8(DR7):
     def retrieve(self, filetype, run, camcol, field=None, band=None, skipExisting=True,
                  tempsuffix='.tmp', rerun=None):
         outfn = self.getPath(filetype, run, camcol, field, band)
+        print 'Checking for file', outfn
         if outfn is None:
             return None
         if skipExisting and os.path.exists(outfn):
@@ -295,7 +354,7 @@ class DR8(DR7):
 
         url = self.get_url(filetype, run, camcol, field, band=band, rerun=rerun)
         #print 'Did not find file:', outfn
-        #print 'URL:', url
+        print 'Retrieving from URL:', url
         if self.curl:
             cmd = "curl -o '%(outfn)s' '%(url)s'"
         else:
@@ -357,59 +416,15 @@ class DR8(DR7):
         else:
             fn = filename
 
-            #fn += '.bz2'
-        #self.logger.debug('readFrame: fn %s' % fn)
-            
+        # optionally bunzip2 the frame file.
+        tempfn,keep = self._unzip_frame(fn, run, camcol)
+        if tempfn is not None:
+            fn = tempfn
+
         if fitsio:
 
-            #print 'Frame filename', fn
+            print 'Frame filename', fn
             # eg /clusterfs/riemann/raid006/dr10/boss/photoObj/frames/301/2825/1/frame-u-002825-1-0126.fits.bz2
-
-            tempfn = None
-            keep = False
-            cmd = None
-            # bunzip2
-            filetype = 'frame'
-            if filetype in self.processcmds and fn.endswith('.bz2'):
-                cmd = self.processcmds[filetype]
-
-            if cmd is not None and self.unzip_dir is not None:
-                udir = os.path.join(self.unzip_dir, '%i' % run, '%i' % camcol)
-                if not os.path.exists(udir):
-                    try:
-                        os.makedirs(udir)
-                    except:
-                        pass
-                tempfn = os.path.join(udir, os.path.basename(fn).replace('.bz2', ''))
-                #print 'Checking', tempfn
-                if os.path.exists(tempfn):
-                    print 'File exists:', tempfn
-                    fn = tempfn
-                    cmd = None
-                else:
-                    print 'Saving to', tempfn
-                    keep = True
-
-            elif cmd is not None and self.unzip_dir is None:
-                fid,tempfn = tempfile.mkstemp()
-                os.close(fid)
-
-            if cmd is not None:
-                cmd = cmd % dict(input = fn, output = tempfn)
-                self.logger.debug('cmd: %s' % cmd)
-                print 'command:', cmd
-                (rtn,out,err) = run_command(cmd)
-                if rtn:
-                    print 'Command failed: command', cmd
-                    print 'Output:', out
-                    print 'Error:', err
-                    print 'Return val:', rtn
-                    return None
-
-                print out
-                print err
-
-                fn = tempfn
 
             F = fitsio.FITS(fn, lower=True)
             f.header = F[0].read_header()
