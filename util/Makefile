@@ -210,9 +210,15 @@ PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py \
 	sdss_psf.py sdss_psfield.py sdss_radec_to_rcf.py sqlcl.py \
 	usnob_catalog.py usnob_get_image.py usnob_get_region.py \
 	find_data_file.py plotshift.py plotutils.py miscutils.py multiproc.py \
-	yanny.py ttime.py
+	yanny.py ttime.py resample.py \
+	EXIF.py degtohms.py hmstodeg.py horizons.py text2fits.py votabletofits.py \
+	imageutils.py merge-columns.py siap.py stages.py
 
-PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py
+# celestial_mechanics.py (needs license)
+
+PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py \
+	degtohms.py hmstodeg.py text2fits.py votabletofits.py \
+	merge-columns.py
 
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/util
 LINK_DIR := $(PY_BASE_LINK_DIR)/util
