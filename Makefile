@@ -172,7 +172,7 @@ config: util/os-features-config.h util/makefile.os-features
 .PHONY: config
 
 RELEASE_VER := 0.48
-SP_RELEASE_VER := 0.3
+
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
 RELEASE_SUBDIRS := qfits-an gsl-an util libkd blind demo catalogs etc ups sdss
@@ -192,53 +192,6 @@ release:
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
 	bzip2 --best $(RELEASE_DIR).tar
-
-# spherematch-only release
-SP_RELEASE_DIR := pyspherematch-$(SP_RELEASE_VER)
-SP_RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER)/astrometry
-SP_RELEASE_SUBDIRS := gsl-an qfits-an util libkd catalogs
-SP_RELEASE_REMOVE :=
-SP_ONLY := pyspherematch-only
-
-release-pyspherematch:
-	-rm -R $(SP_RELEASE_DIR) $(SP_RELEASE_DIR).tar $(SP_RELEASE_DIR).tar.gz $(SP_RELEASE_DIR).tar.bz2
-	svn export -N $(SP_RELEASE_SVN) $(SP_RELEASE_DIR)
-	for x in $(SP_RELEASE_SUBDIRS); do \
-		svn export $(SP_RELEASE_SVN)/$$x $(SP_RELEASE_DIR)/$$x; \
-	done
-
-	cp -r $(SP_ONLY)/* $(SP_RELEASE_DIR)
-	for x in $(SP_RELEASE_REMOVE); do \
-		rm -v $(SP_RELEASE_DIR)/$$x; \
-	done
-
-	tar cf $(SP_RELEASE_DIR).tar $(SP_RELEASE_DIR)
-	gzip --best -c $(SP_RELEASE_DIR).tar > $(SP_RELEASE_DIR).tar.gz
-	bzip2 --best $(SP_RELEASE_DIR).tar
-
-
-tag-release:
-	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
-
-retag-release:
-	-svn rm svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER) \
-		-m "Remove old release tag in preparation for re-tagging"
-	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
-
-
-tag-release-pyspherematch:
-	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER) -m "tag pyspherematch verion $(SP_RELEASE_VER) "
-	@echo
-	@echo version in $(SP_ONLY)/libkd/setup.py :
-	@grep version $(SP_ONLY)/libkd/setup.py 
-	@echo version in $(SP_ONLY)/README
-	@grep wget $(SP_ONLY)/README
-
-
-retag-release-pyspherematch:
-	-svn rm svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER) \
-		-m "Remove old release tag in preparation for re-tagging"
-	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER)  -m "tag pyspherematch version $(SP_RELEASE_VER) "
 
 SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
 SNAPSHOT_SUBDIRS := $(RELEASE_SUBDIRS)
@@ -261,6 +214,54 @@ snapshot:
 	tar cf snapshot.tar $$SSD; \
 	gzip --best -c snapshot.tar > $$SSD.tar.gz; \
 	bzip2 --best -c snapshot.tar > $$SSD.tar.bz2
+
+LIBKD_RELEASE_DIR := libkd-$(RELEASE_VER)
+LIBKD_RELEASE_SUBDIRS := qfits-an libkd \
+	util/ioutils.c util/mathutil.c util/fitsioutils.c util/fitsbin.h \
+	util/ioutils.h util/mathutil.h util/fitsioutils.h util/fitsbin.c \
+	util/an-endian.c util/fitsfile.c util/log.c util/errors.c util/tic.c \
+	util/an-endian.h util/fitsfile.h util/log.h util/errors.h util/tic.h \
+	util/bl.c util/bl.inc util/bl-nl.c util/bl-nl.inc \
+	util/bl.h util/bl.ph  util/bl-nl.h util/bl-nl.ph  \
+	util/keywords.h util/an-bool.h util/mathutil.inc util/starutil.h \
+	util/an-thread.h util/an-thread-pthreads.h util/thread-specific.inc \
+	util/__init__.py util/starutil_numpy.py
+
+release-libkd:
+	-rm -R $(LIBKD_RELEASE_DIR) $(LIBKD_RELEASE_DIR).tar $(LIBKD_RELEASE_DIR).tar.gz $(LIBKD_RELEASE_DIR).tar.bz2
+	svn export --depth files $(RELEASE_SVN) $(LIBKD_RELEASE_DIR)
+	svn export --depth empty $(RELEASE_SVN)/util $(LIBKD_RELEASE_DIR)/util
+	for x in $(LIBKD_RELEASE_SUBDIRS); do \
+		svn export $(RELEASE_SVN)/$$x $(LIBKD_RELEASE_DIR)/$$x; \
+	done
+	tar cf $(LIBKD_RELEASE_DIR).tar $(LIBKD_RELEASE_DIR)
+	gzip --best -c $(LIBKD_RELEASE_DIR).tar > $(LIBKD_RELEASE_DIR).tar.gz
+	bzip2 --best $(LIBKD_RELEASE_DIR).tar
+
+LIBKD_SNAPSHOT_DIR := snapshot-libkd
+
+snapshot-libkd:
+	-rm -R $(LIBKD_SNAPSHOT_DIR)
+	svn export --depth files $(SNAPSHOT_SVN) $(LIBKD_SNAPSHOT_DIR)
+	svn export --depth empty $(SNAPSHOT_SVN)/util $(LIBKD_SNAPSHOT_DIR)/util
+	for x in $(LIBKD_RELEASE_SUBDIRS); do \
+		svn export $(SNAPSHOT_SVN)/$$x $(LIBKD_SNAPSHOT_DIR)/$$x; \
+	done
+
+	SSD=libkd-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}'); \
+	mv $(LIBKD_SNAPSHOT_DIR) $$SSD; \
+	tar cf $(LIBKD_SNAPSHOT_DIR).tar $$SSD; \
+	gzip --best -c $(LIBKD_SNAPSHOT_DIR).tar > $$SSD.tar.gz; \
+	bzip2 --best -c $(LIBKD_SNAPSHOT_DIR).tar > $$SSD.tar.bz2
+
+tag-release:
+	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
+
+retag-release:
+	-svn rm svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER) \
+		-m "Remove old release tag in preparation for re-tagging"
+	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
+
 
 test:
 	$(MAKE) -C blind test
