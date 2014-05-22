@@ -36,22 +36,28 @@ C API
       * *KD_BUILD_SPLIT*: just keep the split dimension and value at each node.
     
     see *kd_build_options* for additional fancy stuff.
+
+    NOTE that this function will *permute* the contents of the *data* array!
     
     When you're done with your tree, be sure to *kdtree_free()* it.
     
     Example:
-    
-        double mydata[] = { 1,1, 2,2, 3,3, 4,4, 5,5, 6,6, 7,7, 8,8 };
-        int D = 2;
-        int N = sizeof(mydata) / (D * sizeof(double));
-        kdtree_t* kd = kdtree_build(NULL, mydata, N, D, 4, KDTT_DOUBLE, KD_BUILD_BBOX);
-        kdtree_print(kd);
-        kdtree_free(kd);
+
+    .. code-block:: c
+
+       double mydata[] = { 1,1, 2,2, 3,3, 4,4, 5,5, 6,6, 7,7, 8,8 };
+       int D = 2;
+       int N = sizeof(mydata) / (D * sizeof(double));
+       kdtree_t* kd = kdtree_build(NULL, mydata, N, D, 4, KDTT_DOUBLE, KD_BUILD_BBOX);
+       kdtree_print(kd);
+       kdtree_free(kd);
+
 
 
 .. c:function:: void kdtree_free(kdtree_t *kd);
 
-    Frees the given *kd*.
+    Frees the given *kd*.  By default, the *kd->data* is NOT freed.
+    Set *kd->free_data = 1* to free the data when *kdtree_free()* is called.
 
 
 Python API

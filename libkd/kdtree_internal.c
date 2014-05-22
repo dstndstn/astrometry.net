@@ -2052,6 +2052,7 @@ static void convert_data(kdtree_t* kd, etype* edata, int N, int D, int Nleaf) {
 	kd->invscale = 1.0 / kd->scale;
 
 	ddata = kd->data.any = MALLOC(N * D * sizeof(dtype));
+    kd->free_data = TRUE;
 	for (i=0; i<N; i++) {
 		for (d=0; d<D; d++) {
 			etype dd = POINT_ED(kd, d, *edata, KD_ROUND);
@@ -2094,7 +2095,6 @@ static void convert_data(kdtree_t* kd, etype* edata, int N, int D, int Nleaf) {
 		}
 	}
 #endif
-    kd->converted_data = TRUE;
 }
 
 static void compute_bb(const dtype* data, int D, int N, dtype* lo, dtype* hi) {

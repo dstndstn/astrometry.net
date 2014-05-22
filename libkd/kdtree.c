@@ -44,7 +44,7 @@ void kdtree_print(kdtree_t* kd) {
 	printf("  dimmask 0x%x\n", kd->dimmask);
 	printf("  splitmask 0x%x\n", kd->splitmask);
 	printf("  data %p\n", kd->data.any);
-	printf("  converted %i\n", (int)kd->converted_data);
+	printf("  free data %i\n", (int)kd->free_data);
 	printf("  range");
 	if (kd->minval && kd->maxval) {
 		int i;
@@ -544,7 +544,7 @@ void kdtree_free(kdtree_t *kd) {
 	FREE(kd->bb.any);
 	FREE(kd->split.any);
 	FREE(kd->splitdim);
-	if (kd->converted_data)
+	if (kd->free_data)
 		FREE(kd->data.any);
 	FREE(kd->minval);
 	FREE(kd->maxval);

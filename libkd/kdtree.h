@@ -232,7 +232,13 @@ struct kdtree {
 		void* any;
 	} data;
 
-	anbool converted_data;
+    /* Should the kdtree free(kd->data) when kdtree_free(kd) is called?
+
+     Normally the kdtree does *not* free the data, unless the datatype
+     had to be converted (if "external" type != "data" type) so that a
+     new array had to be allocated.
+     */
+	anbool free_data;
 
 	double* minval;
 	double* maxval;
