@@ -410,17 +410,6 @@ double kdtree_get_conservative_query_radius(const kdtree_t* kd, double radius) {
 	return sqrt(radius* radius + kd->ndim * 0.25 * kd->invscale*kd->invscale);
 }
 
-KD_DECLARE(kdtree_convert_data, kdtree_t*, (kdtree_t* kd, void* data, int N, int D, int Nleaf));
-
-kdtree_t* kdtree_convert_data(kdtree_t* kd, void *data,
-							  int N, int D, int Nleaf, int treetype) {
-	kdtree_t* res = NULL;
-	KD_DISPATCH(kdtree_convert_data, treetype, res=, (kd, data, N, D, Nleaf));
-	if (res)
-		res->converted_data = TRUE;
-	return res;
-}
-
 int kdtree_compute_levels(int N, int Nleaf) {
 	int nnodes = N / Nleaf;
 	int maxlevel = 1;

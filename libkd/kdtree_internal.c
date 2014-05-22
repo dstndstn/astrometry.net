@@ -2035,12 +2035,9 @@ static double compute_scale_ext(etype* edata, int N, int D,
 	return (double)DTYPE_MAX / range;
 }
 
-kdtree_t* MANGLE(kdtree_convert_data)
-	 (kdtree_t* kd, etype* edata, int N, int D, int Nleaf) {
+static void convert_data(kdtree_t* kd, etype* edata, int N, int D, int Nleaf) {
 	dtype* ddata;
 	int i, d;
-	if (!kd)
-		kd = kdtree_new(N, D, Nleaf);
 
 	if (!kd->minval || !kd->maxval) {
 		kd->minval = MALLOC(D * sizeof(double));
@@ -2088,7 +2085,6 @@ kdtree_t* MANGLE(kdtree_convert_data)
         etype emax = POINT_DE(kd, d, dmax);
         kd->maxval[d] = MAX(kd->maxval[d], emax);
     }
-
 #ifndef NDEBUG
 	for (i=0; i<N; i++) {
 		for (d=0; d<D; d++) {
@@ -2098,10 +2094,7 @@ kdtree_t* MANGLE(kdtree_convert_data)
 		}
 	}
 #endif
-
     kd->converted_data = TRUE;
-
-	return kd;
 }
 
 static void compute_bb(const dtype* data, int D, int N, dtype* lo, dtype* hi) {
@@ -2184,7 +2177,7 @@ kdtree_t* MANGLE(kdtree_build)
 	if (!kd->data.any) {
         if (needs_data_conversion()) {
             // need to convert the data from "etype" to "dtype".
-            MANGLE(kdtree_convert_data)(kd, indata, N, D, Nleaf);
+            convert_data(kd, indata, N, D, Nleaf);
         } else {
             kd->data.any = indata;
 			

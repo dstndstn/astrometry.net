@@ -320,9 +320,6 @@ void kdtree_update_funcs(kdtree_t* kd);
 
 void kdtree_set_limits(kdtree_t* kd, double* low, double* high);
 
-kdtree_t* kdtree_convert_data(kdtree_t* kd, void *data,
-							  int N, int D, int Nleaf, int treetype);
-
 void* kdtree_get_data(const kdtree_t* kd, int i);
 
 void kdtree_copy_data_double(const kdtree_t* kd, int i, int N, double* dest);
