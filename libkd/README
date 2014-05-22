@@ -4,12 +4,88 @@ libkd is Copyright 2006, 2007, 2008 Dustin Lang and Keir Mierle.
 libkd is free software licensed under the GNU GPL version 2.
 See the file LICENSE for the full terms of the GNU GPL.
 
-Dustin Lang can be reached at:
-  dstn (at) cs (dot) toronto (dot) edu
-or
-  dstndstn (at) gmail (dot) com
+Dustin Lang is dstndstn (at) gmail (dot) com
+Keir Mierle is mierle (at) gmail (dot) com
 
-Keir Mierle can be reached at:
-  keir (at) cs (dot) toronto (dot) edu
+
+About the code internals:
+-------------------------
+
+We use some nasty preprocessors magic to support multiple data types.
+It probably would have been better to write them as C++ templates.
+One lives and learns.
+
+The instantiation of the "templates" happens in the files "kdint_*.c"
+and friends.  These in turn #include one each of
+"kdint_[edt]type_*.h".
+
+There are three data types involved:
+
+ * the "external" type -- the type accepted by the external API, for
+   example, the datatype of the kdtree_nearest_neighbour() query
+   point.
+
+ * the "tree" type -- the type used to describe the bounding boxes or
+   splitting planes within the tree.
+
+ * the "data" type -- the type used to store the data points within
+   the tree.
+
+We also tried to write some functions so that the dimension of the
+tree could be declared constant at compile time -- so there would be
+separate compiled code for three-dimensional or two-dimensional trees.
+But that became hard to manage so we don't use it now.
+
+When instantiated, the function names have the datatypes appended to
+them.  For example, if you look in the libkd.a file, you'll see:
+
+    > nm libkd/libkd.a  | grep "T _kdtree_rangesearch_options"
+    0000000000000130 T _kdtree_rangesearch_options
+    00000000000009e0 T _kdtree_rangesearch_options_ddd
+    0000000000000a00 T _kdtree_rangesearch_options_fff
+    00000000000011e0 T _kdtree_rangesearch_options_ddu
+    0000000000001210 T _kdtree_rangesearch_options_duu
+    00000000000011e0 T _kdtree_rangesearch_options_dds
+    0000000000001240 T _kdtree_rangesearch_options_dss
+
+Where the first one is the entry-point which dispatches to the
+instantiated ones based on the kdtree_t.treetype value.
+
+(To make things more elaborate, we also started gathering the function
+pointers into a "vtable", kdtree_t.fun, and that is used in some
+places.)
+
+There are some preprocessor functions to support the name mangling.
+For example, take the function declared in kdtree.h:
+
+    kdtree_t* kdtree_convert_data(kdtree_t* kd, void *data,
+	      						  int N, int D, int Nleaf, int treetype);
+
+The kdtree_convert_data entry point is in kdtree.c:
+
+    KD_DECLARE(kdtree_convert_data, kdtree_t*, (kdtree_t* kd, void* data, int N, int D, int Nleaf));
+    
+    kdtree_t* kdtree_convert_data(kdtree_t* kd, void *data,
+    							  int N, int D, int Nleaf, int treetype) {
+    	kdtree_t* res = NULL;
+    	KD_DISPATCH(kdtree_convert_data, treetype, res=, (kd, data, N, D, Nleaf));
+    	if (res)
+    		res->converted_data = TRUE;
+    	return res;
+    }
+
+and the actual implementation is in kdtree_internal.c:
+
+    kdtree_t* MANGLE(kdtree_convert_data)
+    	 (kdtree_t* kd, etype* edata, int N, int D, int Nleaf) {
+    	dtype* ddata;
+    	int i, d;
+        //// .....
+    }
+
+Note that in kdtree_interal.c you get to assume that "etype" is
+typedef'd to the external datatype, "dtype" is the tree's datatype,
+etc.
+
 
 
