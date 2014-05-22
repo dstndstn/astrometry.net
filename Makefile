@@ -216,7 +216,8 @@ snapshot:
 	bzip2 --best -c snapshot.tar > $$SSD.tar.bz2
 
 LIBKD_RELEASE_DIR := libkd-$(RELEASE_VER)
-LIBKD_RELEASE_SUBDIRS := qfits-an libkd \
+LIBKD_RELEASE_SUBDIRS := qfits-an libkd doc \
+	CREDITS LICENSE __init__.py setup-libkd.py Makefile \
 	util/ioutils.c util/mathutil.c util/fitsioutils.c util/fitsbin.h \
 	util/ioutils.h util/mathutil.h util/fitsioutils.h util/fitsbin.c \
 	util/an-endian.c util/fitsfile.c util/log.c util/errors.c util/tic.c \
@@ -242,7 +243,7 @@ LIBKD_SNAPSHOT_DIR := snapshot-libkd
 
 snapshot-libkd:
 	-rm -R $(LIBKD_SNAPSHOT_DIR)
-	svn export --depth files $(SNAPSHOT_SVN) $(LIBKD_SNAPSHOT_DIR)
+	svn export --depth empty $(SNAPSHOT_SVN) $(LIBKD_SNAPSHOT_DIR)
 	svn export --depth empty $(SNAPSHOT_SVN)/util $(LIBKD_SNAPSHOT_DIR)/util
 	for x in $(LIBKD_RELEASE_SUBDIRS); do \
 		svn export $(SNAPSHOT_SVN)/$$x $(LIBKD_SNAPSHOT_DIR)/$$x; \
