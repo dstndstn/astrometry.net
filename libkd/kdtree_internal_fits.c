@@ -40,16 +40,6 @@ int MANGLE(kdtree_read_fits)(kdtree_fits_t* io, kdtree_t* kd) {
 
     fitsbin_chunk_init(&chunk);
 
-	// kd->nodes
-    chunk.tablename = get_table_name(kd->name, KD_STR_NODES);
-    chunk.itemsize = COMPAT_NODE_SIZE(kd);
-    chunk.nrows = kd->nnodes;
-    chunk.required = FALSE;
-    if (kdtree_fits_read_chunk(io, &chunk) == 0) {
-        kd->nodes = chunk.data;
-    }
-    free(chunk.tablename);
-
     // kd->lr
     chunk.tablename = get_table_name(kd->name, KD_STR_LR);
     chunk.itemsize = sizeof(u32);
@@ -144,9 +134,9 @@ int MANGLE(kdtree_read_fits)(kdtree_fits_t* io, kdtree_t* kd) {
     }
     free(chunk.tablename);
 
-    if (!(kd->bb.any || kd->nodes ||
+    if (!(kd->bb.any ||
           (kd->split.any && (TTYPE_INTEGER || kd->splitdim)))) {
-		ERROR("kdtree contains neither traditional nodes, bounding boxes nor split+dim data");
+		ERROR("kdtree contains neither bounding boxes nor split+dim data");
         return -1;
     }
 
@@ -220,28 +210,6 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
     free(chunk.tablename);
     fitsbin_chunk_reset(&chunk);
 
-	if (kd->nodes) {
-        if (flip_endian)
-            // Not supported.
-            assert(0);
-
-		chunk.tablename = get_table_name(kd->name, KD_STR_NODES);
-		chunk.itemsize = COMPAT_NODE_SIZE(kd);
-		chunk.nrows = kd->nnodes;
-		chunk.data = kd->nodes;
-        hdr = fitsbin_get_chunk_header(fb, &chunk);
-		fits_add_long_comment
-			(hdr, "The table containing column \"%s\" contains \"legacy\" "
-			 "kdtree nodes (kdtree_node_t structs).  These nodes contain two "
-			 "%u-byte, native-endian unsigned ints, followed by a bounding-box, "
-			 "which is two points in NDIM (=%u) dimensional space, stored as "
-			 "native-endian doubles (%u bytes each).  The whole struct has size %u.",
-			 chunk.tablename, (unsigned int)sizeof(unsigned int), kd->ndim,
-             (unsigned int)sizeof(double), chunk.itemsize);
-        WRITE_CHUNK();
-        free(chunk.tablename);
-        fitsbin_chunk_reset(&chunk);
-	}
 	if (kd->lr) {
         chunk.tablename = get_table_name(kd->name, KD_STR_LR);
         chunk.itemsize = sizeof(u32);

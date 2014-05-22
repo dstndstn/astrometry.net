@@ -134,10 +134,6 @@ size_t kdtree_sizeof_data(const kdtree_t* kd) {
     return get_data_size(kd->treetype) * kd->ndim * kd->ndata;
 }
 
-size_t kdtree_sizeof_nodes(const kdtree_t* kd) {
-    return sizeof(kdtree_node_t) + 2 * kd->ndim * sizeof(double);
-}
-
 void kdtree_memory_report(kdtree_t* kd) {
     int mem;
     int n, sz;
@@ -506,13 +502,6 @@ int kdtree_leaf_right(const kdtree_t* kd, int nodeid) {
 
 
 int kdtree_left(const kdtree_t* kd, int nodeid) {
-	if (unlikely(kd->nodes)) {
-		// assume old "real" = "double".
-		kdtree_node_t* node = (kdtree_node_t*)
-			(((unsigned char*)kd->nodes) +
-			 nodeid * (kd->ndim * 2 * sizeof(double) + sizeof(kdtree_node_t)));
-		return node->l;
-	}
 	if (KD_IS_LEAF(kd, nodeid)) {
         return kdtree_leaf_left(kd, nodeid);
 	} else {
@@ -523,13 +512,6 @@ int kdtree_left(const kdtree_t* kd, int nodeid) {
 }
 
 int kdtree_right(const kdtree_t* kd, int nodeid) {
-	if (unlikely(kd->nodes)) {
-		// assume old "real" = "double".
-		kdtree_node_t* node = (kdtree_node_t*)
-			(((unsigned char*)kd->nodes) +
-			 nodeid * (kd->ndim * 2 * sizeof(double) + sizeof(kdtree_node_t)));
-		return node->r;
-	}
 	if (KD_IS_LEAF(kd, nodeid)) {
         return kdtree_leaf_right(kd, nodeid);
 	} else {
@@ -568,7 +550,6 @@ void kdtree_free_query(kdtree_qres_t *kq) {
 void kdtree_free(kdtree_t *kd) {
 	if (!kd) return;
     FREE(kd->name);
-	FREE(kd->nodes);
 	FREE(kd->lr);
 	FREE(kd->perm);
 	FREE(kd->bb.any);

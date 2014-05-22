@@ -38,7 +38,6 @@
 int kdtree_fits_column_is_kdtree(char* columnname) {
     return
         starts_with(columnname, KD_STR_HEADER) ||
-        starts_with(columnname, KD_STR_NODES) ||
         starts_with(columnname, KD_STR_LR   ) ||
         starts_with(columnname, KD_STR_PERM ) ||
         starts_with(columnname, KD_STR_BB   ) ||

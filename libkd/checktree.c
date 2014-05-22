@@ -83,7 +83,6 @@ int main(int argc, char** args) {
 	printf("Non-leaf nodes: %i\n", kd->ninterior);
 	printf("Tree levels:    %i\n", kd->nlevels);
 
-	printf("Legacy nodes: %s\n", (kd->nodes  ? "yes" : "no"));
 	printf("LR array:     %s\n", (kd->lr     ? "yes" : "no"));
 	printf("Perm array:   %s\n", (kd->perm   ? "yes" : "no"));
 	printf("Bounding box: %s\n", (kd->bb.any ? "yes" : "no"));

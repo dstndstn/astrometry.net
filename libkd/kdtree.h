@@ -81,16 +81,6 @@ typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t  u8;
 
-// Legacy kdtree node.
-struct kdtree_node {
-    unsigned int l,r;              /* data(l:r) are coordinates below this node */
-	/* Implicit hyperrectangle 
-	real HR[sizeof(real)*D] Lower
-	real HR[sizeof(real)*D] Upper
-	*/
-};
-typedef struct kdtree_node kdtree_node_t;
-
 enum kd_types {
 	KDT_NULL = 0,   // note, this MUST be 0 because it's used as a boolean value.
 	KDT_DATA_NULL   = 0,
@@ -195,10 +185,6 @@ struct kdtree {
 	  A bitfield describing the type of this tree.
 	*/
 	u32 treetype;
-
-	// (compatibility mode)
-	kdtree_node_t *nodes;   /* Flat tree storing nodes and
-                             bounding boxes. */
 
 	int32_t* lr;            /* Points owned by leaf nodes, stored and manipulated
 							 in a way that's too complicated to explain in this comment.

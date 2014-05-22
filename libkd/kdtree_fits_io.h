@@ -131,7 +131,6 @@ int kdtree_fits_append_tree_flipped(kdtree_fits_t* io, const kdtree_t* kd,
 
 // names (actually prefixes) of FITS tables.
 #define KD_STR_HEADER    "kdtree_header"
-#define KD_STR_NODES     "kdtree_nodes"
 #define KD_STR_LR        "kdtree_lr"
 #define KD_STR_PERM      "kdtree_perm"
 #define KD_STR_BB        "kdtree_bb"

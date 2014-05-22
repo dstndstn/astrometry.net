@@ -1,6 +1,7 @@
 /*
   This file is part of libkd.
   Copyright 2006-2008 Dustin Lang and Keir Mierle.
+  Copyright 2014 Dustin Lang.
 
   libkd is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -255,11 +256,6 @@ static anbool bboxes(const kdtree_t* kd, int node,
 		// bb trees
 		*p_tlo =  LOW_HR(kd, D, node);
 		*p_thi = HIGH_HR(kd, D, node);
-		return TRUE;
-	} else if (kd->nodes) {
-		// compat mode
-		*p_tlo = COMPAT_LOW_HR (kd, node);
-		*p_thi = COMPAT_HIGH_HR(kd, node);
 		return TRUE;
 	} else {
 		return FALSE;
@@ -1142,7 +1138,7 @@ kdtree_qres_t* MANGLE(kdtree_rangesearch_options)
 			do_l1precheck = FALSE;
 		}
 
-	if (TTYPE_INTEGER && use_tquery && (kd->bb.any || kd->nodes)) {
+	if (TTYPE_INTEGER && use_tquery && kd->bb.any) {
 		if (dtl2 < TTYPE_MAX) {
 			use_tmath = TRUE;
 			/*
