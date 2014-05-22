@@ -2234,6 +2234,7 @@ kdtree_t* MANGLE(kdtree_build)
 
 	if (options & KD_BUILD_BBOX) {
 		kd->bb.any = MALLOC(kd->nnodes * 2 * D * sizeof(ttype));
+        kd->n_bb = kd->nnodes;
 		assert(kd->bb.any);
 	}
 	if (options & KD_BUILD_SPLIT) {

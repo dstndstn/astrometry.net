@@ -121,6 +121,8 @@ checktree: checktree.o $(SLIB)
 
 fix-bb: fix-bb.o $(SLIB)
 
+demo: demo.o $(SLIB)
+
 DEP_OBJ += fix-bb.o checktree.o
 
 LIBKD_INSTALL := #fix-bb checktree
