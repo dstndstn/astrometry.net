@@ -31,6 +31,12 @@
 #include "errors.h"
 #include "log.h"
 
+kdtree_t* kdtree_build(kdtree_t* kd, void *data, int N, int D, int Nleaf,
+                       int treetype, unsigned int options) {
+    return kdtree_build_2(kd, data, N, D, Nleaf, treetype, options,
+                          NULL, NULL);
+}
+
 void kdtree_print(kdtree_t* kd) {
 	printf("kdtree:\n");
 	printf("  type 0x%x\n", kd->treetype);

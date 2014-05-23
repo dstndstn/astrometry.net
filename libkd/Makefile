@@ -166,8 +166,7 @@ ALL_TEST_LIBS = $(SLIB)
 
 include $(COMMON)/makefile.tests
 
-test_libkd: $(LIBKD_NOIO) $(ANUTILS_LIB)
-
+test_libkd: $(SLIB)
 test_libkd_io: $(SLIB)
 test_dualtree_nn: $(SLIB)
 

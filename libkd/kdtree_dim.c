@@ -25,20 +25,17 @@
 #include "kdtree.h"
 #include "kdtree_internal.h"
 
-KD_DECLARE(kdtree_build, kdtree_t*, (kdtree_t* kd, void* data, int N, int D, int Nleaf, unsigned int options));
+KD_DECLARE(kdtree_build_2, kdtree_t*, (kdtree_t* kd, void *data, int N, int D, int Nleaf, int treetype, unsigned int options, double* minval, double* maxval));
 
 /* Build a tree from an array of data, of size N*D*sizeof(real) */
 /* If the root node is level 0, then maxlevel is the level at which there may
  * not be enough points to keep the tree complete (i.e. last level) */
-kdtree_t* KDFUNC(kdtree_build)
+kdtree_t* KDFUNC(kdtree_build_2)
 	 (kdtree_t* kd, void *data, int N, int D, int Nleaf,
-	  int treetype, unsigned int options) {
+	  int treetype, unsigned int options,
+      double* minval, double* maxval) {
 
-	KD_DISPATCH(kdtree_build, treetype, kd=, (kd, data, N, D, Nleaf, options))
-
-	if (kd) {
-		kd->treetype = treetype;
-	}
+	KD_DISPATCH(kdtree_build_2, treetype, kd=, (kd, data, N, D, Nleaf, treetype, options, minval, maxval));
 	return kd;
 }
 

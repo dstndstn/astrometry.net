@@ -51,7 +51,6 @@ static void assert_kdtrees_equal(CuTest* ct, const kdtree_t* kd, const kdtree_t*
     CuAssertIntEquals(ct, kd->ninterior, kd2->ninterior);
     CuAssertIntEquals(ct, kd->nlevels, kd2->nlevels);
     CuAssertIntEquals(ct, kd->has_linear_lr, kd2->has_linear_lr);
-    //CuAssertIntEquals(ct, kd->converted_data, kd2->converted_data);
     CuAssertDblEquals(ct, kd->scale,    kd2->scale,    del);
     CuAssertDblEquals(ct, kd->invscale, kd2->invscale, del);
 
@@ -113,16 +112,6 @@ static void assert_kdtrees_equal(CuTest* ct, const kdtree_t* kd, const kdtree_t*
         CuAssert(ct, "bb equal", memcmp(kd->bb.any, kd2->bb.any, sz) == 0);
     } else {
         CuAssertPtrEquals(ct, NULL, kd2->bb.any);
-    }
-
-    if (kd->nodes) {
-        CuAssertPtrNotNull(ct, kd2->nodes);
-        sz  = kdtree_sizeof_nodes(kd );
-        sz2 = kdtree_sizeof_nodes(kd2);
-        CuAssertIntEquals(ct, sz, sz2);
-        CuAssert(ct, "nodes equal", memcmp(kd->nodes, kd2->nodes, sz) == 0);
-    } else {
-        CuAssertPtrEquals(ct, NULL, kd2->nodes);
     }
 
     if (kd->minval) {

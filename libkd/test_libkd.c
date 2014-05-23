@@ -173,25 +173,31 @@ void test_short_partition(CuTest* ct) {
 	maxval[0] =  1.2071067811865475;
 	maxval[1] =  1.2071067811865475;
 
-	kd = kdtree_new(N, D, Nleaf);
-	kd->minval = minval;
-	kd->maxval = maxval;
-	kd->treetype = KDTT_DSS;
-
 	data = calloc(N*D, sizeof(double));
-	kdtree_convert_data(kd, data, N, D, Nleaf, kd->treetype);
-
-	for (i=0; i<N; i++)
-		kd->data.s[2*i] = cdata[i];
-
-	kdtree_build(kd, kd->data.s, N, D, Nleaf, kd->treetype, KD_BUILD_SPLIT);
-
-	CuAssertIntEquals(ct, 0, kdtree_check(kd));
-
-	kd->minval = NULL;
-	kd->maxval = NULL;
-	kdtree_free(kd);
+    // convert from "cdata" to "data" space (I got the test data above
+    // from the internal data representation of a problem tree).
+    double scale = (maxval[0] - minval[0]) / (double)UINT16_MAX;
+    for (i=0; i<N; i++) {
+        data[2*i+0] = minval[0];
+        data[2*i+1] = minval[0] + (double)cdata[i] * scale;
+    }
+    kd = kdtree_build_2(NULL, data, N, D, Nleaf, KDTT_DSS, KD_BUILD_SPLIT,
+                        minval, maxval);
+    CuAssertPtrNotNull(ct, kd);
 	free(data);
+
+    /*
+     printf("kd:\n");
+     kdtree_print(kd);
+     */
+
+    uint16_t* kdata = kd->data.s;
+    for (i=0; i<N; i++) {
+        CuAssertIntEquals(ct, kdata[2*i+0], 0);
+        CuAssertIntEquals(ct, kdata[2*i+1], cdata[i]);
+    }
+	CuAssertIntEquals(ct, 0, kdtree_check(kd));
+	kdtree_free(kd);
 }
 
 void test_empty_node(CuTest* ct) {
@@ -208,27 +214,28 @@ void test_empty_node(CuTest* ct) {
 	maxval[0] = 1;
 	maxval[1] = 1;
 
-	kd = kdtree_new(N, D, Nleaf);
-	kd->minval = minval;
-	kd->maxval = maxval;
-	kd->treetype = KDTT_DSS;
-
 	data = calloc(N*D, sizeof(double));
-	kdtree_convert_data(kd, data, N, D, Nleaf, kd->treetype);
+    // convert from "cdata" to "data" space
+    double scale = (maxval[0] - minval[0]) / (double)UINT16_MAX;
+    for (i=0; i<N; i++) {
+        data[2*i+0] = minval[0];
+        data[2*i+1] = minval[0] + 3 * scale;
+    }
 
-	for (i=0; i<N; i++)
-		// any ODD value.
-		kd->data.s[2*i+1] = 3;
+	kd = kdtree_build_2(NULL, data, N, D, Nleaf, KDTT_DSS, KD_BUILD_SPLIT,
+                        minval, maxval);
+    CuAssertPtrNotNull(ct, kd);
+	free(data);
 
-	kdtree_build(kd, kd->data.s, N, D, Nleaf, kd->treetype, KD_BUILD_SPLIT);
+    uint16_t* kdata = kd->data.s;
+    for (i=0; i<N; i++) {
+        CuAssertIntEquals(ct, 0, kdata[2*i+0]);
+        CuAssertIntEquals(ct, 3, kdata[2*i+1]);
+    }
 
 	ok = kdtree_check(kd);
 	CuAssertIntEquals(ct, 0, ok);
-
-	kd->minval = NULL;
-	kd->maxval = NULL;
 	kdtree_free(kd);
-	free(data);
 }
 
 static inline u8 node_level(int nodeid) {

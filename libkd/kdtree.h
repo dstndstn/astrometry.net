@@ -551,6 +551,15 @@ kdtree_t* KDFUNC(kdtree_build)
 	 (kdtree_t* kd, void *data, int N, int D, int Nleaf,
 	  int treetype, unsigned int options);
 
+
+kdtree_t* KDFUNC(kdtree_build_2)
+	 (kdtree_t* kd, void *data, int N, int D, int Nleaf,
+	  int treetype, unsigned int options,
+      double* minval, double* maxval);
+
+
+
+
 /* Range seach for a single point.
 
  kdtree_rangesearch()
