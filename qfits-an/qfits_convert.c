@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <sys/param.h>
 
-#include "config.h"
+#include "qfits_config.h"
 #include "qfits_image.h"
 #include "qfits_byteswap.h"
 #include "qfits_error.h"

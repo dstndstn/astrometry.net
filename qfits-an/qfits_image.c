@@ -39,10 +39,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "config.h"
-
+#include "qfits_config.h"
 #include "qfits_image.h"
-
 #include "qfits_rw.h"
 #include "qfits_header.h"
 #include "qfits_byteswap.h"

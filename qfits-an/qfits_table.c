@@ -42,10 +42,8 @@
 #include <math.h>
 #include <sys/param.h>
 
-#include "config.h"
-
+#include "qfits_config.h"
 #include "qfits_table.h"
-
 #include "qfits_float.h"
 #include "qfits_std.h"
 #include "qfits_byteswap.h"

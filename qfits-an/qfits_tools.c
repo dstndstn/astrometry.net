@@ -41,10 +41,8 @@
 #include <unistd.h>
 #include <regex.h>
 
-#include "config.h"
-
+#include "qfits_config.h"
 #include "qfits_tools.h"
-
 #include "qfits_card.h"
 #include "qfits_rw.h"
 #include "qfits_std.h"

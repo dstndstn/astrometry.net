@@ -29,8 +29,7 @@
                                    Includes
  -----------------------------------------------------------------------------*/
 
-#include "config.h"
-
+#include "qfits_config.h"
 #include "qfits_byteswap.h"
 
 // does qfits think this platform is big-endian?
