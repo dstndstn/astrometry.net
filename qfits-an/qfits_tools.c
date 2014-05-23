@@ -275,7 +275,7 @@ int qfits_get_type(const char * s)
 /*----------------------------------------------------------------------------*/
 const char * qfits_version(void)
 {
-    return (const char *)PACKAGE_VERSION;
+    return (const char *)QFITS_VERSION;
 }
 
 /**@}*/
