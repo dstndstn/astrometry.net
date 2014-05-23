@@ -46,7 +46,8 @@ ANBASE_OBJ := starutil.o mathutil.o bl-sort.o bl.o bt.o healpix-utils.o \
 ANBASE_DEPS :=
 
 ANUTILS_OBJ :=  sip-utils.o fit-wcs.o sip.o \
-	tycho2.o anwcs.o wcs-resample.o gslutils.o
+	anwcs.o wcs-resample.o gslutils.o \
+	boilerplate.o
 
 # Things that it depends on but that aren't linked in
 ANFILES_DEPS :=
@@ -108,10 +109,10 @@ QFITS_UTILS := fits-column-merge subtable fitsgetext wcsinfo
 
 PROGS := an-fitstopnm an-pnmtofits downsample-fits \
 	fits-flip-endian hpsplit wcs-to-tan	query-starkd \
-	get-healpix $(QFITS_UTILS) tycho2tofits search-index \
-	pad-file build-hd-tree
+	get-healpix $(QFITS_UTILS) search-index \
+	pad-file
 
-# tycho2tofits search-index pad-file resample tycho2tostellarium build-hd-tree
+# search-index pad-file resample
 
 MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy
 
@@ -132,14 +133,14 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	keywords.h log.h \
 	mathutil.h permutedsort.h qidxfile.h quadfile.h rdlist.h scamp-catalog.h \
 	fit-wcs.h sip-utils.h sip.h sip_qfits.h starkd.h starutil.h starutil.inc \
-	starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
+	starxy.h svn.h tic.h \
 	xylist.h coadd.h convolve-image.h resample.h multiindex.h scamp.h \
 	ctmf.h dimage.h image2xy.h radix.h simplexy-common.h simplexy.h \
 	tabsort.h wcs-rd2xy.h wcs-xy2rd.h
 
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
-	tycho2-fits.o tic.o
+	tic.o
 ANUTILS_DEPS += $(QFITS_LIB)
 endif
 
@@ -374,34 +375,12 @@ ifndef NO_QFITS
 DEP_PREREQS += $(QFITS_LIB)
 endif
 
-hd1.fits: henry-draper.tsv build-hd-tree
-	build-hd-tree -s -R 16 henry-draper.tsv $@
-
-hd.fits: henry-draper.tsv build-hd-tree tycho2.fits tyc2_hd.dat
-	build-hd-tree -s -R 16 -T tycho2.fits -X tyc2_hd.dat henry-draper.tsv $@
-
-tyc2_hd.dat:
-	wget "ftp://cdsarc.u-strasbg.fr/pub/cats/IV/25/tyc2_hd.dat.gz" -O $@.gz
-	gunzip $@.gz
-
-henry-draper.tsv:
-	wget "http://trac.astrometry.net/browser/binary/henry-draper/henry-draper.tsv?format=txt" -O $@
-
-tycho2.fits: catalog.dat suppl_1.dat
-	tycho2tofits -o $@ $^
-
-catalog.dat:
-	wget -c http://www.astro.ku.dk/~cf/CD/data/catalog.dat
-
-suppl_1.dat:
-	wget -c http://www.astro.ku.dk/~cf/CD/data/suppl_1.dat
-
 ### TESTS
 
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log \
 	test_scamp_catalog test_starutil test_svd test_hd test_ioutils \
-	test_tycho2 test_anwcs test_sip-utils test_errors test_multiindex \
+	test_anwcs test_sip-utils test_errors test_multiindex \
 	test_convolve_image test_qsort_r test_wcs test_big_tables test_quadfile \
 	test_dfind test_ctmf test_dsmooth test_dcen3x3 test_simplexy
 # test_hd depends on hd.fits...
@@ -436,7 +415,7 @@ ALL_TEST_EXTRA_OBJS += $(SIMPLEXY_OBJ)
 
 NORMAL_TESTS := test_quadfile test_big_tables test_qsort_r \
 	test_convolve_image test_multiindex test_errors test_sip-utils \
-	test_anwcs test_wcs test_tycho2 test_hd test_fitstable test_fitsbin \
+	test_anwcs test_wcs test_hd test_fitstable test_fitsbin \
 	test_fitsioutils test_xylist test_rdlist test_bl test_bt test_endian \
 	test_healpix test_log test_ioutils test_scamp_catalog test_starutil \
 	test_svd
