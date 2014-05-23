@@ -111,7 +111,6 @@ OTHER_OBJS := catalog.o codefile.o verify.o \
 NOT_INSTALLED_PIPELINE := blind agreeable certifiable \
 	startree hpquads codetree unpermute-quads unpermute-stars \
 	solvedserver printsolved mergesolved subwcs \
-	2masstofits \
 	augment-xylist merge-index index-to-table setsolved \
 	startree2 uniformize-catalog \
 	local-index index-info control-program
@@ -142,9 +141,6 @@ ENGINE_OBJS := \
 # These are required by solve-field and friends
 ENGINE_OBJS += new-wcs.o fits-guess-scale.o cut-table.o \
 	resort-xylist.o
-
-# Conversion routines
-ENGINE_OBJS += 2mass-fits.o 2mass.o
 
 BUILD_INDEX_OBJS := build-index.o uniformize-catalog.o startree2.o hpquads.o \
 	quad-builder.o quad-utils.o codefile.o codetree.o unpermute-stars.o \
@@ -182,7 +178,7 @@ FITS_UTILS_MAIN_OBJ := $(addsuffix .o,$(FITS_UTILS))
 INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) $(PROGS)
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
-INSTALL_H := 2mass-fits.h 2mass.h allquads.h augment-xylist.h axyfile.h \
+INSTALL_H := allquads.h augment-xylist.h axyfile.h \
 	engine.h blind.h blindutils.h build-index.h catalog.h \
 	codefile.h codetree.h fits-guess-scale.h hpquads.h \
 	image2xy-files.h matchfile.h matchobj.h merge-index.h \
@@ -309,7 +305,7 @@ solver_test_2.o: solver.c
 #######################################
 
 # Add the basename of your test sources here...
-ALL_TEST_FILES = test_2mass test_matchfile test_blindutils \
+ALL_TEST_FILES = test_matchfile test_blindutils \
 	test_resort-xylist test_tweak test_multiindex2 test_codefile
 $(ALL_TEST_FILES): $(SLIB)
 

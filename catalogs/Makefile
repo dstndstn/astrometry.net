@@ -25,6 +25,8 @@ include $(COMMON)/makefile.common
 
 # required for build-hd-tree
 include $(COMMON)/makefile.anfiles
+# 2masstofits
+include $(COMMON)/makefile.zlib
 #include $(COMMON)/makefile.libkd
 #include $(COMMON)/makefile.anutils
 
@@ -62,10 +64,11 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 
 OBJS := ngc2000.o ngcic-accurate.o brightstars.o constellations.o \
 	tycho2-fits.o tycho2.o usnob-fits.o usnob.o nomad.o nomad-fits.o \
-	ucac3-fits.o ucac3.o ucac4-fits.o ucac4.o
+	ucac3-fits.o ucac3.o ucac4-fits.o ucac4.o 2mass-fits.o 2mass.o
 
 HEADERS := brightstars.h constellations.h ngc2000.h ngcic-accurate.h \
-	tycho2.h tycho2-fits.h usnob-fits.h usnob.h nomad-fits.h nomad.h 
+	tycho2.h tycho2-fits.h usnob-fits.h usnob.h nomad-fits.h nomad.h \
+	2mass-fits.h 2mass.h
 
 PYTHON_INSTALL := __init__.py ngc2000.py 
 
@@ -90,6 +93,7 @@ LDLIBS += -lm
 
 CFLAGS += -I.
 CFLAGS += -I$(COMMON)
+CFLAGS += $(ZLIB_INC)
 
 LIBCAT := libcatalogs.a
 
@@ -102,7 +106,7 @@ $(LIBCAT): $(OBJS)
 	$(RANLIB) $@
 
 PROGS := build-hd-tree tycho2tofits usnobtofits nomadtofits \
-	ucac3tofits ucac4tofits
+	ucac3tofits ucac4tofits 2masstofits
 
 # not built by default
 MISC_PROGS := usnob-scamp-catalog read_nomad
@@ -114,6 +118,10 @@ ALL_OBJ += ucac3tofits.o
 ucac4tofits: ucac4tofits.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) -lbz2
 ALL_OBJ += ucac4tofits.o
+
+2masstofits: 2masstofits.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) $(ZLIB_LIB)
+ALL_OBJ += 2masstofits.o
 
 $(PROGS): %: %.o $(SLIB)
 
@@ -160,7 +168,7 @@ install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS)
 
 .PHONY: install
 
-ALL_TEST_FILES = test_tycho2 test_usnob test_nomad
+ALL_TEST_FILES = test_tycho2 test_usnob test_nomad test_2mass
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(SLIB)
 ALL_TEST_EXTRA_LDFLAGS = 
