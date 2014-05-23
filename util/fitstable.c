@@ -1369,9 +1369,14 @@ int fitstable_open_extension(fitstable_t* tab, int ext) {
 	} else {
 		if (tab->table) {
 			qfits_table_close(tab->table);
+            tab->table = NULL;
 		}
 
         assert(tab->anq);
+        if (ext >= anqfits_n_ext(tab->anq)) {
+            ERROR("Requested FITS extension %i in file %s, but there are only %i extensions.\n", ext, tab->fn, anqfits_n_ext(tab->anq));
+            return -1;
+        }
         tab->table = anqfits_get_table(tab->anq, ext);
 
 		if (!tab->table) {
