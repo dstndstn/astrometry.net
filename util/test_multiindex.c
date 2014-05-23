@@ -26,7 +26,7 @@ void test_multiindex(CuTest* ct) {
 	sl_append(fns, "t10.ind");
 	sl_append(fns, "t11.ind");
 	sl_append(fns, "t12.ind");
-	mi = multiindex_open("t10.skdt", fns);
+	mi = multiindex_open("t10.skdt", fns, 0);
 
 	printf("Got %i indices\n", multiindex_n(mi));
 	for (i=0; i<multiindex_n(mi); i++) {

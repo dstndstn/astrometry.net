@@ -23,6 +23,7 @@
 
 #include "cutest.h"
 #include "ioutils.h"
+#include "fileutils.h"
 #include "log.h"
 #include "tic.h"
 #include "md5.h"

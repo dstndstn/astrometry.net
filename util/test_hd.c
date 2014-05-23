@@ -7,6 +7,7 @@
 #include "cutest.h"
 #include "hd.h"
 #include "starutil.h"
+#include "ioutils.h"
 
 void test_hd_1(CuTest* tc) {
     hd_catalog_t* hdcat;
@@ -18,6 +19,11 @@ void test_hd_1(CuTest* tc) {
     int strangehds[] = { 40142, 40441, 40672, 40746, 40763, 40764,
                          104176, 104193, 163635, 224698, 224699,
                          129371 };
+
+    if (!file_readable("hd.fits")) {
+        printf("File \"hd.fits\" does not exist; test skipped.\n");
+        return;
+    }
 
     hdcat = henry_draper_open("hd.fits");
     CuAssertPtrNotNull(tc, hdcat);

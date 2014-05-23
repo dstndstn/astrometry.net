@@ -17,7 +17,7 @@ void test_codefile_big(CuTest* ct) {
 	int N = 250000000;
 	double code[4];
 	double ecode[4];
-	codefile* cf;
+	codefile_t* cf;
 	char* fn;
 
 	fits_use_error_system();

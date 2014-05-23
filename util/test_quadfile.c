@@ -13,7 +13,7 @@ void test_quadfile_inmemory_big(CuTest* ct) {
 	int N = 1000000000;
 	unsigned int quad[4];
 	unsigned int equad[4];
-	quadfile* qf;
+	quadfile_t* qf;
 
 	qf = quadfile_open_in_memory();
     CuAssertPtrNotNull(ct, qf);

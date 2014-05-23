@@ -47,12 +47,12 @@ static void set_grid(int GX, int GY, tan_t* tan, sip_t* sip,
 	int i, j;
 
 	if (GX == 1)
-		gridx[i] = 0.5 + 0.5 * tan->imagew;
+		gridx[0] = 0.5 + 0.5 * tan->imagew;
 	else
 		for (i=0; i<GX; i++)
 			gridx[i] = 0.5 + i * tan->imagew / (GX-1);
 	if (GY == 1)
-		gridy[i] = 0.5 + 0.5 * tan->imageh;
+		gridy[0] = 0.5 + 0.5 * tan->imageh;
 	else
 		for (i=0; i<GY; i++)
 			gridy[i] = 0.5 + i * tan->imageh / (GY-1);
