@@ -60,10 +60,11 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
 
-OBJS := ngc2000.o ngcic-accurate.o brightstars.o constellations.o
+OBJS := ngc2000.o ngcic-accurate.o brightstars.o constellations.o \
+	tycho2-fits.o tycho2.o usnob-fits.o usnob.o
 
 HEADERS := brightstars.h constellations.h ngc2000.h ngcic-accurate.h \
-	tycho2.h tycho2-fits.h
+	tycho2.h tycho2-fits.h usnob-fits.h usnob.h
 
 PYTHON_INSTALL := __init__.py ngc2000.py 
 
@@ -74,8 +75,7 @@ LINK_DIR := $(PY_BASE_LINK_DIR)/catalogs
 
 DEP_OBJ := $(OBJS)
 DEP_PREREQS :=
-DEP_PREREQS += ngc2000names.c ngc2000entries.c ngcic-accurate-entries.c \
-	tycho2.o tycho2-fits.o
+DEP_PREREQS += ngc2000names.c ngc2000entries.c ngcic-accurate-entries.c
 
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(LIBKD_INC)
@@ -100,7 +100,10 @@ $(LIBCAT): $(OBJS)
 	$(AR) rc $@ $(OBJS)
 	$(RANLIB) $@
 
-PROGS := build-hd-tree tycho2tofits
+PROGS := build-hd-tree tycho2tofits usnobtofits
+
+# not built by default
+MISC_PROGS := usnob-scamp-catalog
 
 $(PROGS): %: %.o $(SLIB)
 
@@ -147,7 +150,7 @@ install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS)
 
 .PHONY: install
 
-ALL_TEST_FILES = test_tycho2
+ALL_TEST_FILES = test_tycho2 test_usnob
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(SLIB)
 ALL_TEST_EXTRA_LDFLAGS = 

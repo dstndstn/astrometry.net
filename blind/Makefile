@@ -99,18 +99,18 @@ CFITS_UTILS := tablist modhead fitscopy tabmerge liststruc \
 FITS_UTILS := $(QFITS_UTILS) $(CFITS_UTILS)
 
 MISC_EXECS := project-usnob diffractionFlag_check \
-	hpgrid read_nomad usnob-scamp-catalog
+	hpgrid read_nomad
 
 UTIL_OBJS := 
 
-OTHER_OBJS := usnob.o usnob-fits.o catalog.o codefile.o verify.o \
+OTHER_OBJS := catalog.o codefile.o verify.o \
 	solver.o matchfile.o matchobj.o solvedclient.o solvedfile.o pnpoly.o \
 	tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	nomad.o nomad-fits.o blindutils.o \
 	engine-main.o engine.o plotquad.o plotxy.o tweak2.o
 
-NOT_INSTALLED_PIPELINE := blind agreeable certifiable usnobtofits \
+NOT_INSTALLED_PIPELINE := blind agreeable certifiable \
 	startree hpquads codetree unpermute-quads unpermute-stars \
 	solvedserver printsolved mergesolved subwcs \
 	2masstofits nomadtofits \
@@ -123,7 +123,7 @@ PIPELINE := wcs-grab solve-field
 MAIN_PROGS := image2xy new-wcs fits-guess-scale fit-wcs
 # hpquads
 
-SIMPLE_PROGS := nomadtofits usnobtofits wcs-grab get-wcs
+SIMPLE_PROGS := nomadtofits wcs-grab get-wcs
 # hpowned
 
 PROGS := astrometry-engine build-astrometry-index \
@@ -147,7 +147,7 @@ ENGINE_OBJS += new-wcs.o fits-guess-scale.o cut-table.o \
 
 # Conversion routines
 ENGINE_OBJS += 2mass-fits.o 2mass.o nomad-fits.o nomad.o ucac3-fits.o ucac3.o \
-	ucac4-fits.o ucac4.o usnob-fits.o usnob.o
+	ucac4-fits.o ucac4.o
 
 BUILD_INDEX_OBJS := build-index.o uniformize-catalog.o startree2.o hpquads.o \
 	quad-builder.o quad-utils.o codefile.o codetree.o unpermute-stars.o \
@@ -192,7 +192,7 @@ INSTALL_H := 2mass-fits.h 2mass.h allquads.h augment-xylist.h axyfile.h \
 	new-wcs.h nomad-fits.h nomad.h quad-builder.h quad-utils.h \
 	resort-xylist.h solvedclient.h \
 	solvedfile.h solver.h tweak.h uniformize-catalog.h \
-	unpermute-quads.h unpermute-stars.h usnob-fits.h usnob.h verify.h \
+	unpermute-quads.h unpermute-stars.h verify.h \
 	tweak2.h
 
 PLOT_INSTALL_H := plotannotations.h plotfill.h plotgrid.h plotimage.h \
@@ -313,7 +313,7 @@ solver_test_2.o: solver.c
 
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_2mass \
-	test_usnob test_nomad test_matchfile test_blindutils \
+	test_nomad test_matchfile test_blindutils \
 	test_resort-xylist test_tweak \
 	test_multiindex2 test_codefile
 $(ALL_TEST_FILES): $(SLIB)
