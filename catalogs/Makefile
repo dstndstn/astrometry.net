@@ -61,10 +61,10 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 
 
 OBJS := ngc2000.o ngcic-accurate.o brightstars.o constellations.o \
-	tycho2-fits.o tycho2.o usnob-fits.o usnob.o
+	tycho2-fits.o tycho2.o usnob-fits.o usnob.o nomad.o nomad-fits.o
 
 HEADERS := brightstars.h constellations.h ngc2000.h ngcic-accurate.h \
-	tycho2.h tycho2-fits.h usnob-fits.h usnob.h
+	tycho2.h tycho2-fits.h usnob-fits.h usnob.h nomad-fits.h nomad.h 
 
 PYTHON_INSTALL := __init__.py ngc2000.py 
 
@@ -100,10 +100,10 @@ $(LIBCAT): $(OBJS)
 	$(AR) rc $@ $(OBJS)
 	$(RANLIB) $@
 
-PROGS := build-hd-tree tycho2tofits usnobtofits
+PROGS := build-hd-tree tycho2tofits usnobtofits nomadtofits
 
 # not built by default
-MISC_PROGS := usnob-scamp-catalog
+MISC_PROGS := usnob-scamp-catalog read_nomad
 
 $(PROGS): %: %.o $(SLIB)
 
@@ -150,7 +150,7 @@ install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS)
 
 .PHONY: install
 
-ALL_TEST_FILES = test_tycho2 test_usnob
+ALL_TEST_FILES = test_tycho2 test_usnob test_nomad
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(SLIB)
 ALL_TEST_EXTRA_LDFLAGS = 
