@@ -18,7 +18,7 @@
 #ifndef NEW_WCS_H
 #define NEW_WCS_H
 
-#include "an-bool.h"
+#include "astrometry/an-bool.h"
 
 int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
             anbool include_data);

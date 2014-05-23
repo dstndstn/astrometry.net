@@ -18,10 +18,9 @@
 #ifndef BUILD_INDEX_H
 #define BUILD_INDEX_H
 
-#include "fitstable.h"
-#include "index.h"
-#include "an-bool.h"
-#include "index.h"
+#include "astrometry/fitstable.h"
+#include "astrometry/index.h"
+#include "astrometry/an-bool.h"
 
 struct index_params {
 	// catalog:

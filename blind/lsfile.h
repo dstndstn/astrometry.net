@@ -20,7 +20,7 @@
 #define LS_FILE_H
 
 #include <stdio.h>
-#include "bl.h"
+#include "astrometry/bl.h"
 
 /**
    __ls files look like this:

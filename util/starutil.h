@@ -21,8 +21,8 @@
 #define STARUTIL_H
 
 #include <math.h>
-#include "an-bool.h"
-#include "keywords.h"
+#include "astrometry/an-bool.h"
+#include "astrometry/keywords.h"
 
 #define DIM_STARS 3
 #define DIM_XY 2
@@ -227,7 +227,7 @@ InlineDeclare void star_midpoint(double* mid, const double* A, const double* B);
 
 #ifdef INCLUDE_INLINE_SOURCE
 #define InlineDefine InlineDefineH
-#include "starutil.inc"
+#include "astrometry/starutil.inc"
 #undef InlineDefine
 #endif
 

@@ -19,8 +19,8 @@
 #ifndef STARXY_H
 #define STARXY_H
 
-#include "bl.h"
-#include "an-bool.h"
+#include "astrometry/bl.h"
+#include "astrometry/an-bool.h"
 
 struct starxy_t {
     double* x;

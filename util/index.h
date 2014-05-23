@@ -19,11 +19,11 @@
 #ifndef AN_INDEX_H
 #define AN_INDEX_H
 
-#include "quadfile.h"
-#include "starkd.h"
-#include "codekd.h"
-#include "an-bool.h"
-#include "anqfits.h"
+#include "astrometry/quadfile.h"
+#include "astrometry/starkd.h"
+#include "astrometry/codekd.h"
+#include "astrometry/an-bool.h"
+#include "astrometry/anqfits.h"
 
 /*
  * These routines handle loading of index files, which can consist of

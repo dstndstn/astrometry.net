@@ -18,7 +18,7 @@
 
 #include <assert.h>
 
-#include "bl.ph"
+#include "astrometry/bl.ph"
 
 /* find the node in which element "n" can be found. */
 InlineDefine

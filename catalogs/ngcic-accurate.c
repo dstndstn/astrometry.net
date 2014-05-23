@@ -19,12 +19,13 @@
 #include <stdlib.h>
 
 #include "ngcic-accurate.h"
+#include "an-bool.h"
 
 static ngcic_accurate ngcic_acc[] = {
   #include "ngcic-accurate-entries.c"
 };
 
-int ngcic_accurate_get_radec(anbool is_ngc, int id, float* ra, float* dec) {
+int ngcic_accurate_get_radec(int is_ngc, int id, float* ra, float* dec) {
   int i, N;
   N = sizeof(ngcic_acc) / sizeof(ngcic_accurate);
   for (i=0; i<N; i++) {

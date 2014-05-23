@@ -1,5 +1,5 @@
-#include "anwcs.h"
-#include "resample.h"
+#include "astrometry/anwcs.h"
+#include "astrometry/resample.h"
 
 typedef float number;
 

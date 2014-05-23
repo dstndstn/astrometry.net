@@ -22,11 +22,12 @@
 #include <sys/types.h>
 #include <stdio.h>
 
-#include "starutil.h"
-#include "qfits_header.h"
-#include "fitsbin.h"
-#include "quadfile.h"
-#include "starkd.h"
+#include "astrometry/qfits_header.h"
+
+#include "astrometry/starutil.h"
+#include "astrometry/fitsbin.h"
+#include "astrometry/quadfile.h"
+#include "astrometry/starkd.h"
 
 // util:
 void codefile_compute_star_code(const double* starxyz, double* code, int dimquads);

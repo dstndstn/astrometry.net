@@ -19,13 +19,13 @@
 #ifndef WCS_XY2RD_H
 #define WCS_XY2RD_H
 
-#include "bl.h"
+#include "astrometry/bl.h"
 
 int wcs_xy2rd(const char* wcsfn, int wcsext,
 			  const char* xylsfn, const char* rdlsfn,
               const char* xcol, const char* ycol,
-			  anbool forcetan,
-			  anbool forcewcslib,
+			  int forcetan,
+			  int forcewcslib,
               il* fields);
 
 #endif

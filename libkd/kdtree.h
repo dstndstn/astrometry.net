@@ -22,8 +22,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "an-bool.h"
-
 #define KDTREE_MAX_LEVELS 1000
 
 #define KDT_INFTY_DOUBLE HUGE_VAL
@@ -147,7 +145,7 @@ struct kdtree_funcs {
 	void* (*get_data)(const kdtree_t* kd, int i);
 	void  (*copy_data_double)(const kdtree_t* kd, int start, int N, double* dest);
     double (*get_splitval)(const kdtree_t* kd, int nodeid);
-    anbool (*get_bboxes)(const kdtree_t* kd, int node, void* bblo, void* bbhi);
+    int (*get_bboxes)(const kdtree_t* kd, int node, void* bblo, void* bbhi);
 
     int (*check)(const kdtree_t* kd);
     void (*fix_bounding_boxes)(kdtree_t* kd);
@@ -161,7 +159,7 @@ struct kdtree_funcs {
                             void (*callback_overlap)(const kdtree_t* kd, int node, void* extra),
                             void* cb_extra);
 
-    //anbool (*node_node_mindist2_exceeds)(const kdtree_t* kd1, int node1, const kdtree_t* kd2, int node2, double maxd2);
+    //int (*node_node_mindist2_exceeds)(const kdtree_t* kd1, int node1, const kdtree_t* kd2, int node2, double maxd2);
 
     // instrumentation functions - set these to get callbacks about
     // the progress of the algorithm.
@@ -238,7 +236,7 @@ struct kdtree {
      had to be converted (if "external" type != "data" type) so that a
      new array had to be allocated.
      */
-	anbool free_data;
+	int free_data;
 
 	double* minval;
 	double* maxval;
@@ -252,7 +250,7 @@ struct kdtree {
 	int ninterior; /* Number of internal nodes */
 	int nlevels;
 
-    anbool has_linear_lr;
+    int has_linear_lr;
 
     // For i/o: the name of this tree in the file.
     char* name;
@@ -282,7 +280,7 @@ int kdtree_n(const kdtree_t* kd);
 // Returns the number of nodes in this kdtree.
 int kdtree_nnodes(const kdtree_t* kd);
 
-anbool kdtree_has_old_bb(const kdtree_t* kd);
+int kdtree_has_old_bb(const kdtree_t* kd);
 
 double kdtree_get_conservative_query_radius(const kdtree_t* kd, double radius);
 
@@ -442,7 +440,7 @@ void kdtree_nodes_contained(const kdtree_t* kd,
  *
  * Returns FALSE if the tree does not have bounding boxes.
  */
-anbool kdtree_get_bboxes(const kdtree_t* kd, int node, void* bblo, void* bbhi);
+int kdtree_get_bboxes(const kdtree_t* kd, int node, void* bblo, void* bbhi);
 
 double kdtree_get_splitval(const kdtree_t* kd, int nodeid);
 
@@ -454,11 +452,11 @@ double kdtree_node_node_mindist2(const kdtree_t* kd1, int node1,
 double kdtree_node_node_maxdist2(const kdtree_t* kd1, int node1,
                                  const kdtree_t* kd2, int node2);
 
-anbool kdtree_node_node_mindist2_exceeds(const kdtree_t* kd1, int node1,
+int kdtree_node_node_mindist2_exceeds(const kdtree_t* kd1, int node1,
 									   const kdtree_t* kd2, int node2,
 									   double dist2);
 
-anbool kdtree_node_node_maxdist2_exceeds(const kdtree_t* kd1, int node1,
+int kdtree_node_node_maxdist2_exceeds(const kdtree_t* kd1, int node1,
 									   const kdtree_t* kd2, int node2,
 									   double dist2);
 
@@ -466,10 +464,10 @@ double kdtree_node_point_mindist2(const kdtree_t* kd, int node, const void* pt);
 
 double kdtree_node_point_maxdist2(const kdtree_t* kd, int node, const void* pt);
 
-anbool kdtree_node_point_mindist2_exceeds(const kdtree_t* kd, int node,
+int kdtree_node_point_mindist2_exceeds(const kdtree_t* kd, int node,
                                         const void* pt, double dist2);
 
-anbool kdtree_node_point_maxdist2_exceeds(const kdtree_t* kd, int node,
+int kdtree_node_point_maxdist2_exceeds(const kdtree_t* kd, int node,
                                         const void* pt, double dist2);
 
 

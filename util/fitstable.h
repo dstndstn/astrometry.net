@@ -22,11 +22,11 @@
 #include <sys/types.h>
 #include <stdio.h>
 
-#include "qfits_table.h"
-#include "an-bool.h"
-#include "bl.h"
-#include "ioutils.h"
-#include "anqfits.h"
+#include "astrometry/qfits_table.h"
+#include "astrometry/an-bool.h"
+#include "astrometry/bl.h"
+#include "astrometry/ioutils.h"
+#include "astrometry/anqfits.h"
 
 /**
  For quick-n-easy(-ish) access to a column of data in a FITS BINTABLE.

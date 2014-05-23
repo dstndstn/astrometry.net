@@ -19,10 +19,10 @@
 #ifndef USNOB_H
 #define USNOB_H
 
-#include "an-bool.h"
+#include "astrometry/an-bool.h"
 #include <stdint.h>
 
-#include "starutil.h"
+#include "astrometry/starutil.h"
 
 #define USNOB_RECORD_SIZE 80
 

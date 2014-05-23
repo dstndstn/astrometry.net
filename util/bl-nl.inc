@@ -16,7 +16,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-#include "bl-nl.ph"
+#include "astrometry/bl-nl.ph"
 
 InlineDefine
 number NLF(get)(nl* list, int n) {

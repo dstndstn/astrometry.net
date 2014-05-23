@@ -32,7 +32,7 @@
 int wcs_rd2xy(const char* wcsfn, int wcsext,
 			  const char* rdlsfn, const char* xylsfn,
               const char* racol, const char* deccol,
-			  anbool forcetan, anbool forcewcslib,
+			  int forcetan, int forcewcslib,
               il* fields) {
 	xylist_t* xyls = NULL;
 	rdlist_t* rdls = NULL;

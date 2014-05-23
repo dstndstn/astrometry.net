@@ -19,7 +19,7 @@
 #ifndef MATHUTIL_H
 #define MATHUTIL_H
 
-#include "keywords.h"
+#include "astrometry/keywords.h"
 
 /*
   Given a point "pt", computes two unit vectors that are tangent
@@ -104,7 +104,7 @@ InlineDeclare void normalize_3(double* xyz);
 
 #ifdef INCLUDE_INLINE_SOURCE
 #define InlineDefine InlineDefineH
-#include "mathutil.inc"
+#include "astrometry/mathutil.inc"
 #undef InlineDefine
 #endif
 

@@ -20,7 +20,7 @@
 #ifndef SIMPLEXY2_H
 #define SIMPLEXY2_H
 
-#include "an-bool.h"
+#include "astrometry/an-bool.h"
 
 #define SIMPLEXY_DEFAULT_DPSF        1.0
 #define SIMPLEXY_DEFAULT_PLIM        8.0
@@ -59,14 +59,14 @@ struct simplexy_t {
     /* size for sliding sky estimation box */
     int halfbox;
 
-	// don't do background subtraction.
-	anbool nobgsub;
+	// (boolean) don't do background subtraction.
+	int nobgsub;
 
 	// global background.
 	float globalbg;
 
-	// invert the image before processing (for black-on-white images)
-	anbool invert;
+	// (boolean) invert the image before processing (for black-on-white images)
+	int invert;
 
 	// If set to non-zero, the given sigma value will be used;
 	// otherwise a value will be estimated.

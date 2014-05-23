@@ -34,8 +34,8 @@
 int wcs_xy2rd(const char* wcsfn, int ext,
 			  const char* xylsfn, const char* rdlsfn,
               const char* xcol, const char* ycol,
-			  anbool forcetan,
-			  anbool forcewcslib,
+			  int forcetan,
+			  int forcewcslib,
               il* fields) {
 	rdlist_t* rdls = NULL;
 	xylist_t* xyls = NULL;

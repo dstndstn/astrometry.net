@@ -23,11 +23,11 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "kdtree.h"
-#include "kdtree_fits_io.h"
-#include "fitstable.h"
-#include "keywords.h"
-#include "anqfits.h"
+#include "astrometry/kdtree.h"
+#include "astrometry/kdtree_fits_io.h"
+#include "astrometry/fitstable.h"
+#include "astrometry/keywords.h"
+#include "astrometry/anqfits.h"
 
 #ifdef SWIG
 // this keyword (from keywords.h) confuses swig

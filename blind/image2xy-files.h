@@ -22,8 +22,8 @@
 
 #include <stdint.h>
 
-#include "an-bool.h"
-#include "simplexy.h"
+#include "astrometry/an-bool.h"
+#include "astrometry/simplexy.h"
 
 /**
  Reads an input FITS image (possibly multi-HDU), runs simplexy on each

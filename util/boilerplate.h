@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 
-#include "qfits_header.h"
+#include "astrometry/qfits_header.h"
 
 void boilerplate_help_header(FILE* fid);
 

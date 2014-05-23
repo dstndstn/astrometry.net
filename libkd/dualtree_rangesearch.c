@@ -65,7 +65,7 @@ static double mydistsq(void* v1, void* v2, int D) {
 
 void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 						  double mindist, double maxdist,
-						  anbool notself,
+						  int notself,
 						  dist2_function distsquared,
 						  result_callback callback,
 						  void* param,

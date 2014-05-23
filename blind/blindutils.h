@@ -19,7 +19,7 @@
 #ifndef SCRIPTUTILS_H
 #define SCRIPTUTILS_H
 
-#include "bl.h"
+#include "astrometry/bl.h"
 
 int parse_depth_string(il* depths, const char* str);
 

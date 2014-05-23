@@ -49,7 +49,7 @@ static void rs_handle_result(void* extra, kdtree_t* searchtree, int searchnode,
 void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2,
                                double** nearest_d2, int** nearest_ind,
 							   int** count_in_range,
-							   anbool notself) {
+							   int notself) {
     int i, NY, NNY;
 
     // dual-tree search callback functions

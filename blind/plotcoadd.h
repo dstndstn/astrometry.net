@@ -18,7 +18,7 @@
 #ifndef PLOTCOADD_H
 #define PLOTCOADD_H
 
-#include "plotstuff.h"
+#include "astrometry/plotstuff.h"
 
 struct plotcoadd_args {
 };

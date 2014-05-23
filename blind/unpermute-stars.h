@@ -20,9 +20,9 @@
 #ifndef UNPERMUTE_STARS_H
 #define UNPERMUTE_STARS_H
 
-#include "starkd.h"
-#include "quadfile.h"
-#include "fitstable.h"
+#include "astrometry/starkd.h"
+#include "astrometry/quadfile.h"
+#include "astrometry/fitstable.h"
 
 /**
  \file Applies a star kdtree permutation array to all files that depend on

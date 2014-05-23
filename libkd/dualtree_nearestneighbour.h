@@ -19,12 +19,12 @@
 #ifndef DUALTREE_NEAREST_NEIGHBOUR_H
 #define DUALTREE_NEAREST_NEIGHBOUR_H
 
-#include "kdtree.h"
+#include "astrometry/kdtree.h"
 
 void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2,
                                double** nearest_d2, int** nearest_ind,
 							   int** count_within_range,
-							   anbool notself);
+							   int notself);
 
 #endif
 

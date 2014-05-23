@@ -19,8 +19,8 @@
 #ifndef INTMAP_H
 #define INTMAP_H
 
-#include "an-bool.h"
-#include "bl.h"
+#include "astrometry/an-bool.h"
+#include "astrometry/bl.h"
 
 /**
  Maps integers to lists of objects.

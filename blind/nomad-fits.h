@@ -21,8 +21,8 @@
 
 #include <stdio.h>
 
-#include "nomad.h"
-#include "fitstable.h"
+#include "astrometry/nomad.h"
+#include "astrometry/fitstable.h"
 
 #define AN_FILETYPE_NOMAD "NOMAD"
 

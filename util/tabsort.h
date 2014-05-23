@@ -19,9 +19,7 @@
 #ifndef TABSORT_H
 #define TABSORT_H
 
-#include "an-bool.h"
-
 int tabsort(const char* infn, const char* outfn, const char* colname,
-            anbool descending);
+            int descending);
 
 #endif

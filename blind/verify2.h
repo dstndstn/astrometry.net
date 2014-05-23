@@ -19,14 +19,14 @@
 #ifndef VERIFY2_H
 #define VERIFY2_H
 
-#include "kdtree.h"
-#include "matchobj.h"
-#include "bl.h"
-#include "starkd.h"
-#include "sip.h"
-#include "bl.h"
-#include "starxy.h"
-#include "index.h"
+#include "astrometry/kdtree.h"
+#include "astrometry/matchobj.h"
+#include "astrometry/bl.h"
+#include "astrometry/starkd.h"
+#include "astrometry/sip.h"
+#include "astrometry/bl.h"
+#include "astrometry/starxy.h"
+#include "astrometry/index.h"
 
 void verify_get_all_matches(const double* refxys, int NR,
 							const double* testxys, const double* testsigma2s, int NT,

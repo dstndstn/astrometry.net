@@ -21,9 +21,9 @@
 
 #include <stdio.h>
 
-#include "anqfits.h"
-#include "bl.h"
-#include "an-bool.h"
+#include "astrometry/anqfits.h"
+#include "astrometry/bl.h"
+#include "astrometry/an-bool.h"
 /**
  "fitsbin" is our abuse of FITS binary tables to hold raw binary data,
  *without endian flips*, by storing the data as characters/bytes.

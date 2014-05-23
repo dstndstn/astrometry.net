@@ -18,8 +18,8 @@
 #ifndef PLOTOUTLINE_H
 #define PLOTOUTLINE_H
 
-#include "plotstuff.h"
-#include "anwcs.h"
+#include "astrometry/plotstuff.h"
+#include "astrometry/anwcs.h"
 
 struct plotoutline_args {
 	anwcs_t* wcs;

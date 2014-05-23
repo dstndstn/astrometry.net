@@ -19,10 +19,10 @@
 #ifndef TWOMASS_FITS_H
 #define TWOMASS_FITS_H
 
-#include "anqfits.h"
-#include "2mass.h"
-#include "fitstable.h"
-#include "ioutils.h"
+#include "astrometry/anqfits.h"
+#include "astrometry/2mass.h"
+#include "astrometry/fitstable.h"
+#include "astrometry/ioutils.h"
 
 #define AN_FILETYPE_2MASS "2MASS"
 

@@ -19,9 +19,9 @@
 #ifndef CODE_KD_H
 #define CODE_KD_H
 
-#include "kdtree.h"
-#include "qfits_header.h"
-#include "anqfits.h"
+#include "astrometry/kdtree.h"
+#include "astrometry/qfits_header.h"
+#include "astrometry/anqfits.h"
 
 #define AN_FILETYPE_CODETREE "CKDT"
 

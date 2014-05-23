@@ -19,9 +19,9 @@
 #ifndef CODETREE_H
 #define CODETREE_H
 
-#include "codekd.h"
-#include "codefile.h"
-#include "fitstable.h"
+#include "astrometry/codekd.h"
+#include "astrometry/codefile.h"
+#include "astrometry/fitstable.h"
 
 /**
  */

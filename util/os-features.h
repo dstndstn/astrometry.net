@@ -19,7 +19,7 @@
 #define OS_FEATURES_H
 
 #ifndef DONT_INCLUDE_OS_FEATURES_CONFIG_H
-#include "os-features-config.h"
+#include "astrometry/os-features-config.h"
 #endif
 
 // Features we use that aren't standard across all supported platforms

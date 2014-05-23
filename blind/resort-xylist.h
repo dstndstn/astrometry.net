@@ -18,11 +18,9 @@
 #ifndef RESORT_XYLIST_H
 #define RESORT_XYLIST_H
 
-#include "an-bool.h"
-
 int resort_xylist(const char* infn, const char* outfn,
                   const char* fluxcol, const char* backcol,
-                  anbool ascending);
+                  int ascending);
 
 #endif
 

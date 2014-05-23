@@ -19,8 +19,8 @@
 #ifndef AN_HD_H
 #define AN_HD_H
 
-#include "kdtree.h"
-#include "bl.h"
+#include "astrometry/kdtree.h"
+#include "astrometry/bl.h"
 
 /**
 

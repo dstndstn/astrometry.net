@@ -18,7 +18,7 @@
 #ifndef QUAD_BUILDER_H
 #define QUAD_BUILDER_H
 
-#include "an-bool.h"
+#include "astrometry/an-bool.h"
 
 struct potential_quad {
 	double midAB[3];

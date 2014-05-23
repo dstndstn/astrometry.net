@@ -19,7 +19,7 @@
 #ifndef SIP_UTILS_H
 #define SIP_UTILS_H
 
-#include "sip.h"
+#include "astrometry/sip.h"
 
 int sip_ensure_inverse_polynomials(sip_t* sip);
 

@@ -21,7 +21,7 @@
 
 extern double RANGESEARCH_NO_LIMIT;
 
-#include "kdtree.h"
+#include "astrometry/kdtree.h"
 
 // note, 'xind' and 'yind' are indices IN THE KDTREE; to get back to
 // 'normal' ordering you must use the kdtree permutation vector.
@@ -34,7 +34,7 @@ typedef double (*dist2_function)(void* px, void* py, int D);
 
 void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 						  double mindist, double maxdist,
-						  anbool notself,
+						  int notself,
 						  dist2_function distsquared,
 						  result_callback callback,
 						  void* param,

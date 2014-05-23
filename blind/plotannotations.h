@@ -1,7 +1,7 @@
 #ifndef PLOTANNOTATIONS_H
 #define PLOTANNOTATIONS_H
 
-#include "plotstuff.h"
+#include "astrometry/plotstuff.h"
 
 struct annotation_args {
 	anbool NGC;

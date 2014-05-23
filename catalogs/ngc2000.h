@@ -19,8 +19,7 @@
 #ifndef NGC2000_H
 #define NGC2000_H
 
-#include "an-bool.h"
-#include "bl.h"
+#include "astrometry/bl.h"
 
 /**
  The Astrometry.net codebase has two NGC modules.  This one contains
@@ -50,7 +49,7 @@
 
 struct ngc_entry {
 	// true: NGC.  false: IC.
-	anbool is_ngc;
+	int is_ngc;
 
 	// NGC/IC number
 	int id;
@@ -79,7 +78,7 @@ extern ngc_entry ngc_entries[];
 // convenience accessors:
 
 // Find an entry by NGC/IC number.
-ngc_entry* ngc_get_ngcic_num(anbool is_ngc, int num);
+ngc_entry* ngc_get_ngcic_num(int is_ngc, int num);
 
 int ngc_num_entries();
 

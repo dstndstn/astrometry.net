@@ -19,7 +19,7 @@
 #ifndef PLOTRADEC_H
 #define PLOTRADEC_H
 
-#include "plotstuff.h"
+#include "astrometry/plotstuff.h"
 
 struct plotradec_args {
 	char* fn;

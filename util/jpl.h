@@ -18,7 +18,7 @@
 #ifndef JPL_H
 #define JPL_H
 
-#include "bl.h"
+#include "astrometry/bl.h"
 
 struct orbital_elements {
 	double a;

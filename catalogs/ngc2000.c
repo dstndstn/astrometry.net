@@ -66,7 +66,7 @@ ngc_entry* ngc_get_entry(int i) {
 	return ngc_entries + i;
 }
 
-ngc_entry* ngc_get_ngcic_num(anbool is_ngc, int num) {
+ngc_entry* ngc_get_ngcic_num(int is_ngc, int num) {
 	int i, N;
 	N = ngc_num_entries();
 	for (i=0; i<N; i++) {

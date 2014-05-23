@@ -19,10 +19,10 @@
 #ifndef ANWCSLIB_H
 #define ANWCSLIB_H
 
-#include "sip.h"
-#include "an-bool.h"
-#include "qfits_header.h"
-#include "bl.h"
+#include "astrometry/sip.h"
+#include "astrometry/an-bool.h"
+#include "astrometry/qfits_header.h"
+#include "astrometry/bl.h"
 
 /** Interface to Mark Calabretta's wcslib, if available, and
  Astrometry.net's TAN/SIP implementation.  Also WCSTools. */

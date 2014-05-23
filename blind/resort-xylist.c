@@ -33,10 +33,11 @@
 #include "fitstable.h"
 #include "errors.h"
 #include "log.h"
+#include "an-bool.h"
 
 int resort_xylist(const char* infn, const char* outfn,
                   const char* fluxcol, const char* backcol,
-                  anbool ascending) {
+                  int ascending) {
 	FILE* fin = NULL;
 	FILE* fout = NULL;
     double *flux = NULL, *back = NULL;

@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 
-#include "bl.h"
+#include "astrometry/bl.h"
 
 struct anoption {
     // don't change the order of these fields!

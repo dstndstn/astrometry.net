@@ -8,13 +8,13 @@
 
 #include <stdint.h>
 
-#include "qfits_header.h"
-#include "qfits_table.h"
-#include "qfits_keywords.h"
-#include "qfits_std.h"
-#include "qfits_image.h"
-#include "qfits_tools.h"
-#include "qfits_time.h"
+#include "astrometry/qfits_header.h"
+#include "astrometry/qfits_table.h"
+#include "astrometry/qfits_keywords.h"
+#include "astrometry/qfits_std.h"
+#include "astrometry/qfits_image.h"
+#include "astrometry/qfits_tools.h"
+#include "astrometry/qfits_time.h"
 
 
 int fits_get_atom_size(tfits_type type);

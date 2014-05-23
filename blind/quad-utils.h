@@ -18,10 +18,10 @@
 #ifndef QUAD_UTILS_H
 #define QUAD_UTILS_H
 
-#include "starkd.h"
-#include "codefile.h"
-#include "quadfile.h"
-#include "an-bool.h"
+#include "astrometry/starkd.h"
+#include "astrometry/codefile.h"
+#include "astrometry/quadfile.h"
+#include "astrometry/an-bool.h"
 
 void quad_compute_star_code(const double* starxyz, double* code, int dimquads);
 

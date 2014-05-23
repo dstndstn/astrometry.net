@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-#include "keywords.h"
+#include "astrometry/keywords.h"
 
 //#undef Const
 //#define Const 

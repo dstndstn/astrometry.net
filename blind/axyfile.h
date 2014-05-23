@@ -19,7 +19,7 @@
 #ifndef AXYFILE_H
 #define AXYFILE_H
 
-#include "bl.h"
+#include "astrometry/bl.h"
 
 /*
  Shared between 'augment-xylist' and 'astrometry-engine': description of a field

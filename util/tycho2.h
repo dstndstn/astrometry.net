@@ -26,7 +26,7 @@
 
 #include <stdint.h>
 
-#include "starutil.h"
+#include "astrometry/starutil.h"
 
 // 206 bytes of data, but each record is supposed to be terminated
 // by \r\n, making...

@@ -19,12 +19,12 @@
 #ifndef _TWEAK_INTERNAL_H
 #define _TWEAK_INTERNAL_H
 
-#include "an-bool.h"
-#include "kdtree.h"
-#include "bl.h"
-#include "sip.h"
-#include "starutil.h"
-#include "starxy.h"
+#include "astrometry/an-bool.h"
+#include "astrometry/kdtree.h"
+#include "astrometry/bl.h"
+#include "astrometry/sip.h"
+#include "astrometry/starutil.h"
+#include "astrometry/starxy.h"
 
 // These flags represent the work already done on a tweak problem
 enum tweak_flags {

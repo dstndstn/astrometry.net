@@ -33,6 +33,7 @@
 #include "log.h"
 #include "errors.h"
 #include "resample.h"
+#include "an-bool.h"
 
 /*
  * simplexy.c

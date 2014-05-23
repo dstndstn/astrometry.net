@@ -19,8 +19,6 @@
 #ifndef NGCIC_ACCURATE_H
 #define NGCIC_ACCURATE_H
 
-#include "an-bool.h"
-
 /*
   The accurate NGC/IC positions database can be found here:
     http://www.ngcic.org/corwin/default.htm
@@ -28,7 +26,7 @@
 
 struct ngcic_accurate {
   // true: NGC.  false: IC.
-  anbool is_ngc;
+  int is_ngc;
   // NGC/IC number
   int id;
   // RA,Dec in B2000.0 degrees
@@ -37,7 +35,7 @@ struct ngcic_accurate {
 };
 typedef struct ngcic_accurate ngcic_accurate;
 
-int ngcic_accurate_get_radec(anbool is_ngc, int id, float* ra, float* dec);
+int ngcic_accurate_get_radec(int is_ngc, int id, float* ra, float* dec);
 
 int ngcic_accurate_num_entries();
 

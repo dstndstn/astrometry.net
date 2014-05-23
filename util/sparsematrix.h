@@ -22,8 +22,8 @@
 
 #include <stdio.h>
 
-#include "bl.h"
-#include "an-bool.h"
+#include "astrometry/bl.h"
+#include "astrometry/an-bool.h"
 
 // Stored in row-major form.
 struct sparsematrix {

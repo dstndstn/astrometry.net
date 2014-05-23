@@ -21,8 +21,8 @@
 
 #include <stdio.h>
 
-#include "ucac3.h"
-#include "fitstable.h"
+#include "astrometry/ucac3.h"
+#include "astrometry/fitstable.h"
 
 #define AN_FILETYPE_UCAC3 "UCAC3"
 

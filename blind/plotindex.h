@@ -18,9 +18,9 @@
 #ifndef PLOTINDEX_H
 #define PLOTINDEX_H
 
-#include "plotstuff.h"
-#include "bl.h"
-#include "index.h"
+#include "astrometry/plotstuff.h"
+#include "astrometry/bl.h"
+#include "astrometry/index.h"
 
 struct plotindex_args {
 	pl* indexes;

@@ -20,8 +20,8 @@
 #ifndef FIT_WCS_H
 #define FIT_WCS_H
 
-#include "sip.h"
-#include "starkd.h"
+#include "astrometry/sip.h"
+#include "astrometry/starkd.h"
 
 /**
  Move the tangent point to the given CRPIX, keeping the corresponding

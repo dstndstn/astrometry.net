@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 
-#include "an-bool.h"
+#include "astrometry/an-bool.h"
 
 /**
 

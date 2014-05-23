@@ -19,9 +19,9 @@
 #ifndef AN_MULTIINDEX_H
 #define AN_MULTIINDEX_H
 
-#include "index.h"
-#include "bl.h"
-#include "starkd.h"
+#include "astrometry/index.h"
+#include "astrometry/bl.h"
+#include "astrometry/starkd.h"
 
 /**
 

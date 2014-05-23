@@ -21,10 +21,10 @@
 
 #include <time.h>
 
-#include "starxy.h"
-#include "an-bool.h"
-#include "bl.h"
-#include "an-opts.h"
+#include "astrometry/starxy.h"
+#include "astrometry/an-bool.h"
+#include "astrometry/bl.h"
+#include "astrometry/an-opts.h"
 
 #define SCALE_UNITS_DEG_WIDTH 0
 #define SCALE_UNITS_ARCMIN_WIDTH 1

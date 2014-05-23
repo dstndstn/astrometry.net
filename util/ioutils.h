@@ -24,9 +24,9 @@
 #include <sys/types.h>
 #include <time.h>
 
-#include "an-bool.h"
-#include "bl.h"
-#include "keywords.h"
+#include "astrometry/an-bool.h"
+#include "astrometry/bl.h"
+#include "astrometry/keywords.h"
 
 extern uint32_t ENDIAN_DETECTOR;
 

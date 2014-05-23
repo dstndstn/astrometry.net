@@ -21,9 +21,9 @@
 
 #include <stdio.h>
 
-#include "qfits_header.h"
-#include "usnob.h"
-#include "fitstable.h"
+#include "astrometry/qfits_header.h"
+#include "astrometry/usnob.h"
+#include "astrometry/fitstable.h"
 
 #define AN_FILETYPE_USNOB "USNOB"
 

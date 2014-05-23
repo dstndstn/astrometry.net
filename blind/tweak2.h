@@ -19,7 +19,7 @@
 #ifndef TWEAK_2_H
 #define TWEAK_2_H
 
-#include "sip.h"
+#include "astrometry/sip.h"
 
 /**
  Computed SIP parameters given a set of corresponding points.

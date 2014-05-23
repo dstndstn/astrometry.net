@@ -2882,7 +2882,7 @@ void MANGLE(kdtree_nodes_contained)
 	nodes_contained_rec(kd, 0, qlo, qhi, cb_contained, cb_overlap, cb_extra);
 }
 
-anbool MANGLE(kdtree_get_bboxes)(const kdtree_t* kd, int node,
+int MANGLE(kdtree_get_bboxes)(const kdtree_t* kd, int node,
 							   void* vbblo, void* vbbhi) {
 	etype* bblo = vbblo;
 	etype* bbhi = vbbhi;

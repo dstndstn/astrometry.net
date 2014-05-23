@@ -18,7 +18,7 @@
 #ifndef PLOTXXX_H
 #define PLOTXXX_H
 
-#include "plotstuff.h"
+#include "astrometry/plotstuff.h"
 
 struct plotxxx_args {
 };

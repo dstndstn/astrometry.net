@@ -24,7 +24,7 @@
  Expects "number" to be #defined to the numerical type.
  */
 
-#include "bl-nl.ph"
+#include "astrometry/bl-nl.ph"
 
 typedef bl nl;
 

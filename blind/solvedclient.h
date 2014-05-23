@@ -19,7 +19,7 @@
 #ifndef SOLVEDCLIENT_H
 #define SOLVEDCLIENT_H
 
-#include "bl.h"
+#include "astrometry/bl.h"
 
 int solvedclient_set_server(char* addr);
 

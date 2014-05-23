@@ -19,9 +19,11 @@
 #ifndef CFITSIO_UTILS_H
 #define CFITSIO_UTILS_H
 
-#include "bl.h"
+// from cfitsio
 #include "fitsio.h"
-#include "errors.h"
+
+#include "astrometry/bl.h"
+#include "astrometry/errors.h"
 
 static void cfitserr(int status) {
     sl* msgs = sl_new(4);

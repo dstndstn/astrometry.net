@@ -19,8 +19,9 @@
 #ifndef FITS_GUESS_SCALE_H
 #define FITS_GUESS_SCALE_H
 
-#include "bl.h"
-#include "qfits_header.h"
+#include "astrometry/qfits_header.h"
+
+#include "astrometry/bl.h"
 
 int fits_guess_scale(const char* infn,
                      sl** p_methods, dl** p_scales);
