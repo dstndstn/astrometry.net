@@ -61,7 +61,8 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 
 
 OBJS := ngc2000.o ngcic-accurate.o brightstars.o constellations.o \
-	tycho2-fits.o tycho2.o usnob-fits.o usnob.o nomad.o nomad-fits.o
+	tycho2-fits.o tycho2.o usnob-fits.o usnob.o nomad.o nomad-fits.o \
+	ucac3-fits.o ucac3.o ucac4-fits.o ucac4.o
 
 HEADERS := brightstars.h constellations.h ngc2000.h ngcic-accurate.h \
 	tycho2.h tycho2-fits.h usnob-fits.h usnob.h nomad-fits.h nomad.h 
@@ -100,10 +101,19 @@ $(LIBCAT): $(OBJS)
 	$(AR) rc $@ $(OBJS)
 	$(RANLIB) $@
 
-PROGS := build-hd-tree tycho2tofits usnobtofits nomadtofits
+PROGS := build-hd-tree tycho2tofits usnobtofits nomadtofits \
+	ucac3tofits ucac4tofits
 
 # not built by default
 MISC_PROGS := usnob-scamp-catalog read_nomad
+
+ucac3tofits: ucac3tofits.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) -lbz2
+ALL_OBJ += ucac3tofits.o
+
+ucac4tofits: ucac4tofits.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) -lbz2
+ALL_OBJ += ucac4tofits.o
 
 $(PROGS): %: %.o $(SLIB)
 

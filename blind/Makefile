@@ -144,8 +144,7 @@ ENGINE_OBJS += new-wcs.o fits-guess-scale.o cut-table.o \
 	resort-xylist.o
 
 # Conversion routines
-ENGINE_OBJS += 2mass-fits.o 2mass.o ucac3-fits.o ucac3.o \
-	ucac4-fits.o ucac4.o
+ENGINE_OBJS += 2mass-fits.o 2mass.o
 
 BUILD_INDEX_OBJS := build-index.o uniformize-catalog.o startree2.o hpquads.o \
 	quad-builder.o quad-utils.o codefile.o codetree.o unpermute-stars.o \
@@ -362,14 +361,6 @@ fitsverify: ftverify.c fvrf_data.c fvrf_file.c fvrf_head.c fvrf_key.c fvrf_misc.
 	$(CC) -DSTANDALONE -trigraphs $(CFITS_INC) -o $@ $^ $(CFITS_LIB) -lm
 
 $(OLDEXECS) :: %: %.o $(OLDEXECS_OBJS) $(SLIB)
-
-ucac3tofits: ucac3tofits.o $(SLIB)
-	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) -lbz2
-ALL_OBJ += ucac3tofits.o
-
-ucac4tofits: ucac4tofits.o $(SLIB)
-	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) -lbz2
-ALL_OBJ += ucac4tofits.o
 
 2masstofits: 2masstofits.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) $(ZLIB_LIB)
