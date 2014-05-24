@@ -569,7 +569,7 @@ static void find_correspondences(tweak_t* t, double jitter) {
 	free(data_image);
 	free(data_ref);
 
-	logverb("Number of correspondences: %d\n", il_size(t->image));
+	logverb("Number of correspondences: %zu\n", il_size(t->image));
 }
 
 static double correspondences_rms_arcsec(tweak_t* t, int weighted) {

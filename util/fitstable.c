@@ -627,7 +627,7 @@ int fitstable_read_structs(fitstable_t* tab, void* struc,
 				return -1;
 			}
 			if (offset + N > bl_size(tab->rows)) {
-				ERROR("Number of data items requested exceeds number of rows: offset %i, n %i, nrows %i", offset, N, bl_size(tab->rows));
+				ERROR("Number of data items requested exceeds number of rows: offset %i, n %i, nrows %zu", offset, N, bl_size(tab->rows));
 				return -1;
 			}
 
@@ -927,7 +927,7 @@ static void* read_array_into(const fitstable_t* tab,
 			return NULL;
 		}
 		if (offset + Nread > bl_size(tab->rows)) {
-			ERROR("Number of data items requested exceeds number of rows: offset %i, n %i, nrows %i", offset, Nread, bl_size(tab->rows));
+			ERROR("Number of data items requested exceeds number of rows: offset %i, n %i, nrows %zu", offset, Nread, bl_size(tab->rows));
 			return NULL;
 		}
 		off = fits_offset_of_column(tab->table, colnum);
@@ -1356,7 +1356,7 @@ int fitstable_open_extension(fitstable_t* tab, int ext) {
 	if (in_memory(tab)) {
 		fitsext_t* theext;
 		if (ext > bl_size(tab->extensions)) {
-			ERROR("Table has only %i extensions, but you requested #%i",
+			ERROR("Table has only %zu extensions, but you requested #%i",
 				  bl_size(tab->extensions), ext);
 			return -1;
 		}

@@ -19,24 +19,24 @@
 #include "astrometry/bl-nl.ph"
 
 InlineDefine
-number NLF(get)(nl* list, int n) {
+number NLF(get)(nl* list, size_t n) {
 	number* ptr = (number*)bl_access(list, n);
 	return *ptr;
 }
 
 InlineDefine
-number NLF(get_const)(const nl* list, int n) {
+number NLF(get_const)(const nl* list, size_t n) {
 	number* ptr = (number*)bl_access_const(list, n);
 	return *ptr;
 }
 
 InlineDefine
-int NLF(size)(const nl* list) {
+size_t NLF(size)(const nl* list) {
     return bl_size(list);
 }
 
 InlineDefine
-number* NLF(access)(nl* list, int j) {
+number* NLF(access)(nl* list, size_t j) {
     return (number*)bl_access(list, j);
 }
 

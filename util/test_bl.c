@@ -1,20 +1,20 @@
 /*
-  This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ This file is part of the Astrometry.net suite.
+ Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
 
-  The Astrometry.net suite is free software; you can redistribute
-  it and/or modify it under the terms of the GNU General Public License
-  as published by the Free Software Foundation, version 2.
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
 
-  The Astrometry.net suite is distributed in the hope that it will be
-  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the Astrometry.net suite ; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-*/
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #include <math.h>
 #include <stdio.h>
@@ -24,6 +24,77 @@
 #include "cutest.h"
 #include "an-bool.h"
 #include "bl.h"
+
+void test_big_list(CuTest* tc) {
+    // Test size_t sizes and indices of bl's.
+    // Test ptrdiff_t as -1 or index
+    CuAssertTrue(tc, -1 == BL_NOT_FOUND);
+    CuAssertTrue(tc, BL_NOT_FOUND < 0);
+    CuAssertTrue(tc, sizeof(size_t) == sizeof(ptrdiff_t));
+
+    // Create a fake list so we don't have to allocate 16 GB of list to test.
+    int blocksize = 1048576;
+    il* big = il_new(blocksize);
+    // that's 1<<20 ~ 1e6 elements per block
+
+    // now need 1<<12 ~ 4096 blocks to overflow a 32-bit int
+    int i;
+    int N = 4096;
+    bl_node* nodes = calloc(N, sizeof(bl_node));
+    for (i=1; i<N; i++) {
+        nodes[i-1].next = nodes+i;
+        nodes[i-1].N = blocksize;
+    }
+    nodes[N-1].N = blocksize;
+    big->head = nodes;
+    big->tail = nodes + (N-1);
+    big->N = (size_t)blocksize * (size_t)N;
+
+    bl_print_structure(big);
+
+    printf("N %zu\n", il_size(big));
+    printf("check: %s\n", (bl_check_consistency(big) ? "bad" : "ok"));
+
+    int* p = il_append(big, 42);
+    printf("appended: %i\n", *p);
+    CuAssertIntEquals(tc, 42, *p);
+    CuAssertTrue(tc, 4294967297L == il_size(big));
+
+    size_t index = 4294967296L;
+    int v = il_get(big, index);
+    CuAssertIntEquals(tc, 42, v);
+
+    big->last_access = NULL;
+    big->last_access_n = 0;
+
+    v = il_get(big, index);
+    CuAssertIntEquals(tc, 42, v);
+
+    for (i=0; i<blocksize*2; i++) {
+        il_push(big, i);
+    }
+
+    il* split = il_new(1024);
+
+    bl_split(big, split, (size_t)blocksize * (size_t)N);
+
+    printf("split: %zu, %zu\n", il_size(big), il_size(split));
+    CuAssertIntEquals(tc, 42, il_get(split, 0));
+    CuAssertIntEquals(tc, 3, il_get(split, 4));
+
+    il_append_list(big, split);
+
+    CuAssertTrue(tc, 4297064449L == il_size(big));
+
+    int* arr = calloc(1024, sizeof(int));
+
+    bl_copy(big, (size_t)blocksize * (size_t)N, 1024, arr);
+
+    CuAssertIntEquals(tc, 42, arr[0]);
+    CuAssertIntEquals(tc,  3, arr[4]);
+}
+
+
 
 void test_il_sorted(CuTest* tc) {
 	int vals[] = {34951,34950,34949,35049,35149,29951,29950,29949,34999,34998,5099,5199,39849,39949,4999,35249,29952,34952,5299,35349,29953,34953,5399,35449,29954,34954,5499,35549,29955,34955,5599,35649,29956,34956,5699,35749,29957,34957,5799,35849,29958,34958,5899,35949,29959,34959,5999,36049,29960,34960,6099,36149,29961,34961,6199,36249,29962,34962,6299,36349,29963,34963,6399,36449,29964,34964,6499,36549,29965,34965,6599,36649,29966,34966,6699,36749,29967,34967,6799,36849,29968,34968,6899,36949,29969,34969,6999,37049,29970,34970,7099,37149,29971,34971,7199,37249,29972,34972,7299,37349,29973,34973,7399,37449,29974,34974,7499,37549,29975,34975,7599,37649,29976,34976,7699,37749,29977,34977,7799,37849,29978,34978,7899,37949,29979,34979,7999,38049,29980,34980,8099,38149,29981,34981,8199,38249,29982,34982,8299,38349,29983,34983,8399,38449,29984,34984,8499,38549,29985,34985,8599,38649,29986,34986,8699,38749,29987,34987,8799,38849,29988,34988,8899,38949,29989,34989,8999,39049,29990,34990,9099,39149,29991,34991,9199,39249,29992,34992,9299,39349,29993,34993,9399,39449,29994,34994,9499,39549,29995,34995,9599,39649,29996,34996,9699,39749,29997,34997,9799,29998,9899,29999,9999};

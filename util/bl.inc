@@ -22,10 +22,10 @@
 
 /* find the node in which element "n" can be found. */
 InlineDefine
-bl_node* find_node(const bl* list, int n,
-				   int* p_nskipped) {
+bl_node* find_node(const bl* list, size_t n,
+				   size_t* p_nskipped) {
 	bl_node* node;
-	int nskipped;
+	size_t nskipped;
 	if (list->last_access && n >= list->last_access_n) {
 		// take the shortcut!
 		nskipped = list->last_access_n;
@@ -51,10 +51,10 @@ bl_node* find_node(const bl* list, int n,
 }
 
 InlineDefine
-void* bl_access(bl* list, int n) {
+void* bl_access(bl* list, size_t n) {
 	void* rtn;
 	bl_node* node;
-	int nskipped;
+	size_t nskipped;
 	node = find_node(list, n, &nskipped);
 	// grab the element.
 	rtn = NODE_CHARDATA(node) + (n - nskipped) * list->datasize;
@@ -65,13 +65,13 @@ void* bl_access(bl* list, int n) {
 }
 
 InlineDefine
-int bl_size(const bl* list) {
+size_t bl_size(const bl* list) {
 	return list->N;
 }
 
 
 InlineDefine
-int sl_size(const sl* list) {
+size_t sl_size(const sl* list) {
 	return bl_size(list);
 }
 

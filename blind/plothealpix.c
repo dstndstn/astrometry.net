@@ -57,7 +57,7 @@ int plot_healpix_plot(const char* command,
 		return -1;
 	}
 	hps = healpix_rangesearch_radec(ra, dec, rad, args->nside, NULL);
-	logmsg("Found %i healpixes in range.\n", il_size(hps));
+	logmsg("Found %zu healpixes in range.\n", il_size(hps));
 	hpstep = args->nside * args->stepsize * plotstuff_pixel_scale(pargs) / 60.0 / healpix_side_length_arcmin(args->nside);
 	hpstep = MIN(1, hpstep);
 	logmsg("Taking steps of %g in healpix space\n", hpstep);

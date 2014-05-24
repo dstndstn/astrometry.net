@@ -198,7 +198,7 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 		// Phew, plot it.
 		if (ann->constellation_lines) {
 			rds = constellations_get_lines_radec(i);
-			logverb("Constellation %s: plotting %i lines\n",
+			logverb("Constellation %s: plotting %zu lines\n",
 					constellations_get_shortname(i), dl_size(rds)/4);
 			for (j=0; j<dl_size(rds)/4; j++) {
 				double r1,d1,r2,d2;
@@ -230,7 +230,7 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 			int Nin = 0;
 			stars = constellations_get_unique_stars(i);
 			xyzc[0] = xyzc[1] = xyzc[2] = 0.0;
-			logverb("Labeling %s: %i stars\n", constellations_get_shortname(i),
+			logverb("Labeling %s: %zu stars\n", constellations_get_shortname(i),
 					il_size(stars));
 			for (j=0; j<il_size(stars); j++) {
 				constellations_get_star_radec(il_get(stars, j), &ra, &dec);
@@ -312,7 +312,7 @@ static void plot_hd(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 		return;
 	}
 	hdlist = henry_draper_get(hdcat, ra, dec, deg2arcsec(rad));
-	logverb("Got %i Henry Draper stars\n", bl_size(hdlist));
+	logverb("Got %zu Henry Draper stars\n", bl_size(hdlist));
 	
 	N = bl_size(hdlist);
 	for (i=0; i<N; i++) {

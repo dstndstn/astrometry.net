@@ -564,7 +564,7 @@ int main(int argc, char** args) {
             inboundstars = il_new(16);
 
             Nunique = il_size(uniqstars);
-            debug("%s: %i unique stars.\n", shortname, il_size(uniqstars));
+            debug("%s: %zu unique stars.\n", shortname, il_size(uniqstars));
 
             // Count the number of unique stars belonging to this contellation
             // that are within the image bounds
@@ -910,7 +910,7 @@ int main(int argc, char** args) {
         // Fudge
         arcsec *= 1.1;
         hdlist = henry_draper_get(hdcat, rac, decc, arcsec);
-		logverb("Found %i HD stars within range (%g arcsec of RA,Dec %g,%g)\n", bl_size(hdlist), arcsec, rac, decc);
+		logverb("Found %zu HD stars within range (%g arcsec of RA,Dec %g,%g)\n", bl_size(hdlist), arcsec, rac, decc);
 
         for (i=0; i<bl_size(hdlist); i++) {
             double px, py;

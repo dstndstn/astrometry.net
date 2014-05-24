@@ -463,7 +463,7 @@ int hpquads(startree_t* starkd,
 						 i, ra, dec, xyz[0], xyz[1], xyz[2], j);
 			}
 		}
-		logmsg("Will check %i healpixes.\n", il_size(hptotry));
+		logmsg("Will check %zu healpixes.\n", il_size(hptotry));
 		if (log_get_level() > LOG_VERB) {
 			logdebug("Checking healpixes: [ ");
 			for (i=0; i<il_size(hptotry); i++)
@@ -519,7 +519,7 @@ int hpquads(startree_t* starkd,
 		nthispass = build_quads(me, Nhptotry, hptotry, Nreuses);
 
 		logmsg("Made %i quads (out of %i healpixes) this pass.\n", nthispass, Nhptotry);
-		logmsg("Made %i quads so far.\n", (me->bigquadlist ? bt_size(me->bigquadlist) : 0) + bl_size(me->quadlist));
+		logmsg("Made %i quads so far.\n", (me->bigquadlist ? bt_size(me->bigquadlist) : 0) + (int)bl_size(me->quadlist));
 
 		sprintf(key, "PASS%i", pass+1);
 		fits_header_mod_int(chdr, key, nthispass, "quads created in this pass");
@@ -545,14 +545,14 @@ int hpquads(startree_t* starkd,
 			int nthispass;
 
 			logmsg("Loosening reuse maximum to %i...\n", R);
-			logmsg("Trying %i healpixes.\n", il_size(me->retryhps));
+			logmsg("Trying %zu healpixes.\n", il_size(me->retryhps));
 			if (!il_size(me->retryhps))
 				break;
 
 			trylist = me->retryhps;
 			me->retryhps = il_new(1024);
 			nthispass = build_quads(me, il_size(trylist), trylist, R);
-			logmsg("Made %i quads (out of %i healpixes) this pass.\n", nthispass, il_size(trylist));
+			logmsg("Made %i quads (out of %zu healpixes) this pass.\n", nthispass, il_size(trylist));
 			il_free(trylist);
 			for (i=0; i<bl_size(me->quadlist); i++) {
 				void* q = bl_access(me->quadlist, i);

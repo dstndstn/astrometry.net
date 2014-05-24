@@ -75,7 +75,7 @@ static int nchunks(fitsbin_t* fb) {
 
 static fitsbin_chunk_t* get_chunk(fitsbin_t* fb, int i) {
     if (i >= bl_size(fb->chunks)) {
-        ERROR("Attempt to get chunk %i from a fitsbin with only %i chunks",
+        ERROR("Attempt to get chunk %i from a fitsbin with only %zu chunks",
               i, bl_size(fb->chunks));
         return NULL;
     }

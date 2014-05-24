@@ -222,11 +222,11 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 			il_append(seeds, healpix_compose_xy(bigbighp, x0, yy, Nside));
 			il_append(seeds, healpix_compose_xy(bigbighp, x1, yy, Nside));
 		}
-        logmsg("Number of boundary healpixes: %i (Nside/bignside = %i)\n", il_size(seeds), Nside/bignside);
+        logmsg("Number of boundary healpixes: %zu (Nside/bignside = %i)\n", il_size(seeds), Nside/bignside);
 
 		myhps = healpix_region_search(-1, seeds, Nside, NULL, NULL,
 									  outside_healpix, &token, nmargin);
-		logmsg("Number of margin healpixes: %i\n", il_size(myhps));
+		logmsg("Number of margin healpixes: %zu\n", il_size(myhps));
 		il_free(seeds);
 
 		il_sort(myhps, TRUE);

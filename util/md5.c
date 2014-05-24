@@ -415,8 +415,6 @@ void md5_hmac( const unsigned char *key, int keylen,
     memset( &ctx, 0, sizeof( md5_context ) );
 }
 
-static const char _md5_src[] = "_md5_src";
-
 #if defined(SELF_TEST)
 /*
  * RFC 1321 test vectors

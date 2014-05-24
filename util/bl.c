@@ -102,11 +102,11 @@ Pure int bl_datasize(const bl* list) {
 }
 
 
-void bl_split(bl* src, bl* dest, int split) {
+void bl_split(bl* src, bl* dest, size_t split) {
     bl_node* node;
-    int nskipped;
-    int ind;
-    int ntaken = src->N - split;
+    size_t nskipped;
+    size_t ind;
+    size_t ntaken = src->N - split;
     node = find_node(src, split, &nskipped);
     ind = split - nskipped;
     if (ind == 0) {
@@ -254,11 +254,11 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 	list->N--;
 }
 
-void bl_remove_index(bl* list, int index) {
+void bl_remove_index(bl* list, size_t index) {
 	// find the node (and previous node) at which element 'index'
 	// can be found.
 	bl_node *node, *prev;
-	int nskipped = 0;
+	size_t nskipped = 0;
 	for (node=list->head, prev=NULL;
 		 node;
 		 prev=node, node=node->next) {
@@ -273,11 +273,11 @@ void bl_remove_index(bl* list, int index) {
 	list->last_access_n = 0;
 }
 
-void bl_remove_index_range(bl* list, int start, int length) {
+void bl_remove_index_range(bl* list, size_t start, size_t length) {
 	// find the node (and previous node) at which element 'start'
 	// can be found.
 	bl_node *node, *prev;
-	int nskipped = 0;
+	size_t nskipped = 0;
 	list->last_access = NULL;
 	list->last_access_n = 0;
 	for (node=list->head, prev=NULL;
@@ -293,8 +293,8 @@ void bl_remove_index_range(bl* list, int start, int length) {
 	// begin by removing any indices that are at the end of a block.
 	if (start > nskipped) {
 		// we're not removing everything at this node.
-		int istart;
-		int n;
+		size_t istart;
+		size_t n;
 		istart = start - nskipped;
 		if ((istart + length) < node->N) {
 			// we're removing a chunk of elements from the middle of this
@@ -322,7 +322,7 @@ void bl_remove_index_range(bl* list, int start, int length) {
 
 	// remove complete blocks.
 	for (;;) {
-		int n;
+		size_t n;
 		bl_node* todelete;
 		if (length == 0 || length < node->N)
 			break;
@@ -474,28 +474,28 @@ void bl_pop(bl* list, void* into) {
 
 void bl_print_structure(bl* list) {
 	bl_node* n;
-	printf("bl: head %p, tail %p, N %i\n", list->head, list->tail, list->N);
+	printf("bl: head %p, tail %p, N %zu\n", list->head, list->tail, list->N);
 	for (n=list->head; n; n=n->next) {
 		printf("[N=%i] ", n->N);
 	}
 	printf("\n");
 }
 
-void bl_get(bl* list, int n, void* dest) {
+void bl_get(bl* list, size_t n, void* dest) {
 	char* src = bl_access(list, n);
 	memcpy(dest, src, list->datasize);
 }
 
 static void bl_find_ind_and_element(bl* list, const void* data,
 									int (*compare)(const void* v1, const void* v2),
-									void** presult, int* pindex) {
-	int lower, upper;
+									void** presult, ptrdiff_t* pindex) {
+	ptrdiff_t lower, upper;
 	int cmp = -2;
 	void* result;
 	lower = -1;
 	upper = list->N;
 	while (lower < (upper-1)) {
-		int mid;
+		ptrdiff_t mid;
 		mid = (upper + lower) / 2;
 		cmp = compare(data, bl_access(list, mid));
 		if (cmp >= 0) {
@@ -506,11 +506,13 @@ static void bl_find_ind_and_element(bl* list, const void* data,
 	}
 	if (lower == -1 || compare(data, (result = bl_access(list, lower)))) {
 		*presult = NULL;
-		*pindex = -1;
+        if (pindex)
+            *pindex = -1;
 		return;
 	}
 	*presult = result;
-	*pindex = lower;
+    if (pindex)
+        *pindex = lower;
 }
 
 /**
@@ -521,26 +523,25 @@ static void bl_find_ind_and_element(bl* list, const void* data,
 void* bl_find(bl* list, const void* data,
 			  int (*compare)(const void* v1, const void* v2)) {
 	void* rtn;
-	int ind;
-	bl_find_ind_and_element(list, data, compare, &rtn, &ind);
+	bl_find_ind_and_element(list, data, compare, &rtn, NULL);
 	return rtn;
 }
 
-int bl_find_index(bl* list, const void* data,
+ptrdiff_t bl_find_index(bl* list, const void* data,
 				  int (*compare)(const void* v1, const void* v2)) {
 	void* val;
-	int ind;
+	ptrdiff_t ind;
 	bl_find_ind_and_element(list, data, compare, &val, &ind);
 	return ind;
 }
 
-int bl_insert_sorted(bl* list, const void* data,
+size_t bl_insert_sorted(bl* list, const void* data,
 					 int (*compare)(const void* v1, const void* v2)) {
-	int lower, upper;
+	ptrdiff_t lower, upper;
 	lower = -1;
 	upper = list->N;
 	while (lower < (upper-1)) {
-		int mid;
+		ptrdiff_t mid;
 		int cmp;
 		mid = (upper + lower) / 2;
 		cmp = compare(data, bl_access(list, mid));
@@ -554,15 +555,15 @@ int bl_insert_sorted(bl* list, const void* data,
 	return lower+1;
 }
 
-int bl_insert_unique_sorted(bl* list, const void* data,
+ptrdiff_t bl_insert_unique_sorted(bl* list, const void* data,
 							int (*compare)(const void* v1, const void* v2)) {
 	// This is just straightforward binary search - really should
 	// use the block structure...
-	int lower, upper;
+	ptrdiff_t lower, upper;
 	lower = -1;
 	upper = list->N;
 	while (lower < (upper-1)) {
-		int mid;
+		ptrdiff_t mid;
 		int cmp;
 		mid = (upper + lower) / 2;
 		cmp = compare(data, bl_access(list, mid));
@@ -575,16 +576,16 @@ int bl_insert_unique_sorted(bl* list, const void* data,
 
 	if (lower >= 0) {
 		if (compare(data, bl_access(list, lower)) == 0) {
-			return -1;
+			return BL_NOT_FOUND;
 		}
 	}
 	bl_insert(list, lower+1, data);
 	return lower+1;
 }
 
-void bl_set(bl* list, int index, const void* data) {
+void bl_set(bl* list, size_t index, const void* data) {
 	bl_node* node;
-	int nskipped;
+	size_t nskipped;
 	void* dataloc;
 
 	node = find_node(list, index, &nskipped);
@@ -600,9 +601,9 @@ void bl_set(bl* list, int index, const void* data) {
  * All elements that previously had indices "index" and above are moved
  * one position to the right.
  */
-void bl_insert(bl* list, int index, const void* data) {
+void bl_insert(bl* list, size_t index, const void* data) {
 	bl_node* node;
-	int nskipped;
+	size_t nskipped;
 
 	if (list->N == index) {
 		bl_append(list, data);
@@ -676,17 +677,17 @@ void bl_insert(bl* list, int index, const void* data) {
 	}
 }
 
-void* bl_access_const(const bl* list, int n) {
+void* bl_access_const(const bl* list, size_t n) {
 	bl_node* node;
-	int nskipped;
+	size_t nskipped;
 	node = find_node(list, n, &nskipped);
 	// grab the element.
 	return NODE_CHARDATA(node) + (n - nskipped) * list->datasize;
 }
 
-void bl_copy(bl* list, int start, int length, void* vdest) {
+void bl_copy(bl* list, size_t start, size_t length, void* vdest) {
 	bl_node* node;
-	int nskipped;
+	size_t nskipped;
 	char* dest;
 	if (length <= 0)
 		return;
@@ -696,7 +697,7 @@ void bl_copy(bl* list, int start, int length, void* vdest) {
 	// moving down the list until we've copied all "length" elements.
 	dest = vdest;
 	while (length > 0) {
-		int take, avail;
+		size_t take, avail;
 		char* src;
 		// number of elements we want to take.
 		take = length;
@@ -720,7 +721,7 @@ void bl_copy(bl* list, int start, int length, void* vdest) {
 
 int bl_check_consistency(bl* list) {
 	bl_node* node;
-	int N;
+	size_t N;
 	int tailok = 1;
 	int nempty = 0;
 	int nnull = 0;
@@ -757,7 +758,7 @@ int bl_check_consistency(bl* list) {
 		return 1;
 	}
 	if (N != list->N) {
-		fprintf(stderr, "bl_check_consistency: list->N is %i, but sum of blocks is %i.\n",
+		fprintf(stderr, "bl_check_consistency: list->N is %zu, but sum of blocks is %zu.\n",
 				list->N, N);
 		return 1;
 	}
@@ -767,8 +768,8 @@ int bl_check_consistency(bl* list) {
 int bl_check_sorted(bl* list,
 					int (*compare)(const void* v1, const void* v2),
 					int isunique) {
-	int i, N;
-	int nbad = 0;
+	size_t i, N;
+	size_t nbad = 0;
 	void* v2 = NULL;
 	N = bl_size(list);
 	if (N)
@@ -790,7 +791,7 @@ int bl_check_sorted(bl* list,
 		}
 	}
 	if (nbad) {
-		fprintf(stderr, "bl_check_sorted: %i are out of order.\n", nbad);
+		fprintf(stderr, "bl_check_sorted: %zu are out of order.\n", nbad);
 		return 1;
 	}
 	return 0;
@@ -865,21 +866,21 @@ int bl_compare_pointers_ascending(const void* v1, const void* v2) {
 }
 
 void  pl_free_elements(pl* list) {
-	int i;
+	size_t i;
 	for (i=0; i<pl_size(list); i++) {
 		free(pl_get(list, i));
 	}
 }
 
-int pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, const void* v2)) {
+size_t pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, const void* v2)) {
 	// we don't just call bl_insert_sorted because then we end up passing
 	// "void**" rather than "void*" args to the compare function, which 
 	// violates the principle of least surprise.
-	int lower, upper;
+	ptrdiff_t lower, upper;
 	lower = -1;
 	upper = list->N;
 	while (lower < (upper-1)) {
-		int mid;
+		ptrdiff_t mid;
 		int cmp;
 		mid = (upper + lower) / 2;
 		cmp = compare(data, pl_get(list, mid));
@@ -908,7 +909,7 @@ int pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, 
  */
 
 void sl_remove_duplicates(sl* lst) {
-	int i, j;
+	size_t i, j;
 	for (i=0; i<sl_size(lst); i++) {
 		const char* s1 = sl_get(lst, i);
 		for (j=i+1; j<sl_size(lst); j++) {
@@ -932,7 +933,7 @@ void sl_init2(sl* list, int blocksize) {
 }
 
 void sl_free2(sl* list) {
-	int i;
+	size_t i;
 	if (!list) return;
 	for (i=0; i<sl_size(list); i++)
 		free(sl_get(list, i));
@@ -965,7 +966,7 @@ void sl_free_nonrecursive(sl* list) {
 }
 
 void sl_append_contents(sl* dest, sl* src) {
-	int i;
+	size_t i;
 	if (!src)
 		return;
 	for (i=0; i<sl_size(src); i++) {
@@ -974,24 +975,24 @@ void sl_append_contents(sl* dest, sl* src) {
 	}
 }
 
-int sl_index_of(sl* lst, const char* str) {
-    int i;
+ptrdiff_t sl_index_of(sl* lst, const char* str) {
+    size_t i;
     for (i=0; i<sl_size(lst); i++) {
         char* s = sl_get(lst, i);
         if (strcmp(s, str) == 0)
             return i;
     }
-    return -1;
+    return BL_NOT_FOUND;
 }
 
-int sl_last_index_of(sl* lst, const char* str) {
-    int i;
+ptrdiff_t sl_last_index_of(sl* lst, const char* str) {
+    ptrdiff_t i;
     for (i=sl_size(lst)-1; i>=0; i--) {
         char* s = sl_get(lst, i);
         if (strcmp(s, str) == 0)
             return i;
     }
-    return -1;
+    return BL_NOT_FOUND;
 }
 
 // Returns 0 if the string is not in the sl, 1 otherwise.
@@ -1015,8 +1016,8 @@ char* sl_append(sl* list, const char* data) {
 	return copy;
 }
 
-void sl_append_array(sl* list, const char**strings, int n) {
-	int i;
+void sl_append_array(sl* list, const char**strings, size_t n) {
+	size_t i;
 	for (i=0; i<n; i++)
 		sl_append(list, strings[i]);
 }
@@ -1035,15 +1036,15 @@ char* sl_pop(sl* list) {
 	return pl_pop(list);
 }
 
-char* sl_get(sl* list, int n) {
+char* sl_get(sl* list, size_t n) {
 	return pl_get(list, n);
 }
 
-char* sl_get_const(const sl* list, int n) {
+char* sl_get_const(const sl* list, size_t n) {
 	return pl_get_const(list, n);
 }
 
-char* sl_set(sl* list, int index, const char* value) {
+char* sl_set(sl* list, size_t index, const char* value) {
 	char* copy;
 	assert(index >= 0);
 	copy = strdup(value);
@@ -1053,7 +1054,7 @@ char* sl_set(sl* list, int index, const char* value) {
 		bl_set(list, index, &copy);
 	} else {
 		// pad
-		int i;
+		size_t i;
 		for (i=list->N; i<index; i++)
 			sl_append_nocopy(list, NULL);
 		sl_append(list, copy);
@@ -1065,27 +1066,27 @@ int sl_check_consistency(sl* list) {
 	return bl_check_consistency(list);
 }
 
-char* sl_insert(sl* list, int indx, const char* data) {
+char* sl_insert(sl* list, size_t indx, const char* data) {
 	char* copy = strdup(data);
 	bl_insert(list, indx, &copy);
 	return copy;
 }
 
-void sl_insert_nocopy(sl* list, int indx, const char* str) {
+void sl_insert_nocopy(sl* list, size_t indx, const char* str) {
 	bl_insert(list, indx, &str);
 }
 
-void sl_remove_from(sl* list, int start) {
+void sl_remove_from(sl* list, size_t start) {
     sl_remove_index_range(list, start, sl_size(list) - start);
 }
 
-int sl_remove_string(sl* list, const char* string) {
+ptrdiff_t sl_remove_string(sl* list, const char* string) {
     return pl_remove_value(list, string);
 }
 
 char* sl_remove_string_bycaseval(sl* list, const char* string) {
-	int N = sl_size(list);
-	int i;
+	size_t N = sl_size(list);
+	size_t i;
 	for (i=0; i<N; i++) {
         char* str = sl_get(list, i);
 		if (strcasecmp(str, string) == 0) {
@@ -1097,9 +1098,9 @@ char* sl_remove_string_bycaseval(sl* list, const char* string) {
 	return NULL;
 }
 
-int sl_remove_string_byval(sl* list, const char* string) {
-	int N = sl_size(list);
-	int i;
+ptrdiff_t sl_remove_string_byval(sl* list, const char* string) {
+	size_t N = sl_size(list);
+	size_t i;
 	for (i=0; i<N; i++) {
         char* str = sl_get(list, i);
 		if (strcmp(str, string) == 0) {
@@ -1107,11 +1108,11 @@ int sl_remove_string_byval(sl* list, const char* string) {
 			return i;
 		}
 	}
-	return -1;
+	return BL_NOT_FOUND;
 }
 
-void sl_remove_index_range(sl* list, int start, int length) {
-    int i;
+void sl_remove_index_range(sl* list, size_t start, size_t length) {
+    size_t i;
     assert(list);
     assert(start + length <= list->N);
     assert(start >= 0);
@@ -1123,12 +1124,12 @@ void sl_remove_index_range(sl* list, int start, int length) {
     bl_remove_index_range(list, start, length);
 }
 
-void sl_remove(sl* list, int index) {
+void sl_remove(sl* list, size_t index) {
     bl_remove_index(list, index);
 }
 
 void  sl_remove_all(sl* list) {
-	int i;
+	size_t i;
 	if (!list) return;
 	for (i=0; i<sl_size(list); i++)
 		free(pl_get(list, i));
@@ -1151,13 +1152,13 @@ void sl_print(sl* list) {
 }
 
 static char* sljoin(sl* list, const char* join, int forward) {
-    int start, end, inc;
+    size_t start, end, inc;
 
-	int len = 0;
-	int i, N;
+	size_t len = 0;
+	size_t i, N;
 	char* rtn;
-	int offset;
-	int JL;
+	size_t offset;
+	size_t JL;
 
     if (sl_size(list) == 0)
         return strdup("");
@@ -1184,7 +1185,7 @@ static char* sljoin(sl* list, const char* join, int forward) {
 	offset = 0;
 	for (i=start; i!=end; i+= inc) {
 		char* str = sl_get(list, i);
-		int L = strlen(str);
+		size_t L = strlen(str);
 		if (i != start) {
 			memcpy(rtn + offset, join, JL);
 			offset += JL;
@@ -1237,7 +1238,7 @@ char* sl_insert_sortedf(sl* list, const char* format, ...) {
 	return str;
 }
 
-char* sl_insertf(sl* list, int index, const char* format, ...) {
+char* sl_insertf(sl* list, size_t index, const char* format, ...) {
     va_list lst;
 	char* str;
     va_start(lst, format);

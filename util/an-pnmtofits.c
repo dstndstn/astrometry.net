@@ -351,7 +351,7 @@ int main(int argc, char** args) {
 	if (pixcache) {
 		int i, j;
 		int step = (depth - 1);
-		logverb("Writing %i queued pixels\n", bl_size(pixcache));
+		logverb("Writing %zu queued pixels\n", bl_size(pixcache));
 		for (plane=1; plane<depth; plane++) {
 			j = (plane - 1);
 			for (i=0; i<(W * H); i++) {

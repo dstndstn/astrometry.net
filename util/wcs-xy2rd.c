@@ -92,7 +92,7 @@ int wcs_xy2rd(const char* wcsfn, int ext,
 			il_append(fields, i);
 	}
 
-	logverb("Processing %i extensions...\n", il_size(fields));
+	logverb("Processing %zu extensions...\n", il_size(fields));
 	for (i=0; i<il_size(fields); i++) {
 		int fieldind = il_get(fields, i);
         starxy_t xy;

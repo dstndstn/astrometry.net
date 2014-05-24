@@ -432,7 +432,7 @@ void blind_run(blind_t* bp) {
 
         bp->logratio_tosolve = oldodds;
 
-		logmsg("Got %i solutions.\n", bl_size(bp->solutions));
+		logmsg("Got %zu solutions.\n", bl_size(bp->solutions));
 
 		if (bp->best_hit_only)
 			remove_duplicate_solutions(bp);
@@ -610,7 +610,7 @@ static void get_fields_from_solvedserver(blind_t* bp, solver_t* sp) {
             logerr("Failed to get field list from solvedserver.\n");
             exit( -1);
         }
-        logmsg("Got %i fields from solvedserver: ", il_size(bp->fieldlist));
+        logmsg("Got %zu fields from solvedserver: ", il_size(bp->fieldlist));
         for (j = 0; j < il_size(bp->fieldlist); j++) {
             logmsg("%i ", il_get(bp->fieldlist, j));
         }

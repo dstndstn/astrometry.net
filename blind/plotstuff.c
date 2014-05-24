@@ -743,7 +743,7 @@ int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 	int layer;
 	anbool morelayers;
 
-	logverb("Plotting %i stacked plot commands.\n", bl_size(pargs->cairocmds));
+	logverb("Plotting %zu stacked plot commands.\n", bl_size(pargs->cairocmds));
 	morelayers = TRUE;
 	for (layer=0;; layer++) {
 		if (!morelayers)

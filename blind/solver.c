@@ -271,7 +271,7 @@ void solver_log_params(const solver_t* sp) {
 	  logverb("    Forward order %i\n", sp->tweak_aborder);
 	  logverb("    Reverse order %i\n", sp->tweak_abporder);
   }
-  logverb("  Indexes: %i\n", pl_size(sp->indexes));
+  logverb("  Indexes: %zu\n", pl_size(sp->indexes));
   for (i=0; i<pl_size(sp->indexes); i++) {
     index_t* ind = pl_get(sp->indexes, i);
     logverb("    %s\n", ind->indexname);

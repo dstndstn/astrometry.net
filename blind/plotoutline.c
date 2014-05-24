@@ -66,7 +66,7 @@ int plot_outline_plot(const char* command,
 
     rd = dl_new(256);
 	anwcs_walk_image_boundary(args->wcs, args->stepsize, walk_callback, rd);
-	logverb("Outline: walked in %i steps\n", dl_size(rd)/2);
+	logverb("Outline: walked in %zu steps\n", dl_size(rd)/2);
 
     if (dl_size(rd) == 0) {
         printf("plot_outline: empty WCS outline.\n");

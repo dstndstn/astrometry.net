@@ -105,11 +105,11 @@ void test_walk_outline(CuTest* tc) {
 
     printf("\n\n\n");
 
-    printf("%i lists\n", pl_size(lists));
+    printf("%zu lists\n", pl_size(lists));
     int i;
     for (i=0; i<pl_size(lists); i++) {
         dl* plotlist = pl_get(lists, i);
-        printf("List %i: length %i\n", i, dl_size(plotlist));
+        printf("List %i: length %zu\n", i, dl_size(plotlist));
         int j;
         for (j=0; j<dl_size(plotlist)/2; j++) {
             printf("  %.2f, %.2f\n",
