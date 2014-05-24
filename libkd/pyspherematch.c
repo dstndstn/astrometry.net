@@ -242,7 +242,7 @@ static void callback_dualtree(void* v, int ind1, int ind2, double dist2) {
 }
 
 static PyObject* spherematch_match(PyObject* self, PyObject* args) {
-    int i, N;
+    size_t i, N;
     long p1, p2;
     kdtree_t *kd1, *kd2;
     double rad;
