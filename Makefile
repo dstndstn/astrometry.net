@@ -226,7 +226,8 @@ LIBKD_RELEASE_SUBDIRS := qfits-an libkd doc \
 	util/bl.h util/bl.ph  util/bl-nl.h util/bl-nl.ph  \
 	util/keywords.h util/an-bool.h util/mathutil.inc util/starutil.h \
 	util/an-thread.h util/an-thread-pthreads.h util/thread-specific.inc \
-	util/__init__.py util/starutil_numpy.py util/makefile.common
+	util/__init__.py util/starutil_numpy.py util/makefile.common \
+	util/astrometry
 
 release-libkd:
 	-rm -R $(LIBKD_RELEASE_DIR) $(LIBKD_RELEASE_DIR).tar $(LIBKD_RELEASE_DIR).tar.gz $(LIBKD_RELEASE_DIR).tar.bz2
