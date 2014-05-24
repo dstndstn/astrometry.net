@@ -16,6 +16,11 @@ int PILGetBool(char *parname, int *intvalue);
 int PILPutInt(char *parname, int intvalue);
 
 
+int ftverify_work (char *infile, char *outfile,int prehead,
+    int prstat, char* errreport, int testdata, int testcsum,
+    int testfill, int heasarc_conv);
+
+
 /*
    This file contains the main fverify routine, and dummy version of 
    various other headas system routines.  This is used for the stand

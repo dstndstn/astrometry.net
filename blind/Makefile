@@ -31,7 +31,6 @@ include $(COMMON)/makefile.cfitsio
 include $(COMMON)/makefile.png
 include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
-include $(COMMON)/makefile.zlib
 include $(COMMON)/makefile.netpbm
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -75,7 +74,6 @@ CFLAGS += $(CATS_INC)
 CFLAGS += $(ANFILES_CFLAGS)
 CFLAGS += $(ANFILES_INC)
 CFLAGS += $(CFITS_INC)
-CFLAGS += $(ZLIB_INC)
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
@@ -357,9 +355,6 @@ fitsverify: ftverify.c fvrf_data.c fvrf_file.c fvrf_head.c fvrf_key.c fvrf_misc.
 	$(CC) -DSTANDALONE -trigraphs $(CFITS_INC) -o $@ $^ $(CFITS_LIB) -lm
 
 $(OLDEXECS) :: %: %.o $(OLDEXECS_OBJS) $(SLIB)
-
-2masstofits: 2masstofits.o $(SLIB)
-	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) $(ZLIB_LIB)
 
 build-astrometry-index: build-index-main.o $(SLIB) #$(BUILD_INDEX_OBJS) $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
