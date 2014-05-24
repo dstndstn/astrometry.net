@@ -301,8 +301,6 @@ int main(int argc, char** args) {
 
         t0 = timenow();
 
-        solver_cleanup_field(solver);
-
 		// Feed the image source coordinates to the solver...
 		field = starxy_new(nstars, TRUE, FALSE);
 		starxy_set_x_array(field, starx);
@@ -383,8 +381,9 @@ int main(int argc, char** args) {
 			}
 		}
 
+        solver_cleanup_field(solver);
         solver_clear_indexes(solver);
-		starxy_free(field);
+
 		il_free(hplist);
 
         t1 = timenow();

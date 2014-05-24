@@ -180,8 +180,6 @@ void test1() {
     }
 
     bl_free(quadlist);
-
-    starxy_free(starxy);
 }
 
 void test2() {
@@ -249,7 +247,6 @@ void test2() {
         assert(compare_tri(bl_access(quadlist, i), wanted[i]) == 0);
     }
     bl_free(quadlist);
-    starxy_free(starxy);
 }
 
 

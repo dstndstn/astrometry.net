@@ -970,7 +970,7 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
             goto cleanup;
 
 		// Get the field.
-        sp->fieldxy = xylist_read_field(bp->xyls, NULL);
+        solver_set_field(sp, xylist_read_field(bp->xyls, NULL));
         if (!sp->fieldxy) {
             logerr("Failed to read xylist field.\n");
             goto cleanup;
@@ -1060,10 +1060,8 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		last_wtime = wtime;
 
 	cleanup:
-        starxy_free(sp->fieldxy);
-		sp->fieldxy = NULL;
+        solver_cleanup_field(sp);
 	}
-
 }
 
 static anbool is_field_solved(blind_t* bp, int fieldnum) {

@@ -339,6 +339,9 @@ void solver_free(solver_t*);
 
 /**
  Tells the solver which field of stars it's going to be solving.
+
+ The solver_t* takes ownership of the *field*; it will be freed upon
+ solver_free() or solver_cleanup_field() or a new solver_set_field().
  */
 void solver_set_field(solver_t* s, starxy_t* field);
 

@@ -88,7 +88,6 @@ void test_solve_multiindex(CuTest* ct) {
 		verify_free_matchobj(mo);
 	}
 
-	starxy_free(field);
 	xylist_close(xy);
 
 	solver_cleanup_field(s);

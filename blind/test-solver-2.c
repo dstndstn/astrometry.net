@@ -166,7 +166,6 @@ void testit(int* wanted, int Nwanted, int dimquads, int (*compar)(const void *, 
         assert(compar(bl_access(quadlist, i), wanted+i*dimquads) == 0);
     }
     bl_free(quadlist);
-    starxy_free(starxy);
 }
 
 
