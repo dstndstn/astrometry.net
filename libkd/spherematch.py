@@ -1,7 +1,10 @@
-from astrometry.libkd import spherematch_c
-import numpy as np
+#from astrometry.libkd import spherematch_c
+from . import spherematch_c
 
-from astrometry.util.starutil_numpy import radectoxyz, deg2dist, dist2deg, distsq2deg
+#from astrometry.util.starutil_numpy import radectoxyz, deg2dist, dist2deg, distsq2deg
+from ..util.starutil_numpy import radectoxyz, deg2dist, dist2deg, distsq2deg
+
+import numpy as np
 
 def match_xy(x1,y1, x2,y2, R, **kwargs):
     '''

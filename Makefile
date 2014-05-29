@@ -112,9 +112,7 @@ install: all report.txt
 	@echo but will still be able to solve images.
 	@echo
 	-$(MAKE) extra
-	-$(MAKE) -C blind install-extra
-	@echo
-	@echo Errors in the previous make command are not fatal -- we try to build and install some optional code.
+	-($(MAKE) -C blind install-extra || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n"
 	@echo
 
 install-core:
@@ -225,6 +223,7 @@ LIBKD_RELEASE_SUBDIRS := qfits-an libkd doc \
 	util/bl.c util/bl.inc util/bl-nl.c util/bl-nl.inc \
 	util/bl.h util/bl.ph  util/bl-nl.h util/bl-nl.ph  \
 	util/keywords.h util/an-bool.h util/mathutil.inc util/starutil.h \
+	util/starutil.inc \
 	util/an-thread.h util/an-thread-pthreads.h util/thread-specific.inc \
 	util/__init__.py util/starutil_numpy.py util/makefile.common \
 	util/astrometry
