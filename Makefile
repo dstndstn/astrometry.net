@@ -112,7 +112,7 @@ install: all report.txt
 	@echo but will still be able to solve images.
 	@echo
 	-$(MAKE) extra
-	-($(MAKE) -C blind install-extra || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n"
+	-($(MAKE) -C blind install-extra || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n")
 	@echo
 
 install-core:
