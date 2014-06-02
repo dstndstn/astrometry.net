@@ -3,7 +3,7 @@ import scipy.interpolate as interp
 from miscutils import lanczos_filter
 
 # DEBUG
-from astrometry.util.plotutils import *
+from .plotutils import *
 import pylab as plt
 
 class ResampleError(Exception):
