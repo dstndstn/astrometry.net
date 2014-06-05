@@ -79,9 +79,6 @@ SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
 ALL_WCSLIB_TARGETS :=
 
-QFITS_UTILS := 
-#resort-xylist
-
 # inc:
 # 	echo CFLAGS_DEF: $(CFLAGS_DEG)
 # 	echo CATS_INC: $(CATS_INC)
@@ -94,9 +91,11 @@ CFITS_UTILS := tablist modhead fitscopy tabmerge liststruc \
 		listhead imcopy imarith imstat
 # fitstomatlab 
 
-FITS_UTILS := $(QFITS_UTILS) $(CFITS_UTILS)
+FITS_UTILS := $(CFITS_UTILS)
 
-MISC_EXECS := project-usnob diffractionFlag_check hpgrid
+MISC_EXECS := project-usnob diffractionFlag_check hpgrid resort-xylist
+
+resort-xylist: resort-xylist-main.o resort-xylist.o $(SLIB)
 
 UTIL_OBJS := 
 
