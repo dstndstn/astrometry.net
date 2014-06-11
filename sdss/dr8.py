@@ -266,9 +266,11 @@ class DR8(DR7):
     def _unzip_frame(self, fn, run, camcol):
         if self.readBz2:
             return None,True
-        if not fitsio:
-            # pyfits can read .bz2
-            return None,True
+
+        # No, PJM reported that pyfits failed on SDSS frame*.bz2 files
+        # if not fitsio:
+        #    # pyfits can read .bz2
+        #    return None,True
 
         tempfn = None
         keep = False
