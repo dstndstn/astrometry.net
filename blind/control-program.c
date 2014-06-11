@@ -38,6 +38,7 @@
 #include "bl.h"
 #include "log.h"
 #include "errors.h"
+#include "fileutils.h"
 
 // required for this sample program, maybe not for yours...
 #include "anqfits.h"
@@ -122,7 +123,7 @@ static void get_next_field(char* fits_image_fn,
     }
 	// If that doesn't work, look for "RA" and "DEC" header cards.
 	if (!*sip) {
-		qfits_header* hdr = qfits_header_read(fits_image_fn);
+		qfits_header* hdr = anqfits_get_header2(fits_image_fn, 0);
 		*ra = qfits_header_getdouble(hdr, "RA", 0.0);
 		*dec = qfits_header_getdouble(hdr, "DEC", 0.0);
 		qfits_header_destroy(hdr);
@@ -218,7 +219,7 @@ int main(int argc, char** args) {
 	}
     free(configfn);
 
-    logmsg("Loaded %i indexes.\n", pl_size(engine->indexes));
+    logmsg("Loaded %zu indexes.\n", pl_size(engine->indexes));
 
     // For a control program you almost certainly want to be using small enough
     // indexes that they fit in memory!
