@@ -34,7 +34,6 @@ print 'objs:', objs
 print 'inc:', inc
 print 'cflags:', cflags
 
-#sources = ['plotstuff_wrap.c'],
 c_module = Extension('_plotstuff_c',
                      sources = ['plotstuff.i'],
                      include_dirs = [numpy_inc] + inc,

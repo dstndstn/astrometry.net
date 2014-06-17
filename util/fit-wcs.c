@@ -29,6 +29,367 @@
 #include "sip.h"
 #include "sip_qfits.h"
 #include "log.h"
+#include "errors.h"
+#include "gslutils.h"
+#include "sip-utils.h"
+
+int fit_sip_wcs(const double* starxyz,
+                const double* fieldxy,
+                const double* weights,
+                int M,
+                const tan_t* tanin,
+                int sip_order,
+                int inv_order,
+                sip_t* sipout) {
+	int sip_coeffs;
+	double xyzcrval[3];
+	double cdinv[2][2];
+	double sx, sy, sU, sV, su, sv;
+	int N;
+	int i, j, p, q, order;
+	double totalweight;
+	int rtn;
+	gsl_matrix *mA;
+	gsl_vector *b1, *b2, *x1, *x2;
+	gsl_vector *r1=NULL, *r2=NULL;
+
+	// We need at least the linear terms to compute CD.
+	if (sip_order < 1)
+		sip_order = 1;
+
+    memcpy(&(sipout->wcstan), tanin, sizeof(tan_t));
+    sipout->a_order  = sipout->b_order  = sip_order;
+    sipout->ap_order = sipout->bp_order = inv_order;
+
+	// The SIP coefficients form an (order x order) upper triangular
+	// matrix missing the 0,0 element.
+	sip_coeffs = (sip_order + 1) * (sip_order + 2) / 2;
+	N = sip_coeffs;
+
+    if (M < N) {
+        logmsg("Too few correspondences for the SIP order specified (%i < %i)\n", M, N);
+        return -1;
+    }
+
+	mA = gsl_matrix_alloc(M, N);
+	b1 = gsl_vector_alloc(M);
+	b2 = gsl_vector_alloc(M);
+	assert(mA);
+	assert(b1);
+	assert(b2);
+
+	/*
+     *  We use a clever trick to estimate CD, A, and B terms in two
+     *  seperated least squares fits, then finding A and B by multiplying
+     *  the found parameters by CD inverse.
+     * 
+     *  Rearranging the SIP equations (see sip.h) we get the following
+     *  matrix operation to compute x and y in world intermediate
+     *  coordinates, which is convienently written in a way which allows
+     *  least squares estimation of CD and terms related to A and B.
+     * 
+     *  First use the x's to find the first set of parametetrs
+     * 
+     *     +--------------------- Intermediate world coordinates in DEGREES
+     *     |          +--------- Pixel coordinates u and v in PIXELS
+     *     |          |     +--- Polynomial u,v terms in powers of PIXELS
+     *     v          v     v
+     *   ( x1 )   ( 1 u1 v1 p1 )   (sx              )
+     *   ( x2 ) = ( 1 u2 v2 p2 ) * (cd11            ) :
+     *   ( x3 )   ( 1 u3 v3 p3 )   (cd12            ) :
+     *   ( ...)   (   ...    )     (cd11*A + cd12*B ) :
+     * cd11 is a scalar, degrees per pixel
+     * cd12 is a scalar, degrees per pixel
+     * cd11*A and cs12*B are mixture of SIP terms (A,B) and CD matrix
+     *   (cd11,cd12)
+     * 
+     *  Then find cd21 and cd22 with the y's
+     * 
+     *   ( y1 )   ( 1 u1 v1 p1 )   (sy              )
+     *   ( y2 ) = ( 1 u2 v2 p2 ) * (cd21            ) :
+     *   ( y3 )   ( 1 u3 v3 p3 )   (cd22            ) :
+     *   ( ...)   (   ...    )     (cd21*A + cd22*B ) : (Y4)
+     *  y2: scalar, degrees per pixel
+     *  y3: scalar, degrees per pixel
+     *  Y4: mixture of SIP terms (A,B) and CD matrix (cd21,cd22)
+     * 
+     *  These are both standard least squares problems which we solve with
+     *  QR decomposition, ie
+     *      min_{cd,A,B} || x - [1,u,v,p]*[s;cd;cdA+cdB]||^2 with
+     *  x reference, cd,A,B unrolled parameters.
+     * 
+     *  We get back (for x) a vector of optimal
+     *    [sx;cd11;cd12; cd11*A + cd12*B]
+     *  Now we can pull out sx, cd11 and cd12 from the beginning of this vector,
+     *  and call the rest of the vector [cd11*A] + [cd12*B];
+     *  similarly for the y fit, we get back a vector of optimal
+     *    [sy;cd21;cd22; cd21*A + cd22*B]
+     *  once we have all those we can figure out A and B as follows
+     *                   -1
+     *    A' = [cd11 cd12]    *  [cd11*A' + cd12*B']
+     *    B'   [cd21 cd22]       [cd21*A' + cd22*B']
+     * 
+     *  which recovers the A and B's.
+     *
+     */
+
+	/*
+     *  Dustin's interpretation of the above:
+     *  We want to solve:
+     * 
+     *     min || b[M-by-1] - A[M-by-N] x[N-by-1] ||_2
+     * 
+     *  M = the number of correspondences.
+     *  N = the number of SIP terms.
+     *
+     * And we want an overdetermined system, so M >= N.
+     * 
+     *           [ 1  u_1   v_1  u_1^2  u_1 v_1  v_1^2  ... ]
+     *    mA  =  [ 1  u_2   v_2  u_2^2  u_2 v_2  v_2^2  ... ]
+     *           [           ......                         ]
+	 *
+	 * Where (u_i, v_i) are *undistorted* pixel positions minus CRPIX.
+	 *
+     *  The answers we want are:
+     *
+     *         [ sx                  ]
+     *    x1 = [ cd11                ]
+     *         [ cd12                ]
+	 *         [      (A)        (B) ]
+     *         [ cd11*(A) + cd12*(B) ]
+	 *         [      (A)        (B) ]
+     *
+     *         [ sy                  ]
+     *    x2 = [ cd21                ]
+     *         [ cd22                ]
+	 *         [      (A)        (B) ]
+     *         [ cd21*(A) + cd22*(B) ]
+	 *         [      (A)        (B) ]
+	 *
+	 * And the target vectors are the intermediate world coords of the
+	 * reference stars, in degrees.
+     *
+     *         [ ix_1 ]
+     *    b1 = [ ix_2 ]
+     *         [ ...  ]
+     *
+     *         [ iy_1 ]
+     *    b2 = [ iy_2 ]
+     *         [ ...  ]
+     *
+     *
+     *  (where A and B are tall vectors of SIP coefficients of order 2
+     *  and above)
+     *
+     */
+
+	// Fill in matrix mA:
+	radecdeg2xyzarr(tanin->crval[0], tanin->crval[1], xyzcrval);
+	totalweight = 0.0;
+	for (i=0; i<M; i++) {
+        double x=0, y=0;
+        double weight = 1.0;
+        double u;
+        double v;
+        Unused anbool ok;
+
+        u = fieldxy[2*i + 0] -  tanin->crpix[0];
+        v = fieldxy[2*i + 1] -  tanin->crpix[1];
+
+        if (weights) {
+            weight = weights[i];
+            assert(weight >= 0.0);
+            assert(weight <= 1.0);
+            totalweight += weight;
+        }
+
+        /* The coefficients are stored in this order:
+         *   p q
+         *  (0,0) = 1     <- order 0
+         *  (1,0) = u     <- order 1
+         *  (0,1) = v
+         *  (2,0) = u^2   <- order 2
+         *  (1,1) = uv
+         *  (0,2) = v^2
+         *  ...
+         */
+
+        j = 0;
+        for (order=0; order<=sip_order; order++) {
+            for (q=0; q<=order; q++) {
+                p = order - q;
+                assert(j >= 0);
+                assert(j < N);
+                assert(p >= 0);
+                assert(q >= 0);
+                assert(p + q <= sip_order);
+                gsl_matrix_set(mA, i, j,
+                               weight * pow(u, (double)p) * pow(v, (double)q));
+                j++;
+            }
+        }
+        assert(j == N);
+
+        // The shift - aka (0,0) - SIP coefficient must be 1.
+        assert(gsl_matrix_get(mA, i, 0) == 1.0 * weight);
+        assert(fabs(gsl_matrix_get(mA, i, 1) - u * weight) < 1e-12);
+        assert(fabs(gsl_matrix_get(mA, i, 2) - v * weight) < 1e-12);
+
+        // B contains Intermediate World Coordinates (in degrees)
+		// tangent-plane projection
+        ok = star_coords(starxyz + 3*i, xyzcrval, TRUE, &x, &y);
+        assert(ok);
+
+        gsl_vector_set(b1, i, weight * rad2deg(x));
+        gsl_vector_set(b2, i, weight * rad2deg(y));
+    }
+
+	if (weights)
+		logverb("Total weight: %g\n", totalweight);
+
+	// Solve the equation.
+	rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
+	if (rtn) {
+        ERROR("Failed to solve SIP matrix equation!");
+        return -1;
+    }
+
+	// Row 0 of X are the shift (p=0, q=0) terms.
+	// Row 1 of X are the terms that multiply "u".
+	// Row 2 of X are the terms that multiply "v".
+
+	// Grab CD.
+	sipout->wcstan.cd[0][0] = gsl_vector_get(x1, 1);
+	sipout->wcstan.cd[1][0] = gsl_vector_get(x2, 1);
+	sipout->wcstan.cd[0][1] = gsl_vector_get(x1, 2);
+	sipout->wcstan.cd[1][1] = gsl_vector_get(x2, 2);
+
+	// Compute inv(CD)
+	i = invert_2by2_arr((const double*)(sipout->wcstan.cd), (double*)cdinv);
+	assert(i == 0);
+
+	// Grab the shift.
+	sx = gsl_vector_get(x1, 0);
+	sy = gsl_vector_get(x2, 0);
+
+	// Extract the SIP coefficients.
+	//  (this includes the 0 and 1 order terms, which we later overwrite)
+	j = 0;
+	for (order=0; order<=sip_order; order++) {
+		for (q=0; q<=order; q++) {
+			p = order - q;
+			assert(j >= 0);
+			assert(j < N);
+			assert(p >= 0);
+			assert(q >= 0);
+			assert(p + q <= sip_order);
+
+			sipout->a[p][q] =
+				cdinv[0][0] * gsl_vector_get(x1, j) +
+				cdinv[0][1] * gsl_vector_get(x2, j);
+
+			sipout->b[p][q] =
+				cdinv[1][0] * gsl_vector_get(x1, j) +
+				cdinv[1][1] * gsl_vector_get(x2, j);
+			j++;
+		}
+	}
+	assert(j == N);
+
+	// We have already dealt with the shift and linear terms, so zero them out
+	// in the SIP coefficient matrix.
+	sipout->a[0][0] = 0.0;
+	sipout->b[0][0] = 0.0;
+	sipout->a[0][1] = 0.0;
+	sipout->a[1][0] = 0.0;
+	sipout->b[0][1] = 0.0;
+	sipout->b[1][0] = 0.0;
+
+	sip_compute_inverse_polynomials(sipout, 0, 0, 0, 0, 0, 0);
+
+    sU =
+        cdinv[0][0] * sx +
+        cdinv[0][1] * sy;
+    sV =
+        cdinv[1][0] * sx +
+        cdinv[1][1] * sy;
+    logverb("Applying shift of sx,sy = %g,%g deg (%g,%g pix) to CRVAL and CD.\n", sx, sy, sU, sV);
+    sip_calc_inv_distortion(sipout, sU, sV, &su, &sv);
+
+    debug("sx = %g, sy = %g\n", sx, sy);
+    debug("sU = %g, sV = %g\n", sU, sV);
+    debug("su = %g, sv = %g\n", su, sv);
+
+    wcs_shift(&(sipout->wcstan), -su, -sv);
+
+	if (r1)
+		gsl_vector_free(r1);
+	if (r2)
+		gsl_vector_free(r2);
+
+	gsl_matrix_free(mA);
+	gsl_vector_free(b1);
+	gsl_vector_free(b2);
+	gsl_vector_free(x1);
+	gsl_vector_free(x2);
+
+    return 0;
+}
+
+
+// Given a pixel offset (shift in image plane), adjust the WCS
+// CRVAL to the position given by CRPIX + offset.
+// Why not just
+// sip_pixelxy2radec(wcs, crpix0 +- xs, crpix1 +- ys,
+//                   wcs->wcstan.crval+0, wcs->wcstan.crval+1);
+// The answer is that "North" changes when you move the reference point.
+void wcs_shift(tan_t* wcs, double xs, double ys) {
+	// UNITS: xs/ys in pixels
+    // crvals in degrees, nx/nyref and theta in degrees
+	double crpix0, crpix1, crval0;
+	double theta, sintheta, costheta;
+    double newcrval0, newcrval1;
+    double newcd00,newcd01,newcd10,newcd11;
+	// Save old vals
+	crpix0 = wcs->crpix[0];
+	crpix1 = wcs->crpix[1];
+	crval0 = wcs->crval[0];
+
+    // compute the desired projection of the new tangent point by
+    // shifting the projection of the current tangent point
+	wcs->crpix[0] += xs;
+	wcs->crpix[1] += ys;
+
+	// now reproject the old crpix[xy] into shifted wcs
+	tan_pixelxy2radec(wcs, crpix0, crpix1, &newcrval0, &newcrval1);
+
+    // RA,DEC coords of new tangent point
+	wcs->crval[0] = newcrval0;
+	wcs->crval[1] = newcrval1;
+	theta = -deg2rad(newcrval0 - crval0);
+    // deltaRA = new minus old RA;
+	theta *= sin(deg2rad(newcrval1));
+    // multiply by the sin of the NEW Dec; at equator this correctly
+    // evals to zero
+	sintheta = sin(theta);
+	costheta = cos(theta);
+
+	// Restore crpix
+	wcs->crpix[0] = crpix0;
+	wcs->crpix[1] = crpix1;
+
+	// Fix the CD matrix since "northwards" has changed due to moving RA
+    newcd00 = costheta * wcs->cd[0][0] - sintheta * wcs->cd[0][1];
+    newcd01 = sintheta * wcs->cd[0][0] + costheta * wcs->cd[0][1];
+    newcd10 = costheta * wcs->cd[1][0] - sintheta * wcs->cd[1][1];
+    newcd11 = sintheta * wcs->cd[1][0] + costheta * wcs->cd[1][1];
+	wcs->cd[0][0] = newcd00;
+	wcs->cd[0][1] = newcd01;
+	wcs->cd[1][0] = newcd10;
+	wcs->cd[1][1] = newcd11;
+}
+
+
 
 static
 int fit_tan_wcs_solve(const double* starxyz,

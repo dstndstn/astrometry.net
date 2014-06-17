@@ -23,6 +23,17 @@
 #include "astrometry/sip.h"
 #include "astrometry/starkd.h"
 
+void wcs_shift(tan_t* wcs, double xs, double ys);
+
+int fit_sip_wcs(const double* starxyz,
+                const double* fieldxy,
+                const double* weights,
+                int M,
+                const tan_t* tanin,
+                int sip_order,
+                int inv_order,
+                sip_t* sipout);
+
 /**
  Move the tangent point to the given CRPIX, keeping the corresponding
  stars in "starxyz" and "fieldxy" aligned.  It's assumed that "tanin"

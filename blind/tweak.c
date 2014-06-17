@@ -36,6 +36,7 @@
 #include "permutedsort.h"
 #include "gslutils.h"
 #include "errors.h"
+#include "fit-wcs.h"
 
 // TODO:
 //
@@ -180,74 +181,12 @@ static void get_shift(double* ximg, double* yimg, int nimg,
 	free(hough);
 }
 
-// Take shift in image plane and do a switcharoo to make the wcs something better
-// in other words, take the shift in pixels and reset the WCS (in WCS coords)
-// so that the new pixel shift would be zero
-// FIXME -- dstn says, why not just
-// sip_pixelxy2radec(wcs, crpix0 +- xs, crpix1 +- ys, wcs->wcstan.crval+0, wcs->wcstan.crval+1);
-sip_t* wcs_shift(sip_t* wcs, double xs, double ys) {
-	// UNITS: crpix and xs/ys in pixels, crvals in degrees, nx/nyref and theta in degrees
-	double crpix0, crpix1, crval0;
-	double nxref, nyref, theta, sintheta, costheta;
-	double newCD[2][2]; //the new CD matrix
-	sip_t* swcs = malloc(sizeof(sip_t));
-	memcpy(swcs, wcs, sizeof(sip_t));
-
-	// Save old vals
-	crpix0 = wcs->wcstan.crpix[0];
-	crpix1 = wcs->wcstan.crpix[1];
-	crval0 = wcs->wcstan.crval[0];
-
-    // compute the desired projection of the new tangent point by
-    // shifting the projection of the current tangent point
-	wcs->wcstan.crpix[0] += xs;
-	wcs->wcstan.crpix[1] += ys;
-
-	//logmsg("wcs_shift: xs,ys=(%g,%g)\n", xs, ys);
-
-	// now reproject the old crpix[xy] into shifted wcs
-	sip_pixelxy2radec(wcs, crpix0, crpix1, &nxref, &nyref);
-
-    // RA,DEC coords of new tangent point
-	swcs->wcstan.crval[0] = nxref;
-	swcs->wcstan.crval[1] = nyref;
-	theta = -deg2rad(nxref - crval0); // deltaRA = new minus old RA;
-	theta *= sin(deg2rad(nyref));  // multiply by the sin of the NEW Dec; at equator this correctly evals to zero
-	sintheta = sin(theta);
-	costheta = cos(theta);
-
-	// Restore crpix
-	wcs->wcstan.crpix[0] = crpix0;
-	wcs->wcstan.crpix[1] = crpix1;
-
-	// Fix the CD matrix since "northwards" has changed due to moving RA
-	newCD[0][0] = costheta * swcs->wcstan.cd[0][0] - sintheta * swcs->wcstan.cd[0][1];
-	newCD[0][1] = sintheta * swcs->wcstan.cd[0][0] + costheta * swcs->wcstan.cd[0][1];
-	newCD[1][0] = costheta * swcs->wcstan.cd[1][0] - sintheta * swcs->wcstan.cd[1][1];
-	newCD[1][1] = sintheta * swcs->wcstan.cd[1][0] + costheta * swcs->wcstan.cd[1][1];
-	swcs->wcstan.cd[0][0] = newCD[0][0];
-	swcs->wcstan.cd[0][1] = newCD[0][1];
-	swcs->wcstan.cd[1][0] = newCD[1][0];
-	swcs->wcstan.cd[1][1] = newCD[1][1];
-
-	// go into sanity_check and try this:
-	// make something one sq. degree with DEC=89degrees and north up
-	//make xy, convert to to RA/DEC
-	//shift the WCS by .5 degrees of RA (give this in terms of pixels), use this new WCS to convert RA/DEC back to pixels
-	//compare those pixels with pixels that have been shifted by .5 degrees worth of pixels to the left (in x direction only)
-
-	return swcs;
-}
-
 static sip_t* do_entire_shift_operation(tweak_t* t, double rho) {
-	sip_t* swcs;
 	get_shift(t->x, t->y, t->n,
 	          t->x_ref, t->y_ref, t->n_ref,
 	          rho*t->mindx, rho*t->mindy, rho*t->maxdx, rho*t->maxdy,
 	          &t->xs, &t->ys);
-	swcs = wcs_shift(t->sip, t->xs, t->ys);
-	sip_free(t->sip);
-	t->sip = swcs;
+	wcs_shift(&(t->sip->wcstan), t->xs, t->ys);
 	return NULL;
 }
 
@@ -637,267 +576,6 @@ static double figure_of_merit2(tweak_t* t) {
 }
 #endif
 
-static void invert_sip_polynomial(tweak_t* t) {
-	sip_compute_inverse_polynomials(t->sip, 0, 0, 0, 0, 0, 0);
-}
-
-/*
-    T_0(x) = 1
-    T_1(x) = x
-    T_2(x) = 2x^2 - 1
-    T_3(x) = 4x^3 - 3x
-    T_4(x) = 8x^4 - 8x^2 + 1
-    T_5(x) = 16x^5 - 20x^3 + 5x
-    T_6(x) = 32x^6 - 48x^4 + 18x^2 - 1
-    T_7(x) = 64x^7 - 112x^5 + 56x^3 - 7x
-    T_8(x) = 128x^8 - 256x^6 + 160x^4 - 32x^2 + 1
-    T_9(x) = 256x^9 - 576x^7 + 432x^5 - 120x^3 + 9x
- */
-static double tchebyshev(double x, int o) {
-	switch (o) {
-	case 0: return   1;
-	case 1: return   x;
-	case 2: return   2.*pow(x, 2) - 1;
-	case 3: return   4.*pow(x, 3) -   3*x;
-	case 4: return   8.*pow(x, 4) -   8.*pow(x, 2) +   1;
-	case 5: return  16.*pow(x, 5) -  20.*pow(x, 3) +   5.*x;
-	case 6: return  32.*pow(x, 6) -  48.*pow(x, 4) +  18.*pow(x,2) -  1;
-	case 7: return  64.*pow(x, 7) - 112.*pow(x, 5) +  56.*pow(x,3) -  7.*x;
-	case 8: return 128.*pow(x, 8) - 256.*pow(x, 6) + 160.*pow(x,4) -  32.*pow(x,2) + 1;
-	case 9: return 256.*pow(x, 9) - 576.*pow(x, 7) + 432.*pow(x,5) - 120.*pow(x,3) + 9.*x;
-	}
-	assert(0);
-	return 0.0;
-}
-
-//static void tchebyshev_tweak(tweak_t* t, int W, int H) {
-void tchebyshev_tweak(tweak_t* t, int W, int H) {
-	int Torder;
-	double xyzcrval[3];
-	double cdinv[2][2];
-	double sx, sy, sU, sV, su, sv;
-	sip_t* swcs;
-	int M, N;
-	int i, j, p, q, order;
-	double totalweight;
-	int rtn;
-	gsl_matrix *mA;
-	gsl_vector *b1, *b2, *x1, *x2;
-	gsl_vector *r1=NULL, *r2=NULL;
-
-	// a_order and b_order should be the same!
-	assert(t->sip->a_order == t->sip->b_order);
-	Torder = t->sip->a_order;
-	// We need at least the linear terms to compute CD.
-	if (Torder < 1)
-		Torder = 1;
-
-	// The SIP coefficients form an (order x order) upper triangular
-	// matrix missing the 0,0 element.
-	N = (Torder + 1) * (Torder + 2) / 2;
-
-	// number of correspondences
-	M = il_size(t->image);
-
-    if (M < N) {
-        logmsg("Too few correspondences for the SIP order specified (%i < %i)\n", M, N);
-        return;
-    }
-
-	logverb("RMS error of correspondences: %g arcsec\n",
-            correspondences_rms_arcsec(t, 0));
-	logverb("Weighted RMS error of correspondences: %g arcsec\n",
-            correspondences_rms_arcsec(t, 1));
-
-	mA = gsl_matrix_alloc(M, N);
-	b1 = gsl_vector_alloc(M);
-	b2 = gsl_vector_alloc(M);
-	assert(mA);
-	assert(b1);
-	assert(b2);
-
-	// Fill in matrix mA:
-	radecdeg2xyzarr(t->sip->wcstan.crval[0], t->sip->wcstan.crval[1], xyzcrval);
-	totalweight = 0.0;
-	for (i=0; i<M; i++) {
-        int refi;
-        double x=0, y=0;
-        double xyzpt[3];
-        double weight = 1.0;
-        double u;
-        double v;
-        Unused anbool ok;
-
-		// convert to Tchebyshev domain: [-1,1]
-        u = (t->x[il_get(t->image, i)] - t->sip->wcstan.crpix[0]) / (double)W;
-		v = (t->y[il_get(t->image, i)] - t->sip->wcstan.crpix[1]) / (double)H;
-
-        if (t->weighted_fit) {
-            weight = dl_get(t->weight, i);
-            assert(weight >= 0.0);
-            assert(weight <= 1.0);
-            totalweight += weight;
-        }
-
-        j = 0;
-        for (order=0; order<=Torder; order++) {
-            for (q=0; q<=order; q++) {
-                p = order - q;
-                assert(j >= 0);
-                assert(j < N);
-                assert(p >= 0);
-                assert(q >= 0);
-                assert(p + q <= Torder);
-                gsl_matrix_set(mA, i, j, weight * tchebyshev(u, p) * tchebyshev(v, q));
-                j++;
-            }
-        }
-        assert(j == N);
-
-        // The shift - aka (0,0) - SIP coefficient must be 1.
-        assert(gsl_matrix_get(mA, i, 0) == 1.0 * weight);
-        assert(fabs(gsl_matrix_get(mA, i, 1) - u * weight) < 1e-12);
-        assert(fabs(gsl_matrix_get(mA, i, 2) - v * weight) < 1e-12);
-
-        // B contains Intermediate World Coordinates (in degrees)
-        refi = il_get(t->ref, i);
-        radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
-		// tangent-plane projection
-        ok = star_coords(xyzpt, xyzcrval, TRUE, &x, &y);
-        assert(ok);
-
-        gsl_vector_set(b1, i, weight * rad2deg(x));
-        gsl_vector_set(b2, i, weight * rad2deg(y));
-    }
-
-	if (t->weighted_fit)
-		logverb("Total weight: %g\n", totalweight);
-
-
-	// Solve the equation.
-    //rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, &r1, b2, &x2, &r2);
-	rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
-	if (rtn) {
-        ERROR("Failed to solve tweak inversion matrix equation!");
-        return;
-    }
-
-	// Row 0 of X are the shift (p=0, q=0) terms.
-	// Row 1 of X are the terms that multiply "u".
-	// Row 2 of X are the terms that multiply "v".
-
-	// Grab CD.
-	t->sip->wcstan.cd[0][0] = gsl_vector_get(x1, 1);
-	t->sip->wcstan.cd[1][0] = gsl_vector_get(x2, 1);
-	t->sip->wcstan.cd[0][1] = gsl_vector_get(x1, 2);
-	t->sip->wcstan.cd[1][1] = gsl_vector_get(x2, 2);
-
-	// Compute inv(CD)
-	i = invert_2by2_arr((const double*)(t->sip->wcstan.cd), (double*)cdinv);
-	assert(i == 0);
-
-	// Grab the shift.
-	sx = gsl_vector_get(x1, 0);
-	sy = gsl_vector_get(x2, 0);
-
-	// Extract the SIP coefficients.
-	//  (this includes the 0 and 1 order terms, which we later overwrite)
-	j = 0;
-	for (order=0; order<=Torder; order++) {
-		for (q=0; q<=order; q++) {
-			p = order - q;
-			assert(j >= 0);
-			assert(j < N);
-			assert(p >= 0);
-			assert(q >= 0);
-			assert(p + q <= Torder);
-
-			t->sip->a[p][q] =
-				cdinv[0][0] * gsl_vector_get(x1, j) +
-				cdinv[0][1] * gsl_vector_get(x2, j);
-
-			t->sip->b[p][q] =
-				cdinv[1][0] * gsl_vector_get(x1, j) +
-				cdinv[1][1] * gsl_vector_get(x2, j);
-
-			j++;
-		}
-	}
-	assert(j == N);
-
-	// We have already dealt with the shift and linear terms, so zero them out
-	// in the SIP coefficient matrix.
-	t->sip->a_order = Torder;
-	t->sip->b_order = Torder;
-	t->sip->a[0][0] = 0.0;
-	t->sip->b[0][0] = 0.0;
-	t->sip->a[0][1] = 0.0;
-	t->sip->a[1][0] = 0.0;
-	t->sip->b[0][1] = 0.0;
-	t->sip->b[1][0] = 0.0;
-
-	printf("Tchebyshev coefficient matrix for X:\n");
-	for (i=0; i<Torder; i++) {
-		for (j=0; j<Torder; j++) {
-			printf("% 8.4f   ", t->sip->a[i][j]);
-		}
-		printf("\n");
-	}
-	printf("Tchebyshev coefficient matrix for Y:\n");
-	for (i=0; i<Torder; i++) {
-		for (j=0; j<Torder; j++) {
-			printf("% 8.4f   ", t->sip->b[i][j]);
-		}
-		printf("\n");
-	}
-
-
-
-	///////// FIXME -- most things below here don't apply to Tchebshev polys...
-
-	invert_sip_polynomial(t);
-
-	logverb("Applying shift of sx,sy = %g,%g deg to CRVAL and CD.\n", sx, sy);
-	sU =
-		cdinv[0][0] * sx +
-		cdinv[0][1] * sy;
-	sV =
-		cdinv[1][0] * sx +
-		cdinv[1][1] * sy;
-	sip_calc_inv_distortion(t->sip, sU, sV, &su, &sv);
-
-	debug("sx = %g, sy = %g\n", sx, sy);
-	debug("sU = %g, sV = %g\n", sU, sV);
-	debug("su = %g, sv = %g\n", su, sv);
-
-	swcs = wcs_shift(t->sip, -su, -sv);
-	memcpy(t->sip, swcs, sizeof(sip_t));
-	sip_free(swcs);
-
-	// recalc using new SIP
-    tweak_clear_on_sip_change(t);
-	tweak_go_to(t, TWEAK_HAS_IMAGE_AD);
-	tweak_go_to(t, TWEAK_HAS_REF_XY);
-
-	logverb("RMS error of correspondences: %g arcsec\n",
-            correspondences_rms_arcsec(t, 0));
-	logverb("Weighted RMS error of correspondences: %g arcsec\n",
-            correspondences_rms_arcsec(t, 1));
-
-	if (r1)
-		gsl_vector_free(r1);
-	if (r2)
-		gsl_vector_free(r2);
-
-	gsl_matrix_free(mA);
-	gsl_vector_free(b1);
-	gsl_vector_free(b2);
-	gsl_vector_free(x1);
-	gsl_vector_free(x2);
-}
-
-
-
 // FIXME: adapt this function to take as input the correspondences to use VVVVV
 //    wic is World Intermediate Coordinates, either along ra or dec
 //       i.e. canonical image coordinates
@@ -910,45 +588,12 @@ void tchebyshev_tweak(tweak_t* t, int W, int H) {
 
 // Run a polynomial tweak
 static void do_sip_tweak(tweak_t* t) {
-	int sip_order, sip_coeffs;
-	double xyzcrval[3];
-	double cdinv[2][2];
-	double sx, sy, sU, sV, su, sv;
-	sip_t* swcs;
-	int M, N;
-	int i, j, p, q, order;
-	double totalweight;
-	int rtn;
-	gsl_matrix *mA;
-	gsl_vector *b1, *b2, *x1, *x2;
-	gsl_vector *r1=NULL, *r2=NULL;
+	sip_t sipout;
+	int M;
+	int i;
 
 	// a_order and b_order should be the same!
 	assert(t->sip->a_order == t->sip->b_order);
-	sip_order = t->sip->a_order;
-
-	// We need at least the linear terms to compute CD.
-	if (sip_order < 1)
-		sip_order = 1;
-
-	// The SIP coefficients form an (order x order) upper triangular
-	// matrix missing the 0,0 element.
-	sip_coeffs = (sip_order + 1) * (sip_order + 2) / 2;
-
-	M = il_size(t->image);
-	N = sip_coeffs;
-
-    if (M < N) {
-        logmsg("Too few correspondences for the SIP order specified (%i < %i)\n", M, N);
-        return;
-    }
-
-	mA = gsl_matrix_alloc(M, N);
-	b1 = gsl_vector_alloc(M);
-	b2 = gsl_vector_alloc(M);
-	assert(mA);
-	assert(b1);
-	assert(b2);
 
 	debug("do_sip_tweak starting.\n");
 	logverb("RMS error of correspondences: %g arcsec\n",
@@ -956,291 +601,37 @@ static void do_sip_tweak(tweak_t* t) {
 	logverb("Weighted RMS error of correspondences: %g arcsec\n",
             correspondences_rms_arcsec(t, 1));
 
-	/*
-     *  We use a clever trick to estimate CD, A, and B terms in two
-     *  seperated least squares fits, then finding A and B by multiplying
-     *  the found parameters by CD inverse.
-     * 
-     *  Rearranging the SIP equations (see sip.h) we get the following
-     *  matrix operation to compute x and y in world intermediate
-     *  coordinates, which is convienently written in a way which allows
-     *  least squares estimation of CD and terms related to A and B.
-     * 
-     *  First use the x's to find the first set of parametetrs
-     * 
-     *     +--------------------- Intermediate world coordinates in DEGREES
-     *     |          +--------- Pixel coordinates u and v in PIXELS
-     *     |          |     +--- Polynomial u,v terms in powers of PIXELS
-     *     v          v     v
-     *   ( x1 )   ( 1 u1 v1 p1 )   (sx              )
-     *   ( x2 ) = ( 1 u2 v2 p2 ) * (cd11            ) : cd11 is a scalar, degrees per pixel
-     *   ( x3 )   ( 1 u3 v3 p3 )   (cd12            ) : cd12 is a scalar, degrees per pixel
-     *   ( ...)   (   ...    )     (cd11*A + cd12*B ) : cd11*A and cs12*B are mixture of SIP terms (A,B) and CD matrix (cd11,cd12)
-     * 
-     *  Then find cd21 and cd22 with the y's
-     * 
-     *   ( y1 )   ( 1 u1 v1 p1 )   (sy              )
-     *   ( y2 ) = ( 1 u2 v2 p2 ) * (cd21            ) : scalar, degrees per pixel
-     *   ( y3 )   ( 1 u3 v3 p3 )   (cd22            ) : scalar, degrees per pixel
-     *   ( ...)   (   ...    )     (cd21*A + cd22*B ) : mixture of SIP terms (A,B) and CD matrix (cd21,cd22)
-     * 
-     *  These are both standard least squares problems which we solve with
-     *  QR decomposition, ie
-     *      min_{cd,A,B} || x - [1,u,v,p]*[s;cd;cdA+cdB]||^2 with
-     *  x reference, cd,A,B unrolled parameters.
-     * 
-     *  We get back (for x) a vector of optimal
-     *    [sx;cd11;cd12; cd11*A + cd12*B]
-     *  Now we can pull out sx, cd11 and cd12 from the beginning of this vector,
-     *  and call the rest of the vector [cd11*A] + [cd12*B];
-     *  similarly for the y fit, we get back a vector of optimal
-     *    [sy;cd21;cd22; cd21*A + cd22*B]
-     *  once we have all those we can figure out A and B as follows
-     *                   -1
-     *    A' = [cd11 cd12]    *  [cd11*A' + cd12*B']
-     *    B'   [cd21 cd22]       [cd21*A' + cd22*B']
-     * 
-     *  which recovers the A and B's.
-     *
-     */
-
-	/*
-     *  Dustin's interpretation of the above:
-     *  We want to solve:
-     * 
-     *     min || b[M-by-1] - A[M-by-N] x[N-by-1] ||_2
-     * 
-     *  M = the number of correspondences.
-     *  N = the number of SIP terms.
-     *
-     * And we want an overdetermined system, so M >= N.
-     * 
-     *           [ 1  u_1   v_1  u_1^2  u_1 v_1  v_1^2  ... ]
-     *    mA  =  [ 1  u_2   v_2  u_2^2  u_2 v_2  v_2^2  ... ]
-     *           [           ......                         ]
-	 *
-	 * Where (u_i, v_i) are *undistorted* pixel positions minus CRPIX.
-	 *
-     *  The answers we want are:
-     *
-     *         [ sx                  ]
-     *    x1 = [ cd11                ]
-     *         [ cd12                ]
-	 *         [      (A)        (B) ]
-     *         [ cd11*(A) + cd12*(B) ]
-	 *         [      (A)        (B) ]
-     *
-     *         [ sy                  ]
-     *    x2 = [ cd21                ]
-     *         [ cd22                ]
-	 *         [      (A)        (B) ]
-     *         [ cd21*(A) + cd22*(B) ]
-	 *         [      (A)        (B) ]
-	 *
-	 * And the target vectors are the intermediate world coords of the
-	 * reference stars, in degrees.
-     *
-     *         [ ix_1 ]
-     *    b1 = [ ix_2 ]
-     *         [ ...  ]
-     *
-     *         [ iy_1 ]
-     *    b2 = [ iy_2 ]
-     *         [ ...  ]
-     *
-     *
-     *  (where A and B are tall vectors of SIP coefficients of order 2
-     *  and above)
-     *
-     */
-
-	// Fill in matrix mA:
-	radecdeg2xyzarr(t->sip->wcstan.crval[0], t->sip->wcstan.crval[1], xyzcrval);
-	totalweight = 0.0;
+	M = il_size(t->image);
+    double* starxyz = malloc(M * 3 * sizeof(double));
+    double* fieldxy = malloc(M * 2 * sizeof(double));
+    double* weights = NULL;
+    if (t->weighted_fit)
+        weights = malloc(M * sizeof(double));
+        
+    int result;
 	for (i=0; i<M; i++) {
         int refi;
-        double x=0, y=0;
-        double xyzpt[3];
-        double weight = 1.0;
-        double u;
-        double v;
         Unused anbool ok;
 
-        u = t->x[il_get(t->image, i)] - t->sip->wcstan.crpix[0];
-        v = t->y[il_get(t->image, i)] - t->sip->wcstan.crpix[1];
+        fieldxy[2*i + 0] = t->x[il_get(t->image, i)];
+        fieldxy[2*i + 1] = t->y[il_get(t->image, i)];
 
-        if (t->weighted_fit) {
-            weight = dl_get(t->weight, i);
-            assert(weight >= 0.0);
-            assert(weight <= 1.0);
-            totalweight += weight;
-        }
-
-        /* The coefficients are stored in this order:
-         *   p q
-         *  (0,0) = 1     <- order 0
-         *  (1,0) = u     <- order 1
-         *  (0,1) = v
-         *  (2,0) = u^2   <- order 2
-         *  (1,1) = uv
-         *  (0,2) = v^2
-         *  ...
-         */
-
-        j = 0;
-        for (order=0; order<=sip_order; order++) {
-            for (q=0; q<=order; q++) {
-                p = order - q;
-                assert(j >= 0);
-                assert(j < N);
-                assert(p >= 0);
-                assert(q >= 0);
-                assert(p + q <= sip_order);
-                gsl_matrix_set(mA, i, j, weight * pow(u, (double)p) * pow(v, (double)q));
-                j++;
-            }
-        }
-        assert(j == N);
-
-        // The shift - aka (0,0) - SIP coefficient must be 1.
-        assert(gsl_matrix_get(mA, i, 0) == 1.0 * weight);
-        assert(fabs(gsl_matrix_get(mA, i, 1) - u * weight) < 1e-12);
-        assert(fabs(gsl_matrix_get(mA, i, 2) - v * weight) < 1e-12);
-
-        // B contains Intermediate World Coordinates (in degrees)
         refi = il_get(t->ref, i);
-        radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
-        ok = star_coords(xyzpt, xyzcrval, TRUE, &x, &y);
-		// tangent-plane projection
-        assert(ok);
+        radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], starxyz + i*3);
 
-        gsl_vector_set(b1, i, weight * rad2deg(x));
-        gsl_vector_set(b2, i, weight * rad2deg(y));
+        if (t->weighted_fit)
+            weights[i] = dl_get(t->weight, i);
     }
 
-	if (t->weighted_fit)
-		logverb("Total weight: %g\n", totalweight);
-
-
-	// Solve the equation.
-    //rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, &r1, b2, &x2, &r2);
-	rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
-	if (rtn) {
-        ERROR("Failed to solve tweak inversion matrix equation!");
+    result = fit_sip_wcs(starxyz, fieldxy, weights, M,
+                         &(t->sip->wcstan), t->sip->a_order, t->sip->ap_order,
+                         &sipout);
+    free(starxyz);
+    free(fieldxy);
+    free(weights);
+    if (!result)
         return;
-    }
-
-	// Row 0 of X are the shift (p=0, q=0) terms.
-	// Row 1 of X are the terms that multiply "u".
-	// Row 2 of X are the terms that multiply "v".
-
-	// Grab CD.
-	t->sip->wcstan.cd[0][0] = gsl_vector_get(x1, 1);
-	t->sip->wcstan.cd[1][0] = gsl_vector_get(x2, 1);
-	t->sip->wcstan.cd[0][1] = gsl_vector_get(x1, 2);
-	t->sip->wcstan.cd[1][1] = gsl_vector_get(x2, 2);
-
-	// Compute inv(CD)
-	i = invert_2by2_arr((const double*)(t->sip->wcstan.cd), (double*)cdinv);
-	assert(i == 0);
-
-	// Grab the shift.
-	sx = gsl_vector_get(x1, 0);
-	sy = gsl_vector_get(x2, 0);
-
-	// Extract the SIP coefficients.
-	//  (this includes the 0 and 1 order terms, which we later overwrite)
-	j = 0;
-	for (order=0; order<=sip_order; order++) {
-		for (q=0; q<=order; q++) {
-			p = order - q;
-			assert(j >= 0);
-			assert(j < N);
-			assert(p >= 0);
-			assert(q >= 0);
-			assert(p + q <= sip_order);
-
-			t->sip->a[p][q] =
-				cdinv[0][0] * gsl_vector_get(x1, j) +
-				cdinv[0][1] * gsl_vector_get(x2, j);
-
-			t->sip->b[p][q] =
-				cdinv[1][0] * gsl_vector_get(x1, j) +
-				cdinv[1][1] * gsl_vector_get(x2, j);
-
-			j++;
-		}
-	}
-	assert(j == N);
-
-	// We have already dealt with the shift and linear terms, so zero them out
-	// in the SIP coefficient matrix.
-	t->sip->a_order = sip_order;
-	t->sip->b_order = sip_order;
-	t->sip->a[0][0] = 0.0;
-	t->sip->b[0][0] = 0.0;
-	t->sip->a[0][1] = 0.0;
-	t->sip->a[1][0] = 0.0;
-	t->sip->b[0][1] = 0.0;
-	t->sip->b[1][0] = 0.0;
-
-	invert_sip_polynomial(t);
-
-	// DEBUG
-	/*
-	printf("\nBEFORE WCS_SHIFT:\n");
-	{
-		radecdeg2xyzarr(t->sip->wcstan.crval[0], t->sip->wcstan.crval[1], xyzcrval);
-		for (i=0; i<M; i++) {
-			int refi;
-			double x=0, y=0;
-			double xyzpt[3];
-			double bx, by;
-			double axx, axy;
-			anbool ok;
-			double weight = 1.0;
-			refi = il_get(t->ref, i);
-			if (t->weighted_fit)
-				weight = dl_get(t->weight, i);
-			radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
-			ok = star_coords(xyzpt, xyzcrval, &y, &x); // tangent-plane projection
-			assert(ok);
-			bx = rad2deg(x);
-			by = rad2deg(y);
-			x = t->x[il_get(t->image, i)];
-			y = t->y[il_get(t->image, i)];
-			sip_pixelxy2iwc(t->sip, x, y, &axx, &axy);
-			debug("Resid %i: GSL says (%g, %g), dstn says (%g, %g), weighted (%g, %g)\n",
-				  i, gsl_vector_get(r1, i), gsl_vector_get(r2, i),
-				  bx - axx, by - axy, weight*(bx-axx), weight*(by-axy));
-		}
-	}
-	 */
-
-	/*
-	 if (t->push_crval) {
-	 logverb("push_crval. sx,sy = %g,%g\n", sx, sy);
-	 assert(0);
-	 } else {
-	 */
-	{
-		sU =
-			cdinv[0][0] * sx +
-			cdinv[0][1] * sy;
-		sV =
-			cdinv[1][0] * sx +
-			cdinv[1][1] * sy;
-		logverb("Applying shift of sx,sy = %g,%g deg (%g,%g pix) to CRVAL and CD.\n", sx, sy, sU, sV);
-		sip_calc_inv_distortion(t->sip, sU, sV, &su, &sv);
-
-		debug("sx = %g, sy = %g\n", sx, sy);
-		debug("sU = %g, sV = %g\n", sU, sV);
-		debug("su = %g, sv = %g\n", su, sv);
-
-		swcs = wcs_shift(t->sip, -su, -sv);
-		memcpy(t->sip, swcs, sizeof(sip_t));
-		sip_free(swcs);
-	}
+    memcpy(t->sip, &sipout, sizeof(sip_t));
 
 	// recalc using new SIP
     tweak_clear_on_sip_change(t);
@@ -1251,60 +642,6 @@ static void do_sip_tweak(tweak_t* t) {
             correspondences_rms_arcsec(t, 0));
 	logverb("Weighted RMS error of correspondences: %g arcsec\n",
             correspondences_rms_arcsec(t, 1));
-
-	// DEBUG
-	/*
-	{
-		// compute the residuals via WCS functions on the new SIP
-
-		// resids are:    b[M-by-1] - A[M-by-N] x[N-by-1]
-
-		// B contains Intermediate World Coordinates (in degrees)
-		// of ref stars.
-
-		// A x  ~=  sip_pixelxy2iwc( image stars )
-
-		printf("\nAFTER WCS_SHIFT:\n");
-		radecdeg2xyzarr(t->sip->wcstan.crval[0], t->sip->wcstan.crval[1], xyzcrval);
-		for (i=0; i<M; i++) {
-			int refi;
-			double x=0, y=0;
-			double xyzpt[3];
-			double bx, by;
-			double axx, axy;
-			anbool ok;
-			double weight = 1.0;
-
-			refi = il_get(t->ref, i);
-			if (t->weighted_fit)
-				weight = dl_get(t->weight, i);
-			radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
-			ok = star_coords(xyzpt, xyzcrval, &y, &x); // tangent-plane projection
-			assert(ok);
-			bx = rad2deg(x);
-			by = rad2deg(y);
-
-			x = t->x[il_get(t->image, i)];
-			y = t->y[il_get(t->image, i)];
-			sip_pixelxy2iwc(t->sip, x, y, &axx, &axy);
-
-			printf("Resid %i: GSL says (%g, %g), dstn says (%g, %g), weighted (%g, %g)\n",
-				   i, gsl_vector_get(r1, i), gsl_vector_get(r2, i),
-				   bx - axx, by - axy, weight*(bx-axx), weight*(by-axy));
-		}
-	}
-	 */
-
-	if (r1)
-		gsl_vector_free(r1);
-	if (r2)
-		gsl_vector_free(r2);
-
-	gsl_matrix_free(mA);
-	gsl_vector_free(b1);
-	gsl_vector_free(b2);
-	gsl_vector_free(x1);
-	gsl_vector_free(x2);
 }
 
 // Really what we want is some sort of fancy dependency system... DTDS!
