@@ -58,7 +58,7 @@ void opts_print_help(bl* opts, FILE* fid,
 }
 
 int opts_getopt(bl* opts, int argc, char** argv) {
-    int i, j, N;
+    size_t i, j, N;
     char* optstring;
     int c;
     struct option* longoptions;
