@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 from numpy.distutils.misc_util import get_numpy_include_dirs
 numpy_inc = get_numpy_include_dirs()
 
-inc = ['util', 'qfits-an']
+inc = ['include', 'include/astrometry', 'util', 'qfits-an']
 
 libkd_srcs = [
     'pyspherematch.c',

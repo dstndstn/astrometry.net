@@ -1,11 +1,12 @@
 
 FILES := anqfits qfits_card qfits_convert qfits_error qfits_header \
 	qfits_image qfits_md5 qfits_table qfits_time qfits_tools qfits_byteswap \
-	qfits_memory qfits_rw qfits_float md5
+	qfits_memory qfits_rw qfits_float
 
-OBJS := $(addsuffix .o,$(FILES))
-SRCS := $(addsuffix .c,$(FILES))
+OBJS := $(addsuffix .o,$(FILES)) md5.o
+SRCS := $(addsuffix .c,$(FILES)) md5.c
 HEADERS := $(addsuffix .h,$(FILES)) qfits_keywords.h qfits_std.h
+# md5.h is not listed; doesn't need to be installed.
 
 HEADERS_PATH := $(addsuffix $(INCLUDE_DIR),$(HEADERS))
 

@@ -229,6 +229,9 @@ LIBKD_RELEASE_SUBDIRS := qfits-an libkd doc \
 	include/astrometry/qfits_rw.h include/astrometry/qfits_card.h \
 	include/astrometry/qfits_convert.h include/astrometry/qfits_byteswap.h \
 	include/astrometry/qfits_config.h include/astrometry/qfits_md5.h \
+	include/astrometry/qfits_float.h include/astrometry/qfits_md5.h \
+	include/astrometry/kdtree.h include/astrometry/kdtree_fits_io.h \
+	include/astrometry/dualtree.h include/astrometry/dualtree_rangesearch.h \
 	include/astrometry/fitsbin.h include/astrometry/ioutils.h \
 	include/astrometry/mathutil.h include/astrometry/fitsioutils.h \
 	include/astrometry/an-endian.h include/astrometry/fitsfile.h \
