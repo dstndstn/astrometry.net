@@ -55,7 +55,7 @@ ANFILES_OBJ :=
 
 ifndef NO_QFITS
 ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
-	starxy.o qidxfile.o quadfile.o scamp.o scamp-catalog.o hd.o \
+	starxy.o qidxfile.o quadfile.o scamp.o scamp-catalog.o \
 	tabsort.o wcs-xy2rd.o wcs-rd2xy.o
 ANFILES_DEPS += $(QFITS_LIB)
 endif
@@ -125,10 +125,10 @@ ANUTILS_DEPS :=
 
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
-	an-thread.h anwcs.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph  bt.h \
-	cairoutils.h \
+	an-thread.h anwcs.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph \
+	bl-sort.h  bt.h cairoutils.h \
 	codekd.h errors.h fitsbin.h fitsfile.h fitsioutils.h \
-	fitstable.h os-features-config.h os-features.h gslutils.h hd.h \
+	fitstable.h os-features-config.h os-features.h gslutils.h \
 	healpix-utils.h healpix.h index.h intmap.h ioutils.h fileutils.h \
 	keywords.h log.h \
 	mathutil.h permutedsort.h qidxfile.h quadfile.h rdlist.h scamp-catalog.h \
@@ -379,11 +379,10 @@ endif
 
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log \
-	test_scamp_catalog test_starutil test_svd test_hd test_ioutils \
+	test_scamp_catalog test_starutil test_svd test_ioutils \
 	test_anwcs test_sip-utils test_errors test_multiindex \
 	test_convolve_image test_qsort_r test_wcs test_big_tables test_quadfile \
 	test_dfind test_ctmf test_dsmooth test_dcen3x3 test_simplexy
-# test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(ANFILES_SLIB)
 ALL_TEST_EXTRA_LDFLAGS = 
@@ -415,7 +414,7 @@ ALL_TEST_EXTRA_OBJS += $(SIMPLEXY_OBJ)
 
 NORMAL_TESTS := test_quadfile test_big_tables test_qsort_r \
 	test_convolve_image test_multiindex test_errors test_sip-utils \
-	test_anwcs test_wcs test_hd test_fitstable test_fitsbin \
+	test_anwcs test_wcs test_fitstable test_fitsbin \
 	test_fitsioutils test_xylist test_rdlist test_bl test_bt test_endian \
 	test_healpix test_log test_ioutils test_scamp_catalog test_starutil \
 	test_svd
