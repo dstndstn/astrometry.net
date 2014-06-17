@@ -220,6 +220,15 @@ LIBKD_RELEASE_SUBDIRS := qfits-an libkd doc \
 	util/fitsbin.c util/an-endian.c util/fitsfile.c util/log.c util/errors.c \
 	util/tic.c util/bl.c util/bl-nl.c \
 	util/__init__.py util/starutil_numpy.py util/makefile.common \
+	util/makefile.anbase util/makefile.deps \
+	include/astrometry/anqfits.h include/astrometry/qfits_header.h \
+	include/astrometry/qfits_table.h include/astrometry/qfits_keywords.h \
+	include/astrometry/qfits_std.h include/astrometry/qfits_image.h \
+	include/astrometry/qfits_tools.h include/astrometry/qfits_time.h \
+	include/astrometry/qfits_error.h include/astrometry/qfits_memory.h \
+	include/astrometry/qfits_rw.h include/astrometry/qfits_card.h \
+	include/astrometry/qfits_convert.h include/astrometry/qfits_byteswap.h \
+	include/astrometry/qfits_config.h include/astrometry/qfits_md5.h \
 	include/astrometry/fitsbin.h include/astrometry/ioutils.h \
 	include/astrometry/mathutil.h include/astrometry/fitsioutils.h \
 	include/astrometry/an-endian.h include/astrometry/fitsfile.h \
