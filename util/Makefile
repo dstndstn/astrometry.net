@@ -87,6 +87,7 @@ NETPBM_LIB :=
 endif
 
 CFLAGS += $(CFLAGS_DEF)
+CFLAGS += -I$(ANBASE_DIR)
 CFLAGS += $(CAIRO_INC)
 CFLAGS += $(JPEG_INC)
 CFLAGS += $(PNG_INC)
@@ -138,7 +139,7 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	ctmf.h dimage.h image2xy.h radix.h simplexy-common.h simplexy.h \
 	tabsort.h wcs-rd2xy.h wcs-xy2rd.h
 
-ANUTILS_H_PATH := $(addprefix $(INCLUDE_DIR),$(ANUTILS_H))
+ANUTILS_H_PATH := $(addprefix $(INCLUDE_DIR)/,$(ANUTILS_H))
 
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
@@ -185,7 +186,11 @@ an-pnmtofits: an-pnmtofits.o $(ANFILES_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
 ALL_OBJ += an-pnmtofits.o
 
-_util$(PYTHON_SO_EXT) util.py: util.i lanczos.i $(ANFILES_SLIB)
+_util$(PYTHON_SO_EXT): util.i lanczos.i $(ANFILES_SLIB)
+	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
+	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
+	python setup-util.py build_ext -v --inplace --build-temp .
+util.py: util.i lanczos.i
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
 	python setup-util.py build_ext -v --inplace --build-temp .

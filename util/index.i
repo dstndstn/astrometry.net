@@ -69,7 +69,6 @@ void codetree_get_N(codetree* s, unsigned int codeid_start, int N, double* code)
 double* code_alloc(int DC);
 void code_free(double* code);
 double code_get(double* code, int i);
-
 long codekd_addr(index_t* ind);
 long starkd_addr(index_t* ind);
 long quadfile_addr(index_t* ind);

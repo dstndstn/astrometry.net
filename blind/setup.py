@@ -26,6 +26,7 @@ link = ' '.join([os.environ.get('LDFLAGS', ''),
 link = strlist(link)
 objs = strlist(os.environ.get('SLIB', ''))
 inc = strlist(os.environ.get('INC', ''), split='-I')
+inc.append('../util') # for util.i
 cflags = strlist(os.environ.get('CFLAGS', ''))
 
 print 'link:', link
@@ -33,8 +34,9 @@ print 'objs:', objs
 print 'inc:', inc
 print 'cflags:', cflags
 
+#sources = ['plotstuff_wrap.c'],
 c_module = Extension('_plotstuff_c',
-                     sources = ['plotstuff_wrap.c'],
+                     sources = ['plotstuff.i'],
                      include_dirs = [numpy_inc] + inc,
                      extra_objects = [
 						 'plotstuff.o', 'plotfill.o', 'plotxy.o',
@@ -45,7 +47,8 @@ c_module = Extension('_plotstuff_c',
 						 ] + objs,
                          extra_compile_args = cflags,
                          extra_link_args=link,
-                         )
+                         swig_opts=['-I'+d for d in inc] + cflags,
+    )
 
 setup(cmdclass={'build_ext': an_build_ext},
 	  name = 'Plotting stuff in python',

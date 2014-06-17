@@ -14,6 +14,9 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
+# On by default?  This doesn't seem to work
+#SYSTEM_GSL ?= $(shell pkg-config --modversion gsl >/dev/null 2>/dev/null && echo yes)
+
 ifeq ($(SYSTEM_GSL),yes)
 
 GSL_INC ?= $(shell pkg-config --cflags gsl 2>/dev/null)

@@ -45,6 +45,45 @@ static void checkorder(int i, int j) {
     assert(j < SIP_MAXORDER);
 }
 
+// From index.i:
+/**
+For returning single codes and quads as python lists, do something like this:
+
+%typemap(out) float [ANY] {
+  int i;
+  $result = PyList_New($1_dim0);
+  for (i = 0; i < $1_dim0; i++) {
+    PyObject *o = PyFloat_FromDouble((double) $1[i]);
+    PyList_SetItem($result,i,o);
+  }
+}
+**/
+
+double* code_alloc(int DC) {
+	 return malloc(DC * sizeof(double));
+}
+void code_free(double* code) {
+	 free(code);
+}
+double code_get(double* code, int i) {
+	return code[i];
+}
+
+long codekd_addr(index_t* ind) {
+	 return (long)ind->codekd;
+}
+long starkd_addr(index_t* ind) {
+	 return (long)ind->starkd;
+}
+
+long quadfile_addr(index_t* ind) {
+	 return (long)ind->quads;
+}
+/*
+long qidxfile_addr(qidxfile* qf) {
+	 return (long)qf;
+}
+ */
 
 %}
 
@@ -714,6 +753,14 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
 %include "codekd.h"
 %include "starkd.h"
  //%include "qidxfile.h"
+
+double* code_alloc(int DC);
+void code_free(double* code);
+double code_get(double* code, int i);
+long codekd_addr(index_t* ind);
+long starkd_addr(index_t* ind);
+long quadfile_addr(index_t* ind);
+//long qidxfile_addr(qidxfile* qf);
 
 %apply double *OUTPUT { double *dx, double *dy };
 %apply double *OUTPUT { double *ra, double *dec };

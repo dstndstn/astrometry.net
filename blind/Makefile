@@ -73,6 +73,10 @@ CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CATS_INC)
 CFLAGS += $(ANFILES_CFLAGS)
 CFLAGS += $(ANFILES_INC)
+# boilerplate.h
+CFLAGS += -I$(ANUTILS_DIR)
+# wcs-resample.h
+CFLAGS += -I.
 CFLAGS += $(CFITS_INC)
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
@@ -399,7 +403,7 @@ plotxy: plotxy-main.o $(PLOTSTUFF) $(CATS_SLIB) $(CAIRO_SLIB)
 ALL_OBJ += plotxy-main.o
 
 PLOTSTUFF_SRCS = $(subst .o,.c,$(PLOTSTUFF))
-PLOTSTUFF_HDRS = $(subst .o,.h,$(PLOTSTUFF))
+PLOTSTUFF_HDRS = $(addprefix $(INCLUDE_DIR)/,$(subst .o,.h,$(PLOTSTUFF)))
 
 py: pyplotstuff
 .PHONY: py
@@ -407,11 +411,7 @@ py: pyplotstuff
 pyplotstuff: _plotstuff_c$(PYTHON_SO_EXT)
 .PHONY: pyplotstuff
 
-plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) \
-		$(ANUTILS_DIR)/sip.h $(ANUTILS_DIR)/anwcs.h
-	swig -python $(ANFILES_INC) $<
-
-_plotstuff_c$(PYTHON_SO_EXT): plotstuff_wrap.c $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
+_plotstuff_c$(PYTHON_SO_EXT): plotstuff.i $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS) $(CAIRO_LIBS)" \
 	SLIB="$(CAIRO_SLIB)" \
 	INC="$(ANFILES_INC) $(CAIRO_INC) $(NETPBM_INC)" \
