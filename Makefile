@@ -202,9 +202,8 @@ snapshot:
 		svn export $(SNAPSHOT_SVN)/$$x snapshot/$$x; \
 	done
 
-	(cd snapshot/util  && swig -python -I. util.i)
-	(cd snapshot/util  && swig -python -I. index.i)
-	(cd snapshot/blind && swig -python -I. -I../util -I../qfits-an plotstuff.i)
+	(cd snapshot/util  && swig -python -I. -I../include/astrometry util.i)
+	(cd snapshot/blind && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
 	(cd snapshot/sdss  && swig -python -I. cutils.i)
 
 	SSD=astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}'); \
@@ -229,9 +228,10 @@ LIBKD_RELEASE_SUBDIRS := qfits-an libkd doc \
 	include/astrometry/qfits_rw.h include/astrometry/qfits_card.h \
 	include/astrometry/qfits_convert.h include/astrometry/qfits_byteswap.h \
 	include/astrometry/qfits_config.h include/astrometry/qfits_md5.h \
-	include/astrometry/qfits_float.h include/astrometry/qfits_md5.h \
+	include/astrometry/qfits_float.h \
 	include/astrometry/kdtree.h include/astrometry/kdtree_fits_io.h \
 	include/astrometry/dualtree.h include/astrometry/dualtree_rangesearch.h \
+	include/astrometry/dualtree_nearestneighbour.h \
 	include/astrometry/fitsbin.h include/astrometry/ioutils.h \
 	include/astrometry/mathutil.h include/astrometry/fitsioutils.h \
 	include/astrometry/an-endian.h include/astrometry/fitsfile.h \
@@ -271,6 +271,7 @@ snapshot-libkd:
 	done
 
 	SSD=libkd-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}'); \
+	rm -R $$SSD || true; \
 	mv $(LIBKD_SNAPSHOT_DIR) $$SSD; \
 	tar cf $(LIBKD_SNAPSHOT_DIR).tar $$SSD; \
 	gzip --best -c $(LIBKD_SNAPSHOT_DIR).tar > $$SSD.tar.gz; \
