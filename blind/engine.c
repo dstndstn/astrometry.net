@@ -62,7 +62,7 @@ void engine_add_search_path(engine_t* engine, char* path) {
 char* engine_find_index(engine_t* engine, char* name) {
     int j;
 
-    for (j=-1; j<sl_size(engine->index_paths); j++) {
+    for (j=-1; j<(int)sl_size(engine->index_paths); j++) {
         char* path;
         if (j == -1)
             if (strlen(name) && name[0] == '/') {
