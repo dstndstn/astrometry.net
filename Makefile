@@ -173,7 +173,7 @@ RELEASE_VER := 0.49
 
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
-RELEASE_SUBDIRS := qfits-an gsl-an util libkd blind demo catalogs etc ups sdss
+RELEASE_SUBDIRS := include qfits-an gsl-an util libkd blind demo catalogs etc ups sdss
 
 release:
 	-rm -R $(RELEASE_DIR) $(RELEASE_DIR).tar $(RELEASE_DIR).tar.gz $(RELEASE_DIR).tar.bz2

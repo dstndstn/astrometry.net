@@ -19,12 +19,13 @@
 #include <math.h>
 #include <assert.h>
 
-#include "fit-wcs.h"
-#include "starutil.h"
-#include "mathutil.h"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_blas.h"
+
+#include "fit-wcs.h"
+#include "starutil.h"
+#include "mathutil.h"
 #include "sip.h"
 #include "sip_qfits.h"
 #include "log.h"

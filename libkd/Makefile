@@ -47,6 +47,7 @@ INTERNAL_SOURCES := kdtree_internal.c kdtree_internal_fits.c
 
 INC := $(QFITS_INC)
 INC += $(ANUTILS_INC)
+INC += $(LIBKD_INC)
 
 CFLAGS := $(CFLAGS_DEF)
 CFLAGS += $(ANUTILS_CFLAGS)
@@ -96,6 +97,8 @@ $(LIBKD_NOIO): $(KD) $(INTERNALS_NOIO) $(DT)
 
 pyspherematch: spherematch_c$(PYTHON_SO_EXT)
 	@echo pyspherematch
+py: pyspherematch
+.PHONY: py
 
 PYSPHEREMATCH_OBJ := pyspherematch.o
 
@@ -138,8 +141,8 @@ install: $(LIBKD_INSTALL) $(LIBKD)
 	done
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
-		echo cp $$x '$(INCLUDE_INSTALL_DIR)'; \
-		cp $$x '$(INCLUDE_INSTALL_DIR)'; \
+		echo cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)'; \
+		cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
 	mkdir -p '$(INSTALL_DIR)/lib'
 	@for x in $(LIBKD); do \

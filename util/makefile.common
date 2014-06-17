@@ -15,6 +15,8 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
+INCLUDE_BASE_DIR := $(BASEDIR)/include
+INCLUDE_DIR := $(INCLUDE_BASE_DIR)/astrometry
 
 INSTALL_DIR ?= /usr/local/astrometry
 # Put INSTALL_DIR in the environment of commands run by Make.
@@ -273,6 +275,8 @@ FLAGS_DEF += -Winline
 
 # fold in the user's CFLAGS, if set...
 CFLAGS_DEF := $(CFLAGS) $(FLAGS_DEF)
+CFLAGS_DEF += -I$(INCLUDE_BASE_DIR)
+CFLAGS_DEF += -I$(INCLUDE_DIR)
 CFLAGS_DEF += -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 CFLAGS_DEF += -D_GNU_SOURCE
 

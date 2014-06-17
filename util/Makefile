@@ -21,9 +21,6 @@ COMMON := .
 all:
 .PHONY: all
 
-%.o: %.c
-	$(CC) -o $@ $(CFLAGS) -c $<
-
 # You can build stripped-down versions of the AN libraries that do not
 # depend on libkd or libqfits by defining the following in your Makefile
 # before calling "make" in the "util" directory:
@@ -98,6 +95,9 @@ CFLAGS += $(ANFILES_CFLAGS)
 CFLAGS += $(ANFILES_INC)
 CFLAGS += -I.
 
+%.o: %.c
+	$(CC) -o $@ $(CFLAGS) -c $<
+
 LDFLAGS += $(LDFLAGS_DEF)
 
 LDLIBS := $(LDLIBS_DEF)
@@ -138,6 +138,8 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	ctmf.h dimage.h image2xy.h radix.h simplexy-common.h simplexy.h \
 	tabsort.h wcs-rd2xy.h wcs-xy2rd.h
 
+ANUTILS_H_PATH := $(addprefix $(INCLUDE_DIR),$(ANUTILS_H))
+
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
 	tic.o
@@ -150,7 +152,7 @@ ALL_OBJ := $(ANBASE_OBJ) $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 
 # svn.c depends on all the .c and .h files in ANUTILS_OBJ
 SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
-SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(ANUTILS_H)
+SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(ANUTILS_H_PATH)
 
 DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 DEP_PREREQS :=
@@ -224,7 +226,7 @@ PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py \
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/util
 LINK_DIR := $(PY_BASE_LINK_DIR)/util
 
-install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) \
+install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 		$(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE)
 	@echo Installing in base directory '$(INSTALL_DIR)'
 	@echo Installing python in base directory '$(PY_INSTALL_DIR)'
@@ -245,8 +247,8 @@ install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) \
 		cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(ANUTILS_H); do \
-		echo cp $$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
-		cp $$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		echo cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE); do \
 		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
@@ -258,7 +260,7 @@ install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) \
 
 .PHONY: install
 
-os-features-config.h: os-features-test.c
+$(INCLUDE_DIR)/os-features-config.h: os-features-test.c
 	@echo
 	@echo "---- Error messages in the next few commands are not necessarily bugs ----"
 	@echo "     (we're checking how things works on your computer)"
@@ -356,10 +358,10 @@ makefile.os-features: os-features-test.c
 	@echo "------------------------------"
 
 reconfig:
-	-rm -f os-features-config.h makefile.os-features
+	-rm -f $(INCLUDE_DIR)/os-features-config.h makefile.os-features
 .PHONY: reconfig
 
-config: os-features-config.h makefile.os-features
+config: $(INCLUDE_DIR)/os-features-config.h makefile.os-features
 .PHONY: config
 
 ALL_OBJ += os-features.o
@@ -369,7 +371,7 @@ ALL_TARGETS := os-features-test.o \
 	os-features-test-qsort \
 	os-features-test-netpbm \
 	os-features-test-netpbm-make \
-	os-features-config.h
+	$(INCLUDE_DIR)/os-features-config.h
 
 ifndef NO_QFITS
 DEP_PREREQS += $(QFITS_LIB)
@@ -446,9 +448,9 @@ clean:
 # before, but doesn't imply a rebuild is necessary.
 # Should this perhaps go on the .dep files rather than the .c?
 DEP_SRC := $(subst .o,.c,$(DEP_OBJ))
-$(DEP_SRC): | os-features-config.h
-os-features.h: | os-features-config.h
-$(DEP_OBJ): os-features-config.h
+$(DEP_SRC): | $(INCLUDE_DIR)/os-features-config.h
+os-features.h: | $(INCLUDE_DIR)/os-features-config.h
+$(DEP_OBJ): $(INCLUDE_DIR)/os-features-config.h
 
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),reconfig)

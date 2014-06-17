@@ -32,7 +32,6 @@
 #include "qfits_std.h"
 #include "qfits_header.h"
 #include "qfits_rw.h"
-
 #include "anwcs.h"
 #include "anqfits.h"
 #include "errors.h"

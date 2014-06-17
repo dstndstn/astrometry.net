@@ -20,15 +20,15 @@
 		switch (fitstype) {						\
 		case BPP_8_UNSIGNED:					\
 			o8 = optr;							\
-			*o8 = MIN(255, MAX(0, ival));		\
+			*o8 = MIN(255, MAX(0, (uint8_t)ival));  \
 			break;								\
 		case BPP_16_SIGNED:								 \
 			o16 = optr;									 \
-			*o16 = MIN(INT16_MAX, MAX(INT16_MIN, ival));	\
+			*o16 = MIN(INT16_MAX, MAX(INT16_MIN, (int16_t)ival));	\
 			break;											\
 		case BPP_32_SIGNED:									\
 			o32 = optr;										\
-			*o32 = MIN(INT32_MAX, MAX(INT32_MIN, ival));	\
+			*o32 = MIN(INT32_MAX, MAX(INT32_MIN, (int32_t)ival));	\
 			break;											\
 		case BPP_IEEE_FLOAT:								\
 			ofloat = optr;									\
