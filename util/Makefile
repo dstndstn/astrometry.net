@@ -189,25 +189,17 @@ ALL_OBJ += an-pnmtofits.o
 _util$(PYTHON_SO_EXT): util.i lanczos.i $(ANFILES_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
-	python setup-util.py build_ext -v --inplace --build-temp .
+	python setup.py build_ext -v --inplace --build-temp .
 util.py: util.i lanczos.i
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
-	python setup-util.py build_ext -v --inplace --build-temp .
+	python setup.py build_ext -v --inplace --build-temp .
 
 PYUTIL := _util$(PYTHON_SO_EXT) util.py
 pyutil: $(PYUTIL)
 .PHONY: pyutil
 py: $(PYUTIL)
 .PHONY: py
-
-index_wrap.c: index.i index.h
-	swig -python -I. $<
-
-_index_util$(PYTHON_SO_EXT) _index_c$(PYTHON_SO_EXT): index_wrap.c index_pyutils.c $(ANFILES_SLIB)
-	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
-	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
-	python setup-index.py build_ext -v --inplace --build-temp .
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py \
 	starutil.py starutil_numpy.py \
