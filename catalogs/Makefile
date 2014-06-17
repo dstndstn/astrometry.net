@@ -68,7 +68,7 @@ OBJS := ngc2000.o ngcic-accurate.o brightstars.o constellations.o \
 
 HEADERS := brightstars.h constellations.h ngc2000.h ngcic-accurate.h \
 	tycho2.h tycho2-fits.h usnob-fits.h usnob.h nomad-fits.h nomad.h \
-	2mass-fits.h 2mass.h hd.h
+	2mass-fits.h 2mass.h hd.h ucac3.h ucac4.h
 
 HEADERS_PATH := $(addsuffix $(INCLUDE_DIR),$(HEADERS))
 
