@@ -182,9 +182,9 @@ release:
 		svn export $(RELEASE_SVN)/$$x $(RELEASE_DIR)/$$x; \
 	done
 
-	(cd snapshot/util  && swig -python -I. -I../include/astrometry util.i)
-	(cd snapshot/blind && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
-	(cd snapshot/sdss  && swig -python -I. cutils.i)
+	(cd $(RELEASE_DIR)/util  && swig -python -I. -I../include/astrometry util.i)
+	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
+	(cd $(RELEASE_DIR)/sdss  && swig -python -I. cutils.i)
 
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
