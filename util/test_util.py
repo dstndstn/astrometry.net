@@ -1,6 +1,37 @@
 from util import *
 import numpy as np
 import time
+from starutil_numpy import *
+
+sip = Sip('dec095705.01.p.w.wcs')
+x = np.random.uniform(2000, size=100)
+y = np.random.uniform(4000, size=100)
+ra,dec = sip.pixelxy2radec(x, y)
+
+xx = x + np.random.normal(scale=0.1, size=x.shape)
+yy = y + np.random.normal(scale=0.1, size=y.shape)
+
+xyz = radectoxyz(ra, dec)
+xy = np.vstack((xx,yy)).T
+print 'xyz', xyz.shape
+print 'xy', xy.shape
+
+tan = Tan('dec095705.01.p.w.wcs')
+
+sip2 = fit_sip_wcs_2(xyz, xy, None, tan, 2,2)
+
+print 'Got', sip2
+print 'Vs truth', sip
+
+sip2.write_to('sip2.wcs')
+
+xy = np.vstack((x,y)).T
+sip3 = fit_sip_wcs_2(xyz, xy, None, tan, 2,2)
+sip3.write_to('sip3.wcs')
+
+import sys
+sys.exit(0)
+
 
 X = np.random.uniform(1000., size=1001).astype(np.float32)
 

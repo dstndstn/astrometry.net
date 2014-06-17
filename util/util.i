@@ -34,6 +34,8 @@
 
 #include "dimage.h"
 
+#include "fit-wcs.h"
+
 #define true 1
 #define false 0
 
@@ -107,6 +109,7 @@ void log_set_level(int lvl);
 %include "coadd.h"
 %include "resample.h"
 %include "an-bool.h"
+%include "fit-wcs.h"
 
 %inline %{
 #define ERR(x, ...)                             \
@@ -1474,6 +1477,73 @@ Sip = sip_t
     coadd_get_snapshot(co, PyArray_DATA(npimg), badpix);
     return npimg;
   }
+
+  static sip_t* fit_sip_wcs_2(PyObject* np_starxyz,
+                              PyObject* np_fieldxy,
+                              PyObject* np_weights,
+                              tan_t* tanin,
+                              int sip_order,
+                              int inv_order) {
+      PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE);
+      // in numpy v2.0 these constants have a NPY_ARRAY_ prefix
+      int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED |
+          NPY_ELEMENTSTRIDES;
+
+      Py_INCREF(dtype);
+      np_starxyz = PyArray_CheckFromAny(np_starxyz, dtype, 2, 2, req, NULL);
+      Py_INCREF(dtype);
+      np_fieldxy = PyArray_CheckFromAny(np_fieldxy, dtype, 2, 2, req, NULL);
+      if ((np_starxyz == Py_None) || (np_fieldxy == Py_None)) {
+          Py_DECREF(dtype);
+          Py_DECREF(dtype);
+          printf("Failed to convert starxyz or fieldxy to numpy double arrays\n");
+          return NULL;
+      }
+      if (np_weights != Py_None) {
+          Py_INCREF(dtype);
+          np_weights = PyArray_CheckFromAny(np_weights, dtype, 1, 1, req,NULL);
+          if (np_weights == Py_None) {
+              Py_DECREF(dtype);
+              printf("Failed to convert weights to numpy double array\n");
+              return NULL;
+          }
+      }
+      Py_DECREF(dtype);
+      dtype = NULL;
+
+      int M = (int)PyArray_DIM(np_starxyz, 0);
+      if (PyArray_DIM(np_fieldxy, 0) != M) {
+          printf("Expected starxyz and fieldxy to have the same length\n");
+          return NULL;
+      }
+      if ((np_weights != Py_None) && (PyArray_DIM(np_weights, 0) != M)) {
+          printf("Expected starxyz and weights to have the same length\n");
+          return NULL;
+      }
+      if ((PyArray_DIM(np_starxyz, 1) != 3) ||
+          (PyArray_DIM(np_fieldxy, 1) != 2)) {
+          printf("Expected starxyz Mx3 and fieldxy Mx2\n");
+          return NULL;
+      }
+
+      sip_t* sipout = calloc(1, sizeof(sip_t));
+
+      double* weights = NULL;
+      if (np_weights != Py_None)
+          weights = PyArray_DATA(np_weights);
+
+      int rtn = fit_sip_wcs(PyArray_DATA(np_starxyz),
+                            PyArray_DATA(np_fieldxy),
+                            weights, M, tanin, sip_order, inv_order,
+                            sipout);
+      if (rtn) {
+          free(sipout);
+          printf("fit_sip_wcs() returned %i\n", rtn);
+          return NULL;
+      }
+      return sipout;
+  }
+
 
 %}
 

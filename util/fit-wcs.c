@@ -320,7 +320,13 @@ int fit_sip_wcs(const double* starxyz,
     debug("sU = %g, sV = %g\n", sU, sV);
     debug("su = %g, sv = %g\n", su, sv);
 
+    //printf("Before wcs_shift (%g,%g):\n", -su, -sv);
+    //sip_print(sipout);
+
     wcs_shift(&(sipout->wcstan), -su, -sv);
+
+    //printf("After wcs_shift:\n");
+    //sip_print(sipout);
 
 	if (r1)
 		gsl_vector_free(r1);
