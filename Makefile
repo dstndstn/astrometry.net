@@ -216,22 +216,29 @@ snapshot:
 LIBKD_RELEASE_DIR := libkd-$(RELEASE_VER)
 LIBKD_RELEASE_SUBDIRS := qfits-an libkd doc \
 	CREDITS LICENSE __init__.py setup-libkd.py Makefile \
-	util/ioutils.c util/mathutil.c util/fitsioutils.c util/fitsbin.h \
-	util/ioutils.h util/mathutil.h util/fitsioutils.h util/fitsbin.c \
-	util/an-endian.c util/fitsfile.c util/log.c util/errors.c util/tic.c \
-	util/an-endian.h util/fitsfile.h util/log.h util/errors.h util/tic.h \
-	util/bl.c util/bl.inc util/bl-nl.c util/bl-nl.inc \
-	util/bl.h util/bl.ph  util/bl-nl.h util/bl-nl.ph  \
-	util/keywords.h util/an-bool.h util/mathutil.inc util/starutil.h \
-	util/starutil.inc \
-	util/an-thread.h util/an-thread-pthreads.h util/thread-specific.inc \
+	util/ioutils.c util/mathutil.c util/fitsioutils.c \
+	util/fitsbin.c util/an-endian.c util/fitsfile.c util/log.c util/errors.c \
+	util/tic.c util/bl.c util/bl-nl.c \
 	util/__init__.py util/starutil_numpy.py util/makefile.common \
-	util/astrometry
+	include/astrometry/fitsbin.h include/astrometry/ioutils.h \
+	include/astrometry/mathutil.h include/astrometry/fitsioutils.h \
+	include/astrometry/an-endian.h include/astrometry/fitsfile.h \
+	include/astrometry/log.h include/astrometry/errors.h \
+	include/astrometry/tic.h include/astrometry/bl.inc \
+	include/astrometry/bl-nl.inc include/astrometry/bl.h \
+	include/astrometry/bl.ph  include/astrometry/bl-nl.h \
+	include/astrometry/bl-nl.ph  include/astrometry/keywords.h \
+	include/astrometry/an-bool.h include/astrometry/mathutil.inc \
+	include/astrometry/starutil.h include/astrometry/starutil.inc \
+	include/astrometry/an-thread.h include/astrometry/an-thread-pthreads.h \
+	include/astrometry/thread-specific.inc
 
 release-libkd:
 	-rm -R $(LIBKD_RELEASE_DIR) $(LIBKD_RELEASE_DIR).tar $(LIBKD_RELEASE_DIR).tar.gz $(LIBKD_RELEASE_DIR).tar.bz2
 	svn export --depth files $(RELEASE_SVN) $(LIBKD_RELEASE_DIR)
 	svn export --depth empty $(RELEASE_SVN)/util $(LIBKD_RELEASE_DIR)/util
+	svn export --depth empty $(RELEASE_SVN)/include $(LIBKD_RELEASE_DIR)/include
+	svn export --depth empty $(RELEASE_SVN)/include/astrometry $(LIBKD_RELEASE_DIR)/include/astrometry
 	for x in $(LIBKD_RELEASE_SUBDIRS); do \
 		svn export $(RELEASE_SVN)/$$x $(LIBKD_RELEASE_DIR)/$$x; \
 	done
@@ -245,6 +252,8 @@ snapshot-libkd:
 	-rm -R $(LIBKD_SNAPSHOT_DIR)
 	svn export --depth empty $(SNAPSHOT_SVN) $(LIBKD_SNAPSHOT_DIR)
 	svn export --depth empty $(SNAPSHOT_SVN)/util $(LIBKD_SNAPSHOT_DIR)/util
+	svn export --depth empty $(SNAPSHOT_SVN)/include $(LIBKD_SNAPSHOT_DIR)/include
+	svn export --depth empty $(SNAPSHOT_SVN)/include/astrometry $(LIBKD_SNAPSHOT_DIR)/include/astrometry
 	for x in $(LIBKD_RELEASE_SUBDIRS); do \
 		svn export $(SNAPSHOT_SVN)/$$x $(LIBKD_SNAPSHOT_DIR)/$$x; \
 	done
@@ -254,6 +263,7 @@ snapshot-libkd:
 	tar cf $(LIBKD_SNAPSHOT_DIR).tar $$SSD; \
 	gzip --best -c $(LIBKD_SNAPSHOT_DIR).tar > $$SSD.tar.gz; \
 	bzip2 --best -c $(LIBKD_SNAPSHOT_DIR).tar > $$SSD.tar.bz2
+.PHONY: snapshot-libkd
 
 tag-release:
 	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
