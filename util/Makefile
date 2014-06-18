@@ -224,7 +224,7 @@ PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/util
 LINK_DIR := $(PY_BASE_LINK_DIR)/util
 
 install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
-		$(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE)
+		$(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANBASE_LIB_FILE)
 	@echo Installing in base directory '$(INSTALL_DIR)'
 	@echo Installing python in base directory '$(PY_INSTALL_DIR)'
 	mkdir -p '$(PY_INSTALL_DIR)'
@@ -247,7 +247,7 @@ install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 		echo cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 		cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
-	@for x in $(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE); do \
+	@for x in $(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANBASE_LIB_FILE); do \
 		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
 		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
 	done
@@ -431,8 +431,8 @@ endif
 .PHONY: clean
 
 clean:
-	rm -f $(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) $(ALL_OBJ) \
-		$(DEPS) deps cairoutils.o \
+	rm -f $(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) $(ANBASE_LIB_FILE) \
+		$(ALL_OBJ) $(DEPS) deps cairoutils.o \
 		grab-stellarium-constellations \
 		$(PROGS) $(MAIN_PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
 		cairoutils.dep makefile.os-features *.o *~ *.dep *$(PYTHON_SO_EXT) deps \
