@@ -371,8 +371,8 @@ void wcs_shift(tan_t* wcs, double xs, double ys) {
 	tan_pixelxy2radec(wcs, crpix0, crpix1, &newcrval0, &newcrval1);
 
 	// Restore crpix
-	wcs->wcstan.crpix[0] = crpix0;
-	wcs->wcstan.crpix[1] = crpix1;
+	wcs->crpix[0] = crpix0;
+	wcs->crpix[1] = crpix1;
 
     // RA,DEC coords of new tangent point
 	wcs->crval[0] = newcrval0;
