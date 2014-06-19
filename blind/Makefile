@@ -242,8 +242,8 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	python -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('DATA_INSTALL_DIR', '$(DATA_FINAL_DIR)')" > '$(ETC_INSTALL_DIR)/astrometry.cfg'
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
-		echo cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)'; \
-		cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)'; \
+		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
+		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
 	mkdir -p '$(INSTALL_DIR)/lib'
 	@for x in $(INSTALL_LIB); do \
@@ -274,8 +274,8 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 	done
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(PLOT_INSTALL_H); do \
-		echo cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)'; \
-		cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)'; \
+		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
+		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
 	$(MAKE) $(PYTHON_EXTRA_INSTALL)
 	mkdir -p '$(PY_INSTALL_DIR)'

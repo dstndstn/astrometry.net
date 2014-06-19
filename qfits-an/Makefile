@@ -8,7 +8,7 @@ SRCS := $(addsuffix .c,$(FILES)) md5.c
 HEADERS := $(addsuffix .h,$(FILES)) qfits_keywords.h qfits_std.h
 # md5.h is not listed; doesn't need to be installed.
 
-HEADERS_PATH := $(addsuffix $(INCLUDE_DIR),$(HEADERS))
+HEADERS_PATH := $(addsuffix $(INCLUDE_DIR)/,$(HEADERS))
 
 QFITS_LIB_FILE := libqfits.a
 
@@ -41,8 +41,8 @@ $(QFITS_LIB_FILE): $(OBJS)
 install: $(QFITS_LIB_FILE) $(HEADERS)
 	@echo Installing in base directory '$(INSTALL_DIR)'
 	@for x in $(HEADERS); do \
-		echo cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
-		cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(QFITS_LIB_FILE); do \
 		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \

@@ -70,7 +70,7 @@ HEADERS := brightstars.h constellations.h ngc2000.h ngcic-accurate.h \
 	tycho2.h tycho2-fits.h usnob-fits.h usnob.h nomad-fits.h nomad.h \
 	2mass-fits.h 2mass.h hd.h ucac3.h ucac4.h
 
-HEADERS_PATH := $(addsuffix $(INCLUDE_DIR),$(HEADERS))
+HEADERS_PATH := $(addsuffix $(INCLUDE_DIR)/,$(HEADERS))
 
 PYTHON_INSTALL := __init__.py ngc2000.py 
 
@@ -159,8 +159,8 @@ install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS_PATH)
 		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(HEADERS); do \
-		echo cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
-		cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(LIBCAT); do \
 		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \

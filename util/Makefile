@@ -244,8 +244,8 @@ install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 		cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(ANUTILS_H); do \
-		echo cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
-		cp $(INCLUDE_DIR)/$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANBASE_LIB_FILE); do \
 		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
@@ -355,7 +355,7 @@ makefile.os-features: os-features-test.c
 	@echo "------------------------------"
 
 reconfig:
-	-rm -f $(INCLUDE_DIR)/os-features-config.h makefile.os-features
+	-rm -f '$(INCLUDE_DIR)/'os-features-config.h makefile.os-features
 .PHONY: reconfig
 
 config: $(INCLUDE_DIR)/os-features-config.h makefile.os-features
