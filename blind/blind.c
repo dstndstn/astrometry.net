@@ -174,7 +174,7 @@ static anbool grab_field_tagalong_data(MatchObj* mo, xylist_t* xy, int N) {
  Currently it supposedly could handle both "indexnames" and "indexes",
  but we should probably just assert that only one of these can be used.
  **/
-static index_t* get_index(blind_t* bp, int i) {
+static index_t* get_index(blind_t* bp, size_t i) {
     if (i < sl_size(bp->indexnames)) {
         char* fn = sl_get(bp->indexnames, i);
         index_t* ind = index_load(fn, bp->index_options, NULL);
@@ -187,7 +187,7 @@ static index_t* get_index(blind_t* bp, int i) {
     i -= sl_size(bp->indexnames);
     return pl_get(bp->indexes, i);
 }
-static char* get_index_name(blind_t* bp, int i) {
+static char* get_index_name(blind_t* bp, size_t i) {
     index_t* index;
     if (i < sl_size(bp->indexnames)) {
         char* fn = sl_get(bp->indexnames, i);
@@ -197,12 +197,12 @@ static char* get_index_name(blind_t* bp, int i) {
     index = pl_get(bp->indexes, i);
     return index->indexname;
 }
-static void done_with_index(blind_t* bp, int i, index_t* ind) {
+static void done_with_index(blind_t* bp, size_t i, index_t* ind) {
     if (i < sl_size(bp->indexnames)) {
         index_close(ind);
     }
 }
-static int n_indexes(blind_t* bp) {
+static size_t n_indexes(blind_t* bp) {
     return sl_size(bp->indexnames) + pl_size(bp->indexes);
 }
 
@@ -342,8 +342,8 @@ static void check_time_limits(blind_t* bp) {
 
 void blind_run(blind_t* bp) {
 	solver_t* sp = &(bp->solver);
-	int i, I;
-    int Nindexes;
+	size_t i, I;
+    size_t Nindexes;
 
 	// Record current time for total wall-clock time limit.
 	bp->time_total_start = timenow();
@@ -421,7 +421,7 @@ void blind_run(blind_t* bp) {
                 }
                 solver_add_index(sp, index);
 				sp->index = index;
-				logmsg("Verifying WCS with index %i of %i (%s)\n",  I + 1, Nindexes, index->indexname);
+				logmsg("Verifying WCS with index %zu of %zu (%s)\n",  I + 1, Nindexes, index->indexname);
 				// Do it!
 				solve_fields(bp, wcs);
 				// Clean up this index...

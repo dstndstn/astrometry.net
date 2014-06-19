@@ -53,7 +53,8 @@ static anbool is_duplicate(int hp, double ra, double dec, int Nside,
 	int neigh[9];
 	int nn;
 	double xyz2[3];
-	int j, k;
+	int k;
+    size_t j;
 	radecdeg2xyzarr(ra, dec, xyz);
 	// Check this healpix...
 	neigh[0] = hp;
