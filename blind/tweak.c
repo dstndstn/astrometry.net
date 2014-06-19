@@ -589,8 +589,7 @@ static double figure_of_merit2(tweak_t* t) {
 // Run a polynomial tweak
 static void do_sip_tweak(tweak_t* t) {
 	sip_t sipout;
-	int M;
-	int i;
+	size_t i, M;
 
 	// a_order and b_order should be the same!
 	assert(t->sip->a_order == t->sip->b_order);
@@ -611,14 +610,12 @@ static void do_sip_tweak(tweak_t* t) {
     int result;
 	for (i=0; i<M; i++) {
         int refi;
-        Unused anbool ok;
-
-        fieldxy[2*i + 0] = t->x[il_get(t->image, i)];
-        fieldxy[2*i + 1] = t->y[il_get(t->image, i)];
-
+        int imi;
+        imi = il_get(t->image, i);
+        fieldxy[2*i + 0] = t->x[imi];
+        fieldxy[2*i + 1] = t->y[imi];
         refi = il_get(t->ref, i);
         radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], starxyz + i*3);
-
         if (t->weighted_fit)
             weights[i] = dl_get(t->weight, i);
     }

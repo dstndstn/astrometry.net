@@ -193,8 +193,8 @@ int fit_sip_wcs(const double* starxyz,
         double v;
         Unused anbool ok;
 
-        u = fieldxy[2*i + 0] -  tanin->crpix[0];
-        v = fieldxy[2*i + 1] -  tanin->crpix[1];
+        u = fieldxy[2*i + 0] - tanin->crpix[0];
+        v = fieldxy[2*i + 1] - tanin->crpix[1];
 
         if (weights) {
             weight = weights[i];
@@ -260,12 +260,13 @@ int fit_sip_wcs(const double* starxyz,
 
 	// Grab CD.
 	sipout->wcstan.cd[0][0] = gsl_vector_get(x1, 1);
-	sipout->wcstan.cd[1][0] = gsl_vector_get(x2, 1);
 	sipout->wcstan.cd[0][1] = gsl_vector_get(x1, 2);
+	sipout->wcstan.cd[1][0] = gsl_vector_get(x2, 1);
 	sipout->wcstan.cd[1][1] = gsl_vector_get(x2, 2);
 
 	// Compute inv(CD)
-	i = invert_2by2_arr((const double*)(sipout->wcstan.cd), (double*)cdinv);
+	i = invert_2by2_arr((const double*)(sipout->wcstan.cd),
+                        (double*)cdinv);
 	assert(i == 0);
 
 	// Grab the shift.
@@ -299,9 +300,9 @@ int fit_sip_wcs(const double* starxyz,
 	// We have already dealt with the shift and linear terms, so zero them out
 	// in the SIP coefficient matrix.
 	sipout->a[0][0] = 0.0;
-	sipout->b[0][0] = 0.0;
 	sipout->a[0][1] = 0.0;
 	sipout->a[1][0] = 0.0;
+	sipout->b[0][0] = 0.0;
 	sipout->b[0][1] = 0.0;
 	sipout->b[1][0] = 0.0;
 
@@ -369,6 +370,10 @@ void wcs_shift(tan_t* wcs, double xs, double ys) {
 	// now reproject the old crpix[xy] into shifted wcs
 	tan_pixelxy2radec(wcs, crpix0, crpix1, &newcrval0, &newcrval1);
 
+	// Restore crpix
+	wcs->wcstan.crpix[0] = crpix0;
+	wcs->wcstan.crpix[1] = crpix1;
+
     // RA,DEC coords of new tangent point
 	wcs->crval[0] = newcrval0;
 	wcs->crval[1] = newcrval1;
@@ -379,10 +384,6 @@ void wcs_shift(tan_t* wcs, double xs, double ys) {
     // evals to zero
 	sintheta = sin(theta);
 	costheta = cos(theta);
-
-	// Restore crpix
-	wcs->crpix[0] = crpix0;
-	wcs->crpix[1] = crpix1;
 
 	// Fix the CD matrix since "northwards" has changed due to moving RA
     newcd00 = costheta * wcs->cd[0][0] - sintheta * wcs->cd[0][1];
