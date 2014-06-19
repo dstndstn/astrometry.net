@@ -8,7 +8,7 @@ SRCS := $(addsuffix .c,$(FILES)) md5.c
 HEADERS := $(addsuffix .h,$(FILES)) qfits_keywords.h qfits_std.h
 # md5.h is not listed; doesn't need to be installed.
 
-HEADERS_PATH := $(addsuffix $(INCLUDE_DIR)/,$(HEADERS))
+HEADERS_PATH := $(addprefix $(INCLUDE_DIR)/,$(HEADERS))
 
 QFITS_LIB_FILE := libqfits.a
 
