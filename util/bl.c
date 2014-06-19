@@ -468,6 +468,7 @@ void* bl_push(bl* list, const void* data) {
 }
 
 void bl_pop(bl* list, void* into) {
+    assert(list->N > 0);
 	bl_get(list, list->N-1, into);
     bl_remove_index(list, list->N-1);
 }
@@ -482,6 +483,7 @@ void bl_print_structure(bl* list) {
 }
 
 void bl_get(bl* list, size_t n, void* dest) {
+    assert(list->N > 0);
 	char* src = bl_access(list, n);
 	memcpy(dest, src, list->datasize);
 }
