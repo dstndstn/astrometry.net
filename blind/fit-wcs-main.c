@@ -226,8 +226,9 @@ int main(int argc, char** args) {
             wcs.wcstan.crval[0] = cr;
             wcs.wcstan.crval[1] = cd;
         }
-
-        tweak2_from_correspondences(fieldxy, xyz, NULL, N, &wcs);
+        //tweak2_from_correspondences(fieldxy, xyz, NULL, N, &wcs);
+        fit_sip_wcs(xyz, fieldxy, NULL, N, &(wcs.wcstan),
+                    siporder, siporder+1, &wcs);
     }
 
     if (siporder <= 1) {

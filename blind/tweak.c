@@ -597,8 +597,9 @@ static void do_sip_tweak(tweak_t* t) {
 	debug("do_sip_tweak starting.\n");
 	logverb("RMS error of correspondences: %g arcsec\n",
             correspondences_rms_arcsec(t, 0));
-	logverb("Weighted RMS error of correspondences: %g arcsec\n",
-            correspondences_rms_arcsec(t, 1));
+    if (t->weighted_fit)
+        logverb("Weighted RMS error of correspondences: %g arcsec\n",
+                correspondences_rms_arcsec(t, 1));
 
 	M = il_size(t->image);
     double* starxyz = malloc(M * 3 * sizeof(double));
@@ -639,8 +640,9 @@ static void do_sip_tweak(tweak_t* t) {
 
 	logverb("RMS error of correspondences: %g arcsec\n",
             correspondences_rms_arcsec(t, 0));
-	logverb("Weighted RMS error of correspondences: %g arcsec\n",
-            correspondences_rms_arcsec(t, 1));
+    if (t->weighted_fit)
+        logverb("Weighted RMS error of correspondences: %g arcsec\n",
+                correspondences_rms_arcsec(t, 1));
 }
 
 // Really what we want is some sort of fancy dependency system... DTDS!

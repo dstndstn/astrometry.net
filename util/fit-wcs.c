@@ -18,6 +18,7 @@
 */
 #include <math.h>
 #include <assert.h>
+#include <sys/param.h>
 
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_linalg.h"
@@ -33,11 +34,63 @@
 #include "gslutils.h"
 #include "sip-utils.h"
 
+int fit_sip_wcs_2(const double* starxyz,
+                  const double* fieldxy,
+                  const double* weights,
+                  int M,
+                  int sip_order,
+                  int inv_order,
+                  int W, int H,
+                  int crpix_center,
+                  double* crpix,
+                  sip_t* sipout) {
+    tan_t wcs;
+    memset(&wcs, 0, sizeof(tan_t));
+    // Start with a TAN
+    if (fit_tan_wcs(starxyz, fieldxy, M, &wcs, NULL)) {
+        ERROR("Failed to fit for TAN WCS");
+        return -1;
+    }
+
+    if (crpix || crpix_center) {
+        double cx,cy;
+        double cr,cd;
+        if (crpix) {
+            cx = crpix[0];
+            cy = crpix[1];
+        } else {
+            int i;
+            if (W == 0) {
+                for (i=0; i<M; i++) {
+                    W = MAX(W, (int)ceil(fieldxy[2*i + 0]));
+                }
+            }
+            if (H == 0) {
+                for (i=0; i<M; i++) {
+                    H = MAX(H, (int)ceil(fieldxy[2*i + 1]));
+                }
+            }
+            cx = 1. + 0.5 * W;
+            cy = 1. + 0.5 * H;
+        }
+        tan_pixelxy2radec(&wcs, cx, cy, &cr, &cd);
+        wcs.crpix[0] = cx;
+        wcs.crpix[1] = cy;
+        wcs.crval[0] = cr;
+        wcs.crval[1] = cd;
+    }
+    wcs.imagew = W;
+    wcs.imageh = H;
+
+    return fit_sip_wcs(starxyz, fieldxy, weights, M, &wcs,
+                       sip_order, inv_order, sipout);
+}
+
 int fit_sip_wcs(const double* starxyz,
                 const double* fieldxy,
                 const double* weights,
                 int M,
-                const tan_t* tanin,
+                const tan_t* tanin1,
                 int sip_order,
                 int inv_order,
                 sip_t* sipout) {
@@ -52,10 +105,15 @@ int fit_sip_wcs(const double* starxyz,
 	gsl_matrix *mA;
 	gsl_vector *b1, *b2, *x1, *x2;
 	gsl_vector *r1=NULL, *r2=NULL;
-
+    tan_t tanin2;
+    const tan_t* tanin = &tanin2;
 	// We need at least the linear terms to compute CD.
 	if (sip_order < 1)
 		sip_order = 1;
+
+    // convenience: allow the user to call like:
+    //    fit_sip_wcs(... &(sipout.wcstan), ..., sipout);
+    memcpy(&tanin2, tanin1, sizeof(tan_t));
 
     memset(sipout, 0, sizeof(sip_t));
     memcpy(&(sipout->wcstan), tanin, sizeof(tan_t));
