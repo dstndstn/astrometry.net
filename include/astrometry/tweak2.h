@@ -22,27 +22,6 @@
 #include "astrometry/sip.h"
 
 /**
- Computed SIP parameters given a set of corresponding points.
-
- If 'weights' is NULL, uniform weighting will be used.
-
- You MUST set:
-   sip->a_order = sip->b_order = X;
-   sip->ap_order = sip->bp_order = Y;
-   sip->wcstan.imagew = W;
-   sip->wcstan.imageh = H;
-   sip->wcstan.crval = {RA,Dec};
-   sip->wcstan.crpix = {x0,y0};
-
- */
-void tweak2_from_correspondences(const double* fieldxy,
-								 const double* refxyz,
-								 const double* weights,
-								 int N,
-								 sip_t* sip);
-
-
-/**
  Given an initial WCS solution, compute SIP polynomial distortions
  using an annealing-like strategy.  That is, it finds matches between
  image and reference catalog by searching within a radius, and that

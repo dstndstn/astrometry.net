@@ -25,6 +25,14 @@
 
 void wcs_shift(tan_t* wcs, double xs, double ys);
 
+/**
+ Computed SIP parameters given a set of corresponding points,
+ and an initial TAN WCS solution.
+
+ (See fit_sip_wcs_2 if you don't already have a TAN)
+
+ If 'weights' is NULL, uniform weighting will be used.
+ */
 int fit_sip_wcs(const double* starxyz,
                 const double* fieldxy,
                 const double* weights,

@@ -12,7 +12,6 @@
 #include "anwcs.h"
 #include "log.h"
 #include "errors.h"
-#include "tweak2.h"
 
 static const char* OPTIONS = "hx:X:Y:R:D:c:r:o:s:W:H:Cv";
 

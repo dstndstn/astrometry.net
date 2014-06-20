@@ -1478,7 +1478,7 @@ Sip = sip_t
     return npimg;
   }
 
-  static sip_t* fit_sip_wcs_2(PyObject* np_starxyz,
+  static sip_t* fit_sip_wcs_py(PyObject* np_starxyz,
                               PyObject* np_fieldxy,
                               PyObject* np_weights,
                               tan_t* tanin,

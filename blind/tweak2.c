@@ -205,59 +205,6 @@ static char* tdebugfn(const char* name) {
 
 
 
-/**
- Computed SIP parameters given a set of corresponding points.
-
- If 'weights' is NULL, uniform weighting will be used.
-
- You MUST set:
-   sip->a_order = sip->b_order = X;
-   sip->ap_order = sip->bp_order = Y;
-   sip->wcstan.imagew = W;
-   sip->wcstan.imageh = H;
-   sip->wcstan.crval = {RA,Dec};
-   sip->wcstan.crpix = {x0,y0};
- */
-void tweak2_from_correspondences(const double* fieldxy,
-								 const double* refxyz,
-								 const double* weights,
-								 int N,
-								 sip_t* sip) {
-	tweak_t* t = tweak_new();
-	starxy_t* sxy = starxy_new(N, FALSE, FALSE);
-	il* imginds = il_new(256);
-	il* refinds = il_new(256);
-	dl* wts = dl_new(256);
-	int i;
-
-	for (i=0; i<N; i++) {
-		starxy_set_x(sxy, i, fieldxy[2*i+0]);
-		starxy_set_y(sxy, i, fieldxy[2*i+1]);
-	}
-	tweak_init(t);
-	tweak_push_ref_xyz(t, refxyz, N);
-	tweak_push_image_xy(t, sxy);
-	for (i=0; i<N; i++) {
-		il_append(imginds, i);
-		il_append(refinds, i);
-		if (weights)
-			dl_append(wts, weights[i]);
-	}
-	tweak_push_correspondence_indices(t, imginds, refinds, NULL, wts);
-	tweak_push_wcs_tan(t, &sip->wcstan);
-	t->weighted_fit = (weights ? TRUE : FALSE);
-	// fake this -- tweak doesn't really need it.
-	t->state |= TWEAK_HAS_REF_XY;
-	t->sip->a_order = t->sip->b_order = sip->a_order;
-	t->sip->ap_order = t->sip->bp_order = sip->ap_order;
-	tweak_skip_shift(t);
-	tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
-
-	memcpy(sip, t->sip, sizeof(sip_t));
-	starxy_free(sxy);
-	tweak_free(t);
-}
-
 sip_t* tweak2(const double* fieldxy, int Nfield,
 			  double fieldjitter,
 			  int W, int H,
@@ -598,8 +545,10 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 														  crpix, &temptan, &sipout->wcstan);
 				}
 
-				tweak2_from_correspondences(matchxy, matchxyz, weights, Nmatch,
-											sipout);
+                fit_sip_wcs(matchxyz, matchxy, weights, Nmatch,
+                            &(sipout->wcstan), order, sip_invorder,
+                            sipout);
+
 				debug("Got SIP:\n");
 				if (log_get_level() > LOG_VERB)
 					sip_print_to(sipout, stdout);
