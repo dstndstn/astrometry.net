@@ -66,6 +66,10 @@ subdirs: thirdparty
 
 thirdparty: qfits-an
 
+# Detect GSL -- this minimum version was chosen to match the version in gsl-an.
+# Earlier versions would probably work fine.
+SYSTEM_GSL ?= $(shell (pkg-config --atleast-version=1.14 gsl && echo "yes") || echo "no")
+
 ifneq ($(SYSTEM_GSL),yes)
 thirdparty: gsl-an
 endif
