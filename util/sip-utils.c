@@ -177,12 +177,14 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 
 	// Solve the linear equation.
     if (gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL)) {
-        ERROR("Failed to solve tweak inversion matrix equation!");
+        ERROR("Failed to solve SIP inverse matrix equation!");
         return -1;
     }
 
 	// Extract the coefficients
 	j = 0;
+    sip->ap[0][0] = 0.;
+    sip->bp[0][0] = 0.;
 	for (p = 0; p <= inv_sip_order; p++)
 		for (q = 0; q <= inv_sip_order; q++)
 			if ((p + q > 0) &&

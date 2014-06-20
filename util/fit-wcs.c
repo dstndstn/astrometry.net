@@ -57,6 +57,7 @@ int fit_sip_wcs(const double* starxyz,
 	if (sip_order < 1)
 		sip_order = 1;
 
+    memset(sipout, 0, sizeof(sip_t));
     memcpy(&(sipout->wcstan), tanin, sizeof(tan_t));
     sipout->a_order  = sipout->b_order  = sip_order;
     sipout->ap_order = sipout->bp_order = inv_order;
@@ -67,7 +68,7 @@ int fit_sip_wcs(const double* starxyz,
 	N = sip_coeffs;
 
     if (M < N) {
-        logmsg("Too few correspondences for the SIP order specified (%i < %i)\n", M, N);
+        ERROR("Too few correspondences for the SIP order specified (%i < %i)\n", M, N);
         return -1;
     }
 
@@ -314,20 +315,16 @@ int fit_sip_wcs(const double* starxyz,
     sV =
         cdinv[1][0] * sx +
         cdinv[1][1] * sy;
-    logverb("Applying shift of sx,sy = %g,%g deg (%g,%g pix) to CRVAL and CD.\n", sx, sy, sU, sV);
+    logverb("Applying shift of sx,sy = %g,%g deg (%g,%g pix) to CRVAL and CD.\n",
+            sx, sy, sU, sV);
+
     sip_calc_inv_distortion(sipout, sU, sV, &su, &sv);
 
     debug("sx = %g, sy = %g\n", sx, sy);
     debug("sU = %g, sV = %g\n", sU, sV);
     debug("su = %g, sv = %g\n", su, sv);
 
-    //printf("Before wcs_shift (%g,%g):\n", -su, -sv);
-    //sip_print(sipout);
-
     wcs_shift(&(sipout->wcstan), -su, -sv);
-
-    //printf("After wcs_shift:\n");
-    //sip_print(sipout);
 
 	if (r1)
 		gsl_vector_free(r1);

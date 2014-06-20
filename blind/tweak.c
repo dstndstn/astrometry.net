@@ -591,9 +591,6 @@ static void do_sip_tweak(tweak_t* t) {
 	sip_t sipout;
 	size_t i, M;
 
-    printf("\ndo_sip_tweak:\n");
-    sip_print_to(t->sip, stdout);
-
 	// a_order and b_order should be the same!
 	assert(t->sip->a_order == t->sip->b_order);
 
@@ -611,7 +608,6 @@ static void do_sip_tweak(tweak_t* t) {
         weights = malloc(M * sizeof(double));
         
     int result;
-    printf("u v w x y z\n");
 	for (i=0; i<M; i++) {
         int refi;
         int imi;
@@ -622,10 +618,6 @@ static void do_sip_tweak(tweak_t* t) {
         radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], starxyz + i*3);
         if (t->weighted_fit)
             weights[i] = dl_get(t->weight, i);
-
-        printf("%g %g %g %g %g %g\n",
-               fieldxy[2*i+0], fieldxy[2*i+1], weights ? weights[i] : 1.,
-               starxyz[3*i+0], starxyz[3*i+1], starxyz[3*i+2]);
     }
 
     result = fit_sip_wcs(starxyz, fieldxy, weights, M,
@@ -635,7 +627,7 @@ static void do_sip_tweak(tweak_t* t) {
     free(fieldxy);
     free(weights);
     if (result) {
-        printf("fit_sip_wcs failed\n");
+        ERROR("fit_sip_wcs failed\n");
         return;
     }
     memcpy(t->sip, &sipout, sizeof(sip_t));
@@ -649,11 +641,6 @@ static void do_sip_tweak(tweak_t* t) {
             correspondences_rms_arcsec(t, 0));
 	logverb("Weighted RMS error of correspondences: %g arcsec\n",
             correspondences_rms_arcsec(t, 1));
-
-    printf("\nfinished_sip_tweak:\n");
-    sip_print_to(t->sip, stdout);
-    printf("\n");
-
 }
 
 // Really what we want is some sort of fancy dependency system... DTDS!
