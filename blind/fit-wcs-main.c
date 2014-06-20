@@ -215,6 +215,8 @@ int main(int argc, char** args) {
             ERROR("Failed to fit for TAN WCS");
             goto bailout;
         }
+        wcs.wcstan.imagew = W;
+        wcs.wcstan.imageh = H;
         if (crpix_center) {
             double cx,cy;
             double cr,cd;
