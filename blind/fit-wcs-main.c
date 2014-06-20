@@ -208,29 +208,10 @@ int main(int argc, char** args) {
             }
         }
         logverb("Image size = %i x %i pix\n", W, H);
-        wcs.a_order  = wcs.b_order  = siporder;
-        wcs.ap_order = wcs.bp_order = siporder + 1;
-        // Start with a TAN
-        if (fit_tan_wcs(xyz, fieldxy, N, &(wcs.wcstan), NULL)) {
-            ERROR("Failed to fit for TAN WCS");
-            goto bailout;
-        }
-        wcs.wcstan.imagew = W;
-        wcs.wcstan.imageh = H;
-        if (crpix_center) {
-            double cx,cy;
-            double cr,cd;
-            cx = 1. + 0.5 * W;
-            cy = 1. + 0.5 * H;
-            tan_pixelxy2radec(&(wcs.wcstan), cx, cy, &cr, &cd);
-            wcs.wcstan.crpix[0] = cx;
-            wcs.wcstan.crpix[1] = cy;
-            wcs.wcstan.crval[0] = cr;
-            wcs.wcstan.crval[1] = cd;
-        }
-        //tweak2_from_correspondences(fieldxy, xyz, NULL, N, &wcs);
-        fit_sip_wcs(xyz, fieldxy, NULL, N, &(wcs.wcstan),
-                    siporder, siporder+1, &wcs);
+
+        fit_sip_wcs_2(xyz, fieldxy, NULL, N,
+                      siporder, siporder+1, W, H,
+                      crpix_center, NULL, &wcs);
     }
 
     if (siporder <= 1) {

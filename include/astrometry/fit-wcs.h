@@ -34,6 +34,17 @@ int fit_sip_wcs(const double* starxyz,
                 int inv_order,
                 sip_t* sipout);
 
+int fit_sip_wcs_2(const double* starxyz,
+                  const double* fieldxy,
+                  const double* weights,
+                  int M,
+                  int sip_order,
+                  int inv_order,
+                  int W, int H,
+                  int crpix_center,
+                  double* crpix,
+                  sip_t* sipout);
+
 /**
  Move the tangent point to the given CRPIX, keeping the corresponding
  stars in "starxyz" and "fieldxy" aligned.  It's assumed that "tanin"

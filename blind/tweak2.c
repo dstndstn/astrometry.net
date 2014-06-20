@@ -217,7 +217,6 @@ static char* tdebugfn(const char* name) {
    sip->wcstan.imageh = H;
    sip->wcstan.crval = {RA,Dec};
    sip->wcstan.crpix = {x0,y0};
-
  */
 void tweak2_from_correspondences(const double* fieldxy,
 								 const double* refxyz,
