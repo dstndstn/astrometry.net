@@ -115,7 +115,7 @@ PROGS := an-fitstopnm an-pnmtofits downsample-fits \
 
 # search-index pad-file resample
 
-MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy
+MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy fit-wcs
 
 
 

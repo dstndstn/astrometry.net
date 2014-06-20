@@ -118,7 +118,7 @@ NOT_INSTALLED_PIPELINE := blind agreeable certifiable \
 
 PIPELINE := wcs-grab solve-field
 
-MAIN_PROGS := image2xy new-wcs fits-guess-scale fit-wcs
+MAIN_PROGS := image2xy new-wcs fits-guess-scale
 # hpquads
 
 SIMPLE_PROGS := wcs-grab get-wcs
