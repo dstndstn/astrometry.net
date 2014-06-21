@@ -2,19 +2,12 @@ This file lists some of the code we've imported from elsewhere.
 
 First, the obvious ones:
 
--cfitsio/
-  CFITSIO v3.060
-  see cfitsio/License.txt for details; includes GPL code.
-
 -gsl-an/
   GSL (the GNU Scientific Library) v1.11
   Licensed under the GPL, of course.
 
 -qfits-an/
-  QFITS library v6.2, licensed under the GPL.
-
--pyfits/pyfits.py
-  License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+  QFITS library v6.2, licensed under the GPL.  Heavily modified by us.
 
 Now, some miscellaneous files:
 
@@ -48,7 +41,7 @@ Now, some miscellaneous files:
 
 Data files:
 
--quads/ngc2000{,names}.dat
+-catalogs/ngc2000{,names}.dat
   Imported from ftp://cdsarc.u-strasbg.fr/cats/VII/118/
   NGC 2000.0, The Complete New General Catalogue and Index Catalogue
     of Nebulae and Star Clusters by J.L.E. Dreyer
@@ -62,7 +55,7 @@ Data files:
     purposes only. The data should not be used for commercial purposes
     without the explicit permission of Sky Publishing Corporation.
 
--quads/{ic,ngc}2000_pos.txt
+-catalogs/{ic,ngc}2000_pos.txt
   Imported from http://www.ngcic.org/corwin/default.htm
   Dr. Harold G. Corwin Jr (hgcjr@ipac.caltech.edu)
 
