@@ -3,7 +3,7 @@ Astrometry.net code README
 **************************
 
 
-| Copyright 2006-2010 Michael Blanton, David W. Hogg, Dustin Lang, Keir Mierle and Sam Roweis.  
+| Copyright 2006-2010 Michael Blanton, David W. Hogg, Dustin Lang, Keir Mierle and Sam Roweis.
 | Copyright 2011-2013 Dustin Lang and David W. Hogg.
 
 This code is accompanied by the paper:
@@ -20,15 +20,17 @@ it's still neither totally easy nor bug-free.
 
 This release includes a snapshot of all of the components of our
 current research code, including routines to:
-  * Convert raw USNO-B and Tycho2 into FITS format for easier use
-  * Uniformize, deduplicate, and cut the FITSified catalogs
-  * Build index files from these cuts
-  * Solve the astrometry of images using these index files
+
+* Convert raw USNO-B and Tycho2 into FITS format for easier use
+* Uniformize, deduplicate, and cut the FITSified catalogs
+* Build index files from these cuts
+* Solve the astrometry of images using these index files
 
 The code includes:
-  * A simple but powerful HEALPIX implementation
-  * The QFITS library with several modifications
-  * libkd, a compact and high-performance kdtree library
+
+* A simple but powerful HEALPIX implementation
+* The QFITS library with several modifications
+* libkd, a compact and high-performance kdtree library
 
 The code requires *index* files, processed from an astrometric
 reference catalog such as USNO-B1 or 2MASS.  We have released several
@@ -87,50 +89,49 @@ healpixes.   See the maps here; you might not need all of them.
 http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp.png
 http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp2.png
 
-+------------------------+------------------------------+
-| Index Filename         |   Range of skymark diameters |
-|                        |         (arcminutes)         |
-+========================+==============================+
-| index-4219.fits        |      1400  - 2000            |
-+------------------------+------------------------------+
-| index-4218.fits        |      1000  - 1400            |
-+------------------------+------------------------------+
-| index-4217.fits        |       680  - 1000            |
-+------------------------+------------------------------+
-| index-4216.fits        |       480  -  680            |
-+------------------------+------------------------------+
-| index-4215.fits        |       340  -  480            |
-+------------------------+------------------------------+
-| index-4214.fits        |       240  -  340            |
-+------------------------+------------------------------+
-| index-4213.fits        |       170  -  240            |
-+------------------------+------------------------------+
-| index-4212.fits        |       120  -  170            |
-+------------------------+------------------------------+
-| index-4211.fits        |        85  -  120            |
-+------------------------+------------------------------+
-| index-4210.fits        |        60  -   85            |
-+------------------------+------------------------------+
-| index-4209.fits        |        42  -   60            |
-+------------------------+------------------------------+
-| index-4208.fits        |        30  -   42            |
-+------------------------+------------------------------+
-| index-4207-*.fits      |        22  -   30            |
-+------------------------+------------------------------+
-| index-4206-*.fits      |        16  -   22            |
-+------------------------+------------------------------+
-| index-4205-*.fits      |        11  -   16            |
-+------------------------+------------------------------+
-| index-4204-*.fits      |         8  -   11            |
-+------------------------+------------------------------+
-| index-4203-*.fits      |         5.6  -  8.0          |
-+------------------------+------------------------------+
-| index-4202-*.fits      |         4.0  -  5.6          |
-+------------------------+------------------------------+
-| index-4201-*.fits      |         2.8  -  4.0          |
-+------------------------+------------------------------+
-| index-4200-*.fits      |         2.0  -  2.8          |
-+------------------------+------------------------------+
++-----------------------+-----------------------------------------+
+| Index Filename        | Range of skymark diameters (arcminutes) |
++=======================+=========================================+
+| ``index-4219.fits``   |      1400--2000                         |
++-----------------------+-----------------------------------------+
+| ``index-4218.fits``   |      1000--1400                         |
++-----------------------+-----------------------------------------+
+| ``index-4217.fits``   |       680--1000                         |
++-----------------------+-----------------------------------------+
+| ``index-4216.fits``   |       480--680                          |
++-----------------------+-----------------------------------------+
+| ``index-4215.fits``   |       340--480                          |
++-----------------------+-----------------------------------------+
+| ``index-4214.fits``   |       240--340                          |
++-----------------------+-----------------------------------------+
+| ``index-4213.fits``   |       170--240                          |
++-----------------------+-----------------------------------------+
+| ``index-4212.fits``   |       120--170                          |
++-----------------------+-----------------------------------------+
+| ``index-4211.fits``   |        85--120                          |
++-----------------------+-----------------------------------------+
+| ``index-4210.fits``   |        60---85                          |
++-----------------------+-----------------------------------------+
+| ``index-4209.fits``   |        42--60                           |
++-----------------------+-----------------------------------------+
+| ``index-4208.fits``   |        30--42                           |
++-----------------------+-----------------------------------------+
+| ``index-4207-*.fits`` |        22--30                           |
++-----------------------+-----------------------------------------+
+| ``index-4206-*.fits`` |        162--2                           |
++-----------------------+-----------------------------------------+
+| ``index-4205-*.fits`` |        111--6                           |
++-----------------------+-----------------------------------------+
+| ``index-4204-*.fits`` |         81--1                           |
++-----------------------+-----------------------------------------+
+| ``index-4203-*.fits`` |         5.6--8.0                        |
++-----------------------+-----------------------------------------+
+| ``index-4202-*.fits`` |         4.0--5.6                        |
++-----------------------+-----------------------------------------+
+| ``index-4201-*.fits`` |         2.8--4.0                        |
++-----------------------+-----------------------------------------+
+| ``index-4200-*.fits`` |         2.0--2.8                        |
++-----------------------+-----------------------------------------+
 
 Download the index files you need and then either:
 
@@ -221,7 +222,7 @@ Copyrights and credits for the demo images are listed in the file
 
 Note that you can also give solve-field a URL rather than a file as input::
 
-   $ solve-field --out apod1b http://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg 
+   $ solve-field --out apod1b http://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg
 
 
 If you don't have the netpbm tools (eg jpegtopnm), do this instead:
@@ -285,210 +286,206 @@ Output files
 +--------------------+-------------------------------------------------------------+
 |   <base>.kmz       |  (optional) KMZ file for Google Sky-in-Earth.  You need     |
 |                    |  to have "wcs2kml" in your PATH.  See                       |
-|                    |   http://code.google.com/p/wcs2kml/downloads/list           |
-|                    |   http://code.google.com/p/google-gflags/downloads/list     |
+|                    |  http://code.google.com/p/wcs2kml/downloads/list            |
+|                    |  http://code.google.com/p/google-gflags/downloads/list      |
 +--------------------+-------------------------------------------------------------+
 
 
 Tricks and Tips
 ===============
 
-*** To lower the CPU time limit before giving up::
+* To lower the CPU time limit before giving up::
 
     $  solve-field --cpulimit 30 ...
 
-will make it give up after 30 seconds.
+  will make it give up after 30 seconds.
 
-(Note, however, that the "backend" configuration file (astrometry.cfg)
-puts a limit on the CPU time that is spent on an image; solve-field
-can reduce this but not increase it.)
+  (Note, however, that the "backend" configuration file (astrometry.cfg)
+  puts a limit on the CPU time that is spent on an image; solve-field
+  can reduce this but not increase it.)
+
+* Scale of the image: if you provide bounds (lower and upper limits)
+  on the size of the image you are trying to solve, solving can be much
+  faster.  In the last examples above, for example, we specified that
+  the field is at least 30 degrees wide: this means that we don't need
+  to search for matches in the index files that contain only tiny
+  skymarks.
+
+  Eg, to specify that the image is between 1 and 2 degrees wide::
+
+    $ solve-field --scale-units degwidth --scale-low 1 --scale-high 2 ...
+
+  If you know the pixel scale instead::
+
+    $ solve-field --scale-units arcsecperpix \
+        --scale-low 0.386 --scale-high 0.406 ...
+
+  When you tell solve-field the scale of your image, it uses this to
+  decide which index files to try to use to solve your image; each index
+  file contains quads whose scale is within a certain range, so if these
+  quads are too big or too small to be in your image, there is no need
+  to look in that index file.  It is also used while matching quads: a
+  small quad in your image is not allowed to match a large quad in the
+  index file if such a match would cause the image scale to be outside
+  the bounds you specified.  However, all these checks are done before
+  computing a best-fit WCS solution and polynomial distortion terms, so
+  it is possible (though rare) for the final solution to fall outside
+  the limits you specified.  This should only happen when the solution
+  is correct, but you gave incorrect inputs, so you shouldn't be
+  complaining! :)
 
 
-*** Scale of the image: if you provide bounds (lower and upper limits)
-on the size of the image you are trying to solve, solving can be much
-faster.  In the last examples above, for example, we specified that
-the field is at least 30 degrees wide: this means that we don't need
-to search for matches in the index files that contain only tiny
-skymarks.
+* Guess the scale: solve-field can try to guess your image's scale
+  from a number of different FITS header values.  When it's right, this
+  often speeds up solving a lot, and when it's wrong it doesn't cost
+  much.  Enable this with::
 
-Eg, to specify that the image is between 1 and 2 degrees wide::
+    $ solve-field --guess-scale ...
 
-   $ solve-field --scale-units degwidth --scale-low 1 --scale-high 2 ...
+* If you've got big images: you might want to downsample them before
+  doing source extraction::
 
-If you know the pixel scale instead::
-
-   $ solve-field --scale-units arcsecperpix \
-       --scale-low 0.386 --scale-high 0.406 ...
-
-When you tell solve-field the scale of your image, it uses this to
-decide which index files to try to use to solve your image; each index
-file contains quads whose scale is within a certain range, so if these
-quads are too big or too small to be in your image, there is no need
-to look in that index file.  It is also used while matching quads: a
-small quad in your image is not allowed to match a large quad in the
-index file if such a match would cause the image scale to be outside
-the bounds you specified.  However, all these checks are done before
-computing a best-fit WCS solution and polynomial distortion terms, so
-it is possible (though rare) for the final solution to fall outside
-the limits you specified.  This should only happen when the solution
-is correct, but you gave incorrect inputs, so you shouldn't be
-complaining! :)
-
-
-*** Guess the scale: solve-field can try to guess your image's scale
-from a number of different FITS header values.  When it's right, this
-often speeds up solving a lot, and when it's wrong it doesn't cost
-much.  Enable this with::
-
-   $ solve-field --guess-scale ...
-
-*** If you've got big images: you might want to downsample them before
-doing source extraction::
- 
     $ solve-field --downsample 2 ...
     $ solve-field --downsample 4 ...
 
-*** Depth.  The solver works by looking at sources in your image,
-starting with the brightest.  It searches for all "skymarks" that can
-be built from the N brightest stars before considering star N+1.  When
-using several index files, it can be much faster to search for many
-skymarks in one index file before switching to the next one.  This
-flag lets you control when the solver switches between index files.
-It also lets you control how much effort the solver puts in before
-giving up - by default it looks at all the sources in your image, and
-usually times out before this finishes.
+* Depth.  The solver works by looking at sources in your image,
+  starting with the brightest.  It searches for all "skymarks" that can
+  be built from the N brightest stars before considering star N+1.  When
+  using several index files, it can be much faster to search for many
+  skymarks in one index file before switching to the next one.  This
+  flag lets you control when the solver switches between index files.
+  It also lets you control how much effort the solver puts in before
+  giving up - by default it looks at all the sources in your image, and
+  usually times out before this finishes.
 
-Eg, to first look at sources 1-20 in all index files, then sources
-21-30 in all index files, then 31-40::
+  Eg, to first look at sources 1-20 in all index files, then sources
+  21-30 in all index files, then 31-40::
 
     $ solve-field --depth 20,30,40 ...
 
-or::
+  or::
 
     $ solve-field --depth 1-20 --depth 21-30 --depth 31-40 ...
 
-Sources are numbered starting at one, and ranges are inclusive.  If
-you don't give a lower limit, it will take 1 + the previous upper
-limit.  To look at a single source, do::
+  Sources are numbered starting at one, and ranges are inclusive.  If
+  you don't give a lower limit, it will take 1 + the previous upper
+  limit.  To look at a single source, do::
 
     $ solve-field --depth 42-42 ...
 
 
-*** Our source extractor sometimes estimates the background badly, so
-by default we sort the stars by brightness using a compromise between
-the raw and background-subtracted flux estimates.  For images without
-much nebulosity, you might find that using the background-subtracted
-fluxes yields faster results.  Enable this by::
+* Our source extractor sometimes estimates the background badly, so
+  by default we sort the stars by brightness using a compromise between
+  the raw and background-subtracted flux estimates.  For images without
+  much nebulosity, you might find that using the background-subtracted
+  fluxes yields faster results.  Enable this by::
 
     $ solve-field --resort ...
 
 
-*** If you've got big images: you might want to downsample them before
-doing source extraction::
+* If you've got big images: you might want to downsample them before
+  doing source extraction::
 
-   $ solve-field --downsample 2 ...
+    $ solve-field --downsample 2 ...
 
-or::
+  or::
 
- $ solve-field --downsample 4 ...
-
-
-*** When solve-field processes FITS files, it runs them through a
-"sanitizer" which tries to clean up non-standards-compliant images.
-If your FITS files are compliant, this is a waste of time, and you can
-avoid doing it.
-
-::
-
-   $ solve-field --no-fits2fits ...
+    $ solve-field --downsample 4 ...
 
 
-*** When solve-field processes FITS images, it looks for an existing
-WCS header.  If one is found, it tries to verify that header before
-trying to solve the image blindly.  You can prevent this with::
+* When solve-field processes FITS files, it runs them through a
+  "sanitizer" which tries to clean up non-standards-compliant images.
+  If your FITS files are compliant, this is a waste of time, and you can
+  avoid doing it::
 
-   $ solve-field --no-verify ...
-
-Note that currently solve-field only understands a small subset of
-valid WCS headers: essentially just the TAN projection with a CD
-matrix (not CROT).
+    $ solve-field --no-fits2fits ...
 
 
-*** If you don't want the plots to be produced::
+* When solve-field processes FITS images, it looks for an existing
+  WCS header.  If one is found, it tries to verify that header before
+  trying to solve the image blindly.  You can prevent this with::
 
-   $ solve-field --no-plots ...
+    $ solve-field --no-verify ...
 
-
-*** "I know where my image is to within 1 arcminute, how can I tell
-solve-field to only look there?"
-
-::
-
-   $ solve-field --ra, --dec, --radius
-
-Tells it to look within "radius" degrees of the given RA,Dec position.
-
-*** To convert a list of pixel coordinates to RA,Dec coordinates::
-
-   $ wcs-xy2rd -w wcs-file -i xy-list -o radec-list
-
-Where xy-list is a FITS BINTABLE of the pixel locations of sources;
-recall that FITS specifies that the center of the first pixel is pixel
-coordinate (1,1).
+  Note that currently solve-field only understands a small subset of
+  valid WCS headers: essentially just the TAN projection with a CD
+  matrix (not CROT).
 
 
-*** To convert from RA,Dec to pixels::
+* If you don't want the plots to be produced::
 
-   $ wcs-rd2xy -w wcs-file -i radec-list -o xy-list
-
-
-*** To make cool overlay plots: see plotxy, plot-constellations.
+    $ solve-field --no-plots ...
 
 
-*** To change the output filenames when processing multiple input
-files: each of the output filename options listed below can include
-"%s", which will be replaced by the base output filename.  (Eg, the
-default for --wcs is "%s.wcs").  If you really want a "%" character in
-your output filename, you have to put "%%".
+* "I know where my image is to within 1 arcminute, how can I tell
+  solve-field to only look there?"
 
-Outputs include: 
+  ::
 
-* --new-fits
-* --kmz
-* --solved
-* --cancel
-* --match
-* --rdls
-* --corr
-* --wcs
-* --keep-xylist
-*  --pnm
+    $ solve-field --ra, --dec, --radius
 
-also included:
+  Tells it to look within "radius" degrees of the given RA,Dec position.
 
-* --solved-in
-* --verify
+* To convert a list of pixel coordinates to RA,Dec coordinates::
+
+    $ wcs-xy2rd -w wcs-file -i xy-list -o radec-list
+
+  Where xy-list is a FITS BINTABLE of the pixel locations of sources;
+  recall that FITS specifies that the center of the first pixel is pixel
+  coordinate (1,1).
 
 
-*** Reusing files between runs:
+* To convert from RA,Dec to pixels::
 
-The first time you run solve-field, save the source extraction
-results::
+    $ wcs-rd2xy -w wcs-file -i radec-list -o xy-list
 
-   $ solve-field --keep-xylist %s.xy input.fits ...
 
-On subsequent runs, instead of using the original input file, use the
-saved xylist instead.  Also add --continue to overwrite any output
-file that already exists.
+* To make cool overlay plots: see ``plotxy``, ``plot-constellations``.
 
-::
 
-   $ solve-field input.xy --no-fits2fits --continue ...
+* To change the output filenames when processing multiple input
+  files: each of the output filename options listed below can include
+  "%s", which will be replaced by the base output filename.  (Eg, the
+  default for --wcs is "%s.wcs").  If you really want a "%" character in
+  your output filename, you have to put "%%".
 
-To skip previously solved inputs (note that this assumes single-HDU
-inputs)::
+  Outputs include:
 
-   $ solve-field --skip-solved ...
+  * --new-fits
+  * --kmz
+  * --solved
+  * --cancel
+  * --match
+  * --rdls
+  * --corr
+  * --wcs
+  * --keep-xylist
+  *  --pnm
+
+  also included:
+
+  * --solved-in
+  * --verify
+
+* Reusing files between runs:
+
+  The first time you run solve-field, save the source extraction
+  results::
+
+    $ solve-field --keep-xylist %s.xy input.fits ...
+
+  On subsequent runs, instead of using the original input file, use the
+  saved xylist instead.  Also add ``--continue`` to overwrite any output
+  file that already exists.
+
+  ::
+
+    $ solve-field input.xy --no-fits2fits --continue ...
+
+  To skip previously solved inputs (note that this assumes single-HDU
+  inputs)::
+
+    $ solve-field --skip-solved ...
 
 
 Optimizing the code
@@ -526,9 +523,9 @@ Image-solving programs:
 
   * solve-field: main high-level command-line user interface.
   * backend: higher-level solver that reads "augmented xylists";
-called by solve-field.
+    called by solve-field.
   * augment-xylist: creates "augmented xylists" from images, which
-include star positions and hints and instructions for solving.
+    include star positions and hints and instructions for solving.
   * blind: low-level command-line solver.
   * image2xy: source extractor.
 
@@ -538,20 +535,20 @@ Plotting programs:
   * plotxy: plots circles, crosses, etc over images.
   * plotquad: draws polygons over images.
   * plot-constellations: annotates images with constellations, bright
-stars, Messier/NGC objects, Henry Draper catalog stars, etc.
+    stars, Messier/NGC objects, Henry Draper catalog stars, etc.
   * plotcat: produces density plots given lists of stars.
 
 WCS utilities:
 ^^^^^^^^^^^^^^
 
   * new-wcs: merge a WCS solution with existing FITS header cards; can
-be used to create a new image file containing the WCS headers.
+    be used to create a new image file containing the WCS headers.
   * fits-guess-scale: try to guess the scale of an image based on FITS
-headers.
+    headers.
   * wcsinfo: print simple properties of WCS headers (scale, rotation, etc)
   * wcs-xy2rd, wcs-rd2xy: convert between lists of pixel (x,y) and
-(RA,Dec) positions.
-  * wcs-resample: projects one FITS image onto another image.  
+    (RA,Dec) positions.
+  * wcs-resample: projects one FITS image onto another image.
   * wcs-grab/get-wcs: try to interpret an existing WCS header.
 
 Miscellany:
@@ -561,9 +558,9 @@ Miscellany:
   * get-healpix: which healpix covers a given RA,Dec?
   * hpowned: which small healpixels are inside a big healpixel?
   * control-program: sample code for how you might use the
-Astrometry.net code in your own software.
+    Astrometry.net code in your own software.
   * xylist2fits: converts a text list of x,y positions to a FITS
-binary table.
+    binary table.
   * rdlsinfo: print stats about a list of RA,Dec positions (rdlist).
   * xylsinfo: print stats about a list of x,y positions (xylist).
 
@@ -581,39 +578,40 @@ FITS utilities
   * imarith: does (very) simple arithmetic on FITS images.
   * imstat: computes statistics on FITS images.
   * fitsgetext: pull out individual header or data blocks from
-multi-HDU FITS files.
+    multi-HDU FITS files.
   * subtable: pull out a set of columns from a many-column FITS binary
-table.
+    table.
   * tabsort: sort a FITS binary table based on values in one column.
   * column-merge: create a FITS binary table that includes columns
-from two input tables.
+    from two input tables.
   * add-healpix-column: given a FITS binary table containing RA and
-DEC columns, compute the HEALPIX and add it as a column.
+    DEC columns, compute the HEALPIX and add it as a column.
   * resort-xylist: used by solve-field to sort a list of stars using a
-compromise between background-subtracted and non-background-subtracted
-flux (because our source extractor sometimes messes up the background
-subtraction).
+    compromise between background-subtracted and non-background-subtracted
+    flux (because our source extractor sometimes messes up the background
+    subtraction).
   * fits-flip-endian: does endian-swapping of FITS binary tables.
   * fits-dedup: removes duplicate header cards.
 
 Index-building programs
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-  * build-index: given a FITS binary table with RA,Dec, build an index
-    file.  This is the "easy", recent way.  The old way uses the rest
-    of these programs:
-    * usnobtofits, tycho2tofits, nomadtofits, 2masstofits: convert
-catalogs into FITS binary tables.
-    * build-an-catalog: convert input catalogs into a standard FITS
-binary table format.
-    * cut-an: grab a bright, uniform subset of stars from a catalog.
-    * startree: build a star kdtree from a catalog.
-    * hpquads: find a bright, uniform set of N-star features.
-    * codetree: build a kdtree from N-star shape descriptors.
-    * unpermute-quads, unpermute-stars: reorder index files for
-efficiency.
+* build-index: given a FITS binary table with RA,Dec, build an index
+  file.  This is the "easy", recent way.  The old way uses the rest
+  of these programs:
 
-  * hpsplit: splits a list of FITS tables into healpix tiles
+  * usnobtofits, tycho2tofits, nomadtofits, 2masstofits: convert
+    catalogs into FITS binary tables.
+  * build-an-catalog: convert input catalogs into a standard FITS
+    binary table format.
+  * cut-an: grab a bright, uniform subset of stars from a catalog.
+  * startree: build a star kdtree from a catalog.
+  * hpquads: find a bright, uniform set of N-star features.
+  * codetree: build a kdtree from N-star shape descriptors.
+  * unpermute-quads, unpermute-stars: reorder index files for
+    efficiency.
+
+* hpsplit: splits a list of FITS tables into healpix tiles
 
 
 Source lists ("xylists")
@@ -750,69 +748,72 @@ Note that you can tell solve-field where to find SExtractor with::
 
 Workarounds
 -----------
-*** No python
+* No python
 
-There are two places we use python: handling images, and filtering FITS files.
+  There are two places we use python: handling images, and filtering FITS files.
 
-You can avoid the image-handling code by doing source extraction
-yourself; see the "No netpbm" section below.
+  You can avoid the image-handling code by doing source extraction
+  yourself; see the "No netpbm" section below.
 
-You can avoid filtering FITS files by using the "--no-fits2fits"
-option to solve-field.
+  You can avoid filtering FITS files by using the "--no-fits2fits"
+  option to solve-field.
 
-*** No netpbm
+* No netpbm
 
-We use the netpbm tools (jpegtopnm, pnmtofits, etc) to convert from
-all sorts of image formats to PNM and FITS.
+  We use the netpbm tools (jpegtopnm, pnmtofits, etc) to convert from
+  all sorts of image formats to PNM and FITS.
 
-If you don't have these programs installed, you must do source
-extraction yourself and use "xylists" rather than images as the input
-to solve-field.  See SEXTRACTOR and XYLIST sections above.
+  If you don't have these programs installed, you must do source
+  extraction yourself and use "xylists" rather than images as the input
+  to solve-field.  See SEXTRACTOR and XYLIST sections above.
 
 ERROR MESSAGES during compiling
 -------------------------------
 
-1.    /bin/sh: line 1: /dev/null: No such file or directory
+1. ``/bin/sh: line 1: /dev/null: No such file or directory``
 
-We've seen this happen on Macs a couple of times.  Reboot and it goes
-away...
+   We've seen this happen on Macs a couple of times.  Reboot and it goes
+   away...
 
-2.    makefile.deps:40: deps: No such file or directory
+2. ``makefile.deps:40: deps: No such file or directory``
 
-Not a problem.  We use automatic dependency tracking: "make" keeps
-track of which source files depend on which other source files.  These
-dependencies get stored in a file named "deps"; when it doesn't exist,
-"make" tries to rebuild it, but not before printing this message.
+   Not a problem.  We use automatic dependency tracking: "make" keeps
+   track of which source files depend on which other source files.  These
+   dependencies get stored in a file named "deps"; when it doesn't exist,
+   "make" tries to rebuild it, but not before printing this message.
 
-3.    os-features-test.c: In function 'main':
-      os-features-test.c:23: warning: implicit declaration of function 'canonicalize_file_name'
-      os-features-test.c:23: warning: initialization makes pointer from integer without a cast
-      /usr/bin/ld: Undefined symbols:
-      _canonicalize_file_name
-      collect2: ld returned 1 exit status
+3. ::
 
-Not a problem.  We provide replacements for a couple of OS-specific
-functions, but we need to decide whether to use them or not.  We do
-that by trying to build a test program and checking whether it works.
-This failure tells us your OS doesn't provide the
-canonicalize_file_name() function, so we plug in a replacement.
+     os-features-test.c: In function 'main':
+     os-features-test.c:23: warning: implicit declaration of function 'canonicalize_file_name'
+     os-features-test.c:23: warning: initialization makes pointer from integer without a cast
+     /usr/bin/ld: Undefined symbols:
+     _canonicalize_file_name
+     collect2: ld returned 1 exit status
 
-4.    configure: WARNING: cfitsio: == No acceptable f77 found in $PATH
-      configure: WARNING: cfitsio: == Cfitsio will be built without Fortran wrapper support
-      drvrfile.c: In function 'file_truncate':
-      drvrfile.c:360: warning: implicit declaration of function 'ftruncate'
-      drvrnet.c: In function 'http_open':
-      drvrnet.c:300: warning: implicit declaration of function 'alarm'
-      drvrnet.c: In function 'http_open_network':
-      drvrnet.c:810: warning: implicit declaration of function 'close'
-      drvrsmem.c: In function 'shared_cleanup':
-      drvrsmem.c:154: warning: implicit declaration of function 'close'
-      group.c: In function 'fits_get_cwd':
-      group.c:5439: warning: implicit declaration of function 'getcwd'
-      ar: creating archive libcfitsio.a
+   Not a problem.  We provide replacements for a couple of OS-specific
+   functions, but we need to decide whether to use them or not.  We do
+   that by trying to build a test program and checking whether it works.
+   This failure tells us your OS doesn't provide the
+   canonicalize_file_name() function, so we plug in a replacement.
 
-Not a problem; these errors come from cfitsio and we just haven't
-fixed them.
+4. ::
+
+     configure: WARNING: cfitsio: == No acceptable f77 found in $PATH
+     configure: WARNING: cfitsio: == Cfitsio will be built without Fortran wrapper support
+     drvrfile.c: In function 'file_truncate':
+     drvrfile.c:360: warning: implicit declaration of function 'ftruncate'
+     drvrnet.c: In function 'http_open':
+     drvrnet.c:300: warning: implicit declaration of function 'alarm'
+     drvrnet.c: In function 'http_open_network':
+     drvrnet.c:810: warning: implicit declaration of function 'close'
+     drvrsmem.c: In function 'shared_cleanup':
+     drvrsmem.c:154: warning: implicit declaration of function 'close'
+     group.c: In function 'fits_get_cwd':
+     group.c:5439: warning: implicit declaration of function 'getcwd'
+     ar: creating archive libcfitsio.a
+
+   Not a problem; these errors come from cfitsio and we just haven't fixed them.
 
 
 License
