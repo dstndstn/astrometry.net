@@ -46,4 +46,6 @@ For academic use, please cite the paper:
 [Bibtex](http://astrometry.net/lang2010.bib.txt)
 | [Bibtex@ADS](http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=2010AJ....139.1782L&data_type=BIBTEX&db_key=AST&nocookieset=1)
 | [arXiv](http://arxiv.org/abs/0910.2233)
+| [AJ](http://iopscience.iop.org/1538-3881/139/5/1782/article)
+| [doi:10.1088/0004-6256/139/5/1782](http://dx.doi.org/10.1088/0004-6256/139/5/1782)
 
