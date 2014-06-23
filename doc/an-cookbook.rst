@@ -35,6 +35,7 @@ save quite some bandwidth.
 
 Downloading Release Tarballs or Daily Snapshots
 -----------------------------------------------
+
 For details, please refer to the `AN Usage page
 <http://astrometry.net/use.html>`_.  Snapshots as well as release tarballs can
 be found at `http://astrometry.net/downloads/
@@ -42,8 +43,27 @@ be found at `http://astrometry.net/downloads/
 Some contain version numbers, some SVN revision numbers. As usual, newer is
 better. Your choice!
 
+As the project currently (20140623) switches over to GitHub, you'll find
+all upcoming releases there, too, listed at
+`https://github.com/dstndstn/astrometry.net/releases <https://github.com/dstndstn/astrometry.net/releases>`_.
+
+Current Sources
+---------------
+
+The current source tree is managed in GIT on GitHub. Anonymous users will clone
+from there::
+
+	git clone https://github.com/dstndstn/astrometry.net.git
+
+while authenticated users (you need your SSH keys in place!) can clone with::
+
+	git clone git@github.com:dstndstn/astrometry.net.git
+
+Historic SVN Tree
+-----------------
+
 With SVN
---------
+^^^^^^^^
 You can anonymously download the *AN* sources like this::
 
 	svn co http://astrometry.net/svn/trunk astrometry
@@ -55,7 +75,7 @@ as an authenticated user and will be able to commit your changes::
 	svn co svn+ssh://<username>@astrometry.net/svn/trunk astrometry
 
 With GIT-SVN
-------------
+^^^^^^^^^^^^
 Anonymously, this is done by::
 
 	git svn clone http://astrometry.net/svn/trunk astrometry
