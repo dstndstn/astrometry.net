@@ -194,6 +194,28 @@ release:
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
 	bzip2 --best $(RELEASE_DIR).tar
 
+RELEASE_RMDIRS := net
+
+release-git:
+	-rm -R $(RELEASE_DIR) $(RELEASE_DIR).tar $(RELEASE_DIR).tar.gz $(RELEASE_DIR).tar.bz2
+	git archive --prefix $(RELEASE_DIR)/ $(RELEASE_VER) | tar x
+	for x in $(RELEASE_RMDIRS); do \
+		rm -R $(RELEASE_DIR)/$$x; \
+	done
+	(cd $(RELEASE_DIR)/util  && swig -python -I. -I../include/astrometry util.i)
+	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
+	(cd $(RELEASE_DIR)/sdss  && swig -python -I. cutils.i)
+	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
+	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
+	bzip2 --best $(RELEASE_DIR).tar
+
+tag-release-git:
+	git tag -a -m "Tag version $(RELEASE_VER)" $(RELEASE_VER)
+
+retag-release-git:
+	-git tag -d $(RELEASE_VER)
+	git tag -a -m "Re-tag version $(RELEASE_VER)" $(RELEASE_VER)
+
 SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
 SNAPSHOT_SUBDIRS := $(RELEASE_SUBDIRS)
 
