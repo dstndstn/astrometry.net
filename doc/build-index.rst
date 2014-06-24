@@ -32,13 +32,13 @@ Here are some pictures of the index-building process itself:
 +-------------------------------+----------------------------+----------------------------------------------+
 |A reference catalog:           |We lay down a healpix grid: | And select the brightest stars in each cell: |
 +-------------------------------+----------------------------+----------------------------------------------+
-| .. image:: usnob.png          | .. image:: usnob-grid.png  | .. image:: cut.png                           |
+| .. image:: usnob.jpg          | .. image:: usnob-grid.jpg  | .. image:: cut.png                           |
 |  :height: 200px               |  :height: 200px            |  :height: 200px                              |
 +-------------------------------+----------------------------+----------------------------------------------+
 |And then try to build a 4-star | And again...               | And again, until the sky is densely tiled    |
 |feature centered in each cell  |                            | in features.                                 |
 +-------------------------------+----------------------------+----------------------------------------------+
-| .. image:: quads1b.png        | .. image:: quads2b.png     | .. image:: quads3b.png                       |
+| .. image:: quads1b.png        | .. image:: quads2b.png     | .. image:: quads3b.jpg                       |
 |  :height: 200px               |  :height: 200px            |  :height: 200px                              |
 +-------------------------------+----------------------------+----------------------------------------------+
 
