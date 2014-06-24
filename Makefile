@@ -15,7 +15,6 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-
 # To set the install directory:
 #   make install INSTALL_DIR=/path/to/dir
 # or see util/makefile.common
