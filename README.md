@@ -44,6 +44,6 @@ For academic use, please cite the paper:
 > **The Astronomical Journal** 139, 1782--1800.
 
 [Bibtex](http://astrometry.net/lang2010.bib.txt)
-[Bibtex@ADS](http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=2010AJ....139.1782L&data_type=BIBTEX&db_key=AST&nocookieset=1
+[Bibtex@ADS](http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=2010AJ....139.1782L&data_type=BIBTEX&db_key=AST&nocookieset=1)
 [arXiv](http://arxiv.org/abs/0910.2233)
 
