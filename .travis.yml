@@ -7,4 +7,4 @@ script: make && make py && make extra
 
 install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y libnetpbm10 libnetpbm10-dev wcslib-dev libcfitsio3 libcfitsio3-dev python-numpy
+  - sudo apt-get install -y libnetpbm10 libnetpbm10-dev wcslib-dev libcfitsio3 libcfitsio3-dev python-numpy swig
