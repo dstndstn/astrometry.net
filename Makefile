@@ -176,27 +176,9 @@ config: util/os-features-config.h util/makefile.os-features
 RELEASE_VER := 0.50
 
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
-RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
-RELEASE_SUBDIRS := include qfits-an gsl-an util libkd blind demo catalogs etc ups sdss
-
-release:
-	-rm -R $(RELEASE_DIR) $(RELEASE_DIR).tar $(RELEASE_DIR).tar.gz $(RELEASE_DIR).tar.bz2
-	svn export -N $(RELEASE_SVN) $(RELEASE_DIR)
-	for x in $(RELEASE_SUBDIRS); do \
-		svn export $(RELEASE_SVN)/$$x $(RELEASE_DIR)/$$x; \
-	done
-
-	(cd $(RELEASE_DIR)/util  && swig -python -I. -I../include/astrometry util.i)
-	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
-	(cd $(RELEASE_DIR)/sdss  && swig -python -I. cutils.i)
-
-	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
-	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
-	bzip2 --best $(RELEASE_DIR).tar
-
 RELEASE_RMDIRS := net
 
-release-git:
+release:
 	-rm -R $(RELEASE_DIR) $(RELEASE_DIR).tar $(RELEASE_DIR).tar.gz $(RELEASE_DIR).tar.bz2
 	git archive --prefix $(RELEASE_DIR)/ $(RELEASE_VER) | tar x
 	for x in $(RELEASE_RMDIRS); do \
@@ -209,34 +191,32 @@ release-git:
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
 	bzip2 --best $(RELEASE_DIR).tar
 
-tag-release-git:
+tag-release:
 	git tag -a -m "Tag version $(RELEASE_VER)" $(RELEASE_VER)
 
-retag-release-git:
+retag-release:
 	-git tag -d $(RELEASE_VER)
 	git tag -a -m "Re-tag version $(RELEASE_VER)" $(RELEASE_VER)
 
-SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
-SNAPSHOT_SUBDIRS := $(RELEASE_SUBDIRS)
+SNAPSHOT_RMDIRS := $(RELEASE_RMDIRS)
 
 .PHONY: snapshot
 snapshot:
-	-rm -R snapshot snapshot.tar
-	svn export -N $(SNAPSHOT_SVN) snapshot
-	for x in $(SNAPSHOT_SUBDIRS); do \
-		svn export $(SNAPSHOT_SVN)/$$x snapshot/$$x; \
+	-rm -R snapshot snapshot.tar snapshot.tar.gz snapshot.tar.bz2
+	git archive --prefix snapshot/ HEAD | tar x
+	for x in $(SNAPSHOT_RMDIRS); do \
+		rm -R snapshot/$$x; \
 	done
-
 	(cd snapshot/util  && swig -python -I. -I../include/astrometry util.i)
 	(cd snapshot/blind && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
 	(cd snapshot/sdss  && swig -python -I. cutils.i)
-
-	SSD=astrometry.net-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}'); \
+	SSD=astrometry.net-$(shell date -u "+%Y-%m-%d-%H:%M:%S")-$(shell git describe); \
 	mv snapshot $$SSD; \
 	tar cf snapshot.tar $$SSD; \
 	gzip --best -c snapshot.tar > $$SSD.tar.gz; \
 	bzip2 --best -c snapshot.tar > $$SSD.tar.bz2
 
+LIBKD_RELEASE_TEMP := libkd-$(RELEASE_VER)-temp
 LIBKD_RELEASE_DIR := libkd-$(RELEASE_VER)
 LIBKD_RELEASE_SUBDIRS := qfits-an libkd doc \
 	CREDITS LICENSE __init__.py setup-libkd.py Makefile \
@@ -271,46 +251,34 @@ LIBKD_RELEASE_SUBDIRS := qfits-an libkd doc \
 	include/astrometry/thread-specific.inc
 
 release-libkd:
-	-rm -R $(LIBKD_RELEASE_DIR) $(LIBKD_RELEASE_DIR).tar $(LIBKD_RELEASE_DIR).tar.gz $(LIBKD_RELEASE_DIR).tar.bz2
-	svn export --depth files $(RELEASE_SVN) $(LIBKD_RELEASE_DIR)
-	svn export --depth empty $(RELEASE_SVN)/util $(LIBKD_RELEASE_DIR)/util
-	svn export --depth empty $(RELEASE_SVN)/include $(LIBKD_RELEASE_DIR)/include
-	svn export --depth empty $(RELEASE_SVN)/include/astrometry $(LIBKD_RELEASE_DIR)/include/astrometry
+	-rm -R $(LIBKD_RELEASE_DIR) $(LIBKD_RELEASE_DIR).tar $(LIBKD_RELEASE_DIR).tar.gz $(LIBKD_RELEASE_DIR).tar.bz2 $(LIBKD_RELEASE_TEMP)
+	-mkdir -p $(LIBKD_RELEASE_DIR)
+	git archive --prefix $(LIBKD_RELEASE_TEMP)/ $(RELEASE_VER) | tar x
 	for x in $(LIBKD_RELEASE_SUBDIRS); do \
-		svn export $(RELEASE_SVN)/$$x $(LIBKD_RELEASE_DIR)/$$x; \
+		tar c -C '$(LIBKD_RELEASE_TEMP)' $$x | tar x -C $(LIBKD_RELEASE_DIR); \
 	done
 	tar cf $(LIBKD_RELEASE_DIR).tar $(LIBKD_RELEASE_DIR)
 	gzip --best -c $(LIBKD_RELEASE_DIR).tar > $(LIBKD_RELEASE_DIR).tar.gz
 	bzip2 --best $(LIBKD_RELEASE_DIR).tar
 
 LIBKD_SNAPSHOT_DIR := snapshot-libkd
+LIBKD_SNAPSHOT_TEMP := libkd-snapshot-temp
+LIBKD_SNAPSHOT_SUBDIRS := $(LIBKD_RELEASE_SUBDIRS)
 
 snapshot-libkd:
-	-rm -R $(LIBKD_SNAPSHOT_DIR)
-	svn export --depth empty $(SNAPSHOT_SVN) $(LIBKD_SNAPSHOT_DIR)
-	svn export --depth empty $(SNAPSHOT_SVN)/util $(LIBKD_SNAPSHOT_DIR)/util
-	svn export --depth empty $(SNAPSHOT_SVN)/include $(LIBKD_SNAPSHOT_DIR)/include
-	svn export --depth empty $(SNAPSHOT_SVN)/include/astrometry $(LIBKD_SNAPSHOT_DIR)/include/astrometry
-	for x in $(LIBKD_RELEASE_SUBDIRS); do \
-		svn export $(SNAPSHOT_SVN)/$$x $(LIBKD_SNAPSHOT_DIR)/$$x; \
+	-rm -R $(LIBKD_SNAPSHOT_DIR) $(LIBKD_SNAPSHOT_DIR).tar $(LIBKD_SNAPSHOT_DIR).tar.gz $(LIBKD_SNAPSHOT_DIR).tar.bz2 $(LIBKD_SNAPSHOT_TEMP)
+	-mkdir -p $(LIBKD_SNAPSHOT_DIR)
+	git archive --prefix $(LIBKD_SNAPSHOT_TEMP)/ HEAD | tar x
+	for x in $(LIBKD_SNAPSHOT_SUBDIRS); do \
+		tar c -C '$(LIBKD_SNAPSHOT_TEMP)' $$x | tar x -C $(LIBKD_SNAPSHOT_DIR); \
 	done
-
-	SSD=libkd-$(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}'); \
+	SSD=libkd-$(shell date -u "+%Y-%m-%d-%H:%M:%S")-$(shell git describe); \
 	rm -R $$SSD || true; \
 	mv $(LIBKD_SNAPSHOT_DIR) $$SSD; \
 	tar cf $(LIBKD_SNAPSHOT_DIR).tar $$SSD; \
 	gzip --best -c $(LIBKD_SNAPSHOT_DIR).tar > $$SSD.tar.gz; \
 	bzip2 --best -c $(LIBKD_SNAPSHOT_DIR).tar > $$SSD.tar.bz2
 .PHONY: snapshot-libkd
-
-tag-release:
-	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
-
-retag-release:
-	-svn rm svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER) \
-		-m "Remove old release tag in preparation for re-tagging"
-	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
-
 
 test:
 	$(MAKE) -C blind test
