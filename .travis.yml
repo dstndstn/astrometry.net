@@ -1,0 +1,7 @@
+# Travis-CI.org build script
+language: c
+compiler:
+  - gcc
+  - clang
+script: make && make py && make extra
+
