@@ -193,10 +193,12 @@ release:
 
 tag-release:
 	git tag -a -m "Tag version $(RELEASE_VER)" $(RELEASE_VER)
+	git push origin $(RELEASE_VER)
 
 retag-release:
 	-git tag -d $(RELEASE_VER)
 	git tag -a -m "Re-tag version $(RELEASE_VER)" $(RELEASE_VER)
+	git push origin $(RELEASE_VER)
 
 SNAPSHOT_RMDIRS := $(RELEASE_RMDIRS)
 
