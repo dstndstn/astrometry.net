@@ -4,6 +4,8 @@ Astrometry.net
 Automatic recognition of astronomical images; or standards-compliant
 astrometric metadata from data.
 
+Latest release: http://astrometry.net/downloads/astrometry.net-0.50pre.tar.gz
+
 > If you have astronomical imaging of the sky with celestial coordinates
 > you do not know—or do not trust—then Astrometry.net is for you. Input
 > an image and we'll give you back astrometric calibration meta-data,
