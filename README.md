@@ -1,7 +1,7 @@
 Astrometry.net
 ==============
 
-[https://travis-ci.org/dstndstn/astrometry.net.svg?branch=master](https://travis-ci.org/dstndstn/astrometry.net)
+[![Build Status](https://travis-ci.org/dstndstn/astrometry.net.png?branch=master)](https://travis-ci.org/dstndstn/astrometry.net)
 
 Automatic recognition of astronomical images; or standards-compliant
 astrometric metadata from data.
