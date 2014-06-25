@@ -334,6 +334,11 @@ report:
 	-pkg-config --cflags cairo
 	@echo "pkg-config --libs cairo: "
 	-pkg-config --libs cairo
+	@echo "SYSTEM_GSL: xxx$(SYSTEM_GSL)xxx"
+	@echo "pkg-config --atleast-version=1.14 gsl"
+	-pkg-config --atleast-version=1.14 gsl
+	@echo "pkg-config --atleast-version=1.14 gsl && echo \"yes\""
+	-pkg-config --atleast-version=1.14 gsl && echo yes
 
 report.txt: Makefile
 	$(MAKE) report > $@
