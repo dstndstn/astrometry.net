@@ -336,7 +336,7 @@ report:
 	-pkg-config --libs cairo
 	@echo "SYSTEM_GSL: xxx$(SYSTEM_GSL)xxx"
 	@echo "pkg-config --modversion gsl"
-	-pkg-config --atleast-version=1.14 gsl
+	-pkg-config --modversion gsl
 	@echo "pkg-config --atleast-version=1.14 gsl && echo \"yes\""
 	-pkg-config --atleast-version=1.14 gsl && echo yes
 
