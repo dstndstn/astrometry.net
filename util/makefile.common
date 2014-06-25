@@ -106,7 +106,7 @@ LINKTEST = $(CC) -x c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | grep
 DEFTEST = $(CC) -dM -E - < /dev/null 2> /dev/null | grep "$(STR)" > /dev/null
 
 ARG := -shared
-SHAREDLIBFLAGS_DEF := $(shell $(CCTEST))
+SHAREDLIBFLAGS_DEF := $(shell $(LINKTEST))
 SHAREDLIB_SUFFIX = so
 
 # Cygwin peculiarities:
