@@ -214,7 +214,7 @@ void test_tweak_1(CuTest* tc) {
 	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++) {
         printf("test_tweak_1: Expecting %.18g, got %.18g\n", d2[i], d1[i]);
         fflush(NULL);
-		CuAssertDblEquals(tc, d2[i], d1[i], 2e-18);
+		CuAssertDblEquals(tc, d2[i], d1[i], 3e-18);
     }
 	d1 = (double*)outsip->ap;
 	d2 = (double*)&(sip->ap);
