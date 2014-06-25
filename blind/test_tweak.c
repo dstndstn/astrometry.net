@@ -67,6 +67,8 @@ static void set_grid(int GX, int GY, tan_t* tan, sip_t* sip,
 			if(!tan_radec2pixelxy(tan, ra, dec, &x, &y)) perror("tan_radec2pixelxy==FALSE");
 			tanxy[2*(i*GX+j) + 0] = x;
 			tanxy[2*(i*GX+j) + 1] = y;
+			radec[2*(i*GX+j) + 0] = ra;
+			radec[2*(i*GX+j) + 1] = dec;
 		}
 
 }
@@ -83,6 +85,7 @@ static sip_t* run_test(CuTest* tc, sip_t* sip, int N, double* xy, double* radec)
 
 	printf("Input SIP:\n");
 	sip_print_to(sip, stdout);
+    fflush(NULL);
 
 	sxy = starxy_new(N, FALSE, FALSE);
 	starxy_set_xy_array(sxy, xy);
@@ -170,7 +173,26 @@ void test_tweak_1(CuTest* tc) {
 
 	sip_compute_inverse_polynomials(sip, 0, 0, 0, 0, 0, 0);
 
+    /*
+	printf("After compute_inverse_polynomials:\n");
+	sip_print_to(sip, stdout);
+    fflush(NULL);
+     */
+
 	set_grid(GX, GY, tan, sip, origxy, radec, xy, gridx, gridy);
+
+    /*{
+        int i,j;
+        printf("RA,Dec\n");
+        for (i=0; i<GY; i++) {
+            for (j=0; j<GX; j++) {
+                fflush(NULL);
+                printf("gy %i gyx %i: %g %g\n", i, j, radec[2*(i*GX+j)],
+                       radec[2*(i*GX+j) + 1]);
+                fflush(NULL);
+            }
+        }
+     }*/
 
 	outsip = run_test(tc, sip, GX*GY, xy, radec);
 
@@ -189,8 +211,11 @@ void test_tweak_1(CuTest* tc) {
 		CuAssertDblEquals(tc, d2[i], d1[i], 1e-13);
 	d1 = (double*)outsip->b;
 	d2 = (double*)&(sip->b);
-	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
-		CuAssertDblEquals(tc, d2[i], d1[i], 1e-18);
+	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++) {
+        printf("test_tweak_1: Expecting %.18g, got %.18g\n", d2[i], d1[i]);
+        fflush(NULL);
+		CuAssertDblEquals(tc, d2[i], d1[i], 2e-18);
+    }
 	d1 = (double*)outsip->ap;
 	d2 = (double*)&(sip->ap);
 	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
@@ -332,8 +357,11 @@ static void tst_tweak_n(CuTest* tc, int run, int GX, int GY) {
 			CuAssertDblEquals(tc, d2[i], d1[i], 6e-7);
 		d1 = (double*)outsip->b;
 		d2 = (double*)&(sip->b);
-		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
-			CuAssertDblEquals(tc, d2[i], d1[i], 2e-7);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++) {
+            printf("test_tweak_2, run 2: Expecting %.18g, got %.18g\n", d2[i], d1[i]);
+            fflush(NULL);
+			CuAssertDblEquals(tc, d2[i], d1[i], 3e-7);
+        }
 		d1 = (double*)outsip->ap;
 		d2 = (double*)&(sip->ap);
 		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
@@ -350,21 +378,30 @@ static void tst_tweak_n(CuTest* tc, int run, int GX, int GY) {
 		double *d1, *d2;
 		d1 = (double*)outsip->a;
 		d2 = (double*)&(sip->a);
-		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++) {
 			// rather large error, no?
-			CuAssertDblEquals(tc, d2[i], d1[i], 6e-7);
+            printf("test_tweak_2, run 3: Expecting %.18g, got %.18g\n", d2[i], d1[i]);
+            fflush(NULL);
+			CuAssertDblEquals(tc, d2[i], d1[i], 7e-7);
+        }
 		d1 = (double*)outsip->b;
 		d2 = (double*)&(sip->b);
-		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
-			CuAssertDblEquals(tc, d2[i], d1[i], 1e-6);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++) {
+            printf("test_tweak_2, run 3b: Expecting %.18g, got %.18g\n", d2[i], d1[i]);
+            fflush(NULL);
+			CuAssertDblEquals(tc, d2[i], d1[i], 2e-6);
+        }
 		d1 = (double*)outsip->ap;
 		d2 = (double*)&(sip->ap);
 		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
 			CuAssertDblEquals(tc, d2[i], d1[i], 1e-6);
 		d1 = (double*)outsip->bp;
 		d2 = (double*)&(sip->bp);
-		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
-			CuAssertDblEquals(tc, d2[i], d1[i], 1e-6);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++) {
+            printf("test_tweak_2, run 3c: Expecting %.18g, got %.18g\n", d2[i], d1[i]);
+            fflush(NULL);
+			CuAssertDblEquals(tc, d2[i], d1[i], 2e-6);
+        }
 		CuAssertIntEquals(tc, sip->a_order, outsip->a_order);
 		CuAssertIntEquals(tc, sip->b_order, outsip->b_order);
 		CuAssertIntEquals(tc, sip->ap_order, outsip->ap_order);
