@@ -380,9 +380,12 @@ ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log \
 	test_scamp_catalog test_starutil test_svd test_ioutils \
 	test_anwcs test_sip-utils test_errors test_multiindex \
-	test_convolve_image test_qsort_r test_wcs test_big_tables test_quadfile \
+	test_convolve_image test_qsort_r test_wcs test_big_tables \
 	test_dfind test_ctmf test_dsmooth test_dcen3x3 test_simplexy \
 	test_fit_wcs
+
+# test_quadfile -- takes a long time!
+
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(ANFILES_SLIB)
 ALL_TEST_EXTRA_LDFLAGS = 
@@ -412,12 +415,12 @@ ALL_TEST_EXTRA_OBJS += dcen3x3.o
 test_simplexy: $(SIMPLEXY_OBJ) $(ANFILES_SLIB)
 ALL_TEST_EXTRA_OBJS += $(SIMPLEXY_OBJ)
 
-NORMAL_TESTS := test_quadfile test_big_tables test_qsort_r \
+NORMAL_TESTS := test_big_tables test_qsort_r \
 	test_convolve_image test_multiindex test_errors test_sip-utils \
 	test_anwcs test_wcs test_fitstable test_fitsbin \
 	test_fitsioutils test_xylist test_rdlist test_bl test_bt test_endian \
 	test_healpix test_log test_ioutils test_scamp_catalog test_starutil \
-	test_svd test_fit_wcs
+	test_svd test_fit_wcs test_quadfile
 
 $(NORMAL_TESTS): $(ANFILES_SLIB)
 
