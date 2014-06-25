@@ -103,6 +103,10 @@ struct tyc {
     double ra;
     double dec;
 
+    float mag_BT;
+    float mag_VT;
+    float mag_HP;
+
     // From X-ref
     int hd;
     // number of Tycho-2 cross-refs for this star.
@@ -176,6 +180,11 @@ int main(int argc, char** args) {
     dl* ras;
     dl* decs;
     dl* hds;
+
+    fl* mag1s;
+    fl* mag2s;
+    fl* mag3s;
+
     int nbad = 0;
     int nox = 0;
 
@@ -271,6 +280,9 @@ int main(int argc, char** args) {
             tycstars[i].tyc3 = te->tyc3;
             tycstars[i].ra   = te->ra;
             tycstars[i].dec  = te->dec;
+            tycstars[i].mag_BT = te->mag_BT;
+            tycstars[i].mag_VT = te->mag_VT;
+            tycstars[i].mag_HP = te->mag_HP;
         }
         tycho2_fits_close(tyc);
 
@@ -336,11 +348,18 @@ int main(int argc, char** args) {
     decs = dl_new(1024);
     hds = il_new(1024);
 
+    mag1s = fl_new(1024);
+    mag2s = fl_new(1024);
+    mag3s = fl_new(1024);
+
     printf("Reading HD catalog...\n");
     for (;;) {
         char buf[1024];
         double ra, dec;
         int hd;
+        float mag1, mag2, mag3;
+
+        mag1 = mag2 = mag3 = 0.0;
 
         if (!fgets(buf, sizeof(buf), f)) {
             if (ferror(f)) {
@@ -371,12 +390,19 @@ int main(int argc, char** args) {
                 } else {
                     ra = s->ra;
                     dec = s->dec;
+
+                    mag1 = s->mag_VT;
+                    mag2 = s->mag_BT;
+                    mag3 = s->mag_HP;
                 }
             }
 
             dl_append(ras, ra);
             dl_append(decs, dec);
             il_append(hds, hd);
+            fl_append(mag1s, mag1);
+            fl_append(mag2s, mag2);
+            fl_append(mag3s, mag3);
         }
     }
     fclose(f);
@@ -433,6 +459,41 @@ int main(int argc, char** args) {
         ERROR("Failed to write kdtree");
         exit(-1);
     }
+
+    // Write mags as tag-along table.
+    {
+        fitstable_t* tag;
+        tag = fitstable_open_for_appending(outfn);
+        if (!tag) {
+            ERROR("Failed to open kd-tree file for appending");
+            exit(-1);
+        }
+
+        fitstable_add_write_column(tag, fitscolumn_float_type(), "MAG_VT", "");
+        fitstable_add_write_column(tag, fitscolumn_float_type(), "MAG_BT", "");
+        fitstable_add_write_column(tag, fitscolumn_float_type(), "MAG_HP", "");
+
+        if (fitstable_write_header(tag)) {
+            ERROR("Failed to write tag-along header");
+            exit(-1);
+        }
+
+        for (i=0; i<N; i++) {
+            fitstable_write_row(tag, fl_get(mag1s, i), fl_get(mag2s, i),
+                                fl_get(mag3s, i));
+        }
+        if (fitstable_fix_header(tag)) {
+            ERROR("Failed to fix tag-along header");
+            exit(-1);
+        }
+        if (fitstable_close(tag)) {
+            ERROR("Failed to close tag-along data");
+            exit(-1);
+        }
+    }
+    fl_free(mag1s);
+    fl_free(mag2s);
+    fl_free(mag3s);
 
     printf("Done.\n");
 

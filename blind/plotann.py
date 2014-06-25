@@ -51,6 +51,19 @@ def get_annotations(wcs, opt):
                 continue
             annobjs.append((T.ra[i], T.dec[i], 'uzc', ['UZC %s' % T.zname[i]]))
 
+    if opt.hipcat:
+        # FIXME -- is this fast enough, or do we need to cut these
+        # targets first?
+        T = fits_table(opt.hipcat)
+        for i in range(len(T)):
+            if not wcs.is_inside(T.ra[i], T.dec[i]):
+                continue
+            if opt.hiplabel:
+                txt = ['HIP %i (%.1f)' % (T.hip[i], T.vmag[i])]
+            else:
+                txt = ['']
+            annobjs.append((T.ra[i], T.dec[i], 'HIP', txt))
+            
     if opt.abellcat:
         T = fits_table(opt.abellcat)
         for i in range(len(T)):
@@ -199,6 +212,11 @@ if __name__ == '__main__':
     parser.add_option('--abellcat', dest='abellcat',
                       help='Path to Abell catalog abell-all.fits')
 
+    parser.add_option('--hipcat', dest='hipcat',
+                      help='Path to Hipparcos catalog hip.fits')
+    parser.add_option('--hiplabel', action='store_true',
+                      help='Label Hipparcos stars')
+    
     parser.add_option('--ngccat', dest='ngccat',
                       help='Path to NGC2000 catalog ngc2000.fits -- ONLY USED FOR JSON OUTPUT!')
     parser.add_option('--ngcnames', dest='ngcnames',

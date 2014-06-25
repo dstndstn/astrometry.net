@@ -816,6 +816,9 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
                 #     pass
                 if d in valmap:
                     dat[i] = valmap[d]
+                # null out blank values
+                if d is not None and len(d.strip()) == 0:
+                    dat[i] = valmap['']
         t2 = time.clock()
                     
         # trim to valid rows
