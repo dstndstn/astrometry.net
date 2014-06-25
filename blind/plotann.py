@@ -225,7 +225,7 @@ if __name__ == '__main__':
                       help='Path to IC2000 catalog ic2000.fits -- ONLY USED FOR JSON OUTPUT!')
 
     parser.add_option('--ngcfrac', dest='ngcfrac', type=float, default=0.,
-                      help='Minimum fraction of image size to plot NGC/IC objs')
+                      help='Minimum fraction of image size to plot NGC/IC objs; default %default')
 
     parser.add_option('--brightcat', dest='brightcat',
                       help='Path to bright-star catalog -- ONLY USED FOR JSON OUTPUT!')
