@@ -61,6 +61,10 @@ void test_sorting(CuTest* tc) {
 	CuAssertPtrNotNull(tc, s2->background);
 
 	for (i=0; i<N; i++) {
+        fflush(NULL);
+        printf("Testing point %i\n", i);
+        fflush(NULL);
+
 		CuAssertDblEquals(tc, s->x[trueorder[i]], s2->x[i], 1e-6);
 		CuAssertDblEquals(tc, s->y[trueorder[i]], s2->y[i], 1e-6);
 		CuAssertDblEquals(tc, s->flux[trueorder[i]], s2->flux[i], 1e-6);

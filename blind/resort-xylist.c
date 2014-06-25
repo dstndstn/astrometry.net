@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/param.h>
 
 // DEBUG
 #include <sys/mman.h>
@@ -130,11 +131,10 @@ int resort_xylist(const char* infn, const char* outfn,
             goto bailout;
         }
 
-		debug("First 10 rows of input table:\n");
-		for (i=0; i<10; i++)
-			debug("flux %g, background %g\n", flux[i], back[i]);
-
         N = fitstable_nrows(tab);
+		debug("First rows of input table:\n");
+		for (i=0; i<MIN(10, N); i++)
+			debug("flux %g, background %g\n", flux[i], back[i]);
 
         // set back = flux + back (ie, non-background-subtracted flux)
 		for (i=0; i<N; i++)
