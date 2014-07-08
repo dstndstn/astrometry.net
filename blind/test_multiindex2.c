@@ -44,10 +44,10 @@ void test_solve_multiindex(CuTest* ct) {
 	log_init(LOG_VERB);
 
 	fns = sl_new(4);
-	sl_append(fns, "t10.ind");
-	sl_append(fns, "t11.ind");
-	sl_append(fns, "t12.ind");
-	mi = multiindex_open("t10.skdt", fns, 0);
+	sl_append(fns, "../util/t10.ind");
+	sl_append(fns, "../util/t11.ind");
+	sl_append(fns, "../util/t12.ind");
+	mi = multiindex_open("../util/t10.skdt", fns, 0);
 
 	printf("Got %i indices\n", multiindex_n(mi));
 	for (i=0; i<multiindex_n(mi); i++) {
@@ -63,7 +63,7 @@ void test_solve_multiindex(CuTest* ct) {
 	s->funits_lower = 5.0;
 	s->funits_upper = 15.0;
 
-	xy = xylist_open("t1.xy");
+	xy = xylist_open("../util/t1.xy");
 	if (!xy) {
 		ERROR("Failed to open xylist\n");
 		CuFail(ct, "xylist");

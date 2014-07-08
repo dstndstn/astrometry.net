@@ -307,7 +307,10 @@ solver_test_2.o: solver.c
 
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_matchfile test_blindutils \
-	test_resort-xylist test_tweak test_multiindex2 test_codefile
+	test_resort-xylist test_tweak test_multiindex2
+
+#test_codefile -- takes a long time
+
 $(ALL_TEST_FILES): $(SLIB)
 
 ALL_TEST_EXTRA_OBJS :=

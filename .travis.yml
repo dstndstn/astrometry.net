@@ -1,0 +1,16 @@
+# Travis-CI.org build script
+language: c
+compiler:
+  - gcc
+  - clang
+
+# Apparently the wcslib version they have (4.8.3) doesn't use pkg-config
+# And netpbm include files are right in /usr/include, not in /usr/include/netpbm
+
+#script: ln -s /usr/include netpbm && make NETPBM_INC="-I$(pwd)" WCSLIB_INC="-I/usr/include/wcslib-4.8.3" WCSLIB_LIB="-lwcs" && make py NETPBM_INC="-I$(pwd)" WCSLIB_INC="-I/usr/include/wcslib-4.8.3" WCSLIB_LIB="-lwcs" && make extra NETPBM_INC="-I$(pwd)" WCSLIB_INC="-I/usr/include/wcslib-4.8.3" WCSLIB_LIB="-lwcs" && make test NETPBM_INC="-I$(pwd)" WCSLIB_INC="-I/usr/include/wcslib-4.8.3" WCSLIB_LIB="-lwcs" && (cd util; ./test) && (cd blind; ./test) && (cd libkd; ./test)
+
+script: export NETPBM_INC="-I$(pwd)"; export WCSLIB_INC="-I/usr/include/wcslib-4.8.3"; export WCSLIB_LIB="-lwcs" && ln -s /usr/include netpbm && make && make py && make extra && make test && (cd util; ./test) && (cd blind; ./test) && (cd libkd; ./test)
+
+install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y libnetpbm10 libnetpbm10-dev wcslib-dev libcfitsio3 libcfitsio3-dev python-numpy swig gsl-bin libgsl0-dev

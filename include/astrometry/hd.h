@@ -31,7 +31,7 @@
 
  Or the hard way (which involves downloading > 500 MB of Tycho-2 catalog from Denmark!):
 
- make hd.fits   (in the astrometry.net util/ directory)
+ make hd.fits   (in the astrometry.net catalog/ directory)
 
  **/
 

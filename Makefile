@@ -15,7 +15,6 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-
 # To set the install directory:
 #   make install INSTALL_DIR=/path/to/dir
 # or see util/makefile.common
@@ -335,6 +334,11 @@ report:
 	-pkg-config --cflags cairo
 	@echo "pkg-config --libs cairo: "
 	-pkg-config --libs cairo
+	@echo "SYSTEM_GSL: xxx$(SYSTEM_GSL)xxx"
+	@echo "pkg-config --modversion gsl"
+	-pkg-config --modversion gsl
+	@echo "pkg-config --atleast-version=1.14 gsl && echo \"yes\""
+	-pkg-config --atleast-version=1.14 gsl && echo yes
 
 report.txt: Makefile
 	$(MAKE) report > $@
