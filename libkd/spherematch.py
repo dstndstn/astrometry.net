@@ -88,6 +88,8 @@ def cluster_radec(ra, dec, R, singles=False):
 
 	Returns a list of lists of indices that are connected,
 	EXCLUDING singletons.
+
+    If *singles* is *True*, also returns the indices of singletons.
 	'''
 	I,J,d = match_radec(ra, dec, ra, dec, R, notself=True)
 
