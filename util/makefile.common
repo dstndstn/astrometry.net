@@ -119,7 +119,13 @@ ifneq (CYGWIN,$(findstring CYGWIN,$(UNAME)))
 endif 
 
 # Get the library suffix used by python distutils (.dll on cygwin, .so elsewhere)
-PYTHON_SO_EXT := $(shell python -c "from distutils import sysconfig; print sysconfig.get_config_var('SO')")
+PYTHON_SO_EXT ?= $(shell python -c "from distutils import sysconfig; print sysconfig.get_config_var('SO')")
+# Set a default, otherwise terrible things happen:
+#   in util/Makefile : clean: rm -f *$(PYTHON_SO_EXT)
+ifeq ($(PYTHON_SO_EXT)x,x)
+  PYTHON_SO_EXT := .so
+endif
+
 
 ARG := -ffinite-math-only
 FLAGS_DEF += $(shell $(CCTEST))

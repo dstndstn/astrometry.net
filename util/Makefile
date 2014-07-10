@@ -442,6 +442,9 @@ clean:
 		cairoutils.dep makefile.os-features *.o *~ *.dep *$(PYTHON_SO_EXT) deps \
 		os-features.log os-features-makefile.log report.txt
 
+check:
+	echo PYTHON_SO_EXT is $(PYTHON_SO_EXT)
+
 # Try to compensate for clang's lack of -MG to handle generated header
 # files by making everything depend explicitly on os-features-config.h.
 
