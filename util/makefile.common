@@ -94,7 +94,8 @@ TMPFILE := cc-out.tmp
 #CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - < /dev/null > /dev/null 2> /dev/null && echo $(ARG)
 
 # On MacOS, unrecognized gcc args don't cause it to return 1... look for error messages on stderr.
-CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | grep "unrecognized\|invalid\|error:\|warning:" > /dev/null || echo $(ARG)
+# Intel icc/13 says: icc: command line warning #10006: ignoring unknown option '-fno-signaling-nans'
+CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | grep "unrecognized\|invalid\|error:\|warning" > /dev/null || echo $(ARG)
 
 LINKTEST = $(CC) -x c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | grep "unrecognized\|invalid\|error:\|warning:" > /dev/null || echo $(ARG)
 
