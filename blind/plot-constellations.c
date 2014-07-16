@@ -40,6 +40,7 @@
 #include "ngc2000.h"
 #include "ngcic-accurate.h"
 #include "constellations.h"
+#include "constellation-boundaries.h"
 #include "brightstars.h"
 #include "hd.h"
 #include "fitsioutils.h"
@@ -195,6 +196,16 @@ static void add_text(cairos_t* cairos,
     cairo_restore(cairos->shapesmask);
 
 }
+
+static void color_for_radec(double ra, double dec, float* r, float* g, float* b) {
+    int con = constellation_containing(ra, dec);
+    srand(con);
+    *r = ((rand() % 128) + 127) / 255.0;
+    *g = ((rand() % 128) + 127) / 255.0;
+    *b = ((rand() % 128) + 127) / 255.0;
+}
+
+
 
 int main(int argc, char** args) {
     int c;
@@ -438,8 +449,6 @@ int main(int argc, char** args) {
         exit(-1);
     }
 
-    srand(0);
-
     if (!justlist) {
         /*
          Cairo layers:
@@ -554,7 +563,7 @@ int main(int argc, char** args) {
             il* lines;
             il* uniqstars;
             il* inboundstars;
-            unsigned char r,g,b;
+            float r,g,b;
             int Ninbounds;
             int Nunique;
             cairo_text_extents_t textents;
@@ -590,16 +599,23 @@ int main(int argc, char** args) {
                 continue;
             }
 
-            if (!justlist) {
-                r = (rand() % 128) + 127;
-                g = (rand() % 128) + 127;
-                b = (rand() % 128) + 127;
-                cairo_set_source_rgba(cairo, r/255.0,g/255.0,b/255.0,0.8);
+            // Set the color based on the location of the first in-bounds star.
+            // This is a hack -- we have two different constellation
+            // definitions with different numbering schemes!
+            if (!justlist && (il_size(inboundstars) > 0)) {
+                // This is helpful for videos: ensuring that the same
+                // color is chosen for a constellation in each frame.
+                int star = il_get(inboundstars, 0);
+                constellations_get_star_radec(star, &ra, &dec);
+                color_for_radec(ra, dec, &r,&g,&b);
+                cairo_set_source_rgba(cairoshapes, r,g,b,0.8);
+                cairo_set_line_width(cairoshapes, cw);
+                cairo_set_source_rgba(cairo, r,g,b,0.8);
                 cairo_set_line_width(cairo, cw);
             }
 
             // Draw circles around each star.
-            // Also find center of mass (of the in-bounds stars)
+            // Find center of mass (of the in-bounds stars)
             cmass[0] = cmass[1] = cmass[2] = 0.0;
             for (i=0; i<il_size(inboundstars); i++) {
                 double xyz[3];
@@ -647,7 +663,6 @@ int main(int argc, char** args) {
 
             // If the label will be off-screen, move it back on.
             cairo_text_extents(cairo, shortname, &textents);
-
 			
             if (px < 0)
                 px = 0;
@@ -724,6 +739,7 @@ int main(int argc, char** args) {
             pl_append(brightstars, bs);
         }
 
+        // keep only the Nbright brightest?
         if (Nbright && (pl_size(brightstars) > Nbright)) {
             pl_sort(brightstars, sort_by_mag);
             pl_remove_index_range(brightstars, Nbright, pl_size(brightstars)-Nbright);
@@ -772,6 +788,14 @@ int main(int argc, char** args) {
                 printf("The star %s (%s)\n", bs->common_name, bs->name);
             else
                 printf("The star %s\n", bs->name);
+
+            if (!justlist) {
+                float r,g,b;
+                // set color based on RA,Dec to match constellations above.
+                color_for_radec(bs->ra, bs->dec, &r,&g,&b);
+                cairo_set_source_rgba(cairoshapes, r,g,b,0.8);
+                cairo_set_source_rgba(cairo, r,g,b, 0.8);
+            }
 
             if (!justlist)
                 add_text(cairos, text, px + label_offset, py + dy,
