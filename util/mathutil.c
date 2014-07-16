@@ -31,6 +31,37 @@
 #include "mathutil.inc"
 #undef InlineDefine
 
+#include "bl.h"
+
+/**
+ Returns 1 if the given point is inside the given polygon
+ (listed as x0,y0, x1,y1, etc).
+ */
+int point_in_polygon(double x, double y, const dl* polygon) {
+    size_t i;
+    size_t N = dl_size(polygon) / 2;
+    int inside = 0;
+    for (i=0; i<N; i++) {
+        size_t j = (i - 1 + N) % N;
+        double xi, xj, yi, yj;
+        yi = dl_get_const(polygon, i*2+1);
+        yj = dl_get_const(polygon, j*2+1);
+        if (yi == yj)
+            continue;
+        xi = dl_get_const(polygon, i*2+0);
+        xj = dl_get_const(polygon, j*2+0);
+        if (
+            ( ((yi <= y) && (y < yj)) ||
+              ((yj <= y) && (y < yi)) ) &&
+            (x < (xi + ((xj - xi) * (y - yi) / (yj - yi))))
+            ) {
+            // toggle
+            inside = 1-inside;
+        }
+    }
+    return inside;
+}
+
 int get_output_image_size(int W, int H, int S,
 						  int edgehandling,
 						  int* newW, int* newH) {

@@ -56,35 +56,6 @@ static boundarypoint_t boundaries[] = {
 };
 
 /**
- Returns 1 if the given point is inside the given polygon
- (listed as x0,y0, x1,y1, etc).
- */
-int point_in_polygon(double x, double y, dl* polygon) {
-    size_t i;
-    size_t N = dl_size(polygon) / 2;
-    int inside = 0;
-    for (i=0; i<N; i++) {
-        size_t j = (i - 1 + N) % N;
-        double xi, xj, yi, yj;
-        yi = dl_get(polygon, i*2+1);
-        yj = dl_get(polygon, j*2+1);
-        if (yi == yj)
-            continue;
-        xi = dl_get(polygon, i*2+0);
-        xj = dl_get(polygon, j*2+0);
-        if (
-            ( ((yi <= y) && (y < yj)) ||
-              ((yj <= y) && (y < yi)) ) &&
-            (x < (xi + ((xj - xi) * (y - yi) / (yj - yi))))
-            ) {
-            // toggle
-            inside = 1-inside;
-        }
-    }
-    return inside;
-}
-
-/**
  Returns the "enum constellations" number of the constellation
  containing the given RA,Dec point, or -1 if none such is found.
  */
@@ -93,15 +64,13 @@ int constellation_containing(double ra, double dec) {
     int N = sizeof(boundaries) / sizeof(boundarypoint_t);
     dl* poly = dl_new(256);
     double xyz[3];
-
     radecdeg2xyzarr(ra, dec, xyz);
 
-    printf("%i boundary points, %i constellations (%i to %i)\n", N, CON_FINAL,
-           CON_AND, CON_VUL);
+    //printf("%i boundary points, %i constellations (%i to %i)\n", N,
+    //CON_FINAL, CON_AND, CON_VUL);
     for (i=0; i<CON_FINAL; i++) {
         int j;
         anbool con_ok;
-
         con_ok = TRUE;
         dl_remove_all(poly);
         // Find start and end of this constellation, and project
@@ -123,7 +92,9 @@ int constellation_containing(double ra, double dec) {
         }
         if (!con_ok)
             continue;
-
+        // Now we have projected all the boundary points of this
+        // constellation about the query point, which is (0,0) by
+        // definition.  Does the boundary polygon contain (0,0)?
         if (point_in_polygon(0., 0., poly))
             return i;
     }

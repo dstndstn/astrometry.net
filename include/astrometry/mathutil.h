@@ -21,6 +21,10 @@
 
 #include "astrometry/keywords.h"
 
+#include "bl.h"
+
+int point_in_polygon(double x, double y, const dl* polygon);
+
 /*
   Given a point "pt", computes two unit vectors that are tangent
   to the point and perpendicular to each other.
