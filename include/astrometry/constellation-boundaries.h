@@ -1,3 +1,5 @@
+#ifndef CONSTELLATION_BOUNDARIES_H
+#define CONSTELLATION_BOUNDARIES_H
 
 /**
  Returns the "enum constellations" number of the constellation
@@ -97,3 +99,5 @@ enum constellations {
     CON_VUL,
     CON_FINAL,
 };
+
+#endif
