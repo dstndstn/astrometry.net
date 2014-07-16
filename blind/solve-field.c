@@ -615,7 +615,7 @@ static void after_solved(augment_xylist_t* axy,
 		}
 	}
 
-	if (makeplots && axy->imagefn && file_exists(axy->wcsfn) && axy->pnmfn) {
+	if (makeplots && file_readable(axy->wcsfn)) {
 		logmsg("Creating annotation plot...\n");
 		if (plot_annotations(axy, me, verbose, sf->ngcfn, plotscale, bgfn)) {
 			ERROR("Plot annotations failed.");
@@ -721,7 +721,8 @@ int main(int argc, char** args) {
     anbool skip_solved = FALSE;
     anbool makeplots = TRUE;
 	double plotscale = 1.0;
-	char* bgfn = NULL;
+	char* inbgfn = NULL;
+    char* bgfn = NULL;
     char* me;
     anbool verbose = FALSE;
     int loglvl = LOG_MSG;
@@ -827,7 +828,7 @@ int main(int argc, char** args) {
 			plotscale = atof(optarg);
 			break;
 		case '\x85':
-			bgfn = optarg;
+			inbgfn = optarg;
 			break;
 		case '\x87':
 			allaxy->assume_fits_image = TRUE;
@@ -1102,6 +1103,10 @@ int main(int argc, char** args) {
             axy->verifywcs = newlist;
         }
 
+        // ... and plot-bg
+        if (inbgfn)
+            asprintf_safe(&bgfn, inbgfn, base);
+
         if (axy->solvedinfn && axy->solvedfn && streq(axy->solvedfn, axy->solvedinfn)) {
             // solved input and output files are the same: don't delete the input!
             sl_remove_string(outfiles, axy->solvedfn);
@@ -1295,6 +1300,7 @@ int main(int argc, char** args) {
 		if (!engine_batch) {
 			free(axy->fitsimgfn);
 			free(axy->solvedinfn);
+            free(bgfn);
 			// erm.
 			if (axy->verifywcs != allaxy->verifywcs)
 				sl_free2(axy->verifywcs);
