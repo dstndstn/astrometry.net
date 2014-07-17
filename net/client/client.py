@@ -56,11 +56,6 @@ class Client(object):
             m2.add_header('Content-disposition',
                           'form-data; name="file"; filename="%s"' % file_args[0])
 
-            #msg.add_header('Content-Disposition', 'attachment',
-            # filename='bud.gif')
-            #msg.add_header('Content-Disposition', 'attachment',
-            # filename=('iso-8859-1', '', 'FuSballer.ppt'))
-
             mp = MIMEMultipart('form-data', None, [m1, m2])
 
             # Makie a custom generator to format it the way we need.
