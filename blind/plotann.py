@@ -267,7 +267,9 @@ if __name__ == '__main__':
                       help='Plot x,y markers')
     parser.add_option('--quad', dest='quad', action='append', default=[],
                       help='Plot quad from given match file')
-
+    parser.add_option('--pastel', action='store_true',
+                      help='Pastel colors for constellations and bright stars?')
+    
     opt,args = parser.parse_args()
     dojson = False
     if len(args) == 3:
@@ -330,6 +332,10 @@ if __name__ == '__main__':
     ann.constellation_labels_long = opt.const
     ann.bright = opt.bright
     ann.ngc_fraction = opt.ngcfrac
+    if opt.pastel:
+        ann.constellation_pastel = True
+        ann.bright_pastel = True
+        print ann.constellation_pastel
     if opt.hdcat:
         ann.HD = True
         ann.HD_labels = True

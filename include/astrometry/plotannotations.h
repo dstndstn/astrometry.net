@@ -11,9 +11,16 @@ struct annotation_args {
 	anbool constellation_markers;
 	anbool constellation_labels;
 	anbool constellation_labels_long;
+    // don't *exactly* connect the stars, leave a gap of this many pixels.
+    // probably want this = plotstuff marker size
+    float  constellation_lines_offset;
+
+    anbool constellation_pastel;
 
 	anbool bright;
     anbool bright_labels;
+
+    anbool bright_pastel;
 
 	anbool HD;
 	anbool HD_labels;

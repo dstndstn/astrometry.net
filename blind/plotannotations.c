@@ -37,6 +37,7 @@
 #include "sip-utils.h"
 #include "mathutil.h"
 #include "constellations.h"
+#include "constellation-boundaries.h"
 
 DEFINE_PLOTTER(annotations);
 
@@ -149,6 +150,42 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 	}
 }
 
+static void plot_offset_line_rd(cairo_t* cairo, plot_args_t* pargs,
+                                double r1, double d1,
+                                double r2, double d2,
+                                double offset1, double offset2) {
+    double x1,x2,y1,y2;
+    double dx, dy;
+    double dist;
+    double gapfrac;
+    if (!cairo)
+        cairo = pargs->cairo;
+    if (!plotstuff_radec2xy(pargs, r1,d1, &x1,&y1) ||
+        !plotstuff_radec2xy(pargs, r2,d2, &x2,&y2)) {
+        ERROR("failed to convert RA,Dec to x,y for plotting line seg");
+        return;
+    }
+    dx = x2 - x1;
+    dy = y2 - y1;
+    dist = hypot(dx, dy);
+    gapfrac = offset1 / dist;
+    //printf("(x1,y1)-(x2,y2) (%f, %f) -- (%f, %f)\n", x1,y1,x2,y2);
+    //printf("Offset to:\n");
+    //printf("                (%f, %f) -- ", x1 + dx*gapfrac, y1 + dy*gapfrac);
+    cairo_move_to(cairo, x1 + dx*gapfrac, y1 + dy*gapfrac);
+    gapfrac = offset2 / dist;
+    cairo_line_to(cairo, x1 + dx*(1.0-gapfrac), y1 + dy*(1.0-gapfrac));
+    //printf("(%f, %f)\n", x1 + dx*(1.0-gapfrac), y1 + dy*(1.0-gapfrac));
+}
+
+static void color_for_radec(double ra, double dec, float* r, float* g, float* b) {
+    int con = constellation_containing(ra, dec);
+    srand(con);
+    *r = ((rand() % 128) + 127) / 255.0;
+    *g = ((rand() % 128) + 127) / 255.0;
+    *b = ((rand() % 128) + 127) / 255.0;
+}
+
 static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 	int i, N;
 	double ra,dec,radius;
@@ -195,6 +232,15 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 			logverb("  max radius: %g\n", distsq2deg(maxr2));
 			continue;
 		}
+
+        if (ann->constellation_pastel) {
+            float r,g,b;
+            xyzarr2radecdeg(xyzc, &ra, &dec);
+            color_for_radec(ra, dec, &r,&g,&b);
+            plotstuff_set_rgba2(pargs, r,g,b, 0.8);
+            plotstuff_builtin_apply(cairo, pargs);
+        }
+
 		// Phew, plot it.
 		if (ann->constellation_lines) {
 			rds = constellations_get_lines_radec(i);
@@ -203,6 +249,7 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 			for (j=0; j<dl_size(rds)/4; j++) {
 				double r1,d1,r2,d2;
 				double r3,d3,r4,d4;
+                double off = ann->constellation_lines_offset;
 				r1 = dl_get(rds, j*4+0);
 				d1 = dl_get(rds, j*4+1);
 				r2 = dl_get(rds, j*4+2);
@@ -211,13 +258,10 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 											 &r3, &d3, &r4, &d4)) {
 					logverb("Discontinuous: %g,%g -- %g,%g\n", r1, d1, r2, d2);
 					logverb("  %g,%g == %g,%g\n", r3,d3, r4,d4);
-					plotstuff_move_to_radec(pargs, r1, d1);
-					plotstuff_line_to_radec(pargs, r3, d3);
-					plotstuff_move_to_radec(pargs, r4, d4);
-					plotstuff_line_to_radec(pargs, r2, d2);
+                    plot_offset_line_rd(NULL, pargs, r1,d1,r3,d3, off, 0.);
+                    plot_offset_line_rd(NULL, pargs, r4,d4,r2,d2, 0., off);
 				} else {
-					plotstuff_move_to_radec(pargs, r1, d1);
-					plotstuff_line_to_radec(pargs, r2, d2);
+                    plot_offset_line_rd(NULL, pargs, r1,d1,r2,d2, off, off);
 				}
 				plotstuff_stroke(pargs);
 			}
@@ -226,7 +270,8 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 
 		if (ann->constellation_labels ||
 			ann->constellation_markers) {
-			// Put the label at the center of mass of the stars that are in-bounds
+			// Put the label at the center of mass of the stars that
+			// are in-bounds
 			int Nin = 0;
 			stars = constellations_get_unique_stars(i);
 			xyzc[0] = xyzc[1] = xyzc[2] = 0.0;
@@ -236,9 +281,8 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 				constellations_get_star_radec(il_get(stars, j), &ra, &dec);
 				if (!anwcs_radec_is_inside_image(pargs->wcs, ra, dec))
 					continue;
-				if (ann->constellation_markers) {
+				if (ann->constellation_markers)
 					plotstuff_marker_radec(pargs, ra, dec);
-				}
 				radecdeg2xyzarr(ra, dec, xyzj);
 				for (k=0; k<3; k++)
 					xyzc[k] += xyzj[k];
@@ -270,7 +314,8 @@ static void plot_brightstars(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann)
 		const brightstar_t* bs = bright_stars_get(i);
 		if (!plotstuff_radec2xy(pargs, bs->ra, bs->dec, &px, &py))
 			continue;
-		logverb("Bright star %s/%s at RA,Dec (%g,%g) -> xy (%g, %g)\n", bs->name, bs->common_name, bs->ra, bs->dec, px, py);
+		logverb("Bright star %s/%s at RA,Dec (%g,%g) -> xy (%g, %g)\n",
+                bs->name, bs->common_name, bs->ra, bs->dec, px, py);
 		if (px < 1 || py < 1 || px > pargs->W || py > pargs->H)
 			continue;
 		// skip unnamed
@@ -278,6 +323,13 @@ static void plot_brightstars(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann)
 			continue;
         px -= 1;
         py -= 1;
+
+        if (ann->bright_pastel) {
+            float r,g,b;
+            color_for_radec(bs->ra, bs->dec, &r,&g,&b);
+            plotstuff_set_rgba2(pargs, r,g,b, 0.8);
+            plotstuff_builtin_apply(cairo, pargs);
+        }
 
 		plotstuff_stack_marker(pargs, px, py);
         if (ann->bright_labels) {
@@ -422,6 +474,7 @@ void* plot_annotations_init(plot_args_t* args) {
 	ann->bright = TRUE;
 	ann->bright_labels = TRUE;
 	ann->constellation_lines = TRUE;
+    ann->constellation_lines_offset = 5.0;
 	return ann;
 }
 
