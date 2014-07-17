@@ -44,6 +44,7 @@ deg	deg
 #include "an-bool.h"
 #include "bl.h"
 #include "starutil.h"
+#include "mathutil.h"
 
 typedef struct {
     double ra;
