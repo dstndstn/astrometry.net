@@ -859,12 +859,19 @@ double qfits_header_getdouble(
         double                  errval)
 {
     char    *    c;
+    char* endptr;
+    double d;
 
     if (hdr==NULL || key==NULL) return errval;
 
     c = qfits_header_getstr(hdr, key);
     if (c==NULL) return errval;
-    return atof(c);
+
+    d = strtod(c, &endptr);
+    if (endptr == c)
+        return errval;
+    return d;
+    //return atof(c);
 }
 
 /*----------------------------------------------------------------------------*/
