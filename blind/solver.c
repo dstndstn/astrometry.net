@@ -518,6 +518,10 @@ void solver_compute_quad_range(const solver_t* sp, const index_t* index,
 	//  can move before exceeding the code tolerance, in arcsec.
 	// -that divided by the smallest arcsec-per-pixel scale
 	//  gives the largest motion in pixels.
+
+    //logverb("Index scale %f, %f\n", 
+    //index->index_scale_upper, index->index_scale_lower);
+            
 	scalefudge = index->index_scale_upper * M_SQRT1_2 *
 		sp->codetol / sp->funits_upper;
 
@@ -727,12 +731,11 @@ static void add_stars(const pquad* pq, int* field, int fieldoffset,
 // The real deal
 void solver_run(solver_t* solver) {
 	int numxy, newpoint;
-	int i;
 	double usertime, systime;
 	// first timer callback is called after 1 second
 	time_t next_timer_callback_time = time(NULL) + 1;
 	pquad* pquads;
-	int num_indexes;
+	size_t i, num_indexes;
     double tol2;
     int field[DQMAX];
 
@@ -767,6 +770,8 @@ void solver_run(solver_t* solver) {
 			// The limits on the size of quads that we try to match, in pixels.
 			// Derived from index_scale_* and funits_*.
 			solver_compute_quad_range(solver, index, &minAB, &maxAB);
+            //logverb("Index \"%s\" quad range %f to %f\n", index->indexname,
+            //minAB, maxAB);
 			minAB2s[i] = square(minAB);
 			maxAB2s[i] = square(maxAB);
 			solver->minminAB2 = MIN(solver->minminAB2, minAB2s[i]);

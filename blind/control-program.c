@@ -123,9 +123,24 @@ static void get_next_field(char* fits_image_fn,
     }
 	// If that doesn't work, look for "RA" and "DEC" header cards.
 	if (!*sip) {
+        double infval = 1.0/0.0;
 		qfits_header* hdr = anqfits_get_header2(fits_image_fn, 0);
-		*ra = qfits_header_getdouble(hdr, "RA", 0.0);
-		*dec = qfits_header_getdouble(hdr, "DEC", 0.0);
+		*ra = qfits_header_getdouble(hdr, "RA", infval);
+        logverb("Looking for RA header (float): %g\n", *ra);
+        if (isinf(*ra)) {
+            char* rastr = qfits_header_getstr(hdr, "RA");
+            logverb("Looking for RA header (string): >>%s<<\n", rastr);
+            *ra = atora(qfits_header_getstr(hdr, "RA"));
+            logverb("Parsed to %g\n", *ra);
+        }
+		*dec = qfits_header_getdouble(hdr, "DEC", infval);
+        logverb("Looking for Dec header (float): %g\n", *dec);
+        if (isinf(*dec)) {
+            char* decstr = qfits_header_getstr(hdr, "DEC");
+            logverb("Looking for Dec header (string): >>%s<<\n", decstr);
+            *dec = atora(qfits_header_getstr(hdr, "DEC"));
+            logverb("Parsed to %g\n", *dec);
+        }
 		qfits_header_destroy(hdr);
         logmsg("Using (RA,Dec) estimate (%g, %g)\n", *ra, *dec);
 	}
@@ -223,10 +238,19 @@ int main(int argc, char** args) {
 
     // For a control program you almost certainly want to be using small enough
     // indexes that they fit in memory!
-	// Maybe not -- maybe most of them won't be loaded because of healpix constraints...
+	// Maybe not -- maybe most of them won't be loaded because of
+	// healpix constraints...
     if (!engine->inparallel) {
+        size_t i;
         logerr("Forcing indexes_inparallel.\n");
         engine->inparallel = TRUE;
+        // We can't just set "inparallel" because the index files are
+        // loaded during config file parsing... must reload now.
+        for (i=0; i<pl_size(engine->indexes); i++) {
+            index_t* index = pl_get(engine->indexes, i);
+            logmsg("Reloading index \"%s\"...\n", index->indexname);
+            index_reload(index);
+        }
     }
 
     // I assume that the engine config file only contains indexes that cover
@@ -279,9 +303,8 @@ int main(int argc, char** args) {
     }
 
     for (I=0;; I++) {
-        int i, N;
+        size_t i, N;
 		sip_t* sip;
-        double centerxyz[3];
 		double racenter, deccenter;
 		il* hplist = il_new(4);
 		starxy_t* field;
@@ -319,10 +342,7 @@ int main(int argc, char** args) {
 
 		// Where is the center of the image according to the existing WCS?
 		if (sip)
-			sip_pixelxy2xyzarr(sip, imagecx, imagecy, centerxyz);
-        // If there's no existing WCS, assume we got an RA,Dec estimate.
-		else
-			radecdeg2xyzarr(racenter, deccenter, centerxyz);
+			sip_pixelxy2radec(sip, imagecx, imagecy, &racenter, &deccenter);
 
         // Which indexes should we use?  Use the WCS or RA,Dec estimate to decide.
         N = pl_size(engine->indexes);
@@ -332,6 +352,12 @@ int main(int argc, char** args) {
 				continue;
 			logmsg("Adding index %s\n", index->indexname);
 			solver_add_index(solver, index);
+        }
+        if (solver_n_indices(solver) == 0) {
+            logmsg("No index files are within range of given RA,Dec center "
+                   "and radius: (%g,%g), %g\n", racenter, deccenter,
+                   dist2deg(hprange));
+            goto skip;
         }
 
 		if (sip) {
@@ -382,6 +408,7 @@ int main(int argc, char** args) {
 			}
 		}
 
+    skip:
         solver_cleanup_field(solver);
         solver_clear_indexes(solver);
 
@@ -389,7 +416,6 @@ int main(int argc, char** args) {
 
         t1 = timenow();
         logmsg("That took %g seconds\n", t1-t0);
-
         logmsg("Sleeping...\n");
         sleep(1);
         logmsg("Starting!\n");
