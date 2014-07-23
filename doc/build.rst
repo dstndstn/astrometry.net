@@ -31,6 +31,7 @@ For full functionality, you will need:
   * libpng
   * libjpeg
   * libz
+  * bzip2
   * python (probably >= 2.4)
   * numpy
   * pyfits: http://www.stsci.edu/resources/software_hardware/pyfits (version >= 3.1)
@@ -45,7 +46,7 @@ Ubuntu or Debian-like systems:
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
                            libpng12-dev libjpeg-dev python-numpy \
                            python-pyfits python-dev zlib1g-dev \
-                           swig cfitsio-dev
+                           libbz2-dev swig cfitsio-dev
 
 CentOS 6.5 / Fedora / RedHat / RHEL -- Detailed Instructions:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
