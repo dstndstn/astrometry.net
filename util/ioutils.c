@@ -420,6 +420,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 		}
 	}
 
+    fflush(stdout);
 	pid = fork();
 	if (pid == -1) {
         SYSERROR("Failed to fork");
@@ -457,6 +458,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 		int errfd = -1;
 		char* outcursor = outbuf;
 		char* errcursor = errbuf;
+        int rtn = 0;
 
 		// Parent process.
 		if (outlines) {
@@ -507,7 +509,8 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 			NULL);
 			if (ready == -1) {
 				SYSERROR("select() failed");
-				return -1;
+                rtn = -1;
+                goto parentreturn;
 			}
 			if (!outdone) {
 				if (FD_ISSET(outfd, &readset)) {
@@ -515,14 +518,16 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 					if (readfd(outfd, outbuf, sizeof(outbuf), &outcursor,
 							   *outlines, &outdone)) {
 						ERROR("Failed to read from child's output stream");
-						return -1;
+                        rtn = -1;
+                        goto parentreturn;
 					}
 				}
 // https://groups.google.com/d/msg/astrometry/H0bQBjaoZeo/19pe8DXGoigJ
 #if !(defined(__CYGWIN__))
 				if (FD_ISSET(outfd, &errset)) {
 					SYSERROR("error reading from child output stream");
-					return -1;
+                    rtn = -1;
+                    goto parentreturn;
 				}
 #endif
 			}
@@ -532,14 +537,16 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 					if (readfd(errfd, errbuf, sizeof(errbuf), &errcursor,
 							   *errlines, &errdone)) {
 						ERROR("Failed to read from child's error stream");
-						return -1;
+                        rtn = -1;
+                        goto parentreturn;
 					}
 					   
 				}
 #if !(defined(__CYGWIN__))
 				if (FD_ISSET(errfd, &errset)) {
 					SYSERROR("error reading from child error stream");
-					return -1;
+                    rtn = -1;
+                    goto parentreturn;
 				}
 #endif
 			}
@@ -552,27 +559,38 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 			pid_t wpid = waitpid(pid, &status, opts);
 			if (wpid == -1) {
                 SYSERROR("Failed to waitpid() for command to finish");
-				return -1;
+                rtn = -1;
+                goto parentreturn;
 			}
 			//logverb("waitpid() returned\n");
 			//if (pid == 0)
 			// process has not finished.
 			if (WIFSIGNALED(status)) {
                 ERROR("Command was killed by signal %i", WTERMSIG(status));
-				return -1;
+                rtn = -1;
+                goto parentreturn;
 			} else {
 				int exitval = WEXITSTATUS(status);
 				if (exitval == 127) {
                     ERROR("Command not found: %s", cmd);
-					return exitval;
+                    rtn = exitval;
+                    goto parentreturn;
 				} else if (exitval) {
                     ERROR("Command failed: return value %i", exitval);
-					return exitval;
+                    rtn = exitval;
+                    goto parentreturn;
 				}
 			}
 		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
-		
+
+    parentreturn:
+        if (outlines)
+            close(outpipe[0]);
+        if (errlines)
+            close(errpipe[0]);
+		return rtn;
 	}
+    
 	return 0;
 }
 
