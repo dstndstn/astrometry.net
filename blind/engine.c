@@ -1001,6 +1001,11 @@ job_t* engine_read_job_file(engine_t* engine, const char* jobfn) {
                 engine->cpulimit);
         bp->cpulimit = engine->cpulimit;
     }
+    // If not running inparallel, set total limits = limits.
+    if (!engine->inparallel) {
+        bp->total_timelimit = bp->timelimit;
+        bp->total_cpulimit  = bp->cpulimit ;
+    }
 
     // If the job didn't specify depths, set defaults.
     if (il_size(job->depths) == 0) {

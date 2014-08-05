@@ -1052,8 +1052,9 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		get_resource_stats(&utime, &stime, NULL);
 		gettimeofday(&wtime, NULL);
 		logverb("Spent %g s user, %g s system, %g s total, %g s wall time.\n",
-		       (utime - last_utime), (stime - last_stime), (stime - last_stime + utime - last_utime),
-		       millis_between(&last_wtime, &wtime) * 0.001);
+		       (utime - last_utime), (stime - last_stime),
+                (stime - last_stime + utime - last_utime),
+                millis_between(&last_wtime, &wtime) * 0.001);
 
 		last_utime = utime;
 		last_stime = stime;
