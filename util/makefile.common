@@ -202,7 +202,7 @@ X := $(shell $(DEFTEST) && echo "-DNOBOOL")
 ifneq ($(X),)
   # Darwin does dynamic libs differently
   ARG := -dynamic
-  X := $(shell $(CCTEST))
+  X := $(shell $(LINKTEST))
   SHAREDLIBFLAGS_DEF += $(X)
 
   # clang 3.1 wants...
@@ -212,7 +212,7 @@ ifneq ($(X),)
 
   # clang 4.1 doesn't support -dynamiclib
   ARG := -dynamiclib
-  X := $(shell $(CCTEST))
+  X := $(shell $(LINKTEST))
   SHAREDLIBFLAGS_DEF += $(X)
 
   # clang 4.1 seems to need this instead:
