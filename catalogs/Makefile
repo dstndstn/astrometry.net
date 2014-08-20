@@ -127,6 +127,7 @@ ALL_OBJ += ucac4tofits.o
 ALL_OBJ += 2masstofits.o
 
 $(PROGS): %: %.o $(SLIB)
+ALL_OBJ += $(addsuffix .o,$(PROGS))
 
 all: ngc2000.py $(LIBCAT) $(PROGS)
 
@@ -184,7 +185,7 @@ tests: $(ALL_TEST_FILES)
 .PHONY: tests
 
 clean:
-	rm -f $(LIBCAT) $(OBJS) $(DEPS) *.dep deps \
+	rm -f $(LIBCAT) $(OBJS) $(ALL_OBJ) $(DEPS) *.dep deps \
 		grab-stellarium-constellations \
 		ngc2000names.c ngc2000entries.py ngc2000.py ngc2000entries.c \
 		ngcic-accurate-entries.c
