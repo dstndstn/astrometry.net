@@ -16,6 +16,7 @@ Contents:
    build
    build-index
    libkd
+   api
    oaq
 
 .. toctree::
@@ -26,6 +27,8 @@ Contents:
    net/models
    dev
    backups
+   api
+   api-util-py
 
 Other places:
 
