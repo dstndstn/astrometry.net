@@ -63,7 +63,7 @@ struct augment_xylist_s {
 	anbool assume_fits_image;
 
     // output files
-    char* outfn;
+    char* axyfn;
     char* cancelfn;
     char* solvedfn;
     char* matchfn;

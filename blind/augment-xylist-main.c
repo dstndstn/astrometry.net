@@ -107,7 +107,7 @@ int main(int argc, char** args) {
 		help_flag = 1;
 		rtn = -1;
 	}
-	if (!axy->outfn) {
+	if (!axy->axyfn) {
 		printf("Output filename (-o / --out) is required.\n");
 		help_flag = 1;
 		rtn = -1;

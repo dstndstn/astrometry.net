@@ -481,7 +481,7 @@ int augment_xylist_parse_option(char argchar, char* optarg,
 		axy->cutobjs = atoi(optarg);
 		break;
     case 'o':
-        axy->outfn = optarg;
+        axy->axyfn = optarg;
         break;
     case 'i':
         axy->imagefn = optarg;
@@ -1414,13 +1414,13 @@ int augment_xylist(augment_xylist_t* axy,
 		add_sip_coeffs(hdr, "AND", axy->predistort);
 	}
 
-	fout = fopen(axy->outfn, "wb");
+	fout = fopen(axy->axyfn, "wb");
 	if (!fout) {
-		SYSERROR("Failed to open output file %s", axy->outfn);
+		SYSERROR("Failed to open output file %s", axy->axyfn);
 		exit(-1);
 	}
 
-    logverb("Writing headers to file %s\n", axy->outfn);
+    logverb("Writing headers to file %s\n", axy->axyfn);
 
 	if (qfits_header_dump(hdr, fout)) {
 		ERROR("Failed to write FITS header");
@@ -1448,7 +1448,7 @@ int augment_xylist(augment_xylist_t* axy,
         nbytes = anqfits_header_size(anq, ext) + anqfits_data_size(anq, ext);
 
         logverb("Copying data block of file %s to output %s.\n",
-                xylsfn, axy->outfn);
+                xylsfn, axy->axyfn);
         anqfits_close(anq);
 
 		fin = fopen(xylsfn, "rb");
@@ -1459,7 +1459,7 @@ int augment_xylist(augment_xylist_t* axy,
 
         if (pipe_file_offset(fin, offset, nbytes, fout)) {
             ERROR("Failed to copy the data segment of xylist file %s to %s",
-                  xylsfn, axy->outfn);
+                  xylsfn, axy->axyfn);
             exit(-1);
         }
 		fclose(fin);

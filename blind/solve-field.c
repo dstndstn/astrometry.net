@@ -103,6 +103,8 @@ static an_option_t options[] = {
      "output filename for xylist containing the image coordinate of stars from the index"},
 	{'@', "just-augment",   no_argument, NULL,
 	 "just write the augmented xylist files; don't run astrometry-engine."},
+	{'\x90', "temp-axy", no_argument, NULL,
+	 "write 'augmented xy list' (axy) file to a temp file"},
 	{'\x88', "timestamp", no_argument, NULL,
 	 "add timestamps to log messages"},
 };
@@ -293,7 +295,7 @@ static int plot_source_overlay(augment_xylist_t* axy, const char* me,
 		sl_appendf(cmdline, "-W %i -H %i", (int)(plotscale * axy->W), (int)(plotscale * axy->H));
 	}
     sl_append(cmdline, "-i");
-    append_escape(cmdline, axy->outfn);
+    append_escape(cmdline, axy->axyfn);
     if (axy->xcol) {
         sl_append(cmdline, "-X");
         append_escape(cmdline, axy->xcol);
@@ -312,7 +314,7 @@ static int plot_source_overlay(augment_xylist_t* axy, const char* me,
 
     append_executable(cmdline, "plotxy", me);
     sl_append(cmdline, "-i");
-    append_escape(cmdline, axy->outfn);
+    append_escape(cmdline, axy->axyfn);
     if (axy->xcol) {
         sl_append(cmdline, "-X");
         append_escape(cmdline, axy->xcol);
@@ -396,7 +398,7 @@ static int plot_index_overlay(augment_xylist_t* axy, const char* me,
 		sl_appendf(cmdline, "-W %i -H %i", (int)(plotscale * axy->W), (int)(plotscale * axy->H));
 	}
     sl_append(cmdline, "-i");
-    append_escape(cmdline, axy->outfn);
+    append_escape(cmdline, axy->axyfn);
     if (axy->xcol) {
         sl_append(cmdline, "-X");
         append_escape(cmdline, axy->xcol);
@@ -636,7 +638,7 @@ static void after_solved(augment_xylist_t* axy,
 		starxy_t* xy;
 		xylist_t* xyls;
 
-		xyls = xylist_open(axy->outfn);
+		xyls = xylist_open(axy->axyfn);
 		if (!xyls) {
 			ERROR("Failed to read xylist to write SCAMP catalog");
 			exit(-1);
@@ -688,20 +690,24 @@ static void after_solved(augment_xylist_t* axy,
 
 static void delete_temp_files(sl* tempfiles, sl* tempdirs) {
 	int i;
-	for (i=0; i<sl_size(tempfiles); i++) {
-		char* fn = sl_get(tempfiles, i);
-		logverb("Deleting temp file %s\n", fn);
-		if (unlink(fn))
-			SYSERROR("Failed to delete temp file \"%s\"", fn);
-	}
-	for (i=0; i<sl_size(tempdirs); i++) {
-		char* fn = sl_get(tempdirs, i);
-		logverb("Deleting temp dir %s\n", fn);
-		if (rmdir(fn))
-			SYSERROR("Failed to delete temp dir \"%s\"", fn);
-	}
-	sl_remove_all(tempfiles);
-	sl_remove_all(tempdirs);
+    if (tempfiles) {
+        for (i=0; i<sl_size(tempfiles); i++) {
+            char* fn = sl_get(tempfiles, i);
+            logverb("Deleting temp file %s\n", fn);
+            if (unlink(fn))
+                SYSERROR("Failed to delete temp file \"%s\"", fn);
+        }
+        sl_remove_all(tempfiles);
+    }
+    if (tempdirs) {
+        for (i=0; i<sl_size(tempdirs); i++) {
+            char* fn = sl_get(tempdirs, i);
+            logverb("Deleting temp dir %s\n", fn);
+            if (rmdir(fn))
+                SYSERROR("Failed to delete temp dir \"%s\"", fn);
+        }
+        sl_remove_all(tempdirs);
+    }
 }
 
 
@@ -744,8 +750,11 @@ int main(int argc, char** args) {
 	bl* batchsf = NULL;
 	sl* outfiles;
 	sl* tempfiles;
+    // these are deleted after the outer loop over input files
+	sl* tempfiles2;
 	sl* tempdirs;
 	anbool timestamp = FALSE;
+    anbool tempaxy = FALSE;
 
     errors_print_on_exit(stderr);
     fits_use_error_system();
@@ -758,6 +767,7 @@ int main(int argc, char** args) {
 	// output filenames.
 	outfiles = sl_new(16);
 	tempfiles = sl_new(4);
+	tempfiles2 = sl_new(4);
 	tempdirs = sl_new(4);
 
 	rtn = 0;
@@ -805,7 +815,7 @@ int main(int argc, char** args) {
     augment_xylist_init(allaxy);
 
     // default output filename patterns.
-    allaxy->outfn    = "%s.axy";
+    allaxy->axyfn    = "%s.axy";
     allaxy->matchfn  = "%s.match";
     allaxy->rdlsfn   = "%s.rdls";
     allaxy->solvedfn = "%s.solved";
@@ -821,6 +831,9 @@ int main(int argc, char** args) {
         if (c == -1)
             break;
         switch (c) {
+        case '\x90':
+            tempaxy = TRUE;
+            break;
 		case '\x88':
 			timestamp = TRUE;
 			break;
@@ -1053,7 +1066,11 @@ int main(int argc, char** args) {
 		}
         logverb("Base: \"%s\", basefile \"%s\", basedir \"%s\", suffix \"%s\"\n", base, basefile, basedir, suffix);
 
-		axy->outfn    = sl_appendf(outfiles, axy->outfn,       base);
+        if (tempaxy) {
+            axy->axyfn = create_temp_file("axy", axy->tempdir);
+            sl_append_nocopy(tempfiles2, axy->axyfn);
+        } else
+            axy->axyfn    = sl_appendf(outfiles, axy->axyfn,       base);
         if (axy->matchfn)
             axy->matchfn  = sl_appendf(outfiles, axy->matchfn,     base);
         if (axy->rdlsfn)
@@ -1277,7 +1294,7 @@ int main(int argc, char** args) {
                 makeplots = FALSE;
         }
 
-		append_escape(engineargs, axy->outfn);
+		append_escape(engineargs, axy->axyfn);
 
 		if (file_readable(axy->wcsfn))
 			axy->wcs_last_mod = file_get_last_modified_time(axy->wcsfn);
@@ -1339,8 +1356,12 @@ int main(int argc, char** args) {
 		bl_free(batchsf);
 	}
 
+    if (!allaxy->no_delete_temp)
+        delete_temp_files(tempfiles2, NULL);
+
 	sl_free2(outfiles);
 	sl_free2(tempfiles);
+	sl_free2(tempfiles2);
 	sl_free2(tempdirs);
 	sl_free2(engineargs);
     free(me);
