@@ -60,8 +60,9 @@ int xylist_get_imageh(xylist_t* ls) {
 	return H;
 }
 
-anbool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* ycolumn,
-                           char** reason) {
+anbool xylist_is_file_xylist(const char* fn, int ext,
+                             const char* xcolumn, const char* ycolumn,
+                             char** reason) {
     int rtn;
     xylist_t* xyls;
     err_t* err;
@@ -81,6 +82,15 @@ anbool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* yc
         goto bail;
     }
 
+    if (ext) {
+        if (xylist_open_extension(xyls, ext)) {
+            ERROR("Failed to open xylist extension %i", ext);
+            goto bail;
+        }
+    } else {
+        ext = 1;
+    }
+
     if (xcolumn)
         xylist_set_xname(xyls, xcolumn);
     if (ycolumn)
@@ -91,7 +101,7 @@ anbool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* yc
     fitstable_add_read_column_struct(xyls->table, fitscolumn_double_type(),
                                      1, 0, fitscolumn_any_type(), xyls->yname, TRUE);
 
-    rtn = fitstable_read_extension(xyls->table, 1);
+    rtn = fitstable_read_extension(xyls->table, ext);
     if (rtn)
         fitstable_error_report_missing(xyls->table);
     xylist_close(xyls);
@@ -335,6 +345,9 @@ starxy_t* xylist_read_field_num(xylist_t* ls, int ext, starxy_t* fld) {
 }
 
 int xylist_open_field(xylist_t* ls, int i) {
+    return fitstable_open_extension(ls->table, i);
+}
+int xylist_open_extension(xylist_t* ls, int i) {
     return fitstable_open_extension(ls->table, i);
 }
 

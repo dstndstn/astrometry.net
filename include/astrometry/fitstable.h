@@ -201,6 +201,9 @@ int fitstable_switch_to_reading(fitstable_t* tab);
 
 fitstable_t* fitstable_open(const char* fn);
 
+// reading...
+fitstable_t* fitstable_open_extension_2(const char* fn, int ext);
+
 // opens file without trying to open first extension (eg, it can be an image, not a table)
 fitstable_t* fitstable_open_mixed(const char* fn);
 

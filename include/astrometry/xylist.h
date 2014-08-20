@@ -135,6 +135,7 @@ int xylist_next_field(xylist_t* ls);
 //int xylist_start_field(xylist_t* ls);
 
 int xylist_open_field(xylist_t* ls, int i);
+int xylist_open_extension(xylist_t* ls, int i);
 
 int xylist_write_header(xylist_t* ls);
 
@@ -163,7 +164,8 @@ int xylist_get_imageh(xylist_t* ls);
 int xylist_n_fields(xylist_t* ls);
 
 // Is the given filename an xylist?
-anbool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* ycolumn,
-                           char** reason);
+anbool xylist_is_file_xylist(const char* fn, int ext,
+                             const char* xcolumn, const char* ycolumn,
+                             char** reason);
 
 #endif

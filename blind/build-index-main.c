@@ -33,13 +33,14 @@
 #include "log.h"
 #include "starutil.h"
 
-const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:B:A:D:t:";
+const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:B:A:D:t:e:";
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
 	       "      (\n"
 		   "         -i <input-FITS-catalog>  input: source RA,DEC, etc\n"
+           "         -e <input-FITS-extension> input: FITS extension to read\n"
 		   "    OR,\n"
 		   "         -1 <input-index>         to share another index's stars\n"
 		   "      )\n"
@@ -97,6 +98,7 @@ int main(int argc, char** argv) {
 	char* infn = NULL;
 	char* indexfn = NULL;
 	char* inindexfn = NULL;
+    int inext = 0;
 
 	index_params_t myp;
 	index_params_t* p;
@@ -155,6 +157,9 @@ int main(int argc, char** argv) {
 		case 'i':
             infn = optarg;
 			break;
+        case 'e':
+            inext = atoi(optarg);
+            break;
 		case 'o':
 			indexfn = optarg;
 			break;
@@ -274,7 +279,7 @@ int main(int argc, char** argv) {
 	p->args = argv;
 
 	if (infn) {
-		if (build_index_files(infn, indexfn, p)) {
+		if (build_index_files(infn, inext, indexfn, p)) {
 			exit(-1);
 		}
 	} else {

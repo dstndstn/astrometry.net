@@ -1224,10 +1224,12 @@ int main(int argc, char** args) {
 			if (axy->pnmfn)
 				want_pnm = TRUE;
 		} else {
-			logverb("Checking if file \"%s\" is xylist or image: ", infile);
+			logverb("Checking if file \"%s\" ext %i is xylist or image: ",
+                    infile, axy->extension);
 			fflush(NULL);
 			reason = NULL;
-			isxyls = xylist_is_file_xylist(infile, axy->xcol, axy->ycol, &reason);
+			isxyls = xylist_is_file_xylist(infile, axy->extension,
+                                           axy->xcol, axy->ycol, &reason);
 			logverb(isxyls ? "xyls\n" : "image\n");
 			if (!isxyls)
 				logverb("  (not xyls because: %s)\n", reason);

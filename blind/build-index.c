@@ -655,12 +655,14 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 }
 
 
-int build_index_files(const char* infn, const char* indexfn,
+int build_index_files(const char* infn, int ext, const char* indexfn,
 					  index_params_t* p) {
 	fitstable_t* catalog;
-
 	logmsg("Reading %s...\n", infn);
-	catalog = fitstable_open(infn);
+    if (ext)
+        catalog = fitstable_open_extension_2(infn, ext);
+    else
+        catalog = fitstable_open(infn);
     if (!catalog) {
         ERROR("Couldn't read catalog %s", infn);
 		return -1;

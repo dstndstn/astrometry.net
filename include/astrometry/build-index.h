@@ -67,7 +67,8 @@ typedef struct index_params index_params_t;
 
 void build_index_defaults(index_params_t* params);
 
-int build_index_files(const char* catalogfn, const char* indexfn,
+int build_index_files(const char* catalogfn, int extension,
+                      const char* indexfn,
 					  index_params_t* params);
 
 int build_index(fitstable_t* catalog, index_params_t* p,

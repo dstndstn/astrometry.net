@@ -1167,6 +1167,17 @@ fitstable_t* fitstable_open_mixed(const char* fn) {
     return _fitstable_open(fn);
 }
 
+fitstable_t* fitstable_open_extension_2(const char* fn, int ext) {
+    fitstable_t* tab = _fitstable_open(fn);
+    if (!tab)
+        return tab;
+    if (fitstable_open_extension(tab, ext)) {
+        fitstable_close(tab);
+        return NULL;
+    }
+    return tab;
+}
+
 static fitstable_t* open_for_writing(const char* fn, const char* mode, FILE* fid) {
     fitstable_t* tab;
     tab = fitstable_new();

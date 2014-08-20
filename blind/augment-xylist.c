@@ -960,6 +960,63 @@ int augment_xylist(augment_xylist_t* axy,
         xylsfn = axy->xylsfn;
         if (axy->sortcol)
             dosort = TRUE;
+
+        if (axy->extension && (axy->extension != 1)) {
+            // Copy just this extension to a temp file.
+            FILE* fout;
+            FILE* fin;
+            off_t offset;
+            off_t nbytes;
+            off_t nprimary;
+            anqfits_t* anq;
+            char* extfn;
+
+            anq = anqfits_open_hdu(xylsfn, axy->extension);
+            if (!anq) {
+                ERROR("Failed to open xyls file %s up to extension %i",
+                      xylsfn, axy->extension);
+                exit(-1);
+            }
+
+            fin = fopen(xylsfn, "rb");
+            if (!fin) {
+                SYSERROR("Failed to open xyls file \"%s\"", xylsfn);
+                exit(-1);
+            }
+
+            nprimary = anqfits_header_size(anq, 0) + anqfits_data_size(anq, 0);
+            offset = anqfits_header_start(anq, axy->extension);
+            nbytes = anqfits_header_size(anq, axy->extension) +
+                anqfits_data_size(anq, axy->extension);
+            anqfits_close(anq);
+            extfn = create_temp_file("ext", axy->tempdir);
+			sl_append_nocopy(tempfiles, extfn);
+            fout = fopen(extfn, "wb");
+            if (!fout) {
+                SYSERROR("Failed to open temp file \"%s\" to write extension",
+                         extfn);
+                exit(-1);
+            }
+            logverb("Copying ext %i of %s to temp %s\n", axy->extension,
+                    xylsfn, extfn);
+            if (pipe_file_offset(fin, 0, nprimary, fout)) {
+                ERROR("Failed to copy the primary HDU of xylist file %s to %s",
+                      xylsfn, extfn);
+                exit(-1);
+            }
+            if (pipe_file_offset(fin, offset, nbytes, fout)) {
+                ERROR("Failed to copy HDU %i of xylist file %s to %s",
+                      axy->extension, xylsfn, extfn);
+                exit(-1);
+            }
+            fclose(fin);
+            if (fclose(fout)) {
+                SYSERROR("Failed to close %s", extfn);
+                exit(-1);
+            }
+            xylsfn = extfn;
+            axy->extension = 0;
+        }
 	}
 
     if (axy->guess_scale && (fitsimgfn || !axy->imagefn)) {
@@ -1030,6 +1087,8 @@ int augment_xylist(augment_xylist_t* axy,
 			sl_appendf(cmd, "-X %s", axy->xcol);
 		if (axy->ycol)
 			sl_appendf(cmd, "-Y %s", axy->ycol);
+        if (axy->extension)
+            sl_appendf(cmd, "-e %i", axy->extension);
 		append_escape(cmd, xylsfn);
 		append_escape(cmd, nolinesfn);
 		run(cmd, verbose);
@@ -1071,7 +1130,8 @@ int augment_xylist(augment_xylist_t* axy,
         if (do_tabsort) {
             logverb("Sorting by brightness: input=%s, output=%s, column=%s.\n",
                     xylsfn, sortedxylsfn, axy->sortcol);
-            tabsort(xylsfn, sortedxylsfn, axy->sortcol, !axy->sort_ascending);
+            tabsort(xylsfn, sortedxylsfn,
+                    axy->sortcol, !axy->sort_ascending);
         }
 		xylsfn = sortedxylsfn;
     }
@@ -1087,6 +1147,8 @@ int augment_xylist(augment_xylist_t* axy,
 			sl_appendf(cmd, "-X %s", axy->xcol);
 		if (axy->ycol)
 			sl_appendf(cmd, "-Y %s", axy->ycol);
+        if (axy->extension)
+            sl_appendf(cmd, "-e %i", axy->extension);
 		append_escape(cmd, xylsfn);
 		append_escape(cmd, unixylsfn);
 		run(cmd, verbose);
@@ -1369,19 +1431,25 @@ int augment_xylist(augment_xylist_t* axy,
 	// copy blocks from xyls to output.
 	{
 		FILE* fin;
-		int start;
-		int nb;
-		struct stat st;
+		off_t offset;
+		off_t nbytes;
+        anqfits_t* anq;
+        int ext;
 
-        logverb("Copying body of file %s to output %s.\n", xylsfn, axy->outfn);
+        ext = axy->extension;
+        if (!ext)
+            ext = 1;
+        anq = anqfits_open_hdu(xylsfn, ext);
+        if (!anq) {
+            ERROR("Failed to open xyls file %s up to extension %i", xylsfn, ext);
+            exit(-1);
+        }
+        offset = anqfits_header_start(anq, ext);
+        nbytes = anqfits_header_size(anq, ext) + anqfits_data_size(anq, ext);
 
-		start = fits_blocks_needed(orig_nheaders * FITS_LINESZ) * FITS_BLOCK_SIZE;
-
-		if (stat(xylsfn, &st)) {
-			SYSERROR("Failed to stat() xyls file \"%s\"", xylsfn);
-			exit(-1);
-		}
-		nb = st.st_size;
+        logverb("Copying data block of file %s to output %s.\n",
+                xylsfn, axy->outfn);
+        anqfits_close(anq);
 
 		fin = fopen(xylsfn, "rb");
 		if (!fin) {
@@ -1389,8 +1457,9 @@ int augment_xylist(augment_xylist_t* axy,
 			exit(-1);
 		}
 
-        if (pipe_file_offset(fin, start, nb - start, fout)) {
-            ERROR("Failed to copy the data segment of xylist file %s to %s", xylsfn, axy->outfn);
+        if (pipe_file_offset(fin, offset, nbytes, fout)) {
+            ERROR("Failed to copy the data segment of xylist file %s to %s",
+                  xylsfn, axy->outfn);
             exit(-1);
         }
 		fclose(fin);
