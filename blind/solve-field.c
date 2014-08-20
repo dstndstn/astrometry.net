@@ -103,6 +103,8 @@ static an_option_t options[] = {
      "output filename for xylist containing the image coordinate of stars from the index"},
 	{'@', "just-augment",   no_argument, NULL,
 	 "just write the augmented xylist files; don't run astrometry-engine."},
+    {'\x91', "axy", required_argument, "filename",
+     "output filename for augment xy list (axy)"},
 	{'\x90', "temp-axy", no_argument, NULL,
 	 "write 'augmented xy list' (axy) file to a temp file"},
 	{'\x88', "timestamp", no_argument, NULL,
@@ -831,6 +833,9 @@ int main(int argc, char** args) {
         if (c == -1)
             break;
         switch (c) {
+        case '\x91':
+            allaxy->axyfn = optarg;
+            break;
         case '\x90':
             tempaxy = TRUE;
             break;
