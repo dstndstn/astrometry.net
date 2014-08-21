@@ -109,7 +109,8 @@ $(LIBCAT): $(OBJS)
 	$(RANLIB) $@
 
 PROGS := build-hd-tree tycho2tofits usnobtofits nomadtofits \
-	ucac3tofits ucac4tofits 2masstofits
+	2masstofits
+	#ucac3tofits ucac4tofits
 
 # not built by default
 MISC_PROGS := usnob-scamp-catalog read_nomad
