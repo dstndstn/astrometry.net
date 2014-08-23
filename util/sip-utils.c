@@ -31,6 +31,10 @@
 #include "errors.h"
 #include "log.h"
 
+double wcs_pixel_center_for_size(double size) {
+    return 0.5 + 0.5 * size;
+}
+
 void tan_rotate(const tan_t* tanin, tan_t* tanout, double angle) {
 	double s,c;
 	double newcd[4];

@@ -1,0 +1,7 @@
+0.51:
+	Fix half-pixel bug in "solve-field --crpix-center": the center was
+	set to 1 + {W,H}/2, not 0.5 + {W,H}/2.  (The WCS was still
+	correct, the CRPIX was set to a half pixel in each dimension away
+	from the center pixel.
+
+	

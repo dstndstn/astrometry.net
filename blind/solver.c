@@ -35,6 +35,7 @@
 #include "solvedclient.h"
 #include "solvedfile.h"
 #include "fit-wcs.h"
+#include "sip-utils.h"
 #include "keywords.h"
 #include "log.h"
 #include "pquad.h"
@@ -1405,8 +1406,8 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
     mo->index_jitter = sp->index->index_jitter;
 
 	if (sp->set_crpix && sp->set_crpix_center) {
-		sp->crpix[0] = 1 + 0.5 * solver_field_width(sp);
-		sp->crpix[1] = 1 + 0.5 * solver_field_height(sp);
+        sp->crpix[0] = wcs_pixel_center_for_size(solver_field_width(sp));
+		sp->crpix[1] = wcs_pixel_center_for_size(solver_field_height(sp));
 	}
 
 	if (sp->predistort) {
