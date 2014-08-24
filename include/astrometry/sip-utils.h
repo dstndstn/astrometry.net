@@ -21,7 +21,7 @@
 
 #include "astrometry/sip.h"
 
-double wcs_center_for_size(double size);
+double wcs_pixel_center_for_size(double size);
 
 int sip_ensure_inverse_polynomials(sip_t* sip);
 

@@ -352,15 +352,15 @@ int* sip_filter_stars_in_field(const sip_t* sip, const tan_t* tan,
 
 void sip_get_radec_center(const sip_t* wcs,
                           double* p_ra, double* p_dec) {
-    double px = (wcs->wcstan.imagew + 1.0) / 2.0;
-    double py = (wcs->wcstan.imageh + 1.0) / 2.0;
+    double px = wcs_pixel_center_for_size(wcs->wcstan.imagew);
+    double py = wcs_pixel_center_for_size(wcs->wcstan.imageh);
 	sip_pixelxy2radec(wcs, px, py, p_ra, p_dec);
 }
 
 void tan_get_radec_center(const tan_t* wcs,
                           double* p_ra, double* p_dec) {
-    double px = (wcs->imagew + 1.0) / 2.0;
-    double py = (wcs->imageh + 1.0) / 2.0;
+    double px = wcs_pixel_center_for_size(wcs->wcstan.imagew);
+    double py = wcs_pixel_center_for_size(wcs->wcstan.imageh);
 	tan_pixelxy2radec(wcs, px, py, p_ra, p_dec);
 }
 
