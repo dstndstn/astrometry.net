@@ -359,8 +359,8 @@ void sip_get_radec_center(const sip_t* wcs,
 
 void tan_get_radec_center(const tan_t* wcs,
                           double* p_ra, double* p_dec) {
-    double px = wcs_pixel_center_for_size(wcs->wcstan.imagew);
-    double py = wcs_pixel_center_for_size(wcs->wcstan.imageh);
+    double px = wcs_pixel_center_for_size(wcs->imagew);
+    double py = wcs_pixel_center_for_size(wcs->imageh);
 	tan_pixelxy2radec(wcs, px, py, p_ra, p_dec);
 }
 
