@@ -856,7 +856,7 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         print 'total:', len(xx)
         print 'type:', xx.dtype
         T.set(name, xx)
-
+    T._columns = colnames
     return T
         
 # ultra-brittle text table parsing.
