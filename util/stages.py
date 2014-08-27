@@ -1,5 +1,18 @@
 from astrometry.util.file import *
 
+'''
+
+Stages: a utility for saving and resuming computation, savings
+intermediate results as pickle files.
+
+
+
+
+
+'''
+
+
+
 class CallGlobal(object):
     def __init__(self, pattern, globals, *args, **kwargs):
         self.pat = pattern

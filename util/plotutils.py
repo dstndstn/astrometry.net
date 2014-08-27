@@ -16,11 +16,17 @@ class NanColormap(matplotlib.colors.Colormap):
     def __call__(self, data, **kwargs):
         rgba = self.cmap(data, **kwargs)
         # 'data' is a MaskedArray, apparently...
+        if np.all(data.mask == False):
+            return rgba
         iy,ix = np.nonzero(data.mask)
-        rgba[iy,ix, :] = self.nanrgba
+        #print 'NanColormap: replacing', len(iy), 'pixels with', self.nanrgba
+        # nanrgba are floats in [0,1]; convert to uint8 in [0,255].
+        rgba[iy,ix, :] = np.clip(255. * np.array(self.nanrgba), 0, 255).astype(np.uint8)
         return rgba
-    def is_gray(self):
-        return self.cmap.is_gray()
+
+    def __getattr__(self, name):
+        ''' delegate to underlying colormap. '''
+        return getattr(self.cmap, name)
 
 def _imshow_better_defaults(imshowfunc, X, interpolation='nearest', origin='lower', **kwargs):
     '''
