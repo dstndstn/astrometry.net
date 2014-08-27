@@ -1,4 +1,5 @@
-#import matplotlib
+import matplotlib.cm
+import matplotlib.colors
 from matplotlib.patches import Circle, Ellipse
 from pylab import gca, gcf, gci, axis, histogram2d, hist
 from numpy import array, append, flatnonzero
@@ -6,6 +7,42 @@ from numpy import array, append, flatnonzero
 import numpy as np
 import pylab as plt
 from matplotlib.ticker import FixedFormatter
+
+class NanColormap(matplotlib.colors.Colormap):
+    '''
+    A Colormap that wraps another colormap, but replaces non-finite values
+    with a fixed color.
+    '''
+    def __init__(self, cmap, nancolor):
+        self.cmap = cmap
+        self.nanrgba = matplotlib.colors.colorConverter.to_rgba(nancolor)
+    def __call__(self, data, **kwargs):
+        rgba = self.cmap(data, **kwargs)
+        # 'data' is a MaskedArray, apparently...
+        iy,ix = np.nonzero(data.mask)
+        rgba[iy,ix, :] = self.nanrgba
+        return rgba
+    def is_gray(self):
+        return self.cmap.is_gray()
+    
+def imshow_nan(X, nancolor='0.5', cmap=None, vmin=None, vmax=None, **kwargs):
+    '''
+    An "imshow" work-alike that replaces non-finite values by a fixed color.
+    '''
+    if np.all(np.isfinite(X)):
+        print 'Array has no nans'
+        return plt.imshow(X, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
+
+    # X has non-finite values.  Time to get tricky.
+    cmap = matplotlib.cm.get_cmap(cmap)
+    cmap = NanColormap(cmap, nancolor)
+    if vmin is None or vmax is None:
+        I = np.flatnonzero(np.isfinite(X))
+        if vmin is None:
+            vmin = X.flat[I].min()
+        if vmax is None:
+            vmax = X.flat[I].max()
+    return plt.imshow(X, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
 
 class PlotSequence(object):
     def __init__(self, basefn, format='%02i', suffix='png',
@@ -374,3 +411,16 @@ def set_image_color_percentiles(image, plo, phi):
     gci().set_clim(mn, mx)
     return (mn,mx)
 
+
+
+
+if __name__ == '__main__':
+
+    X = np.arange(25.).reshape((5,5))
+    X[2:4,3:4] = np.nan
+    print X
+    plt.clf()
+    imshow_nan(X, interpolation='nearest')
+    plt.savefig('1.png')
+    
+    
