@@ -1,9 +1,6 @@
 import matplotlib.cm
 import matplotlib.colors
-from matplotlib.patches import Circle, Ellipse
-from pylab import gca, gcf, gci, axis, histogram2d, hist
-from numpy import array, append, flatnonzero
-
+import matplotlib.patches
 import numpy as np
 import pylab as plt
 from matplotlib.ticker import FixedFormatter
@@ -357,7 +354,7 @@ def hist_ints(x, step=1, **kwargs):
     kwargs['bins'] = x.max()/step - x.min()/step + 1
     kwargs['range'] = ( (x.min()/int(step))*step - 0.5,
                         ((x.max()/int(step))*step + 0.5) )
-    return hist(x, **kwargs)
+    return plt.hist(x, **kwargs)
 
 def hist2d_with_outliers(x, y, xbins, ybins, nout):
     '''
@@ -382,8 +379,8 @@ def hist2d_with_outliers(x, y, xbins, ybins, nout):
       
     '''
     # returns (density image, indices of outliers)
-    (H,xe,ye) = histogram2d(x, y, (xbins,ybins))
-    Out = array([]).astype(int)
+    (H,xe,ye) = plt.histogram2d(x, y, (xbins,ybins))
+    Out = np.array([]).astype(int)
     for i in range(len(xe)-1):
         for j in range(len(ye)-1):
             if H[i,j] > nout:
@@ -391,10 +388,10 @@ def hist2d_with_outliers(x, y, xbins, ybins, nout):
             if H[i,j] == 0:
                 continue
             H[i,j] = 0
-            Out = append(Out, flatnonzero((x >= xe[i]) *
-                                          (x <  xe[i+1]) *
-                                          (y >= ye[j]) *
-                                          (y <  ye[j+1])))
+            Out = np.append(Out, np.flatnonzero((x >= xe[i]) *
+                                                (x <  xe[i+1]) *
+                                                (y >= ye[j]) *
+                                                (y <  ye[j+1])))
     return (H.T, Out, xe, ye)
 
 
@@ -403,9 +400,9 @@ def circle(xy=None, x=None, y=None, **kwargs):
     if xy is None:
         if x is None or y is None:
             raise 'circle: need x and y'
-        xy = array([x,y])
-    c = Circle(xy=xy, **kwargs)
-    a=gca()
+        xy = np.array([x,y])
+    c = matplotlib.patches.Circle(xy=xy, **kwargs)
+    a=plt.gca()
     c.set_clip_box(a.bbox)
     a.add_artist(c)
     return c
@@ -414,18 +411,18 @@ def ellipse(xy=None, x=None, y=None, **kwargs):
     if xy is None:
         if x is None or y is None:
             raise 'ellipse: need x and y'
-        xy = array([x,y])
-    c = Ellipse(xy=xy, **kwargs)
-    a=gca()
+        xy = np.array([x,y])
+    c = matplotlib.patches.Ellipse(xy=xy, **kwargs)
+    a=plt.gca()
     c.set_clip_box(a.bbox)
     a.add_artist(c)
     return c
 
 # return (pixel width, pixel height) of the axes area.
 def get_axes_pixel_size():
-    dpi = gcf().get_dpi()
-    figsize = gcf().get_size_inches()
-    axpos = gca().get_position()
+    dpi = plt.gcf().get_dpi()
+    figsize = plt.gcf().get_size_inches()
+    axpos = plt.gca().get_position()
     pixw = figsize[0] * dpi * axpos.width
     pixh = figsize[1] * dpi * axpos.height
     return (pixw, pixh)
@@ -449,7 +446,7 @@ def get_axes_pixel_size():
 # returns (x data units per pixel, y data units per pixel)
 # given the current plot range, figure size, and axes position.
 def get_pixel_scales():
-    a = axis()
+    a = plt.axis()
     (pixw, pixh) = get_axes_pixel_size()
     return ((a[1]-a[0])/float(pixw), (a[3]-a[2])/float(pixh))
 
@@ -460,7 +457,7 @@ def set_image_color_percentiles(image, plo, phi):
     N = len(I)
     mn = I[max(0, int(round(plo * N / 100.)))]
     mx = I[min(N-1, int(round(phi * N / 100.)))]
-    gci().set_clim(mn, mx)
+    plt.gci().set_clim(mn, mx)
     return (mn,mx)
 
 
