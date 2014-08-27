@@ -33,7 +33,6 @@ def _imshow_nan(imshowfunc, X, nancolor='0.5', cmap=None, vmin=None, vmax=None, 
     An "imshow" work-alike that replaces non-finite values by a fixed color.
     '''
     if np.all(np.isfinite(X)):
-        print 'Array has no nans'
         return imshowfunc(X, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
 
     # X has non-finite values.  Time to get tricky.
