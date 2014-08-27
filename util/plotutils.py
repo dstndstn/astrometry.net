@@ -24,14 +24,20 @@ class NanColormap(matplotlib.colors.Colormap):
         return rgba
     def is_gray(self):
         return self.cmap.is_gray()
-    
-def imshow_nan(X, nancolor='0.5', cmap=None, vmin=None, vmax=None, **kwargs):
+
+def _imshow_better_defaults(imshowfunc, X, interpolation='nearest', origin='lower', **kwargs):
+    '''
+    An "imshow" wrapper that uses more sensible defaults.
+    '''
+    return imshowfunc(X, interpolation=interpolation, origin=origin, **kwargs)
+
+def _imshow_nan(imshowfunc, X, nancolor='0.5', cmap=None, vmin=None, vmax=None, **kwargs):
     '''
     An "imshow" work-alike that replaces non-finite values by a fixed color.
     '''
     if np.all(np.isfinite(X)):
         print 'Array has no nans'
-        return plt.imshow(X, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
+        return imshowfunc(X, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
 
     # X has non-finite values.  Time to get tricky.
     cmap = matplotlib.cm.get_cmap(cmap)
@@ -42,7 +48,53 @@ def imshow_nan(X, nancolor='0.5', cmap=None, vmin=None, vmax=None, **kwargs):
             vmin = X.flat[I].min()
         if vmax is None:
             vmax = X.flat[I].max()
-    return plt.imshow(X, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
+    return imshowfunc(X, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
+
+def call_underlying(under):
+    '''
+    A decorator-style function to allow one to create a function that
+    wraps a specified underlying function.  Useful for building
+    layered wrapped functions.
+
+    Example:
+    
+    f = call_underlying(g)(h)
+
+    creates a function "f" that calls "h" with first argument "g".
+    '''
+    def wrapper(f):
+        #print 'Wrapping function', f, 'to call', under
+        def real(*args, **kwargs):
+            #print 'calling', f, 'with underlying function', under
+            return f(under, *args, **kwargs)
+        return real
+    return wrapper
+
+'''
+A plt.imshow() work-alike, except with defaults: interpolation='nearest', origin='lower'.
+'''
+imshow_better_defaults = call_underlying(plt.imshow)(_imshow_better_defaults)
+
+'''
+A plt.imshow() work-alike, except handles non-finite values.  Accepts
+an additional kwarg: nancolor='0.5'
+'''
+imshow_nan             = call_underlying(plt.imshow)(_imshow_nan)
+
+'''
+My version of plt.imshow that uses imshow_better_defaults and imshow_nan.
+'''
+dimshow = call_underlying(call_underlying(plt.imshow)(_imshow_better_defaults))(_imshow_nan)
+
+def replace_matplotlib_functions():
+    '''
+    Replaces plt.imshow with a function that handles non-finite values
+    and has the defaults interpolation='nearest', origin='lower'.
+    '''
+    f1 = plt.imshow
+    f2 = call_underlying(f1)(_imshow_better_defaults)
+    f3 = call_underlying(f2)(_imshow_nan)
+    plt.imshow = f3
 
 class PlotSequence(object):
     def __init__(self, basefn, format='%02i', suffix='png',
@@ -419,8 +471,17 @@ if __name__ == '__main__':
     X = np.arange(25.).reshape((5,5))
     X[2:4,3:4] = np.nan
     print X
+
     plt.clf()
     imshow_nan(X, interpolation='nearest')
     plt.savefig('1.png')
+
+    dimshow(X)
+    plt.savefig('2.png')
     
+    replace_matplotlib_functions()
+    
+    plt.clf()
+    plt.imshow(X, interpolation='nearest')
+    plt.savefig('3.png')
     
