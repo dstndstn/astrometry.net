@@ -16,7 +16,7 @@ def get_photoobj_filename(rr, run, camcol, field):
 
 def read_photoobjs_in_wcs(wcs, margin, cols=None,
                           cutToPrimary=True,
-                          wfn='window_flist.fits',
+                          #wfn='window_flist.fits',
                           sdss=None):
     '''
     Read photoObjs that are inside the given 'wcs', plus 'margin' in degrees.
@@ -30,6 +30,14 @@ def read_photoobjs_in_wcs(wcs, margin, cols=None,
     # a little extra margin
     rad += margin
 
+    if sdss is None:
+        from astrometry.sdss import DR9
+        sdss = DR9()
+    wfn = sdss.filenames.get('window_flist', None)
+    if wfn is None:
+        wfn = 'window_flist.fits'
+    print 'Using', wfn
+
     print 'Searching for run,camcol,fields with radius', rad, 'deg'
     RCF = radec_to_sdss_rcf(ra, dec, radius=rad*60., tablefn=wfn)
     log.debug('Found %i fields possibly in range' % len(RCF))
@@ -38,9 +46,6 @@ def read_photoobjs_in_wcs(wcs, margin, cols=None,
     W,H = wcs.get_width(), wcs.get_height()
     
     TT = []
-    if sdss is None:
-        from astrometry.sdss import DR9
-        sdss = DR9()
     for run,camcol,field,r,d in RCF:
         log.debug('RCF %i/%i/%i' % (run, camcol, field))
         rr = sdss.get_rerun(run, field=field)

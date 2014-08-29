@@ -176,6 +176,7 @@ class DR8(DR7):
     def useLocalTree(self):
         pobj = os.environ['BOSS_PHOTOOBJ']
         redux = os.environ['PHOTO_REDUX']
+        resolve = os.environ['PHOTO_RESOLVE']
         
         self.filenames.update(
             photoObj = os.path.join(pobj, '%(rerun)s', '%(run)i', '%(camcol)i',
@@ -186,6 +187,7 @@ class DR8(DR7):
                                    'psField-%(run)06i-%(camcol)i-%(field)04i.fit'),
             fpM = os.path.join(redux, '%(rerun)s', '%(run)i', 'objcs', '%(camcol)i',
                                'fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit.gz'),
+            window_flist = os.path.join(resolve, 'window_flist.fits'),
             )
 
     def saveUnzippedFiles(self, basedir):
