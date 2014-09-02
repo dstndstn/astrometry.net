@@ -5,6 +5,8 @@ import numpy as np
 import pylab as plt
 from matplotlib.ticker import FixedFormatter
 
+import functools
+
 class NanColormap(matplotlib.colors.Colormap):
     '''
     A Colormap that wraps another colormap, but replaces non-finite values
@@ -28,11 +30,12 @@ class NanColormap(matplotlib.colors.Colormap):
         ''' delegate to underlying colormap. '''
         return getattr(self.cmap, name)
 
-def _imshow_better_defaults(imshowfunc, X, interpolation='nearest', origin='lower', **kwargs):
+def _imshow_better_defaults(imshowfunc, X, interpolation='nearest', origin='lower',
+                            cmap='gray', **kwargs):
     '''
     An "imshow" wrapper that uses more sensible defaults.
     '''
-    return imshowfunc(X, interpolation=interpolation, origin=origin, **kwargs)
+    return imshowfunc(X, interpolation=interpolation, origin=origin, cmap=cmap, **kwargs)
 
 def _imshow_nan(imshowfunc, X, nancolor='0.5', cmap=None, vmin=None, vmax=None, **kwargs):
     '''
@@ -52,51 +55,31 @@ def _imshow_nan(imshowfunc, X, nancolor='0.5', cmap=None, vmin=None, vmax=None, 
             vmax = X.flat[I].max()
     return imshowfunc(X, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
 
-def call_underlying(under):
-    '''
-    A decorator-style function to allow one to create a function that
-    wraps a specified underlying function.  Useful for building
-    layered wrapped functions.
-
-    Example:
-    
-    f = call_underlying(g)(h)
-
-    creates a function "f" that calls "h" with first argument "g".
-    '''
-    def wrapper(f):
-        #print 'Wrapping function', f, 'to call', under
-        def real(*args, **kwargs):
-            #print 'calling', f, 'with underlying function', under
-            return f(under, *args, **kwargs)
-        return real
-    return wrapper
-
 '''
 A plt.imshow() work-alike, except with defaults: interpolation='nearest', origin='lower'.
 '''
-imshow_better_defaults = call_underlying(plt.imshow)(_imshow_better_defaults)
+imshow_better_defaults = functools.partial(_imshow_better_defaults, plt.imshow)
 
 '''
 A plt.imshow() work-alike, except handles non-finite values.  Accepts
 an additional kwarg: nancolor='0.5'
 '''
-imshow_nan             = call_underlying(plt.imshow)(_imshow_nan)
+imshow_nan             = functools.partial(_imshow_nan, plt.imshow)
 
 '''
 My version of plt.imshow that uses imshow_better_defaults and imshow_nan.
 '''
-dimshow = call_underlying(call_underlying(plt.imshow)(_imshow_better_defaults))(_imshow_nan)
+dimshow = functools.partial(_imshow_better_defaults, imshow_nan)
 
 def replace_matplotlib_functions():
     '''
     Replaces plt.imshow with a function that handles non-finite values
     and has the defaults interpolation='nearest', origin='lower'.
     '''
-    f1 = plt.imshow
-    f2 = call_underlying(f1)(_imshow_better_defaults)
-    f3 = call_underlying(f2)(_imshow_nan)
-    plt.imshow = f3
+    plt.imshow = dimshow
+
+
+
 
 class PlotSequence(object):
     def __init__(self, basefn, format='%02i', suffix='png',
