@@ -84,11 +84,19 @@ def merge_tables(TT, columns=None):
 
         if columns == 'fillzero':
             vv = []
+            # Handle NxD(xEx...) arrays: find first extant array, record its shape
+            v0 = None
+            for T in TT:
+                if col in T.get_columns():
+                    v0 = T.get(col)
+                    break
+            shape = v0.shape[1:]
+
             for T in TT:
                 if col in T.get_columns():
                     vv.append(T.get(col))
                 else:
-                    vv.append(np.zeros(len(T), types[col]))
+                    vv.append(np.zeros((len(T),)+shape, types[col]))
             V = np.concatenate(vv)
             td.set(col, V)
             continue
