@@ -19,9 +19,14 @@ class NanColormap(matplotlib.colors.Colormap):
         iy,ix = np.nonzero(data.mask)
         rgba[iy,ix, :] = self.nanrgba
         return rgba
+    
     def is_gray(self):
         return self.cmap.is_gray()
-
+    @property
+    def N(self):
+        return self.cmap.N
+    
+    
 def _imshow_better_defaults(imshowfunc, X, interpolation='nearest', origin='lower', **kwargs):
     '''
     An "imshow" wrapper that uses more sensible defaults.
