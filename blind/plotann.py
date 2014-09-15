@@ -241,6 +241,9 @@ if __name__ == '__main__':
     parser.add_option('--grid-size', dest='gridsize', type=float,
                       default=0.1,
                       help='Grid spacing (in degrees), default %default')
+    parser.add_option('--grid-color', dest='gridcolr',
+                      default='0.2:0.2:0.2',
+                      help='Grid color, default %default')
     parser.add_option('--grid-label', dest='gridlab', type=float,
                       default=0.2,
                       help='Grid label spacing (in degrees), default %default')
@@ -321,7 +324,7 @@ if __name__ == '__main__':
     plot.plot('image')
 
     if opt.grid:
-        plot.color = 'gray'
+        plot.color = opt.gridcolr
         plot.plot_grid(opt.gridsize, opt.gridsize,
                        opt.gridlab, opt.gridlab)
 
@@ -347,6 +350,7 @@ if __name__ == '__main__':
         ann.add_target(r, d, name)
 
     plot.color = opt.textcolor
+    plot.fontsize = opt.textsize
     plot.lw = opt.lw
     plot.valign = opt.valign
     plot.halign = opt.halign
