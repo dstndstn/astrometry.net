@@ -6,9 +6,6 @@ Stages: a utility for saving and resuming computation, savings
 intermediate results as pickle files.
 
 
-
-
-
 '''
 
 
@@ -38,7 +35,11 @@ def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
     # "runstage" call below!!
     print 'Runstage', stage
 
-    pfn = picklepat % stage
+    try:
+        pfn = picklepat % stage
+    except:
+        pfn = picklepat % dict(stage=stage)
+    
     if os.path.exists(pfn):
         if stage in force:
             print 'Ignoring pickle', pfn, 'and forcing stage', stage
