@@ -2194,6 +2194,20 @@ def tan_t_tostring(self):
              self.imagew, self.imageh))
 tan_t.__str__ = tan_t_tostring
 
+def tan_t_addtoheader(self, hdr):
+    '''Adds this TAN WCS header to the given fitsio header'''
+    hdr.add_record(dict(name='CRVAL1', value=self.crval[0], comment='Reference RA'))
+    hdr.add_record(dict(name='CRVAL2', value=self.crval[1], comment='Reference Dec'))
+    hdr.add_record(dict(name='CRPIX1', value=self.crpix[0], comment='Reference x'))
+    hdr.add_record(dict(name='CRPIX2', value=self.crpix[1], comment='Reference y'))
+    hdr.add_record(dict(name='CD1_1', value=self.cd[0], comment='CD matrix'))
+    hdr.add_record(dict(name='CD1_2', value=self.cd[1], comment='CD matrix'))
+    hdr.add_record(dict(name='CD2_1', value=self.cd[2], comment='CD matrix'))
+    hdr.add_record(dict(name='CD2_2', value=self.cd[3], comment='CD matrix'))
+    hdr.add_record(dict(name='IMAGEW', value=self.imagew, comment='Image width'))
+    hdr.add_record(dict(name='IMAGEH', value=self.imageh, comment='Image height'))
+tan_t.add_to_header = tan_t_addtoheader
+    
 ## picklable?
 def tan_t_getstate(self):
     return (self.crpix[0], self.crpix[1], self.crval[0], self.crval[1],
