@@ -31,11 +31,14 @@ class NanColormap(matplotlib.colors.Colormap):
         return getattr(self.cmap, name)
     
 def _imshow_better_defaults(imshowfunc, X, interpolation='nearest', origin='lower',
-                            cmap='gray', **kwargs):
+                            cmap='gray', ticks=True, **kwargs):
     '''
     An "imshow" wrapper that uses more sensible defaults.
     '''
-    return imshowfunc(X, interpolation=interpolation, origin=origin, cmap=cmap, **kwargs)
+    X = imshowfunc(X, interpolation=interpolation, origin=origin, cmap=cmap, **kwargs)
+    if not ticks:
+        plt.xticks([]); plt.yticks([])
+    return X
 
 def _imshow_nan(imshowfunc, X, nancolor='0.5', cmap=None, vmin=None, vmax=None, **kwargs):
     '''
