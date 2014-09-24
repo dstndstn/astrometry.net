@@ -2196,6 +2196,8 @@ tan_t.__str__ = tan_t_tostring
 
 def tan_t_addtoheader(self, hdr):
     '''Adds this TAN WCS header to the given fitsio header'''
+    hdr.add_record(dict(name='CTYPE1', value='RA---TAN', comment='TANgent plane'))
+    hdr.add_record(dict(name='CTYPE2', value='DEC--TAN', comment='TANgent plane'))
     hdr.add_record(dict(name='CRVAL1', value=self.crval[0], comment='Reference RA'))
     hdr.add_record(dict(name='CRVAL2', value=self.crval[1], comment='Reference Dec'))
     hdr.add_record(dict(name='CRPIX1', value=self.crpix[0], comment='Reference x'))
