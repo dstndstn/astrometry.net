@@ -660,7 +660,15 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
 
     T._columns = []
 
-    if fitsio and not (type(data) == pyfits.core.FITS_rec):
+    if fitsio:
+        isrecarray = False
+        try:
+            # if pyfits isn't available...
+            isrecarray = (type(data) == pyfits.core.FITS_rec)
+        except:
+            pass
+
+    if fitsio and not isrecarray:
         # fitsio sorts the rows and de-duplicates them, so compute
         # permutation vector 'I' to undo that.
         I = None
