@@ -440,7 +440,7 @@ class tabledata(object):
                 raise
                 
     def write_to(self, fn, columns=None, header='default', primheader=None,
-                 use_fitsio=True, append=False):
+                 use_fitsio=True, append=False, append_to_hdu=None):
 
         fitsio = None
         if use_fitsio:
@@ -455,9 +455,8 @@ class tabledata(object):
         if fitsio:
             arrays = [self.get(c) for c in columns]
             # fitsio has *strange* behavior when file already exists.
-            if os.path.exists(fn):
-                if not append:
-                    os.unlink(fn)
+            if not append and os.path.exists(fn):
+                os.unlink(fn)
             fits = fitsio.FITS(fn, 'rw')
 
             #for a,c in zip(arrays, columns):
@@ -469,7 +468,10 @@ class tabledata(object):
             if header == 'default':
                 header = None
             try:
-                fits.write(arrays, names=columns, header=header)
+                if append and append_to_hdu is not None:
+                    fits[append_to_hdu].append(arrays, names=columns, header=header)
+                else:
+                    fits.write(arrays, names=columns, header=header)
             except:
                 print 'Failed to write FITS table'
                 print 'Columns:'

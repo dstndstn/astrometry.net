@@ -8,7 +8,7 @@ from astrometry.util.sdss_filenames import *
 from os.path import basename,dirname
 import numpy as np
 
-def get_photoobj_filename(rr, run, camcol, field):
+def get_photoobj_filename(photoobjdir, rr, run, camcol, field):
     fn = os.path.join(photoobjdir, rr, '%i'%run, '%i'%camcol,
                       'photoObj-%06i-%i-%04i.fits' % (run, camcol, field))
     return fn
@@ -104,9 +104,9 @@ class RaDecToRcf(object):
 
 	def __call__(self, ra, dec, spherematch=True, radius=0, contains=False):
 		T = self.tab
-		# HACK - magic 13x9 arcmin.
+		# HACK - magic 13x9 +1 arcmin.
 		if radius == 0:
-			radius = sqrt(13.**2 + 9.**2)/2.
+			radius = sqrt(14.**2 + 10.**2)/2.
 		d2 = arcmin2distsq(radius)
 		if self.sdssxyz is None:
 			self.sdssxyz = radectoxyz(T.ra, T.dec)
