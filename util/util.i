@@ -2321,8 +2321,14 @@ anwcs_t.radec2pixelxy = anwcs_t_radec2pixelxy
 
 def tan_t_radec_bounds(self):
     W,H = self.imagew, self.imageh
-    r,d = self.pixelxy2radec([1, W, W, 1], [1, 1, H, H])
-    return (r.min(), r.max(), d.min(), d.max())
+    r,d = self.pixelxy2radec([1, W/2, W, W, W, W/2, 1, 1], [1, 1, 1, H/2, H, H, H, H/2])
+    rx = r.max()
+    rn = r.min()
+    # ugh.
+    if rx - rn > 180:
+        rn = r[r < 180].max()
+        rx = r[r > 180].min()
+    return (rn, rx, d.min(), d.max())
 tan_t.radec_bounds = tan_t_radec_bounds    
 
 
