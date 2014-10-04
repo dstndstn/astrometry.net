@@ -35,7 +35,7 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
 	FILE* fin;
 	FILE* fout;
 	int ext, nextens;
-	int start, size;
+	off_t start, size;
     void* data = NULL;
     int* perm = NULL;
     unsigned char* map = NULL;
@@ -80,7 +80,7 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
 		int (*sort_func)(const void*, const void*);
 		unsigned char* tabledata;
 		unsigned char* tablehdr;
-		int hdrstart, hdrsize, datsize, datstart;
+		off_t hdrstart, hdrsize, datsize, datstart;
 		int i;
 
         hdrstart = anqfits_header_start(anq, ext);
@@ -132,11 +132,14 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
 
         // Grab the sort column.
 		atomsize = fits_get_atom_size(col->atom_type);
+        printf("Reading sort column \"%s\"\n", colname);
 		qfits_query_column_seq_to_array(table, c, 0, table->nr, data, atomsize);
         // Sort it.
+        printf("Sorting sort column\n");
 		perm = permuted_sort(data, atomsize, sort_func, NULL, table->nr);
 
         // mmap the input file.
+        printf("mmapping input file\n");
 		start = hdrstart;
 		size = hdrsize + datsize;
 		get_mmap_size(start, size, &mstart, &msize, &mgap);
@@ -147,10 +150,11 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
             map = NULL;
             goto bailout;
 		}
-		tabledata = map + mgap + (datstart - hdrstart);
-		tablehdr  = map + mgap;
+		tabledata = map + (off_t)mgap + (datstart - hdrstart);
+		tablehdr  = map + (off_t)mgap;
 
         // Copy the table header without change.
+        printf("Copying table header.\n");
 		if (fwrite(tablehdr, 1, hdrsize, fout) != hdrsize) {
 			SYSERROR("Failed to write FITS table header");
             goto bailout;
@@ -158,7 +162,9 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
 
 		for (i=0; i<table->nr; i++) {
 			unsigned char* rowptr;
-			rowptr = tabledata + perm[i] * table->tab_w;
+            if (i % 100000 == 0)
+                printf("Writing row %i\n", i);
+			rowptr = tabledata + (off_t)(perm[i]) * (off_t)table->tab_w;
 			if (fwrite(rowptr, 1, table->tab_w, fout) != table->tab_w) {
 				SYSERROR("Failed to write FITS table row");
                 goto bailout;
@@ -186,6 +192,7 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
 	}
 	fclose(fin);
     anqfits_close(anq);
+    printf("Done\n");
 	return 0;
 
  bailout:
