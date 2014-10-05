@@ -144,6 +144,25 @@ dsdot.o
 
 CBLAS := $(addprefix cblas/,$(BLAS))
 
+MULTIROOTS := \
+fdjac.o \
+fsolver.o \
+fdfsolver.o \
+convergence.o \
+newton.o \
+gnewton.o \
+dnewton.o \
+broyden.o \
+hybrid.o \
+hybridj.o
+
+MULTIROOTS := $(addprefix multiroots/,$(MULTIROOTS))
+
+VECTOR := \
+prop.o
+
+VECTOR := $(addprefix vector/,$(VECTOR))
+
 QR_OBJS := linalg/qr.o linalg/householder.o \
 		matrix/matrix.o matrix/rowcol.o matrix/init.o matrix/submatrix.o \
 		matrix/copy.o \
@@ -174,7 +193,7 @@ LU_OBJS := linalg/lu.o permutation/init.o permutation/permutation.o permutation/
 EXTRA_OBJS := matrix/view.o err/strerror.o
 
 # "sort" removes duplicates.
-GSL_OBJS := $(sort $(QR_OBJS) $(CHOL_OBJS) $(SVD_OBJS) $(LU_OBJS) $(EXTRA_OBJS))
+GSL_OBJS := $(sort $(QR_OBJS) $(CHOL_OBJS) $(SVD_OBJS) $(LU_OBJS) $(EXTRA_OBJS) $(MULTIROOTS) $(VECTOR))
 
 $(GSL_OBJS): config.h
 

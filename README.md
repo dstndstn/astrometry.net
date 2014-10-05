@@ -22,7 +22,8 @@ Latest release: http://astrometry.net/downloads/astrometry.net-0.50.tar.gz
 Copyright 2006-2014 Michael Blanton, David W. Hogg, Dustin Lang, Keir
 Mierle and Sam Roweis.
 
-Contributions from Sjoert van Velzen and others.
+Contributions from Sjoert van Velzen, Themos Tsikas (wcs-match.c),
+Andrew Hood, and others.
 
 Licensed under GPLv2.  Please contact us about other licensing
 arrangements.

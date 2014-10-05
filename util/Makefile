@@ -111,7 +111,7 @@ QFITS_UTILS := fits-column-merge subtable fitsgetext wcsinfo
 PROGS := an-fitstopnm an-pnmtofits downsample-fits \
 	fits-flip-endian hpsplit wcs-to-tan	query-starkd \
 	get-healpix $(QFITS_UTILS) search-index \
-	pad-file
+	pad-file wcs-match
 
 # search-index pad-file resample
 
