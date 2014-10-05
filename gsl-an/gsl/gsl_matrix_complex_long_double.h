@@ -224,6 +224,8 @@ int gsl_matrix_complex_long_double_swap_rowcol(gsl_matrix_complex_long_double * 
 int gsl_matrix_complex_long_double_transpose (gsl_matrix_complex_long_double * m);
 int gsl_matrix_complex_long_double_transpose_memcpy (gsl_matrix_complex_long_double * dest, const gsl_matrix_complex_long_double * src);
 
+int gsl_matrix_complex_long_double_equal (const gsl_matrix_complex_long_double * a, const gsl_matrix_complex_long_double * b);
+
 int gsl_matrix_complex_long_double_isnull (const gsl_matrix_complex_long_double * m);
 int gsl_matrix_complex_long_double_ispos (const gsl_matrix_complex_long_double * m);
 int gsl_matrix_complex_long_double_isneg (const gsl_matrix_complex_long_double * m);

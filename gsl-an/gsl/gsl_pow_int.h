@@ -54,6 +54,7 @@ INLINE_FUN double gsl_pow_9(const double x) { double x3 = x*x*x; return x3*x3*x3
 #endif
 
 double gsl_pow_int(double x, int n);
+double gsl_pow_uint(double x, unsigned int n);
 
 __END_DECLS
 

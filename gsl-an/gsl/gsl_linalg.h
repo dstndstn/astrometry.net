@@ -167,6 +167,8 @@ gsl_linalg_SV_solve (const gsl_matrix * U,
                      const gsl_vector * b,
                      gsl_vector * x);
 
+int gsl_linalg_SV_leverage(const gsl_matrix *U, gsl_vector *h);
+
 
 /* LU Decomposition, Gaussian elimination with partial pivoting
  */
@@ -449,6 +451,9 @@ int gsl_linalg_complex_cholesky_solve (const gsl_matrix_complex * cholesky,
 
 int gsl_linalg_complex_cholesky_svx (const gsl_matrix_complex * cholesky,
                                      gsl_vector_complex * x);
+
+int gsl_linalg_complex_cholesky_invert(gsl_matrix_complex * cholesky);
+
 
 /* Symmetric to symmetric tridiagonal decomposition */
 

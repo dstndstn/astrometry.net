@@ -342,7 +342,7 @@ gsl_linalg_QR_QTvec (const gsl_matrix * QR, const gsl_vector * tau, gsl_vector *
     }
   else if (v->size != M)
     {
-      GSL_ERROR ("vector size must be N", GSL_EBADLEN);
+      GSL_ERROR ("vector size must be M", GSL_EBADLEN);
     }
   else
     {
@@ -375,7 +375,7 @@ gsl_linalg_QR_Qvec (const gsl_matrix * QR, const gsl_vector * tau, gsl_vector * 
     }
   else if (v->size != M)
     {
-      GSL_ERROR ("vector size must be N", GSL_EBADLEN);
+      GSL_ERROR ("vector size must be M", GSL_EBADLEN);
     }
   else
     {

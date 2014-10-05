@@ -224,6 +224,8 @@ int gsl_matrix_complex_swap_rowcol(gsl_matrix_complex * m, const size_t i, const
 int gsl_matrix_complex_transpose (gsl_matrix_complex * m);
 int gsl_matrix_complex_transpose_memcpy (gsl_matrix_complex * dest, const gsl_matrix_complex * src);
 
+int gsl_matrix_complex_equal (const gsl_matrix_complex * a, const gsl_matrix_complex * b);
+
 int gsl_matrix_complex_isnull (const gsl_matrix_complex * m);
 int gsl_matrix_complex_ispos (const gsl_matrix_complex * m);
 int gsl_matrix_complex_isneg (const gsl_matrix_complex * m);

@@ -231,6 +231,8 @@ void gsl_matrix_ulong_max_index (const gsl_matrix_ulong * m, size_t * imax, size
 void gsl_matrix_ulong_min_index (const gsl_matrix_ulong * m, size_t * imin, size_t *jmin);
 void gsl_matrix_ulong_minmax_index (const gsl_matrix_ulong * m, size_t * imin, size_t * jmin, size_t * imax, size_t * jmax);
 
+int gsl_matrix_ulong_equal (const gsl_matrix_ulong * a, const gsl_matrix_ulong * b);
+
 int gsl_matrix_ulong_isnull (const gsl_matrix_ulong * m);
 int gsl_matrix_ulong_ispos (const gsl_matrix_ulong * m);
 int gsl_matrix_ulong_isneg (const gsl_matrix_ulong * m);

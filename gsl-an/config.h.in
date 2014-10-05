@@ -34,6 +34,10 @@
    */
 #undef HAVE_DECL_FINITE
 
+/* Define to 1 if you have the declaration of `fprnd_t', and to 0 if you
+   don't. */
+#undef HAVE_DECL_FPRND_T
+
 /* Define to 1 if you have the declaration of `frexp', and to 0 if you don't.
    */
 #undef HAVE_DECL_FREXP
@@ -276,6 +280,10 @@
 
 #if !HAVE_DECL_ISINF
 #define isinf gsl_isinf
+#endif
+
+#if !HAVE_DECL_ISFINITE
+#define isfinite gsl_finite
 #endif
 
 #if !HAVE_DECL_FINITE

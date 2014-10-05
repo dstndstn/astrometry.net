@@ -231,6 +231,8 @@ void gsl_matrix_long_double_max_index (const gsl_matrix_long_double * m, size_t 
 void gsl_matrix_long_double_min_index (const gsl_matrix_long_double * m, size_t * imin, size_t *jmin);
 void gsl_matrix_long_double_minmax_index (const gsl_matrix_long_double * m, size_t * imin, size_t * jmin, size_t * imax, size_t * jmax);
 
+int gsl_matrix_long_double_equal (const gsl_matrix_long_double * a, const gsl_matrix_long_double * b);
+
 int gsl_matrix_long_double_isnull (const gsl_matrix_long_double * m);
 int gsl_matrix_long_double_ispos (const gsl_matrix_long_double * m);
 int gsl_matrix_long_double_isneg (const gsl_matrix_long_double * m);

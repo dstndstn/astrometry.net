@@ -36,7 +36,7 @@ FUNCTION (gsl_block, alloc) (const size_t n)
                         GSL_ENOMEM, 0);
     }
 
-  b->data = (ATOMIC *) malloc (MULTIPLICITY * n * sizeof (ATOMIC));
+  b->data = (ATOMIC *) calloc (1, MULTIPLICITY * n * sizeof (ATOMIC));
 
   if (b->data == 0)
     {

@@ -155,6 +155,9 @@ int gsl_vector_ulong_div (gsl_vector_ulong * a, const gsl_vector_ulong * b);
 int gsl_vector_ulong_scale (gsl_vector_ulong * a, const double x);
 int gsl_vector_ulong_add_constant (gsl_vector_ulong * a, const double x);
 
+int gsl_vector_ulong_equal (const gsl_vector_ulong * u, 
+                            const gsl_vector_ulong * v);
+
 int gsl_vector_ulong_isnull (const gsl_vector_ulong * v);
 int gsl_vector_ulong_ispos (const gsl_vector_ulong * v);
 int gsl_vector_ulong_isneg (const gsl_vector_ulong * v);

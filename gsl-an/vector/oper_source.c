@@ -148,3 +148,4 @@ FUNCTION(gsl_vector, add_constant) (TYPE(gsl_vector) * a, const double x)
   
   return GSL_SUCCESS;
 }
+

@@ -473,6 +473,45 @@ gsl_linalg_SV_solve (const gsl_matrix * U,
     }
 }
 
+/*
+gsl_linalg_SV_leverage()
+  Compute statistical leverage values of a matrix:
+
+h = diag(A (A^T A)^{-1} A^T)
+
+Inputs: U - U matrix in SVD decomposition
+        h - (output) vector of leverages
+
+Return: success or error
+*/
+
+int
+gsl_linalg_SV_leverage(const gsl_matrix *U, gsl_vector *h)
+{
+  const size_t M = U->size1;
+
+  if (M != h->size)
+    {
+      GSL_ERROR ("first dimension of matrix U must match size of vector h",
+                 GSL_EBADLEN);
+    }
+  else
+    {
+      size_t i;
+
+      for (i = 0; i < M; ++i)
+        {
+          gsl_vector_const_view v = gsl_matrix_const_row(U, i);
+          double hi;
+          
+          gsl_blas_ddot(&v.vector, &v.vector, &hi);
+          gsl_vector_set(h, i, hi);
+        }
+
+      return GSL_SUCCESS;
+    }
+} /* gsl_linalg_SV_leverage() */
+
 /* This is a the jacobi version */
 /* Author:  G. Jungman */
 

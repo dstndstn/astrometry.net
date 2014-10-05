@@ -231,6 +231,8 @@ void gsl_matrix_uchar_max_index (const gsl_matrix_uchar * m, size_t * imax, size
 void gsl_matrix_uchar_min_index (const gsl_matrix_uchar * m, size_t * imin, size_t *jmin);
 void gsl_matrix_uchar_minmax_index (const gsl_matrix_uchar * m, size_t * imin, size_t * jmin, size_t * imax, size_t * jmax);
 
+int gsl_matrix_uchar_equal (const gsl_matrix_uchar * a, const gsl_matrix_uchar * b);
+
 int gsl_matrix_uchar_isnull (const gsl_matrix_uchar * m);
 int gsl_matrix_uchar_ispos (const gsl_matrix_uchar * m);
 int gsl_matrix_uchar_isneg (const gsl_matrix_uchar * m);

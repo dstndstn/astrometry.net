@@ -164,6 +164,9 @@ int gsl_vector_complex_reverse (gsl_vector_complex * v);
 int gsl_vector_complex_swap (gsl_vector_complex * v, gsl_vector_complex * w);
 int gsl_vector_complex_swap_elements (gsl_vector_complex * v, const size_t i, const size_t j);
 
+int gsl_vector_complex_equal (const gsl_vector_complex * u, 
+                                    const gsl_vector_complex * v);
+
 int gsl_vector_complex_isnull (const gsl_vector_complex * v);
 int gsl_vector_complex_ispos (const gsl_vector_complex * v);
 int gsl_vector_complex_isneg (const gsl_vector_complex * v);

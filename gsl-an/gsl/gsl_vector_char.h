@@ -155,6 +155,9 @@ int gsl_vector_char_div (gsl_vector_char * a, const gsl_vector_char * b);
 int gsl_vector_char_scale (gsl_vector_char * a, const double x);
 int gsl_vector_char_add_constant (gsl_vector_char * a, const double x);
 
+int gsl_vector_char_equal (const gsl_vector_char * u, 
+                            const gsl_vector_char * v);
+
 int gsl_vector_char_isnull (const gsl_vector_char * v);
 int gsl_vector_char_ispos (const gsl_vector_char * v);
 int gsl_vector_char_isneg (const gsl_vector_char * v);

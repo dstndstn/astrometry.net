@@ -155,6 +155,9 @@ int gsl_vector_float_div (gsl_vector_float * a, const gsl_vector_float * b);
 int gsl_vector_float_scale (gsl_vector_float * a, const double x);
 int gsl_vector_float_add_constant (gsl_vector_float * a, const double x);
 
+int gsl_vector_float_equal (const gsl_vector_float * u, 
+                            const gsl_vector_float * v);
+
 int gsl_vector_float_isnull (const gsl_vector_float * v);
 int gsl_vector_float_ispos (const gsl_vector_float * v);
 int gsl_vector_float_isneg (const gsl_vector_float * v);

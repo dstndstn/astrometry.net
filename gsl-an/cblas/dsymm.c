@@ -1,6 +1,7 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_cblas.h>
 #include "cblas.h"
+#include "error_cblas_l3.h"
 
 void
 cblas_dsymm (const enum CBLAS_ORDER Order, const enum CBLAS_SIDE Side,

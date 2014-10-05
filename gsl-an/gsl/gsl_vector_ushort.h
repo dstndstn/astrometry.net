@@ -155,6 +155,9 @@ int gsl_vector_ushort_div (gsl_vector_ushort * a, const gsl_vector_ushort * b);
 int gsl_vector_ushort_scale (gsl_vector_ushort * a, const double x);
 int gsl_vector_ushort_add_constant (gsl_vector_ushort * a, const double x);
 
+int gsl_vector_ushort_equal (const gsl_vector_ushort * u, 
+                            const gsl_vector_ushort * v);
+
 int gsl_vector_ushort_isnull (const gsl_vector_ushort * v);
 int gsl_vector_ushort_ispos (const gsl_vector_ushort * v);
 int gsl_vector_ushort_isneg (const gsl_vector_ushort * v);

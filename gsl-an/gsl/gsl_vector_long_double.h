@@ -155,6 +155,9 @@ int gsl_vector_long_double_div (gsl_vector_long_double * a, const gsl_vector_lon
 int gsl_vector_long_double_scale (gsl_vector_long_double * a, const double x);
 int gsl_vector_long_double_add_constant (gsl_vector_long_double * a, const double x);
 
+int gsl_vector_long_double_equal (const gsl_vector_long_double * u, 
+                            const gsl_vector_long_double * v);
+
 int gsl_vector_long_double_isnull (const gsl_vector_long_double * v);
 int gsl_vector_long_double_ispos (const gsl_vector_long_double * v);
 int gsl_vector_long_double_isneg (const gsl_vector_long_double * v);

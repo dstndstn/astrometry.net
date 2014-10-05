@@ -3,6 +3,7 @@ to provide Cholesky, QR, and LU decompositions.
 
 => Updated to gsl-1.11.
 => Updated to gsl-1.14.
+=> Updated to gsl-1.16.
 
 To grab files from a new version (assuming nothing has changed
 structurally):

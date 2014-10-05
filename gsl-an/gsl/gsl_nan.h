@@ -39,7 +39,7 @@
 # define GSL_NAN (gsl_nan())
 #endif
 
-#define GSL_POSZERO (+0)
-#define GSL_NEGZERO (-0)
+#define GSL_POSZERO (+0.0)
+#define GSL_NEGZERO (-0.0)
 
 #endif /* __GSL_NAN_H__ */

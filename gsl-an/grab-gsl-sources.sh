@@ -1,6 +1,6 @@
 #! /bin/bash
 
-GSL=/tmp/gsl-1.14
+GSL=/tmp/gsl-1.16
 
 for x in COPYING README *.h config.h.in; do
 	echo $x
