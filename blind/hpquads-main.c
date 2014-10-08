@@ -50,7 +50,7 @@
 static const char* OPTIONS = "hi:c:q:bn:u:l:d:p:r:L:RI:F:HEv";
 
 static void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 	       "      -i <input-filename>    (star kdtree (skdt.fits) input file)\n"
 		   "      -c <codes-output-filename>    (codes file (code.fits) output file)\n"

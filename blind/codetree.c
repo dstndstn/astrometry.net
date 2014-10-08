@@ -143,7 +143,7 @@ codetree_t* codetree_build(codefile_t* codes,
 	fits_copy_header(chdr, hdr, "CXDX");
 	fits_copy_header(chdr, hdr, "CXDXLT1");
 	fits_copy_header(chdr, hdr, "CIRCLE");
-	boilerplate_add_fits_headers(hdr);
+	BOILERPLATE_ADD_FITS_HEADERS(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the command-line:", NULL, NULL);
 	fits_add_args(hdr, args, argc);
 	qfits_header_add(hdr, "HISTORY", "(end of command line)", NULL, NULL);

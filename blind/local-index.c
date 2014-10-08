@@ -40,7 +40,7 @@
 const char* OPTIONS = "hvx:w:l:u:o:d:I:N:p:R:L:Mn:U:S:f:r:J:X:Y:";
 
 static void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 	       "      -x <input-xylist>    input: source positions; assumed sorted by brightness\n"
 		   "      -w <input-wcs>       input: WCS file for sources\n"

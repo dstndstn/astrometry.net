@@ -34,7 +34,7 @@
 const char* OPTIONS = "he:W:H:";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stderr);
+	BOILERPLATE_HELP_HEADER(stderr);
 	fprintf(stderr, "\nUsage: %s [options] <wcs-file>\n"
 			"  [-e <extension>]  Read from given HDU (default 0 = primary)\n"
 			"  [-W <image width>] Set/override IMAGEW\n"

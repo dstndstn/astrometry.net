@@ -33,7 +33,7 @@
 #define OPTIONS "hq:c:s:o:"
 
 static void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
            "   -q <input-quad-filename>\n"
            "   -c <input-code-kdtree-filename>\n"

@@ -30,7 +30,7 @@
 static const char* OPTIONS = "hvr:d:R:t:Io:T";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s [options] <star-kdtree-file>\n"
 		   "    [-o <ra-dec-list>]: write FITS table (default: print ASCII to stdout)\n"
 		   "    [-r <ra>] (deg)\n"

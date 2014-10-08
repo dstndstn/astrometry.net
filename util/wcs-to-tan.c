@@ -14,7 +14,7 @@
 static const char* OPTIONS = "hw:e:tLx:y:W:H:N:o:v";
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 		   "   -w <WCS input file>\n"
 		   "     [-e <extension>] FITS HDU number to read WCS from (default 0 = primary)\n"

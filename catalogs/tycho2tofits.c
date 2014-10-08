@@ -35,7 +35,7 @@
 #define OPTIONS "ho:HN:"
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
     printf("\nUsage:\n"
 		   "  %s -o <output-filename(-template)>   (eg, tycho2_hp%%02i.fits if you use the -H option)\n"
 		   "  [-H]: do healpixification\n"
@@ -191,7 +191,7 @@ int main(int argc, char** args) {
 					fits_header_add_int(hdr, "NSIDE", Nside, "The healpix resolution.");
 				}
 
-				boilerplate_add_fits_headers(hdr);
+				BOILERPLATE_ADD_FITS_HEADERS(hdr);
 
 				qfits_header_add(hdr, "HISTORY", "Created by the program \"tycho2tofits\"", NULL, NULL);
 				qfits_header_add(hdr, "HISTORY", "tycho2tofits command line:", NULL, NULL);

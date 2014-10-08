@@ -29,7 +29,6 @@
 #include "image2xy.h"
 #include "ioutils.h"
 #include "simplexy.h"
-#include "svn.h"
 #include "dimage.h"
 #include "errors.h"
 #include "log.h"

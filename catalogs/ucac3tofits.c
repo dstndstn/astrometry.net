@@ -40,7 +40,7 @@
 #define OPTIONS "ho:N:"
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage:\n"
 		   "  %s -o <output-filename-template>     [default: ucac3_%%03i.fits]\n"
 		   "  [-N <healpix-nside>]  (default = 9)\n"
@@ -160,7 +160,7 @@ int main(int argc, char** args) {
 				}
 				fits_header_add_int(ucacs[hp]->header, "HEALPIX", hp, "The healpix number of this catalog.");
 				fits_header_add_int(ucacs[hp]->header, "NSIDE", Nside, "The healpix resolution.");
-				boilerplate_add_fits_headers(ucacs[hp]->header);
+				BOILERPLATE_ADD_FITS_HEADERS(ucacs[hp]->header);
 				qfits_header_add(ucacs[hp]->header, "HISTORY", "Created by the program \"ucac3tofits\"", NULL, NULL);
 				qfits_header_add(ucacs[hp]->header, "HISTORY", "ucac3tofits command line:", NULL, NULL);
 				fits_add_args(ucacs[hp]->header, args, argc);

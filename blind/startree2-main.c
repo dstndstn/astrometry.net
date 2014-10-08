@@ -32,7 +32,7 @@
 const char* OPTIONS = "hvL:d:t:bsSci:o:R:D:";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 		   "     -i <input-fits-catalog-name>\n"
            "     -o <output-star-kdtree-name>\n"

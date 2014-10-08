@@ -52,7 +52,7 @@
 const char* OPTIONS = "hvn:r:d:m:o:gc:t:b:";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s [options] <input-FITS-catalog> [...]\n"
 		   "    -o <output-filename-pattern>  with %%i printf-pattern\n"
 		   "    [-r <ra-column-name>]: name of RA in FITS table (default RA)\n"

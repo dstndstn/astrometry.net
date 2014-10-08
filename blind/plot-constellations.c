@@ -47,12 +47,11 @@
 #include "sip-utils.h"
 #include "errors.h"
 #include "log.h"
-#include "svn.h"
 
 const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:g:JF:V:O:";
 
 void print_help(char* progname) {
-    boilerplate_help_header(stdout);
+    BOILERPLATE_HELP_HEADER(stdout);
     printf("\nUsage: %s\n"
            "   -w <WCS input file>\n"
            "   ( -L: just list the items in the field\n"
@@ -983,8 +982,8 @@ int main(int argc, char** args) {
         char* annstr = sl_implode(json, ",\n");
         fprintf(fout, "{ \n");
         fprintf(fout, "  \"status\": \"solved\",\n");
-        fprintf(fout, "  \"svn-revision\": %i,\n", svn_revision());
-        fprintf(fout, "  \"svn-date\": \"%s\",\n", svn_date());
+        fprintf(fout, "  \"git-revision\": %s,\n", PRG_GIT_REVISION);
+        fprintf(fout, "  \"git-date\": \"%s\",\n", PRG_GIT_DATE);
         fprintf(fout, "  \"annotations\": [\n%s\n]\n", annstr);
         fprintf(fout, "}\n");
         free(annstr);

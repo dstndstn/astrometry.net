@@ -36,7 +36,7 @@
 const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:B:A:D:t:e:";
 
 static void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 	       "      (\n"
 		   "         -i <input-FITS-catalog>  input: source RA,DEC, etc\n"

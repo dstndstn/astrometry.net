@@ -32,7 +32,7 @@
 const char* OPTIONS = "hvH:s:n:N:d:R:D:S:fm:";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s [options] <input-FITS-catalog> <output-FITS-catalog>\n"
 		   "    [-R <ra-column-name>]: name of RA in FITS table (default RA)\n"
 		   "    [-D <dec-column-name>]: name of DEC in FITS table (default DEC)\n"

@@ -39,7 +39,7 @@
 #define OPTIONS "hR:k:d:t:bsSci:o:"
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 		   "     -i <input-catalog-name>\n"
            "     -o <output-star-kdtree-name>\n"
@@ -220,7 +220,7 @@ int main(int argc, char *argv[]) {
 	fits_copy_header(catheader, hdr, "CUTMINMG");
 	fits_copy_header(catheader, hdr, "CUTMAXMG");
 
-	boilerplate_add_fits_headers(hdr);
+	BOILERPLATE_ADD_FITS_HEADERS(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"startree\".", NULL, NULL);
 	qfits_header_add(hdr, "HISTORY", "startree command line:", NULL, NULL);
 	fits_add_args(hdr, argv, argc);
