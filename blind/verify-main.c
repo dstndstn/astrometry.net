@@ -63,7 +63,7 @@
 static const char* OPTIONS = "hx:w:r:vj:p:";
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 		   "   -w <WCS input file>\n"
 		   "   -x <xyls input file>\n"

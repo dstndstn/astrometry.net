@@ -35,7 +35,7 @@
 const char* OPTIONS = "hw:e:E:x:L:z";
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s [options] <input-FITS-image> <output (target) WCS-file> <output-FITS-image>\n"
 		   "   [-E <input image FITS extension>] (default: 0)\n"
 		   "   [-w <input WCS file>] (default is to read WCS from input FITS image)\n"

@@ -47,12 +47,11 @@
 #include "sip-utils.h"
 #include "errors.h"
 #include "log.h"
-#include "svn.h"
 
 const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:g:JF:V:O:";
 
 void print_help(char* progname) {
-    boilerplate_help_header(stdout);
+    BOILERPLATE_HELP_HEADER(stdout);
     printf("\nUsage: %s\n"
            "   -w <WCS input file>\n"
            "   ( -L: just list the items in the field\n"

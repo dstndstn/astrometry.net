@@ -35,7 +35,7 @@
 static const char* OPTIONS = "hs:q:S:Q:wcv";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
            "    -s <input-star-kdtree-filename>\n"
            "    -q <input-quads-filename>\n"

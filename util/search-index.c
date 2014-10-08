@@ -32,7 +32,7 @@
 static const char* OPTIONS = "hvr:d:R:o:";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s [options] <index-files>\n"
 		   "    -r <ra>     (deg)\n"
 		   "    -d <dec>    (deg)\n"

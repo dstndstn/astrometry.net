@@ -39,7 +39,7 @@
 
 void print_help(char* progname)
 {
-	boilerplate_help_header(stderr);
+	BOILERPLATE_HELP_HEADER(stderr);
 	fprintf(stderr, "Usage: %s\n"
 			"   -r <rdls-output-file>\n"
             "   [-R]: add quad radius columns to the RDLS file.\n"

@@ -43,7 +43,7 @@
 
 static void print_help(char* progname)
 {
-	boilerplate_help_header(stderr);
+	BOILERPLATE_HELP_HEADER(stderr);
 	fprintf(stderr, "Usage: %s  <code kdtree>\n"
 			"       [-d]: normalize by volume (produce density plots)\n\n",
 	        progname);

@@ -76,7 +76,7 @@ int unpermute_stars(startree_t* treein, quadfile_t* qfin,
 
 	fits_copy_header(qinhdr, qouthdr, "ALLSKY");
 
-	boilerplate_add_fits_headers(qouthdr);
+	BOILERPLATE_ADD_FITS_HEADERS(qouthdr);
 	qfits_header_add(qouthdr, "HISTORY", "This file was created by the program \"unpermute-stars\".", NULL, NULL);
 	qfits_header_add(qouthdr, "HISTORY", "unpermute-stars command line:", NULL, NULL);
 	fits_add_args(qouthdr, args, argc);

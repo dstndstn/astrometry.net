@@ -134,7 +134,7 @@
 static const char* OPTIONS = "hvW:H:o:JjP";
 
 static void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s [options] > output.png\n"
            "  [-o <output-file>] (default: stdout)\n"
            "  [-P]              Write PPM output instead of PNG.\n"

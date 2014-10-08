@@ -75,7 +75,7 @@ int unpermute_quads(quadfile_t* quadin, codetree_t* treein,
 	qouthdr = quadfile_get_header(quadout);
 	qinhdr  = quadfile_get_header(quadin);
 
-	boilerplate_add_fits_headers(qouthdr);
+	BOILERPLATE_ADD_FITS_HEADERS(qouthdr);
 	qfits_header_add(qouthdr, "HISTORY", "This file was created by the program \"unpermute-quads\".", NULL, NULL);
 	qfits_header_add(qouthdr, "HISTORY", "unpermute-quads command line:", NULL, NULL);
 	fits_add_args(qouthdr, args, argc);
@@ -123,7 +123,7 @@ int unpermute_quads(quadfile_t* quadin, codetree_t* treein,
 	fits_copy_header(qinhdr, hdr, "HEALPIX");
 	fits_copy_header(qinhdr, hdr, "HPNSIDE");
 	fits_copy_header(qinhdr, hdr, "ALLSKY");
-	boilerplate_add_fits_headers(hdr);
+	BOILERPLATE_ADD_FITS_HEADERS(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"unpermute-quads\".", NULL, NULL);
 	qfits_header_add(hdr, "HISTORY", "unpermute-quads command line:", NULL, NULL);
 	fits_add_args(hdr, args, argc);

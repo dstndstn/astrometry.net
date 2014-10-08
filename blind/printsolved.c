@@ -30,7 +30,7 @@
 const char* OPTIONS = "hum:SM:jwps";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stderr);
+	BOILERPLATE_HELP_HEADER(stderr);
 	fprintf(stderr, "\nUsage: %s <solved-file> ...\n"
 			"    [-s]: just summary info, no field numbers\n"
 			"    [-p]: print percent solved\n"

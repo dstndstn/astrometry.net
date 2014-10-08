@@ -16,7 +16,7 @@ static anwcs_t* wcs1 = NULL;
 static anwcs_t* wcs2 = NULL;
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 	       "   -1 <WCS first input file>\n"
 	       "   -2 <WCS second input file>\n"

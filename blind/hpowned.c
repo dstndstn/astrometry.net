@@ -31,7 +31,7 @@
 #define OPTIONS "hN:mf:"
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
     printf("\nUsage: %s\n"
 		   "     [-N <nside>]    (default 1)\n"
 		   "     [-m (to include a margin of one small healpixel)]\n"

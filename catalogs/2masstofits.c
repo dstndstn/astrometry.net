@@ -33,7 +33,7 @@
 #define OPTIONS "ho:N:"
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
     printf("usage:\n"
 		   "  %s -o <output-filename-template>\n"
 		   "  [-N <healpix-nside>]  (default = 8.)\n"
@@ -137,7 +137,7 @@ int main(int argc, char** args) {
 				}
 				// header remarks...
                 hdr = twomass_fits_get_primary_header(cats[hp]);
-				boilerplate_add_fits_headers(hdr);
+				BOILERPLATE_ADD_FITS_HEADERS(hdr);
 				fits_header_add_int(hdr, "HEALPIX", hp, "The healpix number of this catalog.");
 				fits_header_add_int(hdr, "NSIDE", Nside, "The healpix resolution.");
 

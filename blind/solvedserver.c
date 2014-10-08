@@ -38,7 +38,7 @@
 const char* OPTIONS = "hp:f:";
 
 static void printHelp(char* progname) {
-	boilerplate_help_header(stderr);
+	BOILERPLATE_HELP_HEADER(stderr);
 	fprintf(stderr, "\nUsage: %s\n"
 			"   [-p <port>] (default 6789)\n"
 			"   [-f <filename-pattern>]  (default solved.%%02i)\n",

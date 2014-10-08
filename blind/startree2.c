@@ -174,7 +174,7 @@ startree_t* startree_build(fitstable_t* intable,
 	//fits_copy_header(inhdr, hdr, "CUTBAND");
 	//fits_copy_header(inhdr, hdr, "CUTMINMG");
 	//fits_copy_header(inhdr, hdr, "CUTMAXMG");
-	boilerplate_add_fits_headers(hdr);
+	BOILERPLATE_ADD_FITS_HEADERS(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the command-line:", NULL, NULL);
 	fits_add_args(hdr, args, argc);
 	qfits_header_add(hdr, "HISTORY", "(end of command line)", NULL, NULL);

@@ -20,11 +20,24 @@
 #define BOILERPLATE_H
 
 #include <stdio.h>
-
 #include "astrometry/qfits_header.h"
+#include "../version.h"
 
-void boilerplate_help_header(FILE* fid);
+#define BOILERPLATE_HELP_HEADER(fid)                                       \
+do {                                                                       \
+    fprintf(fid, "This program is part of the Astrometry.net suite.\n");   \
+    fprintf(fid, "For details, visit  http://astrometry.net .\n");         \
+    fprintf(fid, "Git URL %s\n", PRG_GIT_URL);                             \
+    fprintf(fid, "Revision %s, date %s.\n", PRG_GIT_REVISION, PRG_GIT_DATE);\
+} while (0)
 
-void boilerplate_add_fits_headers(qfits_header* hdr);
+#define BOILERPLATE_ADD_FITS_HEADERS(hdr)                                       \
+do {                                                                            \
+    fits_add_long_history(hdr, "Created by the Astrometry.net suite.");         \
+    fits_add_long_history(hdr, "For more details, see http://astrometry.net .");\
+    fits_add_long_history(hdr, "Git URL %s", PRG_GIT_URL);                      \
+    fits_add_long_history(hdr, "Git revision %s", PRG_GIT_REVISION);             \
+    fits_add_long_history(hdr, "Git date %s", PRG_GIT_DATE);                    \
+} while (0)
 
 #endif
