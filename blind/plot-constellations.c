@@ -982,8 +982,8 @@ int main(int argc, char** args) {
         char* annstr = sl_implode(json, ",\n");
         fprintf(fout, "{ \n");
         fprintf(fout, "  \"status\": \"solved\",\n");
-        fprintf(fout, "  \"svn-revision\": %i,\n", svn_revision());
-        fprintf(fout, "  \"svn-date\": \"%s\",\n", svn_date());
+        fprintf(fout, "  \"git-revision\": %s,\n", PRG_GIT_REVISION);
+        fprintf(fout, "  \"git-date\": \"%s\",\n", PRG_GIT_DATE);
         fprintf(fout, "  \"annotations\": [\n%s\n]\n", annstr);
         fprintf(fout, "}\n");
         free(annstr);
