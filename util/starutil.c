@@ -97,8 +97,8 @@ static int parse_hms_string(const char* str,
     const char* s;
 
     const char* restr = 
-        "^([+-])?([[:digit:]]{2}):"
-        "([[:digit:]]{2}):"
+        "^([+-])?([[:digit:]]{1,2}):"
+        "([[:digit:]]{1,2}):"
         "([[:digit:]]*(\\.[[:digit:]]*)?)$";
     if (regcomp(&re, restr, REG_EXTENDED)) {
         ERROR("Failed to compile H:M:S regex \"%s\"", restr);

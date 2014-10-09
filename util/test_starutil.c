@@ -128,6 +128,22 @@ void test_atora(CuTest* tc) {
     CuAssertDblEquals(tc, 0.25, atora("00:01:00.0"), 1e-6);
     CuAssertDblEquals(tc, 0.25/60.0, atora("00:00:01.0"), 1e-6);
     CuAssertDblEquals(tc, 0.25/60.0/10.0, atora("00:00:00.1"), 1e-6);
+
+    CuAssertDblEquals(tc, 0.0, atora("0:00:00.0"), 1e-6);
+    CuAssertDblEquals(tc, 15.0, atora("1:00:00.0"), 1e-6);
+    CuAssertDblEquals(tc, 0.25, atora("0:01:00.0"), 1e-6);
+    CuAssertDblEquals(tc, 0.25/60.0, atora("0:00:01.0"), 1e-6);
+    CuAssertDblEquals(tc, 0.25/60.0/10.0, atora("0:00:00.1"), 1e-6);
+
+    CuAssertDblEquals(tc, 0.0, atora("00:0:00.0"), 1e-6);
+    CuAssertDblEquals(tc, 15.0, atora("01:0:00.0"), 1e-6);
+    CuAssertDblEquals(tc, 0.25, atora("00:1:00.0"), 1e-6);
+    CuAssertDblEquals(tc, 0.25/60.0, atora("00:0:01.0"), 1e-6);
+    CuAssertDblEquals(tc, 0.25/60.0/10.0, atora("00:0:00.1"), 1e-6);
+
+    CuAssertDblEquals(tc, 6 * 15 + 8 * 0.25 + 41.0 * 0.25/60.0, atora("06:08:41.0"), 1e-6);
+    CuAssertDblEquals(tc, 6 * 15 + 8 * 0.25 + 41.0 * 0.25/60.0, atora("6:08:41.0"), 1e-6);
+    CuAssertDblEquals(tc, 6 * 15 + 8 * 0.25 + 41.0 * 0.25/60.0, atora("6:8:41.0"), 1e-6);
 }
 void test_atodec(CuTest* tc) {
     CuAssertDblEquals(tc, 0.0, atodec("00:00:00.0"), 1e-6);
