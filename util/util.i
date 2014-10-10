@@ -155,10 +155,10 @@ void log_set_level(int lvl);
     }
 
 
-    static PyObject* hist2d(PyObject* py_arrx, PyObject* py_arry,
-                            PyObject* py_hist,
-                            double xlo, double xhi,
-                            double ylo, double yhi) {
+    static PyObject* an_hist2d(PyObject* py_arrx, PyObject* py_arry,
+                               PyObject* py_hist,
+                               double xlo, double xhi,
+                               double ylo, double yhi) {
         PyArray_Descr* dtype = NULL;
         PyArray_Descr* itype = NULL;
         int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
