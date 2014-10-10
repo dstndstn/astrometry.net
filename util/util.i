@@ -155,6 +155,102 @@ void log_set_level(int lvl);
     }
 
 
+    static PyObject* hist2d(PyObject* py_arrx, PyObject* py_arry,
+                            PyObject* py_hist,
+                            double xlo, double xhi,
+                            double ylo, double yhi) {
+        PyArray_Descr* dtype = NULL;
+        PyArray_Descr* itype = NULL;
+        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
+               NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+        int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+        PyObject* np_arrx;
+        PyObject* np_arry;
+        PyObject* np_hist;
+        double *arrx;
+        double *arry;
+        int32_t *hist;
+        int nx, ny;
+        double dx, dy, idx, idy;
+        int i, N;
+
+        dtype = PyArray_DescrFromType(NPY_DOUBLE);
+        itype = PyArray_DescrFromType(NPY_INT32);
+
+        Py_INCREF(dtype);
+        np_arrx = PyArray_FromAny(py_arrx, dtype, 1, 1, req, NULL);
+        if (!np_arrx) {
+            PyErr_SetString(PyExc_ValueError,"Expected x array to be double");
+            Py_DECREF(dtype);
+            return NULL;
+        }
+        N = PyArray_SIZE(np_arrx);
+
+        Py_INCREF(dtype);
+        np_arry = PyArray_FromAny(py_arry, dtype, 1, 1, req, NULL);
+        if (!np_arry) {
+            PyErr_SetString(PyExc_ValueError,"Expected y array to be double");
+            Py_DECREF(dtype);
+            Py_DECREF(np_arrx);
+            return NULL;
+        }
+        if (PyArray_SIZE(np_arry) != N) {
+            PyErr_SetString(PyExc_ValueError,"Expected x and y arrays to be the same length");
+            Py_DECREF(dtype);
+            Py_DECREF(np_arrx);
+            return NULL;
+        }
+        Py_CLEAR(dtype);
+        Py_INCREF(itype);
+        np_hist = PyArray_FromAny(py_hist, itype, 2, 2, reqout, NULL);
+        if (!np_hist) {
+            PyErr_SetString(PyExc_ValueError,"Expected hist array to be int32");
+            Py_DECREF(np_arrx);
+            Py_DECREF(np_arry);
+            Py_DECREF(itype);
+            return NULL;
+        }
+        Py_CLEAR(itype);
+
+        ny = PyArray_DIM(np_hist, 0);
+        nx = PyArray_DIM(np_hist, 1);
+        dx = (xhi - xlo) / (double)nx;
+        dy = (yhi - ylo) / (double)ny;
+        idx = 1./dx;
+        idy = 1./dy;
+
+        hist = PyArray_DATA(np_hist);
+        arrx = PyArray_DATA(np_arrx);
+        arry = PyArray_DATA(np_arry);
+
+        for (i=0; i<N; i++,
+                 arrx++, arry++) {
+            double x, y;
+            int binx, biny;
+            x = *arrx;
+            y = *arry;
+            if ((x < xlo) || (x > xhi) || (y < ylo) || (y > yhi))
+                continue;
+            binx = (int)((x - xlo) * idx);
+            biny = (int)((y - ylo) * idy);
+            // == upper limit
+            if (unlikely(binx == nx)) {
+                binx--;
+            }
+            if (unlikely(biny == ny)) {
+                biny--;
+            }
+            hist[biny * nx + binx]++;
+        }
+
+        Py_DECREF(np_arrx);
+        Py_DECREF(np_arry);
+        Py_DECREF(np_hist);
+    
+        Py_RETURN_NONE;
+    }
+
+
     static double flat_percentile_f(PyObject* np_arr, double pct) {
         PyArray_Descr* dtype;
         npy_intp N;
