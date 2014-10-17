@@ -118,11 +118,11 @@ http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp2.png
 +-----------------------+-----------------------------------------+
 | ``index-4207-*.fits`` |        22--30                           |
 +-----------------------+-----------------------------------------+
-| ``index-4206-*.fits`` |        162--2                           |
+| ``index-4206-*.fits`` |        16--22                           |
 +-----------------------+-----------------------------------------+
-| ``index-4205-*.fits`` |        111--6                           |
+| ``index-4205-*.fits`` |        11--16                           |
 +-----------------------+-----------------------------------------+
-| ``index-4204-*.fits`` |         81--1                           |
+| ``index-4204-*.fits`` |         8--11                           |
 +-----------------------+-----------------------------------------+
 | ``index-4203-*.fits`` |         5.6--8.0                        |
 +-----------------------+-----------------------------------------+
@@ -192,13 +192,17 @@ Finally, solve some fields.
 (If you didn't build the plotting commands, add "--no-plots" to the
 command lines below.)
 
-If you have any of index files 213 to 218::
+(These lists of index files have not been updated; usually replacing
+"2xx" by "42xx" should work; for some of them the exact set that will
+solve has changed.)
+
+If you have any of index files 4112 to 4118 (213 to 218)::
 
    $ solve-field --scale-low 10 demo/apod4.jpg
 
-If you have index 219::
+If you have any of index files 4115 to 4119 (219)::
 
-   $ solve-field --scale-low 30 demo/apod5.jpg
+   $ solve-field --scale-low 45 demo/apod5.jpg
 
 If you have any of index files 210 to 214::
 
