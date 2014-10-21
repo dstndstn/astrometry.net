@@ -173,15 +173,17 @@ class DR8(DR7):
     def getDRNumber(self):
         return 8
 
-    def useLocalTree(self):
-        pobj = os.environ['BOSS_PHOTOOBJ']
+    def useLocalTree(self, photoObjs=None, resolve=None):
+        if photoObjs is None:
+            photoObjs = os.environ['BOSS_PHOTOOBJ']
         redux = os.environ['PHOTO_REDUX']
-        resolve = os.environ['PHOTO_RESOLVE']
+        if resolve is None:
+            resolve = os.environ['PHOTO_RESOLVE']
         
         self.filenames.update(
-            photoObj = os.path.join(pobj, '%(rerun)s', '%(run)i', '%(camcol)i',
+            photoObj = os.path.join(photoObjs, '%(rerun)s', '%(run)i', '%(camcol)i',
                                     'photoObj-%(run)06i-%(camcol)i-%(field)04i.fits'),
-            frame = os.path.join(pobj, 'frames', '%(rerun)s', '%(run)i', '%(camcol)i',
+            frame = os.path.join(photoObjs, 'frames', '%(rerun)s', '%(run)i', '%(camcol)i',
                                     'frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2'),
             psField = os.path.join(redux, '%(rerun)s', '%(run)i', 'objcs', '%(camcol)i',
                                    'psField-%(run)06i-%(camcol)i-%(field)04i.fit'),
