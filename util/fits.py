@@ -286,6 +286,10 @@ class tabledata(object):
     def get_header(self):
         return self._header
 
+    def to_np_arrays(self):
+        for col in self.get_columns():
+            self.set(col, np.array(self.get(col)))
+
     def columns(self):
         return [k for k in self.__dict__.keys() if not k.startswith('_')]
     def __len__(self):
