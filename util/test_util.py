@@ -3,6 +3,41 @@ import numpy as np
 import time
 from starutil_numpy import *
 
+x = np.random.uniform(size=10000) * 10
+y = np.random.uniform(size=10000) * 100
+xlo,xhi = 0., 9.
+ylo,yhi = 5., 105.
+nx,ny = 10,12
+H = np.zeros((ny,nx), np.int32)
+an_hist2d(x, y, H, xlo, xhi, ylo, yhi)
+
+print H.sum()
+
+H2,xe,ye = np.histogram2d(x, y, range=((xlo,xhi),(ylo,yhi)), bins=(nx,ny))
+
+assert(np.all(H == H2.T))
+
+x2 = np.append(x, np.array([xlo,xlo,xhi,xhi]))
+y2 = np.append(y, np.array([ylo,yhi,ylo,yhi]))
+
+Hb = np.zeros((ny,nx), np.int32)
+an_hist2d(x2, y2, Hb, xlo, xhi, ylo, yhi)
+
+H2b,xe,ye = np.histogram2d(x2, y2, range=((xlo,xhi),(ylo,yhi)), bins=(nx,ny))
+
+assert(np.all(Hb == H2b.T))
+
+an_hist2d(x, y, Hb, xlo, xhi, ylo, yhi)
+
+assert(np.all(Hb == (H2b.T + H2.T)))
+
+
+import sys
+sys.exit(0)
+
+
+
+
 sip = Sip('dec095705.01.p.w.wcs')
 x = np.random.uniform(2000, size=100)
 y = np.random.uniform(4000, size=100)

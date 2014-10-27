@@ -348,7 +348,10 @@ def tree_save(kd, fn):
     return rtn
 
 def tree_open(fn, treename=None):
-    return spherematch_c.kdtree_open(fn, treename)
+    if treename is None:
+        return spherematch_c.kdtree_open(fn)
+    else:
+        return spherematch_c.kdtree_open(fn, treename)
 
 def tree_close(kd):
     return spherematch_c.kdtree_close(kd)
@@ -356,6 +359,18 @@ def tree_close(kd):
 def tree_search(kd, pos, radius, getdists=False, sortdists=False):
     return spherematch_c.kdtree_rangesearch(kd, pos, radius,
                                             int(getdists), int(sortdists))
+
+def tree_search_radec(kd, ra, dec, radius, getdists=False, sortdists=False):
+    '''
+    ra,dec in degrees
+    radius in degrees
+    '''
+    dec = np.deg2rad(dec)
+    cosd = np.cos(dec)
+    ra = np.deg2rad(ra)
+    pos = np.array([cosd * np.cos(ra), cosd * np.sin(ra), np.sin(dec)])
+    rad = deg2dist(radius)
+    return tree_search(kd, pos, rad, getdists=getdists, sortdists=sortdists)
 
 def trees_match(kd1, kd2, radius, nearest=False, notself=False,
                 permuted=True, count=False):

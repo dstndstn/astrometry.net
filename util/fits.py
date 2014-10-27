@@ -1,10 +1,14 @@
 import os
+class NoPyfits(object):
+    pass
 try:
-    import pyfits
-except:
-    class NoPyfits(object):
-        pass
+    import fitsio
     pyfits = NoPyfits()
+except:
+    try:
+        import pyfits
+    except:
+        pyfits = NoPyfits()
 import numpy as np
 
 def pyfits_writeto(p, filename, **kwargs):
@@ -400,7 +404,8 @@ class tabledata(object):
             self._length = len(C)
 
     def __getitem__(self, I):
-        rtn = tabledata()
+        #rtn = tabledata()
+        rtn = self.__class__()
         for name,val in self.__dict__.items():
             if name.startswith('_'):
                 continue
@@ -620,13 +625,14 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
                lower=True,
                mmap=True,
                normalize=True,
-               use_fitsio=True):
+               use_fitsio=True,
+               tabledata_class=tabledata):
     '''
     If 'columns' (a list of strings) is passed, only those columns
     will be read; otherwise all columns will be read.
     '''
     if dataorfn is None:
-        return tabledata(header=header)
+        return tabledata_class(header=header)
     
     fitsio = None
     if use_fitsio:
@@ -660,7 +666,7 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
 
     if data is None:
         return None
-    T = tabledata(header=hdr)
+    T = tabledata_class(header=hdr)
 
     T._columns = []
 

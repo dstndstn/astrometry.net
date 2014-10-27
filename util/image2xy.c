@@ -75,7 +75,7 @@ int image2xy_run(simplexy_t* s,
     anbool tryagain;
     int rtn = -1;
 
-	if (downsample) {
+	if (downsample && downsample > 1) {
 		logmsg("Downsampling by %i...\n", S);
         if (!s->image) {
             s->image = upconvert(s->image_u8, s->nx, s->ny);
