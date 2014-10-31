@@ -1,10 +1,14 @@
 import os
+class NoPyfits(object):
+    pass
 try:
-    import pyfits
-except:
-    class NoPyfits(object):
-        pass
+    import fitsio
     pyfits = NoPyfits()
+except:
+    try:
+        import pyfits
+    except:
+        pyfits = NoPyfits()
 import numpy as np
 
 def pyfits_writeto(p, filename, **kwargs):
@@ -285,6 +289,10 @@ class tabledata(object):
     # Returns the original FITS header.
     def get_header(self):
         return self._header
+
+    def to_np_arrays(self):
+        for col in self.get_columns():
+            self.set(col, np.array(self.get(col)))
 
     def columns(self):
         return [k for k in self.__dict__.keys() if not k.startswith('_')]

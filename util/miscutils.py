@@ -1,6 +1,71 @@
 from math import pi
 import numpy as np
 
+def estimate_mode(img, lo=None, hi=None, plo=1, phi=70, bins1=30,
+                   flo=0.5, fhi=0.8, bins2=30,
+                   return_fit=False, raiseOnWarn=False):
+    # Estimate sky level by: compute the histogram within [lo,hi], fit
+    # a parabola to the log-counts, return the argmax of that parabola.
+
+    # Coarse bin to find the peak (mode)
+    if lo is None:
+        lo = np.percentile(img, plo)
+    if hi is None:
+        hi = np.percentile(img, phi)
+
+    binedges1 = np.linspace(lo, hi, bins1+1)
+    counts1,e = np.histogram(img.ravel(), bins=binedges1)
+    bincenters1 = binedges1[:-1] + (binedges1[1]-binedges1[0])/2.
+    maxbin = np.argmax(counts1)
+    maxcount = counts1[maxbin]
+    mode = bincenters1[maxbin]
+
+    # Search for bin containing < {flo,fhi} * maxcount
+    ilo = maxbin
+    while ilo > 0:
+        ilo -= 1
+        if counts1[ilo] < flo*maxcount:
+            break
+    ihi = maxbin
+    while ihi < bins1-1:
+        ihi += 1
+        if counts1[ihi] < fhi*maxcount:
+            break
+    
+    lo = bincenters1[ilo]
+    hi = bincenters1[ihi]
+    
+    binedges = np.linspace(lo, hi, bins2)
+    counts,e = np.histogram(img.ravel(), bins=binedges)
+    bincenters = binedges[:-1] + (binedges[1]-binedges[0])/2.
+    
+    b = np.log10(np.maximum(1, counts))
+
+    xscale = 0.5 * (hi - lo)
+    x0 = (hi + lo) / 2.
+    x = (bincenters - x0) / xscale
+
+    A = np.zeros((len(x), 3))
+    A[:,0] = 1.
+    A[:,1] = x
+    A[:,2] = x**2
+    res = np.linalg.lstsq(A, b)
+    X = res[0]
+    mx = -X[1] / (2. * X[2])
+    mx = (mx * xscale) + x0
+
+    if not (mx > lo and mx < hi):
+        if raiseOnWarn:
+            raise ValueError('sky estimate not bracketed by peak: lo %f, sky %f, hi %f' % (lo, mx, hi))
+        print 'WARNING: sky estimate not bracketed by peak: lo %f, sky %f, hi %f' % (lo, mx, hi)
+        
+    if return_fit:
+        bfit = X[0] + X[1] * x + X[2] * x**2
+        return (x * xscale + x0, b, bfit, mx, warn, binedges1,counts1)
+
+    return mx
+
+
 def parse_ranges(s):
     '''
     Parse PBS job array-style ranges: NNN,MMM-NNN,PPP

@@ -51,7 +51,11 @@ def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
     if stage <= 0:
         P = initial_args
     else:
-        prereq = prereqs.get(stage, stage-1)
+        try:
+            prereq = prereqs[stage]
+        except KeyError:
+            prereq = stage - 1
+
         if prereq is None:
             P = initial_args
         else:

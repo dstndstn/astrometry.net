@@ -148,14 +148,21 @@ class CpuMeas(object):
         from time import clock
         self.wall = datetime.datetime.now()
         self.cpu = clock()
-    def format_diff(self, other):
+
+    def cpu_seconds_since(self, other):
+        return self.cpu - other.cpu
+    def wall_seconds_since(self, other):
         dwall = (self.wall - other.wall)
         # python2.7
         if hasattr(dwall, 'total_seconds'):
             dwall = dwall.total_seconds()
         else:
             dwall = (dwall.microseconds + (dwall.seconds + dwall.days * 24. * 3600.) * 1e6) / 1e6
-        dcpu = (self.cpu - other.cpu)
+        return dwall
+        
+    def format_diff(self, other):
+        dwall = self.wall_seconds_since(other)
+        dcpu = self.cpu_seconds_since(other)
         return 'Wall: %.2f s, CPU: %.2f s' % (dwall, dcpu)
         
 class Time(object):
