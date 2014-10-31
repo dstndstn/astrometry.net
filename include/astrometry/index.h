@@ -46,7 +46,7 @@ typedef struct {
 	quadfile_t* quads;
 	startree_t* starkd;
 
-	// FITS file access
+   // FITS file access
 	anqfits_t* fits;
 
     // filenames

@@ -1337,9 +1337,19 @@ sip_t.cd    = property(sip_t_get_cd   , sip_t_set_cd,    None, 'CD')
 
 
 def sip_t_radec_bounds(self):
-    W,H = self.wcstan.imagew, self.wcstan.imageh
-    r,d = self.pixelxy2radec([1, W, W, 1], [1, 1, H, H])
-    return (r.min(), r.max(), d.min(), d.max())
+    # W,H = self.wcstan.imagew, self.wcstan.imageh
+    # r,d = self.pixelxy2radec([1, W, W, 1], [1, 1, H, H])
+    # return (r.min(), r.max(), d.min(), d.max())
+    W,H = self.imagew, self.imageh
+    r,d = self.pixelxy2radec([1, W/2, W, W, W, W/2, 1, 1], [1, 1, 1, H/2, H, H, H, H/2])
+    rx = r.max()
+    rn = r.min()
+    # ugh, RA wrap-around.  We find the largest value < 180 (ie, near zero) and smallest value > 180 (ie, near 360)
+    # and report them with ralo > rahi so that this case can be identified
+    if rx - rn > 180:
+        rx = r[r < 180].max()
+        rn = r[r > 180].min()
+    return (rn, rx, d.min(), d.max())
 sip_t.radec_bounds = sip_t_radec_bounds    
 
 #def sip_t_fromstring(s):
@@ -2420,10 +2430,11 @@ def tan_t_radec_bounds(self):
     r,d = self.pixelxy2radec([1, W/2, W, W, W, W/2, 1, 1], [1, 1, 1, H/2, H, H, H, H/2])
     rx = r.max()
     rn = r.min()
-    # ugh.
+    # ugh, RA wrap-around.  We find the largest value < 180 (ie, near zero) and smallest value > 180 (ie, near 360)
+    # and report them with ralo > rahi so that this case can be identified
     if rx - rn > 180:
-        rn = r[r < 180].max()
-        rx = r[r > 180].min()
+        rx = r[r < 180].max()
+        rn = r[r > 180].min()
     return (rn, rx, d.min(), d.max())
 tan_t.radec_bounds = tan_t_radec_bounds    
 
