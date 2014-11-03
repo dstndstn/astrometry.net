@@ -208,17 +208,17 @@ int main(int argc, char *argv[]) {
 	fprintf(stderr, "Writing output to %s ...\n", treefname);
 	fflush(stderr);
     hdr = startree_header(starkd);
-	fits_copy_header(catheader, hdr, "HEALPIX");
-	fits_copy_header(catheader, hdr, "HPNSIDE");
-	fits_copy_header(catheader, hdr, "ALLSKY");
-	fits_copy_header(catheader, hdr, "JITTER");
-	fits_copy_header(catheader, hdr, "CUTNSIDE");
-	fits_copy_header(catheader, hdr, "CUTMARG");
-	fits_copy_header(catheader, hdr, "CUTBAND");
-	fits_copy_header(catheader, hdr, "CUTDEDUP");
-	fits_copy_header(catheader, hdr, "CUTNSWEP");
-	fits_copy_header(catheader, hdr, "CUTMINMG");
-	fits_copy_header(catheader, hdr, "CUTMAXMG");
+	an_fits_copy_header(catheader, hdr, "HEALPIX");
+	an_fits_copy_header(catheader, hdr, "HPNSIDE");
+	an_fits_copy_header(catheader, hdr, "ALLSKY");
+	an_fits_copy_header(catheader, hdr, "JITTER");
+	an_fits_copy_header(catheader, hdr, "CUTNSIDE");
+	an_fits_copy_header(catheader, hdr, "CUTMARG");
+	an_fits_copy_header(catheader, hdr, "CUTBAND");
+	an_fits_copy_header(catheader, hdr, "CUTDEDUP");
+	an_fits_copy_header(catheader, hdr, "CUTNSWEP");
+	an_fits_copy_header(catheader, hdr, "CUTMINMG");
+	an_fits_copy_header(catheader, hdr, "CUTMAXMG");
 
 	boilerplate_add_fits_headers(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"startree\".", NULL, NULL);
@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
 		n = qfits_header_getint(catheader, key, -1);
 		if (n == -1)
 			break;
-		fits_copy_header(catheader, hdr, key);
+		an_fits_copy_header(catheader, hdr, key);
 	}
 
 	if (startree_write_to_file(starkd, treefname)) {

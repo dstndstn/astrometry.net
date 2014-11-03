@@ -798,7 +798,7 @@ int fits_add_args(qfits_header* hdr, char** args, int argc) {
 	return i;
 }
 
-int fits_copy_header(const qfits_header* src, qfits_header* dest, char* key) {
+int an_fits_copy_header(const qfits_header* src, qfits_header* dest, char* key) {
 	char* str = qfits_header_getstr(src, key);
 	if (!str) {
 		// header not found, or other problem.
