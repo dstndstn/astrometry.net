@@ -57,7 +57,7 @@ typedef struct {
     double imagew;
     double imageh;
 
-	// SIP projection rather than TAN.
+	// SIN projection rather than TAN.
 	anbool sin;
 
 } tan_t;
