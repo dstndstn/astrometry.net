@@ -32,7 +32,7 @@ def merge_tables(TT, columns=None):
         if columns == 'fillzero':
             for c in cols:
                 types[c] = TT[0].get(c).dtype
-                print 'col', c, 'is', types[c]
+                #print 'col', c, 'is', types[c]
                 
         for T in TT[1:]:
             if columns == 'minimal':
@@ -45,7 +45,7 @@ def merge_tables(TT, columns=None):
                 for c in newcols:
                     # Assume numpy arrays
                     types[c] = T.get(c).dtype
-                    print 'col', c, 'is', types[c]
+                    #print 'col', c, 'is', types[c]
                 cols = cols.union(T.get_columns())
                 continue
 
@@ -673,10 +673,25 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
     if fitsio:
         isrecarray = False
         try:
-            # if pyfits isn't available...
+            import pyfits.core
+            # in a try/catch in case pyfits isn't available
             isrecarray = (type(data) == pyfits.core.FITS_rec)
         except:
+            import traceback
+            traceback.print_exc()
             pass
+        if not isrecarray:
+            try:
+                import pyfits.fitsrec
+                isrecarray = (type(data) == pyfits.fitsrec.FITS_rec)
+            except:
+                import traceback
+                traceback.print_exc()
+                pass
+        #if not isrecarray:
+        #    if type(data) == np.recarray:
+        #        isrecarray = True
+
 
     if fitsio and not isrecarray:
         # fitsio sorts the rows and de-duplicates them, so compute
