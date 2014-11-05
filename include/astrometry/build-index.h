@@ -59,7 +59,7 @@ struct index_params {
 	// general options
 	anbool inmemory;
 	anbool delete_tempfiles;
-	char* tempdir;
+	const char* tempdir;
 	char** args;
 	int argc;
 };

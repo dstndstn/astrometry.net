@@ -136,13 +136,13 @@ codetree_t* codetree_build(codefile_t* codes,
 
 	hdr = codetree_header(codekd);
 	fits_header_add_int(hdr, "NLEAF", Nleaf, "Target number of points in leaves.");
-	fits_copy_header(chdr, hdr, "INDEXID");
-	fits_copy_header(chdr, hdr, "HEALPIX");
-	fits_copy_header(chdr, hdr, "ALLSKY");
-	fits_copy_header(chdr, hdr, "HPNSIDE");
-	fits_copy_header(chdr, hdr, "CXDX");
-	fits_copy_header(chdr, hdr, "CXDXLT1");
-	fits_copy_header(chdr, hdr, "CIRCLE");
+	an_fits_copy_header(chdr, hdr, "INDEXID");
+	an_fits_copy_header(chdr, hdr, "HEALPIX");
+	an_fits_copy_header(chdr, hdr, "ALLSKY");
+	an_fits_copy_header(chdr, hdr, "HPNSIDE");
+	an_fits_copy_header(chdr, hdr, "CXDX");
+	an_fits_copy_header(chdr, hdr, "CXDXLT1");
+	an_fits_copy_header(chdr, hdr, "CIRCLE");
 	boilerplate_add_fits_headers(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the command-line:", NULL, NULL);
 	fits_add_args(hdr, args, argc);

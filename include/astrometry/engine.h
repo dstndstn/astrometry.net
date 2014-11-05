@@ -67,8 +67,8 @@ struct job_t {
 typedef struct job_t job_t;
 
 engine_t* engine_new();
-void engine_add_search_path(engine_t* engine, char* path);
-char* engine_find_index(engine_t*, char* name);
+void engine_add_search_path(engine_t* engine, const char* path);
+char* engine_find_index(engine_t*, const char* name);
 // note that "path" must be a full path name.
 int engine_add_index(engine_t* engine, char* path);
 // look in all the search path directories for index files.

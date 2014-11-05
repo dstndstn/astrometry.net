@@ -248,7 +248,7 @@ static void add_headers(qfits_header* hdr, char** argv, int argc,
 	qfits_header_add(hdr, "CXDXLT1", "T", "All codes have the property cx+dx<=1.", NULL);
 	qfits_header_add(hdr, "MIDHALF", "T", "All codes have the property cx+dx<=1.", NULL);
 
-	fits_copy_header(startreehdr, hdr, "ALLSKY");
+	an_fits_copy_header(startreehdr, hdr, "ALLSKY");
 
 	qfits_header_add(hdr, "CIRCLE", (circle ? "T" : "F"), 
 					 (circle ? "Stars C,D live in the circle defined by AB."

@@ -166,8 +166,8 @@ int main(int argc, char *argv[]) {
 	quadhdr = quadfile_get_header(quads);
 	qidxhdr = qidxfile_get_header(qidx);
 
-	fits_copy_header(quadhdr, qidxhdr, "INDEXID");
-	fits_copy_header(quadhdr, qidxhdr, "HEALPIX");
+	an_fits_copy_header(quadhdr, qidxhdr, "INDEXID");
+	an_fits_copy_header(quadhdr, qidxhdr, "HEALPIX");
 
 	boilerplate_add_fits_headers(qidxhdr);
 	qfits_header_add(qidxhdr, "HISTORY", "This file was created by the program \"quadidx\".", NULL, NULL);

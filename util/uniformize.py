@@ -21,10 +21,10 @@ if __name__ == '__main__':
         sys.path.insert(2, rootdir)
 
 import numpy
-import pyfits
 from numpy import *
 from numpy.random import rand
 from astrometry.util.fits import *
+import pyfits
 
 def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
     p = pyfits.open(infile)

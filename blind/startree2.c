@@ -163,14 +163,14 @@ startree_t* startree_build(fitstable_t* intable,
 
 	inhdr = fitstable_get_primary_header(intable);
     hdr = startree_header(starkd);
-	fits_copy_header(inhdr, hdr, "HEALPIX");
-	fits_copy_header(inhdr, hdr, "HPNSIDE");
-	fits_copy_header(inhdr, hdr, "ALLSKY");
-	fits_copy_header(inhdr, hdr, "JITTER");
-	fits_copy_header(inhdr, hdr, "CUTNSIDE");
-	fits_copy_header(inhdr, hdr, "CUTMARG");
-	fits_copy_header(inhdr, hdr, "CUTDEDUP");
-	fits_copy_header(inhdr, hdr, "CUTNSWEP");
+	an_fits_copy_header(inhdr, hdr, "HEALPIX");
+	an_fits_copy_header(inhdr, hdr, "HPNSIDE");
+	an_fits_copy_header(inhdr, hdr, "ALLSKY");
+	an_fits_copy_header(inhdr, hdr, "JITTER");
+	an_fits_copy_header(inhdr, hdr, "CUTNSIDE");
+	an_fits_copy_header(inhdr, hdr, "CUTMARG");
+	an_fits_copy_header(inhdr, hdr, "CUTDEDUP");
+	an_fits_copy_header(inhdr, hdr, "CUTNSWEP");
 	//fits_copy_header(inhdr, hdr, "CUTBAND");
 	//fits_copy_header(inhdr, hdr, "CUTMINMG");
 	//fits_copy_header(inhdr, hdr, "CUTMAXMG");
@@ -188,7 +188,7 @@ startree_t* startree_build(fitstable_t* intable,
 		n = qfits_header_getint(inhdr, key, -1);
 		if (n == -1)
 			break;
-		fits_copy_header(inhdr, hdr, key);
+		an_fits_copy_header(inhdr, hdr, key);
 	}
 
  bailout:

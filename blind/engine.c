@@ -55,11 +55,11 @@
 #include "sip-utils.h"
 #include "multiindex.h"
 
-void engine_add_search_path(engine_t* engine, char* path) {
+void engine_add_search_path(engine_t* engine, const char* path) {
     sl_append(engine->index_paths, path);
 }
 
-char* engine_find_index(engine_t* engine, char* name) {
+char* engine_find_index(engine_t* engine, const char* name) {
     int j;
 
     for (j=-1; j<(int)sl_size(engine->index_paths); j++) {

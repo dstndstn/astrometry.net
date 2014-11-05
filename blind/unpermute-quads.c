@@ -86,10 +86,10 @@ int unpermute_quads(quadfile_t* quadin, codetree_t* treein,
 	qfits_header_add(qouthdr, "COMMENT", "** unpermute-quads: comments from input:", NULL, NULL);
 	fits_copy_all_headers(qinhdr, qouthdr, "COMMENT");
 	qfits_header_add(qouthdr, "COMMENT", "** unpermute-quads: end of comments from input.", NULL, NULL);
-	fits_copy_header(qinhdr, qouthdr, "CXDX");
-	fits_copy_header(qinhdr, qouthdr, "CXDXLT1");
-	fits_copy_header(qinhdr, qouthdr, "CIRCLE");
-	fits_copy_header(qinhdr, qouthdr, "ALLSKY");
+	an_fits_copy_header(qinhdr, qouthdr, "CXDX");
+	an_fits_copy_header(qinhdr, qouthdr, "CXDXLT1");
+	an_fits_copy_header(qinhdr, qouthdr, "CIRCLE");
+	an_fits_copy_header(qinhdr, qouthdr, "ALLSKY");
 
 	if (quadfile_write_header(quadout)) {
 		ERROR("Failed to write quadfile header");
@@ -120,9 +120,9 @@ int unpermute_quads(quadfile_t* quadin, codetree_t* treein,
 	treeout->tree->perm = NULL;
 
 	hdr = codetree_header(treeout);
-	fits_copy_header(qinhdr, hdr, "HEALPIX");
-	fits_copy_header(qinhdr, hdr, "HPNSIDE");
-	fits_copy_header(qinhdr, hdr, "ALLSKY");
+	an_fits_copy_header(qinhdr, hdr, "HEALPIX");
+	an_fits_copy_header(qinhdr, hdr, "HPNSIDE");
+	an_fits_copy_header(qinhdr, hdr, "ALLSKY");
 	boilerplate_add_fits_headers(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"unpermute-quads\".", NULL, NULL);
 	qfits_header_add(hdr, "HISTORY", "unpermute-quads command line:", NULL, NULL);
@@ -134,9 +134,9 @@ int unpermute_quads(quadfile_t* quadin, codetree_t* treein,
 	qfits_header_add(hdr, "COMMENT", "** unpermute-quads: comments from input ckdt:", NULL, NULL);
 	fits_copy_all_headers(codehdr, hdr, "COMMENT");
 	qfits_header_add(hdr, "COMMENT", "** unpermute-quads: end of comments from input ckdt.", NULL, NULL);
-	fits_copy_header(codehdr, hdr, "CXDX");
-	fits_copy_header(codehdr, hdr, "CXDXLT1");
-	fits_copy_header(codehdr, hdr, "CIRCLE");
+	an_fits_copy_header(codehdr, hdr, "CXDX");
+	an_fits_copy_header(codehdr, hdr, "CXDXLT1");
+	an_fits_copy_header(codehdr, hdr, "CIRCLE");
 
 	*p_treeout = treeout;
 	return 0;

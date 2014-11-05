@@ -74,7 +74,7 @@ int unpermute_stars(startree_t* treein, quadfile_t* qfin,
 	qouthdr = quadfile_get_header(qfout);
 	qinhdr  = quadfile_get_header(qfin);
 
-	fits_copy_header(qinhdr, qouthdr, "ALLSKY");
+	an_fits_copy_header(qinhdr, qouthdr, "ALLSKY");
 
 	boilerplate_add_fits_headers(qouthdr);
 	qfits_header_add(qouthdr, "HISTORY", "This file was created by the program \"unpermute-stars\".", NULL, NULL);
@@ -153,17 +153,17 @@ int unpermute_stars(startree_t* treein, quadfile_t* qfin,
 	memcpy(treeout->tree, treein->tree, sizeof(kdtree_t));
 	treeout->tree->perm = NULL;
 
-	fits_copy_header(startree_header(treein), startree_header(treeout), "HEALPIX");
-	fits_copy_header(startree_header(treein), startree_header(treeout), "HPNSIDE");
-	fits_copy_header(startree_header(treein), startree_header(treeout), "ALLSKY");
-	fits_copy_header(startree_header(treein), startree_header(treeout), "JITTER");
-	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTNSIDE");
-	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTMARG");
-	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTBAND");
-	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTDEDUP");
-	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTNSWEP");
-	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTMINMG");
-	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTMAXMG");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "HEALPIX");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "HPNSIDE");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "ALLSKY");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "JITTER");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "CUTNSIDE");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "CUTMARG");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "CUTBAND");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "CUTDEDUP");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "CUTNSWEP");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "CUTMINMG");
+	an_fits_copy_header(startree_header(treein), startree_header(treeout), "CUTMAXMG");
 
 	qfits_header_add(startree_header(treeout), "HISTORY", "unpermute-stars command line:", NULL, NULL);
 	fits_add_args(startree_header(treeout), args, argc);
@@ -184,7 +184,7 @@ int unpermute_stars(startree_t* treein, quadfile_t* qfin,
 			n = qfits_header_getint(treein->header, key, -1);
 			if (n == -1)
 				break;
-			fits_copy_header(treein->header, treeout->header, key);
+			an_fits_copy_header(treein->header, treeout->header, key);
 		}
 
 		// compute sweep array.
