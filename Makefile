@@ -133,7 +133,7 @@ install-core:
 	cp CREDITS LICENSE README.md '$(INSTALL_DIR)/doc'
 	cp report.txt '$(INSTALL_DIR)/doc'
 	cp demo/* '$(INSTALL_DIR)/examples'
-	$(MAKE) -C util  install
+	$(MAKE) -C util  install-core
 	$(MAKE) -C catalogs install
 	$(MAKE) -C libkd install
 	$(MAKE) -C qfits-an install

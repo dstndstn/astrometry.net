@@ -223,7 +223,16 @@ PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py \
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/util
 LINK_DIR := $(PY_BASE_LINK_DIR)/util
 
-install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
+install: install-core
+	$(MAKE) install-core
+	@echo "The following copy commands may fail; they are optional."
+	-$(MAKE) py && cp _util$(PYTHON_SO_EXT) util.py '$(PY_INSTALL_DIR)'
+	@echo ok
+
+.PHONY: install
+
+
+install-core: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 		$(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANBASE_LIB_FILE)
 	@echo Installing in base directory '$(INSTALL_DIR)'
 	@echo Installing python in base directory '$(PY_INSTALL_DIR)'
@@ -251,11 +260,8 @@ install: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
 		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
 	done
-	@echo "The following copy commands may fail; they are optional."
-	-$(MAKE) py && cp _util$(PYTHON_SO_EXT) util.py '$(PY_INSTALL_DIR)'
-	@echo ok
 
-.PHONY: install
+.PHONY: install-core
 
 $(INCLUDE_DIR)/os-features-config.h: os-features-test.c
 	@echo
