@@ -46,7 +46,7 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
         pat = re.compile(r'[^A-Z0-9_\-]')
 
         newcards = []
-        for c in hdr.ascard:
+        for c in hdr.cards:
             k = c.keyword
             # new keyword:
             knew = pat.sub('_', k)
