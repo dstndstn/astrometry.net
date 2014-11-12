@@ -30,7 +30,7 @@
 #define OPTIONS "h"
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage:\n"
 		   "  %s\n"
 		   , progname);

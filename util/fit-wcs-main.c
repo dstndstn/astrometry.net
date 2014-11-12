@@ -16,7 +16,7 @@
 static const char* OPTIONS = "hx:X:Y:R:D:c:r:o:s:W:H:Cv";
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 		   "   -x <xyls input file>\n"
 		   "     [-X <x-column-name> -Y <y-column-name>]\n"

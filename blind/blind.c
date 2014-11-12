@@ -1202,7 +1202,7 @@ static int write_match_file(blind_t* bp) {
 		logerr("Failed to open file %s to write match file.\n", bp->matchfname);
 		return -1;
 	}
-	boilerplate_add_fits_headers(bp->mf->header);
+	BOILERPLATE_ADD_FITS_HEADERS(bp->mf->header);
 	qfits_header_add(bp->mf->header, "HISTORY", "This file was created by the program \"blind\".", NULL, NULL);
 	qfits_header_add(bp->mf->header, "DATE", qfits_get_datetime_iso8601(), "Date this file was created.", NULL);
 	add_blind_params(bp, bp->mf->header);
@@ -1237,7 +1237,7 @@ static int write_rdls_file(blind_t* bp) {
 	}
 	h = rdlist_get_primary_header(bp->indexrdls);
 
-	boilerplate_add_fits_headers(h);
+	BOILERPLATE_ADD_FITS_HEADERS(h);
 	fits_add_long_history(h, "This \"indexrdls\" file was created by the program \"blind\"."
 						  "  It contains the RA/DEC of index objects that were found inside a solved field.");
 	qfits_header_add(h, "DATE", qfits_get_datetime_iso8601(), "Date this file was created.", NULL);
@@ -1325,7 +1325,7 @@ static int write_wcs_file(blind_t* bp) {
 		else
 			hdr = tan_create_header(&(mo->wcstan));
 
-		boilerplate_add_fits_headers(hdr);
+		BOILERPLATE_ADD_FITS_HEADERS(hdr);
 		qfits_header_add(hdr, "HISTORY", "This WCS header was created by the program \"blind\".", NULL, NULL);
 		tm = qfits_get_datetime_iso8601();
 		qfits_header_add(hdr, "DATE", tm, "Date this file was created.", NULL);

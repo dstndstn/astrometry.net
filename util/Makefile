@@ -35,16 +35,15 @@ include $(COMMON)/makefile.anfiles
 SO=$(SHAREDLIB_SUFFIX)
 
 ANBASE_OBJ := starutil.o mathutil.o bl-sort.o bl.o bt.o healpix-utils.o \
-	healpix.o permutedsort.o ioutils.o fileutils.o md5.o boilerplate.o \
-	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
+	healpix.o permutedsort.o ioutils.o fileutils.o md5.o \
+	os-features.o an-endian.o errors.o an-opts.o tic.o log.o datalog.o \
 	sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o \
 	intmap.o histogram.o histogram2d.o
 
 ANBASE_DEPS :=
 
 ANUTILS_OBJ :=  sip-utils.o fit-wcs.o sip.o \
-	anwcs.o wcs-resample.o gslutils.o \
-	boilerplate.o
+	anwcs.o wcs-resample.o gslutils.o
 
 # Things that it depends on but that aren't linked in
 ANFILES_DEPS :=
@@ -134,7 +133,7 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	keywords.h log.h \
 	mathutil.h permutedsort.h qidxfile.h quadfile.h rdlist.h scamp-catalog.h \
 	fit-wcs.h sip-utils.h sip.h sip_qfits.h starkd.h starutil.h starutil.inc \
-	starxy.h svn.h tic.h \
+	starxy.h tic.h \
 	xylist.h coadd.h convolve-image.h resample.h multiindex.h scamp.h \
 	ctmf.h dimage.h image2xy.h radix.h simplexy-common.h simplexy.h \
 	tabsort.h wcs-rd2xy.h wcs-xy2rd.h
@@ -150,10 +149,6 @@ endif
 ## ANFILES_DEPS, ANFILES_OBJ -- in makefile.anfiles
 
 ALL_OBJ := $(ANBASE_OBJ) $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
-
-# svn.c depends on all the .c and .h files in ANUTILS_OBJ
-SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
-SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(ANUTILS_H_PATH)
 
 DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 DEP_PREREQS :=
@@ -172,9 +167,6 @@ $(ANFILES_LIB_FILE): $(ANFILES_OBJ) $(ANFILES_DEPS)
 	-rm -f $@
 	$(AR) rc $@ $(ANFILES_OBJ)
 	$(RANLIB) $@
-
-svn.c: $(SVN_C_DEPS)
-	echo "//" >> svn.c
 
 $(MAIN_PROGS): %: %-main.o $(ANFILES_SLIB)
 $(PROGS): %: %.o $(ANFILES_SLIB)

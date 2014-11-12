@@ -39,7 +39,7 @@
 #define OPTIONS "ho:N:"
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage:\n"
 		   "  %s -o <output-filename-template>     [eg, usnob10_%%03i.fits]\n"
 		   "  [-N <healpix-nside>]  (default = 8)\n"
@@ -203,7 +203,7 @@ int main(int argc, char** args) {
 				// header remarks...
 				fits_header_add_int(hdr, "HEALPIX", hp, "The healpix number of this catalog.");
 				fits_header_add_int(hdr, "NSIDE", Nside, "The healpix resolution.");
-				boilerplate_add_fits_headers(hdr);
+				BOILERPLATE_ADD_FITS_HEADERS(hdr);
 				qfits_header_add(hdr, "HISTORY", "Created by the program \"usnobtofits\"", NULL, NULL);
 				qfits_header_add(hdr, "HISTORY", "usnobtofits command line:", NULL, NULL);
 				fits_add_args(hdr, args, argc);
