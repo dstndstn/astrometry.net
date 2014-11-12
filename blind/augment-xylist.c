@@ -56,6 +56,8 @@
 #include "log.h"
 #include "anqfits.h"
 
+static void delete_existing_an_headers(qfits_header* hdr);
+
 void augment_xylist_init(augment_xylist_t* axy) {
     memset(axy, 0, sizeof(augment_xylist_t));
     axy->tempdir = "/tmp";
@@ -665,7 +667,6 @@ int augment_xylist(augment_xylist_t* axy,
     anbool dosort = FALSE;
     char* xylsfn;
 	qfits_header* hdr = NULL;
-    int orig_nheaders;
     anbool addwh = TRUE;
     FILE* fout = NULL;
     char *fitsimgfn = NULL;
@@ -1180,7 +1181,8 @@ int augment_xylist(augment_xylist_t* axy,
 		exit(-1);
 	}
 
-	orig_nheaders = qfits_header_n(hdr);
+    // delete any existing processing directives
+    delete_existing_an_headers(hdr);
 
     if (!(axy->W && axy->H)) {
         // Look for existing IMAGEW and IMAGEH in primary header.
@@ -1481,6 +1483,118 @@ int augment_xylist(augment_xylist_t* axy,
     sl_free2(cmd);
     sl_free2(tempfiles);
     return 0;
+}
+
+static void delete_existing_an_headers(qfits_header* hdr) {
+    int i,j,k;
+    char key[64];
+    qfits_header_del(hdr, "ANRUN");
+    qfits_header_del(hdr, "ANCLIM");
+    qfits_header_del(hdr, "ANXCOL");
+    qfits_header_del(hdr, "ANYCOL");
+    qfits_header_del(hdr, "ANTAGALL");
+	for (i=0; i<100; i++) {
+        sprintf(key, "ANTAG%i", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANAPPL%i", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANAPPU%i", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANDPL%i", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANDPU%i", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANFD%i", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANFDL%i", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANFDU%i", i+1);
+        qfits_header_del(hdr, key);
+    }
+	for (i=0; i<10; i++) {
+        sprintf(key, "ANW%iPIX1", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iPIX2", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iVAL1", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iVAL2", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iCD11", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iCD12", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iCD21", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iCD22", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iSAO", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iSAPO", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iSBO", i+1);
+        qfits_header_del(hdr, key);
+        sprintf(key, "ANW%iSBPO", i+1);
+        qfits_header_del(hdr, key);
+        for (j=0; j<10; j++) {
+            for (k=0; k<10; k++) {
+                sprintf(key, "ANW%iA%i%i", i+1, j, k);
+                qfits_header_del(hdr, key);
+                sprintf(key, "ANW%iB%i%i", i+1, j, k);
+                qfits_header_del(hdr, key);
+                sprintf(key, "ANW%iAP%i%i", i+1, j, k);
+                qfits_header_del(hdr, key);
+                sprintf(key, "ANW%iBP%i%i", i+1, j, k);
+                qfits_header_del(hdr, key);
+            }
+        }
+    }
+    qfits_header_del(hdr, "ANRDSORT");
+    qfits_header_del(hdr, "ANVERUNI");
+    qfits_header_del(hdr, "ANVERDUP");
+    qfits_header_del(hdr, "ANODDSTU");
+    qfits_header_del(hdr, "ANODDSSL");
+    qfits_header_del(hdr, "ANODDSBL");
+    qfits_header_del(hdr, "ANODDSST");
+    qfits_header_del(hdr, "ANQSFMIN");
+    qfits_header_del(hdr, "ANQSFMAX");
+    qfits_header_del(hdr, "ANCRPIXC");
+    qfits_header_del(hdr, "ANCRPIX1");
+    qfits_header_del(hdr, "ANCRPIX2");
+    qfits_header_del(hdr, "ANTWEAK");
+    qfits_header_del(hdr, "ANTWEAKO");
+    qfits_header_del(hdr, "ANSOLVED");
+    qfits_header_del(hdr, "ANSOLVIN");
+    qfits_header_del(hdr, "ANCANCEL");
+    qfits_header_del(hdr, "ANMATCH");
+    qfits_header_del(hdr, "ANRDLS");
+    qfits_header_del(hdr, "ANSCAMP");
+    qfits_header_del(hdr, "ANWCS");
+    qfits_header_del(hdr, "ANCORR");
+    qfits_header_del(hdr, "ANCTOL");
+    qfits_header_del(hdr, "ANPOSERR");
+    qfits_header_del(hdr, "ANPARITY");
+    qfits_header_del(hdr, "ANERA");
+    qfits_header_del(hdr, "ANEDEC");
+    qfits_header_del(hdr, "ANERAD");
+    qfits_header_del(hdr, "ANDPIX0");
+    qfits_header_del(hdr, "ANDPIX1");
+    qfits_header_del(hdr, "ANDSAO");
+    qfits_header_del(hdr, "ANDSBO");
+    qfits_header_del(hdr, "ANDSAPO");
+    qfits_header_del(hdr, "ANDSBPO");
+    for (j=0; j<10; j++) {
+        for (k=0; k<10; k++) {
+            sprintf(key, "ANDA%i%i", j, k);
+            qfits_header_del(hdr, key);
+            sprintf(key, "ANDB%i%i", j, k);
+            qfits_header_del(hdr, key);
+            sprintf(key, "ANDAP%i%i", j, k);
+            qfits_header_del(hdr, key);
+            sprintf(key, "ANDBP%i%i", j, k);
+            qfits_header_del(hdr, key);
+        }
+    }
 }
 
 static int parse_fields_string(il* fields, const char* str) {
