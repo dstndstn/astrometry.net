@@ -25,7 +25,7 @@
 static const char* OPTIONS = "hx:m:r:vj:p:i:J:o:W:w:s:X:Y:";
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 		   "   -m <match input file>\n"
 		   "   -x <xyls input file>\n"

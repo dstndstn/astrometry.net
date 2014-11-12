@@ -172,7 +172,7 @@ config: util/os-features-config.h util/makefile.os-features
 	$(MAKE) -C util config
 .PHONY: config
 
-RELEASE_VER := 0.50
+RELEASE_VER := $(shell git describe | cut -f1 -d"-")
 
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_RMDIRS := net

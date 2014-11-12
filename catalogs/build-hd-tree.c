@@ -78,7 +78,7 @@ static const char* OPTIONS = "hR:d:t:bsST:X:";
 #define HD_NENTRIES 272150
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 		   "   (   [-b]: build bounding boxes\n"
 		   "    OR [-s]: build splitting planes   )\n"
@@ -451,7 +451,7 @@ int main(int argc, char** args) {
 
     hdr = qfits_header_default();
     qfits_header_add(hdr, "AN_FILE", "HDTREE", "Henry Draper catalog kdtree", NULL);
-    boilerplate_add_fits_headers(hdr);
+    BOILERPLATE_ADD_FITS_HEADERS(hdr);
     fits_add_long_history(hdr, "This file was created by the following command-line:");
     fits_add_args(hdr, args, argc);
 

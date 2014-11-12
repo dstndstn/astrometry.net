@@ -40,7 +40,7 @@
 static const char* OPTIONS = "hFi:o:cv";
 
 static void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s -i <quad input> -o <qidx output>\n"
 		   "\n"
 		   "    [-c]: run quadfile_check()\n"
@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
 	an_fits_copy_header(quadhdr, qidxhdr, "INDEXID");
 	an_fits_copy_header(quadhdr, qidxhdr, "HEALPIX");
 
-	boilerplate_add_fits_headers(qidxhdr);
+	BOILERPLATE_ADD_FITS_HEADERS(qidxhdr);
 	qfits_header_add(qidxhdr, "HISTORY", "This file was created by the program \"quadidx\".", NULL, NULL);
 	qfits_header_add(qidxhdr, "HISTORY", "quadidx command line:", NULL, NULL);
 	fits_add_args(qidxhdr, argv, argc);

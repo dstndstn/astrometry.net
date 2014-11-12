@@ -32,7 +32,6 @@
 #include "fitsio.h"
 #include "ioutils.h"
 #include "simplexy.h"
-#include "svn.h"
 #include "errors.h"
 #include "log.h"
 #include "cfitsutils.h"
@@ -90,20 +89,20 @@ int image2xy_files(const char* infn, const char* outfn,
 	fits_write_history(ofptr, "Created by Astrometry.net's image2xy program.", &status);
     CFITS_CHECK("Failed to write HISTORY headers");
 
-    asprintf_safe(&str, "SVN URL: %s", svn_url());
+    asprintf_safe(&str, "GIT URL: %s", AN_GIT_URL);
 	fits_write_history(ofptr, str, &status);
-    CFITS_CHECK("Failed to write SVN HISTORY headers");
+    CFITS_CHECK("Failed to write GIT HISTORY headers");
     free(str);
-    asprintf_safe(&str, "SVN Rev: %i", svn_revision());
+    asprintf_safe(&str, "GIT Rev: %s", AN_GIT_REVISION);
 	fits_write_history(ofptr, str, &status);
-    CFITS_CHECK("Failed to write SVN HISTORY headers");
+    CFITS_CHECK("Failed to write GIT HISTORY headers");
     free(str);
-    asprintf_safe(&str, "SVN Date: %s", svn_date());
+    asprintf_safe(&str, "GIT Date: %s", AN_GIT_DATE);
 	fits_write_history(ofptr, str, &status);
-    CFITS_CHECK("Failed to write SVN HISTORY headers");
+    CFITS_CHECK("Failed to write GIT HISTORY headers");
     free(str);
 	fits_write_history(ofptr, "Visit us on the web at http://astrometry.net/", &status);
-    CFITS_CHECK("Failed to write SVN HISTORY headers");
+    CFITS_CHECK("Failed to write GIT HISTORY headers");
 
 	nimgs = 0;
 

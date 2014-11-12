@@ -29,7 +29,7 @@
 char* OPTIONS = "hs:";
 
 void printHelp(char* progname) {
-    boilerplate_help_header(stdout);
+    BOILERPLATE_HELP_HEADER(stdout);
 	printf("\n\n%s  [options] <input-file-1> <input-file-2> <output-file>\n"
            "Options:\n"
            "   [-s]: suffix to add for duplicate column names in table 2\n"
@@ -185,7 +185,7 @@ int main(int argc, char** args) {
         fprintf(stderr, "Failed to read primary header from \"%s\".\n", afn);
         exit(-1);
     }
-    boilerplate_add_fits_headers(hdr);
+    BOILERPLATE_ADD_FITS_HEADERS(hdr);
     fits_add_long_history(hdr, "This file was created by the program \"%s\" by "
                           "merging columns from the input files \"%s\" and \"%s\"."
                           , args[0], afn, bfn);

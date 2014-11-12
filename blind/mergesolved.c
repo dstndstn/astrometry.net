@@ -28,7 +28,7 @@
 const char* OPTIONS = "ho:e";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stderr);
+	BOILERPLATE_HELP_HEADER(stderr);
 	fprintf(stderr, "\nUsage: %s -o <output-file> <input-file> ...\n"
 			"    [-e]: no error if file no found (assume empty)\n"
 			"\n", progname);

@@ -234,7 +234,7 @@ static void add_headers(qfits_header* hdr, char** argv, int argc,
 						qfits_header* startreehdr, anbool circle,
 						int npasses) {
 	int i;
-	boilerplate_add_fits_headers(hdr);
+	BOILERPLATE_ADD_FITS_HEADERS(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"hpquads\".", NULL, NULL);
 	qfits_header_add(hdr, "HISTORY", "hpquads command line:", NULL, NULL);
 	fits_add_args(hdr, argv, argc);

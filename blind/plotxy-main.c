@@ -40,7 +40,7 @@
 #define OPTIONS "hvW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:o:pJ"
 
 static void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s [options] > output.png\n"
 		   "  -i <input-file>   Input file (xylist)\n"
            "  [-o <output-file>] (default: stdout)\n"

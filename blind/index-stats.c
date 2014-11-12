@@ -38,7 +38,7 @@ static const char* OPTIONS = "hvmM:";
 
 
 void print_help(char* progname) {
-	boilerplate_help_header(stderr);
+	BOILERPLATE_HELP_HEADER(stderr);
 	fprintf(stderr, "Usage: %s\n"
 			"   [-h]: help\n"
 			"   [-m]: measure range of mags of quad stars.\n"

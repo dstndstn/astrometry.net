@@ -35,7 +35,7 @@
 const char* OPTIONS = "hve:x:y:X:Y:s:";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stderr);
+	BOILERPLATE_HELP_HEADER(stderr);
 	fprintf(stderr, "\nUsage: %s [options] <input-wcs-file> <output-wcs-file>\n"
 			"\n"
 			"    [-e <extension>]  Read from given HDU (default 0 = primary)\n"

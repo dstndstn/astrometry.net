@@ -314,3 +314,14 @@ LDLIBS_DEF := $(LDLIBS)
 #    $(CC) $(LDFLAGS) n.o $(LOADLIBES) $(LDLIBS)
 # and some linkers demand that libraries appear *after* the object files,
 # so if you want a lib always linked in, add it to LDLIBS.
+
+# Provide for executable programs and FITS headers 
+# GIT fields: revision, date and url via CFLAGS.
+# These fields replace the deprecated SVN fields.
+AN_GIT_REVISION := $(shell git describe)
+AN_GIT_DATE := $(shell git log -n 1 --format=\"%cd\")
+AN_GIT_URL := "https://github.com/dstndstn/astrometry.net"
+
+CFLAGS_DEF += -DAN_GIT_REVISION=\"$(AN_GIT_REVISION)\"
+CFLAGS_DEF += -DAN_GIT_DATE=\"$(AN_GIT_DATE)\"
+CFLAGS_DEF += -DAN_GIT_URL=\"$(AN_GIT_URL)\"

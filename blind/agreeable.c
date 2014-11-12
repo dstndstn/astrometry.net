@@ -34,7 +34,7 @@
 char* OPTIONS = "hA:B:I:J:L:M:r:f:s:S:Fa";
 
 void printHelp(char* progname) {
-	boilerplate_help_header(stderr);
+	BOILERPLATE_HELP_HEADER(stderr);
 	fprintf(stderr, "Usage: %s [options]\n"
 			"   [-A first-field]\n"
 			"   [-B last-field]\n"
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
 			fprintf(stderr, "Failed to open file %s to write leftover matches.\n", leftoverfname);
 			exit(-1);
 		}
-		boilerplate_add_fits_headers(leftovermf->header);
+		BOILERPLATE_ADD_FITS_HEADERS(leftovermf->header);
 		qfits_header_add(leftovermf->header, "HISTORY", "This file was created by the program \"agreeable\".", NULL, NULL);
 		if (matchfile_write_headers(leftovermf)) {
 			fprintf(stderr, "Failed to write leftovers matchfile header.\n");
@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
 			fprintf(stderr, "Failed to open file %s to write agreeing matches.\n", agreefname);
 			exit(-1);
 		}
-		boilerplate_add_fits_headers(agreemf->header);
+		BOILERPLATE_ADD_FITS_HEADERS(agreemf->header);
 		qfits_header_add(agreemf->header, "HISTORY", "This file was created by the program \"agreeable\".", NULL, NULL);
 		if (matchfile_write_headers(agreemf)) {
 			fprintf(stderr, "Failed to write agreeing matchfile header.\n");

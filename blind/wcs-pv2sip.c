@@ -387,7 +387,7 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 const char* OPTIONS = "hve:sx:X:y:Y:a:b:W:H:t";
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s [options] <input-wcs> <output-wcs>\n"
 		   "   [-e <extension>] FITS HDU number to read WCS from (default 0 = primary)\n"
 		   "   [-s]: treat input as Scamp .head file\n"

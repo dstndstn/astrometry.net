@@ -33,7 +33,7 @@
 const char* OPTIONS = "hi:o:w:f:R:D:te:r:d:Lv";
 
 void print_help(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 		   "   -w <WCS input file>\n"
 		   "   [-e <extension>] HDU to read (default 0 = primary)\n"

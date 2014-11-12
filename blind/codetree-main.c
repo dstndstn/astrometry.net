@@ -34,7 +34,7 @@
 static const char* OPTIONS = "hR:i:o:bsSt:d:";
 
 static void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
+	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s\n"
 		   "    -i <input-filename>\n"
 		   "    -o <output-filename>\n"

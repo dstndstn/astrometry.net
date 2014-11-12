@@ -29,7 +29,7 @@
 const char* OPTIONS = "hv";
 
 static void print_help(char* progname) {
-    boilerplate_help_header(stdout);
+    BOILERPLATE_HELP_HEADER(stdout);
     printf("\nUsage:  %s <input-filename> <extension> <output-filename>\n"
            "\n\n", progname);
 }
