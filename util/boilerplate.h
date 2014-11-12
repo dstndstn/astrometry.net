@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include "astrometry/qfits_header.h"
-#include "../version.h"
+//#include "../version.h"
 
 #define BOILERPLATE_HELP_HEADER(fid)                                        \
 do {                                                                        \

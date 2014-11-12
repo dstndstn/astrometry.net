@@ -314,3 +314,11 @@ LDLIBS_DEF := $(LDLIBS)
 #    $(CC) $(LDFLAGS) n.o $(LOADLIBES) $(LDLIBS)
 # and some linkers demand that libraries appear *after* the object files,
 # so if you want a lib always linked in, add it to LDLIBS.
+
+PRG_GIT_REVISION := $(shell git describe)
+PRG_GIT_DATE := $(shell git log -n 1 --format=\"%cd\")
+PRG_GIT_URL := "https://github.com/dstndstn/astrometry.net"
+
+CFLAGS_DEF += -DPRG_GIT_REVISION=\"$(PRG_GIT_REVISION)\"
+CFLAGS_DEF += -DPRG_GIT_DATE=\"$(PRG_GIT_DATE)\"
+CFLAGS_DEF += -DPRG_GIT_URL=\"$(PRG_GIT_URL)\"

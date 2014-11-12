@@ -35,7 +35,6 @@
 #include "errors.h"
 #include "log.h"
 #include "cfitsutils.h"
-#include "../version.h"
 
 int image2xy_files(const char* infn, const char* outfn,
 				   anbool do_u8, int downsample, int downsample_as_required,

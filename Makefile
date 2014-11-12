@@ -172,23 +172,7 @@ config: util/os-features-config.h util/makefile.os-features
 	$(MAKE) -C util config
 .PHONY: config
 
-PRG_GIT_REVISION := $(shell git describe)
-PRG_GIT_DATE := $(shell git log -n 1 --format=\"%cd\")
-PRG_GIT_URL := "https://github.com/dstndstn/astrometry.net"
-
-define VERSION_H
-/* Generated file, do not edit. */
-#define PRG_GIT_REVISION "$(PRG_GIT_REVISION)"
-#define PRG_GIT_DATE $(PRG_GIT_DATE)
-#define PRG_GIT_URL $(PRG_GIT_URL)
-endef
-export VERSION_H
-
-version:
-	@echo "$$VERSION_H" > version.h
-.PHONY: version
-
-RELEASE_VER := $(shell echo $(PRG_GIT_REVISION) | cut -f1 -d"-")
+RELEASE_VER := $(shell git describe | cut -f1 -d"-")
 
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_RMDIRS := net
