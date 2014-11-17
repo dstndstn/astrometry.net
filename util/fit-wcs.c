@@ -106,6 +106,7 @@ int fit_sip_wcs(const double* starxyz,
 	gsl_vector *b1, *b2, *x1, *x2;
 	gsl_vector *r1=NULL, *r2=NULL;
     tan_t tanin2;
+    int ngood;
     const tan_t* tanin = &tanin2;
 	// We need at least the linear terms to compute CD.
 	if (sip_order < 1)
@@ -245,6 +246,7 @@ int fit_sip_wcs(const double* starxyz,
 	// Fill in matrix mA:
 	radecdeg2xyzarr(tanin->crval[0], tanin->crval[1], xyzcrval);
 	totalweight = 0.0;
+    ngood = 0;
 	for (i=0; i<M; i++) {
         double x=0, y=0;
         double weight = 1.0;
@@ -255,11 +257,24 @@ int fit_sip_wcs(const double* starxyz,
         u = fieldxy[2*i + 0] - tanin->crpix[0];
         v = fieldxy[2*i + 1] - tanin->crpix[1];
 
+        // B contains Intermediate World Coordinates (in degrees)
+		// tangent-plane projection
+        ok = star_coords(starxyz + 3*i, xyzcrval, TRUE, &x, &y);
+        if (!ok) {
+            logverb("Skipping star that cannot be projected to tangent plane\n");
+            continue;
+        }
+
+        gsl_vector_set(b1, ngood, weight * rad2deg(x));
+        gsl_vector_set(b2, ngood, weight * rad2deg(y));
+
         if (weights) {
             weight = weights[i];
             assert(weight >= 0.0);
             assert(weight <= 1.0);
             totalweight += weight;
+            if (weight == 0.0)
+                continue;
         }
 
         /* The coefficients are stored in this order:
@@ -282,7 +297,7 @@ int fit_sip_wcs(const double* starxyz,
                 assert(p >= 0);
                 assert(q >= 0);
                 assert(p + q <= sip_order);
-                gsl_matrix_set(mA, i, j,
+                gsl_matrix_set(mA, ngood, j,
                                weight * pow(u, (double)p) * pow(v, (double)q));
                 j++;
             }
@@ -294,20 +309,30 @@ int fit_sip_wcs(const double* starxyz,
         assert(fabs(gsl_matrix_get(mA, i, 1) - u * weight) < 1e-12);
         assert(fabs(gsl_matrix_get(mA, i, 2) - v * weight) < 1e-12);
 
-        // B contains Intermediate World Coordinates (in degrees)
-		// tangent-plane projection
-        ok = star_coords(starxyz + 3*i, xyzcrval, TRUE, &x, &y);
-        assert(ok);
+        ngood++;
+    }
 
-        gsl_vector_set(b1, i, weight * rad2deg(x));
-        gsl_vector_set(b2, i, weight * rad2deg(y));
+    if (ngood == 0) {
+        ERROR("No stars projected within the image\n");
+        return -1;
     }
 
 	if (weights)
 		logverb("Total weight: %g\n", totalweight);
 
-	// Solve the equation.
-	rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
+    if (ngood < M) {
+        _gsl_vector_view sub_b1 = gsl_vector_subvector(b1, 0, ngood);
+        _gsl_vector_view sub_b2 = gsl_vector_subvector(b2, 0, ngood);
+        _gsl_matrix_view sub_mA = gsl_matrix_submatrix(mA, 0, 0, ngood, N);
+
+        rtn = gslutils_solve_leastsquares_v(&(sub_mA.matrix), 2,
+                                            &(sub_b1.vector), &x1, NULL,
+                                            &(sub_b2.vector), &x2, NULL);
+
+    } else {
+        // Solve the equation.
+        rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
+    }
 	if (rtn) {
         ERROR("Failed to solve SIP matrix equation!");
         return -1;

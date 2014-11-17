@@ -462,99 +462,29 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			qc[1] /= totalweight;
 			logverb("Moved quad center to (%.1f, %.1f)\n", qc[0], qc[1]);
 
-			if (FALSE && (order == 1)) {
-				tan_t newtan;
-				fit_tan_wcs_weighted(matchxyz, matchxy, weights, Nmatch, &newtan, NULL);
-				newtan.imagew = W;
-				newtan.imageh = H;
-				sip_wrap_tan(&newtan, sipout);
-				debug("Using %i (weighted) matches, new TAN WCS is:\n", Nmatch);
-				if (log_get_level() > LOG_VERB)
-					tan_print_to(&newtan, stdout);
+            //
+            sipout->a_order = sipout->b_order = order;
+            sipout->ap_order = sipout->bp_order = sip_invorder;
+            logverb("tweak2: setting orders %i, %i\n", sipout->a_order, sipout->ap_order);
 
-				if (TWEAK_DEBUG_PLOTS) {
-					char name[32];
-					double* ixy;
-					int i;
-					Unused anbool ok;
-					ixy = malloc(2*Nin*sizeof(double));
-					for (i=0; i<Nin; i++) {
-						int ii = indexin[refperm[i]];
-						ra  = indexradec[ii*2+0];
-						dec = indexradec[ii*2+1];
-						ok = sip_radec2pixelxy(sipout, ra, dec, ixy+2*i, ixy+2*i+1);
-						assert(ok);
-					}
-					sprintf(name, "o%is%02ipost", order, step);
-					TWEAK_DEBUG_PLOT(name, W, H, Nfield, fieldxy, fieldsigma2s,
-									 Nin, ixy, besti, theta,
-									 sipout->wcstan.crpix, testperm, qc);
-					free(ixy);
-				}
+            if (crpix) {
+                tan_t temptan;
+                logverb("Moving tangent point to given CRPIX (%g,%g)\n", crpix[0], crpix[1]);
+                fit_tan_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
+                                                        crpix, &sipout->wcstan, &temptan);
+                fit_tan_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
+                                                        crpix, &temptan, &sipout->wcstan);
+            }
 
-				if (crpix) {
-					tan_t temptan;
-					logverb("Moving tangent point to given CRPIX (%g,%g)\n", crpix[0], crpix[1]);
+            fit_sip_wcs(matchxyz, matchxy, weights, Nmatch,
+                        &(sipout->wcstan), order, sip_invorder,
+                        sipout);
 
-					fit_tan_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
-														  crpix, &newtan, &temptan);
-					fit_tan_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
-														  crpix, &temptan, &newtan);
-					newtan.imagew = W;
-					newtan.imageh = H;
-					sip_wrap_tan(&newtan, sipout);
-					debug("After moving CRPIX, TAN WCS is:\n");
-					if (log_get_level() > LOG_VERB)
-						tan_print_to(&newtan, stdout);
-
-
-					if (TWEAK_DEBUG_PLOTS) {
-						char name[32];
-						double* ixy;
-						int i;
-						Unused anbool ok;
-						ixy = malloc(2*Nin*sizeof(double));
-						for (i=0; i<Nin; i++) {
-							int ii = indexin[refperm[i]];
-							ra  = indexradec[ii*2+0];
-							dec = indexradec[ii*2+1];
-							ok = sip_radec2pixelxy(sipout, ra, dec, ixy+2*i, ixy+2*i+1);
-							assert(ok);
-						}
-						sprintf(name, "o%is%02icrpix", order, step);
-						TWEAK_DEBUG_PLOT(name, W, H, Nfield, fieldxy, fieldsigma2s,
-										 Nin, ixy, besti, theta,
-										 sipout->wcstan.crpix, testperm, qc);
-						free(ixy);
-					}
-
-				}
-
-			} else {
-				//
-				sipout->a_order = sipout->b_order = order;
-				sipout->ap_order = sipout->bp_order = sip_invorder;
-				logverb("tweak2: setting orders %i, %i\n", sipout->a_order, sipout->ap_order);
-
-				if (crpix) {
-					tan_t temptan;
-					logverb("Moving tangent point to given CRPIX (%g,%g)\n", crpix[0], crpix[1]);
-					fit_tan_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
-														  crpix, &sipout->wcstan, &temptan);
-					fit_tan_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
-														  crpix, &temptan, &sipout->wcstan);
-				}
-
-                fit_sip_wcs(matchxyz, matchxy, weights, Nmatch,
-                            &(sipout->wcstan), order, sip_invorder,
-                            sipout);
-
-				debug("Got SIP:\n");
-				if (log_get_level() > LOG_VERB)
-					sip_print_to(sipout, stdout);
-				sipout->wcstan.imagew = W;
-				sipout->wcstan.imageh = H;
-			}
+            debug("Got SIP:\n");
+            if (log_get_level() > LOG_VERB)
+                sip_print_to(sipout, stdout);
+            sipout->wcstan.imagew = W;
+            sipout->wcstan.imageh = H;
 		}
 	}
 

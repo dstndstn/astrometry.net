@@ -193,6 +193,8 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order, sip_t* verifysip) {
 	theta = mo->theta;
 	besti = mo->nbest-1;//mo->nmatch + mo->nconflict + mo->ndistractor;
 
+    logverb("solver_tweak2: set_crpix %i, crpix (%.1f,%.1f)\n",
+            sp->set_crpix, sp->crpix[0], sp->crpix[1]);
 	mo->sip = tweak2(xy, Nxy,
 					 sp->verify_pix, // pixel positional noise sigma
 					 solver_field_width(sp),
@@ -757,6 +759,14 @@ void solver_run(solver_t* solver) {
 	if (numxy >= 1000) {
 		logverb("Limiting search to first 1000 objects\n");
 		numxy = 1000;
+	}
+
+	if (solver->set_crpix && solver->set_crpix_center) {
+        solver->crpix[0] = wcs_pixel_center_for_size(solver_field_width(solver));
+		solver->crpix[1] = wcs_pixel_center_for_size(solver_field_height(solver));
+        logverb("Setting CRPIX to center (%.1f, %.1f) based on image size %i x %i\n",
+                solver->crpix[0], solver->crpix[1],
+                (int)solver_field_width(solver), (int)solver_field_height(solver));
 	}
 
 	num_indexes = pl_size(solver->indexes);
@@ -1404,12 +1414,6 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
 
 	mo->index = sp->index;
     mo->index_jitter = sp->index->index_jitter;
-
-	if (sp->set_crpix && sp->set_crpix_center) {
-        sp->crpix[0] = wcs_pixel_center_for_size(solver_field_width(sp));
-		sp->crpix[1] = wcs_pixel_center_for_size(solver_field_height(sp));
-        logverb("Setting CRPIX to center (%.1f, %.1f) based on image size %i x %i\n", sp->crpix[0], sp->crpix[1], solver_field_width(sp), solver_field_height(sp));
-	}
 
 	if (sp->predistort) {
 		int i;
