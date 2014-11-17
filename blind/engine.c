@@ -718,6 +718,12 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
         sp->tweak_abporder = order;
     }
 
+    if (!sp->do_tweak) {
+        // No tweak: set tweak order to linear, because the tweak alg
+        // can still be invoked via tune-up.
+        sp->tweak_aborder = sp->tweak_abporder = 1;
+    }
+
     val = qfits_header_getdouble(hdr, "ANQSFMIN", 0.0);
     if (val > 0.0)
         bp->quad_size_fraction_lo = val;

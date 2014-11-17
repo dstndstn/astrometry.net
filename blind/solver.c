@@ -1408,6 +1408,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
 	if (sp->set_crpix && sp->set_crpix_center) {
         sp->crpix[0] = wcs_pixel_center_for_size(solver_field_width(sp));
 		sp->crpix[1] = wcs_pixel_center_for_size(solver_field_height(sp));
+        logverb("Setting CRPIX to center (%.1f, %.1f) based on image size %i x %i\n", sp->crpix[0], sp->crpix[1], solver_field_width(sp), solver_field_height(sp));
 	}
 
 	if (sp->predistort) {
