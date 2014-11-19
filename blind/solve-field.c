@@ -931,6 +931,12 @@ int main(int argc, char** args) {
 	}
     bl_free(opts);
 
+    // --dont-augment: advertised as just write xy file,
+    // so quit after doing that.
+    if (axy->dont_augment) {
+        just_augment = TRUE;
+    }
+
     log_init(loglvl);
 	if (timestamp)
 		log_set_timestamp(TRUE);
