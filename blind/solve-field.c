@@ -933,7 +933,7 @@ int main(int argc, char** args) {
 
     // --dont-augment: advertised as just write xy file,
     // so quit after doing that.
-    if (axy->dont_augment) {
+    if (allaxy->dont_augment) {
         just_augment = TRUE;
     }
 
