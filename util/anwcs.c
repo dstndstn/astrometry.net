@@ -1570,7 +1570,7 @@ anwcs_t* anwcs_create_mercator_2(double refra, double refdec,
                                  int W, int H, anbool yflip) {
 	qfits_header* hdr;
 	double xscale = -360. / (double)W;
-    double yscale = xscale;
+    double yscale = -xscale;
     // Pixel scales are the same...
 	char* str = NULL;
 	int Nstr = 0;

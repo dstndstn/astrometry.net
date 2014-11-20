@@ -41,12 +41,12 @@ void test_mercator_2(CuTest* tc) {
                                            1., 256, 256, TRUE);
     printf("RA,Dec in corners:\n");
     anwcs_pixelxy2radec(wcs, 1., 1., &ra, &dec);
-    CuAssertDblEquals(tc, -85.0, dec, 0.1);
+    CuAssertDblEquals(tc,  85.0, dec, 0.1);
     CuAssertDblEquals(tc, 360.0, ra,  1.0);
     printf("  1,1 -> %.1f, %.1f\n", ra, dec);
     anwcs_pixelxy2radec(wcs, 256., 256., &ra, &dec);
     printf("  W,H -> %.1f, %.1f\n", ra, dec);
-    CuAssertDblEquals(tc, 85.0, dec, 0.1);
+    CuAssertDblEquals(tc, -85.0, dec, 0.1);
     CuAssertDblEquals(tc, 0.0, ra,  1.0);
 
     printf("Delta near the center:\n");
