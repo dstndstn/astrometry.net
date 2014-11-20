@@ -79,6 +79,15 @@ anwcs_t* anwcs_create_box(double ra, double dec, double width, int W, int H);
 
 anwcs_t* anwcs_create_box_upsidedown(double ra, double dec, double width, int W, int H);
 
+anwcs_t* anwcs_create_mercator(double refra, double refdec,
+                               double zoomfactor,
+                               int W, int H, anbool yflip);
+
+anwcs_t* anwcs_create_mercator_2(double refra, double refdec,
+                                 double crpix1, double crpix2,
+                                 double zoomfactor,
+                                 int W, int H, anbool yflip);
+
 anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
 									double zoomfactor,
 									int W, int H, anbool yflip);
