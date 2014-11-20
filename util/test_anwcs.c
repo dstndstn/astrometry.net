@@ -34,6 +34,30 @@ struct walk_token2 {
 	dl* radecs;
 };
 
+void test_mercator_2(CuTest* tc) {
+    double ra,dec;
+    double ra2,dec2;
+    anwcs_t* wcs = anwcs_create_mercator_2(180., 0., 128.5, 128.5,
+                                           1., 256, 256, TRUE);
+    printf("RA,Dec in corners:\n");
+    anwcs_pixelxy2radec(wcs, 1., 1., &ra, &dec);
+    CuAssertDblEquals(tc, -85.0, dec, 0.1);
+    CuAssertDblEquals(tc, 360.0, ra,  1.0);
+    printf("  1,1 -> %.1f, %.1f\n", ra, dec);
+    anwcs_pixelxy2radec(wcs, 256., 256., &ra, &dec);
+    printf("  W,H -> %.1f, %.1f\n", ra, dec);
+    CuAssertDblEquals(tc, 85.0, dec, 0.1);
+    CuAssertDblEquals(tc, 0.0, ra,  1.0);
+
+    printf("Delta near the center:\n");
+    anwcs_pixelxy2radec(wcs, 128., 128., &ra, &dec);
+    anwcs_pixelxy2radec(wcs, 129., 128., &ra2, &dec2);
+    printf("dx = 1 -> dRA, dDec %.1f, %.1f\n", ra2-ra, dec2-dec);
+    anwcs_pixelxy2radec(wcs, 128., 129., &ra2, &dec2);
+    printf("dy = 1 -> dRA, dDec %.1f, %.1f\n", ra2-ra, dec2-dec);
+}
+
+
 /*
 static void walk_callback2(const anwcs_t* wcs, double ix, double iy,
                            double ra, double dec, void* token) {
