@@ -200,9 +200,16 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
     else:
         # Use 2-d broadcasting pixel <-> radec functions here.
         # This can be rather expensive, with lots of WCS calls!
-        ok,fxi,fyi = wcs.radec2pixelxy(
-            *targetwcs.pixelxy2radec(ixo[np.newaxis,:] + 1.,
-                                     iyo[:,np.newaxis] + 1.))
+
+        R = targetwcs.pixelxy2radec(ixo[np.newaxis,:] + 1.,
+                                    iyo[:,np.newaxis] + 1.)
+        if len(R) == 3:
+            # ok,ra,dec
+            R = R[1:]
+        ok,fxi,fyi = wcs.radec2pixelxy(*R)
+        # ok,fxi,fyi = wcs.radec2pixelxy(
+        #     *targetwcs.pixelxy2radec(ixo[np.newaxis,:] + 1.,
+        #                              iyo[:,np.newaxis] + 1.))
         del ok
         fxi -= 1.
         fyi -= 1.
