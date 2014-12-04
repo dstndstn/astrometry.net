@@ -2398,6 +2398,11 @@ tan_t.__getstate__ = tan_t_getstate
 tan_t.__setstate__ = tan_t_setstate
 tan_t.__getnewargs__ = tan_t_getnewargs
 
+def tan_t_getshape(self):
+    return int(self.imageh), int(self.imagew)
+
+tan_t.shape = property(tan_t_getshape)
+
 def tan_t_get_cd(self):
     cd = self.cd
     return (cd[0], cd[1], cd[2], cd[3])
