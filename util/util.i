@@ -2320,7 +2320,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         
         H = (int)PyArray_DIM(np_counts, 0);
         W = (int)PyArray_DIM(np_counts, 1);
-        printf("Counts array size %i x %i\n", W, H);
+        //printf("Counts array size %i x %i\n", W, H);
         counts = PyArray_DATA(np_counts);
         px = PyArray_DATA(np_x);
         py = PyArray_DATA(np_y);
@@ -2328,18 +2328,16 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
             int32_t xi = (*px);
             int32_t yi = (*py);
             if (yi < 0 || yi >= H || xi < 0 || xi >= W) {
-                printf("Error: i=%i, xi,yi = %i,%i\n", i, xi, yi);
+                printf("Warning: skipping out-of-range value: i=%i, xi,yi = %i,%i\n", i, xi, yi);
             } else {
                 counts[yi*W + xi]++;
             }
             px++;
             py++;
         }
-
         Py_DECREF(np_counts);
         Py_DECREF(np_x);
         Py_DECREF(np_y);
-        //Py_DECREF(itype);
         return 0;
     }
 
