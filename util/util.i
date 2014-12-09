@@ -2285,6 +2285,63 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
     }
 
 
+    static int an_tally(PyObject* py_counts, PyObject* py_x, PyObject* py_y) {
+        PyArray_Descr* itype;
+        PyObject *np_counts=NULL, *np_x=NULL, *np_y=NULL;
+        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED |
+            NPY_ELEMENTSTRIDES;
+        int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+        int32_t *counts, *px, *py;
+        int W, H, i, N;
+
+        itype = PyArray_DescrFromType(NPY_INT32);
+        Py_INCREF(itype);
+        Py_INCREF(itype);
+
+        np_counts = PyArray_CheckFromAny(py_counts, itype, 2, 2, reqout, NULL);
+        np_x = PyArray_CheckFromAny(py_x, itype, 1, 1, req, NULL);
+        np_y = PyArray_CheckFromAny(py_y, itype, 1, 1, req, NULL);
+
+        if (!np_counts || !np_x || !np_y) {
+            ERR("Failed to PyArray_FromAny the counts, x, and y arrays.\n");
+            Py_XDECREF(np_counts);
+            Py_XDECREF(np_x);
+            Py_XDECREF(np_y);
+            return -1;
+        }
+        N = (int)PyArray_DIM(np_x, 0);
+        if (PyArray_DIM(np_y, 0) != N) {
+            ERR("Expected x and y arrays to have the same lengths!\n");
+            Py_XDECREF(np_counts);
+            Py_XDECREF(np_x);
+            Py_XDECREF(np_y);
+            return -1;
+        }
+        
+        H = (int)PyArray_DIM(np_counts, 0);
+        W = (int)PyArray_DIM(np_counts, 1);
+        //printf("Counts array size %i x %i\n", W, H);
+        counts = PyArray_DATA(np_counts);
+        px = PyArray_DATA(np_x);
+        py = PyArray_DATA(np_y);
+        for (i=0; i<N; i++) {
+            int32_t xi = (*px);
+            int32_t yi = (*py);
+            if (yi < 0 || yi >= H || xi < 0 || xi >= W) {
+                printf("Warning: skipping out-of-range value: i=%i, xi,yi = %i,%i\n", i, xi, yi);
+            } else {
+                counts[yi*W + xi]++;
+            }
+            px++;
+            py++;
+        }
+        Py_DECREF(np_counts);
+        Py_DECREF(np_x);
+        Py_DECREF(np_y);
+        return 0;
+    }
+
+             
 
 
 %}
