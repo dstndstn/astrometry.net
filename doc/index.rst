@@ -15,6 +15,7 @@ Contents:
    changelog
    build
    build-index
+   net/api
    libkd
    api
    oaq
