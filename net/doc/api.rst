@@ -104,3 +104,13 @@ And you will get back a response such as::
 
 The ``subid`` is the Submission number.  The ``hash`` is the ``sha-1`` hash of the contents of the URL you specified.
 
+
+
+Misc Notes
+----------
+
+-currently the SDSS and GALEX overlay views return plots by base64
+encoding them and including them in the JSON results, but there is
+probably a better way to do that...  But regardless, you should be
+able to get back plots if you want them.
+

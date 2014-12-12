@@ -41,15 +41,10 @@
     {% endif %}
 
 </p>
+
 <p>
-    To access the Astrometry.net API, first create a session by sending a JSON 
-    request with your API key as the argument <span class="code">'apikey'</span> 
-    to <span class="code">{% url 'astrometry.net.api.api_login' %}</span>. The
-    API will return a session key, which must be included in subsequent
-    requests sent to the API.
-</p>
-<p>
-There is <a href="http://astrometry.net/doc/net/api.html">Little more documentation on the API</a>.
+Then head on over to the
+<a href="http://astrometry.net/doc/net/api.html">API Documentation</a>, such as it is.
 </p>
 
 <p>
@@ -58,7 +53,7 @@ Further questions can go to <a href="http://astrometry.net/group">the Astrometry
 
 <h2>Sample Code</h2>
 <p>
-Probably the best documentation for the API is our complete implementation of a client:
+If you speak python, probably the best documentation for the API is our complete implementation of a client:
 <a href="http://trac.astrometry.net/browser/trunk/src/astrometry/net/client/">API client code</a>
 <br />
 Which you can check out with the command:

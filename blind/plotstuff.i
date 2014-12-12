@@ -264,6 +264,18 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 
 
 %extend plot_args {
+	PyObject* view_image_as_numpy() {
+		npy_intp dim[3];
+		unsigned char* img;
+		PyObject* npimg;
+		dim[0] = self->H;
+		dim[1] = self->W;
+		dim[2] = 4;
+		img = cairo_image_surface_get_data(self->target);
+        npimg = PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, img);
+        return npimg;
+    }
+
 	PyObject* get_image_as_numpy(int flip, PyObject* out) {
 		npy_intp dim[3];
 		unsigned char* img;

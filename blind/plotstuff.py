@@ -155,6 +155,9 @@ class Plotstuff(object):
 	def set_image_from_numpy(self, img, flip=False):
 		self.pargs.set_image_from_numpy(img, flip)
 
+	def view_image_as_numpy(self):
+		return self.pargs.view_image_as_numpy()
+        
 	def apply_settings(self):
 		plotstuff_builtin_apply(self.pargs.cairo, self.pargs)
 
