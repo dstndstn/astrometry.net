@@ -28,7 +28,7 @@ def match_kdtree_catalog(wcs, catfn):
     I,J,nil = trees_match(kd, kd2, r, permuted=False)
     # HACK
     #I2,J,d = trees_match(kd, kd2, r)
-    xyz = spherematch_c.kdtree_get_positions(kd, I)
+    xyz = spherematch_c.kdtree_get_positions(kd, I.astype(np.uint32))
     #print 'I', I
     I2 = tree_permute(kd, I)
     #print 'I2', I2
