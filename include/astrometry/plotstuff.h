@@ -226,6 +226,12 @@ double plotstuff_pixel_scale(plot_args_t* pargs);
 anbool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 						double* p_x, double* p_y);
 
+// RA,Dec in degrees
+// x,y in pixels (FITS coordinates)
+// Returns TRUE on success.
+anbool plotstuff_xy2radec(plot_args_t* pargs, double x, double y,
+                          double* pre, double* pdec);
+
 // RA,Dec,radius in deg.
 int plotstuff_get_radec_center_and_radius(plot_args_t* pargs, double* pra, double* pdec, double* pradius);
 

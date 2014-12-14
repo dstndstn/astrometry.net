@@ -272,7 +272,9 @@ if __name__ == '__main__':
                       help='Plot quad from given match file')
     parser.add_option('--pastel', action='store_true',
                       help='Pastel colors for constellations and bright stars?')
-    
+    parser.add_option('-v', '--verbose',
+        action='store_true', dest='verbose', help='be chatty')
+
     opt,args = parser.parse_args()
     dojson = False
     if len(args) == 3:
@@ -285,6 +287,17 @@ if __name__ == '__main__':
             parser.print_help()
             sys.exit(-1)
 
+    import logging
+    logformat = '%(message)s'
+    from astrometry.util.util import log_init #, LOG_VERB, LOG_MSG
+    loglvl = 2
+    if opt.verbose:
+        logging.basicConfig(level=logging.DEBUG, format=logformat)
+        loglvl += 1
+    else:
+        logging.basicConfig(level=logging.INFO, format=logformat)
+    log_init(loglvl)
+
     wcsfn = args[0]
 
     if dojson:
@@ -295,8 +308,7 @@ if __name__ == '__main__':
         json = simplejson.dumps(jobjs)
         print json
         sys.exit(0)
-                
-    
+
     fmt = PLOTSTUFF_FORMAT_JPG
     s = outfn.split('.')
     if len(s):

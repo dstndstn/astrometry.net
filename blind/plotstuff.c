@@ -1044,6 +1044,16 @@ anbool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 	return (anwcs_radec2pixelxy(pargs->wcs, ra, dec, x, y) ? FALSE : TRUE);
 }
 
+anbool plotstuff_xy2radec(plot_args_t* pargs, double x, double y,
+						double* pra, double* pdec) {
+	if (!pargs->wcs) {
+		ERROR("No WCS defined!");
+		return FALSE;
+	}
+	return (anwcs_pixelxy2radec(pargs->wcs, x, y, pra, pdec)
+            ? FALSE : TRUE);
+}
+
 anbool plotstuff_radec_is_inside_image(plot_args_t* pargs, double ra, double dec) {
 	if (!pargs->wcs) {
 		ERROR("No WCS defined!");

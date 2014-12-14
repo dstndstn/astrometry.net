@@ -307,23 +307,29 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 static void plot_brightstars(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 	int i, N;
 
+    // Get plot center, to use in trimming bright stars
+    double rc,dc,radius;
+    plotstuff_get_radec_center_and_radius(pargs, &rc, &dc, &radius);
+
 	N = bright_stars_n();
 	for (i=0; i<N; i++) {
 		double px, py;
 		char* label;
 		const brightstar_t* bs = bright_stars_get(i);
+		// skip unnamed
+		if (!strlen(bs->name) && !strlen(bs->common_name))
+			continue;
+        // skip stars too far away
+        if (deg_between_radecdeg(rc, dc, bs->ra, bs->dec) > radius * 1.2)
+            continue;
 		if (!plotstuff_radec2xy(pargs, bs->ra, bs->dec, &px, &py))
 			continue;
 		logverb("Bright star %s/%s at RA,Dec (%g,%g) -> xy (%g, %g)\n",
                 bs->name, bs->common_name, bs->ra, bs->dec, px, py);
 		if (px < 1 || py < 1 || px > pargs->W || py > pargs->H)
 			continue;
-		// skip unnamed
-		if (!strlen(bs->name) && !strlen(bs->common_name))
-			continue;
         px -= 1;
         py -= 1;
-
         if (ann->bright_pastel) {
             float r,g,b;
             color_for_radec(bs->ra, bs->dec, &r,&g,&b);

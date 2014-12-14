@@ -35,15 +35,24 @@ print 'inc:', inc
 print 'cflags:', cflags
 
 c_module = Extension('_plotstuff_c',
-                     sources = ['plotstuff.i'],
+                     sources = [
+                         'plotstuff.i',
+                         'plotstuff.c', 'plotfill.c', 'plotxy.c',
+                         'plotimage.c', 'plotannotations.c',
+						 'plotgrid.c', 'plotoutline.c', 'plotindex.c',
+						 'plotradec.c', 'plothealpix.c', 'plotmatch.c',
+						 'matchfile.c', 'matchobj.c',
+                         ],
                      include_dirs = [numpy_inc] + inc,
-                     extra_objects = [
-						 'plotstuff.o', 'plotfill.o', 'plotxy.o',
-						 'plotimage.o', 'plotannotations.o',
-						 'plotgrid.o', 'plotoutline.o', 'plotindex.o',
-						 'plotradec.o', 'plothealpix.o', 'plotmatch.o',
-						 'matchfile.o', 'matchobj.o',
-						 ] + objs,
+                     extra_objects = 
+# [
+# 'plotstuff.o', 'plotfill.o', 'plotxy.o',
+# 'plotimage.o', 'plotannotations.o',
+# 'plotgrid.o', 'plotoutline.o', 'plotindex.o',
+# 'plotradec.o', 'plothealpix.o', 'plotmatch.o',
+# 'matchfile.o', 'matchobj.o',
+# ] + 
+objs,
                          extra_compile_args = cflags,
                          extra_link_args=link,
                          swig_opts=['-I'+d for d in inc] + cflags,
