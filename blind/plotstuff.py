@@ -89,6 +89,10 @@ class Plotstuff(object):
 				plotstuff_set_wcs_file(self.pargs, val, 0)
 		elif name == 'wcs':
 			plotstuff_set_wcs(self.pargs, val)
+		elif name == 'wcs_tan':
+			plotstuff_set_wcs_tan(self.pargs, val)
+		elif name == 'wcs_sip':
+			plotstuff_set_wcs_sip(self.pargs, val)
 		elif name == 'text_bg_alpha':
 			plotstuff_set_text_bg_alpha(self.pargs, val)
 		#elif name == 'operator':
