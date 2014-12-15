@@ -3,7 +3,7 @@
 # NOTICE: This guide was developed on CentOS 6.6, but the author sees no reason why it wouldn't work on any other distribution, provided that you have Python and other prerequisites installed.
 
 # This file is part of the Astrometry.net suite.
-# Copyright 2011 Dustin Lang.
+# Copyright 2014 Denis Vida.
 
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
