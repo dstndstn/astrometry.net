@@ -194,10 +194,19 @@ def _horizons_login(debug=False):
 def get_radec_for_jds(bodyname, jd0, jd1, interval='1d', debug=False):
     t = _horizons_login(debug=debug)
     t.write( # Body name; if found, it asks "Continue?"
-             '%s\n\n' % bodyname)
-    t.read_until('[A]pproaches, [E]phemeris, [F]tp,')
-    t.write('E\n')
-    t.read_until('Observe, Elements, Vectors  [o,e,v,?]')
+             '%s\r\n' % bodyname)
+    #t.read_until('[A]pproaches, [E]phemeris, [F]tp,')
+    txt = t.read_until('[E]phemeris')
+    #txt2 = t.read_until('Horizons> ')
+    txt2 = t.read_until('<cr>: ')
+    print txt, txt2
+    # t.write('\n')
+    # txt = t.read_until('\nHorizons> ')
+    # print txt
+    t.write('E\r\n')
+    
+    txt = t.read_until('Observe, Elements, Vectors  [o,e,v,?]')
+    print txt
     t.write('o\n')
     t.read_until('Coordinate center [ <id>,coord,geo  ]')
     t.write('geo\n')
@@ -350,6 +359,59 @@ def get_ephemerides_for_jds(bodyname, jds, debug=False):
     return EE
 
 if __name__ == '__main__':
+    
+    import optparse
+    parser = optparse.OptionParser()
+    parser.add_option('--start', default='2000-1-1',
+                      help='Start date, YYYY-M-D, default %default')
+    parser.add_option('--end', default='2021-1-1',
+                      help='End date, YYYY-M-D, default %default')
+    parser.add_option('--interval', default='1d',
+                      help='Interval, default %default')
+    parser.add_option('--body', default='C/2012 S1',
+                      help='Solar system body, default %default')
+    parser.add_option('--fits', default='ison-ephem.fits',
+                      help='FITS table output filename, default %default')
+
+    parser.add_option('--verbose', '-v', action='store_true', default=False,
+                      help='Verbose mode?')
+    
+    opt,args = parser.parse_args()
+
+    date0 = opt.start.split('-')
+    if len(date0) != 3:
+        print 'Expected YYYY-M-D, got', opt.start
+        sys.exit(-1)
+    date0 = [int(x, 10) for x in date0]
+    date0 = datetime.datetime(*date0)
+    print 'Start date:', date0
+    jd0 = datetojd(date0)
+    print 'Start JD:', jd0
+
+    date1 = opt.end.split('-')
+    if len(date1) != 3:
+        print 'Expected YYYY-M-D, got', opt.end
+        sys.exit(-1)
+    date1 = [int(x, 10) for x in date1]
+    date1 = datetime.datetime(*date1)
+    print 'End date:', date1
+    jd1 = datetojd(date1)
+    print 'End JD:', jd1
+
+    date,ra,dec = get_radec_for_jds(opt.body, jd0, jd1, debug=opt.verbose,
+                                    interval=opt.interval)
+    for d,rr,dd in zip(date, ra, dec):
+        print '  ', d, rr, dd
+
+    T = fits_table()
+    T.jd  = np.array([datetojd(d) for d in date])
+    T.ra  = np.array(ra)
+    T.dec = np.array(dec)
+    T.writeto(opt.fits)
+    print 'Wrote', opt.fits
+
+    sys.exit(0)
+    
     # import numpy as np
     # jd = 2454153.93624056 + np.random.normal(size=10)*300.
     # ephs = get_ephemerides_for_jds('GALEX', jd)
