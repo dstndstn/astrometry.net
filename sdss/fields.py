@@ -37,7 +37,12 @@ def read_photoobjs_in_wcs(wcs, margin, cols=None,
         wfn = sdss.filenames.get('window_flist', None)
         if wfn is None:
             wfn = 'window_flist.fits'
-    print 'Using', wfn
+    if not os.path.exists(wfn):
+        print 'File does not exist:', wfn, '; downloading...'
+        wfn = sdss.retrieve('window_flist', None, None, None, rerun='xxx')
+        print 'Retrieved', wfn
+    else:
+        print 'Using', wfn
 
     print 'Searching for run,camcol,fields with radius', rad, 'deg'
     RCF = radec_to_sdss_rcf(ra, dec, radius=rad*60., tablefn=wfn)

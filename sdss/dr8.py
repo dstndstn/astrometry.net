@@ -218,6 +218,7 @@ class DR8(DR7):
             'idR': 'idR-%(run)06i-%(band)s-%(camcol)i-%(field)04i.fits',
             'photoObj': 'photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
             'photoField': 'photoField-%(run)06i-%(camcol)i.fits',
+            'window_flist': 'window_flist.fits',
             })
 
         # URLs on DAS server
@@ -233,6 +234,7 @@ class DR8(DR7):
             'photoField': 'photoObj/%(rerun)s/%(run)i/photoField-%(run)06i-%(camcol)i.fits',
             'fpM': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit.gz',
             'fpAtlas': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpAtlas-%(run)06i-%(camcol)i-%(field)04i.fit',
+            'window_flist': 'resolve/2010-05-23/window_flist.fits',
             }
 
         self.dassuffix = {
@@ -351,7 +353,8 @@ class DR8(DR7):
     
     def retrieve(self, filetype, run, camcol, field=None, band=None, skipExisting=True,
                  tempsuffix='.tmp', rerun=None):
-        outfn = self.getPath(filetype, run, camcol, field, band)
+        outfn = self.getPath(filetype, run, camcol, field, band,
+                             rerun=rerun)
         print 'Checking for file', outfn
         if outfn is None:
             return None
