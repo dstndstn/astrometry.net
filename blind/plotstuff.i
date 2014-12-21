@@ -347,6 +347,9 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 	void add_target(double ra, double dec, const char* name) {
 		plot_annotations_add_target(self, ra, dec, name);
 	}
+	void add_named_target(const char* name) {
+		plot_annotations_add_named_target(self, name);
+	}
 }
 
 %extend plotgrid_args {

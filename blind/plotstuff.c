@@ -699,14 +699,30 @@ void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
 				pargs->bg_rgba[2], pargs->bg_rgba[3]);
 		cmd.layer = pargs->text_bg_layer;
 		memcpy(cmd.rgba, pargs->bg_rgba, sizeof(cmd.rgba));
-		for (dy=-1; dy<=1; dy++) {
-			for (dx=-1; dx<=1; dx++) {
-				cmd.text = strdup(txt);
-				cmd.x = px + dx;
-				cmd.y = py + dy;
-				add_cmd(pargs, &cmd);
-			}
-		}
+
+        if (pargs->bg_box) {
+            // Plot a rectangle behind the text
+            cairo_text_extents_t textents;
+            cairo_text_extents(cairo, txt, &textents);
+            cmd.type = RECTANGLE;
+            cmd.x = px + textents.x_bearing;
+            cmd.y = py + textents.y_bearing;
+            cmd.x2 = cmd.x + textents.width;
+            cmd.y2 = py + textents.y_bearing + textents.height;
+            cmd.fill = TRUE;
+            add_cmd(pargs, &cmd);
+            cmd.type = TEXT;
+        } else {
+            // Plot bg-color text behind
+            for (dy=-1; dy<=1; dy++) {
+                for (dx=-1; dx<=1; dx++) {
+                    cmd.text = strdup(txt);
+                    cmd.x = px + dx;
+                    cmd.y = py + dy;
+                    add_cmd(pargs, &cmd);
+                }
+            }
+        }
 	} else
 		logverb("No background behind text\n");
 
@@ -796,8 +812,14 @@ int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 				}
 				break;
 			case RECTANGLE:
-				ERROR("Unimplemented!");
-				return -1;
+                cairo_move_to(cairo, cmd->x, cmd->y);
+                cairo_line_to(cairo, cmd->x, cmd->y2);
+                cairo_line_to(cairo, cmd->x2, cmd->y2);
+                cairo_line_to(cairo, cmd->x2, cmd->y);
+                cairo_close_path(cairo);
+				if (cmd->fill)
+					cairo_fill(cairo);
+                break;
 			case POLYGON:
 				if (!cmd->xy)
 					break;

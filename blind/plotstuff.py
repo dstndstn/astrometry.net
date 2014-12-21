@@ -72,6 +72,8 @@ class Plotstuff(object):
 						   plotstuff_get_alpha(self.pargs))
 		elif name == 'bg_rgba':
 			plotstuff_set_bgrgba2(self.pargs, val[0], val[1], val[2], val[3])
+		elif name == 'bg_box':
+			self.pargs.bg_box = val
 		elif name == 'rgba':
 			plotstuff_set_rgba2(self.pargs, val[0], val[1], val[2], val[3])
 		elif name == 'alpha':

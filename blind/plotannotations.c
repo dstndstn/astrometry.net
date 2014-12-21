@@ -542,6 +542,26 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 
 int plot_annotations_add_named_target(plotann_t* ann, const char* name) {
 	target_t tar;
+    int i, N;
+    // Try bright stars
+    N = bright_stars_n();
+    for (i=0; i<N; i++) {
+        const brightstar_t* bs = bright_stars_get(i);
+        if (!bs->name && !bs->common_name)
+            continue;
+        if (strcaseeq(name, bs->name) || strcaseeq(name, bs->common_name)) {
+            tar.ra = bs->ra;
+            tar.dec = bs->dec;
+            if (strcaseeq(name, bs->name))
+                tar.name = bs->name;
+            else
+                tar.name = bs->common_name;
+            logmsg("Found %s: RA,Dec (%g,%g)\n", name, bs->ra, bs->dec);
+            bl_append(ann->targets, &tar);
+            return 0;
+        }
+    }
+    // Try NGC objects
 	ngc_entry* e = ngc_get_entry_named(name);
 	if (!e) {
 		ERROR("Failed to find target named \"%s\"", name);
