@@ -71,6 +71,7 @@ struct plot_args {
 
 	float bg_rgba[4];
 	float bg_lw; // default: 3
+    int bg_box; // plot a rectangle for text backgrounds.
 
 	float fontsize; // default: 20
 

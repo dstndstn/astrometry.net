@@ -78,12 +78,14 @@ ngc_entry* ngc_get_ngcic_num(int is_ngc, int num) {
 }
 
 ngc_entry* ngc_get_entry_named(const char* name) {
-	if (starts_with(name, "NGC ") || starts_with(name, "IC ")) {
+	if (starts_with(name, "NGC") || starts_with(name, "IC")) {
 		int num;
 		const char* cptr;
 		anbool isngc;
-		isngc = starts_with(name, "NGC ");
-		cptr = name + (isngc ? 4 : 3);
+		isngc = starts_with(name, "NGC");
+		cptr = name + (isngc ? 3 : 2);
+        if (*cptr == ' ')
+            cptr++;
 		num = atoi(cptr);
 		if (!num)
 			return NULL;
@@ -92,7 +94,23 @@ ngc_entry* ngc_get_entry_named(const char* name) {
 		int i, N;
 		N = n_names();
 		for (i=0; i<N; i++) {
+            char nsname[256];
+            const char* src;
+            char* dest;
 			if (streq(name, ngc_names[i].name))
+				return ngc_get_ngcic_num(ngc_names[i].is_ngc, ngc_names[i].id);
+            // Try without spaces
+            dest = nsname;
+            src = ngc_names[i].name;
+            for (; *src; src++) {
+                if (*src == ' ')
+                    continue;
+                *dest = *src;
+                dest++;
+            }
+            *dest = '\0';
+            //printf("Spaceless name: '%s'\n", nsname);
+			if (streq(name, nsname))
 				return ngc_get_ngcic_num(ngc_names[i].is_ngc, ngc_names[i].id);
 		}
 	}
