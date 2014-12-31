@@ -954,6 +954,9 @@ int augment_xylist(augment_xylist_t* axy,
 		}
         dosort = TRUE;
 
+        // now set the extension to 1, for the xylsfn.
+        axy->extension = 1;
+
 	} else {
 		// xylist.
 		// if --xylist is given:
