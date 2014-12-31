@@ -5,7 +5,7 @@ from astrometry.util.resample import resample_with_wcs, ResampleError
 from fields import radec_to_sdss_rcf
 from common import band_name
 
-def get_sdss_cutout(targetwcs, sdss, get_rawvals=False):
+def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg'):
     rgbims = []
 
     ra,dec = targetwcs.radec_center()
@@ -32,15 +32,16 @@ def get_sdss_cutout(targetwcs, sdss, get_rawvals=False):
     # size in SDSS pixels of the target image.
     sz = np.hypot(H, W)/2. * targetpixscale / 0.396
     print 'SDSS sz:', sz
+
+    bandnums = [band_index(b) for b in bands]
     
-    for bandnum in [3,2,1]:
+    for bandnum,band in zip(bandnums, bands):
         targetim = np.zeros((H, W), np.float32)
         targetn  = np.zeros((H, W), np.uint8)
 
         for ifield,(run,camcol,field) in enumerate(RCF):
             
-            fn = sdss.retrieve('frame', run, camcol, field, band_name(bandnum))
-
+            fn = sdss.retrieve('frame', run, camcol, field, band)
             frame = sdss.readFrame(run, camcol, field, bandnum)
 
             h,w = frame.getImageShape()
@@ -71,13 +72,20 @@ def get_sdss_cutout(targetwcs, sdss, get_rawvals=False):
         rawvals = [x.copy() for x in rgbims]
 
     r,g,b = rgbims
+
+    scales = dict(z=1.0, i=1.0, r=1.3, g=2.5)
+    
+    r *= scales[bands[0]]
+    g *= scales[bands[1]]
+    b *= scales[bands[2]]
+    
     # i
-    r *= 1.0
+    #r *= 1.0
     # r
     #g *= 1.5
-    g *= 1.3
+    #g *= 1.3
     # g
-    b *= 2.5
+    #b *= 2.5
     m = -0.02
     r = np.maximum(0, r - m)
     g = np.maximum(0, g - m)
