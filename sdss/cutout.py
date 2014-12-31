@@ -4,7 +4,7 @@ from scipy.ndimage.filters import gaussian_filter
 from astrometry.util.resample import resample_with_wcs, ResampleError
 
 from fields import radec_to_sdss_rcf
-from common import band_name
+from common import band_name, band_index
 
 def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg',
                     get_rawvals_only=False,
