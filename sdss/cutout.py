@@ -4,7 +4,7 @@ from scipy.ndimage.filters import gaussian_filter
 from astrometry.util.resample import resample_with_wcs, ResampleError
 
 from fields import radec_to_sdss_rcf
-from common import band_name, band_index
+from common import band_name, band_index, AsTransWrapper
 
 def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg',
                     get_rawvals_only=False,
@@ -127,8 +127,8 @@ if __name__ == '__main__':
     matplotlib.use('Agg')
     import pylab as plt
 
-    from dr10 import *
-    from astrometry.util.util import *
+    from dr10 import DR10
+    from astrometry.util.util import Tan
     
     tempdir = tempfile.gettempdir()
 
