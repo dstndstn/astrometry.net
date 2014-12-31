@@ -1,3 +1,4 @@
+import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 
 from astrometry.util.resample import resample_with_wcs, ResampleError
