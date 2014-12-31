@@ -3,6 +3,8 @@ import telnetlib as tn
 
 import datetime
 
+import time
+
 #from bmjd import Eph
 
 from astrometry.util.file import *
@@ -196,13 +198,45 @@ def get_radec_for_jds(bodyname, jd0, jd1, interval='1d', debug=False):
     t.write( # Body name; if found, it asks "Continue?"
              '%s\r\n' % bodyname)
     #t.read_until('[A]pproaches, [E]phemeris, [F]tp,')
-    txt = t.read_until('[E]phemeris')
+
+    #time.sleep(5)
+    #txt = t.read_eager()
+    #print 'Read', txt
+    #time.sleep(1)
+    #txt = t.read_eager()
+    #print 'Read', txt
+
     #txt2 = t.read_until('Horizons> ')
-    txt2 = t.read_until('<cr>: ')
+    #txt2 = t.read_until('<cr>: ')
+    txt=''
+    txt2 = t.read_until('<cr>')
+    print
+    print '--------------------------------'
+    print
     print txt, txt2
+    print
+    print '--------------------------------'
+    print
+    t.write('\n')
+
+    # if 'EXACT' in txt2:
+    #     '''
+    #     >EXACT< designation search [CASE & SPACE sensitive]:
+    #     DES = C/2014 Q2;
+    #     Continue [ <cr>
+    #     Telnet(horizons.jpl.nasa.gov,6775): send 'E\r\n'
+    #     Telnet(horizons.jpl.nasa.gov,6775): recv ' n=no, ? ] : '
+    #     Telnet(horizons.jpl.nasa.gov,6775): recv 'E\r\nContinue [ <cr>=yes, n=no, ? ] : '
+    #     '''
+    #     #txt = t.read_until('Continue')
+    #     txt = t.read_until('Continue [ <cr>=yes,  n=no, ? ] :')
+    #     print 'Read', txt
+    #     t.write('\n')
+        
     # t.write('\n')
     # txt = t.read_until('\nHorizons> ')
     # print txt
+    txt = t.read_until('[E]phemeris')
     t.write('E\r\n')
     
     txt = t.read_until('Observe, Elements, Vectors  [o,e,v,?]')
