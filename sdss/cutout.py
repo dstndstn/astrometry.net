@@ -5,7 +5,9 @@ from astrometry.util.resample import resample_with_wcs, ResampleError
 from fields import radec_to_sdss_rcf
 from common import band_name
 
-def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg'):
+def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg',
+                    bandscales=dict(z=1.0, i=1.0, r=1.3, g=2.5):
+
     rgbims = []
 
     ra,dec = targetwcs.radec_center()
@@ -73,11 +75,9 @@ def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg'):
 
     r,g,b = rgbims
 
-    scales = dict(z=1.0, i=1.0, r=1.3, g=2.5)
-    
-    r *= scales[bands[0]]
-    g *= scales[bands[1]]
-    b *= scales[bands[2]]
+    r *= bandscales[bands[0]]
+    g *= bandscales[bands[1]]
+    b *= bandscales[bands[2]]
     
     # i
     #r *= 1.0
