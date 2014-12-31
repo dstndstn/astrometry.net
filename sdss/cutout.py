@@ -6,7 +6,8 @@ from fields import radec_to_sdss_rcf
 from common import band_name
 
 def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg',
-                    bandscales=dict(z=1.0, i=1.0, r=1.3, g=2.5):
+                    get_rawvals_only=False,
+                    bandscales=dict(z=1.0, i=1.0, r=1.3, g=2.5)):
 
     rgbims = []
 
@@ -69,6 +70,9 @@ def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg',
             targetn [Yo,Xo] += 1
 
         rgbims.append(targetim / targetn)
+
+    if get_rawvals_only:
+        return rgbims
 
     if get_rawvals:
         rawvals = [x.copy() for x in rgbims]
