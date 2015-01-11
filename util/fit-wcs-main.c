@@ -13,7 +13,7 @@
 #include "log.h"
 #include "errors.h"
 
-static const char* OPTIONS = "hx:X:Y:R:D:c:r:o:s:W:H:Cv";
+static const char* OPTIONS = "hx:X:Y:R:D:c:r:o:s:W:H:tCv";
 
 void print_help(char* progname) {
 	BOILERPLATE_HELP_HEADER(stdout);
@@ -31,6 +31,7 @@ void print_help(char* progname) {
            "   [-s <SIP-order>] (default is a WCS TAN solution, not SIP)\n"
            "   [-W <image-width> ] (default: max X position; used for SIP)\n"
            "   [-H <image-height>] (default: max Y position; used for SIP)\n"
+           "   [-t]: output WCS TAN_PV_i_j distorsion polynomials (default is SIP_A_B_i_j)\n"
            "   [-C]: set CRPIX to be the center of the field; SIP only\n"
            "   [-v]: verbose\n"
 		   "\n", progname);
@@ -61,6 +62,7 @@ int main(int argc, char** args) {
     int loglvl = LOG_MSG;
     int siporder = 0;
     int W=0, H=0;
+    anbool output_tpv = FALSE;
     anbool crpix_center = FALSE;
     int i;
 
@@ -76,6 +78,9 @@ int main(int argc, char** args) {
             break;
         case 'H':
             H = atoi(optarg);
+            break;
+        case 't':
+            output_tpv = TRUE;
             break;
         case 'C':
             crpix_center = TRUE;
