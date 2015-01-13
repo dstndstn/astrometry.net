@@ -15,11 +15,13 @@ def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg',
     ra,dec = targetwcs.radec_center()
     # in deg
     radius = targetwcs.radius()
+    #print 'Target WCS radius is', radius, 'deg'
     H,W = targetwcs.get_height(), targetwcs.get_width()
     targetpixscale = targetwcs.pixel_scale()
     
     wlistfn = sdss.filenames.get('window_flist', 'window_flist.fits')
     rad2 = radius*60. + np.hypot(14., 10.)/2.
+    #print 'Rad2 radius', rad2, 'arcmin'
     RCF = radec_to_sdss_rcf(ra, dec, tablefn=wlistfn, radius=rad2)
 
     # Drop rerun 157

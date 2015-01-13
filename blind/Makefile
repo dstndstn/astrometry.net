@@ -408,11 +408,14 @@ ALL_OBJ += plotxy-main.o
 PLOTSTUFF_SRCS = $(subst .o,.c,$(PLOTSTUFF))
 PLOTSTUFF_HDRS = $(addprefix $(INCLUDE_DIR)/,$(subst .o,.h,$(PLOTSTUFF)))
 
-py: pyplotstuff
+py: pyplotstuff pyblind
 .PHONY: py
 
 pyplotstuff: _plotstuff_c$(PYTHON_SO_EXT)
 .PHONY: pyplotstuff
+
+pyblind: _blind$(PYTHON_SO_EXT)
+.PHONY: pyblind
 
 _plotstuff_c$(PYTHON_SO_EXT): plotstuff.i $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS) $(CAIRO_LIBS)" \
@@ -420,6 +423,13 @@ _plotstuff_c$(PYTHON_SO_EXT): plotstuff.i $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	INC="$(ANFILES_INC) $(CAIRO_INC) $(NETPBM_INC)" \
 	CFLAGS="$(ANFILES_CFLAGS)" \
 	python setup.py build_ext -v --inplace --build-temp .
+
+_blind$(PYTHON_SO_EXT): blind.i $(ENGINE_OBJS)
+	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" \
+	SLIB="$(SLIB)" \
+	INC="$(ANFILES_INC)" \
+	CFLAGS="$(ANFILES_CFLAGS)" \
+	python setup-blind.py build_ext -v --inplace --build-temp .
 
 test_plotstuff-main.c: test_plotstuff.c
 	$(AN_SHELL) $(MAKE_TESTS) $^ > $@
