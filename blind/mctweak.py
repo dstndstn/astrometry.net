@@ -110,29 +110,6 @@ def get_sip_args(wcs):
 
 
 def mctweak(wcs, xy, rd):
-    ok,x,y = wcs.radec2pixelxy(rd.ra, rd.dec)
-    refxy = np.vstack((x,y)).T
-    print 'Refxy', refxy.shape
-    #print 'xy', xy.shape
-    testxy = np.vstack((xy.x, xy.y)).T
-    #nt,two = xy.shape
-    # source positional uncertainty
-    nt = len(xy)
-    sig2 = 1.
-    testsig2 = np.zeros(nt) + sig2
-
-    area = wcs.get_width() * wcs.get_height()
-    distractors = 0.25
-    ## Accept: set to ~inf?
-    logodds_bail, logodds_accept = -1e100, 1e12
-    
-    logodds = verify_star_lists_np(refxy, testxy, testsig2,
-                                   area, distractors,
-                                   logodds_bail, logodds_accept)
-
-    print 'Logodds:', logodds
-
-
     obj = McTweak(wcs, xy, rd)
 
     # Initial args
@@ -226,14 +203,15 @@ def mctweak(wcs, xy, rd):
             plt.plot(X, y+np.zeros_like(X), 'k-', alpha=0.5)
                 
         plt.axis([1, W, 1, H])
+        plt.axis('scaled')
         ps.savefig()
 
         pp = np.vstack(pp)
         print 'pp', pp.shape
         
-        plt.clf()
-        triangle.corner(pp, plot_contours=False)
-        ps.savefig()
+        # plt.clf()
+        # triangle.corner(pp, plot_contours=False)
+        # ps.savefig()
 
         pp = []
 
