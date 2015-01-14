@@ -245,6 +245,10 @@ class tabledata(object):
         self._columns = []
     def __str__(self):
         return 'tabledata object with %i rows and %i columns' % (len(self), len([k for k in self.__dict__.keys() if not k.startswith('_')]))
+    def __repr__(self):
+        return '<tabledata object with %i rows and %i columns: %s>' % (
+            len(self), len(self.columns()), ', '.join(self.columns()))
+    
     def about(self):
         keys = [k for k in self.__dict__.keys() if not k.startswith('_')]
         print 'tabledata object with %i rows and %i columns:' % (len(self),  len(keys))
