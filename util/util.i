@@ -908,6 +908,9 @@ long quadfile_addr(index_t* ind);
     // healpix_radec_bounds
 %apply double *OUTPUT { double *ralo, double *rahi, double *declo, double *dechi };
 
+// xyztohealpixf
+%apply double *OUTPUT { double *p_dx, double *p_dy };
+
 %include "healpix.h"
 %include "healpix-utils.h"
 

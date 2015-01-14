@@ -14,7 +14,7 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA		 02110-1301 USA
 
-from astrometry.util.healpix import *
+from astrometry.util.util import *
 from astrometry.util.starutil_numpy import *
 from numpy import *
 from pylab import *
@@ -172,7 +172,7 @@ def plot_smallcircles_on_healpix(nside=1, bighp=1):
 	figure(figsize=(6,6))
 	for x in arange(0, 1.001, xstep):
 		for y in arange(0, 1.001, ystep):
-			xyz = array(healpix_to_xyz(bighp, nside, dx=x, dy=y))
+			xyz = array(healpix_to_xyz(bighp, nside, x, y))
 			r,d = xyztoradec(xyz)
 			dra,ddec = derivatives_at_radec(r,d)
 			dra = dra[0,:]
