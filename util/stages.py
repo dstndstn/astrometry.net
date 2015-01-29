@@ -58,6 +58,7 @@ def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
 
         if prereq is None:
             P = initial_args
+
         else:
             P = runstage(prereq, picklepat, stagefunc,
                          force=force, prereqs=prereqs, update=update,

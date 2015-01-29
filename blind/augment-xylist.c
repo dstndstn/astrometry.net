@@ -65,7 +65,7 @@ void augment_xylist_init(augment_xylist_t* axy) {
     axy->tweakorder = 2;
     axy->depths = il_new(4);
     axy->fields = il_new(16);
-    axy->verifywcs = sl_new(4);
+    axy->verifywcs = pl_new(4);
 	axy->tagalong = sl_new(4);
     axy->try_verify = TRUE;
     axy->resort = TRUE;
@@ -77,7 +77,11 @@ void augment_xylist_init(augment_xylist_t* axy) {
 }
 
 void augment_xylist_free_contents(augment_xylist_t* axy) {
-    sl_free2(axy->verifywcs);
+    int i;
+    for (i=0; i<pl_size(axy->verifywcs); i++) {
+        sip_free(pl_get(axy->verifywcs, i));
+    }
+    pl_free(axy->verifywcs);
     sl_free2(axy->tagalong);
     il_free(axy->depths);
     il_free(axy->fields);
@@ -229,6 +233,8 @@ static an_option_t options[] = {
      "quit after writing the unaugmented xylist"},
     {'V', "verify",         required_argument, "filename",
      "try to verify an existing WCS file"},
+    {'\x92', "verify-ext",     required_argument, "extension",
+     "HDU from which to read WCS to verify; set this BEFORE --verify"},
     {'y', "no-verify",     no_argument, NULL,
      "ignore existing WCS headers in FITS input images"},
 	{'g', "guess-scale",   no_argument, NULL,
@@ -284,6 +290,7 @@ static int parse_fields_string(il* fields, const char* str);
 int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
+    int verify_extension = -1;
 	//printf("parsing option %c (%i)\n", argchar, (int)argchar);
     switch (argchar) {
 	case '\x80':
@@ -439,8 +446,21 @@ int augment_xylist_parse_option(char argchar, char* optarg,
     case '7':
         axy->no_delete_temp = TRUE;
         break;
+    case '\x92':
+        verify_extension = atoi(optarg);
+        break;
     case 'V':
-        sl_append(axy->verifywcs, optarg);
+    {
+        sip_t* sip = NULL;
+        int ext = (verify_extension >= 0 ? verify_extension : axy->extension);
+        sip = sip_read_header_file_ext(optarg, ext, NULL);
+        if (!sip) {
+            ERROR("Failed to parse WCS header from file \"%s\" ext %i",
+                  optarg, ext);
+            return -1;
+        }
+        pl_append(axy->verifywcs, sip);
+    }
         break;
     case 'I':
         axy->solvedinfn = optarg;
@@ -803,8 +823,7 @@ int augment_xylist(augment_xylist_t* axy,
 
             if (axy->try_verify) {
                 char* errstr;
-                sip_t sip;
-                anbool ok;
+                sip_t* sip = NULL;
                 // Try to read WCS header from FITS image; if successful,
                 // add it to the list of WCS headers to verify.
                 logverb("Looking for a WCS header in FITS input image %s\n", fitsimgfn);
@@ -813,11 +832,11 @@ int augment_xylist(augment_xylist_t* axy,
                 // obviously this should be more flexible and robust.
                 errors_start_logging_to_string();
                 memset(&sip, 0, sizeof(sip_t));
-                ok = (sip_read_header_file_ext(fitsimgfn, axy->extension, &sip) != NULL);
+                sip = sip_read_header_file_ext(fitsimgfn, axy->extension, NULL);
                 errstr = errors_stop_logging_to_string(": ");
-                if (ok) {
+                if (sip) {
                     logmsg("Found an existing WCS header, will try to verify it.\n");
-                    sl_append(axy->verifywcs, fitsimgfn);
+                    pl_append(axy->verifywcs, sip);
                 } else {
                     logverb("Failed to read a SIP or TAN header from FITS image.\n");
                     logverb("  (reason: %s)\n", errstr);
@@ -1382,19 +1401,13 @@ int augment_xylist(augment_xylist_t* axy,
     }
 
     I = 0;
-    for (i=0; i<sl_size(axy->verifywcs); i++) {
-        char* fn;
-        sip_t sip;
-		int j;
-
-        fn = sl_get(axy->verifywcs, i);
-        if (!sip_read_header_file_ext(fn, axy->extension, &sip)) {
-            ERROR("Failed to parse WCS header from file \"%s\"", fn);
-            continue;
-        }
+    for (i=0; i<pl_size(axy->verifywcs); i++) {
+        sip_t* sip;
+        sip = pl_get(axy->verifywcs, i);
+        assert(sip);
         I++;
         {
-            tan_t* wcs = &(sip.wcstan);
+            tan_t* wcs = &(sip->wcstan);
             // note, this initialization has to happen *after* you read the WCS header :)
             double vals[] = { wcs->crval[0], wcs->crval[1],
                               wcs->crpix[0], wcs->crpix[1],
@@ -1403,13 +1416,14 @@ int augment_xylist(augment_xylist_t* axy,
             char key[64];
             char* keys[] = { "ANW%iPIX1", "ANW%iPIX2", "ANW%iVAL1", "ANW%iVAL2",
                              "ANW%iCD11", "ANW%iCD12", "ANW%iCD21", "ANW%iCD22" };
+            int j;
             for (j = 0; j < 8; j++) {
                 sprintf(key, keys[j], I);
                 fits_header_add_double(hdr, key, vals[j], "");
             }
 
 			sprintf(key, "ANW%i", I);
-			add_sip_coeffs(hdr, key, &sip);
+			add_sip_coeffs(hdr, key, sip);
         }
     }
 
