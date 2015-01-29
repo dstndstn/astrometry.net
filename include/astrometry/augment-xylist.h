@@ -44,7 +44,8 @@ struct augment_xylist_s {
 
 	int cutobjs;
 
-    pl* verifywcs;
+    sl* verifywcs;
+    il* verifywcs_ext;
 
 	sip_t* predistort;
 

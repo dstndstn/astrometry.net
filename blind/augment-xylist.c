@@ -65,7 +65,8 @@ void augment_xylist_init(augment_xylist_t* axy) {
     axy->tweakorder = 2;
     axy->depths = il_new(4);
     axy->fields = il_new(16);
-    axy->verifywcs = pl_new(4);
+    axy->verifywcs = sl_new(4);
+    axy->verifywcs_ext = il_new(4);
 	axy->tagalong = sl_new(4);
     axy->try_verify = TRUE;
     axy->resort = TRUE;
@@ -77,11 +78,8 @@ void augment_xylist_init(augment_xylist_t* axy) {
 }
 
 void augment_xylist_free_contents(augment_xylist_t* axy) {
-    int i;
-    for (i=0; i<pl_size(axy->verifywcs); i++) {
-        sip_free(pl_get(axy->verifywcs, i));
-    }
-    pl_free(axy->verifywcs);
+    sl_free2(axy->verifywcs);
+    il_free(axy->verifywcs_ext);
     sl_free2(axy->tagalong);
     il_free(axy->depths);
     il_free(axy->fields);
@@ -450,17 +448,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         verify_extension = atoi(optarg);
         break;
     case 'V':
-    {
-        sip_t* sip = NULL;
-        int ext = (verify_extension >= 0 ? verify_extension : axy->extension);
-        sip = sip_read_header_file_ext(optarg, ext, NULL);
-        if (!sip) {
-            ERROR("Failed to parse WCS header from file \"%s\" ext %i",
-                  optarg, ext);
-            return -1;
-        }
-        pl_append(axy->verifywcs, sip);
-    }
+        sl_append(axy->verifywcs, optarg);
+        il_append(axy->verifywcs_ext, 
+                  (verify_extension >= 0 ? verify_extension : axy->extension));
         break;
     case 'I':
         axy->solvedinfn = optarg;
@@ -823,20 +813,22 @@ int augment_xylist(augment_xylist_t* axy,
 
             if (axy->try_verify) {
                 char* errstr;
-                sip_t* sip = NULL;
+                sip_t sip;
+                anbool ok;
                 // Try to read WCS header from FITS image; if successful,
                 // add it to the list of WCS headers to verify.
-                logverb("Looking for a WCS header in FITS input image %s\n", fitsimgfn);
+                logverb("Looking for a WCS header in FITS input image %s ext %i\n", fitsimgfn, axy->extension);
 
                 // FIXME - Right now we just try to read SIP/TAN -
                 // obviously this should be more flexible and robust.
                 errors_start_logging_to_string();
                 memset(&sip, 0, sizeof(sip_t));
-                sip = sip_read_header_file_ext(fitsimgfn, axy->extension, NULL);
+                ok = (sip_read_header_file_ext(fitsimgfn, axy->extension, &sip) != NULL);
                 errstr = errors_stop_logging_to_string(": ");
-                if (sip) {
+                if (ok) {
                     logmsg("Found an existing WCS header, will try to verify it.\n");
-                    pl_append(axy->verifywcs, sip);
+                    sl_append(axy->verifywcs, fitsimgfn);
+                    il_append(axy->verifywcs_ext, axy->extension);
                 } else {
                     logverb("Failed to read a SIP or TAN header from FITS image.\n");
                     logverb("  (reason: %s)\n", errstr);
@@ -1401,13 +1393,21 @@ int augment_xylist(augment_xylist_t* axy,
     }
 
     I = 0;
-    for (i=0; i<pl_size(axy->verifywcs); i++) {
-        sip_t* sip;
-        sip = pl_get(axy->verifywcs, i);
-        assert(sip);
+    for (i=0; i<sl_size(axy->verifywcs); i++) {
+        sip_t sip;
+        const char* fn;
+        int ext;
+
+        fn = sl_get(axy->verifywcs, i);
+        ext = il_get(axy->verifywcs_ext, i);
+        if (!sip_read_header_file_ext(fn, ext, &sip)) {
+            ERROR("Failed to parse WCS header from file \"%s\" ext %i", fn, ext);
+            continue;
+        }
+
         I++;
         {
-            tan_t* wcs = &(sip->wcstan);
+            tan_t* wcs = &(sip.wcstan);
             // note, this initialization has to happen *after* you read the WCS header :)
             double vals[] = { wcs->crval[0], wcs->crval[1],
                               wcs->crpix[0], wcs->crpix[1],
@@ -1423,7 +1423,7 @@ int augment_xylist(augment_xylist_t* axy,
             }
 
 			sprintf(key, "ANW%i", I);
-			add_sip_coeffs(hdr, key, sip);
+			add_sip_coeffs(hdr, key, &sip);
         }
     }
 
