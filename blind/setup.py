@@ -34,13 +34,13 @@ print 'objs:', objs
 print 'inc:', inc
 print 'cflags:', cflags
 
-objs.extend([
+objs = [
     'plotfill.o', 'plotxy.o',
     'plotimage.o', 'plotannotations.o',
     'plotgrid.o', 'plotoutline.o', 'plotindex.o',
     'plotradec.o', 'plothealpix.o', 'plotmatch.o',
     'matchfile.o', 'matchobj.o',
-    'plotstuff.o', ])
+    'plotstuff.o', ] + objs
 
 c_module = Extension('_plotstuff_c',
                      sources = [
