@@ -144,6 +144,10 @@ FLAGS_DEF += $(shell $(CCTEST))
 ARG := -pthread
 FLAGS_DEF += $(shell $(CCTEST))
 
+# Avoid "undefined reference to `isfinite'" on gcc 4.7.0 (carver)
+#ARG := -std=c99
+#FLAGS_DEF += $(shell $(CCTEST))
+
 ## Below, we try to guess good compiler flags for this CPU / architecture.
 ## If we make an incorrect choice -- ie, the code fails in some way on the
 ## machine on which it was compiled, please let us know by emailing

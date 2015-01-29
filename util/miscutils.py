@@ -54,10 +54,12 @@ def estimate_mode(img, lo=None, hi=None, plo=1, phi=70, bins1=30,
     mx = -X[1] / (2. * X[2])
     mx = (mx * xscale) + x0
 
+    warn = None
+
     if not (mx > lo and mx < hi):
         if raiseOnWarn:
             raise ValueError('sky estimate not bracketed by peak: lo %f, sky %f, hi %f' % (lo, mx, hi))
-        print 'WARNING: sky estimate not bracketed by peak: lo %f, sky %f, hi %f' % (lo, mx, hi)
+        warn = 'WARNING: sky estimate not bracketed by peak: lo %f, sky %f, hi %f' % (lo, mx, hi)
         
     if return_fit:
         bfit = X[0] + X[1] * x + X[2] * x**2
