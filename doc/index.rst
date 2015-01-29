@@ -18,6 +18,7 @@ Contents:
    net/api
    libkd
    api
+   nova
    oaq
 
 .. toctree::
