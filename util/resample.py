@@ -1,10 +1,11 @@
 import numpy as np
-import scipy.interpolate as interp
-from miscutils import lanczos_filter
+# moved down to where they are used:
+#import scipy.interpolate as interp
+#from miscutils import lanczos_filter
 
 # DEBUG
-from .plotutils import *
-import pylab as plt
+#from .plotutils import *
+#import pylab as plt
 
 class ResampleError(Exception):
     pass
@@ -154,6 +155,7 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
             expand_axes()
             ps.savefig()
     
+        import scipy.interpolate as interp
         xspline = interp.RectBivariateSpline(xx, yy, XX.T)
         yspline = interp.RectBivariateSpline(xx, yy, YY.T)
         del XX
@@ -306,7 +308,7 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
     laccs: list of [float, 1-d numpy array, len n]: outputs
     limages list of [float, 2-d numpy array, shape h,w]: inputs
     '''
-
+    from miscutils import lanczos_filter
     lfunc = lanczos_filter
     if L == 3:
         try:
