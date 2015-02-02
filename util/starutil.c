@@ -24,9 +24,9 @@
 #include <sys/param.h>
 #include <regex.h>
 
+#include "keywords.h"
 #include "mathutil.h"
 #include "starutil.h"
-#include "keywords.h"
 #include "errors.h"
 
 #define POGSON 2.51188643150958

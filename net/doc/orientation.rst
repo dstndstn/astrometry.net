@@ -147,9 +147,10 @@ of hexadecimal digits::
 (We sort them into subdirectories like that to avoid having a huge number 
 of files in a single directory.)
 
+.. _web_local:
 
-Running a local machine (your laptop, say)
-------------------------------------------
+Running on a local machine (your laptop, say)
+---------------------------------------------
 
 Prerequisites:
 

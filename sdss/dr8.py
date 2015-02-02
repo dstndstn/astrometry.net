@@ -361,6 +361,12 @@ class DR8(DR7):
         if skipExisting and os.path.exists(outfn):
             return outfn
 
+        outdir = os.path.dirname(outfn)
+        if not os.path.exists(outdir):
+            try:
+                os.makedirs(outdir)
+            except:
+                pass
         url = self.get_url(filetype, run, camcol, field, band=band, rerun=rerun)
         #print 'Did not find file:', outfn
         print 'Retrieving from URL:', url
