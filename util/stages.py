@@ -29,7 +29,7 @@ class CallGlobal(object):
         kwa = self.getkwargs(stage, **kwargs)
         return func(*self.args, **kwa)
 
-def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
+def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
              update=True, write=True, initial_args={}, **kwargs):
     # NOTE, if you add or change args here, be sure to update the recursive
     # "runstage" call below!!
@@ -41,7 +41,7 @@ def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
         pfn = picklepat % dict(stage=stage)
     
     if os.path.exists(pfn):
-        if stage in force:
+        if forceall or stage in force:
             print 'Ignoring pickle', pfn, 'and forcing stage', stage
         else:
             print 'Reading pickle', pfn
@@ -61,7 +61,7 @@ def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
 
         else:
             P = runstage(prereq, picklepat, stagefunc,
-                         force=force, prereqs=prereqs, update=update,
+                         force=force, forceall=forceall, prereqs=prereqs, update=update,
                          write=write, initial_args=initial_args, **kwargs)
 
     P.update(kwargs)
