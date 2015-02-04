@@ -1,0 +1,4 @@
+base
+libkd-fits
+qfits-an
+astrometry/utils

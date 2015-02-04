@@ -21,7 +21,6 @@
 #define FIT_WCS_H
 
 #include "astrometry/sip.h"
-#include "astrometry/starkd.h"
 
 void wcs_shift(tan_t* wcs, double xs, double ys);
 

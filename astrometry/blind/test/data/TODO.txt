@@ -1,0 +1,1 @@
+test data files for test_multiindex2.c are in astrometry/files/test/
