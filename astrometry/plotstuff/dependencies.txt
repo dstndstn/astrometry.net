@@ -1,0 +1,6 @@
+base
+base-advanced
+astrometry/catalogs
+astrometry/files
+astrometry/utils
+qfits-an
