@@ -1,0 +1,222 @@
+# This file is part of the Astrometry.net suite.
+# Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+# Copyright 2008, 2009, 2010, 2011, 2012 Dustin Lang.
+#
+# The Astrometry.net suite is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, version 2.
+#
+# The Astrometry.net suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the Astrometry.net suite ; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+BASEDIR := ..
+MAKEFILES_DIR := ../old-makefiles
+
+all:
+.PHONY: all
+
+include $(MAKEFILES_DIR)/makefile.common
+include $(MAKEFILES_DIR)/makefile.anbase
+
+INCLUDE_DIR := .
+
+SO=$(SHAREDLIB_SUFFIX)
+
+ANBASE_OBJ := an-endian.o an-opts.o bl-sort.o bl.o bt.o \
+	datalog.o errors.o fileutils.o intmap.o ioutils.o log.o mathutil.o \
+	os-features.o permutedsort.o tic.o
+
+ANBASE_DEPS :=
+
+ANBASE_LIB_FILE := libanbase.a
+
+all: $(ANBASE_LIB_FILE)
+
+# D'oh
+ifneq ($(MAKECMDGOALS),clean)
+  ifneq ($(MAKECMDGOALS),reconfig)
+    include $(MAKEFILES_DIR)/makefile.os-features
+  endif
+endif
+
+CFLAGS += $(CFLAGS_DEF)
+CFLAGS += -I$(ANBASE_DIR)
+CFLAGS += -I.
+
+%.o: %.c
+	$(CC) -o $@ $(CFLAGS) -c $<
+
+LDFLAGS += $(LDFLAGS_DEF)
+
+LDLIBS := $(LDLIBS_DEF)
+LDLIBS += $(ANBASE_LIB)
+
+SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
+
+# Actually there are ANFILES_H mixed in here too....
+ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h an-thread.h \
+	bl-nl.h bl-sort.h bl.h bt.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph \
+	datalog.h errors.h fileutils.h intmap.h ioutils.h keywords.h log.h \
+	mathutil.h os-features.h os-features-config.h permutedsort.h tic.h
+
+ANUTILS_H_PATH := $(addprefix $(INCLUDE_DIR)/,$(ANUTILS_H))
+
+ALL_OBJ := $(ANBASE_OBJ)
+DEP_OBJ := $(ANBASE_OBJ)
+DEP_PREREQS :=
+
+$(ANBASE_LIB_FILE): $(ANBASE_OBJ) $(ANBASE_DEPS) 
+	-rm -f $@
+	$(AR) rc $@ $(ANBASE_OBJ)
+	$(RANLIB) $@
+
+$(INCLUDE_DIR)/os-features-config.h: os-features-test.c
+	@echo
+	@echo "---- Error messages in the next few commands are not necessarily bugs ----"
+	@echo "     (we're checking how things works on your computer)"
+	-rm -f os-features.log
+	-rm -f $@ $@.tmp
+	@echo
+	@echo "Testing canonicalize_file_name..."
+	@echo "Testing canonicalize_file_name..." >> os-features.log
+	(($(CC) -o os-features-test-canonicalize \
+	  $(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $^ $(LDFLAGS) >> os-features.log && \
+	  ./os-features-test-canonicalize >> os-features.log && \
+	  echo "#define NEED_CANONICALIZE_FILE_NAME 0") \
+	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1") >> $@.tmp
+	@echo
+	@echo "Testing declare qsort_r..."
+	@echo "Testing declare qsort_r..." >> os-features.log
+	(($(CC) -o os-features-test-declare-qsort \
+	   $(CFLAGS) -DTEST_DECLARE_QSORT_R $^ $(LDFLAGS) >> os-features.log && \
+	   ./os-features-test-declare-qsort >> os-features.log && \
+	   echo "#define NEED_DECLARE_QSORT_R 1") \
+	|| echo "#define NEED_DECLARE_QSORT_R 0") >> $@.tmp
+	@echo
+	@echo "Testing qsort_r..."
+	@echo "Testing qsort_r..." >> os-features.log
+	(($(CC) -o os-features-test-qsort \
+	   $(CFLAGS) -DTEST_QSORT_R $^ $(LDFLAGS) >> os-features.log && \
+	   ./os-features-test-qsort >> os-features.log && \
+	   echo "#define NEED_QSORT_R 0") \
+	|| echo "#define NEED_QSORT_R 1") >> $@.tmp
+	@echo
+	@echo "Testing swap qsort_r..."
+	@echo "Testing swap qsort_r..." >> os-features.log
+	(($(CC) -Werror -o os-features-test-swap-qsort \
+	   $(CFLAGS) -DTEST_SWAP_QSORT_R $^ $(LDFLAGS) >> os-features.log && \
+	   ./os-features-test-swap-qsort >> os-features.log && \
+	   echo "#define NEED_SWAP_QSORT_R 0") \
+	|| echo "#define NEED_SWAP_QSORT_R 1") >> $@.tmp
+	@echo
+	@echo "Testing netpbm..."
+	@echo "   NETPBM_INC is $(NETPBM_INC_ORIG)"
+	@echo "   NETPBM_LIB is $(NETPBM_LIB_ORIG)"
+	@echo "Testing netpbm..." >> os-features.log
+	(($(CC) -o os-features-test-netpbm \
+	   $(CFLAGS) -DTEST_NETPBM $(NETPBM_INC_ORIG) $^ $(LDFLAGS) $(NETPBM_LIB_ORIG) >> os-features.log && \
+	   ./os-features-test-netpbm >> os-features.log && \
+	   echo "#define HAVE_NETPBM 1") \
+	|| echo "#define HAVE_NETPBM 0") >> $@.tmp
+	@echo "--------------- End of expected error messages -----------------"
+	@echo
+	mv $@.tmp $@
+	@echo
+	@echo "Config results:"
+	@echo "------------------------------"
+	@echo
+	cat $@
+	@echo
+	@echo "------------------------------"
+	@echo
+
+$(MAKEFILES_DIR)/makefile.os-features: os-features-test.c
+	@echo
+	@echo "---- Error messages in the next few commands are not necessarily bugs ----"
+	@echo "     (we're checking how things works on your computer)"
+	-rm -f os-features-makefile.log
+	( \
+	 echo "# This file is generated by util/Makefile."; \
+	 (($(CC) -o os-features-test-netpbm-make \
+	   $(CFLAGS) -DTEST_NETPBM_MAKE $(NETPBM_INC_ORIG) $^ $(LDFLAGS) $(NETPBM_LIB_ORIG) >> os-features-makefile.log && \
+	   ./os-features-test-netpbm-make >> os-features-makefile.log && \
+	   echo "HAVE_NETPBM := yes") \
+	|| (echo "# Astrometry.net didn't find netpbm; not setting HAVE_NETPBM."; \
+		echo "# See os-features-makefile.log for details."; \
+		echo "# To re-run this test, do 'make reconfig; make makefile.os-features' (in the 'util' directory)"; \
+		echo "# Or to do it yourself, just uncomment this line:"; \
+		echo "# HAVE_NETPBM := yes")) \
+	; \
+	echo) > $@.tmp
+	@echo "--------------- End of expected error messages -----------------"
+	@echo
+	mv $@.tmp $@
+	@echo
+	@echo "Config results:"
+	@echo "------------------------------"
+	@echo
+	cat $@
+	@echo "------------------------------"
+	@echo
+	@echo "And, by the way, is WCSlib support being compiled in?"
+	@echo
+	pkg-config --exists wcslib && echo yes || echo no
+	@echo
+	@echo "  WCSLIB_INC: $(WCSLIB_INC)"
+	@echo "  WCSLIB_LIB: $(WCSLIB_LIB)"
+	@echo
+	@echo "------------------------------"
+
+reconfig:
+	-rm -f '$(INCLUDE_DIR)/'os-features-config.h $(MAKEFILES_DIR)/makefile.os-features
+.PHONY: reconfig
+
+config: $(INCLUDE_DIR)/os-features-config.h $(MAKEFILES_DIR)/makefile.os-features
+.PHONY: config
+
+makefile.os-features: $(COMMON)/makefile.os-features
+.PHONY: makefile.os-features
+
+ALL_OBJ += os-features.o
+ALL_TARGETS := os-features-test.o \
+	os-features-test-canonicalize \
+	os-features-test-declare-qsort \
+	os-features-test-qsort \
+	os-features-test-netpbm \
+	os-features-test-netpbm-make \
+	$(INCLUDE_DIR)/os-features-config.h
+
+
+###### TESTS
+
+
+# Try to compensate for clang's lack of -MG to handle generated header
+# files by making everything depend explicitly on os-features-config.h.
+
+# the bar "|" indicates an "order-only" dependency: must be built
+# before, but doesn't imply a rebuild is necessary.
+# Should this perhaps go on the .dep files rather than the .c?
+DEP_SRC := $(subst .o,.c,$(DEP_OBJ))
+$(DEP_SRC): | $(INCLUDE_DIR)/os-features-config.h
+os-features.h: | $(INCLUDE_DIR)/os-features-config.h
+$(DEP_OBJ): $(INCLUDE_DIR)/os-features-config.h
+
+ifneq ($(MAKECMDGOALS),clean)
+  ifneq ($(MAKECMDGOALS),reconfig)
+    ifneq ($(MAKECMDGOALS),makefile.os-features)
+      include $(MAKEFILES_DIR)/makefile.deps
+    endif
+  endif
+endif
+
+clean:
+	rm -f $(ANBASE_LIB_FILE) \
+		$(ALL_OBJ) $(DEPS) deps \
+		$(MAKEFILES_DIR)/makefile.os-features *.o *~ *.dep *$(PYTHON_SO_EXT) \
+		os-features.log os-features-makefile.log report.txt

@@ -1,5 +1,5 @@
 
-ANBASE_DIR := $(BASEDIR)/util
+ANBASE_DIR := $(BASEDIR)/base
 ANBASE_LIB_FILE := $(ANBASE_DIR)/libanbase.a
 
 ANBASE_CFLAGS :=

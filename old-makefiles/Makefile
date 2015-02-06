@@ -315,7 +315,7 @@ $(INCLUDE_DIR)/os-features-config.h: os-features-test.c
 	@echo "------------------------------"
 	@echo
 
-makefile.os-features: os-features-test.c
+$(COMMON)/makefile.os-features: os-features-test.c
 	@echo
 	@echo "---- Error messages in the next few commands are not necessarily bugs ----"
 	@echo "     (we're checking how things works on your computer)"
@@ -353,10 +353,10 @@ makefile.os-features: os-features-test.c
 	@echo "------------------------------"
 
 reconfig:
-	-rm -f '$(INCLUDE_DIR)/'os-features-config.h makefile.os-features
+	-rm -f '$(INCLUDE_DIR)/'os-features-config.h $(COMMON)/makefile.os-features
 .PHONY: reconfig
 
-config: $(INCLUDE_DIR)/os-features-config.h makefile.os-features
+config: $(INCLUDE_DIR)/os-features-config.h $(COMMON)/makefile.os-features
 .PHONY: config
 
 ALL_OBJ += os-features.o
@@ -437,7 +437,7 @@ clean:
 		$(ALL_OBJ) $(DEPS) deps cairoutils.o \
 		grab-stellarium-constellations \
 		$(PROGS) $(MAIN_PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
-		cairoutils.dep makefile.os-features *.o *~ *.dep *$(PYTHON_SO_EXT) deps \
+		cairoutils.dep $(COMMON)/makefile.os-features *.o *~ *.dep *$(PYTHON_SO_EXT) deps \
 		os-features.log os-features-makefile.log report.txt
 
 check:
@@ -456,7 +456,7 @@ $(DEP_OBJ): $(INCLUDE_DIR)/os-features-config.h
 
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),reconfig)
-    ifneq ($(MAKECMDGOALS),makefile.os-features)
+    ifneq ($(MAKECMDGOALS),$(COMMON)/makefile.os-features)
       include $(COMMON)/makefile.deps
     endif
   endif
