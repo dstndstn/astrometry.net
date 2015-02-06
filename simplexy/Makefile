@@ -30,7 +30,7 @@ INCLUDE_DIR := .
 
 SIMPLEXY_OBJ := ctmf.o dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o \
 	dobjects.o dpeaks.o dselip.o dsigma.o dsmooth.o image2xy.o radix.o \
-	simplexy.o
+	simplexy.o image2xy-files.o
 
 SIMPLEXY_H := ctmf.h dimage.h image2xy-files.h image2xy.h radix.h \
 	simplexy-common.h simplexy.h

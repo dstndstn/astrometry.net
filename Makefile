@@ -34,7 +34,7 @@ MAKEFILES_DIR := old-makefiles
 # gsl-an -> none
 # qfits-an -> base
 # resample -> base
-# simplexy -> resample, base
+# simplexy -> resample, base, cfitsio
 # libkd -> base
 # libkd-fits -> libkd, qfitsan
 # astrometry/utils -> base, resample, qfits-an, gsl-an
@@ -84,6 +84,7 @@ subdirs: thirdparty
 	$(MAKE) -C astrometry/catalogs
 	$(MAKE) -C astrometry/blind
 	$(MAKE) -C astrometry/tools
+#	$(MAKE) -C astrometry/plotstuff
 
 thirdparty: qfits-an
 

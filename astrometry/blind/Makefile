@@ -20,11 +20,6 @@ MAKEFILES_DIR := $(BASEDIR)/old-makefiles
 all:
 .PHONY: all
 
-# CATALOGS := $(BASEDIR)/catalogs
-# CATS_INC := -I$(CATALOGS)
-# CATS_SLIB := $(CATALOGS)/libcatalogs.a
-# CATS_LIB :=
-
 include $(MAKEFILES_DIR)/makefile.common
 include $(MAKEFILES_DIR)/makefile.catalogs
 include $(MAKEFILES_DIR)/makefile.simplexy
@@ -184,7 +179,7 @@ $(ENGINE_SO): $(ENGINE_OBJS) $(SLIB)
 INSTALL_H := allquads.h augment-xylist.h axyfile.h \
 	engine.h blind.h blindutils.h build-index.h catalog.h \
 	codefile.h codetree.h fits-guess-scale.h hpquads.h \
-	image2xy-files.h matchfile.h matchobj.h merge-index.h \
+	matchfile.h matchobj.h merge-index.h \
 	new-wcs.h quad-builder.h quad-utils.h \
 	resort-xylist.h solvedclient.h \
 	solvedfile.h solver.h tweak.h uniformize-catalog.h \
@@ -199,10 +194,12 @@ ALL_EXECS :=
 
 #ALL_OBJ += $(PLOTSTUFF)
 
-all: $(QFITS_SLIB) $(LIBKD_LIB_FILE) \
-	$(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) \
-	$(PROGS) $(PIPELINE) $(FITS_UTILS) \
-	$(ENGINE_LIB) $(ENGINE_SO) augment-xylist
+all: $(ENGINE_LIB) $(ENGINE_SO) $(PROGS) 
+
+#$(QFITS_SLIB) $(LIBKD_LIB_FILE) \
+#	$(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) \
+#	$(PROGS) $(PIPELINE) $(FITS_UTILS) \
+#	$(ENGINE_LIB) $(ENGINE_SO) augment-xylist
 
 #fitsverify \
 
@@ -223,9 +220,6 @@ prospectus_progs: $(PROSPECTUS)
 
 .PHONY: fitsutils
 fitsutils: $(FITS_UTILS)
-
-simplexy: image2xy
-.PHONY: simplexy
 
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/blind
 LINK_DIR := $(PY_BASE_LINK_DIR)/blind
@@ -343,24 +337,13 @@ demo_dsmooth: demo_dsmooth.o $(CAIRO_SLIB)
 # control-program: control-program.o $(SLIB)
 # ALL_OBJ += control-program.o
 
-image2xy: image2xy-main.o image2xy-files.o $(CFITS_SLIB) $(SLIB)
-	$(CC) -o $@ $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
-
 fit-wcs: fit-wcs-main.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
-
-ALL_OBJ += image2xy-files.o
 
 # wcs-pv2sip: wcs-pv2sip.o tweak.o $(SLIB)
 # ALL_OBJ += wcs-pv2sip.o
 
 hpgrid: hpgrid.o $(SLIB)
-
-$(CFITS_UTILS) :: %: %.o $(CFITS_SLIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
-
-fitsverify: ftverify.c fvrf_data.c fvrf_file.c fvrf_head.c fvrf_key.c fvrf_misc.c $(CFITS_SLIB)
-	$(CC) -DSTANDALONE -trigraphs $(CFITS_INC) -o $@ $^ $(CFITS_LIB) -lm
 
 $(OLDEXECS) :: %: %.o $(OLDEXECS_OBJS) $(SLIB)
 
@@ -371,12 +354,11 @@ ALL_OBJ += build-index-main.o
 astrometry-engine: engine-main.o $(SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
-solve-field: solve-field.o augment-xylist.o image2xy-files.o $(SLIB) $(CFITS_SLIB)
+solve-field: solve-field.o augment-xylist.o $(SLIB) $(CFITS_SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
-ALL_OBJ += solve-field.o image2xy-files.o
+ALL_OBJ += solve-field.o
 
-augment-xylist: augment-xylist-main.o augment-xylist.o image2xy-files.o \
-		$(SLIB) $(CFITS_SLIB)
+augment-xylist: augment-xylist-main.o augment-xylist.o $(SLIB) $(CFITS_SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 ALL_OBJ += augment-xylist-main.o augment-xylist.o
 
@@ -451,8 +433,7 @@ clean:
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) deps $(FITS_UTILS) $(ALL_OBJ) \
 		$(NODEP_OBJS) plot-constellations fitsverify plotquad plotxy \
 		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
-		$(ENGINE_LIB) $(ENGINE_SO) _plotstuff_c$(PYTHON_SO_EXT) *.o *~ *.dep deps \
-		plotstuff
-
+		$(ENGINE_LIB) $(ENGINE_SO) _plotstuff_c$(PYTHON_SO_EXT) *.o *~ *.dep \
+		deps
 
 

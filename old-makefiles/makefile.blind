@@ -14,5 +14,26 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-BLIND_DIR := $(BASEDIR)/blind
+BLIND_DIR := $(BASEDIR)/astrometry/blind
 BLIND_INC := -I$(BLIND_DIR)
+BLIND_LIB := 
+BLIND_LIB_FILE := $(BLIND_DIR)/libastrometry.a
+BLIND_SLIB := $(BLIND_LIB_FILE)
+BLIND_CFLAGS :=
+
+$(BLIND_LIB_FILE): $(addprefix $(BLIND_DIR)/,$(BLIND_OBJ))
+	$(MAKE) -C $(BLIND_DIR) libastrometry.a
+
+include $(MAKEFILES_DIR)/makefile.catalogs
+include $(MAKEFILES_DIR)/makefile.simplexy
+
+BLIND_CFLAGS += $(ANCATS_CFLAGS)
+BLIND_INC += $(ANCATS_INC)
+BLIND_LIB += $(ANCATS_LIB)
+BLIND_SLIB += $(ANCATS_SLIB)
+
+BLIND_CFLAGS += $(SIMPLEXY_CFLAGS)
+BLIND_INC += $(SIMPLEXY_INC)
+BLIND_LIB += $(SIMPLEXY_LIB)
+BLIND_SLIB += $(SIMPLEXY_SLIB)
+
