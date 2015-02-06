@@ -16,13 +16,13 @@
 #  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 BASEDIR := ..
-COMMON := $(BASEDIR)/util
+MAKEFILES_DIR := ../old-makefiles
 
 all:
 .PHONY: all
 
-include $(COMMON)/makefile.common
-include $(COMMON)/makefile.libkd
+include $(MAKEFILES_DIR)/makefile.common
+include $(MAKEFILES_DIR)/makefile.libkd
 
 SO=$(SHAREDLIB_SUFFIX)
 
@@ -83,7 +83,7 @@ DEP_OBJ := $(KD) $(KD_FITS) $(INTERNALS) $(INTERNALS_NOIO) $(DT)
 %_noio.o: %.c
 	$(CC) -o $@ -c $< $(CFLAGS) -DKDTREE_NO_FITS
 
-all: $(LIBKD) checktree fix-bb
+all: $(LIBKD)
 
 $(LIBKD): $(KD) $(KD_FITS) $(INTERNALS) $(DT)
 	-rm -f $@
@@ -120,15 +120,9 @@ ifeq ($(MAKECMDGOALS),pyspherematch)
   DEP_OBJ += $(PYSPHEREMATCH_OBJ)
 endif
 
-checktree: checktree.o $(SLIB)
-
-fix-bb: fix-bb.o $(SLIB)
-
 demo: demo.o $(SLIB)
 
-DEP_OBJ += fix-bb.o checktree.o
-
-LIBKD_INSTALL := #fix-bb checktree
+LIBKD_INSTALL := 
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/libkd
 
 .PHONY: install
@@ -166,21 +160,19 @@ ALL_TEST_FILES = test_libkd test_libkd_io test_dualtree_nn
 ALL_TEST_EXTRA_OBJS =
 ALL_TEST_LIBS = $(SLIB)
 
-include $(COMMON)/makefile.tests
+include $(MAKEFILES_DIR)/makefile.tests
 
 test_libkd: $(SLIB)
 test_libkd_io: $(SLIB)
 test_dualtree_nn: $(SLIB)
 
-DEP_OBJ += $(ALL_TEST_FILES_O) $(ALL_TEST_FILES_MAIN_O)
+###DEP_OBJ += $(ALL_TEST_FILES_O) $(ALL_TEST_FILES_MAIN_O)
 
 ### /TESTS
 
 .PHONY: clean
 clean:
 	-rm -f $(LIBKD) $(KD) $(KD_FITS) deps $(DEPS) \
-		checktree checktree.o \
-		fix-bb fix-bb.o \
 		$(INTERNALS) $(INTERNALS_NOIO) $(LIBKD_NOIO) $(DT) \
 		$(ALL_TESTS_CLEAN) \
 		$(PYSPHEREMATCH_OBJ) spherematch_c$(PYTHON_SO_EXT) *~ *.dep deps
@@ -192,7 +184,7 @@ tags:
 
 DEP_PREREQS := $(QFITS_LIB)
 
-include $(COMMON)/makefile.deps
+include $(MAKEFILES_DIR)/makefile.deps
 
 # Borrowed from makefile.deps
 %_noio.dep : %.c

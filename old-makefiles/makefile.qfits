@@ -19,14 +19,14 @@ QFITS_LIB_FILE := $(QFITS_DIR)/libqfits.a
 QFITS_SRCDIR := $(QFITS_DIR)
 
 QFITS_CFLAGS :=
-QFITS_INC :=
+QFITS_INC := -I$(INCLUDE_BASE_DIR)/qfits-an
 QFITS_LIB := 
 QFITS_SLIB := $(QFITS_LIB_FILE)
 
 $(QFITS_LIB_FILE):
 	$(MAKE) -C $(QFITS_DIR) libqfits.a
 
-include $(COMMON)/makefile.anbase
+include $(MAKEFILES_DIR)/makefile.anbase
 
 QFITS_INC += $(ANBASE_INC)
 QFITS_LIB += $(ANBASE_LIB)

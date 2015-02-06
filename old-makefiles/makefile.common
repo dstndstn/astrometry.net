@@ -15,8 +15,10 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-INCLUDE_BASE_DIR := $(BASEDIR)/include
-INCLUDE_DIR := $(INCLUDE_BASE_DIR)/astrometry
+#INCLUDE_BASE_DIR := $(BASEDIR)/include
+#INCLUDE_DIR := $(INCLUDE_BASE_DIR)/astrometry
+INCLUDE_BASE_DIR := $(BASEDIR)
+INCLUDE_DIR := $(INCLUDE_BASE_DIR)
 
 INSTALL_DIR ?= /usr/local/astrometry
 # Put INSTALL_DIR in the environment of commands run by Make.

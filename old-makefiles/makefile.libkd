@@ -28,7 +28,8 @@ $(LIBKD_LIB_FILE):
 $(LIBKD_NOIO_LIB_FILE):
 	$(MAKE) -C $(LIBKD_DIR) libkd-noio.a
 
-include $(COMMON)/makefile.anutils
+#include $(MAKEFILES_DIR)/makefile.anbase
+include $(MAKEFILES_DIR)/makefile.qfits
 
 LIBKD_INC += $(ANUTILS_INC)
 LIBKD_CFLAGS += $(ANUTILS_CFLAGS)

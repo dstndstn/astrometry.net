@@ -22,8 +22,10 @@
 #include <stdio.h>
 
 #include "astrometry/kdtree.h"
-#include "astrometry/fitsbin.h"
-#include "astrometry/anqfits.h"
+//#include "astrometry/fitsbin.h"
+//#include "astrometry/anqfits.h"
+#include "qfits-an/fitsbin.h"
+#include "qfits-an/anqfits.h"
 
 /**
  Usage patterns:
