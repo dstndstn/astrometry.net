@@ -29,6 +29,16 @@ class CallGlobal(object):
         kwa = self.getkwargs(stage, **kwargs)
         return func(*self.args, **kwa)
 
+class CallGlobalTime(CallGlobal):
+    def __call__(self, stage, **kwargs):
+        from astrometry.util.ttime import Time
+        t0 = Time()
+        print 'Running stage', stage, 'at', t0.wall.isoformat()
+        rtn = super(CallGlobalTime, self).__call__(stage, **kwargs)
+        t1 = Time()
+        print 'Stage', stage, ':', t1-t0
+        print 'Stage', stage, 'finished:', t1.wall.isoformat()
+
 def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
              update=True, write=True, initial_args={}, **kwargs):
     # NOTE, if you add or change args here, be sure to update the recursive
