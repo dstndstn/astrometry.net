@@ -26,7 +26,7 @@
 all:
 
 BASEDIR := .
-COMMON := $(BASEDIR)/util
+MAKEFILES_DIR := old-makefiles
 
 # The internal Astrometry.net dependency stack, top to bottom, is:
 #
@@ -40,9 +40,9 @@ COMMON := $(BASEDIR)/util
 #          qfits-an/libqfits.a -- FITS files
 #            util/libanbase.a  -- basic stuff
 
-include $(COMMON)/makefile.common
-#include $(COMMON)/makefile.qfits
-#include $(COMMON)/makefile.cfitsio
+include $(MAKEFILES_DIR)/makefile.common
+#include $(MAKEFILES_DIR)/makefile.qfits
+#include $(MAKEFILES_DIR)/makefile.cfitsio
 
 .PHONY: all
 all: subdirs
@@ -58,10 +58,16 @@ pkgconfig:
 .PHONY: pkgconfig
 
 subdirs: thirdparty
-	$(MAKE) -C util
-	$(MAKE) -C catalogs
+	$(MAKE) -C base
+	$(MAKE) -C resample
+	$(MAKE) -C qfits-an
 	$(MAKE) -C libkd
-	$(MAKE) -C blind
+	$(MAKE) -C simplexy
+	$(MAKE) -C astrometry/catalog
+	$(MAKE) -C astrometry/utils
+	$(MAKE) -C astrometry/files
+	$(MAKE) -C astrometry/blind
+	$(MAKE) -C astrometry/tools
 
 thirdparty: qfits-an
 

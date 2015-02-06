@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-#include "astrometry/simplexy.h"
+#include "simplexy/simplexy.h"
 
 int image2xy_run(simplexy_t* s,
 				 int downsample, int downsample_as_required);
