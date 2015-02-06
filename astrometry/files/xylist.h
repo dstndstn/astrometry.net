@@ -20,7 +20,7 @@
 #define XYLIST_H
 
 #include "astrometry/files/starxy.h"
-#include "astrometry/utils/fitstable.h"
+#include "qfits-an/fitstable.h"
 
 #define AN_FILETYPE_XYLS "XYLS"
 

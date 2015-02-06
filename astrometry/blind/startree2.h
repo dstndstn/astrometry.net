@@ -20,7 +20,7 @@
 #define STARTREE2_H
 
 #include "astrometry/files/starkd.h"
-#include "astrometry/utils/fitstable.h"
+#include "qfits-an/fitstable.h"
 #include "base/an-bool.h"
 
 /**

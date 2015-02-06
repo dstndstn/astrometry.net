@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 #include "astrometry/catalogs/tycho2.h"
-#include "astrometry/utils/fitstable.h"
+#include "qfits-an/fitstable.h"
 
 #define AN_FILETYPE_TYCHO2 "TYCHO2"
 

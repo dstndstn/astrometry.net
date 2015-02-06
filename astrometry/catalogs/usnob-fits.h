@@ -23,7 +23,7 @@
 
 #include "qfits-an/qfits_header.h"
 #include "astrometry/catalogs/usnob.h"
-#include "astrometry/utils/fitstable.h"
+#include "qfits-an/fitstable.h"
 
 #define AN_FILETYPE_USNOB "USNOB"
 

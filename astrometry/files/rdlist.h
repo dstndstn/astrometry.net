@@ -23,8 +23,6 @@
 #include <sys/types.h>
 
 #include "astrometry/files/xylist.h"
-//#include "astrometry/starutil.h"
-#include "astrometry/utils/fitstable.h"
 
 #define AN_FILETYPE_RDLS "RDLS"
 

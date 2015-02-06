@@ -18,8 +18,8 @@
 #ifndef BUILD_INDEX_H
 #define BUILD_INDEX_H
 
-#include "astrometry/utils/fitstable.h"
 #include "astrometry/files/index.h"
+#include "qfits-an/fitstable.h"
 #include "base/an-bool.h"
 
 struct index_params {

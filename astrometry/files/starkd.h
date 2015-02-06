@@ -25,8 +25,8 @@
 
 #include "libkd/kdtree.h"
 #include "libkd/kdtree_fits_io.h"
-#include "astrometry/utils/fitstable.h"
 #include "base/keywords.h"
+#include "qfits-an/fitstable.h"
 #include "qfits-an/anqfits.h"
 
 #ifdef SWIG

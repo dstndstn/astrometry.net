@@ -26,10 +26,10 @@ include $(MAKEFILES_DIR)/makefile.common
 include $(MAKEFILES_DIR)/makefile.qfits
 include $(MAKEFILES_DIR)/makefile.resample
 
-ANUTILS_OBJ :=  sip-utils.o fit-wcs.o sip.o fitstable.o healpix-utils.o \
+ANUTILS_OBJ :=  sip-utils.o fit-wcs.o sip.o healpix-utils.o \
 	healpix.o sip_qfits.o starutil.o anwcs.o wcs-resample.o gslutils.o
 
-ANUTILS_H := anwcs.h boilerplate.h fit-wcs.h fitstable.h gslutils.h \
+ANUTILS_H := anwcs.h boilerplate.h fit-wcs.h gslutils.h \
 	healpix-utils.h healpix.h sip-utils.h sip.h sip_qfits.h starutil.h \
 	wcs-resample.h
 

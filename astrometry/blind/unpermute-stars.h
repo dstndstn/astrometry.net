@@ -22,7 +22,7 @@
 
 #include "astrometry/files/starkd.h"
 #include "astrometry/files/quadfile.h"
-#include "astrometry/utils/fitstable.h"
+#include "qfits-an/fitstable.h"
 
 /**
  \file Applies a star kdtree permutation array to all files that depend on

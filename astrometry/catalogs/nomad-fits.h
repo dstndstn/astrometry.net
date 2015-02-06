@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 #include "astrometry/catalogs/nomad.h"
-#include "astrometry/utils/fitstable.h"
+#include "qfits-an/fitstable.h"
 
 #define AN_FILETYPE_NOMAD "NOMAD"
 

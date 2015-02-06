@@ -19,7 +19,7 @@
 #ifndef SCAMP_CATALOG_H
 #define SCAMP_CATALOG_H
 
-#include "astrometry/utils/fitstable.h"
+#include "qfits-an/fitstable.h"
 #include "qfits-an/qfits_header.h"
 #include "base/an-bool.h"
 

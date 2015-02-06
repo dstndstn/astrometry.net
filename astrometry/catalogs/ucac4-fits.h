@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 #include "astrometry/catalogs/ucac4.h"
-#include "astrometry/utils/fitstable.h"
+#include "qfits-an/fitstable.h"
 
 #define AN_FILETYPE_UCAC4 "UCAC4"
 

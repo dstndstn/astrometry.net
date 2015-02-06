@@ -21,7 +21,7 @@
 
 #include "astrometry/files/codekd.h"
 #include "astrometry/blind/codefile.h"
-#include "astrometry/utils/fitstable.h"
+#include "qfits-an/fitstable.h"
 
 /**
  */
