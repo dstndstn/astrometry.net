@@ -29,9 +29,9 @@ $(ANFILES_LIB_FILE): $(addprefix $(ANFILES_DIR)/,$(ANFILES_OBJ))
 #  anutils (+ qfits)
 
 ifndef NO_KDTREE
-include $(COMMON)/makefile.libkd
+include $(MAKEFILES_DIR)/makefile.libkd
 else
-include $(COMMON)/makefile.anutils
+include $(MAKEFILES_DIR)/makefile.anutils
 endif
 
 ifndef NO_KDTREE

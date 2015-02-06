@@ -19,7 +19,7 @@
 #ifndef NGC2000_H
 #define NGC2000_H
 
-#include "astrometry/bl.h"
+#include "base/bl.h"
 
 /**
  The Astrometry.net codebase has two NGC modules.  This one contains

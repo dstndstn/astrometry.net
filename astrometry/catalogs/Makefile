@@ -14,21 +14,21 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-BASEDIR := ..
-COMMON := $(BASEDIR)/util
+BASEDIR := ../..
+MAKEFILES_DIR := $(BASEDIR)/old-makefiles
 DATA := .
 
 all:
 .PHONY: all
 
-include $(COMMON)/makefile.common
+include $(MAKEFILES_DIR)/makefile.common
 
 # required for build-hd-tree
-include $(COMMON)/makefile.anfiles
+#include $(MAKEFILES_DIR)/makefile.anutils
+include $(MAKEFILES_DIR)/makefile.anfiles
 # 2masstofits
-include $(COMMON)/makefile.zlib
-#include $(COMMON)/makefile.libkd
-#include $(COMMON)/makefile.anutils
+include $(MAKEFILES_DIR)/makefile.zlib
+#include $(MAKEFILES_DIR)/makefile.libkd
 
 $(DATA)/%.txt: ;
 $(DATA)/%.dat: ;
@@ -38,14 +38,14 @@ ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
 ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
 	$(AWK) -f parse-ngc2000names.awk < $(DATA)/ngc2000names.dat  > $@
 
-ngc2000entries.py: parse-ngc2000-py.awk $(DATA)/ngc2000.dat
-	$(AWK) -f parse-ngc2000-py.awk < $(DATA)/ngc2000.dat  > $@
-
-ngc2000accurate.py: parse-ngcic-accurate-py.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
-	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate-py.awk > $@
-
-ngc2000.py: ngc2000-pre.py ngc2000entries.py ngc2000-mid.py ngc2000accurate.py ngc2000-post.py
-	cat $^ > $@
+# ngc2000entries.py: parse-ngc2000-py.awk $(DATA)/ngc2000.dat
+# 	$(AWK) -f parse-ngc2000-py.awk < $(DATA)/ngc2000.dat  > $@
+# 
+# ngc2000accurate.py: parse-ngcic-accurate-py.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
+# 	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate-py.awk > $@
+# 
+# ngc2000.py: ngc2000-pre.py ngc2000entries.py ngc2000-mid.py ngc2000accurate.py ngc2000-post.py
+# 	cat $^ > $@
 
 ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
 	$(AWK) -f parse-ngc2000.awk < $(DATA)/ngc2000.dat  > $@
@@ -95,7 +95,6 @@ LDLIBS += $(ANFILES_LIB)
 LDLIBS += -lm
 
 CFLAGS += -I.
-CFLAGS += -I$(COMMON)
 CFLAGS += $(ZLIB_INC)
 
 LIBCAT := libcatalogs.a
@@ -130,7 +129,14 @@ ALL_OBJ += 2masstofits.o
 $(PROGS): %: %.o $(SLIB)
 ALL_OBJ += $(addsuffix .o,$(PROGS))
 
-all: ngc2000.py $(LIBCAT) $(PROGS)
+info:
+	echo ANBASE_INC: $(ANBASE_INC)
+	echo ANUTILS_INC: $(ANUTILS_INC)
+	echo ANFILES_INC: $(ANFILES_INC)
+	echo QFITS_INC: $(QFITS_INC)
+.PHONY: info
+
+all: info $(LIBCAT) $(PROGS) # ngc2000.py
 
 hd1.fits: henry-draper.tsv build-hd-tree
 	build-hd-tree -s -R 16 henry-draper.tsv $@
@@ -178,7 +184,7 @@ ALL_TEST_FILES = test_tycho2 test_usnob test_nomad test_2mass test_hd \
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(SLIB)
 ALL_TEST_EXTRA_LDFLAGS = 
-include $(COMMON)/makefile.tests
+include $(MAKEFILES_DIR)/makefile.tests
 
 $(ALL_TEST_FILES): $(SLIB)
 
@@ -187,11 +193,13 @@ tests: $(ALL_TEST_FILES)
 
 clean:
 	rm -f $(LIBCAT) $(OBJS) $(ALL_OBJ) $(DEPS) *.dep deps \
-		grab-stellarium-constellations \
-		ngc2000names.c ngc2000entries.py ngc2000.py ngc2000entries.c \
+		ngc2000names.c ngc2000entries.c \
 		ngcic-accurate-entries.c
 
+# grab-stellarium-constellations
+# ngc2000entries.py ngc2000.py
+
 ifneq ($(MAKECMDGOALS),clean)
-          include $(COMMON)/makefile.deps
+          include $(MAKEFILES_DIR)/makefile.deps
 endif
 

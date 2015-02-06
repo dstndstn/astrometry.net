@@ -20,8 +20,8 @@
 #define ANWCS_H
 
 #include <stdio.h>
-#include "astrometry/an-bool.h"
-#include "astrometry/keywords.h"
+#include "base/an-bool.h"
+#include "base/keywords.h"
 
 #define SIP_MAXORDER 10
 

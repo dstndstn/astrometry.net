@@ -28,6 +28,22 @@ all:
 BASEDIR := .
 MAKEFILES_DIR := old-makefiles
 
+## Reorg'd dependencies:
+
+# base -> none
+# gsl-an -> none
+# qfits-an -> base
+# resample -> base
+# simplexy -> resample, base
+# libkd -> base
+# libkd-fits -> libkd, qfitsan
+# astrometry/utils -> base, resample, qfits-an, gsl-an
+# astrometry/files -> base, libkd-fits, qfits-an, astrometry/utils
+# astrometry/catalogs -> base, resample, libkd-fits, qfits-an, astrometry/utils, astrometry/files
+# astrometry/blind -> base, resample, libkd-fits, qfits-an astrometry/utils, astrometry/files, astrometry/catalogs
+
+
+
 # The internal Astrometry.net dependency stack, top to bottom, is:
 #
 #  blind/libastrometry.a  -- astrometry.net core

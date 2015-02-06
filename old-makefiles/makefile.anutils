@@ -17,7 +17,7 @@
 ANUTILS_DIR := $(BASEDIR)/util
 ANUTILS_LIB_FILE := $(ANUTILS_DIR)/libanutils.a
 
-ANUTILS_INC := -I$(INCLUDE_BASE_DIR)
+ANUTILS_INC := -I$(INCLUDE_BASE_DIR)/astrometry/utils
 ANUTILS_LIB := 
 ANUTILS_SLIB := $(ANUTILS_LIB_FILE)
 ANUTILS_CFLAGS :=
@@ -31,8 +31,8 @@ $(ANUTILS_LIB_FILE):
 #  gsl
 #  wcslib (optional)
 
-include $(COMMON)/makefile.gsl
-include $(COMMON)/makefile.wcslib
+include $(MAKEFILES_DIR)/makefile.gsl
+include $(MAKEFILES_DIR)/makefile.wcslib
 
 ANUTILS_INC += $(ANBASE_INC)
 ANUTILS_CFLAGS += $(ANBASE_CFLAGS)
@@ -40,9 +40,9 @@ ANUTILS_LIB += $(ANBASE_LIB)
 ANUTILS_SLIB += $(ANBASE_SLIB)
 
 ifndef NO_QFITS
-include $(COMMON)/makefile.qfits
+include $(MAKEFILES_DIR)/makefile.qfits
 else
-include $(COMMON)/makefile.anbase
+include $(MAKEFILES_DIR)/makefile.anbase
 endif
 
 ifdef WCSLIB_EXISTS

@@ -1,5 +1,5 @@
 base
-base-advanced
+resample
 libkd-fits
 qfits-an
 astrometry/util

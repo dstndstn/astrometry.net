@@ -20,7 +20,7 @@
 #ifndef FIT_WCS_H
 #define FIT_WCS_H
 
-#include "astrometry/sip.h"
+#include "astrometry/utils/sip.h"
 
 void wcs_shift(tan_t* wcs, double xs, double ys);
 

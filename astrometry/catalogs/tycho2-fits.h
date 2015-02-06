@@ -21,8 +21,8 @@
 
 #include <stdio.h>
 
-#include "astrometry/tycho2.h"
-#include "astrometry/fitstable.h"
+#include "astrometry/catalogs/tycho2.h"
+#include "astrometry/utils/fitstable.h"
 
 #define AN_FILETYPE_TYCHO2 "TYCHO2"
 

@@ -22,7 +22,7 @@
 #include "astrometry/an-bool.h"
 #include <stdint.h>
 
-#include "astrometry/starutil.h"
+#include "astrometry/utils/starutil.h"
 
 #define USNOB_RECORD_SIZE 80
 

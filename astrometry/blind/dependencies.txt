@@ -1,7 +1,7 @@
 base
-base-advanced
+resample
 libkd-fits
 qfits-an
-astrometry/util
+astrometry/utils
 astrometry/files
 astrometry/catalogs

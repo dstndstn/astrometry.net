@@ -19,8 +19,8 @@
 #ifndef SIP_QFITS_H
 #define SIP_QFITS_H
 
-#include "astrometry/qfits_header.h"
-#include "astrometry/sip.h"
+#include "qfits-an/qfits_header.h"
+#include "astrometry/utils/sip.h"
 
 int sip_get_image_size(const qfits_header* hdr, int* pW, int* pH);
 

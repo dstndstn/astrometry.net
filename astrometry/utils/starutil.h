@@ -21,8 +21,8 @@
 #define STARUTIL_H
 
 #include <math.h>
-#include "astrometry/an-bool.h"
-#include "astrometry/keywords.h"
+#include "base/an-bool.h"
+#include "base/keywords.h"
 
 #define DIM_STARS 3
 #define DIM_XY 2

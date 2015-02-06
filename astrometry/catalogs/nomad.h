@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 
-#include "astrometry/starutil.h"
+#include "astrometry/utils/starutil.h"
 
 #define NOMAD_RECORD_SIZE 88
 

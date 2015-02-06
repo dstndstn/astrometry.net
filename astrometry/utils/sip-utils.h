@@ -19,7 +19,7 @@
 #ifndef SIP_UTILS_H
 #define SIP_UTILS_H
 
-#include "astrometry/sip.h"
+#include "astrometry/utils/sip.h"
 
 double wcs_pixel_center_for_size(double size);
 
