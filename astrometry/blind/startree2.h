@@ -19,9 +19,9 @@
 #ifndef STARTREE2_H
 #define STARTREE2_H
 
-#include "astrometry/starkd.h"
-#include "astrometry/fitstable.h"
-#include "astrometry/an-bool.h"
+#include "astrometry/files/starkd.h"
+#include "astrometry/utils/fitstable.h"
+#include "base/an-bool.h"
 
 /**
  Given a FITS BINTABLE, pulls out RA,Dec columns and builds a kd-tree

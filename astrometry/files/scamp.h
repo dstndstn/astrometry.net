@@ -19,9 +19,9 @@
 #ifndef BLIND_SCAMP_H
 #define BLIND_SCAMP_H
 
-#include "astrometry/qfits_header.h"
-#include "astrometry/sip.h"
-#include "astrometry/starxy.h"
+#include "qfits-an/qfits_header.h"
+#include "astrometry/utils/sip.h"
+#include "astrometry/files/starxy.h"
 
 int scamp_write_field(const qfits_header* imageheader,
                       const sip_t* wcs,

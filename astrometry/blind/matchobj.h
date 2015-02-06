@@ -22,11 +22,11 @@
 
 #include <stdint.h>
 
-#include "astrometry/starutil.h"
-#include "astrometry/sip.h"
-#include "astrometry/bl.h"
-#include "astrometry/index.h"
-#include "astrometry/an-bool.h"
+#include "astrometry/utils/starutil.h"
+#include "astrometry/utils/sip.h"
+#include "astrometry/files/index.h"
+#include "base/bl.h"
+#include "base/an-bool.h"
 
 struct match_struct {
     unsigned int quadno;

@@ -19,9 +19,9 @@
 #ifndef SCAMP_CATALOG_H
 #define SCAMP_CATALOG_H
 
-#include "astrometry/fitstable.h"
-#include "astrometry/qfits_header.h"
-#include "astrometry/an-bool.h"
+#include "astrometry/utils/fitstable.h"
+#include "qfits-an/qfits_header.h"
+#include "base/an-bool.h"
 
 struct scamp_catalog {
     fitstable_t* table;

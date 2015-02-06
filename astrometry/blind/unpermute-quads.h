@@ -20,8 +20,8 @@
 #ifndef UNPERMUTE_QUADS_H
 #define UNPERMUTE_QUADS_H
 
-#include "astrometry/quadfile.h"
-#include "astrometry/codekd.h"
+#include "astrometry/files/quadfile.h"
+#include "astrometry/files/codekd.h"
 
 /**
    \file Applies a code kdtree permutation array to the corresponding

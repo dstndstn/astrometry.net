@@ -22,18 +22,18 @@
 
 #include <time.h>
 
-#include "astrometry/starutil.h"
-#include "astrometry/starxy.h"
-#include "astrometry/kdtree.h"
-#include "astrometry/bl.h"
-#include "astrometry/matchobj.h"
-#include "astrometry/quadfile.h"
-#include "astrometry/starkd.h"
-#include "astrometry/codekd.h"
-#include "astrometry/index.h"
-#include "astrometry/verify.h"
-#include "astrometry/sip.h"
-#include "astrometry/an-bool.h"
+#include "astrometry/utils/starutil.h"
+#include "astrometry/files/starxy.h"
+#include "libkd/kdtree.h"
+#include "astrometry/blind/matchobj.h"
+#include "astrometry/files/quadfile.h"
+#include "astrometry/files/starkd.h"
+#include "astrometry/files/codekd.h"
+#include "astrometry/files/index.h"
+#include "astrometry/blind/verify.h"
+#include "astrometry/utils/sip.h"
+#include "base/bl.h"
+#include "base/an-bool.h"
 
 enum {
 	PARITY_NORMAL,

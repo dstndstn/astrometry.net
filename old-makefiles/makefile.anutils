@@ -14,7 +14,7 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-ANUTILS_DIR := $(BASEDIR)/util
+ANUTILS_DIR := $(BASEDIR)/astrometry/utils
 ANUTILS_LIB_FILE := $(ANUTILS_DIR)/libanutils.a
 
 ANUTILS_INC := -I$(INCLUDE_BASE_DIR)/astrometry/utils

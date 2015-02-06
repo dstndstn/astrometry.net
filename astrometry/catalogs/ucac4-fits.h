@@ -22,8 +22,8 @@
 
 #include <stdio.h>
 
-#include "astrometry/ucac4.h"
-#include "astrometry/fitstable.h"
+#include "astrometry/catalogs/ucac4.h"
+#include "astrometry/utils/fitstable.h"
 
 #define AN_FILETYPE_UCAC4 "UCAC4"
 

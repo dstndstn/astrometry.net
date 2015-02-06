@@ -1,5 +1,5 @@
 
-RESAMPLE_DIR := $(BASEDIR)/base
+RESAMPLE_DIR := $(BASEDIR)/resample
 RESAMPLE_LIB_FILE := $(RESAMPLE_DIR)/libresample.a
 
 RESAMPLE_CFLAGS :=

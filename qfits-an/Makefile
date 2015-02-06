@@ -1,5 +1,6 @@
 
-FILES := anqfits qfits_card qfits_convert qfits_error qfits_header \
+FILES := anqfits fitsbin fitsfile fitsioutils qfits_card qfits_convert \
+	qfits_error qfits_header \
 	qfits_image qfits_md5 qfits_table qfits_time qfits_tools qfits_byteswap \
 	qfits_memory qfits_rw qfits_float
 

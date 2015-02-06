@@ -14,29 +14,21 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-LIBKD_DIR := $(BASEDIR)/libkd
-LIBKD_LIB_FILE := $(LIBKD_DIR)/libkd.a
-LIBKD_NOIO_LIB_FILE := $(LIBKD_DIR)/libkd-noio.a
+ANCATS_DIR := $(BASEDIR)/astrometry/catalogs
+ANCATS_INC := -I$(INCLUDE_BASE_DIR)/astrometry/catalogs
+ANCATS_LIB := 
+ANCATS_LIB_FILE := $(ANCATS_DIR)/libancats.a
+ANCATS_SLIB := $(ANCATS_LIB_FILE)
+ANCATS_CFLAGS :=
 
-LIBKD_INC := -I$(INCLUDE_BASE_DIR)/libkd
-LIBKD_SLIB := $(LIBKD_LIB_FILE)
-LIBKD_LIB :=
+$(ANCATS_LIB_FILE): $(addprefix $(ANCATS_DIR)/,$(ANCATS_OBJ))
+	$(MAKE) -C $(ANCATS_DIR) libancats.a
 
-$(LIBKD_LIB_FILE):
-	$(MAKE) -C $(LIBKD_DIR) libkd.a
+include $(MAKEFILES_DIR)/makefile.anfiles
 
-$(LIBKD_NOIO_LIB_FILE):
-	$(MAKE) -C $(LIBKD_DIR) libkd-noio.a
+ANCATS_CFLAGS += $(ANFILES_CFLAGS)
+ANCATS_INC += $(ANFILES_INC)
+ANCATS_LIB += $(ANFILES_LIB)
+ANCATS_SLIB += $(ANFILES_SLIB)
 
-#include $(MAKEFILES_DIR)/makefile.anbase
-include $(MAKEFILES_DIR)/makefile.qfits
 
-# LIBKD_INC += $(ANUTILS_INC)
-# LIBKD_CFLAGS += $(ANUTILS_CFLAGS)
-# LIBKD_SLIB += $(ANUTILS_SLIB)
-# LIBKD_LIB += $(ANUTILS_LIB)
-
-LIBKD_INC += $(QFITS_INC)
-LIBKD_CFLAGS += $(QFITS_CFLAGS)
-LIBKD_SLIB += $(QFITS_SLIB)
-LIBKD_LIB += $(QFITS_LIB)

@@ -75,13 +75,13 @@ pkgconfig:
 
 subdirs: thirdparty
 	$(MAKE) -C base
-	$(MAKE) -C resample
 	$(MAKE) -C qfits-an
-	$(MAKE) -C libkd
+	$(MAKE) -C resample
 	$(MAKE) -C simplexy
-	$(MAKE) -C astrometry/catalog
+	$(MAKE) -C libkd
 	$(MAKE) -C astrometry/utils
 	$(MAKE) -C astrometry/files
+	$(MAKE) -C astrometry/catalogs
 	$(MAKE) -C astrometry/blind
 	$(MAKE) -C astrometry/tools
 

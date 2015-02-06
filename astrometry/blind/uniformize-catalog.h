@@ -18,8 +18,8 @@
 #ifndef UNIFORMIZE_CATALOG_H
 #define UNIFORMIZE_CATALOG_H
 
-#include "astrometry/fitstable.h"
-#include "astrometry/an-bool.h"
+#include "astrometry/utils/fitstable.h"
+#include "base/an-bool.h"
 
 /**
 

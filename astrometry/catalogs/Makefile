@@ -85,19 +85,22 @@ DEP_PREREQS :=
 DEP_PREREQS += ngc2000names.c ngc2000entries.c ngcic-accurate-entries.c
 
 CFLAGS += $(CFLAGS_DEF)
-CFLAGS += $(LIBKD_INC)
-CFLAGS += $(ANUTILS_INC)
+#CFLAGS += $(LIBKD_INC)
+#CFLAGS += $(ANUTILS_INC)
+CFLAGS += $(ANFILES_INC)
+CFLAGS += $(SIMPLEXY_INC)
 
 LDFLAGS += $(LDFLAGS_DEF)
 
 LDLIBS := $(LDLIBS_DEF)
 LDLIBS += $(ANFILES_LIB)
+LDLIBS += $(SIMPLEXY_LIB)
 LDLIBS += -lm
 
 CFLAGS += -I.
 CFLAGS += $(ZLIB_INC)
 
-LIBCAT := libcatalogs.a
+LIBCAT := libancats.a
 
 SLIB := $(LIBCAT)
 SLIB += $(ANFILES_SLIB)

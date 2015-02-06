@@ -19,8 +19,8 @@
 #ifndef XYLIST_H
 #define XYLIST_H
 
-#include "astrometry/starxy.h"
-#include "astrometry/fitstable.h"
+#include "astrometry/files/starxy.h"
+#include "astrometry/utils/fitstable.h"
 
 #define AN_FILETYPE_XYLS "XYLS"
 

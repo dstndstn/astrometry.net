@@ -14,29 +14,26 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-LIBKD_DIR := $(BASEDIR)/libkd
-LIBKD_LIB_FILE := $(LIBKD_DIR)/libkd.a
-LIBKD_NOIO_LIB_FILE := $(LIBKD_DIR)/libkd-noio.a
+SIMPLEXY_DIR := $(BASEDIR)/simplexy
+SIMPLEXY_INC := -I$(INCLUDE_BASE_DIR)/simplexy
+SIMPLEXY_LIB := 
+SIMPLEXY_LIB_FILE := $(SIMPLEXY_DIR)/libsimplexy.a
+SIMPLEXY_SLIB := $(SIMPLEXY_LIB_FILE)
+SIMPLEXY_CFLAGS :=
 
-LIBKD_INC := -I$(INCLUDE_BASE_DIR)/libkd
-LIBKD_SLIB := $(LIBKD_LIB_FILE)
-LIBKD_LIB :=
+$(SIMPLEXY_LIB_FILE): $(addprefix $(SIMPLEXY_DIR)/,$(SIMPLEXY_OBJ))
+	$(MAKE) -C $(SIMPLEXY_DIR) libsimplexy.a
 
-$(LIBKD_LIB_FILE):
-	$(MAKE) -C $(LIBKD_DIR) libkd.a
+include $(MAKEFILES_DIR)/makefile.resample
+include $(MAKEFILES_DIR)/makefile.cfitsio
 
-$(LIBKD_NOIO_LIB_FILE):
-	$(MAKE) -C $(LIBKD_DIR) libkd-noio.a
+SIMPLEXY_CFLAGS += $(RESAMPLE_CFLAGS)
+SIMPLEXY_INC += $(RESAMPLE_INC)
+SIMPLEXY_LIB += $(RESAMPLE_LIB)
+SIMPLEXY_SLIB += $(RESAMPLE_SLIB)
 
-#include $(MAKEFILES_DIR)/makefile.anbase
-include $(MAKEFILES_DIR)/makefile.qfits
+SIMPLEXY_CFLAGS += $(CFITS_CFLAGS)
+SIMPLEXY_INC += $(CFITS_INC)
+SIMPLEXY_LIB += $(CFITS_LIB)
+SIMPLEXY_SLIB += $(CFITS_SLIB)
 
-# LIBKD_INC += $(ANUTILS_INC)
-# LIBKD_CFLAGS += $(ANUTILS_CFLAGS)
-# LIBKD_SLIB += $(ANUTILS_SLIB)
-# LIBKD_LIB += $(ANUTILS_LIB)
-
-LIBKD_INC += $(QFITS_INC)
-LIBKD_CFLAGS += $(QFITS_CFLAGS)
-LIBKD_SLIB += $(QFITS_SLIB)
-LIBKD_LIB += $(QFITS_LIB)

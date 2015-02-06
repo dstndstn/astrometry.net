@@ -19,9 +19,9 @@
 #ifndef MERGE_INDEX_H
 #define MERGE_INDEX_H
 
-#include "astrometry/quadfile.h"
-#include "astrometry/codekd.h"
-#include "astrometry/starkd.h"
+#include "astrometry/files/quadfile.h"
+#include "astrometry/files/codekd.h"
+#include "astrometry/files/starkd.h"
 
 /**
  Merges .quad, .ckdt, and .skdt files to produce a .index file.

@@ -21,10 +21,10 @@
 
 #include <stdio.h>
 
-#include "astrometry/matchobj.h"
-#include "astrometry/starutil.h"
-#include "astrometry/fitstable.h"
-#include "astrometry/bl.h"
+#include "astrometry/blind/matchobj.h"
+#include "astrometry/utils/starutil.h"
+#include "astrometry/utils/fitstable.h"
+#include "base/bl.h"
 
 #define AN_FILETYPE_MATCH "MATCH"
 

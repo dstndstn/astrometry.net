@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 BASEDIR := ..
-COMMON := $(BASEDIR)/util
+MAKEFILES_DIR := $(BASEDIR)/old-makefiles
 
 GSL_LIB := libgsl-an.a
 all: $(GSL_LIB)
@@ -27,7 +27,7 @@ lib: $(GSL_LIB)
 .PHONY: lib
 #	$(MAKE) $(GSL_LIB)
 
-include $(COMMON)/makefile.common
+include $(MAKEFILES_DIR)/makefile.common
 
 CFLAGS := $(CFLAGS_DEF)
 CFLAGS += -I.
@@ -210,7 +210,7 @@ config.h.in: ;
 DEP_OBJ := $(GSL_OBJS)
 # Don't try to include "*.dep" before config.h is built.
 ifeq ($(MAKECMDGOALS),$(GSL_LIB))
-include $(COMMON)/makefile.deps
+include $(MAKEFILES_DIR)/makefile.deps
 endif
 
 

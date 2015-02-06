@@ -21,10 +21,10 @@
 
 #include <stdio.h>
 
-#include "astrometry/blind.h"
-#include "astrometry/bl.h"
-#include "astrometry/an-bool.h"
-#include "astrometry/index.h"
+#include "astrometry/blind/blind.h"
+#include "astrometry/files/index.h"
+#include "base/bl.h"
+#include "base/an-bool.h"
 
 struct engine {
     // search paths (directories)

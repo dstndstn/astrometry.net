@@ -14,8 +14,8 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-ANFILES_DIR := $(BASEDIR)/util
-ANFILES_INC :=
+ANFILES_DIR := $(BASEDIR)/astrometry/files
+ANFILES_INC := -I$(INCLUDE_BASE_DIR)/astrometry/files
 ANFILES_LIB := 
 ANFILES_LIB_FILE := $(ANFILES_DIR)/libanfiles.a
 ANFILES_SLIB := $(ANFILES_LIB_FILE)
@@ -30,18 +30,17 @@ $(ANFILES_LIB_FILE): $(addprefix $(ANFILES_DIR)/,$(ANFILES_OBJ))
 
 ifndef NO_KDTREE
 include $(MAKEFILES_DIR)/makefile.libkd
-else
-include $(MAKEFILES_DIR)/makefile.anutils
 endif
+include $(MAKEFILES_DIR)/makefile.anutils
+
+ANFILES_CFLAGS += $(ANUTILS_CFLAGS)
+ANFILES_INC += $(ANUTILS_INC)
+ANFILES_LIB += $(ANUTILS_LIB)
+ANFILES_SLIB += $(ANUTILS_SLIB)
 
 ifndef NO_KDTREE
 ANFILES_INC += $(LIBKD_INC)
 ANFILES_LIB += $(LIBKD_LIB)
 ANFILES_SLIB += $(LIBKD_SLIB)
 endif
-
-ANFILES_CFLAGS += $(ANUTILS_CFLAGS)
-ANFILES_INC += $(ANUTILS_INC)
-ANFILES_LIB += $(ANUTILS_LIB)
-ANFILES_SLIB += $(ANUTILS_SLIB)
 

@@ -19,7 +19,7 @@
 #ifndef TWEAK_2_H
 #define TWEAK_2_H
 
-#include "astrometry/sip.h"
+#include "astrometry/utils/sip.h"
 
 /**
  Given an initial WCS solution, compute SIP polynomial distortions

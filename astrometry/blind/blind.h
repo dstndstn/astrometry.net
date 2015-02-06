@@ -19,12 +19,12 @@
 #ifndef BLIND_H
 #define BLIND_H
 
-#include "astrometry/an-bool.h"
-#include "astrometry/solver.h"
-#include "astrometry/matchobj.h"
-#include "astrometry/matchfile.h"
-#include "astrometry/rdlist.h"
-#include "astrometry/bl.h"
+#include "astrometry/blind/solver.h"
+#include "astrometry/blind/matchobj.h"
+#include "astrometry/blind/matchfile.h"
+#include "astrometry/files/rdlist.h"
+#include "base/bl.h"
+#include "base/an-bool.h"
 
 #define DEFAULT_QSF_LO 0.1
 #define DEFAULT_QSF_HI 1.0

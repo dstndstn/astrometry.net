@@ -19,10 +19,10 @@
 #ifndef HPQUADS_H
 #define HPQUADS_H
 
-#include "astrometry/an-bool.h"
-#include "astrometry/starkd.h"
-#include "astrometry/codefile.h"
-#include "astrometry/quadfile.h"
+#include "base/an-bool.h"
+#include "astrometry/files/starkd.h"
+#include "astrometry/blind/codefile.h"
+#include "astrometry/files/quadfile.h"
 
 int hpquads(startree_t* starkd,
 			codefile_t* codes,

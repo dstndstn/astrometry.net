@@ -20,13 +20,12 @@
 #ifndef VERIFY_H
 #define VERIFY_H
 
-#include "astrometry/kdtree.h"
-#include "astrometry/matchobj.h"
-#include "astrometry/bl.h"
-#include "astrometry/starkd.h"
-#include "astrometry/sip.h"
-#include "astrometry/bl.h"
-#include "astrometry/starxy.h"
+#include "libkd/kdtree.h"
+#include "astrometry/blind/matchobj.h"
+#include "base/bl.h"
+#include "astrometry/files/starkd.h"
+#include "astrometry/utils/sip.h"
+#include "astrometry/files/starxy.h"
 
 struct verify_field_t {
     const starxy_t* field;
