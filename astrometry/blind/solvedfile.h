@@ -19,8 +19,8 @@
 #ifndef SOLVEDFILE_H
 #define SOLVEDFILE_H
 
-#include "astrometry/bl.h"
-#include "astrometry/an-bool.h"
+#include "base/bl.h"
+#include "base/an-bool.h"
 
 /**
  All field numbers are 1-indexed.

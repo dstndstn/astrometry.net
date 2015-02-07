@@ -21,7 +21,7 @@
 
 extern double RANGESEARCH_NO_LIMIT;
 
-#include "astrometry/kdtree.h"
+#include "libkd/kdtree.h"
 
 // note, 'xind' and 'yind' are indices IN THE KDTREE; to get back to
 // 'normal' ordering you must use the kdtree permutation vector.

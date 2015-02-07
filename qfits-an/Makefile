@@ -17,7 +17,7 @@ all: $(QFITS_LIB_FILE)
 .PHONY: all
 
 BASEDIR := ..
-MAKEFILES_DIR := $(BASEDIR)/old-makefiles
+MAKEFILES_DIR := $(BASEDIR)/makefiles
 
 include $(MAKEFILES_DIR)/makefile.common
 include $(MAKEFILES_DIR)/makefile.anbase

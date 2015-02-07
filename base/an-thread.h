@@ -47,7 +47,7 @@
 
  */
 
-#include "astrometry/an-thread-pthreads.h"
+#include "base/an-thread-pthreads.h"
 
 
 

@@ -30,7 +30,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-#include "astrometry/keywords.h"
+#include "base/keywords.h"
 
 struct bl_node {
 	// number of elements filled.
@@ -288,25 +288,25 @@ sl_insertf(sl* list, size_t index, const char* format, ...);
 #define DEFINE_SORT 1
 #define nl il
 #define number int
-#include "astrometry/bl-nl.h"
+#include "base/bl-nl.h"
 #undef nl
 #undef number
 
 #define nl ll
 #define number int64_t
-#include "astrometry/bl-nl.h"
+#include "base/bl-nl.h"
 #undef nl
 #undef number
 
 #define nl dl
 #define number double
-#include "astrometry/bl-nl.h"
+#include "base/bl-nl.h"
 #undef nl
 #undef number
 
 #define nl fl
 #define number float
-#include "astrometry/bl-nl.h"
+#include "base/bl-nl.h"
 #undef nl
 #undef number
 
@@ -314,7 +314,7 @@ sl_insertf(sl* list, size_t index, const char* format, ...);
 #define DEFINE_SORT 0
 #define nl pl
 #define number void*
-#include "astrometry/bl-nl.h"
+#include "base/bl-nl.h"
 #undef nl
 #undef number
 
@@ -327,35 +327,35 @@ size_t pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v
 #ifdef INCLUDE_INLINE_SOURCE
 #define InlineDefine InlineDefineH
 
-#include "astrometry/bl.inc"
+#include "base/bl.inc"
 
 #define nl il
 #define number int
-#include "astrometry/bl-nl.inc"
+#include "base/bl-nl.inc"
 #undef nl
 #undef number
 
 #define nl ll
 #define number int64_t
-#include "astrometry/bl-nl.inc"
+#include "base/bl-nl.inc"
 #undef nl
 #undef number
 
 #define nl pl
 #define number void*
-#include "astrometry/bl-nl.inc"
+#include "base/bl-nl.inc"
 #undef nl
 #undef number
 
 #define nl dl
 #define number double
-#include "astrometry/bl-nl.inc"
+#include "base/bl-nl.inc"
 #undef nl
 #undef number
 
 #define nl fl
 #define number float
-#include "astrometry/bl-nl.inc"
+#include "base/bl-nl.inc"
 #undef nl
 #undef number
 

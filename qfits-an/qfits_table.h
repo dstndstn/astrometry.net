@@ -40,7 +40,7 @@
 #include <stdlib.h>
 #include <unistd.h>
     
-#include "astrometry/qfits_header.h"
+#include "qfits-an/qfits_header.h"
 
 /*-----------------------------------------------------------------------------
                                    Defines

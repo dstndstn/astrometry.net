@@ -26,7 +26,7 @@
 all:
 
 BASEDIR := .
-MAKEFILES_DIR := old-makefiles
+MAKEFILES_DIR := makefiles
 
 ## Reorg'd dependencies:
 

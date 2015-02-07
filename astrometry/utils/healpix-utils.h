@@ -19,7 +19,7 @@
 #ifndef HEALPIX_UTILS_H
 #define HEALPIX_UTILS_H
 
-#include "astrometry/bl.h"
+#include "base/bl.h"
 
 /**
  Returns healpixes that are / may be within range of the given point, resp.

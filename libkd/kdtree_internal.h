@@ -19,7 +19,7 @@
 #ifndef KDTREE_INTERNAL_H
 #define KDTREE_INTERNAL_H
 
-#include "astrometry/kdtree.h"
+#include "libkd/kdtree.h"
 
 
 #define GLUE3(base, x, y, z) base ## _ ## x ## y ## z

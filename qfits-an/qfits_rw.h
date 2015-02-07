@@ -32,7 +32,7 @@
                                    Includes
  -----------------------------------------------------------------------------*/
 
-#include "astrometry/qfits_header.h"
+#include "qfits-an/qfits_header.h"
 
 /*-----------------------------------------------------------------------------
                         Function ANSI prototypes

@@ -20,7 +20,7 @@
 #define BOILERPLATE_H
 
 #include <stdio.h>
-#include "astrometry/qfits_header.h"
+#include "qfits-an/qfits_header.h"
 
 #define BOILERPLATE_HELP_HEADER(fid)                                         \
 do {								             \

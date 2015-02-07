@@ -23,9 +23,9 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-#include "astrometry/qfits_header.h"
-#include "astrometry/fitsbin.h"
-#include "astrometry/anqfits.h"
+#include "qfits-an/qfits_header.h"
+#include "qfits-an/fitsbin.h"
+#include "qfits-an/anqfits.h"
 
 typedef struct {
 	unsigned int numquads;

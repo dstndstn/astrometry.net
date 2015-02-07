@@ -21,11 +21,11 @@
 
 #include <stdint.h>
 
-#include "astrometry/qfits_header.h"
-#include "astrometry/qfits_image.h"
-#include "astrometry/qfits_table.h"
-#include "astrometry/keywords.h"
-#include "astrometry/an-bool.h"
+#include "qfits-an/qfits_header.h"
+#include "qfits-an/qfits_image.h"
+#include "qfits-an/qfits_table.h"
+#include "base/keywords.h"
+#include "base/an-bool.h"
 
 void fits_use_error_system(void);
 

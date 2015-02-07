@@ -19,7 +19,7 @@
 #ifndef CONSTELLATIONS_H
 #define CONSTELLATIONS_H
 
-#include "astrometry/bl.h"
+#include "base/bl.h"
 
 int constellations_n();
 

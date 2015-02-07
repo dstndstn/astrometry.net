@@ -59,7 +59,7 @@ astrometry/tools/wcsinfo
 base/os-features-config.h
 base/os-features-makefile.log
 base/os-features-test-*
-old-makefiles/makefile.os-features
+makefiles/makefile.os-features
 qfits-an/astrometry
 
 */*.dep

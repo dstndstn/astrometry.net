@@ -19,7 +19,7 @@
 #ifndef MATHUTIL_H
 #define MATHUTIL_H
 
-#include "astrometry/keywords.h"
+#include "base/keywords.h"
 
 #include "bl.h"
 
@@ -108,7 +108,7 @@ InlineDeclare void normalize_3(double* xyz);
 
 #ifdef INCLUDE_INLINE_SOURCE
 #define InlineDefine InlineDefineH
-#include "astrometry/mathutil.inc"
+#include "base/mathutil.inc"
 #undef InlineDefine
 #endif
 

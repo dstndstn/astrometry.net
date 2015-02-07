@@ -19,7 +19,7 @@
 #ifndef USNOB_H
 #define USNOB_H
 
-#include "astrometry/an-bool.h"
+#include "base/an-bool.h"
 #include <stdint.h>
 
 #include "astrometry/utils/starutil.h"

@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 BASEDIR := ../..
-MAKEFILES_DIR := $(BASEDIR)/old-makefiles
+MAKEFILES_DIR := $(BASEDIR)/makefiles
 DATA := .
 
 all:
@@ -25,6 +25,7 @@ include $(MAKEFILES_DIR)/makefile.common
 
 include $(MAKEFILES_DIR)/makefile.qfits
 include $(MAKEFILES_DIR)/makefile.resample
+include $(MAKEFILES_DIR)/makefile.wcslib
 
 ANUTILS_OBJ :=  sip-utils.o fit-wcs.o sip.o healpix-utils.o \
 	healpix.o sip_qfits.o starutil.o anwcs.o wcs-resample.o gslutils.o

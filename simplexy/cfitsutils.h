@@ -22,8 +22,8 @@
 // from cfitsio
 #include "fitsio.h"
 
-#include "astrometry/bl.h"
-#include "astrometry/errors.h"
+#include "base/bl.h"
+#include "base/errors.h"
 
 static void cfitserr(int status) {
     sl* msgs = sl_new(4);

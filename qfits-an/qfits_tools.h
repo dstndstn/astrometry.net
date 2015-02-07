@@ -53,7 +53,7 @@
 /* String type for FITS value */
 #define QFITS_STRING        5
 
-#include "astrometry/qfits_std.h"
+#include "qfits-an/qfits_std.h"
 
 size_t qfits_blocks_needed(size_t size);
 

@@ -20,7 +20,7 @@
 #ifndef SIMPLEXY2_H
 #define SIMPLEXY2_H
 
-#include "astrometry/an-bool.h"
+#include "base/an-bool.h"
 
 #define SIMPLEXY_DEFAULT_DPSF        1.0
 #define SIMPLEXY_DEFAULT_PLIM        8.0

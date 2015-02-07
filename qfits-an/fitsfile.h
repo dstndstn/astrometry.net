@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 
-#include "astrometry/qfits_header.h"
+#include "qfits-an/qfits_header.h"
 
 int fitsfile_pad_with(FILE* fid, char pad);
 

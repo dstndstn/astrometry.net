@@ -19,8 +19,8 @@
 #define DATA_LOG_H
 
 #include <stdio.h>
-#include "astrometry/an-bool.h"
-#include "astrometry/keywords.h"
+#include "base/an-bool.h"
+#include "base/keywords.h"
 
 typedef uint32_t data_mask_t;
 
