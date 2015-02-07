@@ -125,6 +125,10 @@ ALL_OBJ += ucac4tofits.o
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) $(ZLIB_LIB)
 ALL_OBJ += 2masstofits.o
 
+build-hd-tree: build-hd-tree.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
+ALL_OBJ += build-hd-tree.o
+
 $(PROGS): %: %.o $(SLIB)
 ALL_OBJ += $(addsuffix .o,$(PROGS))
 
