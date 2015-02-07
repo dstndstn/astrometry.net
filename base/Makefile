@@ -25,6 +25,15 @@ include $(MAKEFILES_DIR)/makefile.common
 include $(MAKEFILES_DIR)/makefile.anbase
 include $(MAKEFILES_DIR)/makefile.netpbm
 
+NETPBM_INC_ORIG := $(NETPBM_INC)
+NETPBM_LIB_ORIG := $(NETPBM_LIB)
+
+ifeq ($(HAVE_NETPBM),yes)
+else
+NETPBM_INC :=
+NETPBM_LIB :=
+endif
+
 INCLUDE_DIR := .
 
 SO=$(SHAREDLIB_SUFFIX)
