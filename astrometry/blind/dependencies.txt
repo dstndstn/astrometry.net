@@ -1,5 +1,6 @@
 base
 resample
+simplexy
 libkd-fits
 qfits-an
 astrometry/utils

@@ -40,7 +40,7 @@ MAKEFILES_DIR := makefiles
 # astrometry/utils -> base, resample, qfits-an, gsl-an
 # astrometry/files -> base, libkd-fits, qfits-an, astrometry/utils
 # astrometry/catalogs -> base, resample, libkd-fits, qfits-an, astrometry/utils, astrometry/files
-# astrometry/blind -> base, resample, libkd-fits, qfits-an astrometry/utils, astrometry/files, astrometry/catalogs
+# astrometry/blind -> base, resample, libkd-fits, qfits-an astrometry/utils, astrometry/files, astrometry/catalogs, simplexy
 
 
 
