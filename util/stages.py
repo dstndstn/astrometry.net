@@ -32,12 +32,14 @@ class CallGlobal(object):
 class CallGlobalTime(CallGlobal):
     def __call__(self, stage, **kwargs):
         from astrometry.util.ttime import Time
+        from datetime import datetime
         t0 = Time()
-        print 'Running stage', stage, 'at', t0.wall.isoformat()
+        print 'Running stage', stage, 'at', datetime.now().isoformat()
         rtn = super(CallGlobalTime, self).__call__(stage, **kwargs)
         t1 = Time()
         print 'Stage', stage, ':', t1-t0
-        print 'Stage', stage, 'finished:', t1.wall.isoformat()
+        print 'Stage', stage, 'finished:', datetime.now().isoformat()
+        return rtn
 
 def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
              update=True, write=True, initial_args={}, **kwargs):
