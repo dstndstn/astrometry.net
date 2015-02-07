@@ -227,7 +227,7 @@ InlineDeclare void star_midpoint(double* mid, const double* A, const double* B);
 
 #ifdef INCLUDE_INLINE_SOURCE
 #define InlineDefine InlineDefineH
-#include "astrometry/starutil.inc"
+#include "astrometry/utils/starutil.inc"
 #undef InlineDefine
 #endif
 
