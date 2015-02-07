@@ -23,12 +23,9 @@ all:
 
 include $(MAKEFILES_DIR)/makefile.common
 
-# required for build-hd-tree
-#include $(MAKEFILES_DIR)/makefile.anutils
 include $(MAKEFILES_DIR)/makefile.anfiles
 # 2masstofits
 include $(MAKEFILES_DIR)/makefile.zlib
-#include $(MAKEFILES_DIR)/makefile.libkd
 
 $(DATA)/%.txt: ;
 $(DATA)/%.dat: ;
@@ -84,21 +81,19 @@ DEP_OBJ := $(OBJS)
 DEP_PREREQS :=
 DEP_PREREQS += ngc2000names.c ngc2000entries.c ngcic-accurate-entries.c
 
-CFLAGS += $(CFLAGS_DEF)
-#CFLAGS += $(LIBKD_INC)
-#CFLAGS += $(ANUTILS_INC)
+CFLAGS := $(CFLAGS_DEF)
 CFLAGS += $(ANFILES_INC)
-CFLAGS += $(SIMPLEXY_INC)
+#CFLAGS += $(SIMPLEXY_INC)
+CFLAGS += $(ZLIB_INC)
+#CFLAGS += -I.
 
-LDFLAGS += $(LDFLAGS_DEF)
+LDFLAGS := $(LDFLAGS_DEF)
+LDFLAGS += $(ANFILES_CFLAGS)
 
 LDLIBS := $(LDLIBS_DEF)
 LDLIBS += $(ANFILES_LIB)
-LDLIBS += $(SIMPLEXY_LIB)
+#LDLIBS += $(SIMPLEXY_LIB)
 LDLIBS += -lm
-
-CFLAGS += -I.
-CFLAGS += $(ZLIB_INC)
 
 LIBCAT := libancats.a
 
@@ -112,7 +107,8 @@ $(LIBCAT): $(OBJS)
 
 PROGS := build-hd-tree tycho2tofits usnobtofits nomadtofits \
 	2masstofits
-	#ucac3tofits ucac4tofits
+
+#ucac3tofits ucac4tofits
 
 # not built by default
 MISC_PROGS := usnob-scamp-catalog read_nomad
@@ -137,6 +133,10 @@ info:
 	echo ANUTILS_INC: $(ANUTILS_INC)
 	echo ANFILES_INC: $(ANFILES_INC)
 	echo QFITS_INC: $(QFITS_INC)
+
+	echo ANFILES_SLIB: $(ANFILES_SLIB)
+	echo SLIB: $(SLIB)
+
 .PHONY: info
 
 all: info $(LIBCAT) $(PROGS) # ngc2000.py
