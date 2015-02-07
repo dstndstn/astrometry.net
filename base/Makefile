@@ -23,6 +23,7 @@ all:
 
 include $(MAKEFILES_DIR)/makefile.common
 include $(MAKEFILES_DIR)/makefile.anbase
+include $(MAKEFILES_DIR)/makefile.netpbm
 
 INCLUDE_DIR := .
 
