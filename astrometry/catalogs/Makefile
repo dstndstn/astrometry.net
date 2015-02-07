@@ -125,9 +125,9 @@ ALL_OBJ += ucac4tofits.o
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) $(ZLIB_LIB)
 ALL_OBJ += 2masstofits.o
 
-build-hd-tree: build-hd-tree.o $(SLIB)
-	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
-ALL_OBJ += build-hd-tree.o
+# build-hd-tree: build-hd-tree.o $(SLIB)
+# 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
+# ALL_OBJ += build-hd-tree.o
 
 $(PROGS): %: %.o $(SLIB)
 ALL_OBJ += $(addsuffix .o,$(PROGS))
@@ -140,6 +140,12 @@ info:
 
 	echo ANFILES_SLIB: $(ANFILES_SLIB)
 	echo SLIB: $(SLIB)
+	echo WCS_SLIB: $(WCS_SLIB)
+
+	echo LIBKD_LIB_FILE: $(LIBKD_LIB_FILE)
+	echo ANUTILS_LIB_FILE: $(ANUTILS_LIB_FILE)
+	echo LIBKD_SLIB_DEPS: $(LIBKD_SLIB_DEPS)
+	echo ANUTILS_SLIB_DEPS: $(ANUTILS_SLIB_DEPS)
 
 .PHONY: info
 
