@@ -22,6 +22,8 @@ all:
 
 include $(MAKEFILES_DIR)/makefile.common
 include $(MAKEFILES_DIR)/makefile.blind
+include $(MAKEFILES_DIR)/makefile.netpbm
+
 #include $(MAKEFILES_DIR)/makefile.cfitsio
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -32,13 +34,17 @@ LDFLAGS := $(LDFLAGS_DEF)
 
 LDLIBS := $(LDLIBS_DEF)
 LDLIBS += $(BLIND_LIB)
+LDLIBS += $(NETPBM_LIB)
 
 SLIB := $(BLIND_SLIB)
+SLIB += $(NETPBM_SLIB)
 
 INC := $(BLIND_INC)
+INC += $(NETPBM_INC)
 
 CFLAGS := $(CFLAGS_DEF)
 CFLAGS += $(BLIND_CFLAGS)
+CFLAGS += $(NETPBM_CFLAGS)
 CFLAGS += $(INC)
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
