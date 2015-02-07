@@ -43,6 +43,29 @@ MAKEFILES_DIR := makefiles
 # astrometry/blind -> base, resample, libkd-fits, qfits-an astrometry/utils, astrometry/files, astrometry/catalogs, simplexy
 
 
+## Minimal dependencies:
+
+# base -> none
+# gsl-an -> none
+# cfitsio -> none
+
+# qfits-an -> base
+# resample -> base
+
+# libkd -> qfits-an
+# simplexy -> resample
+# astrometry/utils -> qfits-an, gsl-an, resample
+
+# astrometry/files -> libkd, astrometry/utils  (diamond deps)
+
+# astrometry/catalogs -> astrometry/files
+
+# astrometry/blind -> astrometry/catalogs, simplexy (diamond deps)
+
+# astrometry/tools -> astrometry/blind
+
+
+
 
 # The internal Astrometry.net dependency stack, top to bottom, is:
 #
