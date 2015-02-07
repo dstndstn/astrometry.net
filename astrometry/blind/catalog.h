@@ -22,9 +22,9 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-#include "astrometry/fitsbin.h"
-#include "astrometry/bl.h"
-#include "astrometry/an-bool.h"
+#include "qfits-an/fitsbin.h"
+#include "base/bl.h"
+#include "base/an-bool.h"
 
 #define AN_FILETYPE_CATALOG "OBJS"
 

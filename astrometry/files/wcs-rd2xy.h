@@ -20,7 +20,7 @@
 #ifndef WCS_RD2XY_H
 #define WCS_RD2XY_H
 
-#include "astrometry/bl.h"
+#include "base/bl.h"
 
 int wcs_rd2xy(const char* wcsfn, int wcsext,
 			  const char* rdlsfn, const char* xylsfn,
