@@ -189,11 +189,11 @@ install-indexes:
 
 reconfig:
 	-rm -f base/os-features-config.h $(MAKEFILES_DIR)/makefile.os-features
-	$(MAKE) -C util config
+	$(MAKE) -C base config
 .PHONY: reconfig
 
-config: util/os-features-config.h util/makefile.os-features
-	$(MAKE) -C util config
+config: base/os-features-config.h $(MAKEFILES_DIR)/makefile.os-features
+	$(MAKE) -C base config
 .PHONY: config
 
 RELEASE_VER := $(shell git describe | cut -f1 -d"-")
