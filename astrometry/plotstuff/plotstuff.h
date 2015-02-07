@@ -22,11 +22,11 @@
 #include <stdio.h>
 #include <cairo.h>
 
-#include "astrometry/keywords.h"
-#include "astrometry/sip.h"
-#include "astrometry/bl.h"
-#include "astrometry/anwcs.h"
-#include "astrometry/an-bool.h"
+#include "astrometry/utils/sip.h"
+#include "astrometry/utils/anwcs.h"
+#include "base/keywords.h"
+#include "base/bl.h"
+#include "base/an-bool.h"
 
 #define PLOTSTUFF_FORMAT_JPG 1
 #define PLOTSTUFF_FORMAT_PNG 2

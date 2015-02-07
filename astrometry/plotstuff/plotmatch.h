@@ -18,9 +18,9 @@
 #ifndef PLOTMATCH_H
 #define PLOTMATCH_H
 
-#include "astrometry/plotstuff.h"
-#include "astrometry/bl.h"
-#include "astrometry/matchobj.h"
+#include "astrometry/plotstuff/plotstuff.h"
+#include "astrometry/blind/matchobj.h"
+#include "base/bl.h"
 
 struct plotmatch_args {
 	// of MatchObj's

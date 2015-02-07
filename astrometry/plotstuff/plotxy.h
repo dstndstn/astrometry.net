@@ -19,7 +19,7 @@
 #ifndef PLOTXY_H
 #define PLOTXY_H
 
-#include "astrometry/plotstuff.h"
+#include "astrometry/plotstuff/plotstuff.h"
 
 struct plotxy_args {
 	char* fn;

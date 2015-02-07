@@ -18,7 +18,7 @@
 #ifndef PLOTFILL_H
 #define PLOTFILL_H
 
-#include "astrometry/plotstuff.h"
+#include "astrometry/plotstuff/plotstuff.h"
 
 struct plotfill_args {
 };

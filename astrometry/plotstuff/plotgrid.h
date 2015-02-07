@@ -18,7 +18,7 @@
 #ifndef PLOTGRID_H
 #define PLOTGRID_H
 
-#include "astrometry/plotstuff.h"
+#include "astrometry/plotstuff/plotstuff.h"
 
 struct plotgrid_args {
 	anbool dolabel;

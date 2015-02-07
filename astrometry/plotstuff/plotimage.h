@@ -1,8 +1,8 @@
 #ifndef PLOTIMAGE_H
 #define PLOTIMAGE_H
 
-#include "astrometry/plotstuff.h"
-#include "astrometry/anwcs.h"
+#include "astrometry/plotstuff/plotstuff.h"
+#include "astrometry/utils/anwcs.h"
 
 struct plotimage_args {
 	char* fn;

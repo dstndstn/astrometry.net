@@ -107,7 +107,6 @@ subdirs: thirdparty
 	$(MAKE) -C astrometry/catalogs
 	$(MAKE) -C astrometry/blind
 	$(MAKE) -C astrometry/tools
-#	$(MAKE) -C astrometry/plotstuff
 
 thirdparty: qfits-an
 
@@ -135,11 +134,9 @@ gsl-an:
 .PHONY: subdirs thirdparty qfits-an gsl-an
 
 # Targets that require extra libraries
-extra:
-	$(MAKE) -C qfits-an
-	$(MAKE) -C util
-	$(MAKE) -C catalogs
-	$(MAKE) -C blind cairo
+extra: subdirs
+	$(MAKE) -C astrometry/plotstuff
+.PHONY: extra
 
 # Targets that create python bindings (requiring swig)
 py: thirdparty
