@@ -1,0 +1,51 @@
+# Common rules for all tests.
+#
+# The tests only have to define the following variables and rules:
+#
+# - ROOT: the root of the source
+# - PDFS: the list of Pdf files to be generated.
+# - For each of the Pdf files, a rule that generates either a .deps file or a
+#   .clusters file (there is a rule that automatically generates a clusted .deps
+#   from a .clusters if required).
+
+# Define new file types.
+.SUFFIXES: .log .deps .dot .pdf .clusters
+
+# Allow including this file from anywhere.
+## (only works with GNU make-3.81)
+##.SECONDEXPANSION:
+
+# Do not delete intermediate dot files from chained implicit rules.
+.PRECIOUS: %.log %.deps %.dot %.clusters
+
+OS = $(shell uname)
+ifeq ($(OS),Darwin)
+   PSTOPDF=pstopdf -i -o
+else
+   PSTOPDF=ps2pdf -
+endif
+
+FOOD_FLAGS= --ext inc --ext ph --merge module --fuzzy --verbose
+
+
+all: $(PDFS)
+
+# Generate the raw list of dependencies for the entire codebase.
+raw.deps: $(ROOT)
+	cfood $(FOOD_FLAGS) $(ROOT) 2>&1 > $@ | tee raw.log
+
+# Implicit rules.
+.deps.dot:
+	cat $< | sfood-graph -p > $@
+
+.dot.pdf:
+	cat $< | neato -Tps | $(PSTOPDF) $@
+
+# Implicit rule to filter and cluster the raw.deps file simply from the existence of a
+# .filters and .clusters file. Note that both files must be present!
+%.deps: %.filters %.clusters raw.deps
+	cat raw.deps | grep -v -f $< | sfood-cluster -f $(word 2,$^) > $@
+
+clean:
+	rm -f *.dot *.ps *.pdf *.clusters *.filters *.deps *.log
+

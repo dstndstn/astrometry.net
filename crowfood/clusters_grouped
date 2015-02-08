@@ -1,0 +1,13 @@
+astrometry/analysis
+astrometry/blind
+astrometry/catalogs
+astrometry/files
+astrometry/plotstuff
+astrometry/tools
+astrometry/utils
+base
+resample
+simplexy
+gsl-an
+libkd
+qfits-an
