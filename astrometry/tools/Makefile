@@ -54,7 +54,7 @@ SIMPLE_PROGS := an-fitstopnm an-pnmtofits control-program downsample-fits \
 	hpowned hpsplit	query-starkd subtable subwcs wcs-pv2sip wcsinfo wcs-to-tan
 
 OTHER_PROGS := fit-wcs fits-guess-scale image2xy new-wcs resort-xylist \
-	tabsort wcs-rd2xy wcs-xy2rd
+	tabsort wcs-rd2xy wcs-xy2rd resample
 
 # MAIN_PROGS := fit-wcs
 # MAINX_PROGS := 
@@ -78,6 +78,9 @@ all: $(PROGS)
 
 $(SIMPLE_PROGS): %: %.o $(SLIB)
 ALL_OBJ += $(addsuffix .o,$(SIMPLE_PROGS))
+
+resample: resample-main.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(SLIB) $(LDLIBS)
 
 fit-wcs: fit-wcs-main.o
 	$(CC) -o $@ $(LDFLAGS) $^ $(SLIB) $(LDLIBS)
