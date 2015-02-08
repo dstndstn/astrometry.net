@@ -18,12 +18,8 @@
 # Do not delete intermediate dot files from chained implicit rules.
 .PRECIOUS: %.log %.deps %.dot %.clusters
 
-OS = $(shell uname)
-ifeq ($(OS),Darwin)
-   PSTOPDF=pstopdf -i -o
-else
-   PSTOPDF=ps2pdf -
-endif
+DRAW?=circo
+
 
 FOOD_FLAGS= --ext inc --ext ph --merge module --fuzzy --verbose
 
@@ -39,7 +35,7 @@ raw.deps: $(ROOT)
 	cat $< | sfood-graph -p > $@
 
 .dot.pdf:
-	cat $< | neato -Tps | $(PSTOPDF) $@
+	cat $< | $(DRAW) -Tpdf > $@
 
 # Implicit rule to filter and cluster the raw.deps file simply from the existence of a
 # .filters and .clusters file. Note that both files must be present!

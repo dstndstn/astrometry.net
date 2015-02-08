@@ -2,8 +2,7 @@
 
 ROOT=..
 
-PDFS =						\
-	astrometry_full.pdf astrometry_grouped.pdf
+PDFS=astrometry_full.pdf astrometry_grouped.pdf astrometry_grouped_big.pdf
 
 include Makefile.rules
 
@@ -20,4 +19,12 @@ astrometry_grouped.clusters: clusters_grouped
 
 astrometry_grouped.filters: filters_grouped
 	cat $^ > $@
+	
+astrometry_grouped_big.clusters: clusters_grouped_big
+	cp $< $@
+
+astrometry_grouped_big.filters: filters_grouped
+	cat $^ > $@
+
+
 
