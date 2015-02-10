@@ -2,16 +2,16 @@
 
 ROOT=..
 
-PDFS=astrometry_full.pdf astrometry_grouped.pdf astrometry_grouped_big.pdf
+PDFS=astrometry_grouped.pdf astrometry_grouped_big.pdf astrometry_layered.pdf
 
 include Makefile.rules
 
 
 # Handmade cluster and filter lists.
-astrometry_full.clusters: clusters_full
+astrometry_layered.clusters: clusters_layered
 	cp $< $@
-	
-astrometry_full.filters: filters_full
+
+astrometry_layered.filters: filters_layered
 	cat $^ > $@
 
 astrometry_grouped.clusters: clusters_grouped

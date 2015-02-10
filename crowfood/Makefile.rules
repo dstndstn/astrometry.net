@@ -19,9 +19,11 @@
 .PRECIOUS: %.log %.deps %.dot %.clusters
 
 DRAW?=circo
-
+CLUSTER?=sfood-cluster
 
 FOOD_FLAGS= --ext inc --ext ph --merge module --fuzzy --verbose
+
+GRAPH_FLAGS?=
 
 
 all: $(PDFS)
@@ -32,7 +34,7 @@ raw.deps: $(ROOT)
 
 # Implicit rules.
 .deps.dot:
-	cat $< | sfood-graph -p > $@
+	cat $< | cfood-graph --rankdir TB --ratio compress $(GRAPH_FLAGS) > $@
 
 .dot.pdf:
 	cat $< | $(DRAW) -Tpdf > $@
@@ -40,7 +42,7 @@ raw.deps: $(ROOT)
 # Implicit rule to filter and cluster the raw.deps file simply from the existence of a
 # .filters and .clusters file. Note that both files must be present!
 %.deps: %.filters %.clusters raw.deps
-	cat raw.deps | grep -v -f $< | sfood-cluster -f $(word 2,$^) > $@
+	cat raw.deps | grep -v -f $< | $(CLUSTER) -f $(word 2,$^) > $@
 
 clean:
 	rm -f *.dot *.ps *.pdf *.clusters *.filters *.deps *.log
