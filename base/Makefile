@@ -39,7 +39,7 @@ INCLUDE_DIR := .
 SO=$(SHAREDLIB_SUFFIX)
 
 ANBASE_OBJ := an-endian.o an-opts.o bl-sort.o bl.o bt.o \
-	datalog.o errors.o fileutils.o intmap.o ioutils.o log.o mathutil.o \
+	errors.o fileutils.o intmap.o ioutils.o log.o mathutil.o \
 	os-features.o permutedsort.o tic.o
 
 ANBASE_DEPS :=
@@ -72,7 +72,7 @@ SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h an-thread.h \
 	bl-nl.h bl-sort.h bl.h bt.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph \
-	datalog.h errors.h fileutils.h intmap.h ioutils.h keywords.h log.h \
+	errors.h fileutils.h intmap.h ioutils.h keywords.h log.h \
 	mathutil.h os-features.h os-features-config.h permutedsort.h tic.h
 
 ANUTILS_H_PATH := $(addprefix $(INCLUDE_DIR)/,$(ANUTILS_H))

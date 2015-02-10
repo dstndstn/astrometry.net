@@ -30,7 +30,6 @@
 #include "log.h"
 #include "sip-utils.h"
 #include "healpix.h"
-#include "datalog.h"
 
 #define DEBUGVERIFY 0
 
@@ -39,16 +38,6 @@
 #else
 #define debug2(args...)
 #endif
-
-#define DATALOG_MASK_VERIFY 0x1
-
-// level
-#define DLOG_ODDS 10
-
-#define DLOG_ODDS_MIN log(1e6)
-//#define DLOG_ODDS_MIN -HUGE_VAL
-
-#define dlog(lev, fmt, ...) data_log(DATALOG_MASK_VERIFY, lev, fmt, ##__VA_ARGS__)
 
 // avoid functions with 50 arguments...
 struct verify_s {
@@ -518,7 +507,7 @@ static double real_verify_star_lists(verify_t* v,
 	for (i=0; i<v->NR; i++)
 		rprobs[i] = -HUGE_VAL;
 
-	if (p_logodds || data_log_passes(DATALOG_MASK_VERIFY, DLOG_ODDS))
+	if (p_logodds)
 		all_logodds = calloc(v->NT, sizeof(double));
 	if (p_logodds)
 		*p_logodds = all_logodds;
@@ -708,60 +697,6 @@ static double real_verify_star_lists(verify_t* v,
 				*p_istopped = i;
 			break;
 		}
-	}
-
-	if (bestlogodds > DLOG_ODDS_MIN) {
-		// when the loop stopped...
-		int iend = i;
-		data_log_start_item(DATALOG_MASK_VERIFY, DLOG_ODDS, "logodds");
-		dlog(DLOG_ODDS, "[");
-		for (i=0; i<iend; i++)
-			dlog(DLOG_ODDS, "%s%g", (i ? ", ":""), all_logodds[i]);
-		dlog(DLOG_ODDS, "]");
-		data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
-
-		data_log_start_item(DATALOG_MASK_VERIFY, DLOG_ODDS, "bestlogodds");
-		dlog(DLOG_ODDS, "%g", bestlogodds);
-		data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
-
-		/*
- 		double lnp = 0.0;
-		for (i=0; i<5; i++)
-			lnp += all_logodds[i];
-		if (lnp > 4.) {
-			printf("lnp at step 5: %g\n", lnp);
-			printf("test perm:");
-			for (i=0; i<10; i++)
-				printf(" %i", v->testperm[i]);
-			printf("\n");
-			printf("theta:");
-			for (i=0; i<10; i++)
-				printf(" %i", theta[i]);
-			printf("\n");
-
-			data_log_start_item(DATALOG_MASK_VERIFY, DLOG_ODDS, "match");
-			dlog(DLOG_ODDS, "{ 'refxy': [");
-			for (i=0; i<v->NRall; i++)
-				dlog(DLOG_ODDS, "(%.3f,%.3f),", v->refxy[2*i+0], v->refxy[2*i+1]);
-			dlog(DLOG_ODDS, "], 'testxy': [");
-			for (i=0; i<v->NTall; i++)
-				dlog(DLOG_ODDS, "(%.3f,%.3f),", v->testxy[2*i+0], v->testxy[2*i+1]);
-			dlog(DLOG_ODDS, "], 'testperm': [");
-			for (i=0; i<v->NT; i++)
-				dlog(DLOG_ODDS, "%i,", v->testperm[i]);
-			dlog(DLOG_ODDS, "], 'refperm': [");
-			for (i=0; i<v->NR; i++)
-				dlog(DLOG_ODDS, "%i,", v->refperm[i]);
-			dlog(DLOG_ODDS, "], 'theta': [");
-			for (i=0; i<v->NT; i++)
-				dlog(DLOG_ODDS, "%i,", theta[i]);
-			dlog(DLOG_ODDS, "], 'logodds5': %g, 'all_logodds': [", lnp);
-			for (i=0; i<iend; i++)
-				dlog(DLOG_ODDS, "%g,", all_logodds[i]);
-			dlog(DLOG_ODDS, "] }");
-			data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
-		}
-		 */
 	}
 
 	free(rmatches);

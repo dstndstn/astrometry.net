@@ -54,8 +54,6 @@
 #include "an-opts.h"
 #include "gslutils.h"
 
-#include "datalog.h"
-
 static an_option_t myopts[] = {
 	{'h', "help", no_argument, NULL, "print this help"},
 	{'v', "verbose", no_argument, NULL, "+verbose"},
@@ -75,23 +73,11 @@ static an_option_t myopts[] = {
 	 "use the given index files (in addition to any specified in the config file); put in quotes to use wildcards, eg: \" -i 'index-*.fits' \""},
 	{'p', "in-parallel", no_argument, NULL,
 	 "run the index files in parallel"},
-	{'D', "data-log file", required_argument, "file",
-	 "log data to the given filename"},
 };
 
 static void print_help(const char* progname, bl* opts) {
 	printf("Usage:   %s [options] <augmented xylist (axy) file(s)>\n", progname);
 	opts_print_help(opts, stdout, NULL, NULL);
-}
-
-FILE* datalogfid = NULL;
-static void close_datalogfid() {
-	if (datalogfid) {
-		data_log_end();
-		if (fclose(datalogfid)) {
-			SYSERROR("Failed to close data log file");
-		}
-	}
 }
 
 int main(int argc, char** args) {
@@ -118,8 +104,6 @@ int main(int argc, char** args) {
 	bl* opts = opts_from_array(myopts, sizeof(myopts)/sizeof(an_option_t), NULL);
 	sl* inds = sl_new(4);
 
-	char* datalog = NULL;
-
 	engine = engine_new();
 
 	while (1) {
@@ -127,9 +111,6 @@ int main(int argc, char** args) {
 		if (c == -1)
 			break;
 		switch (c) {
-		case 'D':
-			datalog = optarg;
-			break;
 		case 'p':
 			engine->inparallel = TRUE;
 			break;
@@ -184,19 +165,6 @@ int main(int argc, char** args) {
     log_init(loglvl);
     if (tostderr)
         log_to(stderr);
-
-	if (datalog) {
-		datalogfid = fopen(datalog, "wb");
-		if (!datalogfid) {
-			SYSERROR("Failed to open data log file \"%s\" for writing", datalog);
-			return -1;
-		}
-		atexit(close_datalogfid);
-		data_log_init(100);
-		data_log_enable_all();
-		data_log_to(datalogfid);
-		data_log_start();
-	}
 
     if (infn) {
         logverb("Reading input filenames from %s\n", (fromstdin ? "stdin" : infn));
