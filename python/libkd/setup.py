@@ -5,31 +5,21 @@ import os.path
 from numpy.distutils.misc_util import get_numpy_include_dirs
 numpy_inc = get_numpy_include_dirs()
 
-def strlist(s, split=' '):
-    lst = s.split(split)
-    lst = [i.strip() for i in lst]
-    lst = [i for i in lst if len(i)]
-    return lst
+inc = ['../../base', '../../qfits-an', '../../libkd']
+libdirs = inc
 
-link = ' '.join([os.environ.get('LDFLAGS', ''),
-                 os.environ.get('LDLIBS', ''),])
-link = strlist(link)
-objs = strlist(os.environ.get('SLIB', ''))
-inc = strlist(os.environ.get('INC', ''), split='-I')
-cflags = strlist(os.environ.get('CFLAGS', ''))
+# for #include libkd/... etc.
+inc += ['../..']
 
-print 'link:', link
-print 'objs:', objs
-print 'inc:', inc
-print 'cflags:', cflags
+# the order is important!
+libs = ['kd', 'qfits', 'anbase']
 
-c_module = Extension('spherematch_c',
+c_module = Extension('libkd._libkd',
                      sources = ['pyspherematch.c'],
                      include_dirs = numpy_inc + inc,
-                     extra_objects = objs,
-                     extra_compile_args = cflags,
-                     extra_link_args=link,
-    )
+                     library_dirs = libdirs,
+                     libraries = libs,
+                     )
 
 setup(name = 'Kdtree matching in Python',
       version = '1.0',
@@ -37,6 +27,7 @@ setup(name = 'Kdtree matching in Python',
       author = 'Astrometry.net (Dustin Lang)',
       author_email = 'dstn@cmu.edu',
       url = 'http://astrometry.net',
-      py_modules = [ 'spherematch' ],
+      package_dir={'libkd':''},
+      packages=['libkd'],
       ext_modules = [c_module])
 

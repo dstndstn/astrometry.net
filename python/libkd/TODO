@@ -1,0 +1,6 @@
+pyspherematch.c should be split up into two files:
+- wrapper-only kd_ functions 
+- advanced algorithms (match, nearest neighbor)
+
+Also, the "sphere" part is only implemented in the Python-only module sphere.py,
+so the C file should be named more generic.

@@ -777,8 +777,8 @@ static PyMethodDef spherematchMethods[] = {
 };
 
 PyMODINIT_FUNC
-initspherematch_c(void) {
-    Py_InitModule("spherematch_c", spherematchMethods);
+init_libkd(void) {
+    Py_InitModule("_libkd", spherematchMethods);
     import_array();
 }
 
