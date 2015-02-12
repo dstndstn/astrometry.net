@@ -19,7 +19,7 @@
 #define PLOTMATCH_H
 
 #include "astrometry/plotstuff/plotstuff.h"
-#include "astrometry/blind/matchobj.h"
+#include "astrometry/files/matchobj.h"
 #include "base/bl.h"
 
 struct plotmatch_args {

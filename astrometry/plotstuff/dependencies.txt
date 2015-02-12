@@ -1,6 +1,8 @@
 base
-base-advanced
+anresample
 astrometry/catalogs
 astrometry/files
 astrometry/utils
 qfits-an
+libcairo
+libjpeg
