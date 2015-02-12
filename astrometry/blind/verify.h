@@ -21,7 +21,7 @@
 #define VERIFY_H
 
 #include "libkd/kdtree.h"
-#include "astrometry/blind/matchobj.h"
+#include "astrometry/files/matchobj.h"
 #include "base/bl.h"
 #include "astrometry/files/starkd.h"
 #include "astrometry/utils/sip.h"

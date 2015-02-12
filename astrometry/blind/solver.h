@@ -25,7 +25,7 @@
 #include "astrometry/utils/starutil.h"
 #include "astrometry/files/starxy.h"
 #include "libkd/kdtree.h"
-#include "astrometry/blind/matchobj.h"
+#include "astrometry/files/matchobj.h"
 #include "astrometry/files/quadfile.h"
 #include "astrometry/files/starkd.h"
 #include "astrometry/files/codekd.h"

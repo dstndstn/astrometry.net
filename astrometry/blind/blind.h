@@ -20,8 +20,8 @@
 #define BLIND_H
 
 #include "astrometry/blind/solver.h"
-#include "astrometry/blind/matchobj.h"
-#include "astrometry/blind/matchfile.h"
+#include "astrometry/files/matchobj.h"
+#include "astrometry/files/matchfile.h"
 #include "astrometry/files/rdlist.h"
 #include "base/bl.h"
 #include "base/an-bool.h"
