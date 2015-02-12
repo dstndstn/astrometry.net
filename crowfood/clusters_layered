@@ -1,7 +1,7 @@
-^base|^gsl\-an base,gsl-an
-^qfits\-an|^resample qfits-an,resample
-^simplexy|^libkd|^astrometry/utils simplexy,libkd,astrometry/utils
+^base|^gsl\-an base, gsl-an
+^qfits\-an|^resample qfits-an, resample
+^simplexy|^libkd|^astrometry/utils simplexy, libkd, astrometry/utils
 ^astrometry/files astrometry/files
 ^astrometry/catalogs astrometry/catalogs
-^astrometry/blind|^astrometry/analysis blind,analysis
-^astrometry/tools|^astrometry/plotstuff tools,plotstuff
+^astrometry/blind|^astrometry/analysis blind, analysis
+^astrometry/tools|^astrometry/plotstuff tools, plotstuff

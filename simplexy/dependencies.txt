@@ -1,3 +1,4 @@
 base
 resample
+qfits-an
 cfitsio
