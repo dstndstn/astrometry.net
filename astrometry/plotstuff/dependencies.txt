@@ -6,3 +6,4 @@ astrometry/utils
 qfits-an
 libcairo
 libjpeg
+netpbm
