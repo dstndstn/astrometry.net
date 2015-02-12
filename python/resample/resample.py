@@ -278,7 +278,7 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
         laccs = [np.zeros(nn, np.float32) for im in Limages]
 
         if cinterp:
-            from util import lanczos3_interpolate
+            from anresample._resample import lanczos3_interpolate
             # ixi = ixi.astype(np.int)
             # iyi = iyi.astype(np.int)
             # print 'ixi/iyi', ixi.shape, ixi.dtype, iyi.shape, iyi.dtype
@@ -308,11 +308,10 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
     laccs: list of [float, 1-d numpy array, len n]: outputs
     limages list of [float, 2-d numpy array, shape h,w]: inputs
     '''
-    from miscutils import lanczos_filter
     lfunc = lanczos_filter
     if L == 3:
         try:
-            from util import lanczos3_filter, lanczos3_filter_table
+            from anresample._resample import lanczos3_filter, lanczos3_filter_table
             # 0: no rangecheck
             if table:
                 #lfunc = lambda nil,x,y: lanczos3_filter_table(x,y, 0)
@@ -344,6 +343,16 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
     for lacc in laccs:
         lacc /= fsum
 
+def lanczos_filter(order, x, out=None):
+    x = np.atleast_1d(x)
+    nz = np.logical_and(x != 0., np.logical_and(x < order, x > -order))
+    nz = np.flatnonzero(nz)
+    if out is None:
+        out = np.zeros(x.shape, dtype=float)
+    pinz = pi * x.flat[nz]
+    out.flat[nz] = order * np.sin(pinz) * np.sin(pinz / order) / (pinz**2)
+    out[x == 0] = 1.
+    return out
 
 
 if __name__ == '__main__':
@@ -352,7 +361,7 @@ if __name__ == '__main__':
     import time
     import sys
 
-    from astrometry.util.util import lanczos3_filter, lanczos3_filter_table
+    from anresample._resample import lanczos3_filter, lanczos3_filter_table
     # x = np.linspace(-4, 4, 500)
     # L = np.zeros_like(x)
     # L2 = np.zeros(len(x), np.float32)
