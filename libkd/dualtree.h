@@ -36,7 +36,7 @@
    The search and query trees can be the same tree.
 */
 
-#include "astrometry/utils/starutil.h"
+#include "base/an-bool.h"
 #include "libkd/kdtree.h"
 
 typedef anbool (*decision_function)(void* extra, kdtree_t* searchtree, int searchnode,
