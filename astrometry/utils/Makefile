@@ -23,6 +23,7 @@ all:
 
 include $(MAKEFILES_DIR)/makefile.common
 
+include $(MAKEFILES_DIR)/makefile.gsl
 include $(MAKEFILES_DIR)/makefile.qfits
 include $(MAKEFILES_DIR)/makefile.resample
 include $(MAKEFILES_DIR)/makefile.wcslib
@@ -43,6 +44,7 @@ all: $(ANUTILS_LIB_FILE)
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(QFITS_INC)
 CFLAGS += $(RESAMPLE_INC)
+CFLAGS += $(GSL_INC)
 CFLAGS += -I.
 
 %.o: %.c
