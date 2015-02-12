@@ -4,3 +4,4 @@ libkd-fits
 qfits-an
 astrometry/util
 astrometry/files
+zlib
