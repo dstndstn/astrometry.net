@@ -17,12 +17,14 @@
 %}
 
 %inline %{
+    #define ERR(x, ...) printf(x, ## __VA_ARGS__)
+
     #define LANCZOS_INTERP_FUNC lanczos5_interpolate
     #define L 5
         static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
                                        PyObject* np_dx, PyObject* np_dy,
                                        PyObject* loutputs, PyObject* linputs);
-    #include "lanczos.inc"
+    #include "lanczos.c"
     #undef LANCZOS_INTERP_FUNC
     #undef L
 
@@ -31,7 +33,7 @@
         static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
                                        PyObject* np_dx, PyObject* np_dy,
                                        PyObject* loutputs, PyObject* linputs);
-    #include "lanczos.inc"
+    #include "lanczos.c"
     #undef LANCZOS_INTERP_FUNC
     #undef L
     

@@ -1,0 +1,5 @@
+required dependencies:
+
+python-dev
+swig
+numpy

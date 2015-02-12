@@ -1,0 +1,5 @@
+build/
+_resample.py
+*.so
+*_wrap.c
+*.pyc
