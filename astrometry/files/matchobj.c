@@ -22,7 +22,6 @@
 #include "matchobj.h"
 #include "starutil.h"
 #include "log.h"
-//#include "verify.h"
 
 char* matchobj_hit_miss_string(int* theta, int* testperm, int nbest,
 							   int nfield, char* target) {
