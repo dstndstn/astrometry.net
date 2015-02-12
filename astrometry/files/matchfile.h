@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 
-#include "astrometry/blind/matchobj.h"
+#include "astrometry/files/matchobj.h"
 #include "astrometry/utils/starutil.h"
 #include "qfits-an/fitstable.h"
 #include "base/bl.h"

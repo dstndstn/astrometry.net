@@ -29,11 +29,11 @@ include $(MAKEFILES_DIR)/makefile.libkd
 
 OBJS := codekd.o index.o multiindex.o qidxfile.o quadfile.o rdlist.o \
 	scamp-catalog.o scamp.o starkd.o starxy.o tabsort.o wcs-rd2xy.o \
-	wcs-xy2rd.o xylist.o
+	wcs-xy2rd.o xylist.o matchfile.o matchobj.o
 
 HEADERS := codekd.h index.h multiindex.h qidxfile.h quadfile.h rdlist.h \
 	scamp-catalog.h scamp.h starkd.h starxy.h tabsort.h wcs-rd2xy.h \
-	wcs-xy2rd.h xylist.h
+	wcs-xy2rd.h xylist.h matchfile.h matchobj.h
 
 #HEADERS_PATH := $(addprefix $(INCLUDE_DIR)/,$(HEADERS))
 

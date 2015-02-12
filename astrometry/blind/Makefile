@@ -133,7 +133,7 @@ INSTALL_LIB := $(ENGINE_LIB) $(ENGINE_SO)
 
 ENGINE_OBJS := \
 		engine.o blindutils.o blind.o solver.o quad-utils.o \
-		matchfile.o matchobj.o solvedclient.o solvedfile.o tweak2.o \
+		solvedclient.o solvedfile.o tweak2.o \
 		verify.o tweak.o
 
 # These are required by solve-field and friends

@@ -22,7 +22,7 @@
 #include "matchobj.h"
 #include "starutil.h"
 #include "log.h"
-#include "verify.h"
+//#include "verify.h"
 
 char* matchobj_hit_miss_string(int* theta, int* testperm, int nbest,
 							   int nfield, char* target) {
@@ -109,11 +109,6 @@ void matchobj_compute_derived(MatchObj* mo) {
     mo->radius = deg2dist(mo->radius_deg);
 	mo->nbest = mo->nmatch + mo->ndistractor + mo->nconflict;
 }
-
-/*void matchobj_log_verify_hit_miss(MatchObj* mo, int loglevel) {
- verify_log_hit_miss(mo->theta, mo->nbest, mo->nfield, loglevel);
- }
- */
 
 const char* matchobj_get_index_name(MatchObj* mo) {
 	if (!mo->index)

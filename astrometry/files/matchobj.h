@@ -28,6 +28,17 @@
 #include "base/bl.h"
 #include "base/an-bool.h"
 
+// Distractor
+#define THETA_DISTRACTOR -1
+// Conflict
+#define THETA_CONFLICT -2
+// Filtered out
+#define THETA_FILTERED -3
+// Not examined because the bail-out threshold was reached.
+#define THETA_BAILEDOUT -4
+// Not examined because the stop-looking threshold was reached.
+#define THETA_STOPPEDLOOKING -5
+
 struct match_struct {
     unsigned int quadno;
 	unsigned int star[DQMAX];

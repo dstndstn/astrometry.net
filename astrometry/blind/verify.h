@@ -118,17 +118,6 @@ void verify_hit(const startree_t* skdt,
                 anbool distance_from_quad_bonus,
                 anbool fake_match);
 
-// Distractor
-#define THETA_DISTRACTOR -1
-// Conflict
-#define THETA_CONFLICT -2
-// Filtered out
-#define THETA_FILTERED -3
-// Not examined because the bail-out threshold was reached.
-#define THETA_BAILEDOUT -4
-// Not examined because the stop-looking threshold was reached.
-#define THETA_STOPPEDLOOKING -5
-
 /*
  void verify_apply_ror(double* refxy, int* starids, int* p_NR,
  int index_cutnside,
