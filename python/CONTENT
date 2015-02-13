@@ -1,0 +1,101 @@
+* = properly packaged / done
+
+Libraries
+=========
+*libkd - wrapper for libkd C library + matching for spherical coordinates
+*anresample - resampling functions implemented in C/Python
+astrometry/blind - wrapper for astrometry/blind C library + other Python utilities (?)
+astrometry/catalogs - complementary Python modules (?) for astrometry/catalogs C library
+astrometry/files - wrapper (util.i) for astrometry/{utils,files,blind} ?? + other Python utilities (?)
+astrometry/plotstuff - wrapper for astrometry/plotstuff C library (BUT: depends on blind's coadd.h!!)
+astrometry/utils - Python helpers for other packages (BUT: depends on util.i)
+
+-> util.i should be split up to get dependencies right
+
+Random files
+============
+
+Most of the following modules are for command-line usage only.
+Partially they depend on the libraries above.
+
+Unused (not referenced anywhere)
+------
+2mass_catalog.py - transforms original 2MASS catalog to astrometry format
+2mass_get.py - downloads original 2MASS catalogs
+  (note: astrometry/blind has 2mass-cut.py, what's that and why is it there?)
+c.py - ???
+celestial_mechanics.py - celestial mechanics utilities for exoplanet ephemerides
+clipper.py - polygon clipping
+compare-runs.py - compares two astrometry match results
+defaults.py - matplotlib rc defaults
+degtohms.py - converts RA/Dec degrees to hms (included in Makefile)
+hmstodeg.py - converts RA/Dec hms to degrees (included in Makefile)
+EXIF.py - Python library to extract EXIF data from tiff and jpeg files. (included in Makefile)
+file.py - file/pickling/svn+git version (included in Makefile)
+gator.py - ???
+horizons.py - accesses JPL's HORIZONS system via telnet (included in Makefile)
+hpimage.py - creates healpix image for given image and WCS
+imageutils.py - function for writing PNM image (included in Makefile, but it's not a CLI script?!)
+jpl.py - parses some JPL data strings (?)
+lsstutils.py - LSST file reading (included in Makefile, but it's not a CLI script?!)
+matchfile_to_wcs.py - creates minimal WCS header from .match file
+mcmc.py - ???
+merge-columns.py - merges columns of two FITS files (included in Makefile)
+plotshift.py - ??? (included in Makefile)
+plotSipDistortion.py - plots sip distortion
+pnmutils.py - writes np array to PPM/PGM file
+removelines_general.py - generalized version of removelines.py ?
+removelines_rotate.py - generalized version of removelines.py ?
+sdss_astrom.py - ???
+sdss_cutout.py - ???
+sdss_flags.py - ???
+sdss_get_catalog.py - accesses SDSS web catalog (included in Makefile)
+sdss_name.py - ???
+sdss_noise.py - ??? (used by sdss_cutout.py only)
+sdss_photom.py - ???
+sdss_psf.py - ??? (used in test-psf.py only)
+sdss_psfield.py - ??? (used in sdss_cutout.py only)
+stages.py - ??? (included in Makefile)
+test_hpsplit.py - tests the astrometry/tools/hpsplit C tool
+test-psf.py - tests sdss_psf.py
+test_pyfitsutils - tests slicing of fits.py
+test_util.py - random tests
+tstimg.py - random test code
+ttime.py - cpu/mem usage retrieval
+votabletofits.py - ??? (included in Makefile)
+w3c_validator.py - eh... (included in Makefile)
+
+Independent (in use, but not (directly) called from astrometry C code)
+-----------
+Note that the following modules may be used by the companion tools below!
+
+addpath.py - workarounds to fix PYTHONPATH (probably obsolete once we're done)
+an_build_ext.py - ??? seems to optimize speed of SWIG's distutil command (used in some setup.py's)
+casjobs.py - download client for GALEX and SDSS archives (used in sdss_get_catalog.py and sdss/)
+filetype.py - runs the unix "file" system tool to get filetype info (used in many modules)
+find_data_file.py - tries to find a given file (used in sdss/)
+fits.py - FITS reading/writing using fitsio/pyfits (used in many modules)
+fix_sdss_idr.py - fixes FITS (used by image2pnm.py and fits2fits.py)
+make-wcs.py - creates a FITS WCS files for testing purposes (referenced in *comment* of blind/test C)
+miscutils.py - math and polygon helpers (used in sdss_noise.py, sdss/, net/enhance[_models].py)
+multiproc.py - parallel processing helpers (used in net/ only)
+plotutils.py - generic matplotlib utils (used in net/, astrometry/{blind,files}, miscutils.py, test scripts)
+run_command.py - runs subprocess and reads output (used in /net, file.py, sdss_das.py, setuputils.py, ...)
+sdss_das.py (used in sdss/)
+sdss_filenames.py (used in sdss/, sdss_das.py)
+shell.py - shell escaping functions (used in filetype.py, image2pnm.py)
+siap.py - ??? (used in votabletofits.py)
+sqlcl.py - web query helper (used in casjobs.py)
+text2fits.py - index-building tool (mentioned in docs)
+usnob_*.py - helpers for astrometry/catalogs/usnob* C code ?
+yanny.py - handling yanny files (used in sdss/)
+
+astrometry.net companion tools (called from astrometry C library/tools)
+------------------------------
+Note that some (all?) tools are optional.
+
+fits2fits.py - fixes FITS files (called from astrometry/blind)
+image2pnm.py - convert image to pnm format (called from astrometry/blind)
+removelines.py - removes horizontal and vertical lines of sources (called from astrometry/blind)
+uniformize.py - ??? (called from astrometry/blind)
+
