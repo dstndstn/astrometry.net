@@ -244,6 +244,7 @@ void tan_print_to(const tan_t* tan, FILE* f);
 // for python
 void sip_get_crval(const sip_t* sip, double* ra, double* dec);
 
+double tan_get_orientation(const tan_t* tan);
 double sip_get_orientation(const sip_t* sip);
 
 #endif
