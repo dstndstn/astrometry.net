@@ -551,7 +551,7 @@ double sip_get_orientation(const sip_t* sip) {
 double tan_get_orientation(const tan_t* tan) {
   double T, A, orient;
   double det, parity;
-  det = tan_det_cd(sip);
+  det = tan_det_cd(tan);
   parity = (det >= 0 ? 1.0 : -1.0);
   T = parity * tan->cd[0][0] + tan->cd[1][1];
   A = parity * tan->cd[1][0] - tan->cd[0][1];
