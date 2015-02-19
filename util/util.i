@@ -1300,6 +1300,59 @@ def sip_t_tostring(self):
              self.ap_order, self.bp_order))
 sip_t.__str__ = sip_t_tostring
 
+def sip_t_addtoheader(self, hdr):
+    '''Adds this SIP WCS header to the given fitsio header'''
+    self.wcstan.add_to_header(hdr)
+    hdr.delete('CTYPE1')
+    hdr.delete('CTYPE2')
+    for k,v,c in [
+        ('CTYPE1', 'RA---TAN-SIP', 'TANgent plane+SIP'),
+        ('CTYPE2', 'DEC--TAN-SIP', 'TANgent plane+SIP'),
+        ('A_ORDER', self.a_order, 'Polynomial order, axis 1'),
+        ('B_ORDER', self.b_order, 'Polynomial order, axis 2'),
+        ('AP_ORDER', self.ap_order, 'Inv.polynomial order, axis 1'),
+        ('BP_ORDER', self.bp_order, 'Inv.polynomial order, axis 2'),
+        ]:
+        hdr.add_record(dict(name=k, value=v, comment=c))
+    for i in range(self.a_order + 1):
+        for j in range(self.a_order + 1):
+            #if i + j < 1:
+            # drop linear (CD) terms
+            if i + j < 2:
+                continue
+            if i + j > self.a_order:
+                continue
+            hdr.add_record(dict(name='A_%i_%i' % (i,j), value=self.get_a_term(i, j),
+                                comment='SIP polynomial term'))
+    for i in range(self.b_order + 1):
+        for j in range(self.b_order + 1):
+            #if i + j < 1:
+            # drop linear (CD) terms
+            if i + j < 2:
+                continue
+            if i + j > self.b_order:
+                continue
+            hdr.add_record(dict(name='B_%i_%i' % (i,j), value=self.get_b_term(i, j),
+                                comment='SIP polynomial term'))
+    for i in range(self.ap_order + 1):
+        for j in range(self.ap_order + 1):
+            if i + j < 1:
+                continue
+            if i + j > self.ap_order:
+                continue
+            hdr.add_record(dict(name='AP_%i_%i' % (i,j), value=self.get_ap_term(i, j),
+                                comment='SIP polynomial term'))
+    for i in range(self.bp_order + 1):
+        for j in range(self.bp_order + 1):
+            if i + j < 1:
+                continue
+            if i + j > self.bp_order:
+                continue
+            hdr.add_record(dict(name='BP_%i_%i' % (i,j), value=self.get_bp_term(i, j),
+                                comment='SIP polynomial term'))
+sip_t.add_to_header = sip_t_addtoheader
+
+
 # def sip_t_get_subimage(self, x0, y0, w, h):
 #     wcs2 = sip_t(self)
 #     cpx,cpy = wcs2.crpix
@@ -1309,8 +1362,19 @@ sip_t.__str__ = sip_t_tostring
 #     return wcs2
 # sip_t.get_subimage = sip_t_get_subimage
 
+def sip_t_get_shape(self):
+    return (self.wcstan.imageh, self.wcstan.imagew)
+sip_t.get_shape = sip_t_get_shape
+
+def sip_t_set_shape(self, S):
+    H,W = S
+    self.set_height(H)
+    self.set_width(W)
+sip_t.set_shape = sip_t_set_shape
+
 sip_t.imagew = property(sip_t.get_width,  sip_t.set_width,  None, 'image width')
 sip_t.imageh = property(sip_t.get_height, sip_t.set_height, None, 'image height')
+sip_t.shape = property(sip_t.get_shape, sip_t.set_shape, None, 'image shape')
 
 def sip_t_get_cd(self):
     cd = self.wcstan.cd
