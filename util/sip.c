@@ -545,12 +545,16 @@ void sip_print(const sip_t* sip) {
 }
 
 double sip_get_orientation(const sip_t* sip) {
+    return tan_get_orientation(&(sip->wcstan));
+}
+
+double tan_get_orientation(const tan_t* tan) {
   double T, A, orient;
   double det, parity;
-  det = sip_det_cd(sip);
+  det = tan_det_cd(tan);
   parity = (det >= 0 ? 1.0 : -1.0);
-  T = parity * sip->wcstan.cd[0][0] + sip->wcstan.cd[1][1];
-  A = parity * sip->wcstan.cd[1][0] - sip->wcstan.cd[0][1];
+  T = parity * tan->cd[0][0] + tan->cd[1][1];
+  A = parity * tan->cd[1][0] - tan->cd[0][1];
   orient = -rad2deg(atan2(A, T));
   return orient;
 }
