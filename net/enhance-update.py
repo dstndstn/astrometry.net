@@ -148,6 +148,14 @@ def addcal(cal, version, hpmod, hpnum, ps):
         assert(enhI.shape[2] == 3)
         assert(I.shape[2] == 3)
 
+        from enhance import EnhanceImage
+        
+        Eimg = EnhanceImage(0,0)
+        Eimg.enhW = enhW
+        Eimg.enhI = enhI[Yo,Xo,:]
+        print 'enhI shape:', Eimg.enhI.shape
+
+        
         for b in range(3):
             data = (I[:,:,b] / 255.).astype(np.float32)
             data += np.random.uniform(0., 1./255, size=data.shape)
