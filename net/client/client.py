@@ -1,3 +1,4 @@
+#!/bin/env python2
 import os
 import sys
 import time
@@ -15,7 +16,14 @@ from email.mime.application  import MIMEApplication
 
 from email.encoders import encode_noop
 
-from api_util import json2python, python2json
+import json
+def json2python(data):
+    try:
+        return json.loads(data)
+    except:
+        pass
+    return None
+python2json = json.dumps
 
 class MalformedResponse(Exception):
     pass
@@ -24,7 +32,7 @@ class RequestError(Exception):
 
 class Client(object):
     default_url = 'http://nova.astrometry.net/api/'
-    
+
     def __init__(self,
                  apiurl = default_url):
         self.session = None
@@ -58,7 +66,7 @@ class Client(object):
 
             mp = MIMEMultipart('form-data', None, [m1, m2])
 
-            # Makie a custom generator to format it the way we need.
+            # Make a custom generator to format it the way we need.
             from cStringIO import StringIO
             from email.generator import Generator
 
@@ -71,7 +79,7 @@ class Client(object):
                     # We don't want to write the top-level headers;
                     # they go into Request(headers) instead.
                     if self.root:
-                        return                        
+                        return
                     # We need to use \r\n line-terminator, but Generator
                     # doesn't provide the flexibility to override, so we
                     # have to copy-n-paste-n-modify.
@@ -90,16 +98,6 @@ class Client(object):
             g.flatten(mp)
             data = fp.getvalue()
             headers = {'Content-type': mp.get('Content-type')}
-
-            if False:
-                print 'Sending headers:'
-                print ' ', headers
-                print 'Sending data:'
-                print data[:1024].replace('\n', '\\n\n').replace('\r', '\\r')
-                if len(data) > 1024:
-                    print '...'
-                    print data[-256:].replace('\n', '\\n\n').replace('\r', '\\r')
-                    print
 
         else:
             # Else send x-www-form-encoded
@@ -165,7 +163,7 @@ class Client(object):
                 args.update({key: default})
         print 'Upload args:', args
         return args
-    
+
     def url_upload(self, url, **kwargs):
         args = dict(url=url)
         args.update(self._get_upload_args(**kwargs))
@@ -179,9 +177,9 @@ class Client(object):
             result = self.send_request('upload', args, (fn, f.read()))
             return result
         except IOError:
-            print 'File %s does not exist' % fn     
+            print 'File %s does not exist' % fn
             raise
-    
+
     def submission_images(self, subid):
         result = self.send_request('submission_images', {'subid':subid})
         return result.get('image_ids')
@@ -234,6 +232,14 @@ class Client(object):
 
         return stat
 
+    def annotate_data(self,job_id):
+        """
+        :param job_id: id of job
+        :return: return data for annotations
+        """
+        result = self.send_request('jobs/%s/annotations' % job_id)
+        return result
+
     def sub_status(self, sub_id, justdict=False):
         result = self.send_request('submissions/%s' % sub_id)
         if justdict:
@@ -249,6 +255,7 @@ class Client(object):
         return result
 
 if __name__ == '__main__':
+    print "Running with args %s"%sys.argv
     import optparse
     parser = optparse.OptionParser()
     parser.add_option('--server', dest='server', default=Client.default_url,
@@ -259,6 +266,7 @@ if __name__ == '__main__':
     parser.add_option('--wait', '-w', dest='wait', action='store_true', help='After submitting, monitor job status')
     parser.add_option('--wcs', dest='wcs', help='Download resulting wcs.fits file, saving to given filename; implies --wait if --urlupload or --upload')
     parser.add_option('--kmz', dest='kmz', help='Download resulting kmz file, saving to given filename; implies --wait if --urlupload or --upload')
+    parser.add_option('--annotate','-a',dest='annotate',help='store information about annotations in give file, JSON format; implies --wait if --urlupload or --upload')
     parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
     parser.add_option('--scale-units', dest='scale_units',
                       choices=('arcsecperpix', 'arcminwidth', 'degwidth', 'focalmm'), help='Units for scale estimate')
@@ -277,6 +285,7 @@ if __name__ == '__main__':
     parser.add_option('--crpix-center', dest='crpix_center', action='store_true', default=None, help='Set reference point to center of image?')
     parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
+    parser.add_option('--jobid', '-i', dest='solved_id', type=int,help='retrieve result for jobId instead of submitting new image')
     parser.add_option('--substatus', '-s', dest='sub_id', help='Get status of a submission')
     parser.add_option('--jobstatus', '-j', dest='job_id', help='Get status of a job')
     parser.add_option('--jobs', '-J', dest='myjobs', action='store_true', help='Get all my jobs')
@@ -293,7 +302,7 @@ if __name__ == '__main__':
         action='store_const',
         const='sa',
         default='d',
-        help='Select license to allow derivative works of submission, but only if shared under same conditions of original license') 
+        help='Select license to allow derivative works of submission, but only if shared under same conditions of original license')
     parser.add_option('--no_mod','-M',
         dest='allow_mod',
         action='store_const',
@@ -305,7 +314,7 @@ if __name__ == '__main__':
         action='store_const',
         const='n',
         default='d',
-        help='Select license to disallow commercial use of submission') 
+        help='Select license to disallow commercial use of submission')
     opt,args = parser.parse_args()
 
     if opt.apikey is None:
@@ -323,7 +332,7 @@ if __name__ == '__main__':
     c.login(opt.apikey)
 
     if opt.upload or opt.upload_url:
-        if opt.wcs or opt.kmz:
+        if opt.wcs or opt.kmz or opt.annotate:
             opt.wait = True
 
         kwargs = dict(
@@ -344,14 +353,14 @@ if __name__ == '__main__':
                 kwargs.update(scale_lower=opt.scale_lower)
             if opt.scale_upper:
                 kwargs.update(scale_upper=opt.scale_upper)
-                
+
         for key in ['scale_units', 'center_ra', 'center_dec', 'radius',
                     'downsample_factor', 'tweak_order', 'crpix_center',]:
             if getattr(opt, key) is not None:
                 kwargs[key] = getattr(opt, key)
         if opt.parity is not None:
             kwargs.update(parity=int(opt.parity))
-            
+
         if opt.upload:
             upres = c.upload(opt.upload, **kwargs)
         if opt.upload_url:
@@ -366,7 +375,7 @@ if __name__ == '__main__':
         opt.sub_id = upres['subid']
 
     if opt.wait:
-        if opt.job_id is None:
+        if opt.solved_id is None:
             if opt.sub_id is None:
                 print "Can't --wait without a submission id or job id!"
                 sys.exit(-1)
@@ -381,52 +390,45 @@ if __name__ == '__main__':
                             break
                     if j is not None:
                         print 'Selecting job id', j
-                        opt.job_id = j
+                        opt.solved_id = j
                         break
                 time.sleep(5)
 
-        success = False
         while True:
-            stat = c.job_status(opt.job_id, justdict=True)
+            stat = c.job_status(opt.solved_id, justdict=True)
             print 'Got job status:', stat
             if stat.get('status','') in ['success']:
                 success = (stat['status'] == 'success')
                 break
             time.sleep(5)
 
-        if success:
-            c.job_status(opt.job_id)
-            # result = c.send_request('jobs/%s/calibration' % opt.job_id)
-            # print 'Calibration:', result
-            # result = c.send_request('jobs/%s/tags' % opt.job_id)
-            # print 'Tags:', result
-            # result = c.send_request('jobs/%s/machine_tags' % opt.job_id)
-            # print 'Machine Tags:', result
-            # result = c.send_request('jobs/%s/objects_in_field' % opt.job_id)
-            # print 'Objects in field:', result
-            #result = c.send_request('jobs/%s/annotations' % opt.job_id)
-            #print 'Annotations:', result
+    if opt.solved_id:
+        # we have a jobId for retrieving results
+        retrieveurls = []
+        if opt.wcs:
+            # We don't need the API for this, just construct URL
+            url = opt.server.replace('/api/', '/wcs_file/%i' % opt.solved_id)
+            retrieveurls.append((url, opt.wcs))
+        if opt.kmz:
+            url = opt.server.replace('/api/', '/kml_file/%i/' % opt.solved_id)
+            retrieveurls.append((url, opt.kmz))
 
-            retrieveurls = []
-            if opt.wcs:
-                # We don't need the API for this, just construct URL
-                url = opt.server.replace('/api/', '/wcs_file/%i' % opt.job_id)
-                retrieveurls.append((url, opt.wcs))
-            if opt.kmz:
-                url = opt.server.replace('/api/', '/kml_file/%i/' % opt.job_id)
-                retrieveurls.append((url, opt.kmz))
+        for url,fn in retrieveurls:
+            print 'Retrieving file from', url, 'to', fn
+            f = urlopen(url)
+            txt = f.read()
+            w = open(fn, 'wb')
+            w.write(txt)
+            w.close()
+            print 'Wrote to', fn
 
-            for url,fn in retrieveurls:
-                print 'Retrieving file from', url, 'to', fn
-                f = urlopen(url)
-                txt = f.read()
-                w = open(fn, 'wb')
-                w.write(txt)
-                w.close()
-                print 'Wrote to', fn
+        if opt.annotate:
+            result = c.annotate_data(opt.solved_id)
+            with open(opt.annotate,'w') as f:
+                f.write(python2json(result))
 
-                
-        opt.job_id = None
+    if opt.wait:
+        # beahviour as in old implementation
         opt.sub_id = None
 
     if opt.sdss_wcs:
@@ -435,12 +437,11 @@ if __name__ == '__main__':
     if opt.galex_wcs:
         (wcsfn, outfn) = opt.galex_wcs
         c.galex_plot(outfn, wcsfn)
+
     if opt.sub_id:
         print c.sub_status(opt.sub_id)
     if opt.job_id:
         print c.job_status(opt.job_id)
-        #result = c.send_request('jobs/%s/annotations' % opt.job_id)
-        #print 'Annotations:', result
 
     if opt.jobs_by_tag:
         tag = opt.jobs_by_tag
@@ -453,4 +454,4 @@ if __name__ == '__main__':
         jobs = c.myjobs()
         print jobs
 
-    #print c.submission_images(1)
+
