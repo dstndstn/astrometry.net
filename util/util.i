@@ -1021,6 +1021,17 @@ anwcs.imagew = property(anwcs.get_width,  anwcs.set_width,  None, 'image width')
 anwcs.imageh = property(anwcs.get_height, anwcs.set_height, None, 'image height')
 anwcs.writeto = anwcs.write_to
 
+def anwcs_t_get_shape(self):
+    return int(self.get_height()), int(self.get_width())
+anwcs_t.get_shape = anwcs_t_get_shape
+
+def anwcs_t_set_shape(self, S):
+    H,W = S
+    self.set_height(H)
+    self.set_width(W)
+anwcs_t.set_shape = anwcs_t_set_shape
+anwcs_t.shape = property(anwcs_t.get_shape, anwcs_t.set_shape, None, 'image shape')
+
 # same API as tan_t
 anwcs.radec_center = anwcs.get_center
 anwcs.radius = anwcs.get_radius
