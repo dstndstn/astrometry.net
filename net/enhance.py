@@ -44,7 +44,9 @@ class EnhanceImage(object):
         Updates this EnhanceImage with the given new image *img*.
 
         *mask* describes the pixels in this EnhanceImage corresponding
-         to the pixels in *img*.
+         to the pixels in *img*; this must be a numpy index array or
+         boolean array to select pixels than overlap; ie, the mask
+         describes _valid_, _overlapping_ pixels.
 
          *img* must be "flattened", having shape (npix, nbands).
 
@@ -57,22 +59,35 @@ class EnhanceImage(object):
         npix,nbands = self.enhI.shape
 
         assert(len(img.shape) == 2)
+        # Number of pixels in image == number of pixels within masked
+        # region of this EnhanceImage.
+        assert(img.shape[0] == len(wenh))
         assert(img.shape[1] == nbands)
-        assert(len(wenh) == img.shape[0])
-        assert(np.min(img) >= 0.)
-        assert(np.max(img) <= 1.)
+        if addRandom:
+            # Image range is as expected.
+            assert(np.min(img) >= 0.)
+            assert(np.max(img) <= 1.)
 
         for b in range(nbands):
+            # Pull out this band of the image (R,G,B)
             imgb = img[:,b]
             if addRandom:
                 imgb = imgb + np.random.uniform(0., 1., size=imgb.shape)
+            # Rank the image pixels
             imgrank = pixel_ranks(imgb)
+            # Pull out the masked region
             enh = self.enhI[mask, b]
+            # Rank the 'enhanced' pixels
             enhrank,EI = pixel_ranks(enh, get_argsort=True)
+            # Compute composite ("consensus") rank.
             rank = ( ((enhrank * wenh) + (imgrank * weightFactor))
                         / (wenh + weightFactor) )
+            # The "consensus" "ranks" need not be integers... re-rank
+            # them.
             rank = pixel_ranks(rank)
+            # Permute the "enhance" pixels using this new ranking.
             enhnew = enh[EI[rank]]
             self.enhI[mask,b] = enhnew
+        # Update the weights
         self.enhW[mask] += 1.
 
