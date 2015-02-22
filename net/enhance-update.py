@@ -56,6 +56,10 @@ def addcal(cal, version, hpmod, hpnum, ps):
     #print 'DiskFile', df
     ft = df.file_type
     fn = df.get_path()
+    if not os.path.exists(fn):
+        print 'WARNING: does not exist:', fn
+        return False
+
     if 'JPEG' in ft or 'PNG image' in ft:
         print 'Reading', fn
         I = plt.imread(fn)
@@ -151,106 +155,110 @@ def addcal(cal, version, hpmod, hpnum, ps):
         from enhance import EnhanceImage
         
         Eimg = EnhanceImage(0,0)
-        Eimg.enhW = enhW
-        Eimg.enhI = enhI[Yo,Xo,:]
+        Eimg.enhW = enhW.ravel()
+        h,w,b = enhI.shape
+        Eimg.enhI = enhI.reshape((h*w, b))
         print 'enhI shape:', Eimg.enhI.shape
 
+        M = np.ravel_multi_index((Yo,Xo), (h,w))
+        Eimg.update(M, I[Yi,Xi,:].astype(np.float32)/255., weightFactor=2.)
+
         
-        for b in range(3):
-            data = (I[:,:,b] / 255.).astype(np.float32)
-            data += np.random.uniform(0., 1./255, size=data.shape)
-
-            img = data[Yi, Xi]
-            enh = enhI[Yo, Xo, b]
-            wenh = enhW[Yo, Xo]
-
-            doplots = (ps is not None) and (hp == 152774) and (b == 2)
-
-            if doplots:
-                eh,ew = enhW.shape
-                rim = np.zeros((eh,ew))
-
-                dd = (I[:,:,b] / 255.).astype(np.float32)
-                print 'Hp', hp, 'band', b
-                print 'dd range:', dd.min(), dd.max()
-                print 'data range:', data.min(), data.max()
-                rim[Yo,Xo] = dd[Yi, Xi]
-                plt.clf()
-                plt.imshow(rim, interpolation='nearest', origin='lower')
-                plt.colorbar()
-                plt.title('dd (rim) hp %i, band %i' % (hp, b))
-                ps.savefig()
-
-                rim[Yo,Xo] = img
-                plt.clf()
-                plt.imshow(rim, interpolation='nearest', origin='lower')
-                plt.colorbar()
-                plt.title('img (rim)')
-                ps.savefig()
-
-            II = np.argsort(img)
-            rankimg = np.empty_like(II)
-            rankimg[II] = np.arange(len(II))
-
-            if doplots:
-                eh,ew = enhW.shape
-                rim = np.zeros((eh,ew))
-                rim[Yo,Xo] = rankimg
-                plt.clf()
-                plt.imshow(rim, interpolation='nearest', origin='lower')
-                plt.colorbar()
-                plt.title('rankimg (rim)')
-                ps.savefig()
-
-            EI = np.argsort(enh)
-            rankenh = np.empty_like(EI)
-            rankenh[EI] = np.arange(len(EI))
-
-            if doplots:
-                eh,ew = enhW.shape
-                rim = np.zeros((eh,ew))
-                rim[Yo,Xo] = enh
-                plt.clf()
-                plt.imshow(rim, interpolation='nearest', origin='lower')
-                plt.colorbar()
-                plt.title('enh (rim)')
-                ps.savefig()
-                rim[Yo,Xo] = rankenh
-                plt.clf()
-                plt.imshow(rim, interpolation='nearest', origin='lower')
-                plt.colorbar()
-                plt.title('rankenh (rim)')
-                ps.savefig()
-
-            weightFactor = 2.
-
-            rank = ( ((rankenh * wenh) + (rankimg * weightFactor))
-                     / (wenh + weightFactor) )
-            II = np.argsort(rank)
-            rankC = np.empty_like(II)
-            rankC[II] = np.arange(len(II))
-
-            if doplots:
-                eh,ew = enhW.shape
-                rim = np.zeros((eh,ew))
-                rim[Yo,Xo] = rankC
-                plt.clf()
-                plt.imshow(rim, interpolation='nearest', origin='lower')
-                plt.colorbar()
-                plt.title('rankC (rim)')
-                ps.savefig()
-
-            Enew = enh[EI[rankC]]
-            enhI[Yo,Xo, b] = Enew
-
-            if doplots:
-                plt.clf()
-                plt.imshow(enhI, interpolation='nearest', origin='lower')
-                plt.colorbar()
-                plt.title('enhI')
-                ps.savefig()
-
-        enhW[Yo,Xo] += 1.
+        # for b in range(3):
+        #     data = (I[:,:,b] / 255.).astype(np.float32)
+        #     data += np.random.uniform(0., 1./255, size=data.shape)
+        # 
+        #     img = data[Yi, Xi]
+        #     enh = enhI[Yo, Xo, b]
+        #     wenh = enhW[Yo, Xo]
+        # 
+        #     doplots = (ps is not None) and (hp == 152774) and (b == 2)
+        # 
+        #     if doplots:
+        #         eh,ew = enhW.shape
+        #         rim = np.zeros((eh,ew))
+        # 
+        #         dd = (I[:,:,b] / 255.).astype(np.float32)
+        #         print 'Hp', hp, 'band', b
+        #         print 'dd range:', dd.min(), dd.max()
+        #         print 'data range:', data.min(), data.max()
+        #         rim[Yo,Xo] = dd[Yi, Xi]
+        #         plt.clf()
+        #         plt.imshow(rim, interpolation='nearest', origin='lower')
+        #         plt.colorbar()
+        #         plt.title('dd (rim) hp %i, band %i' % (hp, b))
+        #         ps.savefig()
+        # 
+        #         rim[Yo,Xo] = img
+        #         plt.clf()
+        #         plt.imshow(rim, interpolation='nearest', origin='lower')
+        #         plt.colorbar()
+        #         plt.title('img (rim)')
+        #         ps.savefig()
+        # 
+        #     II = np.argsort(img)
+        #     rankimg = np.empty_like(II)
+        #     rankimg[II] = np.arange(len(II))
+        # 
+        #     if doplots:
+        #         eh,ew = enhW.shape
+        #         rim = np.zeros((eh,ew))
+        #         rim[Yo,Xo] = rankimg
+        #         plt.clf()
+        #         plt.imshow(rim, interpolation='nearest', origin='lower')
+        #         plt.colorbar()
+        #         plt.title('rankimg (rim)')
+        #         ps.savefig()
+        # 
+        #     EI = np.argsort(enh)
+        #     rankenh = np.empty_like(EI)
+        #     rankenh[EI] = np.arange(len(EI))
+        # 
+        #     if doplots:
+        #         eh,ew = enhW.shape
+        #         rim = np.zeros((eh,ew))
+        #         rim[Yo,Xo] = enh
+        #         plt.clf()
+        #         plt.imshow(rim, interpolation='nearest', origin='lower')
+        #         plt.colorbar()
+        #         plt.title('enh (rim)')
+        #         ps.savefig()
+        #         rim[Yo,Xo] = rankenh
+        #         plt.clf()
+        #         plt.imshow(rim, interpolation='nearest', origin='lower')
+        #         plt.colorbar()
+        #         plt.title('rankenh (rim)')
+        #         ps.savefig()
+        # 
+        #     weightFactor = 2.
+        # 
+        #     rank = ( ((rankenh * wenh) + (rankimg * weightFactor))
+        #              / (wenh + weightFactor) )
+        #     II = np.argsort(rank)
+        #     rankC = np.empty_like(II)
+        #     rankC[II] = np.arange(len(II))
+        # 
+        #     if doplots:
+        #         eh,ew = enhW.shape
+        #         rim = np.zeros((eh,ew))
+        #         rim[Yo,Xo] = rankC
+        #         plt.clf()
+        #         plt.imshow(rim, interpolation='nearest', origin='lower')
+        #         plt.colorbar()
+        #         plt.title('rankC (rim)')
+        #         ps.savefig()
+        # 
+        #     Enew = enh[EI[rankC]]
+        #     enhI[Yo,Xo, b] = Enew
+        # 
+        #     if doplots:
+        #         plt.clf()
+        #         plt.imshow(enhI, interpolation='nearest', origin='lower')
+        #         plt.colorbar()
+        #         plt.title('enhI')
+        #         ps.savefig()
+        # 
+        # enhW[Yo,Xo] += 1.
 
         tempfn = en.write_files(enhI, enhW, temp=True)
         maxw = enhW.max()
