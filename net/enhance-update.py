@@ -260,6 +260,8 @@ def addcal(cal, version, hpmod, hpnum, ps):
         # 
         # enhW[Yo,Xo] += 1.
 
+        enhI,enhW = Eimg.enhI.reshape((h,w,b)), Eimg.enhW.reshape((h,w))
+
         tempfn = en.write_files(enhI, enhW, temp=True)
         maxw = enhW.max()
         with transaction.commit_on_success():
