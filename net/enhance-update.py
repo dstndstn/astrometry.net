@@ -153,17 +153,31 @@ def addcal(cal, version, hpmod, hpnum, ps):
         assert(I.shape[2] == 3)
 
         from enhance import EnhanceImage
-        
+
         Eimg = EnhanceImage(0,0)
+        # Reshape arrays as required by "EnhanceImage".
         Eimg.enhW = enhW.ravel()
         h,w,b = enhI.shape
         Eimg.enhI = enhI.reshape((h*w, b))
-        print 'enhI shape:', Eimg.enhI.shape
 
+        # This is the mask of pixels touched by this update:
         M = np.ravel_multi_index((Yo,Xo), (h,w))
-        Eimg.update(M, I[Yi,Xi,:].astype(np.float32)/255., weightFactor=2.)
 
-        
+        # Enhance!
+        Eimg.update(M, I[Yi,Xi,:].astype(np.float32)/255.,
+                    weightFactor=2.)
+        # Pull out and reshape the results.
+        enhI,enhW = Eimg.enhI.reshape((h,w,b)), Eimg.enhW.reshape((h,w))
+
+        tempfn = en.write_files(enhI, enhW, temp=True)
+        maxw = enhW.max()
+        with transaction.commit_on_success():
+            en.move_temp_files(tempfn)
+            en.maxweight = maxw
+            en.cals.add(cal)
+            en.save()
+
+        # Old "Enhance" code, kept for plotting code...
         # for b in range(3):
         #     data = (I[:,:,b] / 255.).astype(np.float32)
         #     data += np.random.uniform(0., 1./255, size=data.shape)
@@ -260,15 +274,6 @@ def addcal(cal, version, hpmod, hpnum, ps):
         # 
         # enhW[Yo,Xo] += 1.
 
-        enhI,enhW = Eimg.enhI.reshape((h,w,b)), Eimg.enhW.reshape((h,w))
-
-        tempfn = en.write_files(enhI, enhW, temp=True)
-        maxw = enhW.max()
-        with transaction.commit_on_success():
-            en.move_temp_files(tempfn)
-            en.maxweight = maxw
-            en.cals.add(cal)
-            en.save()
 
 if __name__ == '__main__':
     import optparse
