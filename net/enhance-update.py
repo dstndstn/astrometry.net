@@ -14,6 +14,7 @@ from astrometry.net.models import *
 from django.contrib.auth.models import User
 
 from astrometry.net.enhance_models import *
+from astrometry.net.enhance import *
 
 from astrometry.util.util import *
 from astrometry.util.starutil_numpy import *
