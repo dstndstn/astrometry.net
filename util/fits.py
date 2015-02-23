@@ -294,6 +294,9 @@ class tabledata(object):
     def get_header(self):
         return self._header
 
+    def to_dict(self):
+        return dict([(k,self.get(k)) for k in self.columns()])
+
     def to_np_arrays(self):
         for col in self.get_columns():
             self.set(col, np.array(self.get(col)))
