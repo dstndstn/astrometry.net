@@ -187,14 +187,15 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 
     if force_ppm:
         original_outfile = outfile
-        (outfile_dir, outfile_file) = os.path.split(outfile)
+        outfile_dir = os.path.dirname(outfile)
         (f, outfile) = tempfile.mkstemp(suffix='.pnm',
-                        prefix=outfile_file,
-                        dir=outfile_dir)
+					dir=outfile_dir)
         # we might rename this file later, so don't add it to the list of
         # tempfiles to delete until later...
         os.close(f)
         logging.debug('temporary output file: %s' % outfile)
+	# print 'force_ppm: original output file', original_outfile
+	# print 'temp:', outfile
 
     if ext == fitsext and extension:
         cmd = an_fitstopnm_ext_cmd % extension
@@ -214,6 +215,7 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
             do_command(pgmcmd % (shell_escape(outfile), shell_escape(original_outfile)))
             tempfiles.append(outfile)
         else:
+            # print 'file type extension:', ext, '; renaming', outfile, 'to', original_outfile
             os.rename(outfile, original_outfile)
 
     for fn in tempfiles:
