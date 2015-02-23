@@ -110,7 +110,7 @@ class EnhancedImage(models.Model):
         topscale = self.version.topscale
 
         hpwcs,hpxy = get_healpix_wcs(nside, hp, topscale)
-        H,W = hpwcs.get_height(), hpwcs.get_width()
+        H,W = int(hpwcs.get_height()), int(hpwcs.get_width())
 
         bands = 3
 
