@@ -420,6 +420,12 @@ def red_green_image(req, job_id=None, size='full'):
     pnmfn = img.get_pnm_path()
     exfn = get_temp_file()
 
+    print 'red_green_image: axy ' + axyfn + ' pnm ' + pnmfn
+    cmd = 'pnmfile %s' % pnmfn
+    print 'running:', cmd
+    (rtn, out, err) = run_command(cmd)
+    print 'out:', out, 'err:', err, 'rtn', rtn
+
     try:
         plot = Plotstuff()
         plot.wcs_file = wcsfn
@@ -432,6 +438,7 @@ def red_green_image(req, job_id=None, size='full'):
         pimg = plot.image
         pimg.set_file(str(pnmfn))
         pimg.format = PLOTSTUFF_FORMAT_PPM
+        plot.color = 'white'
         plot.plot('image')
 
         # plot red

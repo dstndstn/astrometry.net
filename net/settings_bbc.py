@@ -2,12 +2,12 @@
 from settings_common import *
 
 TEMPDIR = '/data2/tmp'
-DATABASES['default']['NAME'] = 'an-ison'
+DATABASES['default']['NAME'] = 'an-bbc'
 
 LOGGING['loggers']['django.request']['level'] = 'WARN'
 
-SESSION_COOKIE_NAME = 'IsonAstrometrySession'
+SESSION_COOKIE_NAME = 'BBCAstrometrySession'
 
-ssh_solver_config = 'an-ison'
-sitename = 'ison'
+ssh_solver_config = 'an-bbc'
+sitename = 'bbc'
 
