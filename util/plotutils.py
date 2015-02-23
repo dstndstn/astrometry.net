@@ -53,9 +53,15 @@ def _imshow_nan(imshowfunc, X, nancolor='0.5', cmap=None, vmin=None, vmax=None, 
     if vmin is None or vmax is None:
         I = np.flatnonzero(np.isfinite(X))
         if vmin is None:
-            vmin = X.flat[I].min()
+            try:
+                vmin = X.flat[I].min()
+            except ValueError:
+                vmin = 0.
         if vmax is None:
-            vmax = X.flat[I].max()
+            try:
+                vmax = X.flat[I].max()
+            except ValueError:
+                vmax = 0.
     return imshowfunc(X, cmap=cmap, vmin=vmin, vmax=vmax, **kwargs)
 
 '''
