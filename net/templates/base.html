@@ -9,7 +9,7 @@
 
 {% block link_css %}
 <!--<link rel="stylesheet" href="{{ STATIC_URL }}css/base.css" />-->
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}css/jquery.autocomplete.css">
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}css/jquery.autocomplete.css" />
 {% endblock %}
 
 {% include 'base.css' %}
@@ -67,7 +67,7 @@ $(document).ready(function() {
         </div>
 
         {% block messageblock %}
-        <div id="messages">
+        <div id="messageshtml">
         {% include "messages.html" %}
         </div>
         {% endblock messageblock %}

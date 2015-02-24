@@ -23,7 +23,7 @@ urlpatterns += patterns('',
 
 urlpatterns += patterns('',
                         url(r'^login/', 'astrometry.net.views.home.login', name='login'),
-                        url(r'^logout/', 'nil', name='logout'),
+                        url(r'^logout/', 'astrometry.net.views.home.logout', name='logout'),
                         )
 
 # urlpatterns += patterns('astrometry.net.openid_views',

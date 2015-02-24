@@ -64,3 +64,9 @@ def login(req):
     return render_to_response('login.html', {'version': version},
                               ctxt)
 
+
+def logout(request):
+    from django.contrib.auth import logout as auth_logout
+    """Logs out user"""
+    auth_logout(request)
+    return redirect('/')

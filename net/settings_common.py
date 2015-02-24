@@ -224,12 +224,12 @@ INSTALLED_APPS = (
 
 #SOCIAL_AUTH_
 AUTHENTICATION_BACKENDS = (
-    'social.backends.open_id.OpenIdAuth',
+    #'social.backends.open_id.OpenIdAuth',
     #'social.backends.google.GoogleOpenId',
     'social.backends.google.GoogleOAuth2',
     #'social.backends.google.GoogleOAuth',
     'social.backends.twitter.TwitterOAuth',
-    'social.backends.yahoo.YahooOpenId',
+    #'social.backends.yahoo.YahooOpenId',
     #'social.backends.stripe.StripeBackend',
     #'social.backends.steam.SteamBackend',
     #'social.backends.reddit.RedditBackend',
@@ -280,6 +280,11 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_KEY    = authsecrets.google.key
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = authsecrets.google.secret
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['openid', 'email']
 
+SOCIAL_AUTH_FLICKR_KEY    = authsecrets.flickr.key
+SOCIAL_AUTH_FLICKR_SECRET = authsecrets.flickr.secret
+
+### I was getting a Flickr SSL verification error...
+SOCIAL_AUTH_FLICKR_VERIFY_SSL = False
 
 SOCIAL_AUTH_RAISE_EXCEPTIONS = True
 
