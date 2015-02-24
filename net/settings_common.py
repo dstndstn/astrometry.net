@@ -1,9 +1,10 @@
 import os
 import astrometry.net
 import astrometry.net.secrets.django_db as secrets
+import astrometry.net.secrets.auth as authsecrets
 from astrometry.net.util import dict_pack
 
-os.environ['MPLCONFIGDIR'] = '/home/nova/.matplotlib'
+os.environ['MPLCONFIGDIR'] = '/home/nova/.config/matplotlib'
 
 DATE_FORMAT = 'Y-m-d'
 DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z'
@@ -28,8 +29,6 @@ JOBDIR = os.path.join(WEB_DIR, 'data', 'jobs')
 ENHANCE_DIR = os.path.join(WEB_DIR, 'data', 'files', 'enhance')
 
 TEMPDIR = '/tmp'
-
-AUTH_PROFILE_MODULE = 'net.UserProfile'
 
 # The 'host' name in ~/.ssh/config for running the compute server.
 ssh_solver_config = 'an-test'
@@ -198,6 +197,10 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
+
+    'social.apps.django_app.context_processors.backends',
+    'social.apps.django_app.context_processors.login_redirect',
+    #'social.apps.django_app.context_processors.social_auth_by_type_backends',
 )
 
 INSTALLED_APPS = (
@@ -211,18 +214,88 @@ INSTALLED_APPS = (
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-        'astrometry.net',
-    'django_openid_auth',
-    'south',
+    'astrometry.net',
+    #'django_openid_auth',
+    'social.apps.django_app.default',
+    # https://docs.djangoproject.com/en/1.7/topics/migrations/#upgrading-from-south
+    #'south',
 )
 
+
+#SOCIAL_AUTH_
 AUTHENTICATION_BACKENDS = (
-    'django_openid_auth.auth.OpenIDBackend',
+    'social.backends.open_id.OpenIdAuth',
+    #'social.backends.google.GoogleOpenId',
+    'social.backends.google.GoogleOAuth2',
+    #'social.backends.google.GoogleOAuth',
+    'social.backends.twitter.TwitterOAuth',
+    'social.backends.yahoo.YahooOpenId',
+    #'social.backends.stripe.StripeBackend',
+    #'social.backends.steam.SteamBackend',
+    #'social.backends.reddit.RedditBackend',
+    #'social.backends.amazon.AmazonBackend',
+    #'social.backends.browserid.BrowserIDBackend',
+    #'social.backends.contrib.linkedin.LinkedinBackend',
+    #'social.backends.contrib.skyrock.SkyrockBackend',
+    'social.backends.flickr.FlickrOAuth',
+    #'social.backends.contrib.instagram.InstagramBackend',
+    'social.backends.github.GithubOAuth2',
+    #'social.backends.contrib.yandex.YandexBackend',
+    #'social.backends.contrib.yandex.YandexOAuth2Backend',
+    #'social.backends.contrib.yandex.YaruBackend',
+    #'social.backends.contrib.disqus.DisqusBackend',
+    'social.backends.yahoo.YahooOAuth',
+    #'social.backends.contrib.foursquare.FoursquareBackend',
+    #'social.backends.contrib.live.LiveBackend',
+    #'social.backends.contrib.livejournal.LiveJournalBackend',
+    #'social.backends.contrib.douban.DoubanBackend',
+    #'social.backends.contrib.vk.VKOpenAPIBackend',
+    #'social.backends.contrib.vk.VKOAuth2Backend',
+    #'social.backends.contrib.odnoklassniki.OdnoklassnikiBackend',
+    #'social.backends.contrib.odnoklassniki.OdnoklassnikiAppBackend',
+    #'social.backends.contrib.mailru.MailruBackend',
+    #'social.backends.contrib.dailymotion.DailymotionBackend',
+    #'social.backends.contrib.shopify.ShopifyBackend',
+    #'social.backends.contrib.exacttarget.ExactTargetBackend',
+    #'social.backends.contrib.stocktwits.StocktwitsBackend',
+    #'social.backends.contrib.behance.BehanceBackend',
+    #'social.backends.contrib.readability.ReadabilityBackend',
+    #'social.backends.contrib.fedora.FedoraBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/loggedin/'
+SOCIAL_AUTH_LOGIN_ERROR_URL = '/error/'
+SOCIAL_AUTH_LOGIN_URL = '/'
+SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/dashboard/'
+SOCIAL_AUTH_NEW_ASSOCIATION_REDIRECT_URL = '/dashboard/'
+SOCIAL_AUTH_DISCONNECT_REDIRECT_URL = '/'
+SOCIAL_AUTH_INACTIVE_USER_URL = '/inactive-user/'
 
-OPENID_CREATE_USERS = True
-OPENID_UPDATE_DETAILS_FROM_SREG = True
+#SOCIAL_AUTH_USER_MODEL = 'django.contrib.auth.models.User'
+#SOCIAL_AUTH_USER_MODEL = 'net.MyUser'
+
+AUTH_PROFILE_MODULE = 'net.UserProfile'
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY    = authsecrets.google.key
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = authsecrets.google.secret
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['openid', 'email']
+
+
+SOCIAL_AUTH_RAISE_EXCEPTIONS = True
+
+SOUTH_MIGRATION_MODULES = {
+    'default': 'social.apps.django_app.default.south_migrations'
+}
+
+
+
+# AUTHENTICATION_BACKENDS = (
+#     'django_openid_auth.auth.OpenIDBackend',
+#     'django.contrib.auth.backends.ModelBackend',
+# )
+# 
+# OPENID_CREATE_USERS = True
+# OPENID_UPDATE_DETAILS_FROM_SREG = True
 
 # list of open id providers to allow users to log into the site with;
 # any instance of username will be replaced with a username
@@ -289,3 +362,6 @@ LOGGING = {
         },
     }
 }
+
+
+

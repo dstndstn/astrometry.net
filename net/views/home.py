@@ -31,3 +31,36 @@ def explore(req):
     }
     return render(req, 'explore.html', context)
     
+
+def login(req):
+    #from social_auth import __version__ as version
+    from social import __version__ as version
+
+    from astrometry.net import settings
+    from social.backends.utils import load_backends
+
+    ctxt = RequestContext(req)
+
+    print 'Backends:', ctxt['backends']
+
+    ctxt.update({
+            #'plus_id': getattr(settings, 'SOCIAL_AUTH_GOOGLE_PLUS_KEY', None),
+            #'plus_scope': ' '.join(GooglePlusAuth.DEFAULT_SCOPE),
+            'available_backends': load_backends(settings.AUTHENTICATION_BACKENDS)
+            })
+    # print 'Context:', ctxt
+    # stack = []
+    # while True:
+    #     try:
+    #         d = ctxt.pop()
+    #     except:
+    #         break
+    #     print 'Keys:', d.keys()
+    #     stack.append(d)
+    # while len(stack):
+    #     d = stack.pop()
+    #     ctxt.push(d)
+
+    return render_to_response('login.html', {'version': version},
+                              ctxt)
+

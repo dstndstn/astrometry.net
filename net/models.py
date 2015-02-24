@@ -10,7 +10,12 @@ import numpy as np
 
 from django.db import models
 from django.db.models import Q
+
 from django.contrib.auth.models import User
+
+#from django.contrib.auth.models import User, AbstractUser
+#import django.contrib.auth.models
+
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 
@@ -33,6 +38,9 @@ import PIL.Image, PIL.ImageDraw
 from urllib2 import urlopen
 
 from astrometry.net.abstract_models import *
+
+#class MyUser(django.contrib.auth.models.AbstractUser):
+#    pass
 
 ### Admin view -- running Submissions and Jobs
 
