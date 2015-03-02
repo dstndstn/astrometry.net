@@ -37,7 +37,7 @@ class EnhanceImage(object):
         self.enhI = np.zeros((npix, nbands), np.float32)
         if random:
             for b in range(nbands):
-                enhI[:,b] = np.random.permutation(npix) / float(npix)
+                self.enhI[:,b] = np.random.permutation(npix) / float(npix)
 
     def update(self, mask, img, weightFactor=1., addRandom=True):
         '''
@@ -72,7 +72,8 @@ class EnhanceImage(object):
             # Pull out this band of the image (R,G,B)
             imgb = img[:,b]
             if addRandom:
-                imgb = imgb + np.random.uniform(0., 1., size=imgb.shape)
+                imgb = imgb + np.random.uniform(0., 1./256.,
+                                                size=imgb.shape)
             # Rank the image pixels
             imgrank = pixel_ranks(imgb)
             # Pull out the masked region
@@ -91,3 +92,79 @@ class EnhanceImage(object):
         # Update the weights
         self.enhW[mask] += 1.
 
+    def stretch_to_match(self, img, shape=None):
+        '''
+        Stretches this enhanced image to match the tone of the given
+        *img*.  If *shape* is given, *shape = (H,W)*, reshapes the
+        result to have shape *(H,W,#bands)*.  The result will have the
+        same datatype as *img*.
+        '''
+
+        npix,nbands = self.enhI.shape
+        assert(len(img.shape) == 3)
+        if shape is None:
+            stretch = np.zeros((npix, nbands), img.dtype)
+        else:
+            stretch = np.zeros(shape + (nbands,), img.dtype)
+        for b in range(nbands):
+            imgb = img[:,:,b].ravel()
+            I = np.argsort(imgb)
+            # enhI should already be histogram-equalized (ie, ~
+            # floating-point pixel ranks).  Scale to indices in the
+            # (argsorted) imgb lookup table.
+            EI = np.floor(self.enhI[:,b] * len(I)).astype(int)
+            assert(np.all(EI >= 0))
+            assert(np.all(EI < len(I)))
+
+            newpix = imgb[I[EI]]
+            if shape is None:
+                stretch[:,b] = newpix
+            else:
+                stretch[:,:,b] = newpix.reshape(shape)
+
+        return stretch
+
+                
+
+
+if __name__ == '__main__':
+    # test
+    import matplotlib
+    matplotlib.use('Agg')
+    import pylab as plt
+    img = plt.imread('demo/apod1.jpg')
+    (H,W,B) = img.shape
+    print 'Image', img.shape, img.dtype
+
+    imx = np.sqrt(img.astype(np.float32) / 255.)
+
+    enhance = EnhanceImage(H*W, B)
+    enhance.update(np.ones((H*W), bool), imx.reshape((-1,B)))
+
+    imx2 = np.zeros((H*W,B), np.float32)
+    for i in range(B):
+        imx2[:,i] = imx[:,:,i].ravel()
+    assert(np.all(imx2 == imx.reshape((-1,B))))
+        
+    en = np.zeros((H,W,B), np.float32)
+    for i in range(B):
+        en[:,:,i] = enhance.enhI[:,i].reshape((H,W))
+    
+    plt.clf()
+    plt.imshow(en, interpolation='nearest', origin='lower')
+    plt.savefig('en.png')
+
+    stretch = enhance.stretch_to_match(img, shape=(H,W))
+    
+    plt.clf()
+    plt.imshow(stretch, interpolation='nearest', origin='lower')
+    plt.savefig('stretch1.png')
+    
+    img2 = plt.imread('demo/apod3.jpg')
+    
+    stretch2 = enhance.stretch_to_match(img2, shape=(H,W))
+    
+    plt.clf()
+    plt.imshow(stretch2, interpolation='nearest', origin='lower')
+    plt.savefig('stretch2.png')
+    
