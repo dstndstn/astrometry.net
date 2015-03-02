@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load backend_utils %}
+
+{% comment %}
+Modified from
+https://github.com/omab/python-social-auth/blob/master/examples/django_example/example/templates/home.html
+{% endcomment %}
+
+{% block inline_css %}
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css" rel="stylesheet" />
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" />
+<style type="text/css">
+  .col-md-2 { width: 18.6667%; }
+  .buttons { display: block; table-layout: fixed; border-radius: 7px; border: 1px solid #ccc;
+  margin: 20px; background: #eee; padding: 30px; }
+  .buttons > div a { margin: 5px 10px; }
+  .buttons > div:not(:first-child) { margin-top: 10px; border-top: 1px solid #ccc;
+  padding-top: 10px; text-align: center; }
+  .user-details { text-align: center; font-size: 16px; font-weight: bold; }
+  .disconnect-form { padding: 0; margin: 0px 10px; }
+  .disconnect-form > a { display: block; margin: 5px 0 !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="buttons">
+  <h3>Sign in with one of these accounts:</h3>
+  {% if user.is_authenticated %}
+  <div class="user-details">
+    You are logged in as <code>{{ user.username }}</code>
+  </div>
+  {% endif %}
+  <div class="social">
+    {% for sublist in available_backends|social_backends %}
+    <div class="row">
+      {% for name, backend in sublist %}
+      {% associated backend %}
+      {% if association %}
+      <form class="disconnect-form col-md-2" action="{% url "social:disconnect_individual" backend=association.provider association_id=association.id %}" method="post">{% csrf_token %}
+	<a class="btn btn-danger" name="{{ backend|backend_class }}" href="#">
+	  <i class="fa fa-{{ name|icon_name }}"></i>
+	  Disconnect {{ backend|backend_name }}
+	</a>
+      </form>
+      {% else %}
+      <a class="col-md-2 btn btn-default" name="{{ backend|backend_class }}" href="{% url "social:begin" backend=name %}">
+	<i class="fa fa-{{ name|icon_name }}"></i>
+	{{ backend|backend_name }}
+      </a>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div>
+    <a class="btn btn-primary" href="/logout/">
+      <i class="fa fa-sign-out"></i>
+      Logout
+    </a>
+  </div>
+</div>
+{% endblock %}

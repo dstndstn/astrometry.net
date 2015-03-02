@@ -10,7 +10,7 @@ import stat
 import time
 from datetime import datetime, timedelta
 
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict, StreamingHttpResponse
 from django.shortcuts import render_to_response, get_object_or_404, redirect, render
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
@@ -432,6 +432,8 @@ def red_green_image(req, job_id=None, size='full'):
         pimg = plot.image
         pimg.set_file(str(pnmfn))
         pimg.format = PLOTSTUFF_FORMAT_PPM
+        plot.color = 'white'
+        plot.alpha = 1.
         plot.plot('image')
 
         # plot red
@@ -464,7 +466,7 @@ def red_green_image(req, job_id=None, size='full'):
         return HttpResponse("plot failed") 
 
     f = open(exfn)
-    res = HttpResponse(f)
+    res = StreamingHttpResponse(f)
     res['Content-Type'] = 'image/png'
     return res
 

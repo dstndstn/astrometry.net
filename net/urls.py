@@ -16,12 +16,24 @@ urlpatterns += patterns('astrometry.net.views.home',
     url(r'^explore/?$', 'explore', name='explore'),
 )
 
-urlpatterns += patterns('astrometry.net.openid_views',
-    url(r'^signin/?$', 'login_begin', name='openid-login'),
-    url(r'^signout/?$', 'logout', name='openid-logout'),
-    url(r'^complete/?$', 'login_complete', name='openid-complete'),
-    url(r'^logo.gif$', 'logo', name='openid-logo'),
+
+urlpatterns += patterns('',
+    url('', include('social.apps.django_app.urls', namespace='social'))
 )
+
+urlpatterns += patterns('',
+                        url(r'^signin/', 'astrometry.net.views.home.signin', name='signin'),
+                        url(r'^signout/', 'astrometry.net.views.home.signout', name='signout'),
+                        url(r'^signedin/', 'astrometry.net.views.home.signedin'),
+                        url(r'^newuser/', 'astrometry.net.views.home.newuser'),
+                        )
+
+# urlpatterns += patterns('astrometry.net.openid_views',
+#     url(r'^signin/?$', 'login_begin', name='openid-login'),
+#     url(r'^signout/?$', 'logout', name='openid-logout'),
+#     url(r'^complete/?$', 'login_complete', name='openid-complete'),
+#     url(r'^logo.gif$', 'logo', name='openid-logo'),
+# )
 
 urlpatterns += patterns('astrometry.net.views.search',
     (r'^search/images/?$', 'images'),
