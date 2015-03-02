@@ -92,7 +92,7 @@ class EnhanceImage(object):
         # Update the weights
         self.enhW[mask] += 1.
 
-    def stretch_to_match(self, img, shape=None):
+    def stretch_to_match(self, img):
         '''
         Stretches this enhanced image to match the tone of the given
         *img*.  If *shape* is given, *shape = (H,W)*, reshapes the
@@ -102,10 +102,7 @@ class EnhanceImage(object):
 
         npix,nbands = self.enhI.shape
         assert(len(img.shape) == 3)
-        if shape is None:
-            stretch = np.zeros((npix, nbands), img.dtype)
-        else:
-            stretch = np.zeros(shape + (nbands,), img.dtype)
+        stretch = np.zeros((npix, nbands), img.dtype)
         for b in range(nbands):
             imgb = img[:,:,b].ravel()
             I = np.argsort(imgb)
@@ -115,13 +112,7 @@ class EnhanceImage(object):
             EI = np.floor(self.enhI[:,b] * len(I)).astype(int)
             assert(np.all(EI >= 0))
             assert(np.all(EI < len(I)))
-
-            newpix = imgb[I[EI]]
-            if shape is None:
-                stretch[:,b] = newpix
-            else:
-                stretch[:,:,b] = newpix.reshape(shape)
-
+            stretch[:,b] = imgb[I[EI]]
         return stretch
 
                 
@@ -141,20 +132,13 @@ if __name__ == '__main__':
     enhance = EnhanceImage(H*W, B)
     enhance.update(np.ones((H*W), bool), imx.reshape((-1,B)))
 
-    imx2 = np.zeros((H*W,B), np.float32)
-    for i in range(B):
-        imx2[:,i] = imx[:,:,i].ravel()
-    assert(np.all(imx2 == imx.reshape((-1,B))))
-        
-    en = np.zeros((H,W,B), np.float32)
-    for i in range(B):
-        en[:,:,i] = enhance.enhI[:,i].reshape((H,W))
+    en = enhance.enhI.reshape((H,W,B))
     
     plt.clf()
     plt.imshow(en, interpolation='nearest', origin='lower')
     plt.savefig('en.png')
 
-    stretch = enhance.stretch_to_match(img, shape=(H,W))
+    stretch = enhance.stretch_to_match(img).reshape((H,W,B))
     
     plt.clf()
     plt.imshow(stretch, interpolation='nearest', origin='lower')
@@ -162,7 +146,7 @@ if __name__ == '__main__':
     
     img2 = plt.imread('demo/apod3.jpg')
     
-    stretch2 = enhance.stretch_to_match(img2, shape=(H,W))
+    stretch2 = enhance.stretch_to_match(img2).reshape((H,W,B))
     
     plt.clf()
     plt.imshow(stretch2, interpolation='nearest', origin='lower')
