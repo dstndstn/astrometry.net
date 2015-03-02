@@ -1,7 +1,7 @@
 from django.shortcuts import render_to_response, get_object_or_404, redirect, render
 from django.template import Context, RequestContext
 from django.db.models import Count
-#from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from astrometry.net.models import *
 
 def home(req):
@@ -80,8 +80,9 @@ def signedin(req):
 
 @login_required
 def newuser(req):
-    print 'New user'
-    return HttpResponse('hello, new guy')
+    #print 'New user'
+    #return HttpResponse('hello, new guy')
+    return HttpResponseRedirect('/')
 
 
 

@@ -1147,7 +1147,8 @@ class Submission(Hideable):
         self.processing_finished = datetime.now()
 
     def save(self, *args, **kwargs):
-        default_license=self.user.get_profile().default_license
+        pro = get_user_profile(self.user)
+        default_license=pro.default_license
         try:
             self.license
         except:
@@ -1235,4 +1236,10 @@ class UserProfile(models.Model):
         self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
 
         return super(UserProfile, self).save(*args, **kwargs)
+
+
+def get_user_profile(user):
+    if user is None:
+        return None
+    return user.profile.all()[0]
 
