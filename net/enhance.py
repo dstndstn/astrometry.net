@@ -119,10 +119,85 @@ class EnhanceImage(object):
 
 
 if __name__ == '__main__':
-    # test
     import matplotlib
     matplotlib.use('Agg')
     import pylab as plt
+    import sys
+
+    import os
+    from astrometry.util.util import *
+    from astrometry.util.resample import *
+    from astrometry.util.plotutils import *
+    import fitsio
+
+    ra,dec = 83.8, -1.1
+    pixscale = 100./3600.
+    W,H = 500,500
+    targetwcs = Tan(ra, dec, W/2.+0.5, H/2.+0.5,
+                    -pixscale, 0., 0., pixscale, float(W), float(H))
+    enhance = EnhanceImage(W*H, 3)
+
+    ps = PlotSequence('en')
+    
+    urls = ['http://bbc.astrometry.net/new_fits_file/2',
+            'http://bbc.astrometry.net/new_fits_file/4',
+            'http://bbc.astrometry.net/new_fits_file/3',
+            ]
+    images = []
+    for i,url in enumerate(urls):
+        fn = 'orion-%i.fits' % (i+1)
+        if not os.path.exists(fn):
+            cmd = 'wget -O %s %s' % (fn, url)
+            print cmd
+            os.system(cmd)
+        images.append(fn)
+    
+    for imgfn,wcsfn in zip(images, images):
+
+        wcs = Sip(wcsfn)
+        img = fitsio.read(imgfn)
+        print 'img shape', img.shape
+        three,imh,imw = img.shape
+        imx = np.zeros((imh,imw,three), np.float32)
+        for i in range(3):
+            imx[:,:,i] = img[i,:,:] / 256.
+        img = imx
+        
+        # Compute index arrays Yo,Xo,Yi,Xi (x and y pixel coordinates, input and output)
+        # for nearest-neighbor resampling from wcs to targetwcs
+        try:
+            Yo,Xo,Yi,Xi,nil = resample_with_wcs(targetwcs, wcs, [], 3)
+        except NoOverlapError:
+            print 'No actual overlap'
+            continue
+        print len(Yo), 'resampled pixels'
+        if len(Yo) == 0:
+            continue
+
+        # create the resampled image
+        resampled_img = np.zeros((H,W,3), img.dtype)
+        resampled_mask = np.zeros((H,W), bool)
+        for band in range(3):
+            resampled_img[Yo, Xo, band] = img[Yi, Xi, band]
+        resampled_mask[Yo,Xo] = True
+
+        plt.clf()
+        plt.subplot(1,2,1)
+        dimshow(resampled_img)
+        plt.subplot(1,2,2)
+        dimshow(resampled_mask)
+        ps.savefig()
+        
+        # feed it to "enhance"
+        enhance.update(resampled_mask.ravel(), img[Yi,Xi,:])
+
+        plt.clf()
+        dimshow(enhance.enhI.reshape((H,W,3)))
+        ps.savefig()
+
+    sys.exit(0)
+    
+    # test stretching
     img = plt.imread('demo/apod1.jpg')
     (H,W,B) = img.shape
     print 'Image', img.shape, img.dtype
