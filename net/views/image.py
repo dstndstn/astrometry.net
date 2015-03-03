@@ -166,8 +166,9 @@ def edit(req, user_image_id=None):
         if image_form.is_valid() and license_form.is_valid():
             image_form.save()
 
+            pro = get_user_profile(req.user)
             license,created = License.objects.get_or_create(
-                default_license=req.user.get_profile().default_license,
+                default_license=pro.default_license,
                 allow_commercial_use=license_form.cleaned_data['allow_commercial_use'],
                 allow_modifications=license_form.cleaned_data['allow_modifications'],
             )
@@ -220,7 +221,7 @@ def edit(req, user_image_id=None):
 
 def serve_image(req, id=None):
     image = get_object_or_404(Image, pk=id)
-    res = HttpResponse(mimetype=image.get_mime_type())
+    res = HttpResponse(content_type=image.get_mime_type())
 
     date = datetime.now() + timedelta(days=7)
     res['Expires'] = time.asctime(date.timetuple())

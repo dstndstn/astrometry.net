@@ -897,7 +897,7 @@ class UserImageManager(models.Manager):
         return valid_uis.order_by('-submission__submitted_on')
 
     def public_only(self, user=None):
-        if user and not user.is_authenticated():
+        if user is not None and not user.is_authenticated():
             user = None
         return self.all_visible().filter(Q(publicly_visible='y') | Q(user=user))
     
@@ -1147,7 +1147,8 @@ class Submission(Hideable):
         self.processing_finished = datetime.now()
 
     def save(self, *args, **kwargs):
-        default_license=self.user.get_profile().default_license
+        pro = get_user_profile(self.user)
+        default_license=pro.default_license
         try:
             self.license
         except:
@@ -1235,4 +1236,10 @@ class UserProfile(models.Model):
         self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
 
         return super(UserProfile, self).save(*args, **kwargs)
+
+
+def get_user_profile(user):
+    if user is None:
+        return None
+    return user.profile.all()[0]
 

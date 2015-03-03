@@ -481,8 +481,9 @@ def dosub(sub):
     return sub.id
 
 def create_user_image(sub, img, original_filename):
+    pro = get_user_profile(sub.user)
     license, created = License.objects.get_or_create(
-        default_license=sub.user.get_profile().default_license,
+        default_license=pro.default_license,
         allow_modifications = sub.license.allow_modifications,
         allow_commercial_use = sub.license.allow_commercial_use,
     )

@@ -295,10 +295,12 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['openid', 'email']
 ### I was getting a Flickr SSL verification error...
 # SOCIAL_AUTH_FLICKR_VERIFY_SSL = False
 
-SOCIAL_AUTH_GITHUB_KEY    = authsecrets.github.key
-SOCIAL_AUTH_GITHUB_SECRET = authsecrets.github.secret
-#SOCIAL_AUTH_GITHUB_SCOPE = ['openid', 'email']
-SOCIAL_AUTH_GITHUB_SCOPE = ['user:email']
+github_secrets = authsecrets.githubs
+
+# SOCIAL_AUTH_GITHUB_KEY    = authsecrets.githubs[sitename].key
+# SOCIAL_AUTH_GITHUB_SECRET = authsecrets.githubs[sitename].secret
+# #SOCIAL_AUTH_GITHUB_SCOPE = ['openid', 'email']
+# SOCIAL_AUTH_GITHUB_SCOPE = ['user:email']
 
 # dstn can't figure out how to get user's email addr from twitter.  Argh!
 # https://twittercommunity.com/t/how-to-get-email-from-twitter-user-using-oauthtokens/558/74

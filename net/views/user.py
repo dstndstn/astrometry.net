@@ -40,7 +40,7 @@ def dashboard(request):
 @login_required
 def save_profile(req):
     if req.method == 'POST':
-        profile = req.user.get_profile()
+        profile = get_user_profile(req.user)
         profile_form = ProfileForm(req.POST, instance=profile)
         license_form = LicenseForm(req.POST, instance=profile.default_license)
         
@@ -64,7 +64,7 @@ def save_profile(req):
 @login_required
 def dashboard_profile(req):
     # user profile guaranteed to be created during openid login
-    profile = req.user.get_profile()
+    profile = get_user_profile(req.user)
            
     profile_form = get_session_form(req.session, ProfileForm, instance=profile)
     license_form = get_session_form(req.session, LicenseForm, instance=profile.default_license)
@@ -220,6 +220,7 @@ def user_autocomplete(req):
     users = User.objects.filter(profile__display_name__icontains=name)[:8]
     response = HttpResponse(mimetype='text/plain')
     for user in users:
-        response.write(user.get_profile().display_name + '\n')
+        pro = get_user_profile(user)
+        response.write(pro.display_name + '\n')
     return response
 
