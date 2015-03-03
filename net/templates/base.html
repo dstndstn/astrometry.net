@@ -12,10 +12,7 @@
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}css/jquery.autocomplete.css" />
 {% endblock %}
 
-{% include 'base.css' %}
-{% block inline_css %}
-{% endblock inline_css %}
-
+{% block autocomplete %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.autocomplete.js"></script>
 <script type="text/javascript">
@@ -30,6 +27,12 @@ $(document).ready(function() {
     $('#search_query').autocomplete('/tags/autocomplete');
 });
 </script>
+{% endblock %}
+
+{% include 'base.css' %}
+{% block inline_css %}
+{% endblock inline_css %}
+
 {% block javascript %}
 {% endblock javascript %}
 

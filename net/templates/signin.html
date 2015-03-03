@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load backend_utils %}
 
+{% block autocomplete %}
+{% endblock %}
+
 {% comment %}
 Modified from
 https://github.com/omab/python-social-auth/blob/master/examples/django_example/example/templates/home.html
@@ -61,4 +64,16 @@ https://github.com/omab/python-social-auth/blob/master/examples/django_example/e
     </a>
   </div>
 </div>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+      $(function () {
+        $('.disconnect-form').on('click', 'a.btn', function (event) {
+          event.preventDefault();
+          $(event.target).closest('form').submit();
+        });
+      });
+</script>
+
 {% endblock %}
