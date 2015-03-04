@@ -1241,5 +1241,17 @@ class UserProfile(models.Model):
 def get_user_profile(user):
     if user is None:
         return None
-    return user.profile.all()[0]
+    profiles = user.profile.all()
+    if len(profiles) > 0:
+        return profiles[0]
+    # Create new profile?
+    profile = UserProfile(user=user)
+    profile.create_api_key()
+    profile.create_default_license()
+    if user.get_full_name():
+        profile.display_name = user.get_full_name()
+    else:
+        profile.display_name = user.username
+    profile.save()
+    return profile
 
