@@ -37,7 +37,10 @@ void multiindex_unload_starkd(multiindex_t* mi) {
 int multiindex_reload_starkd(multiindex_t* mi) {
     int i;
     assert(mi->fits);
-    assert(!(mi->starkd));
+    if (mi->starkd) {
+        // It's already loaded
+        return 0;
+    }
     mi->starkd = startree_open_fits(mi->fits);
     if (!mi->starkd) {
         ERROR("Failed to open multi-index star kdtree");
