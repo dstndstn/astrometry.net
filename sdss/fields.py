@@ -320,7 +320,7 @@ def main():
 	for (r,c,f,ra1,dec1) in rcfs:
 		print 'wget "http://cas.sdss.org/dr7/en/get/frameByRCFZ.asp?R=%i&C=%i&F=%i&Z=0&submit1=Get+Image" -O sdss-%04i-%i-%04i.jpg' % (r,c,f,r,c,f)
 
-	from sdss_das import *
+	from sdss_das import sdss_das_get
 	for (r,c,f,ra1,dec1) in rcfs:
 		for t in opt.filetypes:
 			for b in opt.bands:
@@ -337,13 +337,6 @@ def main():
 					os.system('an-fitstopnm -i /tmp/cut-%s -N 1150 -X 1400 | pnmtopng > cut-%s.png' % (fpc, fpc))
 					print 'R,C,F', r,c,f
 					print 'x,y', x,y
-			
-	#from sdss_das import *
-	#for (r,c,f,ra,dec) in rcfs:
-	#	for b in 'ugriz':
-	#		sdss_das_get('fpC', None, r, c, f, b)
-
-
 
 if __name__ == '__main__':
     main()
