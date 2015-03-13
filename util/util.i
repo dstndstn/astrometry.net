@@ -180,7 +180,7 @@ void log_set_level(int lvl);
         Py_INCREF(dtype);
         np_arrx = PyArray_FromAny(py_arrx, dtype, 1, 1, req, NULL);
         if (!np_arrx) {
-            PyErr_SetString(PyExc_ValueError,"Expected x array to be double");
+            PyErr_SetString(PyExc_ValueError,"Expected x array to be double";)
             Py_DECREF(dtype);
             return NULL;
         }
