@@ -23,6 +23,12 @@ for x in sys.path:
 
 print 'PATH is:', os.environ['PATH']
 
+os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+
+import django
+django.setup()
+
+
 import pyfits
 
 
@@ -52,7 +58,6 @@ from astrometry.util.util import Tan
 from astrometry.util import util as anutil
 from astrometry.util.fits import *
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 #import astrometry.net.settings as settings
 import settings
 settings.LOGGING['loggers'][''] = {
