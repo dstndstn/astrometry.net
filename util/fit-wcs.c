@@ -532,12 +532,6 @@ int fit_sip_coefficients(const double* starxyz,
         x = fieldxy[2*i  ] - tanin->crpix[0];
         y = fieldxy[2*i+1] - tanin->crpix[1];
 
-        /*
-         if (i < 10)
-         printf("xprime,yprime (%f,%f) vs x,y (%f, %f)\n",
-         xprime, yprime, x, y);
-         */
-
         if (weights) {
             weight = weights[i];
             assert(weight >= 0.0);
@@ -574,8 +568,6 @@ int fit_sip_coefficients(const double* starxyz,
                 assert(p + q <= sip_order);
                 gsl_matrix_set(mA, ngood, j,
                                weight * pow(x, (double)p) * pow(y, (double)q));
-                //if (ngood == 0)
-                //printf("j=%i: p=%i, q=%i\n", j, p, q);
                 j++;
             }
         }
@@ -621,31 +613,12 @@ int fit_sip_coefficients(const double* starxyz,
 			assert(p + q <= sip_order);
 			sipout->a[p][q] = gsl_vector_get(x1, j);
 			sipout->b[p][q] = gsl_vector_get(x2, j);
-            //printf("j=%i: p=%i, q=%i\n", j, p, q);
 			j++;
 		}
 	}
 	assert(j == N);
 
 	sip_compute_inverse_polynomials(sipout, 0, 0, 0, 0, 0, 0);
-
-    printf("FIT SIP:\n");
-    sip_print(sipout);
-    printf("\n");
-
-    for (i=0; i<10; i++) {
-        double xprime, yprime;
-        double x, y;
-        anbool ok;
-        //ok = tan_xyzarr2pixelxy(tanin, starxyz + 3*i, &xprime, &yprime);
-        //sip_pixel_distortion(sipout, xprime, yprime, &x, &y);
-        //printf("xprime,yprime (%f,%f) -> (%f,%f) vs field (%f,%f)\n",
-        //xprime, yprime, x, y, fieldxy[2*i], fieldxy[2*i+1]);
-        x = y = 0.;
-        ok = sip_xyzarr2pixelxy(sipout, starxyz + 3*i, &x, &y);
-        printf("FIT x,y (%f,%f) vs field (%f,%f)\n",
-               x, y, fieldxy[2*i], fieldxy[2*i+1]);
-    }
 
 	if (r1)
 		gsl_vector_free(r1);

@@ -104,8 +104,6 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	int rtn = -1;
 	tan_t tanwcs;
 	double x,y, px,py;
-	//double xyz[3];
-
 	double* xorig = NULL;
 	double* yorig = NULL;
 	double* rddist = NULL;
@@ -282,133 +280,32 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 			rpows[i] = rpows[i-1]*r;
 		}
 		px = py = 0;
-        if (j == 0)
-            printf("\nPoint %i X,Y = %f,%f, (xi,eta = %f, %f)\n", j,
-                   xorig[j], yorig[j], x, y);
 		for (i=0; i<sizeof(xp)/sizeof(int); i++) {
-            if (j == 0) {
-                double tx,ty;
-                tx = pv1[i] * xpows[xp[i]] * ypows[yp[i]] * rpows[rp[i]];
-                ty = pv2[i] * ypows[xp[i]] * xpows[yp[i]] * rpows[rp[i]];
-                if (tx != 0 || ty != 0)
-                    printf("Term %i: dxi = %16.8g, deta = %16.8g\n",
-                           i, tx, ty);
-            }
-                
 			px += pv1[i] * xpows[xp[i]] * ypows[yp[i]] * rpows[rp[i]];
             // here's the "cross-over" mentioned above
 			py += pv2[i] * ypows[xp[i]] * xpows[yp[i]] * rpows[rp[i]];
 		}
 
-        if (j == 0)
-            printf("px,py = (%f, %f)\n", px, py);
-
         // Note that the PV terms *include* a linear term, so no need
         // to re-add x,y to px,py.
         tan_iwc2radec(&tanwcs, px, py,
                       rddist + 2*j, rddist + 2*j + 1);
-
-        if (j == 0)
-            printf("RA,Dec = (%f,%f)\n", rddist[2*j], rddist[2*j+1]);
 	}
 
     {
         sip_t sip;
         double* starxyz;
-
         starxyz = malloc(3 * Nxy * sizeof(double));
         for (i=0; i<Nxy; i++)
             radecdegarr2xyzarr(rddist + i*2, starxyz + i*3);
         memset(&sip, 0, sizeof(sip_t));
-
-        printf("TAN:\n");
-        tan_print(&tanwcs);
-        printf("\n");
-
-        /*
-         rtn = fit_sip_wcs_2(starxyz, xy, NULL, Nxy,
-         order, order, imageW, imageH,
-         1, tanwcs.crpix, doshift, &sip);
-         assert(rtn == 0);
-         printf("First-round SIP:\n");
-         sip_print(&sip);
-         */
-
-        /*
-         // again, with new TAN.
-         int round;
-         for (round=0; round<1; round++) {
-         sip_t sip2;
-         tan_t* tanin;
-         //tanin = &(sip.wcstan);
-         tanin = &tanwcs;
-         memset(&sip2, 0, sizeof(sip_t));
-         rtn = fit_sip_wcs(starxyz, xy, NULL, Nxy,
-         tanin, order, order, doshift,
-         &sip2);
-         assert(rtn == 0);
-         printf("Second-round SIP (%i):\n", round);
-         sip_print(&sip2);
-         memcpy(&sip, &sip2, sizeof(sip_t));
-         }
-         */
-
-        {
-            tan_t* tanin;
-            tanin = &tanwcs;
-            rtn = fit_sip_coefficients(starxyz, xy, NULL, Nxy,
-                                       tanin, order, order, &sip);
-            assert(rtn == 0);
-        }
-        {
-            double rr,dd;
-            sip_pixelxy2radec(&sip, 1., 1., &rr, &dd);
-            printf("Fit SIP: x,y = (1,1) --> RA,Dec %f,%f\n", rr,dd);
-            printf("\n");
-        }
+        rtn = fit_sip_coefficients(starxyz, xy, NULL, Nxy,
+                                   &tanwcs, order, order, &sip);
+        assert(rtn == 0);
 
 		sip_write_to_file(&sip, wcsoutfn);
         free(starxyz);
     }
-
-	/*
-	{
-		starxy_t sxy;
-		tweak_t* t;
-		il* imgi;
-		il* refi;
-		int sip_order = order;
-		int sip_inv_order = order;
-
-		sxy.N = Nxy;
-		sxy.x = xorig;
-		sxy.y = yorig;
-
-		imgi = il_new(256);
-		refi = il_new(256);
-		for (i=0; i<Nxy; i++) {
-			il_append(imgi, i);
-			il_append(refi, i);
-		}
-
-		t = tweak_new();
-		t->sip->a_order = t->sip->b_order = sip_order;
-		t->sip->ap_order = t->sip->bp_order = sip_inv_order;
-		tweak_push_wcs_tan(t, &tanwcs);
-		tweak_push_ref_ad_array(t, rddist, Nxy);
-		tweak_push_image_xy(t, &sxy);
-		tweak_push_correspondence_indices(t, imgi, refi, NULL, NULL);
-		tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
-		if (imageW)
-			t->sip->wcstan.imagew = imageW;
-		if (imageH)
-			t->sip->wcstan.imageh = imageH;
-		sip_write_to_file(t->sip, wcsoutfn);
-		tweak_free(t);
-     }*/
-
-
-
 
 	rtn = 0;
 

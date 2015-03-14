@@ -309,8 +309,6 @@ static anbool read_polynomial(const qfits_header* hdr, const char* format,
 				continue;
 			sprintf(key, format, i, j);
 			val = qfits_header_getdouble(hdr, key, nil);
-            printf("Reading SIP: order %i,%i (%s) = %f\n",
-                   i, j, key, val);
 			if (val == nil) {
                 // don't warn if linear terms are "missing"
                 if (i+j >= 2) {

@@ -378,9 +378,6 @@ void sip_calc_distortion(const sip_t* sip, double u, double v, double* U, double
 			if (p+q <= sip->b_order)
 				guv += sip->b[p][q] * powu[p] * powv[q];
 
-    //printf("sip_calc_distortion: u,v = (%f, %f), fuv,guv = (%f,%f)\n",
-    //u, v, fuv, guv);
-
 	*U = u + fuv;
 	*V = v + guv;
 }
