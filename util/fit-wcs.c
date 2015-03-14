@@ -43,6 +43,7 @@ int fit_sip_wcs_2(const double* starxyz,
                   int W, int H,
                   int crpix_center,
                   double* crpix,
+                  int doshift,
                   sip_t* sipout) {
     tan_t wcs;
     memset(&wcs, 0, sizeof(tan_t));
@@ -83,7 +84,7 @@ int fit_sip_wcs_2(const double* starxyz,
     wcs.imageh = H;
 
     return fit_sip_wcs(starxyz, fieldxy, weights, M, &wcs,
-                       sip_order, inv_order, sipout);
+                       sip_order, inv_order, doshift, sipout);
 }
 
 int fit_sip_wcs(const double* starxyz,
@@ -93,6 +94,7 @@ int fit_sip_wcs(const double* starxyz,
                 const tan_t* tanin1,
                 int sip_order,
                 int inv_order,
+                int doshift,
                 sip_t* sipout) {
 	int sip_coeffs;
 	double xyzcrval[3];
@@ -265,9 +267,6 @@ int fit_sip_wcs(const double* starxyz,
             continue;
         }
 
-        gsl_vector_set(b1, ngood, weight * rad2deg(x));
-        gsl_vector_set(b2, ngood, weight * rad2deg(y));
-
         if (weights) {
             weight = weights[i];
             assert(weight >= 0.0);
@@ -276,6 +275,9 @@ int fit_sip_wcs(const double* starxyz,
             if (weight == 0.0)
                 continue;
         }
+
+        gsl_vector_set(b1, ngood, weight * rad2deg(x));
+        gsl_vector_set(b2, ngood, weight * rad2deg(y));
 
         /* The coefficients are stored in this order:
          *   p q
@@ -342,20 +344,33 @@ int fit_sip_wcs(const double* starxyz,
 	// Row 1 of X are the terms that multiply "u".
 	// Row 2 of X are the terms that multiply "v".
 
-	// Grab CD.
-	sipout->wcstan.cd[0][0] = gsl_vector_get(x1, 1);
-	sipout->wcstan.cd[0][1] = gsl_vector_get(x1, 2);
-	sipout->wcstan.cd[1][0] = gsl_vector_get(x2, 1);
-	sipout->wcstan.cd[1][1] = gsl_vector_get(x2, 2);
+    if (doshift) {
+        // Grab CD.
+        sipout->wcstan.cd[0][0] = gsl_vector_get(x1, 1);
+        sipout->wcstan.cd[0][1] = gsl_vector_get(x1, 2);
+        sipout->wcstan.cd[1][0] = gsl_vector_get(x2, 1);
+        sipout->wcstan.cd[1][1] = gsl_vector_get(x2, 2);
 
-	// Compute inv(CD)
-	i = invert_2by2_arr((const double*)(sipout->wcstan.cd),
-                        (double*)cdinv);
-	assert(i == 0);
+        // Compute inv(CD)
+        i = invert_2by2_arr((const double*)(sipout->wcstan.cd),
+                            (double*)cdinv);
+        assert(i == 0);
 
-	// Grab the shift.
-	sx = gsl_vector_get(x1, 0);
-	sy = gsl_vector_get(x2, 0);
+        // Grab the shift.
+        sx = gsl_vector_get(x1, 0);
+        sy = gsl_vector_get(x2, 0);
+
+    } else {
+        double cd[2][2];
+        cd[0][0] = gsl_vector_get(x1, 1);
+        cd[0][1] = gsl_vector_get(x1, 2);
+        cd[1][0] = gsl_vector_get(x2, 1);
+        cd[1][1] = gsl_vector_get(x2, 2);
+        // Compute inv(CD)
+        i = invert_2by2_arr((const double*)(sipout->wcstan.cd),
+                            (double*)cdinv);
+        assert(i == 0);
+    }
 
 	// Extract the SIP coefficients.
 	//  (this includes the 0 and 1 order terms, which we later overwrite)
@@ -381,33 +396,256 @@ int fit_sip_wcs(const double* starxyz,
 	}
 	assert(j == N);
 
-	// We have already dealt with the shift and linear terms, so zero them out
-	// in the SIP coefficient matrix.
-	sipout->a[0][0] = 0.0;
-	sipout->a[0][1] = 0.0;
-	sipout->a[1][0] = 0.0;
-	sipout->b[0][0] = 0.0;
-	sipout->b[0][1] = 0.0;
-	sipout->b[1][0] = 0.0;
+    if (doshift) {
+        // We have already dealt with the shift and linear terms, so zero them out
+        // in the SIP coefficient matrix.
+        sipout->a[0][0] = 0.0;
+        sipout->a[0][1] = 0.0;
+        sipout->a[1][0] = 0.0;
+        sipout->b[0][0] = 0.0;
+        sipout->b[0][1] = 0.0;
+        sipout->b[1][0] = 0.0;
+    }
 
 	sip_compute_inverse_polynomials(sipout, 0, 0, 0, 0, 0, 0);
 
-    sU =
-        cdinv[0][0] * sx +
-        cdinv[0][1] * sy;
-    sV =
-        cdinv[1][0] * sx +
-        cdinv[1][1] * sy;
-    logverb("Applying shift of sx,sy = %g,%g deg (%g,%g pix) to CRVAL and CD.\n",
-            sx, sy, sU, sV);
+    if (doshift) {
+        sU =
+            cdinv[0][0] * sx +
+            cdinv[0][1] * sy;
+        sV =
+            cdinv[1][0] * sx +
+            cdinv[1][1] * sy;
+        logverb("Applying shift of sx,sy = %g,%g deg (%g,%g pix) to CRVAL and CD.\n",
+                sx, sy, sU, sV);
 
-    sip_calc_inv_distortion(sipout, sU, sV, &su, &sv);
+        sip_calc_inv_distortion(sipout, sU, sV, &su, &sv);
 
-    debug("sx = %g, sy = %g\n", sx, sy);
-    debug("sU = %g, sV = %g\n", sU, sV);
-    debug("su = %g, sv = %g\n", su, sv);
+        debug("sx = %g, sy = %g\n", sx, sy);
+        debug("sU = %g, sV = %g\n", sU, sV);
+        debug("su = %g, sv = %g\n", su, sv);
 
-    wcs_shift(&(sipout->wcstan), -su, -sv);
+        wcs_shift(&(sipout->wcstan), -su, -sv);
+    }
+
+	if (r1)
+		gsl_vector_free(r1);
+	if (r2)
+		gsl_vector_free(r2);
+
+	gsl_matrix_free(mA);
+	gsl_vector_free(b1);
+	gsl_vector_free(b2);
+	gsl_vector_free(x1);
+	gsl_vector_free(x2);
+
+    return 0;
+}
+
+
+
+
+
+int fit_sip_coefficients(const double* starxyz,
+                         const double* fieldxy,
+                         const double* weights,
+                         int M,
+                         const tan_t* tanin1,
+                         int sip_order,
+                         int inv_order,
+                         sip_t* sipout) {
+	int sip_coeffs;
+	int N;
+	int i, j, p, q, order;
+	double totalweight;
+	int rtn;
+	gsl_matrix *mA;
+	gsl_vector *b1, *b2, *x1, *x2;
+	gsl_vector *r1=NULL, *r2=NULL;
+    tan_t tanin2;
+    int ngood;
+    const tan_t* tanin = &tanin2;
+	// We need at least the linear terms to compute CD.
+	if (sip_order < 1)
+		sip_order = 1;
+
+    // convenience: allow the user to call like:
+    //    fit_sip_wcs(... &(sipout.wcstan), ..., sipout);
+    memcpy(&tanin2, tanin1, sizeof(tan_t));
+
+    memset(sipout, 0, sizeof(sip_t));
+    memcpy(&(sipout->wcstan), tanin, sizeof(tan_t));
+    sipout->a_order  = sipout->b_order  = sip_order;
+    sipout->ap_order = sipout->bp_order = inv_order;
+
+	// The SIP coefficients form an (order x order) upper triangular
+	// matrix
+	sip_coeffs = (sip_order + 1) * (sip_order + 2) / 2;
+	N = sip_coeffs;
+
+    if (M < N) {
+        ERROR("Too few correspondences for the SIP order specified (%i < %i)\n", M, N);
+        return -1;
+    }
+
+	mA = gsl_matrix_alloc(M, N);
+	b1 = gsl_vector_alloc(M);
+	b2 = gsl_vector_alloc(M);
+	assert(mA);
+	assert(b1);
+	assert(b2);
+
+    /**
+     * We're going to fit for the "forward" SIP coefficients
+     * A, B.
+     *
+     * SIP converts (x,y) -> distort with A,B -> (x',y') -> TAN -> RA,Dec
+     *
+     * We are going to hold TAN fixed here, so first convert RA,Dec
+     * to (x',y'), and then compute A,B terms.
+     *
+     * Set up the matrix equation
+     *   [ SIP polynomial terms ] [ SIP coeffs ] - [x'] ~ 0
+     *
+     * Where SIP polynomial terms are powers of x.
+     *
+     * Though rather than x, x' we'll work in CRPIX-relative units,
+     * since that's what SIP does.
+     */
+
+	// Fill in matrix mA:
+	totalweight = 0.0;
+    ngood = 0;
+    for (i=0; i<M; i++) {
+        double xprime, yprime;
+        double x, y;
+        double weight = 1.0;
+        anbool ok;
+
+        ok = tan_xyzarr2pixelxy(tanin, starxyz + 3*i, &xprime, &yprime);
+        if (!ok)
+            continue;
+
+        xprime -= tanin->crpix[0];
+        yprime -= tanin->crpix[1];
+
+        x = fieldxy[2*i  ] - tanin->crpix[0];
+        y = fieldxy[2*i+1] - tanin->crpix[1];
+
+        /*
+         if (i < 10)
+         printf("xprime,yprime (%f,%f) vs x,y (%f, %f)\n",
+         xprime, yprime, x, y);
+         */
+
+        if (weights) {
+            weight = weights[i];
+            assert(weight >= 0.0);
+            assert(weight <= 1.0);
+            totalweight += weight;
+            if (weight == 0.0)
+                continue;
+        }
+
+        /// AHA!, since SIP computes an "fuv","guv" to ADD to
+        /// x,y to get x',y', b is the DIFFERENCE!
+        gsl_vector_set(b1, ngood, weight * (xprime - x));
+        gsl_vector_set(b2, ngood, weight * (yprime - y));
+
+        /* The coefficients are stored in this order:
+         *   p q
+         *  (0,0) = 1     <- order 0
+         *  (1,0) = u     <- order 1
+         *  (0,1) = v
+         *  (2,0) = u^2   <- order 2
+         *  (1,1) = uv
+         *  (0,2) = v^2
+         *  ...
+         */
+
+        j = 0;
+        for (order=0; order<=sip_order; order++) {
+            for (q=0; q<=order; q++) {
+                p = order - q;
+                assert(j >= 0);
+                assert(j < N);
+                assert(p >= 0);
+                assert(q >= 0);
+                assert(p + q <= sip_order);
+                gsl_matrix_set(mA, ngood, j,
+                               weight * pow(x, (double)p) * pow(y, (double)q));
+                //if (ngood == 0)
+                //printf("j=%i: p=%i, q=%i\n", j, p, q);
+                j++;
+            }
+        }
+        assert(j == N);
+
+        ngood++;
+    }
+
+    if (ngood == 0) {
+        ERROR("No stars projected within the image\n");
+        return -1;
+    }
+	if (weights)
+		logverb("Total weight: %g\n", totalweight);
+
+    if (ngood < M) {
+        _gsl_vector_view sub_b1 = gsl_vector_subvector(b1, 0, ngood);
+        _gsl_vector_view sub_b2 = gsl_vector_subvector(b2, 0, ngood);
+        _gsl_matrix_view sub_mA = gsl_matrix_submatrix(mA, 0, 0, ngood, N);
+
+        rtn = gslutils_solve_leastsquares_v(&(sub_mA.matrix), 2,
+                                            &(sub_b1.vector), &x1, NULL,
+                                            &(sub_b2.vector), &x2, NULL);
+
+    } else {
+        // Solve the equation.
+        rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
+    }
+	if (rtn) {
+        ERROR("Failed to solve SIP matrix equation!");
+        return -1;
+    }
+
+	// Extract the SIP coefficients.
+	j = 0;
+	for (order=0; order<=sip_order; order++) {
+		for (q=0; q<=order; q++) {
+			p = order - q;
+			assert(j >= 0);
+			assert(j < N);
+			assert(p >= 0);
+			assert(q >= 0);
+			assert(p + q <= sip_order);
+			sipout->a[p][q] = gsl_vector_get(x1, j);
+			sipout->b[p][q] = gsl_vector_get(x2, j);
+            //printf("j=%i: p=%i, q=%i\n", j, p, q);
+			j++;
+		}
+	}
+	assert(j == N);
+
+	sip_compute_inverse_polynomials(sipout, 0, 0, 0, 0, 0, 0);
+
+    printf("FIT SIP:\n");
+    sip_print(sipout);
+    printf("\n");
+
+    for (i=0; i<10; i++) {
+        double xprime, yprime;
+        double x, y;
+        anbool ok;
+        //ok = tan_xyzarr2pixelxy(tanin, starxyz + 3*i, &xprime, &yprime);
+        //sip_pixel_distortion(sipout, xprime, yprime, &x, &y);
+        //printf("xprime,yprime (%f,%f) -> (%f,%f) vs field (%f,%f)\n",
+        //xprime, yprime, x, y, fieldxy[2*i], fieldxy[2*i+1]);
+        x = y = 0.;
+        ok = sip_xyzarr2pixelxy(sipout, starxyz + 3*i, &x, &y);
+        printf("FIT x,y (%f,%f) vs field (%f,%f)\n",
+               x, y, fieldxy[2*i], fieldxy[2*i+1]);
+    }
 
 	if (r1)
 		gsl_vector_free(r1);

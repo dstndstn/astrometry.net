@@ -32,6 +32,8 @@
 #include "anqfits.h"
 #include "qfits_rw.h"
 
+#include "fit-wcs.h"
+
 /*
  Scamp's copy of wcslib has  "raw_to_pv" in "proj.c".
 
@@ -94,13 +96,15 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 			   anbool scamp_head_file,
 			   double* xy, int Nxy,
 			   int imageW, int imageH,
-			   anbool forcetan) {
+               int order,
+			   anbool forcetan,
+               int doshift) {
 	qfits_header* hdr = NULL;
 	double* radec = NULL;
 	int rtn = -1;
 	tan_t tanwcs;
 	double x,y, px,py;
-	double xyz[3];
+	//double xyz[3];
 
 	double* xorig = NULL;
 	double* yorig = NULL;
@@ -263,13 +267,13 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 
 	for (j=0; j<Nxy; j++) {
 
-        // x,y with respect to CRPIX?
-		xorig[j] = xy[2*j+0]; // + tanwcs.crpix[0];
-		yorig[j] = xy[2*j+1]; // + tanwcs.crpix[1];
+		xorig[j] = xy[2*j+0];
+		yorig[j] = xy[2*j+1];
 
 		tan_pixelxy2iwc(&tanwcs, 
                         xorig[j], yorig[j],
                         &x, &y);
+        // "x,y" here are most commonly known as "xi, eta".
 		r = sqrt(x*x + y*y);
 		xpows[0] = ypows[0] = rpows[0] = 1.0;
 		for (i=1; i<sizeof(xpows)/sizeof(double); i++) {
@@ -278,23 +282,103 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 			rpows[i] = rpows[i-1]*r;
 		}
 		px = py = 0;
+        if (j == 0)
+            printf("\nPoint %i X,Y = %f,%f, (xi,eta = %f, %f)\n", j,
+                   xorig[j], yorig[j], x, y);
 		for (i=0; i<sizeof(xp)/sizeof(int); i++) {
+            if (j == 0) {
+                double tx,ty;
+                tx = pv1[i] * xpows[xp[i]] * ypows[yp[i]] * rpows[rp[i]];
+                ty = pv2[i] * ypows[xp[i]] * xpows[yp[i]] * rpows[rp[i]];
+                if (tx != 0 || ty != 0)
+                    printf("Term %i: dxi = %16.8g, deta = %16.8g\n",
+                           i, tx, ty);
+            }
+                
 			px += pv1[i] * xpows[xp[i]] * ypows[yp[i]] * rpows[rp[i]];
             // here's the "cross-over" mentioned above
 			py += pv2[i] * ypows[xp[i]] * xpows[yp[i]] * rpows[rp[i]];
 		}
-		tan_iwc2xyzarr(&tanwcs, px, py, xyz);
-		xyzarr2radecdeg(xyz, rddist+2*j, rddist+2*j+1);
+
+        if (j == 0)
+            printf("px,py = (%f, %f)\n", px, py);
+
+        // Note that the PV terms *include* a linear term, so no need
+        // to re-add x,y to px,py.
+        tan_iwc2radec(&tanwcs, px, py,
+                      rddist + 2*j, rddist + 2*j + 1);
+
+        if (j == 0)
+            printf("RA,Dec = (%f,%f)\n", rddist[2*j], rddist[2*j+1]);
 	}
 
-	//
+    {
+        sip_t sip;
+        double* starxyz;
+
+        starxyz = malloc(3 * Nxy * sizeof(double));
+        for (i=0; i<Nxy; i++)
+            radecdegarr2xyzarr(rddist + i*2, starxyz + i*3);
+        memset(&sip, 0, sizeof(sip_t));
+
+        printf("TAN:\n");
+        tan_print(&tanwcs);
+        printf("\n");
+
+        /*
+         rtn = fit_sip_wcs_2(starxyz, xy, NULL, Nxy,
+         order, order, imageW, imageH,
+         1, tanwcs.crpix, doshift, &sip);
+         assert(rtn == 0);
+         printf("First-round SIP:\n");
+         sip_print(&sip);
+         */
+
+        /*
+         // again, with new TAN.
+         int round;
+         for (round=0; round<1; round++) {
+         sip_t sip2;
+         tan_t* tanin;
+         //tanin = &(sip.wcstan);
+         tanin = &tanwcs;
+         memset(&sip2, 0, sizeof(sip_t));
+         rtn = fit_sip_wcs(starxyz, xy, NULL, Nxy,
+         tanin, order, order, doshift,
+         &sip2);
+         assert(rtn == 0);
+         printf("Second-round SIP (%i):\n", round);
+         sip_print(&sip2);
+         memcpy(&sip, &sip2, sizeof(sip_t));
+         }
+         */
+
+        {
+            tan_t* tanin;
+            tanin = &tanwcs;
+            rtn = fit_sip_coefficients(starxyz, xy, NULL, Nxy,
+                                       tanin, order, order, &sip);
+            assert(rtn == 0);
+        }
+        {
+            double rr,dd;
+            sip_pixelxy2radec(&sip, 1., 1., &rr, &dd);
+            printf("Fit SIP: x,y = (1,1) --> RA,Dec %f,%f\n", rr,dd);
+            printf("\n");
+        }
+
+		sip_write_to_file(&sip, wcsoutfn);
+        free(starxyz);
+    }
+
+	/*
 	{
 		starxy_t sxy;
 		tweak_t* t;
 		il* imgi;
 		il* refi;
-		int sip_order = 5;
-		int sip_inv_order = 5;
+		int sip_order = order;
+		int sip_inv_order = order;
 
 		sxy.N = Nxy;
 		sxy.x = xorig;
@@ -321,7 +405,11 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 			t->sip->wcstan.imageh = imageH;
 		sip_write_to_file(t->sip, wcsoutfn);
 		tweak_free(t);
-	}
+     }*/
+
+
+
+
 	rtn = 0;
 
  bailout:
@@ -384,12 +472,14 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 #include "boilerplate.h"
 #include "bl.h"
 
-const char* OPTIONS = "hve:sx:X:y:Y:a:b:W:H:t";
+const char* OPTIONS = "hve:sx:X:y:Y:a:b:W:H:to:S";
 
 void print_help(char* progname) {
 	BOILERPLATE_HELP_HEADER(stdout);
 	printf("\nUsage: %s [options] <input-wcs> <output-wcs>\n"
+           "   [-o <order>] SIP polynomial order to fit (default: 5)\n"
 		   "   [-e <extension>] FITS HDU number to read WCS from (default 0 = primary)\n"
+           "   [-S]: do NOT do the wcs_shift thing\n"
 		   "   [-s]: treat input as Scamp .head file\n"
 		   "   [-t]: override the CTYPE* cards in the WCS header, and assume they are TAN.\n"
 		   "   [-v]: +verboseness\n"
@@ -412,6 +502,7 @@ int main(int argc, char** args) {
 	char** myargs;
 	int nargs;
 	int c;
+    int order = 5;
 
 	char* wcsinfn = NULL;
 	char* wcsoutfn = NULL;
@@ -429,14 +520,21 @@ int main(int argc, char** args) {
 	double* xy;
 	int Nxy;
 	int W, H;
+    int doshift = 1;
 
 	W = H = 0;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+        case 'S':
+            doshift = 0;
+            break;
 		case 't':
 			forcetan = TRUE;
 			break;
+        case 'o':
+            order = atoi(optarg);
+            break;
 		case 'W':
 			W = atoi(optarg);
 			break;
@@ -517,7 +615,7 @@ int main(int argc, char** args) {
 	dl_free(xylst);
 
 	if (wcs_pv2sip(wcsinfn, ext, wcsoutfn, scamp, xy, Nxy, W, H,
-				   forcetan)) {
+                   order, forcetan, doshift)) {
 		exit(-1);
 	}
 

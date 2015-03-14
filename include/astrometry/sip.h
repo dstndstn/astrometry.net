@@ -181,13 +181,15 @@ void   sip_calc_distortion(const sip_t* sip, double u, double v, double* U, doub
 // This applies the A,B matrix terms;
 // This is the distortion applied in the pixel-to-RA,Dec direction.
 //   (pix -> "un"distorted -> TAN -> RA,Dec)
-void sip_pixel_distortion(const sip_t* sip, double x, double y, double* X, double *Y);
+void sip_pixel_distortion(const sip_t* sip, double x, double y,
+                          double *p_x, double *p_y);
 
 // Reverses sip_pixel_distortion;
 // Applies "reverse" SIP distortion: the AP, BP matrices;
 // This is the distortion applied in the RA,Dec-to-pixel direction:
 //   (RA,Dec -> TAN -> undistorted -> pix)
-void sip_pixel_undistortion(const sip_t* sip, double x, double y, double* X, double *Y);
+void sip_pixel_undistortion(const sip_t* sip, double x, double y,
+                            double *p_x, double *p_y);
 
 // Pixels to XYZ unit vector.
 void   tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz);

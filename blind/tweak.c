@@ -621,8 +621,9 @@ static void do_sip_tweak(tweak_t* t) {
             weights[i] = dl_get(t->weight, i);
     }
 
+    int doshift = 1;
     result = fit_sip_wcs(starxyz, fieldxy, weights, M,
-                         &(t->sip->wcstan), t->sip->a_order, t->sip->ap_order,
+                         &(t->sip->wcstan), t->sip->a_order, t->sip->ap_order, doshift,
                          &sipout);
     free(starxyz);
     free(fieldxy);

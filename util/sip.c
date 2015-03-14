@@ -377,6 +377,10 @@ void sip_calc_distortion(const sip_t* sip, double u, double v, double* U, double
 			//if ((p+q > 0) && (p+q <= sip->b_order))
 			if (p+q <= sip->b_order)
 				guv += sip->b[p][q] * powu[p] * powv[q];
+
+    //printf("sip_calc_distortion: u,v = (%f, %f), fuv,guv = (%f,%f)\n",
+    //u, v, fuv, guv);
+
 	*U = u + fuv;
 	*V = v + guv;
 }
@@ -425,11 +429,9 @@ void sip_calc_inv_distortion(const sip_t* sip, double U, double V, double* u, do
 
 	for (p=0; p<=sip->ap_order; p++)
 		for (q=0; q<=sip->ap_order; q++)
-			//fUV += sip->ap[p][q] * pow(U,p) * pow(V,q);
 			fUV += sip->ap[p][q] * powu[p] * powv[q];
 	for (p=0; p<=sip->bp_order; p++) 
 		for (q=0; q<=sip->bp_order; q++) 
-			//gUV += sip->bp[p][q] * pow(U,p) * pow(V,q);
             gUV += sip->bp[p][q] * powu[p] * powv[q];
 
 	*u = U + fUV;

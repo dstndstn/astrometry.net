@@ -476,9 +476,10 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
                                                         crpix, &temptan, &sipout->wcstan);
             }
 
+            int doshift = 1;
             fit_sip_wcs(matchxyz, matchxy, weights, Nmatch,
                         &(sipout->wcstan), order, sip_invorder,
-                        sipout);
+                        doshift, sipout);
 
             debug("Got SIP:\n");
             if (log_get_level() > LOG_VERB)

@@ -23,6 +23,15 @@
 #include "astrometry/sip.h"
 #include "astrometry/starkd.h"
 
+int fit_sip_coefficients(const double* starxyz,
+                         const double* fieldxy,
+                         const double* weights,
+                         int M,
+                         const tan_t* tanin1,
+                         int sip_order,
+                         int inv_order,
+                         sip_t* sipout);
+
 void wcs_shift(tan_t* wcs, double xs, double ys);
 
 /**
@@ -40,7 +49,9 @@ int fit_sip_wcs(const double* starxyz,
                 const tan_t* tanin,
                 int sip_order,
                 int inv_order,
-                sip_t* sipout);
+                int doshift,
+                sip_t* sipout
+                );
 
 int fit_sip_wcs_2(const double* starxyz,
                   const double* fieldxy,
@@ -51,7 +62,9 @@ int fit_sip_wcs_2(const double* starxyz,
                   int W, int H,
                   int crpix_center,
                   double* crpix,
-                  sip_t* sipout);
+                  int doshift,
+                  sip_t* sipout
+                  );
 
 /**
  Move the tangent point to the given CRPIX, keeping the corresponding

@@ -1483,8 +1483,10 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
 									   sip.wcstan.crpix+0, sip.wcstan.crpix+1);
 			}
 
+            int doshift = 1;
             fit_sip_wcs(matchxyz, matchxy, weights, N, &(sip.wcstan),
-                        sp->tweak_aborder, sp->tweak_abporder, &sip);
+                        sp->tweak_aborder, sp->tweak_abporder, doshift,
+                        &sip);
 
 			for (i=0; i<Ngood; i++) {
 				double xx,yy;

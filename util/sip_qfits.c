@@ -185,16 +185,15 @@ int sip_get_image_size(const qfits_header* hdr, int* pW, int* pH) {
 }
 
 static void add_polynomial(qfits_header* hdr, const char* format,
-						   int order, const double* data, int datastride,
-						   anbool drop_linear) {
+						   int order, const double* data, int datastride) {
 	int i, j;
 	char key[64];
 	for (i=0; i<=order; i++)
 		for (j=0; (i+j)<=order; j++) {
-			if (i+j < 1)
-				continue;
-			if (drop_linear && (i+j < 2))
-				continue;
+			//if (i+j < 1)
+			//	continue;
+			//if (drop_linear && (i+j < 2))
+			//	continue;
 			sprintf(key, format, i, j);
 			fits_header_add_double(hdr, key, data[i*datastride + j], "");
 		}
@@ -211,16 +210,16 @@ void sip_add_to_header(qfits_header* hdr, const sip_t* sip) {
 	}
 
 	fits_header_add_int(hdr, "A_ORDER", sip->a_order, "Polynomial order, axis 1");
-	add_polynomial(hdr, "A_%i_%i", sip->a_order, (double*)sip->a, SIP_MAXORDER, TRUE);
+	add_polynomial(hdr, "A_%i_%i", sip->a_order, (double*)sip->a, SIP_MAXORDER);
 
 	fits_header_add_int(hdr, "B_ORDER", sip->b_order, "Polynomial order, axis 2");
-	add_polynomial(hdr, "B_%i_%i", sip->b_order, (double*)sip->b, SIP_MAXORDER, TRUE);
+	add_polynomial(hdr, "B_%i_%i", sip->b_order, (double*)sip->b, SIP_MAXORDER);
 
 	fits_header_add_int(hdr, "AP_ORDER", sip->ap_order, "Inv polynomial order, axis 1");
-	add_polynomial(hdr, "AP_%i_%i", sip->ap_order, (double*)sip->ap, SIP_MAXORDER, FALSE);
+	add_polynomial(hdr, "AP_%i_%i", sip->ap_order, (double*)sip->ap, SIP_MAXORDER);
 
 	fits_header_add_int(hdr, "BP_ORDER", sip->bp_order, "Inv polynomial order, axis 2");
-	add_polynomial(hdr, "BP_%i_%i", sip->bp_order, (double*)sip->bp, SIP_MAXORDER, FALSE);
+	add_polynomial(hdr, "BP_%i_%i", sip->bp_order, (double*)sip->bp, SIP_MAXORDER);
 }
 
 qfits_header* sip_create_header(const sip_t* sip) {
@@ -304,12 +303,14 @@ static anbool read_polynomial(const qfits_header* hdr, const char* format,
 	double val;
 	for (i=0; i<=order; i++)
 		for (j=0; (i+j)<=order; j++) {
-			if (skip_zero && i+j < 1)
+			if (skip_zero && (i+j < 1))
 				continue;
 			if (skip_linear && (i+j < 2))
 				continue;
 			sprintf(key, format, i, j);
 			val = qfits_header_getdouble(hdr, key, nil);
+            printf("Reading SIP: order %i,%i (%s) = %f\n",
+                   i, j, key, val);
 			if (val == nil) {
                 // don't warn if linear terms are "missing"
                 if (i+j >= 2) {

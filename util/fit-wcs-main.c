@@ -63,6 +63,7 @@ int main(int argc, char** args) {
     int W=0, H=0;
     anbool crpix_center = FALSE;
     int i;
+    int doshift = 1;
 
 	fits_use_error_system();
 
@@ -210,7 +211,7 @@ int main(int argc, char** args) {
 
         fit_sip_wcs_2(xyz, fieldxy, NULL, N,
                       siporder, siporder+1, W, H,
-                      crpix_center, NULL, &wcs);
+                      crpix_center, NULL, doshift, &wcs);
     }
 
     if (siporder <= 1) {
