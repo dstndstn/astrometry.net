@@ -55,7 +55,7 @@ class memberfuncwrapper(object):
 
 
 class multiproc(object):
-    def __init__(self, nthreads=1, init=None, initargs=None,
+    def __init__(self, nthreads=1, init=None, initargs=[],
                  map_chunksize=1, pool=None, wrap_all=False):
         self.wrap_all = wrap_all
         if pool is not None:

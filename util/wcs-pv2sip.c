@@ -244,15 +244,18 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	
 	tan_read_header(hdr, &tanwcs);
 
-    if (imageW && (imageW != tanwcs.crpix[0])) {
+    printf("Read TAN header:\n");
+    tan_print(&tanwcs);
+
+    if (imageW && (imageW != tanwcs.imagew)) {
         logmsg("Overriding image width %f with user-specified %i\n",
-               tanwcs.crpix[0], imageW);
-        tanwcs.crpix[0] = imageW;
+               tanwcs.imagew, imageW);
+        tanwcs.imagew = imageW;
     }
-    if (imageH && (imageH != tanwcs.crpix[1])) {
+    if (imageH && (imageH != tanwcs.imageh)) {
         logmsg("Overriding image height %f with user-specified %i\n",
-               tanwcs.crpix[1], imageH);
-        tanwcs.crpix[1] = imageH;
+               tanwcs.imageh, imageH);
+        tanwcs.imageh = imageH;
     }
 
 	for (i=0; i<sizeof(pv1)/sizeof(double); i++) {
@@ -313,6 +316,8 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
         rtn = fit_sip_coefficients(starxyz, xy, NULL, Nxy,
                                    &tanwcs, order, order, &sip);
         assert(rtn == 0);
+
+        sip_compute_inverse_polynomials(&sip, 0, 0, 0, 0, 0, 0);
 
 		sip_write_to_file(&sip, wcsoutfn);
         free(starxyz);

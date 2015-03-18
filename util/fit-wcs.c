@@ -618,8 +618,6 @@ int fit_sip_coefficients(const double* starxyz,
 	}
 	assert(j == N);
 
-	sip_compute_inverse_polynomials(sipout, 0, 0, 0, 0, 0, 0);
-
 	if (r1)
 		gsl_vector_free(r1);
 	if (r2)
