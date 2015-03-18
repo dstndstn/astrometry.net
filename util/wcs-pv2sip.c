@@ -244,6 +244,17 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	
 	tan_read_header(hdr, &tanwcs);
 
+    if (imageW && (imageW != tanwcs.crpix[0])) {
+        logmsg("Overriding image width %f with user-specified %i\n",
+               tanwcs.crpix[0], imageW);
+        tanwcs.crpix[0] = imageW;
+    }
+    if (imageH && (imageH != tanwcs.crpix[1])) {
+        logmsg("Overriding image height %f with user-specified %i\n",
+               tanwcs.crpix[1], imageH);
+        tanwcs.crpix[1] = imageH;
+    }
+
 	for (i=0; i<sizeof(pv1)/sizeof(double); i++) {
 		char key[10];
         double defaultval;
