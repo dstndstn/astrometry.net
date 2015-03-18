@@ -25,6 +25,7 @@
 #include "an-bool.h"
 #include "sip.h"
 #include "sip_qfits.h"
+#include "sip-utils.h"
 #include "starutil.h"
 #include "starxy.h"
 #include "tweak.h"
@@ -244,8 +245,10 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	
 	tan_read_header(hdr, &tanwcs);
 
-    printf("Read TAN header:\n");
-    tan_print(&tanwcs);
+    if (log_get_level() >= LOG_VERB) {
+        printf("Read TAN header:\n");
+        tan_print(&tanwcs);
+    }
 
     if (imageW && (imageW != tanwcs.imagew)) {
         logmsg("Overriding image width %f with user-specified %i\n",
@@ -317,7 +320,17 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
                                    &tanwcs, order, order, &sip);
         assert(rtn == 0);
 
+        if (log_get_level() >= LOG_VERB) {
+            printf("Fit SIP:\n");
+            sip_print(&sip);
+        }
+
         sip_compute_inverse_polynomials(&sip, 0, 0, 0, 0, 0, 0);
+
+        if (log_get_level() >= LOG_VERB) {
+            printf("Fit SIP inverse polynomials:\n");
+            sip_print(&sip);
+        }
 
 		sip_write_to_file(&sip, wcsoutfn);
         free(starxyz);
