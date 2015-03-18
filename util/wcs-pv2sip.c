@@ -336,14 +336,14 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
             y = ylo + i*ystep;
             for (j=0; j<nx; j++) {
                 x = xlo + j*xstep;
-                if (i == 0)
-                    printf("x=%f\n", x);
+                //if (i == 0)
+                //printf("x=%f\n", x);
                 xy[k] = x;
                 k++;
                 xy[k] = y;
                 k++;
             }
-            printf("y=%f\n", y);
+            //printf("y=%f\n", y);
         }
         assert(k == (Nxy*2));
     }
