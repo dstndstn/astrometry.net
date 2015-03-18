@@ -171,14 +171,35 @@ int sip_get_image_size(const qfits_header* hdr, int* pW, int* pH) {
 	debug("sip_get_image_size: IMAGEW = %i\n", W);
     H = qfits_header_getint(hdr, "IMAGEH", 0);
 	debug("sip_get_image_size: IMAGEH = %i\n", H);
-    if (!W) {
-        W = qfits_header_getint(hdr, "NAXIS1", 0);
-		debug("sip_get_image_size: NAXIS1 = %i\n", W);
-	}
-    if (!H) {
-        H = qfits_header_getint(hdr, "NAXIS2", 0);
-		debug("sip_get_image_size: NAXIS2 = %i\n", H);
-	}
+    if (W == 0 || H == 0) {
+        // no IMAGE[WH].  Check for fpack-compressed image.
+        int eq;
+        char* str = fits_get_dupstring(hdr, "XTENSION");
+        printf("XTENSION: '%s'\n", str);
+        // qfits_header_getstr turns the string double-quotes to single-quotes
+        eq = streq(str, "BINTABLE");
+        free(str);
+        if (eq) {
+            // ZNAXIS1 =                 2046 / length of data axis 1
+            // ZNAXIS2 =                 4094 / length of data axis 2
+            if (!W) {
+                W = qfits_header_getint(hdr, "ZNAXIS1", 0);
+                debug("sip_get_image_size: ZNAXIS1 = %i\n", W);
+            }
+            if (!H) {
+                H = qfits_header_getint(hdr, "ZNAXIS2", 0);
+                debug("sip_get_image_size: ZNAXIS2 = %i\n", H);
+            }
+        }
+        if (!W) {
+            W = qfits_header_getint(hdr, "NAXIS1", 0);
+            debug("sip_get_image_size: NAXIS1 = %i\n", W);
+        }
+        if (!H) {
+            H = qfits_header_getint(hdr, "NAXIS2", 0);
+            debug("sip_get_image_size: NAXIS2 = %i\n", H);
+        }
+    }
 	if (pW) *pW = W;
 	if (pH) *pH = H;
 	return 0;

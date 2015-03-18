@@ -17,6 +17,7 @@
 */
 #include <math.h>
 #include <assert.h>
+#include <sys/param.h>
 
 #include "fitsioutils.h"
 #include "ioutils.h"
@@ -91,24 +92,50 @@ PV2_10  =  -4.717653697970E-04 /      + PV2_10* x**3
 
  */
 
+/**
+ Evaluates the given TAN-TPV WCS header on a grid of points,
+ fitting a SIP distortion solution to it.
 
+ The grid can be specified by either:
+
+ double* xy, int Nxy
+
+ double stepsize=100, double xlo=0, double xhi=0, double ylo=0, double yhi=0
+
+ xlo and xhi, if both 0, default to 1. and the WCS width
+ ylo and yhi, if both 0, default to 1. and the WCS height
+
+ The number of steps is chosen to be the closest step size to split the range
+ xlo to xhi into an integer number of steps.
+
+ imageW and imageH, if non-zero, override the image width read from the WCS,
+ and ALSO the WCS width/height mentioned above.
+
+ */
 int wcs_pv2sip(const char* wcsinfn, int ext,
 			   const char* wcsoutfn,
 			   anbool scamp_head_file,
+
 			   double* xy, int Nxy,
+               
+               double stepsize,
+               double xlo, double xhi,
+               double ylo, double yhi,
+
 			   int imageW, int imageH,
                int order,
 			   anbool forcetan,
                int doshift) {
+
 	qfits_header* hdr = NULL;
 	double* radec = NULL;
 	int rtn = -1;
 	tan_t tanwcs;
 	double x,y, px,py;
-	double* xorig = NULL;
-	double* yorig = NULL;
 	double* rddist = NULL;
 	int i, j;
+    int nx, ny;
+    double xstep, ystep;
 
     /**
      From http://iraf.noao.edu/projects/mosaic/tpv.html
@@ -276,20 +303,62 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 		pv2[i] = qfits_header_getdouble(hdr, key, defaultval);
 	}
 
-	xorig = malloc(Nxy * sizeof(double));
-	yorig = malloc(Nxy * sizeof(double));
+
+    // choose grid for evaluating TAN-PV WCS
+    if (xlo == 0 && xhi == 0) {
+        xlo = 1.;
+        xhi = tanwcs.imagew;
+    }
+    if (ylo == 0 && yhi == 0) {
+        ylo = 1.;
+        yhi = tanwcs.imageh;
+    }
+
+	assert(xhi >= xlo);
+	assert(yhi >= ylo);
+
+	if (stepsize == 0)
+        stepsize = 100.;
+    nx = MAX(2, round((xhi - xlo)/stepsize));
+    ny = MAX(2, round((yhi - ylo)/stepsize));
+    xstep = (xhi - xlo) / (double)(nx - 1);
+    ystep = (yhi - ylo) / (double)(ny - 1);
+
+	logverb("Stepping from x = %g to %g, steps of %g\n", xlo, xhi, xstep);
+	logverb("Stepping from y = %g to %g, steps of %g\n", ylo, yhi, ystep);
+
+    Nxy = nx * ny;
+
+    if (xy == NULL) {
+        int k = 0;
+        xy = malloc(Nxy * 2 * sizeof(double));
+        for (i=0; i<ny; i++) {
+            y = ylo + i*ystep;
+            for (j=0; j<nx; j++) {
+                x = xlo + j*xstep;
+                if (i == 0)
+                    printf("x=%f\n", x);
+                xy[k] = x;
+                k++;
+                xy[k] = y;
+                k++;
+            }
+            printf("y=%f\n", y);
+        }
+        assert(k == (Nxy*2));
+    }
+
+    // distorted RA,Dec
 	rddist = malloc(2 * Nxy * sizeof(double));
 
 	for (j=0; j<Nxy; j++) {
+        double ix = xy[2*j+0];
+		double iy = xy[2*j+1];
 
-		xorig[j] = xy[2*j+0];
-		yorig[j] = xy[2*j+1];
-
-		tan_pixelxy2iwc(&tanwcs, 
-                        xorig[j], yorig[j],
-                        &x, &y);
+		tan_pixelxy2iwc(&tanwcs, ix, iy, &x, &y);
         // "x,y" here are most commonly known as "xi, eta".
 		r = sqrt(x*x + y*y);
+        // compute powers of x,y
 		xpows[0] = ypows[0] = rpows[0] = 1.0;
 		for (i=1; i<sizeof(xpows)/sizeof(double); i++) {
 			xpows[i] = xpows[i-1]*x;
@@ -325,6 +394,7 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
             sip_print(&sip);
         }
 
+        // FIXME? -- use xlo,xhi,ylo,yhi here??  Not clear.
         sip_compute_inverse_polynomials(&sip, 0, 0, 0, 0, 0, 0);
 
         if (log_get_level() >= LOG_VERB) {
@@ -339,8 +409,6 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	rtn = 0;
 
  bailout:
-	free(xorig);
-	free(yorig);
 	free(rddist);
 	qfits_header_destroy(hdr);
 	free(radec);
@@ -398,7 +466,7 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 #include "boilerplate.h"
 #include "bl.h"
 
-const char* OPTIONS = "hve:sx:X:y:Y:a:b:W:H:to:S";
+const char* OPTIONS = "hve:sx:X:y:Y:a:W:H:to:S";
 
 void print_help(char* progname) {
 	BOILERPLATE_HELP_HEADER(stdout);
@@ -415,10 +483,9 @@ void print_help(char* progname) {
 		   " Set the pixel values used to compute the distortion polynomials with:\n"
 		   "   [-x <x-low>] (default: 1)\n"
 		   "   [-y <y-low>] (default: 1)\n"
-		   "   [-X <x-high>] (default: 1000)\n" // or value of IMAGEW header)\n"
-		   "   [-Y <y-high>] (default: 1000)\n" // or value of IMAGEH header)\n"
-		   "   [-a <x-step>] (default: closest to 100 yielding whole number of steps)\n"
-		   "   [-b <y-step>] (default: closest to 100 yielding whole number of steps)\n"
+		   "   [-X <x-high>] (default: image width)\n"
+		   "   [-Y <y-high>] (default: image width)\n"
+		   "   [-a <step-size>] (default: closest to 100 yielding whole number of steps)\n"
 		   "\n", progname);
 }
 
@@ -434,17 +501,12 @@ int main(int argc, char** args) {
 	char* wcsoutfn = NULL;
 	int ext = 0;
 	anbool scamp = FALSE;
-	double xlo = 1;
-	double xhi = 1000;
-	double xstep = 0;
-	double ylo = 1;
-	double yhi = 1000;
-	double ystep = 0;
+	double xlo = 0;
+	double xhi = 0;
+	double stepsize = 0;
+	double ylo = 0;
+	double yhi = 0;
 	anbool forcetan = FALSE;
-	dl* xylst;
-	double x,y;
-	double* xy;
-	int Nxy;
 	int W, H;
     int doshift = 1;
 
@@ -474,16 +536,13 @@ int main(int argc, char** args) {
 			xhi = atof(optarg);
 			break;
 		case 'a':
-			xstep = atof(optarg);
+			stepsize = atof(optarg);
 			break;
 		case 'y':
 			ylo = atof(optarg);
 			break;
 		case 'Y':
 			yhi = atof(optarg);
-			break;
-		case 'b':
-			ystep = atof(optarg);
 			break;
 		case 's':
 			scamp = TRUE;
@@ -516,36 +575,11 @@ int main(int argc, char** args) {
 	logmsg("Reading WCS (with PV distortions) from %s, ext %i\n", wcsinfn, ext);
 	logmsg("Writing WCS (with SIP distortions) to %s\n", wcsoutfn);
 
-	assert(xhi >= xlo);
-	assert(yhi >= ylo);
-	if (xstep == 0) {
-		int nsteps = MAX(1, round((xhi - xlo)/100.0));
-		xstep = (xhi - xlo) / (double)nsteps;
-	}
-	if (ystep == 0) {
-		int nsteps = MAX(1, round((yhi - ylo)/100.0));
-		ystep = (yhi - ylo) / (double)nsteps;
-	}
-	logverb("Stepping from x = %g to %g, steps of %g\n", xlo, xhi, xstep);
-	logverb("Stepping from y = %g to %g, steps of %g\n", ylo, yhi, ystep);
-
-	xylst = dl_new(256);
-	for (y=ylo; y<=(yhi+0.001); y+=ystep) {
-		for (x=xlo; x<=(xhi+0.001); x+=xstep) {
-			dl_append(xylst, x);
-			dl_append(xylst, y);
-		}
-	}
-	Nxy = dl_size(xylst)/2;
-	xy = dl_to_array(xylst);
-	dl_free(xylst);
-
-	if (wcs_pv2sip(wcsinfn, ext, wcsoutfn, scamp, xy, Nxy, W, H,
+	if (wcs_pv2sip(wcsinfn, ext, wcsoutfn, scamp, NULL, 0,
+                   stepsize, xlo, xhi, ylo, yhi, W, H,
                    order, forcetan, doshift)) {
 		exit(-1);
 	}
-
-	free(xy);
 
 	return 0;
 }
