@@ -2,6 +2,7 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect, re
 from django.template import Context, RequestContext
 from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
 from astrometry.net.models import *
 
 def home(req):
@@ -15,9 +16,16 @@ def support(req):
     return render(req, 'support.html', context)
 
 def api_help(req):
-    context = {}
+    context = dict(user_profile=get_user_profile(req.user))
     return render(req, 'api_help.html', context)
     
+# @login_required
+# def new_api_key(req):
+#     pro = get_user_profile(req.user)
+#     
+#     return HttpResponse('you are ' + str(req.user) + 'with profile' + str(pro)
+#                         + 'or', str(req.user.get_profile()))
+
 def explore(req):
     recent_images = UserImage.objects.public_only(req.user)[:12]
     recent_comments = Comment.objects.filter(recipient__userimage__isnull=False)[:8]

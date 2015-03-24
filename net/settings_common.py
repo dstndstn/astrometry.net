@@ -199,6 +199,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
 
+    'astrometry.net.models.context_user_profile',
+
     'social.apps.django_app.context_processors.backends',
     'social.apps.django_app.context_processors.login_redirect',
     #'social.apps.django_app.context_processors.social_auth_by_type_backends',

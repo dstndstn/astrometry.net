@@ -73,6 +73,7 @@ def dashboard_profile(req):
         'license_form': license_form,
         'profile': profile,
         'site_default_license': License.get_default(),
+        'profile': profile,
     }
     return render(req, "dashboard/profile.html", context)
 
@@ -166,6 +167,7 @@ def user_profile(req, user_id=None):
         'display_user': user,
 		'recent_images': user.user_images.public_only(req.user),	
         'recent_submissions': user.submissions.all().order_by('-submitted_on')[:10],
+        'profile': get_user_profile(req.user),
     }
     return render_to_response('user/profile.html',
         context,
@@ -179,7 +181,7 @@ def user_images(req, user_id=None):
     
     context = {
         'display_user': user,
-        'image_page': page
+        'image_page': page,
     }
     
     return render_to_response('user/user_images.html',

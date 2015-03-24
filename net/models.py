@@ -1246,6 +1246,7 @@ def get_user_profile(user):
         return profiles[0]
     # Create new profile?
     profile = UserProfile(user=user)
+    print 'Creating new profile for user', user
     profile.create_api_key()
     profile.create_default_license()
     if user.get_full_name():
@@ -1255,3 +1256,13 @@ def get_user_profile(user):
     profile.save()
     return profile
 
+## This is a hack: a template context processor that sets
+## user.get_profile to the actual profile.  The template language
+## can't tell the difference between an attribute and a function, so
+## this works.
+def context_user_profile(req):
+    if req.user.is_authenticated():
+        req.user.get_profile = get_user_profile(req.user)
+    return dict(user=req.user)
+
+    
