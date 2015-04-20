@@ -1,6 +1,7 @@
 import os
 class NoPyfits(object):
     pass
+fitsio = pyfits = None
 try:
     import fitsio
     pyfits = NoPyfits()
@@ -662,6 +663,7 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
             data = F[hdunum]
             hdr = data.read_header()
         else:
+            global pyfits
             pf = pyfits.open(dataorfn, memmap=mmap)
             data = pf[hdunum].data
             if header == 'default':

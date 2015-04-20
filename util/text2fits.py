@@ -32,7 +32,7 @@ if __name__ == '__main__':
     #   coltypes = 
     if opt.format:
         typemap = {'d':np.float64, 'f':np.float32, 's':str,
-                   'j':np.int32, 'k':np.int64}
+                   'i':np.int16, 'j':np.int32, 'k':np.int64}
         coltypes = [typemap[c] for c in opt.format]
 
     fnulls = dict([(x, np.nan) for x in opt.fnull])
