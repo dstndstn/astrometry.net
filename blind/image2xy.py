@@ -42,7 +42,13 @@ MODIFICATION HISTORY:
 # You need ctypes and a recent (1.0) numpy for this to work. I've included
 # pyfits so you don't have to. 
 
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 import sys
 import scipy
 import os

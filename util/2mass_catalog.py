@@ -2,7 +2,13 @@
 import sys
 from optparse import OptionParser
 
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 from numpy import *
 
 from astrometry.util.fits import *

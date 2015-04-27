@@ -13,7 +13,15 @@ from astrometry.util.fits import pyfits_writeto
 
 if __name__ == '__main__':
 	try:
-		import pyfits
+                try:
+                        import pyfits
+                except ImportError:
+                        try:
+                                from astropy.io import fits as pyfits
+                        except ImportError:
+                                raise ImportError(
+                                        "Cannot import either pyfits or astropy.io.fits"
+                                        )
 		import astrometry
 		from astrometry.util.shell import shell_escape
 		from astrometry.util.filetype import filetype_short
@@ -33,7 +41,13 @@ if __name__ == '__main__':
 		sys.path.insert(2, rootdir)
 
 import numpy
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+        except ImportError:
+            raise ImportError("Cannot import either pyfits or astropy.io.fits")
 from numpy import *
 from numpy.random import rand
 
