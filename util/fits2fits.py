@@ -16,9 +16,21 @@ if __name__ == '__main__':
     # of the path: astrometry to pick up pyfits, and .. to pick up astrometry itself.
     sys.path.insert(1, andir)
     sys.path.insert(2, rootdir)
-    import pyfits
+    try:
+        import pyfits
+    except ImportError:
+        try:
+            from astropy.io import fits as pyfits
+        except ImportError:
+            raise ImportError("Cannot import either pyfits or astropy.io.fits")
 
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 from astrometry.util.fits import pyfits_writeto
 
 def fits2fits(infile, outfile, verbose=False, fix_idr=False):

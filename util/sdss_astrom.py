@@ -8,7 +8,13 @@
 
 from astrometry.util.fits import *
 from numpy import *
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 from glob import glob
 
 def tsfield_get_node_incl(tsfield):

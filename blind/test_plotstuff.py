@@ -3,7 +3,13 @@ if __name__ == '__main__':
 	matplotlib.use('Agg')
 import unittest
 
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 import numpy as np
 import pylab as plt
 from math import pi,sqrt
