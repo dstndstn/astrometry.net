@@ -849,7 +849,7 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         t1 = time.clock()
 
         floattypes = [float,np.float32,np.float64]
-        inttypes = [int, np.int32, np.int64]
+        inttypes = [int, np.int16, np.int32, np.int64]
 
         for dat,typ in zip(data, coltypes):
             if typ in floattypes:
@@ -876,8 +876,13 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         # trim to valid rows
         data = [dat[:goodrows] for dat in data]
         # convert
-        data = [np.array(dat).astype(typ) for dat,typ in zip(data, coltypes)]
-                    
+        try:
+            data = [np.array(dat).astype(typ) for dat,typ in zip(data, coltypes)]
+        except:
+            for name,dat,typ in zip(colnames, data, coltypes):
+                print 'Column', name
+                np.array(dat).astype(typ)
+            raise
         t3 = time.clock()
 
         #print 'Reading & splitting:', t1-t0
