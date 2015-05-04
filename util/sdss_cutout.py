@@ -2,9 +2,14 @@
 
 import os
 import sys
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 from astrometry.util.util import *
-import pyfits
 from astrometry.util.sdss_noise import *
 from astrometry.util.sdss_psfield import *
 

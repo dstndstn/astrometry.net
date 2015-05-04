@@ -33,7 +33,13 @@ import threading
 import mimetools, mimetypes
 import os, stat
 from cStringIO import StringIO
-import pyfits 
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 import time
 
 __author__  = "J. S. Bloom"

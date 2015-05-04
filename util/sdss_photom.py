@@ -8,7 +8,13 @@
 from astrometry.util.fits import *
 from numpy import *
 import numpy as np
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 
 class PhotometricCalib(object):
 	def __init__(self, tsfieldfn):

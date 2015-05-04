@@ -2,7 +2,13 @@ import matplotlib
 if __name__ == '__main__':
 	matplotlib.use('Agg')
 import unittest
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 from astrometry.util.fits import *
 from astrometry.blind.plotstuff import *
 import numpy as np
