@@ -2,7 +2,13 @@ import os
 from astrometry.util.fits import fits_table
 from astrometry.util.miscutils import get_overlapping_region
 import numpy as np
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 
 try:
     import cutils

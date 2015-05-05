@@ -1,5 +1,11 @@
 import math
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 from numpy import *
 from matplotlib.pylab import figure, plot, xlabel, ylabel, loglog, clf
 from matplotlib.pylab import semilogy, show, find, legend, hist, axis

@@ -7,7 +7,13 @@ try:
     pyfits = NoPyfits()
 except:
     try:
-        import pyfits
+        try:
+            import pyfits
+        except ImportError:
+            try:
+                from astropy.io import fits as pyfits
+            except ImportError:
+                raise ImportError("Cannot import either pyfits or astropy.io.fits")
     except:
         pyfits = NoPyfits()
 import numpy as np
@@ -686,17 +692,25 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
             # in a try/catch in case pyfits isn't available
             isrecarray = (type(data) == pyfits.core.FITS_rec)
         except:
-            import traceback
-            traceback.print_exc()
-            pass
+            try:
+                from astropy.io import fits as pyfits
+                isrecarray = (type(data) == pyfits.core.FITS_rec)
+            except:
+                import traceback
+                traceback.print_exc()
+                pass
         if not isrecarray:
             try:
                 import pyfits.fitsrec
                 isrecarray = (type(data) == pyfits.fitsrec.FITS_rec)
             except:
-                import traceback
-                traceback.print_exc()
-                pass
+                try:
+                    from astropy.io import fits as pyfits
+                    isrecarray = (type(data) == pyfits.fitsrec.FITS_rec)
+                except:
+                    import traceback
+                    traceback.print_exc()
+                    pass
         #if not isrecarray:
         #    if type(data) == np.recarray:
         #        isrecarray = True
@@ -849,7 +863,7 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         t1 = time.clock()
 
         floattypes = [float,np.float32,np.float64]
-        inttypes = [int, np.int32, np.int64]
+        inttypes = [int, np.int16, np.int32, np.int64]
 
         for dat,typ in zip(data, coltypes):
             if typ in floattypes:
@@ -876,8 +890,13 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         # trim to valid rows
         data = [dat[:goodrows] for dat in data]
         # convert
-        data = [np.array(dat).astype(typ) for dat,typ in zip(data, coltypes)]
-                    
+        try:
+            data = [np.array(dat).astype(typ) for dat,typ in zip(data, coltypes)]
+        except:
+            for name,dat,typ in zip(colnames, data, coltypes):
+                print 'Column', name
+                np.array(dat).astype(typ)
+            raise
         t3 = time.clock()
 
         #print 'Reading & splitting:', t1-t0

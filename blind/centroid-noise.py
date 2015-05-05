@@ -7,7 +7,13 @@ from math import pi
 from pylab import *
 from numpy import *
 from numpy.random import *
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 
 # Given an image and an xylist (including estimated image sigma),
 # look at a cutout around each source position, add noise, and recompute

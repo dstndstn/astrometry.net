@@ -96,11 +96,11 @@ def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
         margin = splineMargin
         step = splineStep
         xlo = max(0, x0-margin)
-        xhi = min(W, x1+margin+1)
+        xhi = min(W-1, x1+margin)
         nx = np.ceil(float(xhi - xlo) / step) + 1
         xx = np.linspace(xlo, xhi, nx)
         ylo = max(0, y0-margin)
-        yhi = min(H, y1+margin+1)
+        yhi = min(H-1, y1+margin)
         ny = np.ceil(float(yhi - ylo) / step) + 1
         yy = np.linspace(ylo, yhi, ny)
 
