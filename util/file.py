@@ -3,8 +3,11 @@ import os
 #import pickle
 import cPickle
 
-def trymakedirs(fn):
-    dirnm = os.path.dirname(fn)
+def trymakedirs(fn, dir=False):
+    if dir is True:
+        dirnm = os.path.dirname(fn)
+    else:
+        dirnm = fn
     if not os.path.exists(dirnm):
         try:
             os.makedirs(dirnm)
