@@ -1,7 +1,19 @@
+0.54:
+	Try importing pyfits and then astropy.io.fits
+
+0.53:
+	Update wcs-pv2sip and include in default build
+	Fixes for git version strings
+	Read and write linear SIP distortion terms
+	multiindex: don't assert when reloading already-loaded file
+
+0.52:
+	Fix release version strings in released versions.
+
 0.51:
 	Fix half-pixel bug in "solve-field --crpix-center": the center was
 	set to 1 + {W,H}/2, not 0.5 + {W,H}/2.  (The WCS was still
 	correct, the CRPIX was set to a half pixel in each dimension away
 	from the center pixel.
 
-	
+
