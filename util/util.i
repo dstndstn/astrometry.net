@@ -1897,18 +1897,18 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         innersizeptr = NpyIter_GetInnerLoopSizePtr(iter);
         dataptrarray = NpyIter_GetDataPtrArray(iter);
 
-        // are the inputs contiguous?  (Outputs will be, since we
-        // allocated them)
-        if ((strideptr[0] == sizeof(double)) &&
-            (strideptr[1] == sizeof(double))) {
-            // printf("Contiguous inputs; going fast\n");
-            do {
-                N = *innersizeptr;
-                double* din1 = (double*)dataptrarray[0];
-                double* din2 = (double*)dataptrarray[1];
-                double* dout1 = (double*)dataptrarray[2];
-                double* dout2 = (double*)dataptrarray[3];
+        do {
+            // are the inputs contiguous?  (Outputs will be, since we
+            // allocated them)
+            if ((strideptr[0] == sizeof(double)) &&
+                (strideptr[1] == sizeof(double))) {
+                // printf("Contiguous inputs; going fast\n");
+                double* din1  = (double*)(dataptrarray[0]);
+                double* din2  = (double*)(dataptrarray[1]);
+                double* dout1 = (double*)(dataptrarray[2]);
+                double* dout2 = (double*)(dataptrarray[3]);
                 char* ok = dataptrarray[4];
+                N = *innersizeptr;
                 while (N--) {
                     *ok = func(baton, *din1, *din2, dout1, dout2);
                     ok++;
@@ -1917,12 +1917,10 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                     dout1++;
                     dout2++;
                 }
-            } while (iternext(iter));
-        } else {
-            // printf("Non-contiguous inputs; going slow\n");
-            npy_intp stride1 = NpyIter_GetInnerStrideArray(iter)[0];
-            npy_intp stride2 = NpyIter_GetInnerStrideArray(iter)[1];
-            do {
+            } else {
+                // printf("Non-contiguous inputs; going slow\n");
+                npy_intp stride1 = strideptr[0];
+                npy_intp stride2 = strideptr[1];
                 npy_intp size = *innersizeptr;
                 char* src1 = dataptrarray[0];
                 char* src2 = dataptrarray[1];
@@ -1939,8 +1937,8 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                     dout1++;
                     dout2++;
                 }
-            } while (iternext(iter));
-        }
+            }
+        } while (iternext(iter));
 
         if (PyArray_IsPythonScalar(in1) && PyArray_IsPythonScalar(in2)) {
             PyObject* px  = (PyObject*)NpyIter_GetOperandArray(iter)[2];
@@ -2061,18 +2059,18 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         innersizeptr = NpyIter_GetInnerLoopSizePtr(iter);
         dataptrarray = NpyIter_GetDataPtrArray(iter);
 
-        // are the inputs contiguous?  (Outputs will be, since we
-        // allocated them)
-        if ((strideptr[0] == sizeof(double)) &&
-            (strideptr[1] == sizeof(double))) {
-            // printf("Contiguous inputs; going fast\n");
-            do {
-                N = *innersizeptr;
-                double* din1 = (double*)dataptrarray[0];
-                double* din2 = (double*)dataptrarray[1];
-                double* dout1 = (double*)dataptrarray[2];
-                double* dout2 = (double*)dataptrarray[3];
+        do {
+            // are the inputs contiguous?  (Outputs will be, since we
+            // allocated them)
+            if ((strideptr[0] == sizeof(double)) &&
+                (strideptr[1] == sizeof(double))) {
+                // printf("Contiguous inputs; going fast\n");
+                double* din1  = (double*)(dataptrarray[0]);
+                double* din2  = (double*)(dataptrarray[1]);
+                double* dout1 = (double*)(dataptrarray[2]);
+                double* dout2 = (double*)(dataptrarray[3]);
                 int* ok = (int*)dataptrarray[4];
+                N = *innersizeptr;
                 while (N--) {
                     *ok = func(baton, *din1, *din2, dout1, dout2);
                     ok++;
@@ -2081,12 +2079,10 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                     dout1++;
                     dout2++;
                 }
-            } while (iternext(iter));
-        } else {
-            // printf("Non-contiguous inputs; going slow\n");
-            npy_intp stride1 = NpyIter_GetInnerStrideArray(iter)[0];
-            npy_intp stride2 = NpyIter_GetInnerStrideArray(iter)[1];
-            do {
+            } else {
+                // printf("Non-contiguous inputs; going slow\n");
+                npy_intp stride1 = strideptr[0];
+                npy_intp stride2 = strideptr[1];
                 npy_intp size = *innersizeptr;
                 char* src1 = dataptrarray[0];
                 char* src2 = dataptrarray[1];
@@ -2103,8 +2099,8 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                     dout1++;
                     dout2++;
                 }
-            } while (iternext(iter));
-        }
+            }
+        } while (iternext(iter));
 
         if (PyArray_IsPythonScalar(in1) && PyArray_IsPythonScalar(in2)) {
             PyObject* px  = (PyObject*)NpyIter_GetOperandArray(iter)[2];
@@ -2156,7 +2152,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         char **dataptrarray;
         npy_intp* strideptr;
         PyArray_Descr* dtypes[4];
-        npy_intp i, N;
+        npy_intp i;
         
         // we'll do the inner loop ourselves
         flags = NPY_ITER_EXTERNAL_LOOP;
@@ -2205,36 +2201,45 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         innersizeptr = NpyIter_GetInnerLoopSizePtr(iter);
         dataptrarray = NpyIter_GetDataPtrArray(iter);
 
-        // are the inputs contiguous?  (Outputs will be, since we
-        // allocated them)
-        if ((strideptr[0] == sizeof(double)) &&
-            (strideptr[1] == sizeof(double))) {
-            // printf("Contiguous inputs; going fast\n");
-            do {
-                N = *innersizeptr;
-                double* din1 = (double*)dataptrarray[0];
-                double* din2 = (double*)dataptrarray[1];
-                double* dout1 = (double*)dataptrarray[2];
-                double* dout2 = (double*)dataptrarray[3];
+        do {
+            // are the inputs contiguous?  (Outputs will be, since we
+            // allocated them)
+            if ((strideptr[0] == sizeof(double)) &&
+                (strideptr[1] == sizeof(double))) {
+
+                npy_intp N = *innersizeptr;
+                double* din1  = (double*)(dataptrarray[0]);
+                double* din2  = (double*)(dataptrarray[1]);
+                double* dout1 = (double*)(dataptrarray[2]);
+                double* dout2 = (double*)(dataptrarray[3]);
+
+                //printf("Contiguous inputs; going fast\n");
+                //printf("Inner loop: %i\n", (int)N);
+                //printf("Output strides: %i %i\n", (int)strideptr[2], (int)strideptr[3]);
+                //printf("Strides: %i %i %i %i\n", (int)strideptr[0], (int)strideptr[1], (int)strideptr[2], (int)strideptr[3]);
+
                 while (N--) {
+                    //printf("Calling %i: inputs (%12g,%12g)\n", (int)N, *din1, *din2);
                     func(baton, *din1, *din2, dout1, dout2);
                     din1++;
                     din2++;
                     dout1++;
                     dout2++;
                 }
-            } while (iternext(iter));
-        } else {
-            // printf("Non-contiguous inputs; going slow\n");
-            npy_intp stride1 = NpyIter_GetInnerStrideArray(iter)[0];
-            npy_intp stride2 = NpyIter_GetInnerStrideArray(iter)[1];
-            do {
+            } else {
+                npy_intp stride1 = NpyIter_GetInnerStrideArray(iter)[0];
+                npy_intp stride2 = NpyIter_GetInnerStrideArray(iter)[1];
                 npy_intp size = *innersizeptr;
-                char* src1 = dataptrarray[0];
-                char* src2 = dataptrarray[1];
-                double* dout1 = (double*)dataptrarray[2];
-                double* dout2 = (double*)dataptrarray[3];
+                char*   src1  = dataptrarray[0];
+                char*   src2  = dataptrarray[1];
+                double* dout1 = (double*)(dataptrarray[2]);
+                double* dout2 = (double*)(dataptrarray[3]);
+
+                //printf("Non-contiguous inputs; going slow\n");
+                //printf("%i items\n", (int)size);
+                
                 for (i=0; i<size; i++) {
+                    //printf("Call %i: inputs (%12g,%12g)\n", (int)i, ((double*)src1)[0], ((double*)src2)[0]);
                     func(baton, *((double*)src1), *((double*)src2),
                          dout1, dout2);
                     src1 += stride1;
@@ -2242,8 +2247,8 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                     dout1++;
                     dout2++;
                 }
-            } while (iternext(iter));
-        }
+            }
+        } while (iternext(iter));
 
         if (PyArray_IsPythonScalar(in1) && PyArray_IsPythonScalar(in2)) {
             PyObject* px  = (PyObject*)NpyIter_GetOperandArray(iter)[2];
