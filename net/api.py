@@ -102,13 +102,13 @@ def requires_json_login(handler):
 def upload_common(request, url=None, file=None):
     df, original_filename = handle_upload(file=file, url=url)
     submittor = request.user if request.user.is_authenticated() else None
-
+    pro = get_user_profile(submittor)
     json = request.json
     logmsg('upload: JSON', json)
     allow_commercial_use = json.get('allow_commercial_use', 'd')
     allow_modifications = json.get('allow_modifications', 'd')
     license,created = License.objects.get_or_create(
-        default_license=submittor.get_profile().default_license,
+        default_license=pro.default_license,
         allow_commercial_use=allow_commercial_use,
         allow_modifications=allow_modifications,
     )
@@ -159,15 +159,34 @@ def upload_common(request, url=None, file=None):
 @csrf_exempt
 @requires_json_args
 @requires_json_session
+@requires_json_login
 def url_upload(req):
-    logmsg('request:' + str(req))
+    #logmsg('request:' + str(req))
     url = req.json.get('url')
     logmsg('url: %s' % url)
+
+    logmsg('req.session:', req.session)
+    logmsg('req.session keys:', req.session.keys())
+    user_id = req.session['_auth_user_id']
+    logmsg('user_id:', user_id)
+    backend_path = req.session['_auth_user_backend']
+    logmsg('backend_path:', backend_path)
+    from django.contrib.auth import load_backend
+    
+    backend = load_backend(backend_path)
+    logmsg('backend:', backend)
+    user = backend.get_user(user_id)
+    logmsg('user:', user)
+    logmsg('is_auth:', user.is_authenticated())
+
+    logmsg('request.user:', req.user)
+
     return upload_common(req, url=url)
 
 @csrf_exempt
 @requires_json_args
 @requires_json_session
+@requires_json_login
 def api_upload(request):
     #logmsg('request:' + str(request))
     upfile = request.FILES.get('file', None)
@@ -258,10 +277,14 @@ def api_login(request):
     #auth.authenticate(username=profile.user.username, password=password)
     #auth.login(request, profile.user)
 
-    loginfo('backends:' + str(auth.get_backends()))
+    # Instead, since we're using the auth AuthenticationMiddleware,
+    # we just have to register the session?
+
+    #loginfo('backends:' + str(auth.get_backends()))
 
     user = profile.user
-    user.backend = 'django_openid_auth.auth.OpenIDBackend'
+    #user.backend = 'django_openid_auth.auth.OpenIDBackend'
+    user.backend = 'django.contrib.auth.backends.ModelBackend'
 
     session = create_session(None)
 

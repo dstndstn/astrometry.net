@@ -173,7 +173,7 @@ config: util/os-features-config.h util/makefile.os-features
 	$(MAKE) -C util config
 .PHONY: config
 
-RELEASE_VER := $(shell git describe | cut -f1 -d"-")
+RELEASE_VER ?= $(shell git describe | cut -f1 -d"-")
 
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_RMDIRS := net
@@ -187,6 +187,8 @@ release:
 	(cd $(RELEASE_DIR)/util  && swig -python -I. -I../include/astrometry util.i)
 	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
 	(cd $(RELEASE_DIR)/sdss  && swig -python -I. cutils.i)
+	cat $(RELEASE_DIR)/util/makefile.common | sed "s/AN_GIT_REVISION .=.*/AN_GIT_REVISION := $$(git describe)/" | sed "s/AN_GIT_DATE .=.*/AN_GIT_DATE := $$(git log -n 1 --format=%cd | sed 's/ /_/g')/" > $(RELEASE_DIR)/util/makefile.common.x && mv $(RELEASE_DIR)/util/makefile.common.x $(RELEASE_DIR)/util/makefile.common
+	cat $(RELEASE_DIR)/Makefile | sed "s/RELEASE_VER .=.*/RELEASE_VER := $(RELEASE_VER)/" > $(RELEASE_DIR)/Makefile.x && mv $(RELEASE_DIR)/Makefile.x $(RELEASE_DIR)/Makefile
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
 	bzip2 --best $(RELEASE_DIR).tar

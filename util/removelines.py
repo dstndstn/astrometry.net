@@ -9,7 +9,13 @@ if __name__ == '__main__':
     addpath.addpath()
 
 import numpy
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 from numpy import *
 from numpy.random import rand
 from astrometry.util.fits import pyfits_writeto

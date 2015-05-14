@@ -897,7 +897,7 @@ class UserImageManager(models.Manager):
         return valid_uis.order_by('-submission__submitted_on')
 
     def public_only(self, user=None):
-        if user and not user.is_authenticated():
+        if user is not None and not user.is_authenticated():
             user = None
         return self.all_visible().filter(Q(publicly_visible='y') | Q(user=user))
     
@@ -1147,7 +1147,8 @@ class Submission(Hideable):
         self.processing_finished = datetime.now()
 
     def save(self, *args, **kwargs):
-        default_license=self.user.get_profile().default_license
+        pro = get_user_profile(self.user)
+        default_license=pro.default_license
         try:
             self.license
         except:
@@ -1236,3 +1237,32 @@ class UserProfile(models.Model):
 
         return super(UserProfile, self).save(*args, **kwargs)
 
+
+def get_user_profile(user):
+    if user is None:
+        return None
+    profiles = user.profile.all()
+    if len(profiles) > 0:
+        return profiles[0]
+    # Create new profile?
+    profile = UserProfile(user=user)
+    print 'Creating new profile for user', user
+    profile.create_api_key()
+    profile.create_default_license()
+    if user.get_full_name():
+        profile.display_name = user.get_full_name()
+    else:
+        profile.display_name = user.username
+    profile.save()
+    return profile
+
+## This is a hack: a template context processor that sets
+## user.get_profile to the actual profile.  The template language
+## can't tell the difference between an attribute and a function, so
+## this works.
+def context_user_profile(req):
+    if req.user.is_authenticated():
+        req.user.get_profile = get_user_profile(req.user)
+    return dict(user=req.user)
+
+    

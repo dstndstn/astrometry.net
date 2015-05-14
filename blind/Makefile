@@ -349,9 +349,6 @@ fit-wcs: fit-wcs-main.o $(SLIB)
 
 ALL_OBJ += image2xy-files.o
 
-wcs-pv2sip: wcs-pv2sip.o tweak.o $(SLIB)
-ALL_OBJ += wcs-pv2sip.o
-
 hpgrid: hpgrid.o $(SLIB)
 
 $(CFITS_UTILS) :: %: %.o $(CFITS_SLIB)

@@ -1,3 +1,5 @@
+sitename = 'nova'
+
 # settings_nova.py
 from settings_common import *
 
@@ -9,5 +11,6 @@ LOGGING['loggers']['django.request']['level'] = 'WARN'
 SESSION_COOKIE_NAME = 'NovaAstrometrySession'
 
 ssh_solver_config = 'an-nova'
-sitename = 'nova'
 
+SOCIAL_AUTH_GITHUB_KEY    = github_secrets[sitename].key
+SOCIAL_AUTH_GITHUB_SECRET = github_secrets[sitename].secret

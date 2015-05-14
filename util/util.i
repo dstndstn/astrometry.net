@@ -1291,6 +1291,9 @@ anwcs.get_cd = anwcs_get_cd
     void get_distortion(double x, double y, double *p_x, double *p_y) {
         return sip_pixel_distortion($self, x, y, p_x, p_y);
     }
+    void get_undistortion(double x, double y, double *p_x, double *p_y) {
+        return sip_pixel_undistortion($self, x, y, p_x, p_y);
+    }
 
     int write_to(const char* filename) {
         return sip_write_to_file($self, filename);
@@ -1716,10 +1719,11 @@ Sip = sip_t
       if (np_weights != Py_None)
           weights = PyArray_DATA(np_weights);
 
+      int doshift = 1;
       int rtn = fit_sip_wcs(PyArray_DATA(np_starxyz),
                             PyArray_DATA(np_fieldxy),
                             weights, M, tanin, sip_order, inv_order,
-                            sipout);
+                            doshift, sipout);
       if (rtn) {
           free(sipout);
           printf("fit_sip_wcs() returned %i\n", rtn);

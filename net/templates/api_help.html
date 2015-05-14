@@ -32,11 +32,17 @@
     {% if user.is_authenticated %} 
         but here it is for convenience:<br />
         <span style="margin-left:20px">
-            {% include 'user/api_key.html' with apikey=user.get_profile.apikey %}
+            {% include 'user/api_key.html' with apikey=user_profile.apikey %}
         </span><br />
+	{% comment %}
+	<form action="{% url 'new_api_key' %}">
+	  You can also <input type="submit" value="Generate a new API key" />
+	</form>
+	<br />
+	{% endcomment %}
     {% else %}
         so you must first
-        <a href="{% url 'openid-login' %}?next={{ request.path }}">Sign In</a>.
+        <a href="{% url 'signin' %}?next={{ request.path }}">Sign In</a>.
 
     {% endif %}
 

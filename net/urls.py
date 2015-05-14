@@ -13,6 +13,7 @@ urlpatterns += patterns('astrometry.net.views.home',
     (r'^/?$', 'home'),
     url(r'^support/?$', 'support', name='support'),
     url(r'^api_help/?$', 'api_help', name='api-help'),
+    # url(r'^new_api_key/?$', 'new_api_key', name='new_api_key'),
     url(r'^explore/?$', 'explore', name='explore'),
 )
 

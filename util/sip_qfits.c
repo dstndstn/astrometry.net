@@ -171,30 +171,50 @@ int sip_get_image_size(const qfits_header* hdr, int* pW, int* pH) {
 	debug("sip_get_image_size: IMAGEW = %i\n", W);
     H = qfits_header_getint(hdr, "IMAGEH", 0);
 	debug("sip_get_image_size: IMAGEH = %i\n", H);
-    if (!W) {
-        W = qfits_header_getint(hdr, "NAXIS1", 0);
-		debug("sip_get_image_size: NAXIS1 = %i\n", W);
-	}
-    if (!H) {
-        H = qfits_header_getint(hdr, "NAXIS2", 0);
-		debug("sip_get_image_size: NAXIS2 = %i\n", H);
-	}
+    if (W == 0 || H == 0) {
+        // no IMAGE[WH].  Check for fpack-compressed image.
+        int eq;
+        char* str = fits_get_dupstring(hdr, "XTENSION");
+        printf("XTENSION: '%s'\n", str);
+        // qfits_header_getstr turns the string double-quotes to single-quotes
+        eq = streq(str, "BINTABLE");
+        free(str);
+        if (eq) {
+            // ZNAXIS1 =                 2046 / length of data axis 1
+            // ZNAXIS2 =                 4094 / length of data axis 2
+            if (!W) {
+                W = qfits_header_getint(hdr, "ZNAXIS1", 0);
+                debug("sip_get_image_size: ZNAXIS1 = %i\n", W);
+            }
+            if (!H) {
+                H = qfits_header_getint(hdr, "ZNAXIS2", 0);
+                debug("sip_get_image_size: ZNAXIS2 = %i\n", H);
+            }
+        }
+        if (!W) {
+            W = qfits_header_getint(hdr, "NAXIS1", 0);
+            debug("sip_get_image_size: NAXIS1 = %i\n", W);
+        }
+        if (!H) {
+            H = qfits_header_getint(hdr, "NAXIS2", 0);
+            debug("sip_get_image_size: NAXIS2 = %i\n", H);
+        }
+    }
 	if (pW) *pW = W;
 	if (pH) *pH = H;
 	return 0;
 }
 
 static void add_polynomial(qfits_header* hdr, const char* format,
-						   int order, const double* data, int datastride,
-						   anbool drop_linear) {
+						   int order, const double* data, int datastride) {
 	int i, j;
 	char key[64];
 	for (i=0; i<=order; i++)
 		for (j=0; (i+j)<=order; j++) {
-			if (i+j < 1)
-				continue;
-			if (drop_linear && (i+j < 2))
-				continue;
+			//if (i+j < 1)
+			//	continue;
+			//if (drop_linear && (i+j < 2))
+			//	continue;
 			sprintf(key, format, i, j);
 			fits_header_add_double(hdr, key, data[i*datastride + j], "");
 		}
@@ -211,16 +231,16 @@ void sip_add_to_header(qfits_header* hdr, const sip_t* sip) {
 	}
 
 	fits_header_add_int(hdr, "A_ORDER", sip->a_order, "Polynomial order, axis 1");
-	add_polynomial(hdr, "A_%i_%i", sip->a_order, (double*)sip->a, SIP_MAXORDER, TRUE);
+	add_polynomial(hdr, "A_%i_%i", sip->a_order, (double*)sip->a, SIP_MAXORDER);
 
 	fits_header_add_int(hdr, "B_ORDER", sip->b_order, "Polynomial order, axis 2");
-	add_polynomial(hdr, "B_%i_%i", sip->b_order, (double*)sip->b, SIP_MAXORDER, TRUE);
+	add_polynomial(hdr, "B_%i_%i", sip->b_order, (double*)sip->b, SIP_MAXORDER);
 
 	fits_header_add_int(hdr, "AP_ORDER", sip->ap_order, "Inv polynomial order, axis 1");
-	add_polynomial(hdr, "AP_%i_%i", sip->ap_order, (double*)sip->ap, SIP_MAXORDER, FALSE);
+	add_polynomial(hdr, "AP_%i_%i", sip->ap_order, (double*)sip->ap, SIP_MAXORDER);
 
 	fits_header_add_int(hdr, "BP_ORDER", sip->bp_order, "Inv polynomial order, axis 2");
-	add_polynomial(hdr, "BP_%i_%i", sip->bp_order, (double*)sip->bp, SIP_MAXORDER, FALSE);
+	add_polynomial(hdr, "BP_%i_%i", sip->bp_order, (double*)sip->bp, SIP_MAXORDER);
 }
 
 qfits_header* sip_create_header(const sip_t* sip) {
@@ -304,7 +324,7 @@ static anbool read_polynomial(const qfits_header* hdr, const char* format,
 	double val;
 	for (i=0; i<=order; i++)
 		for (j=0; (i+j)<=order; j++) {
-			if (skip_zero && i+j < 1)
+			if (skip_zero && (i+j < 1))
 				continue;
 			if (skip_linear && (i+j < 2))
 				continue;

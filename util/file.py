@@ -3,6 +3,17 @@ import os
 #import pickle
 import cPickle
 
+def trymakedirs(fn, dir=False):
+    if dir is True:
+        dirnm = os.path.dirname(fn)
+    else:
+        dirnm = fn
+    if not os.path.exists(dirnm):
+        try:
+            os.makedirs(dirnm)
+        except:
+            pass
+
 def _filesize(fn):
 	st = os.stat(fn)
 	return st.st_size

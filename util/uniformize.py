@@ -6,7 +6,13 @@ from optparse import OptionParser
 
 if __name__ == '__main__':
     try:
-        import pyfits
+        try:
+            import pyfits
+        except ImportError:
+            try:
+                from astropy.io import fits as pyfits
+            except ImportError:
+                raise ImportError("Cannot import either pyfits or astropy.io.fits")
         import astrometry
         from astrometry.util.shell import shell_escape
         from astrometry.util.filetype import filetype_short
@@ -24,7 +30,13 @@ import numpy
 from numpy import *
 from numpy.random import rand
 from astrometry.util.fits import *
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 
 def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
     p = pyfits.open(infile)

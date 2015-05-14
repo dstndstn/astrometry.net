@@ -28,9 +28,36 @@
 #include "starutil.h"
 #include "mathutil.h"
 
-static anbool has_distortions(const tpv_t* tpv) {
-	return (tpv->a_order >= 0);
-}
+/*******************************
+
+NOTE, this does not work yet!!!
+
+I copied this from sip.c, which applies the distortion in PIXEL space,
+while TPV applies the distortion in IWC space.
+
+
+
+The TPV projection is evaluated as follows.
+
+    Compute the first order standard coordinates xi and eta from the
+    linear part of the solution stored in CRPIX and the CD matrix.
+
+             xi = CD1_1 * (x - CRPIX1) + CD1_2 * (y - CRPIX2)
+            eta = CD2_1 * (x - CRPIX1) + CD2_2 * (y - CRPIX2)
+
+    Apply the distortion transformation using the coefficients in the
+    PV keywords as described below.
+
+            xi' = f_xi (xi, eta)
+           eta' = f_eta (xi, eta)
+
+    Apply the tangent plane projection to xi' and eta' as described in
+    Calabretta and Greisen . The reference tangent point given by the
+    CRVAL values lead to the final RA and DEC in degrees. Note that
+    the units of xi, eta, f_xi, and f_eta are also degrees.
+
+ ********************************/
+
 
 anbool tpv_xyz2pixelxy(const tpv_t* tpv, double x, double y, double z, double *px, double *py) {
 	double xyz[3];
@@ -90,39 +117,27 @@ static void tpv_distortion(const tpv_t* tpv, double x, double y,
 // Pixels to RA,Dec in degrees.
 void tpv_pixelxy2radec(const tpv_t* tpv, double px, double py,
 					   double *ra, double *dec) {
-	if (has_distortions(tpv)) {
-		double U, V;
-		tpv_distortion(tpv, px, py, &U, &V);
-		// Run a normal TAN conversion on the distorted pixel coords.
-		tan_pixelxy2radec(&(tpv->wcstan), U, V, ra, dec);
-	} else
-		// Run a normal TAN conversion
-		tan_pixelxy2radec(&(tpv->wcstan), px, py, ra, dec);
+    double U, V;
+    tpv_distortion(tpv, px, py, &U, &V);
+    // Run a normal TAN conversion on the distorted pixel coords.
+    tan_pixelxy2radec(&(tpv->wcstan), U, V, ra, dec);
 }
 
 // Pixels to Intermediate World Coordinates in degrees.
 void tpv_pixelxy2iwc(const tpv_t* tpv, double px, double py,
 					 double *iwcx, double* iwcy) {
-	if (has_distortions(tpv)) {
-		double U, V;
-		tpv_distortion(tpv, px, py, &U, &V);
-		// Run a normal TAN conversion on the distorted pixel coords.
-		tan_pixelxy2iwc(&(tpv->wcstan), U, V, iwcx, iwcy);
-	} else
-		// Run a normal TAN conversion
-		tan_pixelxy2iwc(&(tpv->wcstan), px, py, iwcx, iwcy);
+    double U, V;
+    tpv_distortion(tpv, px, py, &U, &V);
+    // Run a normal TAN conversion on the distorted pixel coords.
+    tan_pixelxy2iwc(&(tpv->wcstan), U, V, iwcx, iwcy);
 }
 
 // Pixels to XYZ unit vector.
 void tpv_pixelxy2xyzarr(const tpv_t* tpv, double px, double py, double *xyz) {
-	if (has_distortions(tpv)) {
-		double U, V;
-		tpv_distortion(tpv, px, py, &U, &V);
-		// Run a normal TAN conversion on the distorted pixel coords.
-		tan_pixelxy2xyzarr(&(tpv->wcstan), U, V, xyz);
-	} else
-		// Run a normal TAN conversion
-		tan_pixelxy2xyzarr(&(tpv->wcstan), px, py, xyz);
+    double U, V;
+    tpv_distortion(tpv, px, py, &U, &V);
+    // Run a normal TAN conversion on the distorted pixel coords.
+    tan_pixelxy2xyzarr(&(tpv->wcstan), U, V, xyz);
 }
 
 void tpv_iwc2pixelxy(const tpv_t* tpv, double u, double v,
@@ -131,8 +146,6 @@ void tpv_iwc2pixelxy(const tpv_t* tpv, double u, double v,
     tan_iwc2pixelxy(&(tpv->wcstan), u, v, &x, &y);
     tpv_pixel_undistortion(tpv, x, y, px, py);
 }
-
-// TPV:  (RA,Dec) --> IWC --> x,y --> x',y'
 
 // RA,Dec in degrees to Pixels.
 anbool tpv_radec2pixelxy(const tpv_t* tpv, double ra, double dec, double *px, double *py) {
@@ -145,36 +158,6 @@ anbool tpv_radec2pixelxy(const tpv_t* tpv, double ra, double dec, double *px, do
 
 void tpv_iwc2radec(const tpv_t* tpv, double x, double y, double *p_ra, double *p_dec) {
     tan_iwc2radec(&(tpv->wcstan), x, y, p_ra, p_dec);
-}
-
-
-// RA,Dec in degrees to Pixels.
-anbool tpv_radec2pixelxy_check(const tpv_t* tpv, double ra, double dec, double *px, double *py) {
-	double u, v;
-	double U, V;
-	double U2, V2;
-	if (!tan_radec2pixelxy(&(tpv->wcstan), ra, dec, px, py))
-		return FALSE;
-	if (!has_distortions(tpv))
-		return TRUE;
-
-	// Subtract crpix, invert TPV distortion, add crpix.
-	// Sanity check:
-	if (tpv->a_order != 0 && tpv->ap_order == 0) {
-		fprintf(stderr, "suspicious inversion; no inversion TPV coeffs "
-				"yet there are forward TPV coeffs\n");
-	}
-	U = *px - tpv->wcstan.crpix[0];
-	V = *py - tpv->wcstan.crpix[1];
-	tpv_calc_inv_distortion(tpv, U, V, &u, &v);
-    // Check that we're dealing with the right range of the polynomial by inverting it and
-    // checking that we end up back in the right place.
-    tpv_calc_distortion(tpv, u, v, &U2, &V2);
-    if (fabs(U2 - U) + fabs(V2 - V) > 10.0)
-        return FALSE;
-	*px = u + tpv->wcstan.crpix[0];
-	*py = v + tpv->wcstan.crpix[1];
-	return TRUE;
 }
 
 anbool tpv_xyzarr2pixelxy(const tpv_t* tpv, const double* xyz, double *px, double *py) {
@@ -302,17 +285,6 @@ void tpv_pixel_distortion(const tpv_t* tpv, double x, double y, double* X, doubl
 }
 
 void tpv_pixel_undistortion(const tpv_t* tpv, double x, double y, double* X, double *Y) {
-	if (!has_distortions(tpv)) {
-        *X = x;
-        *Y = y;
-        return;
-    }
-	// Sanity check:
-	if (tpv->a_order != 0 && tpv->ap_order == 0) {
-		fprintf(stderr, "suspicious inversion; no inverse TPV coeffs "
-				"yet there are forward TPV coeffs\n");
-	}
-
 	// Get pixel coordinates relative to reference pixel
 	double u = x - tpv->wcstan.crpix[0];
 	double v = y - tpv->wcstan.crpix[1];
@@ -323,33 +295,9 @@ void tpv_pixel_undistortion(const tpv_t* tpv, double x, double y, double* X, dou
 
 void tpv_calc_inv_distortion(const tpv_t* tpv, double U, double V, double* u, double *v)
 {
-	int p, q;
-	double fUV=0.;
-	double gUV=0.;
-
-    // avoid using pow() function
-    double powu[TPV_MAXORDER];
-    double powv[TPV_MAXORDER];
-    powu[0] = 1.0;
-    powu[1] = U;
-    powv[0] = 1.0;
-    powv[1] = V;
-	for (p=2; p <= MAX(tpv->ap_order, tpv->bp_order); p++) {
-        powu[p] = powu[p-1] * U;
-        powv[p] = powv[p-1] * V;
-    }
-
-	for (p=0; p<=tpv->ap_order; p++)
-		for (q=0; q<=tpv->ap_order; q++)
-			//fUV += tpv->ap[p][q] * pow(U,p) * pow(V,q);
-			fUV += tpv->ap[p][q] * powu[p] * powv[q];
-	for (p=0; p<=tpv->bp_order; p++) 
-		for (q=0; q<=tpv->bp_order; q++) 
-			//gUV += tpv->bp[p][q] * pow(U,p) * pow(V,q);
-            gUV += tpv->bp[p][q] * powu[p] * powv[q];
-
-	*u = U + fUV;
-	*v = V + gUV;
+    assert(0);
+    printf("tpv_calc_inv_distortion not implemented!\n");
+    exit(-1);
 }
 
 double tpv_det_cd(const tpv_t* tpv) {
@@ -364,66 +312,38 @@ double tpv_pixel_scale(const tpv_t* tpv) {
 void tpv_print_to(const tpv_t* tpv, FILE* f) {
    double det,pixsc;
 
-   if (tpv->wcstan.sin) {
-	   print_to(&(tpv->wcstan), f, "SIN-TPV");
-   } else {
-	   print_to(&(tpv->wcstan), f, "TAN-TPV");
-   }
-
-   fprintf(f, "  TPV order: A=%i, B=%i, AP=%i, BP=%i\n",
-		   tpv->a_order, tpv->b_order, tpv->ap_order, tpv->bp_order);
-
+   print_to(&(tpv->wcstan), f, "TPV");
+   
+   /*
 	if (tpv->a_order > 0) {
-		int p, q;
-		for (p=0; p<=tpv->a_order; p++) {
-			fprintf(f, (p ? "      " : "  A = "));
-			for (q=0; q<=tpv->a_order; q++)
-				if (p+q <= tpv->a_order)
-					//fprintf(f,"a%d%d=%le\n", p,q,tpv->a[p][q]);
-					fprintf(f,"%12.5g", tpv->a[p][q]);
-			fprintf(f,"\n");
-		}
+    int p, q;
+    for (p=0; p<=tpv->a_order; p++) {
+    fprintf(f, (p ? "      " : "  A = "));
+    for (q=0; q<=tpv->a_order; q++)
+    if (p+q <= tpv->a_order)
+    //fprintf(f,"a%d%d=%le\n", p,q,tpv->a[p][q]);
+    fprintf(f,"%12.5g", tpv->a[p][q]);
+    fprintf(f,"\n");
+    }
 	}
 	if (tpv->b_order > 0) {
-		int p, q;
-		for (p=0; p<=tpv->b_order; p++) {
-			fprintf(f, (p ? "      " : "  B = "));
-			for (q=0; q<=tpv->b_order; q++)
-				if (p+q <= tpv->a_order)
-					fprintf(f,"%12.5g", tpv->b[p][q]);
-			//if (p+q <= tpv->b_order && p+q > 0)
-			//fprintf(f,"b%d%d=%le\n", p,q,tpv->b[p][q]);
-			fprintf(f,"\n");
-		}
+    int p, q;
+    for (p=0; p<=tpv->b_order; p++) {
+    fprintf(f, (p ? "      " : "  B = "));
+    for (q=0; q<=tpv->b_order; q++)
+    if (p+q <= tpv->a_order)
+    fprintf(f,"%12.5g", tpv->b[p][q]);
+    //if (p+q <= tpv->b_order && p+q > 0)
+    //fprintf(f,"b%d%d=%le\n", p,q,tpv->b[p][q]);
+    fprintf(f,"\n");
+    }
 	}
-
-	if (tpv->ap_order > 0) {
-		int p, q;
-		for (p=0; p<=tpv->ap_order; p++) {
-			fprintf(f, (p ? "      " : "  AP = "));
-			for (q=0; q<=tpv->ap_order; q++)
-				if (p+q <= tpv->ap_order)
-					fprintf(f,"%12.5g", tpv->ap[p][q]);
-			fprintf(f,"\n");
-		}
-	}
-	if (tpv->bp_order > 0) {
-		int p, q;
-		for (p=0; p<=tpv->bp_order; p++) {
-			fprintf(f, (p ? "      " : "  BP = "));
-			for (q=0; q<=tpv->bp_order; q++)
-				if (p+q <= tpv->bp_order)
-					fprintf(f,"%12.5g", tpv->bp[p][q]);
-			fprintf(f,"\n");
-		}
-	}
-
-
 	det = tpv_det_cd(tpv);
 	pixsc = 3600*sqrt(fabs(det));
 	//fprintf(f,"  det(CD)=%g\n", det);
 	fprintf(f,"  sqrt(det(CD))=%g [arcsec]\n", pixsc);
 	//fprintf(f,"\n");
+    */
 }
 
 void tpv_print(const tpv_t* tpv) {

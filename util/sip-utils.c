@@ -98,12 +98,15 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 	if (yhi == 0)
 		yhi = tan->imageh;
 
-	logverb("NX,NY %i,%i\n", NX,NY);
+	logverb("NX,NY %i,%i, x range [%f, %f], y range [%f, %f]\n",
+            NX,NY, xlo, xhi, ylo, yhi);
 
 	// Number of coefficients to solve for:
 	// We only compute the upper triangle polynomial terms, and we
 	// exclude the 0,0 element.
-	N = (inv_sip_order + 1) * (inv_sip_order + 2) / 2 - 1;
+	//N = (inv_sip_order + 1) * (inv_sip_order + 2) / 2 - 1;
+    // Wait, why do we exclude 0,0?
+    N = (inv_sip_order + 1) * (inv_sip_order + 2) / 2;
 
 	// Number of samples to fit.
 	M = NX * NY;
@@ -166,7 +169,7 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 			j = 0;
 			for (p = 0; p <= inv_sip_order; p++)
 				for (q = 0; q <= inv_sip_order; q++)
-					if ((p + q > 0) &&
+					if (//(p + q > 0) &&
 						(p + q <= inv_sip_order)) {
 						assert(j < N);
 						gsl_matrix_set(mA, i, j, pow(U, (double)p) * pow(V, (double)q));
@@ -191,7 +194,7 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
     sip->bp[0][0] = 0.;
 	for (p = 0; p <= inv_sip_order; p++)
 		for (q = 0; q <= inv_sip_order; q++)
-			if ((p + q > 0) &&
+			if (//(p + q > 0) &&
 				(p + q <= inv_sip_order)) {
 				assert(j < N);
 				sip->ap[p][q] = gsl_vector_get(x1, j);

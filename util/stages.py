@@ -76,12 +76,18 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
                          force=force, forceall=forceall, prereqs=prereqs, update=update,
                          write=write, initial_args=initial_args, **kwargs)
 
-    P.update(kwargs)
+    #P.update(kwargs)
+    Px = P.copy()
+    Px.update(kwargs)
 
     print 'Running stage', stage
-    #print 'args:', P.keys()
-    R = stagefunc(stage, **P)
+    print 'Prereq keys:', P.keys()
+    print 'Addings kwargs keys:', Px.keys()
+
+    R = stagefunc(stage, **Px)
     print 'Stage', stage, 'finished'
+    if R is not None:
+        print 'Result keys:', R.keys()
 
     if update:
         if R is not None:
@@ -90,6 +96,8 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
         
     if write:
         print 'Saving pickle', pfn
+        print 'Pickling keys:', R.keys()
+
         pickle_to_file(R, pfn)
         print 'Saved', pfn
     return R

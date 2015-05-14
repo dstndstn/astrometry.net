@@ -5,9 +5,9 @@ Building/installing the Astrometry.net code
 
 Grab the code::
 
-   wget http://astrometry.net/downloads/astrometry.net-0.46.tar.bz2
-   tar xjf astrometry.net-0.46.tar.bz2
-   cd astrometry.net-0.46
+   wget http://astrometry.net/downloads/astrometry.net-latest.tar.bz2
+   tar xjf astrometry.net-latest.tar.bz2
+   cd astrometry.net-*
 
 Build it.  The short version::
 

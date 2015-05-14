@@ -23,7 +23,19 @@ for x in sys.path:
 
 print 'PATH is:', os.environ['PATH']
 
-import pyfits
+os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+
+import django
+django.setup()
+
+
+try:
+    import pyfits
+except ImportError:
+    try:
+        from astropy.io import fits as pyfits
+    except ImportError:
+        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 
 
 import tempfile
@@ -52,7 +64,6 @@ from astrometry.util.util import Tan
 from astrometry.util import util as anutil
 from astrometry.util.fits import *
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 #import astrometry.net.settings as settings
 import settings
 settings.LOGGING['loggers'][''] = {
@@ -481,8 +492,9 @@ def dosub(sub):
     return sub.id
 
 def create_user_image(sub, img, original_filename):
+    pro = get_user_profile(sub.user)
     license, created = License.objects.get_or_create(
-        default_license=sub.user.get_profile().default_license,
+        default_license=pro.default_license,
         allow_modifications = sub.license.allow_modifications,
         allow_commercial_use = sub.license.allow_commercial_use,
     )

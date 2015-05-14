@@ -110,7 +110,7 @@ QFITS_UTILS := fits-column-merge subtable fitsgetext wcsinfo
 PROGS := an-fitstopnm an-pnmtofits downsample-fits \
 	fits-flip-endian hpsplit wcs-to-tan	query-starkd \
 	get-healpix $(QFITS_UTILS) search-index \
-	pad-file wcs-match
+	pad-file wcs-match wcs-pv2sip
 
 # search-index pad-file resample
 
@@ -178,6 +178,10 @@ an-pnmtofits: an-pnmtofits.o $(ANFILES_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
 ALL_OBJ += an-pnmtofits.o
 
+wcs-pv2sip: wcs-pv2sip.o $(ANUTILS_SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
+ALL_OBJ += wcs-pv2sip.o
+
 _util$(PYTHON_SO_EXT): util.i lanczos.i $(ANFILES_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(ANFILES_CFLAGS)" \
@@ -199,7 +203,7 @@ PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py \
 	filetype.py fits.py fix_sdss_idr.py removelines.py \
 	uniformize.py lsstutils.py casjobs.py \
 	sdss_das.py sdss_filenames.py sdss_get_catalog.py sdss_noise.py \
-	sdss_psf.py sdss_psfield.py sdss_radec_to_rcf.py sqlcl.py \
+	sdss_psf.py sdss_psfield.py sqlcl.py \
 	usnob_catalog.py usnob_get_image.py usnob_get_region.py \
 	find_data_file.py plotshift.py plotutils.py miscutils.py multiproc.py \
 	yanny.py ttime.py resample.py \
@@ -244,10 +248,14 @@ install-core: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 		echo cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
 		cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
 	done
+	@echo Installing headers into '$(INCLUDE_INSTALL_DIR)'...
+	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(ANUTILS_H); do \
 		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
+	@echo Installing libraries into '$(LIB_INSTALL_DIR)'...
+	mkdir -p '$(LIB_INSTALL_DIR)'
 	@for x in $(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANBASE_LIB_FILE); do \
 		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
 		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
