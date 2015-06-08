@@ -97,7 +97,14 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
     if write:
         print 'Saving pickle', pfn
         print 'Pickling keys:', R.keys()
-
+        # Create directory, if necessary.
+        import os
+        dirnm = os.path.dirname(pfn)
+        if len(dirnm) and not os.path.exists(dirnm):
+            try:
+                os.makedirs(dirnm)
+            except:
+                pass
         pickle_to_file(R, pfn)
         print 'Saved', pfn
     return R
