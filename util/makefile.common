@@ -127,6 +127,9 @@ ifeq ($(PYTHON_SO_EXT)x,x)
   PYTHON_SO_EXT := .so
 endif
 
+# gcc 5.1 changes inline semantics
+ARG := -std=gnu89
+FLAGS_DEF += $(shell $(CCTEST))
 
 ARG := -ffinite-math-only
 FLAGS_DEF += $(shell $(CCTEST))
@@ -150,8 +153,8 @@ FLAGS_DEF += $(shell $(CCTEST))
 
 ## Below, we try to guess good compiler flags for this CPU / architecture.
 ## If we make an incorrect choice -- ie, the code fails in some way on the
-## machine on which it was compiled, please let us know by emailing
-##    code2 at astrometry.net
+## machine on which it was compiled, please let us know by posting at
+##    astrometry.net/group
 ## If you want to override this setting, you can set the
 ##      ARCH_FLAGS
 ## environment variable in your shell.
