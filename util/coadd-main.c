@@ -20,7 +20,8 @@
 static const char* OPTIONS = "hvw:o:e:O:Ns:p:D";
 
 void printHelp(char* progname) {
-    fprintf(stderr, "%s [options] <input-FITS-image> <image-ext> <input-weight (filename or constant)> <weight-ext> <input-WCS> <wcs-ext> [<image> <ext> <weight> <ext> <wcs> <ext>...]\n"
+    fprintf(stderr, "%s [options] <input-FITS-image> <image-ext> <input-weight (filename or constant)> <weight-ext> <input-WCS> <wcs-ext> \n          [<image> <ext> <weight> <ext> <wcs> <ext>...]\n"
+            "  use \"none\" as weight filename for no weighting\n"
 			"     -w <output-wcs-file>  (default: input file)\n"
 			"    [-e <output-wcs-ext>]: FITS extension to read WCS from (default: primary extension, 0)\n"
 			"     -o <output-image-file>\n"
@@ -268,7 +269,7 @@ int main(int argc, char** args) {
 	{
 		qfitsdumper qoutimg;
 		qfits_header* hdr;
-		hdr = qfits_header_readext(outwcsfn, outwcsext);
+		hdr = anqfits_get_header2(outwcsfn, outwcsext);
 		if (!hdr) {
 			ERROR("Failed to read WCS file \"%s\" ext %i\n", outwcsfn, outwcsext);
 			exit(-1);
