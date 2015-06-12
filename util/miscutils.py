@@ -156,6 +156,99 @@ def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
         #print 'Patched', np.sum(pn > 0)
     return True
 
+def clip_wcs(wcs1, wcs2, makeConvex=True, pix1=None, pix2=None):
+    '''
+    Returns a pixel-space polygon in WCS1 after it is clipped by WCS2.
+    Returns an empty list if the two WCS headers do not intersect.
+
+    Note that due to weakness in the clip_polygon method, wcs2 must be convex.
+    If makeConvex=True, we find the convex hull and clip with that.
+
+    If pix1 is not None, pix1=(xx,yy), xx and yy lists of pixel coordinates defining
+    the boundary of the image, in CLOCKWISE order; default is the edges and midpoints.
+
+    '''
+    if pix1 is None:
+        w1,h1 = wcs1.get_width(), wcs1.get_height()
+        x1,x2,x3 = 0.5, w1/2., w1+0.5
+        y1,y2,y3 = 0.5, h1/2., h1+0.5
+        xx = [x1, x1, x1, x2, x3, x3, x3, x2]
+        yy = [y1, y2, y3, y3, y3, y2, y1, y1]
+    else:
+        xx,yy = pix1
+    #rr,dd = wcs1.pixelxy2radec(xx, yy)
+
+    if pix2 is None:
+        w2,h2 = wcs2.get_width(), wcs2.get_height()
+        x1,x2,x3 = 0.5, w2/2., w2+0.5
+        y1,y2,y3 = 0.5, h2/2., h2+0.5
+        XX = [x1, x1, x1, x2, x3, x3, x3, x2]
+        YY = [y1, y2, y3, y3, y3, y2, y1, y1]
+    else:
+        XX,YY = pix2
+    rr,dd = wcs2.pixelxy2radec(XX, YY)
+    ok,XX,YY = wcs1.radec2pixelxy(rr, dd)
+    # XX,YY is the clip polygon in wcs1 pixel coords.
+    # Not necessarily clockwise at this point!
+
+    #print 'XX,YY', XX, YY
+
+    if makeConvex:
+        from scipy.spatial import ConvexHull
+        points = np.vstack((XX,YY)).T
+        #print 'points', points.shape
+        hull = ConvexHull(points)
+        #print 'Convex hull:', hull
+        #print hull.vertices
+
+        # ConvexHull returns the vertices in COUNTER-clockwise order.  Reverse.
+        v = np.array(list(reversed(hull.vertices))).astype(int)
+        XX = XX[v]
+        YY = YY[v]
+
+        #plt.plot(XX, YY, 'm-')
+        #plt.plot(XX[0], YY[0], 'mo')
+        #plt.savefig('clip2.png')
+    else:
+        # Ensure points are listed in CLOCKWISE order.
+        crosses = []
+        for i in range(len(XX)):
+            j = (i + 1) % len(XX)
+            k = (i + 2) % len(XX)
+            xi,yi = XX[i], YY[i]
+            xj,yj = XX[j], YY[j]
+            xk,yk = XX[k], YY[k]
+            dx1, dy1 = xj - xi, yj - yi
+            dx2, dy2 = xk - xj, yk - yj
+            cross = dx1 * dy2 - dy1 * dx2
+            #print 'cross', cross
+            crosses.append(cross)
+        crosses = np.array(crosses)
+        #print 'cross products', crosses
+        if np.all(crosses >= 0):
+            # Reverse
+            #print 'Reversing wcs2 points'
+            XX = np.array(list(reversed(XX)))
+            YY = np.array(list(reversed(YY)))
+
+    clip = clip_polygon(zip(xx, yy), zip(XX, YY))
+    clip = np.array(clip)
+
+    if False:
+        import pylab as plt
+        plt.clf()
+        plt.plot(xx, yy, 'b.-')
+        plt.plot(xx[0], yy[0], 'bo')
+        plt.plot(XX, YY, 'r.-')
+        plt.plot(XX[0], YY[0], 'ro')
+        if len(clip) > 0:
+            plt.plot(clip[:,0], clip[:,1], 'm.-', alpha=0.5, lw=2)
+        plt.savefig('clip1.png')
+
+    return clip
+
+
+
 def polygon_area(poly):
 	xx,yy = poly
 	x,y = np.mean(xx), np.mean(yy)

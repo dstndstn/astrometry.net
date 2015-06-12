@@ -81,7 +81,8 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
 
     print 'Running stage', stage
     print 'Prereq keys:', P.keys()
-    print 'Addings kwargs keys:', Px.keys()
+    print 'Adding kwargs keys:', kwargs.keys()
+    print 'Combined keys:', Px.keys()
 
     R = stagefunc(stage, **Px)
     print 'Stage', stage, 'finished'
