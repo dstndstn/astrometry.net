@@ -405,6 +405,13 @@ void log_set_level(int lvl);
                              PyObject* np_mask,
                              int halfbox,
                              PyObject* np_smooth) {
+        /*
+
+         image: np.float32
+         mask: bool or uint8; 1 to IGNORE.
+         smooth: np.float32; output array.
+
+         */
         if (!PyArray_Check(np_image) ||
             !PyArray_Check(np_smooth) ||
             !PyArray_ISNOTSWAPPED(np_image) ||
