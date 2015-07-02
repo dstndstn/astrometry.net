@@ -160,8 +160,8 @@ install-indexes:
 	done
 	@for x in `ls index-*.fits 2>/dev/null`; do \
 		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
-		echo "cp $$x '$(DATA_INSTALL_DIR)'" \
-		cp $$x '$(DATA_INSTALL_DIR)' \
+		echo "cp $$x '$(DATA_INSTALL_DIR)'"; \
+		cp $$x '$(DATA_INSTALL_DIR)'; \
 	done
 
 reconfig:
