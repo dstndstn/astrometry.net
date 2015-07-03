@@ -148,7 +148,7 @@ install-indexes:
 		echo tar xvjf $$x -C '$(DATA_INSTALL_DIR)'; \
 		tar xvjf $$x -C '$(DATA_INSTALL_DIR)'; \
 	done
-	@for x in `ls index-*.bz2 | grep -v tar.bz2 2>/dev/null`; do \
+	@for x in `ls index-*.bz2 2>/dev/null | grep -v tar.bz2 2>/dev/null`; do \
 		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
 		echo "cp $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x;"; \
 		cp $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x; \
@@ -160,8 +160,8 @@ install-indexes:
 	done
 	@for x in `ls index-*.fits 2>/dev/null`; do \
 		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
-		echo "cp $$x '$(DATA_INSTALL_DIR)'" \
-		cp $$x '$(DATA_INSTALL_DIR)' \
+		echo "cp $$x '$(DATA_INSTALL_DIR)'"; \
+		cp $$x '$(DATA_INSTALL_DIR)'; \
 	done
 
 reconfig:
