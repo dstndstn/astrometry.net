@@ -393,7 +393,7 @@ static int wcslib_write_to(const anwcslib_t* anwcslib, FILE* fid) {
 	char* hdrstr;
     char line[81];
     char spaces[81];
-    //const char* hdrformat = "%-8s= %70s%s";
+    char val[32];
     const char* hdrformat = "%-8s= %20s /%s";
     sl* lines = NULL;
     int npad;
@@ -404,7 +404,6 @@ static int wcslib_write_to(const anwcslib_t* anwcslib, FILE* fid) {
 		return -1;
 	}
 
-	// FIXME -- incomplete!  Add other required headers and write to file.
 	int i;
 	printf("wcslib header:\n");
 	for (i=0; i<Ncards; i++)
@@ -423,6 +422,13 @@ static int wcslib_write_to(const anwcslib_t* anwcslib, FILE* fid) {
     snprintf(line, sizeof(line), hdrformat, "NAXIS", "0", spaces);
     sl_append(lines, line);
     snprintf(line, sizeof(line), hdrformat, "EXTEND", "T", spaces);
+    sl_append(lines, line);
+
+    sprintf(val, "%i", anwcslib->imagew);
+    snprintf(line, sizeof(line), hdrformat, "IMAGEW", val, spaces);
+    sl_append(lines, line);
+    sprintf(val, "%i", anwcslib->imageh);
+    snprintf(line, sizeof(line), hdrformat, "IMAGEH", val, spaces);
     sl_append(lines, line);
 
 	for (i=0; i<Ncards; i++) {
