@@ -43,6 +43,7 @@
 #include "mathutil.h"
 #include "ioutils.h"
 #include "fitsioutils.h"
+#include "bl.h"
 
 struct anwcslib_t {
 	struct wcsprm* wcs;
@@ -390,6 +391,13 @@ static int wcslib_write_to(const anwcslib_t* anwcslib, FILE* fid) {
 	int res;
 	int Ncards;
 	char* hdrstr;
+    char line[81];
+    char spaces[81];
+    //const char* hdrformat = "%-8s= %70s%s";
+    const char* hdrformat = "%-8s= %20s /%s";
+    sl* lines = NULL;
+    int npad;
+
 	res = wcshdo(-1, anwcslib->wcs, &Ncards, &hdrstr);
 	if (res) {
 		ERROR("wcshdo() failed: %s", wcshdr_errmsg[res]);
@@ -403,8 +411,47 @@ static int wcslib_write_to(const anwcslib_t* anwcslib, FILE* fid) {
 		printf("%.80s\n", hdrstr + i*80);
 	printf("\n\n");
 
-	ERROR("wcslib_write_to() is unfinished.\n");
-	return -1;
+    lines = sl_new(16);
+
+    memset(spaces, ' ', sizeof(spaces));
+    spaces[sizeof(spaces)-1] = '\0';
+
+    snprintf(line, sizeof(line), hdrformat, "SIMPLE", "T", spaces);
+    sl_append(lines, line);
+    snprintf(line, sizeof(line), hdrformat, "BITPIX", "8", spaces);
+    sl_append(lines, line);
+    snprintf(line, sizeof(line), hdrformat, "NAXIS", "0", spaces);
+    sl_append(lines, line);
+    snprintf(line, sizeof(line), hdrformat, "EXTEND", "T", spaces);
+    sl_append(lines, line);
+
+	for (i=0; i<Ncards; i++) {
+        snprintf(line, sizeof(line), "%.80s%s", hdrstr + i*80, spaces);
+        sl_append(lines, line);
+    }
+    snprintf(line, sizeof(line), "END%s", spaces);
+    sl_append(lines, line);
+
+    printf("Complete header:\n");
+    for (i=0; i<sl_size(lines); i++) {
+        printf("|%s|\n", sl_get(lines, i));
+    }
+
+
+    for (i=0; i<sl_size(lines); i++) {
+        if (fprintf(fid, "%s", sl_get(lines, i)) < 0) {
+            SYSERROR("Failed to write FITS WCS header line");
+            return -1;
+        }
+    }
+    npad = 36 - (sl_size(lines) % 36);
+    for (i=0; i<npad; i++) {
+        if (fprintf(fid, "%s", spaces) < 0) {
+            SYSERROR("Failed to write FITS WCS header line");
+            return -1;
+        }
+    }
+	return 0;
 }
 
 static int wcslib_write(const anwcslib_t* anwcslib, const char* filename) {
