@@ -142,10 +142,10 @@ def get_annotations_for_wcs(wcs, opt):
             if len(n1):
                 if '\\u' in n1:
                     n1 = unicode(n1)
-                    import simplejson
-                    x = simplejson.dumps(n1)
+                    import json
+                    x = json.dumps(n1)
                     x = x.replace('\\\\','\\')
-                    n1 = simplejson.loads(x)
+                    n1 = json.loads(x)
                 names.append(n1)
             n2 = n2.strip()
             if len(n2):
@@ -304,9 +304,9 @@ if __name__ == '__main__':
         from astrometry.util.util import anwcs
         wcs = anwcs(wcsfn,0)
         jobjs = get_annotations_for_wcs(wcs, opt)
-        import simplejson
-        json = simplejson.dumps(jobjs)
-        print json
+        import json
+        j = simplejson.dumps(jobjs)
+        print j
         sys.exit(0)
 
     fmt = PLOTSTUFF_FORMAT_JPG
