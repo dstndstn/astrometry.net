@@ -222,7 +222,7 @@ LINK_DIR := $(PY_BASE_LINK_DIR)/util
 install: install-core
 	$(MAKE) install-core
 	@echo "The following copy commands may fail; they are optional."
-	-$(MAKE) py && cp _util$(PYTHON_SO_EXT) util.py '$(PY_INSTALL_DIR)'
+	-$(MAKE) py && $(INSTALL) _util$(PYTHON_SO_EXT) util.py '$(PY_INSTALL_DIR)'
 	@echo ok
 
 .PHONY: install
@@ -234,8 +234,8 @@ install-core: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 	@echo Installing python in base directory '$(PY_INSTALL_DIR)'
 	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
-		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
-		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) $$x '$(PY_INSTALL_DIR)/'$$x; \
+		$(INSTALL) $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
 	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
 	mkdir -p '$(BIN_INSTALL_DIR)'
@@ -245,20 +245,20 @@ install-core: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 	done
 	@echo Installing executables into '$(BIN_INSTALL_DIR)'...
 	@for x in $(PROGS) $(MAIN_PROGS); do \
-		echo cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
-		cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) $$x '$(BIN_INSTALL_DIR)/'$$x; \
+		$(INSTALL) $$x '$(BIN_INSTALL_DIR)/'$$x; \
 	done
 	@echo Installing headers into '$(INCLUDE_INSTALL_DIR)'...
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(ANUTILS_H); do \
-		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
-		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		$(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
 	@echo Installing libraries into '$(LIB_INSTALL_DIR)'...
 	mkdir -p '$(LIB_INSTALL_DIR)'
 	@for x in $(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANBASE_LIB_FILE); do \
-		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
-		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) $$x '$(LIB_INSTALL_DIR)/'$$x; \
+		$(INSTALL) $$x '$(LIB_INSTALL_DIR)/'$$x; \
 	done
 
 .PHONY: install-core

@@ -333,3 +333,5 @@ CFLAGS_DEF += -DAN_GIT_REVISION='"$(AN_GIT_REVISION)"'
 CFLAGS_DEF += -DAN_GIT_DATE='"$(AN_GIT_DATE)"'
 CFLAGS_DEF += -DAN_GIT_URL='"$(AN_GIT_URL)"'
 
+# command to install a file
+INSTALL := install -D

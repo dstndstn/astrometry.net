@@ -128,12 +128,12 @@ install-core:
 	mkdir -p '$(INSTALL_DIR)/examples'
 	mkdir -p '$(PY_BASE_INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/ups'
-	cp ups/astrometry_net.table-dist '$(INSTALL_DIR)/ups/astrometry_net.table'
-	cp ups/astrometry_net.cfg '$(INSTALL_DIR)/ups'
-	cp __init__.py '$(PY_BASE_INSTALL_DIR)'
-	cp CREDITS LICENSE README.md '$(INSTALL_DIR)/doc'
-	cp report.txt '$(INSTALL_DIR)/doc'
-	cp demo/* '$(INSTALL_DIR)/examples'
+	$(INSTALL) ups/astrometry_net.table-dist '$(INSTALL_DIR)/ups/astrometry_net.table'
+	$(INSTALL) ups/astrometry_net.cfg '$(INSTALL_DIR)/ups'
+	$(INSTALL) __init__.py '$(PY_BASE_INSTALL_DIR)'
+	$(INSTALL) CREDITS LICENSE README.md '$(INSTALL_DIR)/doc'
+	$(INSTALL) report.txt '$(INSTALL_DIR)/doc'
+	$(INSTALL) demo/* '$(INSTALL_DIR)/examples'
 	$(MAKE) -C util  install-core
 	$(MAKE) -C catalogs install
 	$(MAKE) -C libkd install
@@ -150,8 +150,8 @@ install-indexes:
 	done
 	@for x in `ls index-*.bz2 2>/dev/null | grep -v tar.bz2 2>/dev/null`; do \
 		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
-		echo "cp $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x;"; \
-		cp $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x; \
+		echo "$(INSTALL) $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x;"; \
+		$(INSTALL) $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x; \
 	done
 	@for x in `ls index-*.tar.gz 2>/dev/null`; do \
 		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
@@ -160,8 +160,8 @@ install-indexes:
 	done
 	@for x in `ls index-*.fits 2>/dev/null`; do \
 		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
-		echo "cp $$x '$(DATA_INSTALL_DIR)'"; \
-		cp $$x '$(DATA_INSTALL_DIR)'; \
+		echo "$(INSTALL) $$x '$(DATA_INSTALL_DIR)'"; \
+		$(INSTALL) $$x '$(DATA_INSTALL_DIR)'; \
 	done
 
 reconfig:

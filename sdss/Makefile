@@ -30,8 +30,8 @@ INSTALL_LIB := cutils.py _cutils$(PYTHON_SO_EXT)
 install-lib:
 	mkdir -p '$(MY_DIR)'
 	@for x in $(INSTALL_LIB); do \
-		echo cp $$x '$(MY_DIR)'; \
-		cp $$x '$(MY_DIR)'; \
+		echo $(INSTALL) $$x '$(MY_DIR)'; \
+		$(INSTALL) $$x '$(MY_DIR)'; \
 	done
 
 .PHONY: install-lib
@@ -42,8 +42,8 @@ install:
 	@echo Installing in directory '$(MY_DIR)'
 	mkdir -p '$(MY_DIR)'
 	@for x in $(INSTALL_PY); do \
-		echo cp $$x '$(MY_DIR)'; \
-		cp $$x '$(MY_DIR)'; \
+		echo $(INSTALL) $$x '$(MY_DIR)'; \
+		$(INSTALL) $$x '$(MY_DIR)'; \
 	done
 	@echo "Trying to build (optional) python module..."
 	-$(MAKE) lib && $(MAKE) install-lib

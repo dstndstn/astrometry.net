@@ -158,16 +158,16 @@ install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS_PATH)
 	@echo Installing in base directory '$(INSTALL_DIR)'
 	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
-		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
-		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) $$x '$(PY_INSTALL_DIR)/'$$x; \
+		$(INSTALL) $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(HEADERS); do \
-		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
-		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		$(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(LIBCAT); do \
-		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
-		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) $$x '$(LIB_INSTALL_DIR)/'$$x; \
+		$(INSTALL) $$x '$(LIB_INSTALL_DIR)/'$$x; \
 	done
 	@echo ok
 
