@@ -77,7 +77,7 @@ Optionally, grab some other handy homebrew packages::
  
 Get our fork of homebrew-science and install::
 
-    $ brew tap camphogg/science     # homebrew/science development is slow!
+    $ brew tap homebrew/homebrew-science
     $ brew install astrometry.net
 
 Or::
