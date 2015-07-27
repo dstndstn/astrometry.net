@@ -78,7 +78,7 @@ Optionally, grab some other handy homebrew packages::
 Get our fork of homebrew-science and install::
 
     $ brew tap homebrew/homebrew-science
-    $ brew install astrometry.net
+    $ brew install astrometry-net
 
 Or::
 
