@@ -305,7 +305,7 @@ if __name__ == '__main__':
         wcs = anwcs(wcsfn,0)
         jobjs = get_annotations_for_wcs(wcs, opt)
         import json
-        j = simplejson.dumps(jobjs)
+        j = json.dumps(jobjs)
         print j
         sys.exit(0)
 
