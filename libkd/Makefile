@@ -136,18 +136,18 @@ install: $(LIBKD_INSTALL) $(LIBKD)
 	@echo Installing in directory '$(INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/bin'
 	@for x in $(LIBKD_INSTALL); do \
-		echo cp $$x '$(INSTALL_DIR)/bin'; \
-		cp $$x '$(INSTALL_DIR)/bin'; \
+		echo $(INSTALL) $$x '$(INSTALL_DIR)/bin'; \
+		$(INSTALL) $$x '$(INSTALL_DIR)/bin'; \
 	done
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
-		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
-		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
+		echo $(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
+		$(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
 	mkdir -p '$(INSTALL_DIR)/lib'
 	@for x in $(LIBKD); do \
-		echo cp $$x '$(INSTALL_DIR)/lib'; \
-		cp $$x '$(INSTALL_DIR)/lib'; \
+		echo $(INSTALL) $$x '$(INSTALL_DIR)/lib'; \
+		$(INSTALL) $$x '$(INSTALL_DIR)/lib'; \
 	done
 	-$(MAKE) install-spherematch
 
@@ -155,8 +155,8 @@ install: $(LIBKD_INSTALL) $(LIBKD)
 install-spherematch: spherematch_c$(PYTHON_SO_EXT)
 	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in spherematch_c$(PYTHON_SO_EXT) spherematch.py __init__.py; do \
-		echo cp $$x '$(PY_INSTALL_DIR)'; \
-		cp $$x '$(PY_INSTALL_DIR)'; \
+		echo $(INSTALL) $$x '$(PY_INSTALL_DIR)'; \
+		$(INSTALL) $$x '$(PY_INSTALL_DIR)'; \
 	done
 
 

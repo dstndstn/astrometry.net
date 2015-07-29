@@ -41,12 +41,12 @@ $(QFITS_LIB_FILE): $(OBJS)
 install: $(QFITS_LIB_FILE) $(HEADERS)
 	@echo Installing in base directory '$(INSTALL_DIR)'
 	@for x in $(HEADERS); do \
-		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
-		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		$(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(QFITS_LIB_FILE); do \
-		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
-		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) $$x '$(LIB_INSTALL_DIR)/'$$x; \
+		$(INSTALL) $$x '$(LIB_INSTALL_DIR)/'$$x; \
 	done
 .PHONY: install
 

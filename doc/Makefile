@@ -42,7 +42,7 @@ html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
-	cp -a $(BUILDDIR)/html $(STAGEDIR)
+	$(INSTALL) -a $(BUILDDIR)/html $(STAGEDIR)
 	@echo "Copied to $(STAGEDIR)/html"
 
 dirhtml:

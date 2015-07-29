@@ -235,25 +235,25 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	@echo Installing in directory '$(INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/bin'
 	@for x in $(INSTALL_EXECS); do \
-		echo cp $$x '$(INSTALL_DIR)/bin'; \
-		cp $$x '$(INSTALL_DIR)/bin'; \
+		echo $(INSTALL) $$x '$(INSTALL_DIR)/bin'; \
+		$(INSTALL) $$x '$(INSTALL_DIR)/bin'; \
 	done
 	mkdir -p '$(ETC_INSTALL_DIR)'
 	python -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('DATA_INSTALL_DIR', '$(DATA_FINAL_DIR)')" > '$(ETC_INSTALL_DIR)/astrometry.cfg'
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
-		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
-		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
+		echo $(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
+		$(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
 	mkdir -p '$(INSTALL_DIR)/lib'
 	@for x in $(INSTALL_LIB); do \
-		echo cp $$x '$(INSTALL_DIR)/lib'; \
-		cp $$x '$(INSTALL_DIR)/lib'; \
+		echo $(INSTALL) $$x '$(INSTALL_DIR)/lib'; \
+		$(INSTALL) $$x '$(INSTALL_DIR)/lib'; \
 	done
 	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
-		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
-		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) $$x '$(PY_INSTALL_DIR)/'$$x; \
+		$(INSTALL) $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
 	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
 	mkdir -p '$(BIN_INSTALL_DIR)'
@@ -269,19 +269,19 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 	@echo Installing in directory '$(INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/bin'
 	@for x in $(INSTALL_CAIRO_EXECS); do \
-		echo cp $$x '$(INSTALL_DIR)/bin'; \
-		cp $$x '$(INSTALL_DIR)/bin'; \
+		echo $(INSTALL) $$x '$(INSTALL_DIR)/bin'; \
+		$(INSTALL) $$x '$(INSTALL_DIR)/bin'; \
 	done
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(PLOT_INSTALL_H); do \
-		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
-		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
+		echo $(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
+		$(INSTALL) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
 	$(MAKE) $(PYTHON_EXTRA_INSTALL)
 	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_EXTRA_INSTALL); do \
-		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
-		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		echo $(INSTALL) $$x '$(PY_INSTALL_DIR)/'$$x; \
+		$(INSTALL) $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
 
 test-solver: test-solver.o solver_test.o $(SLIB)
