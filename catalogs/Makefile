@@ -157,6 +157,8 @@ suppl_1.dat:
 install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS_PATH)
 	@echo Installing in base directory '$(INSTALL_DIR)'
 	mkdir -p '$(PY_INSTALL_DIR)'
+	mkdir -p '$(INCLUDE_INSTALL_DIR)'
+	mkdir -p '$(LIB_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
 		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
 		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
