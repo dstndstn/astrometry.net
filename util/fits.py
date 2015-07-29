@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 class NoPyfits(object):
     pass
@@ -39,7 +40,7 @@ def merge_tables(TT, columns=None):
         if columns == 'fillzero':
             for c in cols:
                 types[c] = TT[0].get(c).dtype
-                #print 'col', c, 'is', types[c]
+                #print('col', c, 'is', types[c])
                 
         for T in TT[1:]:
             if columns == 'minimal':
@@ -52,16 +53,16 @@ def merge_tables(TT, columns=None):
                 for c in newcols:
                     # Assume numpy arrays
                     types[c] = T.get(c).dtype
-                    #print 'col', c, 'is', types[c]
+                    #print('col', c, 'is', types[c])
                 cols = cols.union(T.get_columns())
                 continue
 
             # They must have the same set of columns
             if len(cols.symmetric_difference(T.get_columns())):
-                print 'Tables to merge must have the same set of columns.'
-                print 'First table columns:', cols
-                print 'Target table columns:', T.get_columns()
-                print 'Difference:', cols.symmetric_difference(T.get_columns())
+                print('Tables to merge must have the same set of columns.')
+                print('First table columns:', cols)
+                print('Target table columns:', T.get_columns())
+                print('Difference:', cols.symmetric_difference(T.get_columns()))
             assert(len(cols.symmetric_difference(T.get_columns())) == 0)
         cols = list(cols)
 
@@ -80,10 +81,10 @@ def merge_tables(TT, columns=None):
         for i,T in enumerate(TT):
             # ensure they all have the requested columns
             if not set(columns).issubset(set(T.get_columns())):
-                print 'Each table to be merged must have the requested columns'
-                print 'Table', i, 'is missing columns:', set(columns)-set(T.get_columns())
-                print 'columns', columns
-                print 'T.columns', T.get_columns()
+                print('Each table to be merged must have the requested columns')
+                print('Table', i, 'is missing columns:', set(columns)-set(T.get_columns()))
+                print('columns', columns)
+                print('T.columns', T.get_columns())
                 assert(False)
         cols = columns
     N = sum([len(T) for T in TT])
@@ -120,7 +121,7 @@ def merge_tables(TT, columns=None):
             for T in TT[1:]:
                 V.extend(T.getcolumn(col))
         elif np.isscalar(v0):
-            #print 'merge_tables: copying scalar from first table:', col, '=', v0
+            #print('merge_tables: copying scalar from first table:', col, '=', v0)
             V = v0
         else:
             raise RuntimeError("pyfits_utils.merge_tables: Don't know how to concatenate type: %s" % str(type(v0)))
@@ -140,14 +141,8 @@ def add_nonstructural_headers(fromhdr, tohdr):
             card.key.startswith('TFORM')):
             #card.key.startswith('TUNIT') or
             #card.key.startswith('TDISP')):
-            #print 'skipping card', card.key
+            #print('skipping card', card.key)
             continue
-        #if tohdr.has_key(card.key):
-        #   #print 'skipping existing card', card.key
-        #   continue
-        #print 'adding card', card.key
-        #tohdr.update(card.key, card.value, card.comment, before='END')
-        #tohdr.ascardlist().append(
         cl = tohdr.ascardlist()
         if 'END' in cl.keys():
             i = cl.index_of('END')
@@ -164,8 +159,6 @@ def cut_array(val, I, name=None, to=None):
             return
 
     if type(val) in [np.ndarray, np.core.defchararray.chararray]:
-        #print 'slicing numpy array "%s": val shape' % name, val.shape
-        #print 'slice shape:', I.shape
         # You can't slice a two-dimensional, length-zero, numpy array,
         # with an empty array.
         if len(val) == 0:
@@ -198,7 +191,7 @@ def cut_array(val, I, name=None, to=None):
                         val[i] = t
                 return
         except:
-            print 'Failed to slice field', name
+            print('Failed to slice field', name)
             #setattr(rtn, name, val)
             #continue
 
@@ -221,13 +214,13 @@ def cut_array(val, I, name=None, to=None):
     if hasattr(I, '__len__') and len(I) == 0:
         return []
 
-    print 'Error slicing array:'
-    print 'array is'
-    print '  type:', type(val)
-    print '  ', val
-    print 'cut is'
-    print '  type:', type(I)
-    print '  ', I
+    print('Error slicing array:')
+    print('array is')
+    print('  type:', type(val))
+    print('  ', val)
+    print('cut is')
+    print('  type:', type(I))
+    print('  ', I)
     raise Exception('Error in cut_array')
 
 class tabledata(object):
@@ -258,28 +251,28 @@ class tabledata(object):
     
     def about(self):
         keys = [k for k in self.__dict__.keys() if not k.startswith('_')]
-        print 'tabledata object with %i rows and %i columns:' % (len(self),  len(keys))
+        print('tabledata object with %i rows and %i columns:' % (len(self),  len(keys)))
         keys.sort()
         for k in keys:
-            print '  ', k,
+            print('  ', k, end='')
             v = self.get(k)
-            print '(%s)' % (str(type(v))),
+            print('(%s)' % (str(type(v))), end='')
             if np.isscalar(v):
-                print v,
+                print(v, end='')
             elif hasattr(v, 'shape'):
-                print 'shape', v.shape,
+                print('shape', v.shape, end='')
             elif hasattr(v, '__len__'):
-                print 'length', len(v),
+                print('length', len(v), end='')
             else:
-                print v,
+                print(v, end='')
 
             if hasattr(v, 'dtype'):
-                print 'dtype', v.dtype,
-            print
+                print('dtype', v.dtype, end='')
+            print()
 
     def __setattr__(self, name, val):
         object.__setattr__(self, name, val)
-        #print 'set', name, 'to', val
+        #print('set', name, 'to', val)
         if (self._length == 0) and (not (name.startswith('_'))) and hasattr(val, '__len__') and len(val) != 0 and type(val) != str:
             self._length = len(val)
         if hasattr(self, '_columns') and not name in self._columns:
@@ -333,7 +326,7 @@ class tabledata(object):
 
         
         if type(I) is slice:
-            print 'I:', I
+            print('I:', I)
             # HACK... "[:]" -> slice(None, None, None)
             if I.start is None and I.stop is None and I.step is None:
                 I = np.arange(len(self))
@@ -351,36 +344,19 @@ class tabledata(object):
             except Exception:
                 # HACK -- emulate numpy's boolean and int array slicing...
                 ok = False
-                #if type(I) == np.ndarray and hasattr(I, 'dtype') and I.dtype == bool:
-                #   for i,b in enumerate(I):
-                #       if b:
-                #           val[i] = O.get(val)
-                #   ok = True
-                #if type(I) == np.ndarray and hasattr(I, 'dtype') and I.dtype == 'int':
-                #   rtn.set(name, [val[i] for i in I])
-                #   ok = True
-                #if len(I) == 0:
-                #   rtn.set(name, [])
-                #   ok = True
                 if not ok:
-                    print 'Error in slicing an astrometry.util.pyfits_utils.table_data object:'
-                    #print '  -->', e
-
+                    print('Error in slicing an astrometry.util.pyfits_utils.table_data object:')
                     import pdb; pdb.set_trace()
 
-                    print 'While setting member:', name
-                    print ' setting elements:', I
-                    print ' from obj', O
-                    print ' target type:', type(O.get(name))
-                    print ' dest type:', type(val)
-                    print 'index type:', type(I)
-                    #if hasattr(val, 'shape'):
-                    #   print ' shape:', val.shape
-                    #if hasattr(I, 'shape'):
-                    #   print ' index shape:', I.shape
+                    print('While setting member:', name)
+                    print(' setting elements:', I)
+                    print(' from obj', O)
+                    print(' target type:', type(O.get(name)))
+                    print(' dest type:', type(val))
+                    print('index type:', type(I))
                     if hasattr(I, 'dtype'):
-                        print '  index dtype:', I.dtype
-                    print 'my length:', self._length
+                        print('  index dtype:', I.dtype)
+                    print('my length:', self._length)
                     raise Exception('error in fits_table indexing')
 
     def copy(self):
@@ -389,18 +365,18 @@ class tabledata(object):
             if name.startswith('_'):
                 continue
             if np.isscalar(val):
-                #print 'copying scalar', name
+                #print('copying scalar', name)
                 rtn.set(name, val)
                 continue
             if type(val) in [np.ndarray, np.core.defchararray.chararray]:
-                #print 'copying numpy array', name
+                #print('copying numpy array', name)
                 rtn.set(name, val.copy())
                 continue
             if type(val) in [list,tuple]:
-                #print 'copying list', name
+                #print('copying list', name)
                 rtn.set(name, val[:])
                 continue
-            print 'in pyfits_utils: copy(): can\'t copy', name, '=', val[:10], 'type', type(val)
+            print('in pyfits_utils: copy(): can\'t copy', name, '=', val[:10], 'type', type(val))
         rtn._header = self._header
         if hasattr(self, '_columns'):
             rtn._columns = [c for c in self._columns]
@@ -412,13 +388,11 @@ class tabledata(object):
                 continue
             if np.isscalar(val):
                 continue
-            #print 'cutting', name
             C = cut_array(val, I, name)
             self.set(name, C)
             self._length = len(C)
 
     def __getitem__(self, I):
-        #rtn = tabledata()
         rtn = self.__class__()
         for name,val in self.__dict__.items():
             if name.startswith('_'):
@@ -429,7 +403,7 @@ class tabledata(object):
             try:
                 C = cut_array(val, I, name)
             except:
-                print 'Error in cut_array() via __getitem__, name', name
+                print('Error in cut_array() via __getitem__, name', name)
                 raise
             rtn.set(name, C)
 
@@ -459,7 +433,7 @@ class tabledata(object):
                 self.set(name, newX)
                 self._length = len(newX)
             except Exception:
-                print 'exception appending element "%s"' % name
+                print('exception appending element "%s"' % name)
                 raise
                 
     def write_to(self, fn, columns=None, header='default', primheader=None,
@@ -482,9 +456,6 @@ class tabledata(object):
                 os.unlink(fn)
             fits = fitsio.FITS(fn, 'rw')
 
-            #for a,c in zip(arrays, columns):
-            #   print 'Writing:', c, 'shape', getattr(a, 'shape', None), 'type', (getattr(a, 'dtype', type(a)))
-
             arrays = [np.array(a) if isinstance(a,list) else a
                       for a in arrays]
 
@@ -496,21 +467,20 @@ class tabledata(object):
                 else:
                     fits.write(arrays, names=columns, header=header)
             except:
-                print 'Failed to write FITS table'
-                print 'Columns:'
+                print('Failed to write FITS table')
+                print('Columns:')
                 for c,a in zip(columns, arrays):
-                    print '  ', c, type(a),
+                    print('  ', c, type(a), end='')
                     try:
-                        print a.dtype, a.shape,
+                        print(a.dtype, a.shape, end='')
                     except:
                         pass
-                    print
+                    print()
                 raise
             return
 
 
         fc = self.to_fits_columns(columns)
-        #print 'FITS columns:', fc
         T = pyfits.new_table(fc)
         if header == 'default':
             header = self._header
@@ -557,14 +527,6 @@ class tabledata(object):
                 continue
             val = self.get(name)
 
-            #print 'col', name, 'type', val.dtype, 'descr', val.dtype.descr
-            #print repr(val.dtype)
-            #print val.dtype.type
-            #print repr(val.dtype.type)
-            #print val.shape
-            #print val.size
-            #print val.itemsize
-
             if type(val) in [list, tuple]:
                 val = np.array(val)
 
@@ -576,7 +538,7 @@ class tabledata(object):
             try:
                 fitstype = fmap.get(val.dtype.type, 'D')
             except:
-                print 'Table column "%s" has no "dtype"; skipping' % name
+                print('Table column "%s" has no "dtype"; skipping' % name)
                 continue
 
             if fitstype == 'X':
@@ -589,24 +551,20 @@ class tabledata(object):
                 fitstype = '%i%s' % (val.itemsize, fitstype)
             else:
                 fitstype = '1'+fitstype
-            #print 'fits type', fitstype
+            #print('fits type', fitstype)
             try:
                 col = pyfits.Column(name=name, array=val, format=fitstype)
             except:
-                print 'Error converting column', name, 'to a pyfits column:'
-                print 'fitstype:', fitstype
+                print('Error converting column', name, 'to a pyfits column:')
+                print('fitstype:', fitstype)
                 try:
-                    print 'numpy dtype:'
-                    print val.dtype
-                    print val.dtype.type
+                    print('numpy dtype:')
+                    print(val.dtype)
                 except:
                     pass
-                print 'value:', val
+                print('value:', val)
                 raise
             cols.append(col)
-            #print 'fits type', fitstype, 'column', col
-            #print repr(col)
-            #print 'col', name, ': data length:', val.shape
         return cols
 
     def add_columns_from(self, X, dup=None):
@@ -615,7 +573,7 @@ class tabledata(object):
         for c in X.get_columns():
             if c in mycols:
                 if dup is None:
-                    print 'Not copying existing column', c
+                    print('Not copying existing column', c)
                     continue
                 else:
                     self.set(dup + c, X.get(c))
@@ -735,7 +693,7 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
                 dd = data.read(rows=rows, columns=columns, lower=True)
             except:
                 import sys
-                print >>sys.stderr, 'Error reading from FITS object', type(data), data, 'dataorfn', dataorfn
+                print('Error reading from FITS object', type(data), data, 'dataorfn', dataorfn, file=sys.stderr)
                 raise
             if dd is None:
                 return None
@@ -764,7 +722,6 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
         if columns is None:
             columns = data.dtype.names
         for c in columns:
-            #print 'reading column "%s"' % c
             col = data.field(c)
             if rows is not None:
                 col = col[rows]
@@ -793,17 +750,17 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
     f = None
     if isinstance(forfn, str):
         f = open(forfn)
-        print 'Reading file', forfn
+        print('Reading file', forfn)
     else:
         f = forfn
 
     for i in range(skiplines):
         x = f.readline()
-        print 'Skipping line:', x
+        print('Skipping line:', x)
 
     if headerline is None:
         headerline = f.readline().strip()
-        print 'Header:', headerline
+        print('Header:', headerline)
     header = headerline
 
     if header[0] == '#':
@@ -813,12 +770,12 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         colnames = header.split()
     else:
         colnames = header.split(split)
-    print 'Column names:', colnames
+    print('Column names:', colnames)
 
     if coltypes is not None:
         if len(coltypes) != len(colnames):
-            print 'Column names:', len(colnames)
-            print 'Column types:', len(coltypes)
+            print('Column names:', len(colnames))
+            print('Column types:', len(coltypes))
             raise Exception('Column names vs types length mismatch: %i vs %i' %
                             (len(colnames), len(coltypes)))
     else:
@@ -839,9 +796,9 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         for i,line in zip(xrange(Nchunk), f):
             line = line.strip()
             if line.startswith('#') and skipcomments:
-                print 'Skipping comment line:'
-                print line
-                print
+                print('Skipping comment line:')
+                print(line)
+                print()
                 continue
             if split is None:
                 words = line.split()
@@ -851,8 +808,9 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
                 ncomplain += 1
                 if ncomplain > 10:
                     continue
-                print ('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n    "%s"\n(Skipping this row of the input file)' %
-                       (len(colnames), ', '.join(colnames), i+i0, len(words), line))
+                print('Expected to find %i columns of data to match headers (%s) in row %i; got %i; skipping line' %
+                      (len(colnames), ', '.join(colnames), i+i0, len(words)))
+                print('    "%s"' % line)
                 continue
             for d,w in zip(data, words):
                 d[j] = w
@@ -894,7 +852,7 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
             data = [np.array(dat).astype(typ) for dat,typ in zip(data, coltypes)]
         except:
             for name,dat,typ in zip(colnames, data, coltypes):
-                print 'Column', name
+                print('Column', name)
                 np.array(dat).astype(typ)
             raise
         t3 = time.clock()
@@ -906,7 +864,7 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
 
         # print 'Read', i+1, 'lines'
         # print 'Read', j, 'valid lines'
-        print 'Read line', i0 + nread
+        print('Read line', i0 + nread)
         
         alldata.append(data)
         i0 += nread
@@ -915,17 +873,17 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
             break
         
     if ncomplain > 10:
-        print 'Total of', ncomplain, 'bad lines'
+        print('Total of', ncomplain, 'bad lines')
 
     # merge chunks
     T = tabledata()
     for name in reversed(colnames):
-        print 'Merging', name
+        print('Merging', name)
         xx = [data.pop() for data in alldata]
-        print 'lengths:', [len(x) for x in xx]
+        print('lengths:', [len(x) for x in xx])
         xx = np.hstack(xx)
-        print 'total:', len(xx)
-        print 'type:', xx.dtype
+        print('total:', len(xx))
+        print('type:', xx.dtype)
         T.set(name, xx)
     T._columns = colnames
     return T
@@ -938,31 +896,31 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
         f = None
         if isinstance(forfn, str):
             f = open(forfn)
-            print 'Reading file', forfn
+            print('Reading file', forfn)
             data = f.read()
             f.close()
         else:
             data = forfn.read()
-            print 'Read', len(data), 'bytes'
+            print('Read', len(data), 'bytes')
     else:
         data = text
 
     # replace newline variations with a single newline character
-    print 'Replacing line endings'
+    print('Replacing line endings')
     data = data.replace('\r\n','\n') # windows
     data = data.replace('\r','\n') # mac os
-    print 'Splitting lines'
+    print('Splitting lines')
     txtrows = data.split('\n')
-    print 'Got', len(txtrows), 'lines'
-    print 'First line:', txtrows[0]
-    print 'Last line:', txtrows[-1]
+    print('Got', len(txtrows), 'lines')
+    print('First line:', txtrows[0])
+    print('Last line:', txtrows[-1])
     if txtrows[-1] == '':
-        print 'Trimming last line.'
+        print('Trimming last line.')
         txtrows = txtrows[:-1]
-        print 'Last line now:', txtrows[-1]
+        print('Last line now:', txtrows[-1])
     if skiplines != 0:
         txtrows = txtrows[skiplines:]
-        print 'Skipped', skiplines, 'kept', len(txtrows)
+        print('Skipped', skiplines, 'kept', len(txtrows))
 
     if headerline is None:
         # column names are in the first (un-skipped) line.
@@ -974,7 +932,7 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
     header = header.split()
     if len(header) == 0:
         raise Exception('Expected to find column names in the first row of text; got \"%s\".' % txt)
-    print 'Header:', len(header), 'columns'
+    print('Header:', len(header), 'columns')
     #assert(len(header) >= 1)
     if trycsv and (split is None) and (len(header) == 1) and (',' in header[0]):
         # try CSV
@@ -988,12 +946,12 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 
     fields = tabledata()
     txtrows = [r for r in txtrows if not r.startswith('#')]
-    print 'Kept', len(txtrows), 'non-commented rows'
+    print('Kept', len(txtrows), 'non-commented rows')
     coldata = [[] for x in colnames]
     ncomplain = 0
     for i,r in enumerate(txtrows):
         if i and (i % 1000000 == 0):
-            print 'Row', i
+            print('Row', i)
         if maxcols is not None:
             r = r[:maxcols]
         if split is None:
@@ -1011,9 +969,11 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
             ncomplain += 1
             if ncomplain > 10:
                 continue
-            print 'Expected to find %i columns of data to match headers (%s) in row %i; got %i\n    "%s"' % (len(colnames), ', '.join(colnames), i, len(cols), r)
+            print('Expected to find %i columns of data to match headers (%s) in row %i; got %i' %
+                  (len(colnames), ', '.join(colnames), i, len(cols)))
+            print('    "%s"' % (r))
             continue
-        #assert(len(cols) == len(colnames))
+
         if coltypes is not None:
             floattypes = [float,np.float32,np.float64]
             for i,(cd,c,t) in enumerate(zip(coldata, cols, coltypes)):
@@ -1038,7 +998,7 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
                 cd.append(c)
 
     if ncomplain > 10:
-        print 'Total of', ncomplain, 'bad lines'
+        print('Total of', ncomplain, 'bad lines')
                 
     if coltypes is None:
         for i,col in enumerate(coldata):
