@@ -40,6 +40,8 @@ $(QFITS_LIB_FILE): $(OBJS)
 
 install: $(QFITS_LIB_FILE) $(HEADERS)
 	@echo Installing in base directory '$(INSTALL_DIR)'
+	mkdir -p '$(INCLUDE_INSTALL_DIR)'
+	mkdir -p '$(LIB_INSTALL_DIR)'
 	@for x in $(HEADERS); do \
 		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
