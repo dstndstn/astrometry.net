@@ -1,0 +1,40 @@
+.TH QUERY-STARKD "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+query-starkd \- Search index files for stars near a given point on the sky
+.SH SYNOPSIS
+.B query-starkd
+[options]
+\fIstar-kdtree-file\fR
+.SH DESCRIPTION
+This program is mainly undocumented. If you have more information, please file
+a bug for the astrometry.net package.
+.SH OPTIONS
+.TP
+\fB\-o\fR \fIfile\fR
+Write RA-DEC-list FITS table (default: print ASCII to stdout)
+.TP
+\fB-r\fR \fIra\fR
+RA (deg)
+.TP
+\fB\-d\fR \fIdec\fR
+DEC (deg)
+.TP
+\fB\-R\fR \fIradius\fR
+Radius (deg)
+.TP
+\fB\-t\fR \fIcol\fR
+Tag along column
+.TP
+\fB\-T\fR
+Tag along all
+.TP
+\fB\-I\fR
+Print indices too
+.TP
+\fB\-v\fR
++verbose
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

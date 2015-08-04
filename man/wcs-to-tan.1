@@ -1,0 +1,33 @@
+.TH WCS-TO-TAN "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+wcs-to-tan \- Undocumented program of astromatic.net
+.SH SYNOPSIS
+.B wcs-to-tan
+.SH DESCRIPTION
+.TP
+\fB\-w\fR \fIfile\fR
+WCS input file
+.TP
+\fB\-o\fR \fIfile\fR
+WCS output file
+.TP
+\fB\-e \fIextension\fR
+FITS HDU number to read WCS from (default 0 = primary)
+.TP
+\fB\-t\fR
+Just use TAN projection, even if SIP extension exists.
+.TP
+\fB\-L\fR
+force WCSlib
+.TP
+\fB\-x\fR \fIx-lo\fR \fB\-y\fR \fIy-lo\fR \fB\-W\fR \fIx-hi\fR \fB\-H\fR \fIy-hi\fR
+.TP
+\fB\-N\fR \fIgrid-n\fR
+.TP
+\fB\-v\fR
+Verbose
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

@@ -1,0 +1,53 @@
+.TH WCS-PV2SIP "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+wcs-pv2sip \- Convert TPV WCS headers to SIP distortion headers
+.SH SYNOPSIS
+.B wcs-pv2sip
+[options]
+\fIinput-wcs\fR \fIoutput-wcs\fR
+.SH OPTIONS
+.TP
+\fB\-o\fR \fIorder\fR
+SIP polynomial order to fit (default: 5)
+.TP
+\fB\-e\fR \fIext\fR
+FITS HDU number to read WCS from (default 0 = primary)
+.TP
+\fB\-S\fR
+Do NOT do the wcs_shift thing
+.TP
+\fB\-s\fR
+Treat input as Scamp .head file
+.TP
+\fB\-t\fR
+Override the CTYPE* cards in the WCS header, and assume they are TAN.
+.TP
+\fB\-v\fR
++verboseness
+.TP
+\fB\-W\fR \fIint\fR
+Set the IMAGEW in the output file
+.TP
+\fB\-H\fR \fIint\fR
+Set the IMAGEH in the output file
+.TP
+\fB\-x\fR \fInum\fR
+x-low (default: 1)
+.TP
+\fB\-y\fR \fInum\fR
+y-low (default: 1)
+.TP
+\fB\-X\fR \fInum\fR
+x-high (default: image width)
+.TP
+\fB\-Y\fR \fInum\fR
+y-high (default: image width)
+.TP
+\fB\-a\fR \fIsize\fR
+Set the pixel values used to compute the distortion polynomials with
+(default: closest to 100 yielding whole number of steps)
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

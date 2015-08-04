@@ -1,0 +1,325 @@
+.TH SOLVE-FIELD "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+solve-field \- Main high-level command-line user interface.
+.SH SYNOPSIS
+.B
+solve-field
+[options]
+[\fIimage-file-1\fR \fIimage-file-2\fR ...]
+[\fIxyls-file-1\fR \fIxyls-file-2\fR ...]
+.SH DESCRIPTION
+Main high-level command-line user interface for astrometry.net
+.PP
+You can specify http:// or ftp:// URLs instead of filenames.  The "wget" or
+"curl" program will be used to retrieve the URL.
+.PP
+The astrometry engine will take any image and return the astrometry world
+coordinate system (WCS), ie a standards-based description of the (usually
+nonlinear) transformation between image coordinates and sky coordinates with
+absolutely no “false positives” (but maybe some “no answers”). It will do its
+best, even when the input image has no or totally incorrect meta data.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print the help message
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Be more chatty. Repeat for even more verboseness
+.TP
+\fB\-D\fR, \fB\-\-dir\fR \fIdirectory\fR
+Place all output files in the specified directory
+.TP
+\fB\-o\fR, \fB\-\-out\fR \fIfile\fR
+Name the output files with this base name
+.TP
+\fB\-b\fR, \fB\-\-backend-config\fR \fIfile\fR
+Use this config file for the "astrometry-engine" program
+.TP
+\fB\-\-config\fR \fIfile\fR
+Use this config file for the "astrometry-engine" program
+.TP
+\fB\-\-batch\fR
+Run astrometry-engine once, rather than once per input file
+.TP
+\fB\-f\fR, \fB\-\-files-on-stdin\fR
+Read filenames to solve on stdin, one per line
+.TP
+\fB\-p\fR, \fB\-\-no\-plots\fR
+Don't create any plots of the results
+.TP
+\fB\-\-plot\-scale\fR \fIscale\fR
+Scale the plots by this factor (eg, 0.25)
+.TP
+\fB\-\-plot\-bg\fR \fIfile\fR
+Set the background image to use for plots (JPEG)
+.TP
+\fB\-G\fR, \fB\-\-use\-wget\fR
+Use wget instead of curl
+.TP
+\fB\-O\fR, \fB\-\-overwrite\fR
+Overwrite output files if they already exist
+.TP
+\fB\-K\fR, \fB\-\-continue\fR
+Don't overwrite output files if they already exist; continue a previous run
+.TP
+\fB\-J\fR, \fB\-\-skip-solved\fR
+Skip input files for which the 'solved' output file already exists; NOTE: this assumes single-field input files
+.TP
+\fB\-\-fits\-image\fR
+assume the input files are FITS images
+.TP
+\fB\-N\fR, \fB\-\-new-fits\fR \fIfile\fR
+Output filename of the new FITS file containing the WCS header; "none" to not create this file
+.TP
+\fB\-Z\fR, \fB\-\-kmz\fR \fIfile\fR
+Create KMZ file for Google Sky. (requires wcs2kml)
+.TP
+\fB\-i\fR, \fB\-\-scamp\fR \fIfile\fR
+Create image object catalog for SCAMP
+.TP
+\fB\-n\fR, \fB\-\-scamp-config\fR \fIfile\fR
+Create SCAMP config file snippet
+.TP
+\fB\-U\fR, \fB\-\-index-xyls\fR \fIfile\fR
+Output filename for xylist containing the image coordinate of stars from the index
+.TP
+\fB\-\-just-augment\fR
+Just write the augmented xylist files; don't run astrometry-engine.
+.TP
+\fB\-\-axy\fR \fIfile\fR
+Output filename for augment xy list (axy)
+.TP
+\fB\-\-temp\-axy\fR
+Write 'augmented xy list' (axy) file to a temp file
+.TP
+\fB\-\-timestamp\fR
+Add timestamps to log messages
+.TP
+\fB\-7\fR, \fB\-\-no-delete-temp\fR
+Don't delete temp files (for debugging)
+.TP
+\fB\-L\fR, \fB\-\-scale-low\fR \fIscale\fR
+Lower bound of image scale estimate
+.TP
+\fB\-H\fR, \fB\-\-scale-high\fR \fIscale\fR
+Upper bound of image scale estimate
+.TP
+\fB\-u\fR, \fB\-\-scale-units\fR \fIunits\fR
+In what units are the lower and upper bounds? Choices:
+.RS
+.TP
+"degwidth", "degw", "dw"
+width of the image, in degrees (default)
+.TP
+"arcminwidth", "amw", "aw"
+width of the image, in arcminutes
+.TP
+"arcsecperpix", "app"
+arcseconds per pixel
+.TP
+"focalmm"
+35\-mm (width-based) equivalent focal length
+.RE
+.TP
+\fB\-8\fR, \fB\-\-parity\fR \fIpos\fR/\fIneg\fR
+Only check for matches with positive/negative parity (default: try both)
+.TP
+\fB\-c\fR, \fB\-\-code\-tolerance\fR \fIdistance\fR
+Matching distance for quads (default: 0.01)
+.TP
+\fB\-E\fR, \fB\-\-pixel\-error\fR \fIpixels\fR
+For verification, size of pixel positional error (default: 1)
+.TP
+\fB\-q\fR, \fB\-\-quad\-size\-min\fR \fIfraction\fR
+Minimum size of quads to try, as a fraction of the smaller image dimension, default: 0.1
+.TP
+\fB\-Q\fR, \fB\-\-quad\-size\-max\fR \fIfraction\fR
+Maximum size of quads to try, as a fraction of the image hypotenuse, default 1.0
+.TP
+\fB\-\-odds\-to\-tune\-up\fR \fIodds\fR
+Odds ratio at which to try tuning up a match that isn't good enough to solve (default: 1e6)
+.TP
+\fB\-\-odds\-to\-solve\fR \fIodds\fR
+Odds ratio at which to consider a field solved (default: 1e9)
+.TP
+\fB\-\-odds\-to\-reject\fR \fIodds\fR
+Odds ratio at which to reject a hypothesis (default: 1e\-100)
+.TP
+\fB\-\-odds\-to\-stop\-looking\fR \fIodds\fR
+Odds ratio at which to stop adding stars when evaluating a hypothesis (default: HUGE_VAL)
+.TP
+\fB\-\-use\-sextractor\fR
+Use SExtractor rather than built\-in image2xy to find sources
+.TP
+\fB\-\-sextractor\-config\fR \fIfile\fR
+Use the given SExtractor config file. Note that CATALOG_NAME and CATALOG_TYPE values will be over\-ridden by
+command\-line values.  This option implies \fB\-\-use\-sextractor\fR.
+.TP
+\fB\-\-sextractor\-path\fR \fIfile\fR
+Use the given path to the SExtractor executable. Default: just 'sextractor',
+assumed to be in your PATH. Note that you can give command line args here too
+(but put them in quotes), eg:
+.IP
+\fB\-\-sextractor\-path\fR 'sextractor -DETECT_TYPE CCD'.
+.IP
+This option implies \fB\-\-use\-sextractor\fR.
+.TP
+\fB\-3\fR \fIRA\fR, \fB\-\-ra\fR \fIRA\fR
+RA of field center for search, format: degrees or hh:mm:ss
+.TP
+\fB\-4\fR \fIDEC\fR, \fB\-\-dec\fR \fIDEC\fR
+DEC of field center for search, format: degrees or hh:mm:ss
+.TP
+\fB\-5\fR \fIdegrees\fR, \fB\-\-radius\fR \fIdegrees\fR
+Only search in indexes within 'radius' of the field center given by
+\fB\-\-ra\fR and \fB\-\-dec\fR
+.TP
+\fB\-d\fR, \fB\-\-depth\fR \fInumber\fR or \fIrange\fR
+Number of field objects to look at, or range of numbers; 1 is the brightest
+star, so "\-d 10" or "\-d 1\-10" mean look at the top ten brightest stars only.
+.TP
+\fB\-\-objs\fR \fIint\fR
+Cut the source list to have this many items (after sorting, if applicable).
+.TP
+\fB\-l\fR, \fB\-\-cpulimit\fR \fIseconds\fR
+Give up solving after the specified number of seconds of CPU time
+.TP
+\fB\-r\fR, \fB\-\-resort\fR
+Sort the star brightnesses by background\-subtracted flux; the default is to
+sort using acompromise between background\-subtracted and non\-background\-subtracted flux
+.TP
+\fB\-6\fR, \fB\-\-extension\fR \fIint\fR
+FITS extension to read image from.
+.TP
+\fB\-2\fR, \fB\-\-no\-fits2fits\fR
+Don't sanitize FITS files; assume they're already valid
+.TP
+\fB\-\-invert\fR
+Invert the image (for black\-on\-white images)
+.TP
+\fB\-z\fR, \fB\-\-downsample\fR \fIint\fR
+Downsample the image by factor \fIint\fR before running source extraction
+.TP
+\fB\-\-no\-background\-subtraction\fR
+Don't try to estimate a smoothly\-varying sky background during source extraction.
+.TP
+\fB\-\-sigma\fR \fIfloat\fR
+Set the noise level in the image
+.TP
+\fB\-9\fR, \fB\-\-no\-remove\-lines\fR
+Don't remove horizontal and vertical overdensities of sources.
+.TP
+\fB\-\-uniformize\fR \fIint\fR
+Select sources uniformly using roughly this many boxes (0=disable; default 10)
+.TP
+\fB\-\-no\-verify\-uniformize\fR
+Don't uniformize the field stars during verification
+.TP
+\fB\-\-no\-verify\-dedup\fR
+Don't deduplicate the field stars during verification
+.TP
+\fB\-0\fR, \fB\-\-no\-fix\-sdss\fR
+Don't try to fix SDSS idR files.
+.TP
+\fB\-C\fR, \fB\-\-cancel\fR \fIfile\fR
+Filename whose creation signals the process to stop
+.TP
+\fB\-S\fR, \fB\-\-solved\fR \fIfile\fR
+Output file to mark that the solver succeeded
+.TP
+\fB\-I\fR, \fB\-\-solved\-in\fR \fIfile\fR
+Input filename for solved file
+.TP
+\fB\-M\fR, \fB\-\-match\fR \fIfile\fR
+Output filename for match file
+.TP
+\fB\-R\fR, \fB\-\-rdls\fR \fIfile\fR
+Output filename for RDLS file
+.TP
+\fB\-\-sort\-rdls\fR \fIcolumn\fR
+Sort the RDLS file by this column; default is ascending; use "\-column" to sort "column" in descending order instead.
+.TP
+\fB\-\-tag\fR \fIcolumn\fR
+Grab tag\-along column from index into RDLS file
+.TP
+\fB\-\-tag\-all\fR
+Grab all tag\-along columns from index into RDLS file
+.TP
+\fB\-j\fR, \fB\-\-scamp\-ref\fR \fIfile\fR
+Output filename for SCAMP reference catalog
+.TP
+\fB\-B\fR, \fB\-\-corr\fR \fIfile\fR
+Output filename for correspondences
+.TP
+\fB\-W\fR, \fB\-\-wcs\fR \fIfile\fR
+Output filename for WCS file
+.TP
+\fB\-P\fR, \fB\-\-pnm\fR \fIfile\fR
+Save the PNM file as \fIfile\fR
+.TP
+\fB\-k\fR, \fB\-\-keep\-xylist\fR \fIfile\fR
+Save the (unaugmented) xylist to \fIfile\fR
+.TP
+\fB\-A\fR, \fB\-\-dont\-augment\fR
+Quit after writing the unaugmented xylist
+.TP
+\fB\-V\fR, \fB\-\-verify\fR \fIfile\fR
+Try to verify an existing WCS file
+.TP
+\fB\-\-verify\-ext\fR \fIextension\fR
+HDU from which to read WCS to verify; set this BEFORE \fB\-\-verify\fR
+.TP
+\fB\-y\fR, \fB\-\-no\-verify\fR
+Ignore existing WCS headers in FITS input images
+.TP
+\fB\-g\fR, \fB\-\-guess\-scale\fR
+Try to guess the image scale from the FITS headers
+.TP
+\fB\-\-crpix\-center\fR
+Set the WCS reference point to the image center
+.TP
+\fB\-\-crpix\-x\fR \fIpix\fR
+Set the WCS reference point to the given position
+.TP
+\fB\-\-crpix\-y\fR \fIpix\fR
+Set the WCS reference point to the given position
+.TP
+\fB\-T\fR, \fB\-\-no\-tweak\fR
+Don't fine\-tune WCS by computing a SIP polynomial
+.TP
+\fB\-t\fR, \fB\-\-tweak\-order\fR \fIint\fR
+Polynomial order of SIP WCS corrections
+.TP
+\fB\-m\fR, \fB\-\-temp\-dir\fR \fIdir\fR
+Where to put temp files, default \fI\,/tmp\/\fP
+.SS "The following options are valid for xylist inputs only:"
+.TP
+\fB\-F\fR, \fB\-\-fields\fR \fInumber or range\fR
+The FITS extension(s) to solve, inclusive
+.TP
+\fB\-w\fR, \fB\-\-width\fR \fIpixels\fR
+Specify the field width
+.TP
+\fB\-e\fR, \fB\-\-height\fR \fIpixels\fR
+Specify the field height
+.TP
+\fB\-X\fR, \fB\-\-x\-column\fR \fIcolumn\-name\fR
+The FITS column containing the X coordinate of the sources
+.TP
+\fB\-Y\fR, \fB\-\-y\-column\fR \fIcolumn\-name\fR
+The FITS column containing the Y coordinate of the sources
+.TP
+\fB\-s\fR, \fB\-\-sort\-column\fR \fIcolumn\-name\fR
+The FITS column that should be used to sort the sources
+.TP
+\fB\-a\fR, \fB\-\-sort\-ascending\fR
+Sort in ascending order (smallest first); default is descending order
+.PP
+Note that most output files can be disabled by setting the filename to "none".
+(If you have a sick sense of humour and you really want to name your output
+file "none", you can use "./none" instead.)
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

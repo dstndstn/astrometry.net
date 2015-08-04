@@ -1,0 +1,75 @@
+.TH PLOTXY "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+plotxy \- plots circles, crosses, etc over images.
+.SH SYNOPSIS
+.B plotxy
+[options]
+.SH OPTIONS
+.TP
+\fB\-i\fR \fIfile\fR
+Input file (xylist)
+.TP
+\fB\-o\fR \fIfile\fR
+Output file (default: stdout)
+.TP
+\fB\-I\fR \fIimage\fR
+Input image on which plotting will occur; PPM format.
+.TP
+\fB\-p\fR
+Input image is PNG format, not PPM.
+.TP
+\fB\-P\fR
+Write PPM output instead of PNG.
+.TP
+\fB\-J\fR
+Write PDF output.
+.TP
+\fB\-W\fR \fIwidth\fR
+Width of output image (default: data\-dependent).
+.TP
+\fB\-H\fR \fIheight\fR
+Height of output image (default: data\-dependent).
+.TP
+\fB\-x\fR \fIoffset\fR
+X offset: position of the bottom\-left pixel (default: 1).
+.TP
+\fB\-y\fR \fIoffset\fR
+Y offset: position of the bottom\-left pixel (default: 1).
+.TP
+\fB\-X\fR \fIname\fR
+X column: name of the FITS column.
+.TP
+\fB\-Y\fR \fIname\fR
+Y column: name of the FITS column.
+.TP
+\fB\-n\fR \fIobj\fR
+First object to plot (default: 0).
+.TP
+\fB\-N\fR \fInum\fR
+Number of objects to plot (default: all).
+.TP
+\fB\-r\fR \fIradius\fR
+Size of markers to plot (default: 5.0).
+.TP
+\fB\-w\fR \fIwidth\fR
+Linewidth (default: 1.0).
+.TP
+\fB\-s\fR \fIshape\fR
+Shape of markers (default: circle): circle, crosshair, square, diamond, X, Xcrosshair
+.TP
+\fB\-C\fR \fIcolor\fR
+Color to plot in (default: white): darkred, red, darkgreen, green, blue, verydarkblue, white, black, cyan, magenta, yellow, brightred, skyblue, orange, gray, darkgray
+.TP
+\fB\-b\fR \fIcolor\fR
+Draw in \fIcolor\fR behind each marker.
+.TP
+\fB\-S\fR \fIfactor\fR
+Scale xylist entries by this value before plotting.
+.TP
+\fB\-e\fR \fIext\fR
+FITS extension to read (default 0).
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

@@ -1,0 +1,35 @@
+.TH GET-HEALPIX "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+get-healpix \- Convert RA,DEC to Which healpix
+.SH SYNOPSIS
+.B get\-healpix
+[\fIoptions\fR] \fIra\fR \fIdec\fR
+.br
+.B get\-healpix
+[\fIoptions\fR] \fIx\fR \fIy\fR \fIz\fR
+.SH OPTIONS
+.TP
+\fB\-r\fR
+RA/DEC values in radians; default is in decimal degrees or H:M:S
+.TP
+\fB\-H\fR \fIhealpix\fR
+take healpix number as input and print center as output.
+.TP
+\fB\-N\fR \fIn\fR
+Nside (default 1)
+.TP
+\fB\-n\fR
+Print neighbours
+.TP
+\fB\-R\fR \fIrange\fR
+print healpixes within radius \fIrange\fR in degrees
+.TP
+\fB\-p\fR
+Project position within healpix
+.PP
+If your values are negative, add "\-\-" in between "\-r" (if you're using it) and "ra" or "x".
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

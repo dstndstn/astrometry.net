@@ -1,0 +1,59 @@
+.TH AN-FITSTOPNM "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+an-fitstopnm \- Convert FITS images into ugly PNM images.
+.SH SYNOPSIS
+an\-fitstopnm \fB\-i\fR \fIinput-file\fR
+.SH OPTIONS
+.TP
+\fB\-o\fR \fIfile\fR
+Output file (default stdout)
+.TP
+\fB\-e\fR \fIext\fR
+FITS extension number (default 0)
+.TP
+\fB\-p\fR \fIplane\fR
+Image plane number (default 0)
+.TP
+\fB\-m\fR \fImargin\fR
+Number of pixels to avoid at the image edges (default 0)
+.TP
+\fB\-O\fR
+Do ordinal transform (default: map 25-95 percentile)
+.TP
+\fB\-L\fR \fIpercentile\fR
+Set percentile that becomes black (default 25)
+.TP
+\fB\-H\fR \fIpercentile\fR
+Set percentile that becomes white (default 95)
+.TP
+\fB\-I\fR
+Invert black-on-white image
+.TP
+\fB\-X\fR \fImax\fR
+Set the input value that will become white
+.TP
+\fB\-N\fR \fImin\fR
+Set the input value that will become black
+.TP
+\fB\-x\fR
+Set max to the observed maximum value
+.TP
+\fB\-n\fR
+Set min to the observed minimum value
+.TP
+\fB\-r\fR
+Same as \fB\-x\fR \fB\-n\fR: set min and max to observed data range.
+.TP
+\fB\-s\fR
+Write 16-bit output
+.TP
+\fB\-v\fR
+Verbose
+.TP
+\fB\-M\fR
+Compute & print median value
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

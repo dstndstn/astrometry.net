@@ -1,0 +1,51 @@
+.TH WCS-XY2RD "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+wcs-xy2rd \- Convert lists of pixel from (x,y) to (RA,Dec) positions.
+.SH SYNOPSIS
+.B wcs-xy2rd
+[options] \fB\-w\fR \fIfile\fR
+.SH OPTIONS
+.TP
+\fB\-w\fR \fIfile\fR
+WCS input file
+.TP
+\fB\-e\fR \fIextension\fR
+FITS HDU number to read WCS from (default 0 = primary)
+.TP
+\fB\-x \fIpixel\fR \fB\-y \fIpixel\fR
+Specify a single point to convert (result is printed to stdout)
+.TP
+\fB\-t\fR
+just use TAN projection, even if SIP extension exists.
+.TP
+\fB\-L\fR
+force WCSlib
+.TP
+\fB\-T\fR
+force WCStools
+.TP
+\fB\-s\fR
+print sexigesimal too
+.TP
+\fB\-i\fR \fIfile\fR
+xyls input file
+.TP
+\fB\-o\fR \fIfile\fR
+rdls output file
+.TP
+\fB\-f \fIindex\fR
+xyls field index (default: all)
+.TP
+\fB\-X \fIname\fR
+X-column-name
+.TP
+\fB\-Y\fR \fIname\fR
+Y-column-name
+.TP
+\fB\-v\fR
++verbose
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

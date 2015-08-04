@@ -1,0 +1,20 @@
+.TH PAD-FILE "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+pad-file \- Pad a FITS file out to the correct size
+.SH SYNOPSIS
+.B pad-file
+\fIdesired-length input-file\fR [\fIinput-file\fR ...]
+.SH DESCRIPTION
+The file will be padded in\-place. By default, the file is padded with zeros.
+.SH OPTIONS
+.TP
+\fB\-v\fR \fIn\fR
+Numerical value of character to pad with
+.TP
+\fB\-c\fR \fIc\fR
+Character to pad with
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

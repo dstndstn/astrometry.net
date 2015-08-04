@@ -1,0 +1,42 @@
+.TH HPSPLIT "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+hpsplit \- Split a list of FITS tables into healpix tiles
+.SH SYNOPSIS
+.B hpsplit
+[options]
+\fIinput-FITS-catalog\fR [...]
+.SH OPTIONS
+.TP
+\fB\-o\fR \fIpattern\fP
+Output filename pattern (with %i printf-pattern)
+.TP
+\fB\-r\fR \fIcolumn\fP
+Name of RA column in FITS table (default RA)
+.TP
+\fB\-d\fR \fIcolumn\fP
+Name of DEC column in FITS table (default DEC)
+.TP
+\fB\-n\fR \fINside\fP
+Healpix Nside. Default is 1
+.TP
+\fB\-m\fR \fImargin\fP
+Add a margin of this many degrees around the healpixes; default 0
+.TP
+\fB\-g\fR
+Gzip'd inputs
+.TP
+\fB\-c\fR \fIname\fP
+Copy given column name to the output files
+.TP
+\fB\-t\fR \fIdir\fP
+Use the given temp dir; default is \fI\,/tmp\/\fP
+.TP
+\fB\-b\fR \fIfile\fP
+Save the filenumber\->filename map in this file; enables writing backreferences too
+\fB\-v\fR
++verbose
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

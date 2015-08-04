@@ -1,0 +1,50 @@
+.TH ASTROMETRY-ENGINE "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+astrometry-engine \- Identify where a list of stars is on the sky
+.SH SYNOPSIS
+.B
+astrometry-engine
+[options]
+\fIfile\fR [...]
+.SH DESCRIPTION
+This does the actual work of identifying where the list of stars is on the sky.
+It is run by solve-field.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Be verbose
+.TP
+\fB\-c\fR, \fB\-\-config\fR \fIfile\fR
+Use this config file (default: "/etc/astrometry.cfg"); "none" for no config file
+.TP
+\fB\-d\fR, \fB\-\-base-dir\fR \fIdir\fR
+Set base directory of all output filenames.
+.TP
+\fB\-C\fR, \fB\-\-cancel\fR \fIfile\fR
+Quit solving if this file appears
+.TP
+\fB\-s\fR, \fB\-\-solved\fR \fIfile\fR
+Write to this file when a field is solved
+.TP
+\fB\-E\fR, \fB\-\-to\-stderr\fR
+Send log message to stderr
+.TP
+\fB\-f\fR, \fB\-\-inputs\-from\fR \fIfile\fR
+Read input filenames from the given file, "\-" for stdin
+.TP
+\fB\-i\fR, \fB\-\-index\fR \fIfile(s)\fR
+Use the given index files (in addition to any specified in the config file); put in quotes to use wildcards, eg: "\fB\-i\fR 'index\-*.fits'"
+.TP
+\fB\-p\fR, \fB\-\-in-parallel\fR
+Run the index files in parallel
+.TP
+\fB\-D\fR, \fB\-\-data-log\fR file \fIfile\fR
+Log data to the given filename
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

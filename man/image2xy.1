@@ -1,0 +1,93 @@
+.TH IMAGE2XY "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+image2xy \- Source extractor.
+.SH SYNOPSIS
+.B image2xy
+[options]
+\fIfitsname.fits\fR
+.SH DESCRIPTION
+Read a FITS file, find objects, and write out X, Y, FLUX to fitsname.xy.fits.
+.SH OPTIONS
+.TP
+\fB\-e\fR \fIextension\fR
+Read from a single FITS extension
+.TP
+\fB\-O\fR
+Overwrite existing output file.
+.TP
+\fB\-o\fR \fIfile\fR
+Write XYlist to given filename.
+.TP
+\fB\-L\fR \fIorder\fR
+Lanczos order
+.TP
+\fB\-8\fR
+Don't use optimization for byte (u8) images.
+.TP
+\fB\-H\fR
+Downsample by a factor of 2 before running simplexy.
+.TP
+\fB\-d\fR \fIfactor\fR
+Downsample by an integer factor before running simplexy.
+.TP
+\fB\-D\fR \fIfactor\fR
+Downsample, if necessary, by this many factors of two.
+.TP
+\fB\-s\fR \fIscale\fR\fR
+Set median\-filter box size (default 100 pixels)
+.TP
+\fB\-w\fR \fIwidth\fR
+Set Gaussian PSF sigma (default 1 pixel)
+.TP
+\fB\-g\fR \fIsigma\fR
+Set image noise level
+.TP
+\fB\-p\fR \fIsignificance\fR
+Set significance level of peaks in sigmas (default 8 sigmas)
+.TP
+\fB\-a\fR \fIsaddle\fR
+Set "saddle" level joining peaks i sigmas (default 5 sigmas)
+.TP
+\fB\-P\fR \fIplane\fR
+Pull out a single plane of a multi-color image (default: first plane)
+.TP
+\fB\-b\fR
+Don't do (median-based) background subtraction
+.TP
+\fB\-G\fR \fIbackground\fR
+Subtract this 'global' background value; implies \fB\-b\fR
+.TP
+\fB\-m\fR
+Set maximum extended object size for deblending (default 2000 pixels)
+.TP
+\fB\-S\fR \fIfile\fR
+Save background\-subtracted image to this filename (FITS float image)
+.TP
+\fB\-B\fR \fIfile\fR
+Save background image to filename
+.TP
+\fB\-U\fR \fIfile\fR
+Save smoothed background\-subtracted image to filename
+.TP
+\fB\-M\fR \fIfile\fR
+Save mask image to filename
+.TP
+\fB\-C\fR \fIfile\fR
+Save connected\-components image to filename
+.TP
+\fB\-v\fR
+Verbose. repeat for more and more verboseness
+.TP
+image2xy 'file.fits[1]'
+Process first extension.
+.TP
+image2xy 'file.fits[2]'
+Process second extension
+.TP
+image2xy file.fits+2
+Same as above
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

@@ -1,0 +1,24 @@
+.TH DOWNSAMPLE-FITS "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+downsample-fits \- Scale down a FITS image
+.SH SYNOPSIS
+.B
+downsample-fits
+[options]  \fIinput-file\fR \fIoutput-file\fR
+.SH DESCRIPTION
+Scale down a FITS image. Use "\-" to write to stdout.
+.SH OPTIONS
+.TP
+\fB\-s\fR \fIscale\fR
+Downsample scale (default: 2): integer
+.TP
+\fB\-e\fR \fIextension\fR
+Read extension (default: 0)
+.TP
+\fB\-v\fR
+Verbose
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

@@ -1,0 +1,28 @@
+.TH NEW-WCS "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+new-wcs \-  Merge a WCS solution with existing FITS header cards
+.SH SYNOPSIS
+.B
+new\-wcs
+\fB\-i\fR \fIinput-file\fR
+.SH DESCRIPTION
+Merge a WCS solution with existing FITS header cards.
+This can be used to create a new image file containing the WCS headers. 
+.SH OPTIONS
+.TP
+\fB\-w\fR \fIfile\fR
+WCS file
+.TP
+\fB\-o\fR \fIfile\fR
+Output file
+.TP
+\fB\-d\fR
+Also copy the data segment
+.TP
+\fB\-v\fR
++verbose
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net
