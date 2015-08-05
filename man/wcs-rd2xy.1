@@ -1,0 +1,45 @@
+.TH WCS-RD2XY "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+wcs-rd2xy \- Convert lists of pixel from (RA,Dec) to (x,y) positions.
+.SH SYNOPSIS
+.B wcs-rd2xy
+[options] \fB\-w\fR \fIfile\fR
+.SH OPTIONS
+.TP
+\fB\-w\fR \fIfile\fR
+WCS input file
+.TP
+\fB\-e\fR \fIextension\fR
+FITS HDU number to read WCS from (default 0 = primary)
+.TP
+\fB\-i\fR \fIfile\fR
+rdls input file
+.TP
+\fB\-o\fR \fIfile\fR
+xyls output file
+.TP
+\fB\-f\fR \fIindex\fR
+rdls field index (default: all)
+.TP
+\fB\-R\fR \fIname\fR
+RA column name
+.TP
+\fB\-D\fR \fIname\fR
+DEC column name
+.TP
+\fB\-t\fR
+Just use TAN projection, even if SIP extension exists
+.TP
+\fB\-L\fR
+Force using WCSlib rather than Astrometry.net routines
+.TP
+\fB\-r\fR \fIra\fR \fB\-d\fR \fIra\fR
+Specify a single point (in deg) to convert (printed to stdout)
+.TP
+\fB\-v\fR
++verbose
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

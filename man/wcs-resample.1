@@ -1,0 +1,31 @@
+.TH WCS-RESAMPLE "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+wcs-resample \- Project one FITS image onto another image.
+.SH SYNOPSIS
+.B wcs-resample
+[options]
+\fIinput-FITS\fR \fIoutput-WCS\fR \fIoutput-FITS\fR
+.SH OPTIONS
+.TP
+\fB\-E\fR \fIextension\fR
+Input image FITS extension (default: 0)
+.TP
+\fB\-w\fR \fIfile\fR
+Input WCS file (default is to read WCS from input FITS image)
+.TP
+\fB\-e\fR \fIfile\fR
+Input WCS FITS extension (default: 0)
+.TP
+\fB\-x\fR \fIextension\fR
+Output WCS FITS extension (default: 0)
+.TP
+\fB\-L\fR \fIorder\fR
+Lanczos order (default: nearest-neighbor resampling)
+.TP
+\fB\-z\fR
+Zero out inf/nan input image value
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

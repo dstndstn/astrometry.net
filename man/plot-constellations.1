@@ -1,0 +1,87 @@
+.TH PLOT-CONSTELLATIONS "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+plot-constellations \- Annotates images with constellations etc.
+.SH SYNOPSIS
+plot-constellations 
+\fB\-w\fR \fIfile\fR | \fB\-L\fR | \fB\-o\fR \fIfile\fR 
+.SH DESCRIPTION
+Annotates images with constellations, bright stars, Messier/NGC objects,
+Henry Draper catalog stars, etc.
+.SH OPTIONS
+.TP
+\fB\-w\fR \fIfile\fR
+WCS input file
+.TP
+\fB\-L\fR
+just list the items in the field
+.TP
+\fB\-o\fR \fIfile\fR
+image output file; "\-" for stdout
+.TP
+.TP
+\fB\-p\fR
+write PPM output \- default is PNG
+([\fB\-i\fR \fIPPM input file\fR]
+OR [\fB\-W\fR \fIwidth\fR \fB\-H\fR \fIheight\fR] )
+.TP
+\fB\-s\fR \fIscale\fR
+scale image coordinates by this value before plotting.
+.TP
+\fB\-N\fR
+plot NGC objects
+.TP
+\fB\-F\fR \fIfraction\fR
+minimum NGC size, relative to image size (default 0.02)
+.TP
+\fB\-C\fR
+plot constellations
+.TP
+\fB\-B\fR
+plot named bright stars
+.TP
+\fB\-D\fR
+plot HD objects
+.TP
+\fB\-d\fR
+path to HD catalog
+.TP
+\fB\-b\fR \fIN\fR
+just plot the \fIN\fR brightest stars
+.TP
+\fB\-c\fR
+only plot bright stars that have common names.
+.TP
+\fB\-j\fR
+if a bright star has a common name, only print that
+.TP
+\fB\-v\fR
+be verbose
+.TP
+\fB\-n\fR \fIwidth\fR
+NGC circle width (default 2)
+.TP
+\fB\-f\fR \fIsize\fR
+font size.
+.TP
+\fB\-M\fR
+show only NGC/IC and Messier numbers (no common names)
+.TP
+\fB\-G\fR \fIspacing\fR
+Plot RA,Dec grid with specified grid spacing in arcmin.
+.TP
+\fB\-g\fR \fIr\fR:\fIg\fR:\fIb\fR
+grid color (default 0.2:0.2:0.2)
+.TP
+\fB\-J\fR
+print JSON output to stderr
+.TP
+\fB\-V\fR
+vertical alignment of text labels, "C"enter/"T"op/"B"ottom: default C
+.TP
+\fB\-O\fR
+horizontal alignment of text labels, "L"eft/"C"enter/"R"ight, default L
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

@@ -1,0 +1,57 @@
+.TH FIT-WCS "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+fit-wcs \- Fit a transformation from x,y and matching RA,DEC coordinates
+.SH SYNOPSIS
+.B fit-wcs
+[options] \fB-x\fR file \fB-r file\fR
+.br
+.B fit-wcs
+[options] \fB-c\fR file
+.SH DESCRIPTION
+Given a list of x,y coordinates and matching RA,Dec coordinates,
+fit a transformation and produce a WCS file
+.SH OPTIONS
+.TP
+\fB\-x\fR \fIfile\fP
+XYls input file
+.TP
+\fB\-X\fR \fIname\fP
+X column name (default: FIELD_X)
+.TP
+\fB\-Y\fR \fIname\fP
+Y column name (default: FIELD_Y)
+.TP
+\fB\-r\fR \fIfile\fP
+RDls input file
+.TP
+\fB\-R\fR \fIname\fP
+RA column name (default: INDEX_RA)
+.TP
+\fB\-D\fR \fIname\fP
+Dec column name (default: INDEX_DEC)
+.TP
+\fB\-c\fR \fIfile\fP
+Correspondences file
+.TP
+\fB\-o\fR \fIfile\fP
+WCS output file
+.TP
+\fB\-s \fIsip\fP
+SIP order (default is a WCS TAN solution, not SIP)
+.TP
+\fB\-W \fIwidth\fP
+Image width (default: max X position; used for SIP)
+.TP
+\fB\-H \fIheight\fP
+Image height (default: max Y position; used for SIP)
+.TP
+\fB\-C\fR
+Set CRPIX to be the center of the field; SIP only
+.TP
+\fB\-v
+Verbose
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

@@ -1,0 +1,56 @@
+.TH PLOTQUAD "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+plotquad \- Draws polygons over images.
+.SH SYNOPSIS
+.B plotquad
+[\fI\,options\/\fR] \fIquads\fR  > output.png\/\fR
+.SH OPTIONS
+.TP
+\fB\-I\fR \fIfile\fR
+Input image (PPM format) to plot over.
+.TP
+\fB\-p\fR
+Input image is PNG format, not PPM.
+.TP
+\fB\-P\fR
+Write PPM output instead of PNG.
+.TP
+\fB\-C\fR \fIcolor\fR
+Color to plot in (default: white): darkred, red, darkgreen, green, blue,
+verydarkblue, white, black, cyan, magenta, yellow, brightred, skyblue, orange,
+gray, darkgray
+.TP
+\fB\-b\fR \fIcolor\fR
+Draw in \fIcolor\fR behind each line.
+.TP
+\fB\-c\fR
+Also plot a circle at each vertex.
+.TP
+\fB\-W\fR \fIwidth\fR
+Width of output image.
+.TP
+\fB\-H\fR \fIheight\fR
+Height of output image.
+.TP
+\fB\-w\fR \fIwidth\fR
+Width of lines to draw (default: 5).
+.TP
+\fB\-R\fR
+Read quads from stdin.
+.TP
+\fB\-o\fR \fIopacity\fR
+Opacity.
+.TP
+\fB\-d\fR \fIdim\fR
+Dimension of "quad".
+.TP
+\fB\-s\fR \fIscale\fR
+Scale quad coordinates before plotting.
+.TP
+\fB\-m\fR \fIfile\fR
+Get quad from match file. OR  \fIx1\fR \fIy1\fR \fIx2\fR \fIy2\fR \fIx3\fR \fIy3\fR \fIx4\fR \fIy4\fR [...]
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net

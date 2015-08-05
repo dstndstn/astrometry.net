@@ -23,7 +23,7 @@ Copyright 2006-2014 Michael Blanton, David W. Hogg, Dustin Lang, Keir
 Mierle and Sam Roweis.
 
 Contributions from Sjoert van Velzen, Themos Tsikas (wcs-match.c),
-Andrew Hood, Thomas Stibor, Denis Vida and others.
+Andrew Hood, Thomas Stibor, Denis Vida, Ole Streicher and others.
 
 Licensed under GPLv2.  Please contact us about other licensing
 arrangements.

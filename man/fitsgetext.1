@@ -1,0 +1,34 @@
+.TH FITSGETEXT "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+fitsgetext \- Pull out individual header or data blocks from multi-HDU FITS files.
+.SH OPTIONS
+.TP
+\fB\-o\fR \fIfile\fR
+Output file
+.TP
+\fB\-a\fR
+Write out ALL extensions; the output filename should be a sprintf(1) pattern
+such as "extension\-%04i".
+.TP
+\fB\-b\fR
+Print sizes and offsets in FITS blocks (of 2880 bytes)
+.TP
+\fB\-M\fR
+Print sizes in megabytes (using floor(), not round()!)
+.TP
+\fB\-D\fR
+Data blocks only
+.TP
+\fB\-H\fR
+Header blocks only
+.TP
+\fB\-e\fR \fIextension\fR
+Extension number
+.TP
+\fB\-v\fR
++verbose
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net
