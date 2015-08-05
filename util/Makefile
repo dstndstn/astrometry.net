@@ -109,14 +109,9 @@ QFITS_UTILS := fits-column-merge subtable fitsgetext wcsinfo
 
 PROGS := an-fitstopnm an-pnmtofits downsample-fits \
 	fits-flip-endian hpsplit wcs-to-tan	query-starkd \
-	get-healpix $(QFITS_UTILS) search-index \
-	pad-file wcs-match wcs-pv2sip
+	get-healpix $(QFITS_UTILS) pad-file wcs-match wcs-pv2sip
 
-# search-index pad-file resample
-
-MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy fit-wcs coadd
-
-
+MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy fit-wcs
 
 all: $(ANBASE_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) $(PROGS) $(MAIN_PROGS)
 

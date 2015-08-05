@@ -166,8 +166,7 @@ $(ENGINE_SO): $(ENGINE_OBJS) $(SLIB)
 # old and miscellaneous executables that aren't part of the pipeline.
 OLDEXECS := plotquads rawstartree checkquads
 
-CAIROEXECS := plotquad plotxy plot-constellations plotstuff 
-# whynot
+CAIROEXECS := plotquad plotxy plot-constellations
 
 OLDEXECS_OBJS := catalog.o verify.o matchfile.o \
 	$(UTIL_OBJS)
