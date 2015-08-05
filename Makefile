@@ -122,16 +122,15 @@ install: all report.txt
 install-core:
 	mkdir -p '$(DATA_INSTALL_DIR)'
 	mkdir -p '$(BIN_INSTALL_DIR)'
-	mkdir -p '$(INSTALL_DIR)/doc'
+	mkdir -p '$(DOC_INSTALL_DIR)'
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	mkdir -p '$(LIB_INSTALL_DIR)'
-	mkdir -p '$(INSTALL_DIR)/examples'
+	mkdir -p '$(EXAMPLE_INSTALL_DIR)'
 	mkdir -p '$(PY_BASE_INSTALL_DIR)'
 	mkdir -p '$(MAN1_INSTALL_DIR)'
 	cp __init__.py '$(PY_BASE_INSTALL_DIR)'
-	cp CREDITS LICENSE README.md '$(INSTALL_DIR)/doc'
-	cp report.txt '$(INSTALL_DIR)/doc'
-	cp demo/* '$(INSTALL_DIR)/examples'
+	cp CREDITS LICENSE README.md report.txt '$(DOC_INSTALL_DIR)'
+	cp demo/* '$(EXAMPLE_INSTALL_DIR)'
 	cp man/*.1 '$(MAN1_INSTALL_DIR)'
 	$(MAKE) -C util  install-core
 	$(MAKE) -C catalogs install

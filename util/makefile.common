@@ -31,7 +31,9 @@ BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
 DATA_INSTALL_DIR := $(INSTALL_DIR)/data
 PY_BASE_LINK_DIR := ../lib/python/astrometry
 ETC_INSTALL_DIR ?= $(INSTALL_DIR)/etc
-MAN1_INSTALL_DIR := $(INSTALL_DIR)/share/man/man1
+MAN1_INSTALL_DIR ?= $(INSTALL_DIR)/share/man/man1
+DOC_INSTALL_DIR ?= $(INSTALL_DIR)/doc
+EXAMPLE_INSTALL_DIR ?= $(INSTALL_DIR)/examples
 
 # If your build system stages an install in one place (say, a temp
 # dir) and then copies everything to the final install place, (eg,
