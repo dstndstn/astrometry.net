@@ -128,12 +128,14 @@ install-core:
 	mkdir -p '$(INSTALL_DIR)/examples'
 	mkdir -p '$(PY_BASE_INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/ups'
+	mkdir -p '$(MAN1_INSTALL_DIR)'
 	cp ups/astrometry_net.table-dist '$(INSTALL_DIR)/ups/astrometry_net.table'
 	cp ups/astrometry_net.cfg '$(INSTALL_DIR)/ups'
 	cp __init__.py '$(PY_BASE_INSTALL_DIR)'
 	cp CREDITS LICENSE README.md '$(INSTALL_DIR)/doc'
 	cp report.txt '$(INSTALL_DIR)/doc'
 	cp demo/* '$(INSTALL_DIR)/examples'
+	cp man/*.1 '$(MAN1_INSTALL_DIR)'
 	$(MAKE) -C util  install-core
 	$(MAKE) -C catalogs install
 	$(MAKE) -C libkd install
