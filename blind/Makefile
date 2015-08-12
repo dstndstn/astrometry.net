@@ -161,7 +161,7 @@ $(ENGINE_LIB): $(ENGINE_OBJS)
 	$(RANLIB) $@
 
 $(ENGINE_SO): $(ENGINE_OBJS) $(SLIB)
-	$(CC) $(SHAREDLIBFLAGS) -o $@ $^ $(LDLIBS)
+	$(CC) $(LDFLAGS) $(SHAREDLIBFLAGS) -o $@ $^ $(LDLIBS)
 
 # old and miscellaneous executables that aren't part of the pipeline.
 OLDEXECS := plotquads rawstartree checkquads
@@ -292,14 +292,14 @@ ALL_OBJ += test-solver.o test-solver-2.o
 CFLAGS_DEBUG = $(subst -DNDEBUG,,$(CFLAGS))
 
 test-solver.o: test-solver.c
-	$(CC) $(CFLAGS_DEBUG) -o $@ -c $<
+	$(CC) $(CPPFLAGS) $(CFLAGS_DEBUG) -o $@ -c $<
 test-solver-2.o: test-solver-2.c
-	$(CC) $(CFLAGS_DEBUG) -o $@ -c $<
+	$(CC) $(CPPFLAGS) $(CFLAGS_DEBUG) -o $@ -c $<
 
 solver_test.o: solver.c
-	$(CC) $(CFLAGS_DEBUG) -DTESTING=1 -DTESTING_TRYALLCODES=1 -o $@ -c $<
+	$(CC) $(CPPFLAGS) $(CFLAGS_DEBUG) -DTESTING=1 -DTESTING_TRYALLCODES=1 -o $@ -c $<
 solver_test_2.o: solver.c
-	$(CC) $(CFLAGS_DEBUG) -DTESTING=1 -DTESTING_TRYPERMUTATIONS=1 -o $@ -c $<
+	$(CC) $(CPPFLAGS) $(CFLAGS_DEBUG) -DTESTING=1 -DTESTING_TRYPERMUTATIONS=1 -o $@ -c $<
 
 
 #######################################
@@ -354,7 +354,7 @@ $(CFITS_UTILS) :: %: %.o $(CFITS_SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 
 fitsverify: ftverify.c fvrf_data.c fvrf_file.c fvrf_head.c fvrf_key.c fvrf_misc.c $(CFITS_SLIB)
-	$(CC) -DSTANDALONE -trigraphs $(CFITS_INC) -o $@ $^ $(CFITS_LIB) -lm
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -DSTANDALONE -trigraphs $(CFITS_INC) -o $@ $^ $(CFITS_LIB) -lm
 
 $(OLDEXECS) :: %: %.o $(OLDEXECS_OBJS) $(SLIB)
 
@@ -378,25 +378,25 @@ $(COMMON)/cairoutils.o:
 	$(MAKE) -C $(COMMON) cairoutils.o
 
 plotquad.o: plotquad.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC)
+	$(CC) -o $@ -c $< $(CPPFLAGS) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC)
 plotquad: plotquad.o $(CAIRO_SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CAIRO_LIBS)
 
 plot-constellations.o: plot-constellations.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) $(CATS_INC)
+	$(CC) -o $@ -c $< $(CPPFLAGS) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) $(CATS_INC)
 plot-constellations: plot-constellations.o $(CAIRO_SLIB) $(CATS_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(CATS_LIB) $(CAIRO_LIBS)
 
 plotstuff.o: plotstuff.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC)
+	$(CC) -o $@ -c $< $(CPPFLAGS) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC)
 plotstuff: plotstuff-main.o $(PLOTSTUFF) $(CAIRO_SLIB) $(CATS_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(CATS_LIB) $(CAIRO_LIBS) 
 ALL_OBJ += plotstuff-main.o
 
 plotxy.o: plotxy.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) 
+	$(CC) -o $@ -c $< $(CPPFLAGS) $(CFLAGS) $(CAIRO_INC)
 plotxy-main.o: plotxy-main.c
-	$(CC) -o $@ -c $< $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC)
+	$(CC) -o $@ -c $< $(CFLAGS) $(CPPFLAGS) $(CAIRO_INC) $(NETPBM_INC)
 plotxy: plotxy-main.o $(PLOTSTUFF) $(CATS_SLIB) $(CAIRO_SLIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIBS)
 ALL_OBJ += plotxy-main.o
@@ -417,7 +417,8 @@ _plotstuff_c$(PYTHON_SO_EXT): plotstuff.i $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS) $(CAIRO_LIBS)" \
 	SLIB="$(CAIRO_SLIB)" \
 	INC="$(ANFILES_INC) $(CAIRO_INC) $(NETPBM_INC)" \
-	CFLAGS="$(ANFILES_CFLAGS)" \
+	CFLAGS_SWIG="$(ANFILES_CFLAGS)" \
+	CFLAGS="$(CFLAGS)" \
 	python setup.py build_ext -v --inplace --build-temp .
 
 _blind$(PYTHON_SO_EXT): blind.i $(ENGINE_OBJS)
