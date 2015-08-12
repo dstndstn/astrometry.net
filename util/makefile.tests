@@ -53,4 +53,4 @@ test: test.o $(COMMON)/cutest.o $(ALL_TEST_FILES_O) $(sort $(ALL_TEST_EXTRA_OBJS
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(ALL_TEST_EXTRA_LDFLAGS) $(LDLIBS)
 
 $(ALL_TEST_FILES_O) $(ALL_TEST_FILES_MAIN_O) test.o: %.o: %.c
-	$(CC) -o $@ $(CFLAGS) -c $< -I$(COMMON)
+	$(CC) -o $@ $(CPPFLAGS) $(CFLAGS) -c $< -I$(COMMON)
