@@ -145,10 +145,10 @@ install: $(LIBKD_INSTALL) $(LIBKD)
 		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
 		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
-	mkdir -p '$(INSTALL_DIR)/lib'
+	mkdir -p '$(LIB_INSTALL_DIR)'
 	@for x in $(LIBKD); do \
-		echo cp $$x '$(INSTALL_DIR)/lib'; \
-		cp $$x '$(INSTALL_DIR)/lib'; \
+		echo cp $$x '$(LIB_INSTALL_DIR)'; \
+		cp $$x '$(LIB_INSTALL_DIR)'; \
 	done
 	-$(MAKE) install-spherematch
 

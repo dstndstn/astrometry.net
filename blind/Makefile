@@ -244,10 +244,10 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
 		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
 	done
-	mkdir -p '$(INSTALL_DIR)/lib'
+	mkdir -p '$(LIB_INSTALL_DIR)'
 	@for x in $(INSTALL_LIB); do \
-		echo cp $$x '$(INSTALL_DIR)/lib'; \
-		cp $$x '$(INSTALL_DIR)/lib'; \
+		echo cp $$x '$(LIB_INSTALL_DIR)'; \
+		cp $$x '$(LIB_INSTALL_DIR)'; \
 	done
 	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
