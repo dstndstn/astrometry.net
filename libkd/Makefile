@@ -99,6 +99,7 @@ pyspherematch: spherematch_c$(PYTHON_SO_EXT)
 	@echo pyspherematch
 py: pyspherematch
 .PHONY: py
+.PHONY: pyspherematch
 
 PYSPHEREMATCH_OBJ := pyspherematch.o
 
