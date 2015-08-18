@@ -191,6 +191,8 @@ class DR8(DR7):
                                     'photoObj-%(run)06i-%(camcol)i-%(field)04i.fits'),
             frame = os.path.join(photoObjs, 'frames', '%(rerun)s', '%(run)i', '%(camcol)i',
                                     'frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2'),
+            photoField = os.path.join(photoObjs, '%(rerun)s', '%(run)i',
+                                      'photoField-%(run)06i-%(camcol)i.fits')
             psField = os.path.join(redux, '%(rerun)s', '%(run)i', 'objcs', '%(camcol)i',
                                    'psField-%(run)06i-%(camcol)i-%(field)04i.fit'),
             fpM = os.path.join(redux, '%(rerun)s', '%(run)i', 'objcs', '%(camcol)i',
