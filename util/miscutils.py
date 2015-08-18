@@ -344,7 +344,7 @@ def polygons_intersect(poly1, poly2):
     return False
 
 
-def line_segments_intersect((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
+def line_segments_intersect(xy1, xy2, xy3, xy4):
     '''
     Determines whether the two given line segments intersect;
 
@@ -352,6 +352,10 @@ def line_segments_intersect((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
     and
     (x3,y3) to (x4,y4)
     '''
+    (x1,y1) = xy1
+    (x2,y2) = xy2
+    (x3,y3) = xy3
+    (x4,y4) = xy4
     x,y = line_intersection((x1,y1),(x2,y2),(x3,y3),(x4,y4))
     if x1 == x2:
         p1,p2 = y1,y2
@@ -375,7 +379,7 @@ def line_segments_intersect((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
     return (x,y)
 
 
-def line_intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
+def line_intersection(xy1, xy2, xy3, xy4):
     '''
     Determines the point where the lines described by
     (x1,y1) to (x2,y2)
@@ -388,6 +392,10 @@ def line_intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
     Probably raises an exception if the lines are parallel, or does
     something numerically crazy.
     '''
+    (x1,y1) = xy1
+    (x2,y2) = xy2
+    (x3,y3) = xy3
+    (x4,y4) = xy4
     # This code started with the equation from Wikipedia,
     # then I added special-case handling.
     # bottom = ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
@@ -411,10 +419,13 @@ def line_intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
     t = (cx*dy - cy*dx) / b_dot_d_perp
     return x1 + t*bx, y1 + t*by
 
-def _left_right((x1,y1), (x2,y2), (x3,y3)):
+def _left_right(xy1, xy2, xy3):
     '''
     is (x3,y3) to the 'left' or 'right' of the line from (x1,y1) to (x2,y2) ?
     '''
+    (x1,y1) = xy1
+    (x2,y2) = xy2
+    (x3,y3) = xy3
     dx2,dy2 = x2-x1, y2-y1
     dx3,dy3 = x3-x1, y3-y1
     return (dx2 * dy3 - dx3 * dy2) > 0
