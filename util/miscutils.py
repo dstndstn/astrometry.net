@@ -31,14 +31,14 @@ def estimate_mode(img, lo=None, hi=None, plo=1, phi=70, bins1=30,
         ihi += 1
         if counts1[ihi] < fhi*maxcount:
             break
-    
+
     lo = bincenters1[ilo]
     hi = bincenters1[ihi]
-    
+
     binedges = np.linspace(lo, hi, bins2)
     counts,e = np.histogram(img.ravel(), bins=binedges)
     bincenters = binedges[:-1] + (binedges[1]-binedges[0])/2.
-    
+
     b = np.log10(np.maximum(1, counts))
 
     xscale = 0.5 * (hi - lo)
@@ -60,7 +60,7 @@ def estimate_mode(img, lo=None, hi=None, plo=1, phi=70, bins1=30,
         if raiseOnWarn:
             raise ValueError('sky estimate not bracketed by peak: lo %f, sky %f, hi %f' % (lo, mx, hi))
         warn = 'WARNING: sky estimate not bracketed by peak: lo %f, sky %f, hi %f' % (lo, mx, hi)
-        
+
     if return_fit:
         bfit = X[0] + X[1] * x + X[2] * x**2
         return (x * xscale + x0, b, bfit, mx, warn, binedges1,counts1)
@@ -92,7 +92,7 @@ def parse_ranges(s):
                 tiles.append(int(a))
     return tiles
 
-        
+
 def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
                 required=None):
     '''
@@ -103,7 +103,7 @@ def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
     mask: True for good pixels
     required: if non-None: True for pixels you want to be patched.
     dxdy: Pixels to average in, relative to pixels to be patched.
-    
+
     Returns True if patching was successful.
     '''
     assert(img.shape == mask.shape)
@@ -150,7 +150,7 @@ def patch_image(img, mask, dxdy = [(-1,0),(1,0),(0,-1),(0,1)],
             # print 'ok', ok
             # print 'psum', psum
             # print 'pn', pn
-                
+
         img.flat[I] = (psum / np.maximum(pn, 1)).astype(img.dtype)
         mask.flat[I] = (pn > 0)
         #print 'Patched', np.sum(pn > 0)
@@ -250,13 +250,13 @@ def clip_wcs(wcs1, wcs2, makeConvex=True, pix1=None, pix2=None):
 
 
 def polygon_area(poly):
-	xx,yy = poly
-	x,y = np.mean(xx), np.mean(yy)
-	area = 0.
-	for dx0,dy0,dx1,dy1 in zip(xx-x, yy-y, xx[1:]-x, yy[1:]-y):
-		# area: 1/2 cross product
-		area += np.abs(dx0 * dy1 - dx1 * dy0)
-	return 0.5 * area
+    xx,yy = poly
+    x,y = np.mean(xx), np.mean(yy)
+    area = 0.
+    for dx0,dy0,dx1,dy1 in zip(xx-x, yy-y, xx[1:]-x, yy[1:]-y):
+        # area: 1/2 cross product
+        area += np.abs(dx0 * dy1 - dx1 * dy0)
+    return 0.5 * area
 
 def clip_polygon(poly1, poly2):
     '''
@@ -314,7 +314,7 @@ def clip_polygon(poly1, poly2):
         poly1 = clipped
     return poly1
 
-    
+
 def polygons_intersect(poly1, poly2):
     '''
     Determines whether the given 2-D polygons intersect.
@@ -342,14 +342,14 @@ def polygons_intersect(poly1, poly2):
             if xy:
                 return xy
     return False
-    
+
 
 def line_segments_intersect((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
     '''
     Determines whether the two given line segments intersect;
 
     (x1,y1) to (x2,y2)
-    and 
+    and
     (x3,y3) to (x4,y4)
     '''
     x,y = line_intersection((x1,y1),(x2,y2),(x3,y3),(x4,y4))
@@ -373,13 +373,13 @@ def line_segments_intersect((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
     if not ((p >= min(p1,p2)) and (p <= max(p1,p2))):
         return False
     return (x,y)
-    
+
 
 def line_intersection((x1,y1), (x2,y2), (x3,y3), (x4,y4)):
     '''
     Determines the point where the lines described by
     (x1,y1) to (x2,y2)
-    and 
+    and
     (x3,y3) to (x4,y4)
     intersect.
 
@@ -460,17 +460,19 @@ def lanczos_filter(order, x, out=None):
     out[x == 0] = 1.
     return out
 
-# Given a range of integer coordinates that you want to, eg, cut out
-# of an image, [xlo, xhi], and bounds for the image [xmin, xmax],
-# returns the range of coordinates that are in-bounds, and the
-# corresponding region within the desired cutout.
 def get_overlapping_region(xlo, xhi, xmin, xmax):
+    '''
+    Given a range of integer coordinates that you want to, eg, cut out
+    of an image, [xlo, xhi], and bounds for the image [xmin, xmax],
+    returns the range of coordinates that are in-bounds, and the
+    corresponding region within the desired cutout.
+    '''
     if xlo > xmax or xhi < xmin or xlo > xhi or xmin > xmax:
         return ([], [])
 
     assert(xlo <= xhi)
     assert(xmin <= xmax)
-    
+
     xloclamp = max(xlo, xmin)
     Xlo = xloclamp - xlo
 
@@ -525,7 +527,7 @@ if __name__ == '__main__':
             plt.savefig('clip-%02i.png' % i)
         import sys
         sys.exit(0)
-    
+
     if True:
         for i in range(20):
             if i <= 10:
@@ -547,7 +549,7 @@ if __name__ == '__main__':
             ax = plt.axis()
             plt.axis([ax[0]-0.5, ax[1]+0.5, ax[2]-0.5, ax[3]+0.5])
             ps.savefig()
-    
+
     if False:
         X,Y = np.meshgrid(np.linspace(-1,11, 20), np.linspace(-1,11, 23))
         X = X.ravel()
@@ -567,7 +569,7 @@ if __name__ == '__main__':
             ax = plt.axis()
             plt.axis([ax[0]-0.5, ax[1]+0.5, ax[2]-0.5, ax[3]+0.5])
             ps.savefig()
-        
+
 
 
     if True:
@@ -625,6 +627,3 @@ if __name__ == '__main__':
             ax = plt.axis()
             plt.axis([ax[0]-0.5, ax[1]+0.5, ax[2]-0.5, ax[3]+0.5])
             ps.savefig()
-            
-
-        
