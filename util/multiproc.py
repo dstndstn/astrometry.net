@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import multiprocessing
 
 class FakeAsyncResult(object):
@@ -12,9 +14,6 @@ class FakeAsyncResult(object):
     def successful(self):
         return True
 
-#class PostprocessedAsyncResult(object):
-#   pass
-
 class funcwrapper(object):
     def __init__(self, func):
         self.func = func
@@ -25,9 +24,9 @@ class funcwrapper(object):
             return self.func(*X)
         except:
             import traceback
-            print 'Exception while calling your function:'
-            print '  params:', X
-            print '  exception:'
+            print('Exception while calling your function:')
+            print('  params:', X)
+            print('  exception:')
             traceback.print_exc()
             raise
 
@@ -43,12 +42,12 @@ class memberfuncwrapper(object):
             return func(self.obj, *X)
         except:
             import traceback
-            print 'Exception while calling your function:'
-            print '  object:', self.obj
-            print '  member function:', self.funcname
-            print '  ', func
-            print '  params:', X
-            print '  exception:'
+            print('Exception while calling your function:')
+            print('  object:', self.obj)
+            print('  member function:', self.funcname)
+            print('  ', func)
+            print('  params:', X)
+            print('  exception:')
             traceback.print_exc()
             raise
 
@@ -105,11 +104,11 @@ class multiproc(object):
         return res
 
     def waitforall(self):
-        print 'Waiting for async results to finish...'
+        print('Waiting for async results to finish...')
         for r in self.async_results:
-            print '  waiting for', r
+            print('  waiting for', r)
             r.wait()
-        print 'all done'
+        print('all done')
         self.async_results = []
 
     def close(self):

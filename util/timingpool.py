@@ -1,16 +1,42 @@
+from __future__ import print_function
+
 import multiprocessing.queues
 import multiprocessing.pool
 import multiprocessing.synchronize
+
+from multiprocessing.util import debug
+
 import _multiprocessing
-import cPickle as pickle
+import threading
 import time
 import os
+
+try:
+    # py2
+    import cPickle as pickle
+    import Queue as queue
+    Connection = _multiprocessing.Connection
+except:
+    # py3 loads cPickle if available
+    import pickle
+    # py3 renames Queue to queue
+    import queue
+    Connection = multiprocessing.connection.Connection
 
 from astrometry.util.ttime import CpuMeas
 
 '''
 This file provides a subclass of the multiprocessing.Pool class that
-tracks the CPU and Wall time of worker processes.
+tracks the CPU and Wall time of worker processes, as well as time and
+I/O spent in pickling data.
+
+It also provides an astrometry.util.ttime Measurement class,
+TimingPoolMeas, that records & reports the pool's worker CPU time.
+
+    dpool = TimingPool(4, taskqueuesize=4)
+    dmup = multiproc.multiproc(pool=dpool)
+    Time.add_measurement(TimingPoolMeas(dpool))
+
 '''
 
 #
@@ -75,7 +101,7 @@ class TimingConnection():
                     unpickle_cputime = self.uptime)
     
     def __init__(self, fd, writable=True, readable=True):
-        self.real = _multiprocessing.Connection(fd, writable=writable, readable=readable)
+        self.real = Connection(fd, writable=writable, readable=readable)
         self.ptime = 0.
         self.uptime = 0.
         self.pbytes = 0
@@ -121,9 +147,11 @@ class TimingSimpleQueue(multiprocessing.queues.SimpleQueue):
 
     def __init__(self):
         (self._reader, self._writer) = TimingPipe()
-        self._rlock = multiprocessing.queues.Lock()
-        self._wlock = multiprocessing.queues.Lock()
-        self._make_methods()
+        self._rlock = multiprocessing.Lock()
+        self._wlock = multiprocessing.Lock()
+        # py2
+        if hasattr(self, '_make_methods'):
+            self._make_methods()
         # _make_methods creates two methods:
         #
         #  get:  self._rlock.acquire();
@@ -135,16 +163,10 @@ class TimingSimpleQueue(multiprocessing.queues.SimpleQueue):
         #        self._wlock.release();
         #
         
-import threading
-import Queue
-from multiprocessing import Process, cpu_count, TimeoutError
-from multiprocessing.util import Finalize, debug
-from multiprocessing.pool import RUN, CLOSE, TERMINATE
-
 def timing_worker(inqueue, outqueue, progressqueue,
                  initializer=None, initargs=(),
                  maxtasks=None):
-    assert maxtasks is None or (type(maxtasks) == int and maxtasks > 0)
+    assert(maxtasks is None or (type(maxtasks) == int and maxtasks > 0))
     put = outqueue.put
     get = inqueue.get
     if hasattr(inqueue, '_writer'):
@@ -170,7 +192,7 @@ def timing_worker(inqueue, outqueue, progressqueue,
                   ' got EOFError or IOError -- exiting')
             break
         except KeyboardInterrupt as e:
-            print 'timing_worker caught KeyboardInterrupt during get()'
+            print('timing_worker caught KeyboardInterrupt during get()')
             put((None, None, (None,(False,e))))
             raise SystemExit('ctrl-c')
             break
@@ -187,7 +209,7 @@ def timing_worker(inqueue, outqueue, progressqueue,
                 # print 'Worker pid', os.getpid(), 'writing to progressqueue'
                 progressqueue.put((job, i, mypid))
             except (EOFError, IOError):
-                print 'worker got EOFError or IOError on progress queue -- exiting'
+                print('worker got EOFError or IOError on progress queue -- exiting')
                 break
 
         t1 = CpuMeas()
@@ -221,7 +243,7 @@ def timing_handle_results(outqueue, get, cache, beancounter, pool):
             debug('result handler got EOFError/IOError -- exiting')
             return
         if thread._state:
-            assert thread._state == TERMINATE
+            assert(thread._state == multiprocessing.pool.TERMINATE)
             debug('result handler found thread._state=TERMINATE')
             break
         if task is None:
@@ -235,8 +257,8 @@ def timing_handle_results(outqueue, get, cache, beancounter, pool):
             if not success:
                 if isinstance(val, KeyboardInterrupt):
                     #print 'Terminating due to KeyboardInterrupt'
-                    thread._state = TERMINATE
-                    pool._state = CLOSE
+                    thread._state = multiprocessing.pool.TERMINATE
+                    pool._state = multiprocessing.pool.CLOSE
                     break
         try:
             #print 'cache[job]:', cache[job], 'job', job, 'i', i
@@ -245,7 +267,7 @@ def timing_handle_results(outqueue, get, cache, beancounter, pool):
             pass
         beancounter.add_time(dt)
 
-    while cache and thread._state != TERMINATE:
+    while cache and thread._state != multiprocessing.pool.TERMINATE:
         try:
             task = get()
         except (IOError, EOFError):
@@ -286,10 +308,8 @@ def timing_handle_results(outqueue, get, cache, beancounter, pool):
 def timing_handle_tasks(taskqueue, put, outqueue, progressqueue, pool,
                        maxnqueued):
     thread = threading.current_thread()
-    #print 'debug_handle_tasks starting'
     if progressqueue is not None and hasattr(progressqueue, '_writer'):
         progressqueue._writer.close()
-
     
     nqueued = 0
     
@@ -344,9 +364,6 @@ def timing_handle_tasks(taskqueue, put, outqueue, progressqueue, pool,
     except IOError:
         debug('task handler got IOError when sending sentinels')
 
-    #print 'debug_handle_tasks finishing'
-    # 
-
     # Empty the progressqueue to prevent blocking writing workers?
     if progressqueue is not None:
         # print 'task thread: emptying progressqueue'
@@ -364,7 +381,8 @@ class BeanCounter(object):
     def __init__(self):
         self.cpu = 0.
         self.wall = 0.
-        self.lock = multiprocessing.synchronize.Lock()
+        self.lock = multiprocessing.Lock()
+
     ### LOCKING
     def add_time(self, dt):
         self.lock.acquire()
@@ -421,7 +439,7 @@ class TimingPoolTimestamp(object):
                      worker_wall = self.pool.get_worker_wall())
         return stats
 
-class TimingPool(mp.pool.Pool):
+class TimingPool(multiprocessing.pool.Pool):
     def _setup_queues(self):
         self._inqueue  = TimingSimpleQueue()
         self._outqueue = TimingSimpleQueue()
@@ -469,7 +487,7 @@ class TimingPool(mp.pool.Pool):
         '''
         Equivalent of `map()` builtin
         '''
-        assert self._state == RUN
+        assert(self._state == multiprocessing.pool.RUN)
         async = self.map_async(func, iterable, chunksize)
         while True:
             try:
@@ -485,7 +503,7 @@ class TimingPool(mp.pool.Pool):
         '''
         Asynchronous equivalent of `map()` builtin
         '''
-        assert self._state == RUN
+        assert(self._state == multiprocessing.pool.RUN)
         if not hasattr(iterable, '__len__'):
             iterable = list(iterable)
 
@@ -496,8 +514,8 @@ class TimingPool(mp.pool.Pool):
         if len(iterable) == 0:
             chunksize = 0
 
-        result = mp.pool.MapResult(self._cache, chunksize, len(iterable), callback)
-        mapstar = mp.pool.mapstar
+        result = multiprocessing.pool.MapResult(self._cache, chunksize, len(iterable), callback)
+        mapstar = multiprocessing.pool.mapstar
         #print 'chunksize', chunksize
         #print 'Submitting job:', result._job
         #print 'Result:', result
@@ -507,7 +525,7 @@ class TimingPool(mp.pool.Pool):
                                   for i, x in enumerate(iterable)), None))
 
         else:
-            task_batches = mp.pool.Pool._get_tasks(func, iterable, chunksize)
+            task_batches = multiprocessing.pool.Pool._get_tasks(func, iterable, chunksize)
             self._taskqueue.put((((result._job, i, mapstar, (x,), {})
                                   for i, x in enumerate(task_batches)), None))
         return result
@@ -534,9 +552,9 @@ class TimingPool(mp.pool.Pool):
         '''
         self._beancounter = BeanCounter()
         self._setup_queues()
-        self._taskqueue = Queue.Queue()
+        self._taskqueue = queue.Queue()
         self._cache = {}
-        self._state = RUN
+        self._state = multiprocessing.pool.RUN
         self._initializer = initializer
         self._initargs = initargs
         self._maxtasksperchild = maxtasksperchild
@@ -548,7 +566,7 @@ class TimingPool(mp.pool.Pool):
         
         if processes is None:
             try:
-                processes = cpu_count()
+                processes = multiprocessing.cpu_count()
             except NotImplementedError:
                 processes = 1
 
@@ -560,12 +578,12 @@ class TimingPool(mp.pool.Pool):
         self._repopulate_pool()
 
         self._worker_handler = threading.Thread(
-        target=mp.pool.Pool._handle_workers,
+        target=multiprocessing.pool.Pool._handle_workers,
         args=(self, )
             )
         self._worker_handler.name = 'WorkerHandler'
         self._worker_handler.daemon = True
-        self._worker_handler._state = RUN
+        self._worker_handler._state = multiprocessing.pool.RUN
         self._worker_handler.start()
 
         if True:
@@ -576,13 +594,13 @@ class TimingPool(mp.pool.Pool):
                       taskqueuesize))
         else:
             self._task_handler = threading.Thread(
-                target=mp.pool.Pool._handle_tasks,
+                target=multiprocessing.pool.Pool._handle_tasks,
                 args=(self._taskqueue, self._quick_put, self._outqueue,
                       self._pool))
               
         self._task_handler.name = 'TaskHandler'
         self._task_handler.daemon = True
-        self._task_handler._state = RUN
+        self._task_handler._state = multiprocessing.pool.RUN
         self._task_handler.start()
 
         self._result_handler = threading.Thread(
@@ -592,10 +610,10 @@ class TimingPool(mp.pool.Pool):
             )
         self._result_handler.name = 'ResultHandler'
         self._result_handler.daemon = True
-        self._result_handler._state = RUN
+        self._result_handler._state = multiprocessing.pool.RUN
         self._result_handler.start()
 
-        self._terminate = Finalize(
+        self._terminate = multiprocessing.util.Finalize(
             self, self._terminate_pool,
             args=(self._taskqueue, self._inqueue, self._outqueue, self._pool,
                   self._worker_handler, self._task_handler,
@@ -630,10 +648,10 @@ if __name__ == '__main__':
     # import multiprocessing
     # multiprocessing.get_logger()
     
-    def work((i)):
-        print 'Doing work', i
+    def work(i):
+        print('Doing work', i)
         time.sleep(2)
-        print 'Done work', i
+        print('Done work', i)
         return i
         
     class ywrapper(object):
@@ -651,19 +669,19 @@ if __name__ == '__main__':
 
     def yielder(n):
         for i in range(n):
-            print 'Yielding', i
+            print('Yielding', i)
             yield i
 
     N = 20
     y = yielder(N)
     args = ywrapper(y, N)
     
-    dpool = DebugPool(4, taskqueuesize=4)
+    dpool = TimingPool(4, taskqueuesize=4)
     dmup = multiproc.multiproc(pool=dpool)
-    Time.add_measurement(DebugPoolMeas(dpool))
+    Time.add_measurement(TimingPoolMeas(dpool))
 
     t0 = Time()
     res = dmup.map(work, args)
-    print Time()-t0
-    print 'Got result:', res
+    print(Time()-t0)
+    print('Got result:', res)
     

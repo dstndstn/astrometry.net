@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import re
 import resource
@@ -61,14 +63,14 @@ def get_procio():
     
 def memusage():
     mu = get_memusage()
-    print 'Memory usage:'
-    print 'max rss:', mu['maxrss'], 'MB'
+    print('Memory usage:')
+    print('max rss:', mu['maxrss'], 'MB')
     for key in ['VmPeak', 'VmSize', 'VmRSS', 'VmData', 'VmStk'
                 # VmLck, VmHWM, VmExe, VmLib, VmPTE
                 ]:
-        print key, ' '.join(mu.get(key, []))
+        print(key, ' '.join(mu.get(key, [])))
     if 'mmaps' in mu:
-        print 'Number of mmaps:', len(mu['mmaps'])
+        print('Number of mmaps:', len(mu['mmaps']))
 
 def count_file_descriptors():
     procfn = '/proc/%d/fd' % os.getpid()
