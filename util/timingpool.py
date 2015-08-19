@@ -1,9 +1,17 @@
-import multiprocessing as mp
 import multiprocessing.queues
 import multiprocessing.pool
+import multiprocessing.synchronize
+import _multiprocessing
+import cPickle as pickle
+import time
 import os
 
 from astrometry.util.ttime import CpuMeas
+
+'''
+This file provides a subclass of the multiprocessing.Pool class that
+tracks the CPU and Wall time of worker processes.
+'''
 
 #
 # In Python 2.7 (and 2.6):
@@ -55,11 +63,7 @@ from astrometry.util.ttime import CpuMeas
 #
 # Only _multiprocessing/socket_connection.c is used on non-Windows platforms.
 
-import _multiprocessing
-import cPickle as pickle
-import time
-
-class DebugConnection():
+class TimingConnection():
     def stats(self):
         return dict(pickle_objs = self.pobjs,
                     pickle_bytes = self.pbytes,
@@ -102,15 +106,13 @@ class DebugConnection():
     def close(self):
         return self.real.close()
 
-def DebugPipe():
+def TimingPipe():
     fd1, fd2 = os.pipe()
-    c1 = DebugConnection(fd1, writable=False)
-    c2 = DebugConnection(fd2, readable=False)
+    c1 = TimingConnection(fd1, writable=False)
+    c2 = TimingConnection(fd2, readable=False)
     return c1,c2
 
-from multiprocessing.queues import Lock
-
-class DebugSimpleQueue(mp.queues.SimpleQueue):
+class TimingSimpleQueue(multiprocessing.queues.SimpleQueue):
     # new method
     def stats(self):
         S1 = self._reader.stats()
@@ -118,9 +120,9 @@ class DebugSimpleQueue(mp.queues.SimpleQueue):
         return dict([(k, S1[k]+S2[k]) for k in S1.keys()])
 
     def __init__(self):
-        (self._reader, self._writer) = DebugPipe()
-        self._rlock = Lock()
-        self._wlock = Lock()
+        (self._reader, self._writer) = TimingPipe()
+        self._rlock = multiprocessing.queues.Lock()
+        self._wlock = multiprocessing.queues.Lock()
         self._make_methods()
         # _make_methods creates two methods:
         #
@@ -139,32 +141,9 @@ from multiprocessing import Process, cpu_count, TimeoutError
 from multiprocessing.util import Finalize, debug
 from multiprocessing.pool import RUN, CLOSE, TERMINATE
 
-# def debug_handle_workers(pool):
-#     while pool._worker_handler._state == RUN and pool._state == RUN:
-#         print 'debug_handle_workers: pool state', pool._state
-#         pool._maintain_pool()
-#         time.sleep(0.5)
-#     
-#     print 'debug_handle_workers: pool state', pool._state, 'worker_handler state', pool._worker_handler._state
-#     # send sentinel to stop workers
-#     print 'Sending sentinel on task queue...'
-#     pool._taskqueue.put(None)
-#     # print 'Trying to join...'
-#     for p in pool._pool:
-#         print 'Worker', p
-#         print 'isalive', p.is_alive()
-#         if p.is_alive():
-#             print 'terminating'
-#             p.terminate()
-#             print 'joining',
-#             p.join(timeout=0.1)
-#     print 'debug_handle_workers finishing.'
-    
-
-def debug_worker(inqueue, outqueue, progressqueue,
+def timing_worker(inqueue, outqueue, progressqueue,
                  initializer=None, initargs=(),
                  maxtasks=None):
-    #print 'debug_worker()'
     assert maxtasks is None or (type(maxtasks) == int and maxtasks > 0)
     put = outqueue.put
     get = inqueue.get
@@ -187,11 +166,11 @@ def debug_worker(inqueue, outqueue, progressqueue,
             # print 'Worker pid', os.getpid(), 'getting task'
             task = get()
         except (EOFError, IOError):
-            debug('worker got EOFError or IOError -- exiting')
-            print 'Worker pid', os.getpid(), 'got EOF/IOErr getting task'
+            debug('worker pid ' + os.getpid() +
+                  ' got EOFError or IOError -- exiting')
             break
         except KeyboardInterrupt as e:
-            print 'debug_worker caught KeyboardInterrupt during get()'
+            print 'timing_worker caught KeyboardInterrupt during get()'
             put((None, None, (None,(False,e))))
             raise SystemExit('ctrl-c')
             break
@@ -217,10 +196,10 @@ def debug_worker(inqueue, outqueue, progressqueue,
             success,val = (True, func(*args, **kwds))
         except Exception as e:
             success,val = (False, e)
-            #print 'debug_worker: caught', e
+            #print 'timing_worker: caught', e
         except KeyboardInterrupt as e:
             success,val = (False, e)
-            #print 'debug_worker: caught ctrl-C during work', e
+            #print 'timing_worker: caught ctrl-C during work', e
             #print type(e)
             put((None, None, (None,(False,e))))
             raise
@@ -233,7 +212,7 @@ def debug_worker(inqueue, outqueue, progressqueue,
     debug('worker exiting after %d tasks' % completed)
 
         
-def debug_handle_results(outqueue, get, cache, beancounter, pool):
+def timing_handle_results(outqueue, get, cache, beancounter, pool):
     thread = threading.current_thread()
     while 1:
         try:
@@ -304,7 +283,7 @@ def debug_handle_results(outqueue, get, cache, beancounter, pool):
     #print 'debug_handle_results finishing.'
 
 
-def debug_handle_tasks(taskqueue, put, outqueue, progressqueue, pool,
+def timing_handle_tasks(taskqueue, put, outqueue, progressqueue, pool,
                        maxnqueued):
     thread = threading.current_thread()
     #print 'debug_handle_tasks starting'
@@ -381,13 +360,11 @@ def debug_handle_tasks(taskqueue, put, outqueue, progressqueue, pool,
     # print 'Task thread done.'
     
 
-from multiprocessing.synchronize import Lock
-
 class BeanCounter(object):
     def __init__(self):
         self.cpu = 0.
         self.wall = 0.
-        self.lock = Lock()
+        self.lock = multiprocessing.synchronize.Lock()
     ### LOCKING
     def add_time(self, dt):
         self.lock.acquire()
@@ -412,14 +389,14 @@ class BeanCounter(object):
     def __str__(self):
         return 'CPU time: %.3fs s, Wall time: %.3fs' % (self.get_cpu(), self.get_wall())
 
-class DebugPoolMeas(object):
+class TimingPoolMeas(object):
     def __init__(self, pool, pickleTraffic=True):
         self.pool = pool
         self.pickleTraffic = pickleTraffic
     def __call__(self):
-        return DebugPoolTimestamp(self.pool, self.pickleTraffic)
+        return TimingPoolTimestamp(self.pool, self.pickleTraffic)
 
-class DebugPoolTimestamp(object):
+class TimingPoolTimestamp(object):
     def __init__(self, pool, pickleTraffic):
         self.pool = pool
         self.t0 = self.now(pickleTraffic)
@@ -444,10 +421,10 @@ class DebugPoolTimestamp(object):
                      worker_wall = self.pool.get_worker_wall())
         return stats
 
-class DebugPool(mp.pool.Pool):
+class TimingPool(mp.pool.Pool):
     def _setup_queues(self):
-        self._inqueue = DebugSimpleQueue()
-        self._outqueue = DebugSimpleQueue()
+        self._inqueue  = TimingSimpleQueue()
+        self._outqueue = TimingSimpleQueue()
         self._quick_put = self._inqueue._writer.send
         self._quick_get = self._outqueue._reader.recv
         
@@ -469,14 +446,14 @@ class DebugPool(mp.pool.Pool):
     def get_worker_wall(self):
         return self._beancounter.get_wall()
 
-    ### This just replaces the "worker" call with our "debug_worker".
+    ### This just replaces the "worker" call with our "timing_worker".
     def _repopulate_pool(self):
         """Bring the number of pool processes up to the specified number,
         for use after reaping workers which have exited.
         """
         #print 'Repopulating pool with', (self._processes - len(self._pool)), 'workers'
         for i in range(self._processes - len(self._pool)):
-            w = self.Process(target=debug_worker,
+            w = self.Process(target=timing_worker,
                              args=(self._inqueue, self._outqueue,
                                    self._progressqueue,
                                    self._initializer,
@@ -487,22 +464,6 @@ class DebugPool(mp.pool.Pool):
             w.daemon = True
             w.start()
             debug('added worker')
-
-#     def _join_exited_workers(self):
-#         """Cleanup after any worker processes which have exited due to reaching
-#         their specified lifetime.  Returns True if any workers were cleaned up.
-#         """
-#         cleaned = False
-#         for i in reversed(range(len(self._pool))):
-#             worker = self._pool[i]
-#             print 'Worker', worker, 'exitcode', worker.exitcode
-#             if worker.exitcode is not None:
-#                 # worker exited
-#                 debug('cleaning up worker %d' % i)
-#                 worker.join()
-#                 cleaned = True
-#                 del self._pool[i]
-#         return cleaned
 
     def map(self, func, iterable, chunksize=None):
         '''
@@ -555,7 +516,7 @@ class DebugPool(mp.pool.Pool):
 
     
     # This is just copied from the superclass; we call our routines:
-    #  -handle_results -> debug_handle_results
+    #  -handle_results -> timing_handle_results
     # And add _beancounter.
     def __init__(self, processes=None, initializer=None, initargs=(),
                  maxtasksperchild=None, taskqueuesize=0):
@@ -581,7 +542,7 @@ class DebugPool(mp.pool.Pool):
         self._maxtasksperchild = maxtasksperchild
 
         if taskqueuesize:
-            self._progressqueue = DebugSimpleQueue()
+            self._progressqueue = TimingSimpleQueue()
         else:
             self._progressqueue = None
         
@@ -600,7 +561,6 @@ class DebugPool(mp.pool.Pool):
 
         self._worker_handler = threading.Thread(
         target=mp.pool.Pool._handle_workers,
-        #target = debug_handle_workers,
         args=(self, )
             )
         self._worker_handler.name = 'WorkerHandler'
@@ -610,7 +570,7 @@ class DebugPool(mp.pool.Pool):
 
         if True:
             self._task_handler = threading.Thread(
-                target=debug_handle_tasks,
+                target=timing_handle_tasks,
                 args=(self._taskqueue, self._quick_put, self._outqueue,
                       self._progressqueue, self._pool,
                       taskqueuesize))
@@ -626,7 +586,7 @@ class DebugPool(mp.pool.Pool):
         self._task_handler.start()
 
         self._result_handler = threading.Thread(
-            target=debug_handle_results,
+            target=timing_handle_results,
             args=(self._outqueue, self._quick_get, self._cache,
                   self._beancounter, self)
             )
