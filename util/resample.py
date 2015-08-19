@@ -351,6 +351,7 @@ if __name__ == '__main__':
     from astrometry.util.util import Sip,Tan
     import time
     import sys
+    import pylab as plt
 
     from astrometry.util.util import lanczos3_filter, lanczos3_filter_table
     # x = np.linspace(-4, 4, 500)
