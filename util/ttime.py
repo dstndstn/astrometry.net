@@ -4,7 +4,32 @@ import os
 import re
 import resource
 
-def get_memusage():
+# split out of get_memusage for profiling purposes
+def _read_proc_status(pid):
+    procfn = '/proc/%d/status' % pid
+    t = open(procfn).readlines()
+    d = dict([(line.split()[0][:-1], line.split()[1:]) for line in t])
+    return d
+
+                 
+def _read_proc_maps(pid):
+    procfn = '/proc/%d/maps' % pid
+    t = open(procfn).readlines()
+    d = dict(mmaps=t)
+    rex = re.compile(r'(?P<addrlo>[0-9a-f]+)-(?P<addrhi>[0-9a-f]+) .*')
+    parsed = []
+    addrsum = 0
+    for line in t:
+        m = rex.match(line)
+        if m is not None:
+            parsed.append(m.groupdict())
+            try:
+                addrsum += int(m.group('addrhi'), 16) - int(m.group('addrlo'), 16)
+            except:
+                pass
+    return dict(mmaps=t, mmaps_parsed=parsed, mmaps_total=addrsum)
+
+def get_memusage(mmaps=True):
     ru = resource.getrusage(resource.RUSAGE_SELF)
     pgsize = resource.getpagesize()
     maxrss = (ru.ru_maxrss * pgsize / 1e6)
@@ -16,34 +41,19 @@ def get_memusage():
     #print 'unshared stack size:', ru.ru_isrss
     mu = dict(maxrss=[maxrss, 'MB'])
 
-    procfn = '/proc/%d/status' % os.getpid()
+    pid = os.getpid()
     try:
-        t = open(procfn).readlines()
-        d = dict([(line.split()[0][:-1], line.split()[1:]) for line in t])
-        mu.update(d)
+        mu.update(_read_proc_status(pid))
     except:
         pass
 
     # /proc/meminfo ?
-    
-    procfn = '/proc/%d/maps' % os.getpid()
-    try:
-        t = open(procfn).readlines()
-        mu.update(mmaps=t)
-        rex = re.compile(r'(?P<addrlo>[0-9a-f]+)-(?P<addrhi>[0-9a-f]+) .*')
-        parsed = []
-        addrsum = 0
-        for line in t:
-            m = rex.match(line)
-            if m is not None:
-                parsed.append(m.groupdict())
-                try:
-                    addrsum += int(m.group('addrhi'), 16) - int(m.group('addrlo'), 16)
-                except:
-                    pass
-        mu.update(mmaps_parsed=parsed, mmaps_total=addrsum)
-    except:
-        pass
+
+    if mmaps:
+        try:
+            mu.update(_read_proc_maps(pid))
+        except:
+            pass
     
     return mu
 
@@ -100,12 +110,9 @@ class FileDescriptorMeas(object):
             
 class MemMeas(object):
     def __init__(self):
-        self.mem0 = get_memusage()
+        self.mem0 = get_memusage(mmaps=False)
     def format_diff(self, other):
-        #keys = self.mem0.keys()
-        #keys.sort()
         txt = []
-        #for k in keys:
         for k in ['VmPeak', 'VmSize', 'VmRSS', 'VmData']:
             if not k in self.mem0:
                 continue
