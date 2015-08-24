@@ -203,7 +203,7 @@ PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py \
 	find_data_file.py plotshift.py plotutils.py miscutils.py multiproc.py \
 	yanny.py ttime.py resample.py \
 	EXIF.py degtohms.py hmstodeg.py horizons.py text2fits.py votabletofits.py \
-	imageutils.py merge-columns.py siap.py stages.py
+	imageutils.py merge-columns.py siap.py stages.py timingpool.py
 
 # celestial_mechanics.py (needs license)
 
