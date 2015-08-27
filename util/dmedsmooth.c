@@ -39,70 +39,70 @@
 
 float dselip(unsigned long k, unsigned long n, float *arr);
 
-int dmedsmooth(const float *image,
-               const uint8_t *masked,
-               int nx,
-               int ny,
-               int halfbox,
-               float *smooth)
-{
-    int i, j, ip, jp, ist, jst, nb, ind, jnd, sp;
-    int xoff, yoff, nm, nxgrid, nygrid;
-    int ypsize, ymsize, xpsize, xmsize;
-    float dx, dy, xkernel, ykernel;
 
-    float *arr = NULL;
-    int *xgrid = NULL;
-    int *ygrid = NULL;
-    float *grid = NULL;
-    int *xlo = NULL;
-    int *xhi = NULL;
-    int *ylo = NULL;
-    int *yhi = NULL;
-
-    /* get grids */
-    sp = halfbox;
-    nxgrid = MAX(1, nx / sp) + 2;
-    //printf("nxgrid %i\n", nxgrid);
+int dmedsmooth_gridpoints(int nx, int halfbox, int* p_nxgrid, int** p_xgrid,
+                          int** p_xlo, int** p_xhi) {
+    int nxgrid;
+    int* xgrid;
+    int* xlo;
+    int* xhi;
+    int xoff;
+    int i;
+    nxgrid = MAX(1, nx / halfbox) + 2;
+    *p_nxgrid = nxgrid;
     // "xgrid" are the centers.
     // "xlo" are the (inclusive) lower-bounds
     // "xhi" are the (inclusive) upper-bounds
     // the grid cells may overlap.
-    xgrid = (int *) malloc((size_t)nxgrid * sizeof(int));
-    xlo = (int *) malloc((size_t)nxgrid * sizeof(int));
-    xhi = (int *) malloc((size_t)nxgrid * sizeof(int));
-    xoff = (nx - 1 - (nxgrid - 3) * sp) / 2;
-    for (i = 1;i < nxgrid - 1;i++)
-        xgrid[i] = (i - 1) * sp + xoff;
-    xgrid[0] = xgrid[1] - sp;
-    xgrid[nxgrid - 1] = xgrid[nxgrid - 2] + sp;
-    for (i = 0;i < nxgrid;i++) {
-        xlo[i] = MAX(xgrid[i] - sp, 0);
-        xhi[i] = MIN(xgrid[i] + sp, nx-1);
-        //printf("xlo[%i],xhi[%i] = %i,%i\n", i, i, xlo[i], xhi[i]);
+    *p_xgrid = xgrid = (int *) malloc((size_t)nxgrid * sizeof(int));
+    *p_xlo   = xlo   = (int *) malloc((size_t)nxgrid * sizeof(int));
+    *p_xhi   = xhi   = (int *) malloc((size_t)nxgrid * sizeof(int));
+    xoff = (nx - 1 - (nxgrid - 3) * halfbox) / 2;
+    for (i = 1; i < nxgrid - 1; i++)
+        xgrid[i] = (i - 1) * halfbox + xoff;
+    xgrid[0] = xgrid[1] - halfbox;
+    xgrid[nxgrid - 1] = xgrid[nxgrid - 2] + halfbox;
+    for (i = 0; i < nxgrid; i++) {
+        xlo[i] = MAX(xgrid[i] - halfbox, 0);
+        xhi[i] = MIN(xgrid[i] + halfbox, nx-1);
     }
+    return 0;
+}
 
-    nygrid = MAX(1, ny / sp) + 2;
-    //printf("nygrid %i\n", nygrid);
-    ylo = (int *) malloc(nygrid * sizeof(int));
-    yhi = (int *) malloc(nygrid * sizeof(int));
-    ygrid = (int *) malloc(nygrid * sizeof(int));
-    yoff = (ny - 1 - (nygrid - 3) * sp) / 2;
-    for (i = 1;i < nygrid - 1;i++)
-        ygrid[i] = (i - 1) * sp + yoff;
-    ygrid[0] = ygrid[1] - sp;
-    ygrid[nygrid - 1] = ygrid[nygrid - 2] + sp;
+int dmedsmooth_grid(const float* image,
+                    const uint8_t *masked,
+                    int nx,
+                    int ny,
+                    int halfbox,
+                    float **p_grid, int** p_xgrid, int** p_ygrid,
+                    int* p_nxgrid, int* p_nygrid) {
+    float* arr = NULL;
+    float* grid = NULL;
+    int *xlo = NULL;
+    int *xhi = NULL;
+    int *ylo = NULL;
+    int *yhi = NULL;
+    int nxgrid, nygrid;
+    int i, j, nb, jp, ip, nm;
 
-    for (i = 0;i < nygrid;i++) {
-        ylo[i] = MAX(ygrid[i] - sp, 0);
-        yhi[i] = MIN(ygrid[i] + sp, ny-1);
-        //printf("ylo[%i],yhi[%i] = %i,%i\n", i, i, ylo[i], yhi[i]);
+    if (dmedsmooth_gridpoints(nx, halfbox, &nxgrid, p_xgrid, &xlo, &xhi)) {
+        return 1;
     }
+    if (dmedsmooth_gridpoints(ny, halfbox, &nygrid, p_ygrid, &ylo, &yhi)) {
+        FREEVEC(xlo);
+        FREEVEC(xhi);
+        FREEVEC(*p_xgrid);
+        return 1;
+    }
+    *p_nxgrid = nxgrid;
+    *p_nygrid = nygrid;
 
     // the median-filtered image (subsampled on a grid).
-    grid = (float *) malloc((size_t)(nxgrid * nygrid) * sizeof(float));
+    *p_grid = grid = (float *) malloc((size_t)(nxgrid * nygrid) *
+                                      sizeof(float));
 
-    arr = (float *) malloc((size_t)((sp * 2 + 5) * (sp * 2 + 5)) * sizeof(float));
+    arr = (float *) malloc((size_t)((halfbox * 2 + 5) *
+                                    (halfbox * 2 + 5)) * sizeof(float));
 
     for (j=0; j<nygrid; j++) {
         for (i=0; i<nxgrid; i++) {
@@ -144,19 +144,32 @@ int dmedsmooth(const float *image,
     FREEVEC(xhi);
     FREEVEC(yhi);
     FREEVEC(arr);
+    return 0;
+}
+
+int dmedsmooth_interpolate(const float* grid,
+                           int nx, int ny,
+                           int nxgrid, int nygrid,
+                           const int* xgrid, const int* ygrid,
+                           int halfbox,
+                           float* smooth) {
+    int i, j;
+    int jst, jnd, ist, ind;
+    int ypsize, ymsize, xpsize, xmsize;
+    int jp, ip;
 
     for (j = 0;j < ny;j++)
         for (i = 0;i < nx;i++)
             smooth[i + j*nx] = 0.;
     for (j = 0;j < nygrid;j++) {
-        jst = (long) ( (float) ygrid[j] - sp * 1.5);
-        jnd = (long) ( (float) ygrid[j] + sp * 1.5);
+        jst = (int) ( (float) ygrid[j] - halfbox * 1.5);
+        jnd = (int) ( (float) ygrid[j] + halfbox * 1.5);
         if (jst < 0)
             jst = 0;
         if (jnd > ny - 1)
             jnd = ny - 1;
-        ypsize = sp;
-        ymsize = sp;
+        ypsize = halfbox;
+        ymsize = halfbox;
         if (j == 0)
             ypsize = ygrid[1] - ygrid[0];
         if (j == 1)
@@ -166,14 +179,14 @@ int dmedsmooth(const float *image,
         if (j == nygrid - 1)
             ymsize = ygrid[nygrid - 1] - ygrid[nygrid - 2];
         for (i = 0;i < nxgrid;i++) {
-            ist = (long) ( (float) xgrid[i] - sp * 1.5);
-            ind = (long) ( (float) xgrid[i] + sp * 1.5);
+            ist = (long) ( (float) xgrid[i] - halfbox * 1.5);
+            ind = (long) ( (float) xgrid[i] + halfbox * 1.5);
             if (ist < 0)
                 ist = 0;
             if (ind > nx - 1)
                 ind = nx - 1;
-            xpsize = sp;
-            xmsize = sp;
+            xpsize = halfbox;
+            xmsize = halfbox;
             if (i == 0)
                 xpsize = xgrid[1] - xgrid[0];
             if (i == 1)
@@ -191,6 +204,9 @@ int dmedsmooth(const float *image,
                 // in [-0.5, 0.5]: 0.75 - (y^2)
                 // so at +- 0.5 it has value 0.5
                 // at 0 it has value 0.75
+                float dx, dy;
+                float xkernel, ykernel;
+
                 dy = (float)(jp - ygrid[j]);
                 if (dy >= 0) {
                     dy /= (float)ypsize;
@@ -222,6 +238,30 @@ int dmedsmooth(const float *image,
                 }
             }
         }
+    }
+    return 0;
+}
+
+
+int dmedsmooth(const float *image,
+               const uint8_t *masked,
+               int nx,
+               int ny,
+               int halfbox,
+               float *smooth)
+{
+    float *grid = NULL;
+    int *xgrid = NULL;
+    int *ygrid = NULL;
+    int nxgrid, nygrid;
+
+    if (dmedsmooth_grid(image, masked, nx, ny, halfbox,
+                        &grid, &xgrid, &ygrid, &nxgrid, &nygrid)) {
+        return 0;
+    }
+    if (dmedsmooth_interpolate(grid, nx, ny, nxgrid, nygrid,
+                               xgrid, ygrid, halfbox, smooth)) {
+        return 0;
     }
 
     FREEVEC(grid);
