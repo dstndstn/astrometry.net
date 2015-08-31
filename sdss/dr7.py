@@ -1,6 +1,6 @@
 import os
 
-from common import *
+from .common import *
 
 from astrometry.util.miscutils import *
 from astrometry.util.fits import *

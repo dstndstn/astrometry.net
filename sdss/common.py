@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 from astrometry.util.fits import fits_table
 from astrometry.util.miscutils import get_overlapping_region
@@ -256,7 +257,6 @@ class SdssDR(object):
             run = kwargs.get('run', None)
             rerun = self.get_rerun(run)
             kwargs.update(rerun=rerun)
-        #print 'pat', pat, 'kwargs', kwargs
         fn = pat % kwargs
         return fn
 
@@ -416,7 +416,7 @@ class AsTrans(SdssFile):
                             el = el[self.bandi]
                         self.trans[f] = el
                 except:
-                    print 'failed to get astrans.' + f
+                    print('failed to get astrans.' + f)
                     import traceback
                     traceback.print_exc()
                     pass
@@ -486,7 +486,6 @@ class AsTrans(SdssFile):
         '''RA,Dec -> x,y for scalar RA,Dec.'''
         # RA,Dec -> mu,nu -> prime -> pixel
         mu, nu = self.radec_to_munu_single(ra, dec)
-        #print 'py; mu,nu', mu,nu
         return self.munu_to_pixel_single(mu, nu, color)
 
     def radec_to_pixel_single_c(self, ra, dec):
@@ -498,7 +497,6 @@ class AsTrans(SdssFile):
     
     def munu_to_pixel(self, mu, nu, color=0):
         xprime, yprime = self.munu_to_prime(mu, nu, color)
-        #print 'py: xprime,yprime', xprime,yprime
         return self.prime_to_pixel(xprime, yprime, color=color)
 
     munu_to_pixel_single = munu_to_pixel
@@ -518,15 +516,11 @@ class AsTrans(SdssFile):
 
         '''
         a, b, c, d, e, f = self._get_abcdef()
-        #print 'mu,nu', mu, nu, 'a,d', a,d
         determinant = b * f - c * e
-        #print 'det', determinant
         B =  f / determinant
         C = -c / determinant
         E = -e / determinant
         F =  b / determinant
-        #print 'B', B, 'mu-a', mu-a, 'C', C, 'nu-d', nu-d
-        #print 'E', E, 'mu-a', mu-a, 'F', F, 'nu-d', nu-d
         mua = mu - a
         # in field 6955, g3, 809 we see a~413
         #if mua < -180.:
@@ -574,8 +568,6 @@ class AsTrans(SdssFile):
         #   yprime += qy
         qx = qx * np.ones_like(x)
         qy = qy * np.ones_like(y)
-        #print 'color', color.shape, 'px', px.shape, 'qx', qx.shape
-        #print 'color', color, 'px', px, 'py', py
         xprime += np.where(color < color0, px * color, qx)
         yprime += np.where(color < color0, py * color, qy)
 
@@ -593,7 +585,6 @@ class AsTrans(SdssFile):
 
         qx = qx * np.ones_like(xprime)
         qy = qy * np.ones_like(yprime)
-        #print 'color', color.shape, 'px', px.shape, 'qx', qx.shape
         xprime -= np.where(color < color0, px * color, qx)
         yprime -= np.where(color < color0, py * color, qy)
 
@@ -609,7 +600,6 @@ class AsTrans(SdssFile):
             xp    = x + h0 + h1 * x + h2 * x**2 + h3 * x**3
             dxpdx = 1 +      h1     + h2 * 2*x +  h3 * 3*x**2
             dx = (xprime - xp) / dxpdx
-            #print 'Max Newton dx', max(abs(dx))
             x += dx
         y = yprime - (g0 + g1 * x + g2 * x**2 + g3 * x**3)
         return (x, y)
@@ -617,9 +607,6 @@ class AsTrans(SdssFile):
     def radec_to_munu_single_c(self, ra, dec):
         ''' Compute ra,dec to mu,nu for a single RA,Dec, calling C code'''
         mu,nu = cutils.radec_to_munu(ra, dec, self.node, self.incl)
-        #mu2,nu2 = self.radec_to_munu(ra, dec)
-        #print 'mu,mu2', mu, mu2
-        #print 'nu,nu2', nu, nu2
         return mu,nu
 
     def radec_to_munu(self, ra, dec):
@@ -705,7 +692,6 @@ class TsField(SdssFile):
         logcounts = (-0.4 * mag + np.log10(self.exptime)
                      - 0.4*(self.aa[band] + self.kk[band] * self.airmass[band]))
         #logcounts = np.minimum(logcounts, 308.)
-        #print 'logcounts', logcounts
         #olderrs = np.seterr(all='print')
         rtn = 10.**logcounts
         #np.seterr(**olderrs)
@@ -739,14 +725,11 @@ class FpM(SdssFile):
         if self.maskmap is None:
             self.maskmap = {}
             T = fits_table(self.hdus[-1].data)
-            #print 'Got mask definition table'
-            #T.about()
             T.cut(T.defname == 'S_MASKTYPE')
             for k,v in zip(T.attributename, T.value):
                 k = k.replace('S_MASK_', '')
                 if k == 'S_NMASK_TYPES':
                     continue
-                #print '  Mask', k, '=', v
                 self.maskmap[k] = v
         if not name in self.maskmap:
             raise RuntimeError('Unknown mask plane \"%s\"' % name)
@@ -767,11 +750,9 @@ class FpM(SdssFile):
             if roi is not None:
                 (outx,nil) = get_overlapping_region(c0-x0, c1+1-x0, 0, x1-x0)
                 (outy,nil) = get_overlapping_region(r0-y0, r1+1-y0, 0, y1-y0)
-                # print 'Mask col [%i, %i], row [%i, %i]' % (c0, c1, r0, r1)
-                # print  '  outx', outx, 'outy', outy
                 img[outy,outx] = val
             else:
-                img[r0:r1, c0:c1] = val
+                img[r0:r1+1, c0:c1+1] = val
         
 
 class FpC(SdssFile):
@@ -851,7 +832,7 @@ class PsField(SdssFile):
         # good = PSP_FIELD_OK
         status = self.psp_status[bandnum]
         if status != 0:
-            print 'Warning: PsField status[band=%s] =' % (bandnum), status
+            print('Warning: PsField status[band=%s] =' % (bandnum), status)
 
         # b is the "ratio of G2 to G1 at the origin", ie, not the
         # straight Gaussian amplitudes
@@ -919,7 +900,6 @@ class PsField(SdssFile):
             assert(k.shape == img.shape)
             # Trim symmetric zero-padding off the epsf.
             # This will fail spectacularly given an all-zero eigen-component.
-            #print 'epsf shape:', epsf.shape
             while True:
                 H,W = epsf.shape
                 if (np.all(epsf[:,0] == 0) and np.all(epsf[:,-1] == 0) and
@@ -928,7 +908,6 @@ class PsField(SdssFile):
                     epsf = epsf[1:-1, 1:-1]
                 else:
                     break
-            #print 'trimmed epsf shape to:', epsf.shape
             corr += k * correlate(img, epsf)
         return corr
 
@@ -959,23 +938,16 @@ class PsField(SdssFile):
 
         xx,yy = np.broadcast_arrays(x, y)
         N = len(xx.flat)
-        #print 'xx,yy', xx,yy
         psfimgs = np.zeros((N,) + eigenpsfs[0].shape)
         for epsf, (XO, YO, C) in zip(eigenpsfs, eigenpolys):
             kk = reduce(np.add, [(xx.flat ** xo) * (yy.flat ** yo) * c
                                  for (xo,yo,c) in zip(XO,YO,C)])
-            #for (xo,yo,c) in zip(XO,YO,C):
-            #   print ' term:', xo, yo, c, xx.flat**xo, yy.flat**yo, (xx.flat**xo) * (yy.flat**yo) * c
-            #print 'kk', kk
-            #print 'kk shape', kk.shape
             psfimgs += epsf[np.newaxis,:,:] * kk[:,np.newaxis,np.newaxis]
 
         if rtnscalar:
             return psfimgs[0,:,:]
         # convert back to a list...
         return [psfimgs[i,:,:] for i in range(N)]
-        #return psfimgs
-
 
     def getGain(self, band=None):
         if band is not None:
