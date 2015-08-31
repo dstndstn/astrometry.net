@@ -654,8 +654,8 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
                 from astropy.io import fits as pyfits
                 isrecarray = (type(data) == pyfits.core.FITS_rec)
             except:
-                import traceback
-                traceback.print_exc()
+                #import traceback
+                #traceback.print_exc()
                 pass
         if not isrecarray:
             try:

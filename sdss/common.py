@@ -252,7 +252,7 @@ class SdssDR(object):
         if not filetype in self.filenames:
             return None
         pat = self.filenames[filetype]
-        if not 'rerun' in kwargs:
+        if kwargs.get('rerun', None) is None:
             run = kwargs.get('run', None)
             rerun = self.get_rerun(run)
             kwargs.update(rerun=rerun)
