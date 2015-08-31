@@ -199,6 +199,15 @@ class DR8(DR7):
                                'fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit.gz'),
             window_flist = os.path.join(resolve, 'window_flist.fits'),
             )
+        # use fpM files compressed
+        try:
+            del self.dassuffix['fpM']
+        except:
+            pass
+        try:
+            del self.processcmds['fpM']
+        except:
+            pass
 
     def saveUnzippedFiles(self, basedir):
         self.unzip_dir = basedir
@@ -361,6 +370,7 @@ class DR8(DR7):
     
     def retrieve(self, filetype, run, camcol, field=None, band=None, skipExisting=True,
                  tempsuffix='.tmp', rerun=None):
+
         outfn = self.getPath(filetype, run, camcol, field, band,
                              rerun=rerun)
         print 'Checking for file', outfn
@@ -368,7 +378,6 @@ class DR8(DR7):
             return None
         if skipExisting and os.path.exists(outfn):
             return outfn
-
         outdir = os.path.dirname(outfn)
         if not os.path.exists(outdir):
             try:
