@@ -97,6 +97,13 @@ int dmedsmooth_grid(const float* image,
     *p_nxgrid = nxgrid;
     *p_nygrid = nygrid;
 
+    /*
+     for (i=0; i<nxgrid; i++)
+     printf("xgrid %i, xlo %i, xhi %i\n", (*p_xgrid)[i], xlo[i], xhi[i]);
+     for (i=0; i<nygrid; i++)
+     printf("ygrid %i, ylo %i, yhi %i\n", (*p_ygrid)[i], ylo[i], yhi[i]);
+     */
+
     // the median-filtered image (subsampled on a grid).
     *p_grid = grid = (float *) malloc((size_t)(nxgrid * nygrid) *
                                       sizeof(float));

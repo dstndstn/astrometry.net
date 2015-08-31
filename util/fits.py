@@ -451,10 +451,7 @@ class tabledata(object):
 
         if fitsio:
             arrays = [self.get(c) for c in columns]
-            # fitsio has *strange* behavior when file already exists.
-            if not append and os.path.exists(fn):
-                os.unlink(fn)
-            fits = fitsio.FITS(fn, 'rw')
+            fits = fitsio.FITS(fn, 'rw', clobber=(not append))
 
             arrays = [np.array(a) if isinstance(a,list) else a
                       for a in arrays]
@@ -465,7 +462,10 @@ class tabledata(object):
                 if append and append_to_hdu is not None:
                     fits[append_to_hdu].append(arrays, names=columns, header=header)
                 else:
+                    if primheader is not None:
+                        fits.write(None, header=primheader)
                     fits.write(arrays, names=columns, header=header)
+                fits.close()
             except:
                 print('Failed to write FITS table')
                 print('Columns:')
