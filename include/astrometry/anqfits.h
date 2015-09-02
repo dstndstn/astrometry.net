@@ -1,6 +1,8 @@
 /*
  This file was added by the Astrometry.net team.
  Copyright 2007-2013 Dustin Lang.
+
+ Licensed under GPL v2 or later.
  */
 
 #ifndef ANQFITS_H

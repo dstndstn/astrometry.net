@@ -2,6 +2,8 @@
  This file was added by the Astrometry.net team.
  Copyright 2007,2010 Dustin Lang.
  Copyright 2013 Dustin Lang.
+
+ Licensed under GPL v2 or later.
  */
 
 #include <string.h>
