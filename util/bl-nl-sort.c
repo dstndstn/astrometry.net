@@ -1,3 +1,7 @@
+/*
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
+ */
 static int NLF(compare_ascending)(const void* v1, const void* v2) {
     number i1 = *(number*)v1;
     number i2 = *(number*)v2;

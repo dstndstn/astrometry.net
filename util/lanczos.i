@@ -1,3 +1,7 @@
+/*
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
+ */
 static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
                                PyObject* np_dx, PyObject* np_dy,
                                PyObject* loutputs, PyObject* linputs) {

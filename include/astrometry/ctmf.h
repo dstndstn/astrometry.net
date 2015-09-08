@@ -1,3 +1,4 @@
+// See util/ctmf.c for copyright & license
 #ifndef CTMF_H
 #define CTMF_H
 

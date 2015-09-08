@@ -1,3 +1,5 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 import os
 try:
     import pyfits
@@ -11,7 +13,6 @@ import numpy as np
 
 from common import *
 from dr8 import *
-from astrometry.util.yanny import *
 
 class DR9(DR8):
 

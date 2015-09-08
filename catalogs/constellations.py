@@ -1,3 +1,5 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 
 shortnames =  [ "Aql","And","Scl","Ara","Lib","Cet","Ari","Sct","Pyx","Boo","Cae","Cha","Cnc","Cap","Car","Cas","Cen","Cep","Com","Cvn","Aur","Col","Cir","Crt","CrA","CrB","Crv","Cru","Cyg","Del","Dor","Dra","Nor","Eri","Sge","For","Gem","Cam","CMa","UMa","Gru","Her","Hor","Hya","Hyi","Ind","Lac","Mon","Lep","Leo","Lup","Lyn","Lyr","Ant","Mic","Mus","Oct","Aps","Oph","Ori","Pav","Peg","Pic","Per","Equ","CMi","LMi","Vul","UMi","Phe","Psc","PsA","Vol","Pup","Ret","Sgr","Sco","Ser","Sex","Men","Tau","Tel","Tuc","Tri","Tra","Aqr","Vir","Vel" ]
 

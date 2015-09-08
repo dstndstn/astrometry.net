@@ -1,3 +1,7 @@
+/*
+  This file is part of "fitsverify" and was imported from:
+    http://heasarc.gsfc.nasa.gov/docs/software/ftools/fitsverify/
+ */
 #ifndef _FVERIFY_H
 #define _FVERIFY_H
 

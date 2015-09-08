@@ -1,3 +1,5 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 from xml.dom import minidom, Node
 from numpy import *
 from astrometry.util.fits import *

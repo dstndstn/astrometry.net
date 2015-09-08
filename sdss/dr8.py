@@ -1,3 +1,5 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 import os
 from astrometry.util.fits import fits_table
 import numpy as np
@@ -19,7 +21,7 @@ except:
 
 from common import *
 from dr7 import *
-from astrometry.util.yanny import *
+from yanny import *
 from astrometry.util.run_command import run_command
 
 class Frame(SdssFile):

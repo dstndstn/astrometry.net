@@ -1,3 +1,5 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 from run_command import run_command
 
 def get_libs(pkg, required=True):

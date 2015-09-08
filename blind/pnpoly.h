@@ -1,5 +1,5 @@
 /*
-  See the file "pnpoly.c" for copyright information.
+  See the file "pnpoly.c" for copyright and license information.
 */
 
 /*

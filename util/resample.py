@@ -1,11 +1,6 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 import numpy as np
-# moved down to where they are used:
-#import scipy.interpolate as interp
-#from miscutils import lanczos_filter
-
-# DEBUG
-#from .plotutils import *
-#import pylab as plt
 
 class ResampleError(Exception):
     pass

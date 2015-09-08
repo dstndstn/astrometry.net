@@ -1,8 +1,8 @@
 libkd: a library for building and using kd-trees.
 
-libkd is Copyright 2006, 2007, 2008 Dustin Lang and Keir Mierle.
-libkd is free software licensed under the GNU GPL version 2.
-See the file LICENSE for the full terms of the GNU GPL.
+libkd is Copyright 2006-2015 Dustin Lang and Keir Mierle.
+libkd is free software, licensed under a 3-clause BSD-style license.
+See the file LICENSE for the full terms.
 
 Dustin Lang is dstndstn (at) gmail (dot) com
 Keir Mierle is mierle (at) gmail (dot) com

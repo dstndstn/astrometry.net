@@ -1,19 +1,5 @@
 # This file is part of the Astrometry.net suite.
-# Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
-# Copyright 2008, 2009, 2010, 2011, 2012 Dustin Lang.
-#
-# The Astrometry.net suite is free software; you can redistribute
-# it and/or modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation, version 2.
-#
-# The Astrometry.net suite is distributed in the hope that it will be
-# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with the Astrometry.net suite ; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+# Licensed under a 3-clause BSD style license - see LICENSE
 
 BASEDIR := ..
 COMMON := .
@@ -37,7 +23,7 @@ SO=$(SHAREDLIB_SUFFIX)
 ANBASE_OBJ := starutil.o mathutil.o bl-sort.o bl.o bt.o healpix-utils.o \
 	healpix.o permutedsort.o ioutils.o fileutils.o md5.o \
 	os-features.o an-endian.o errors.o an-opts.o tic.o log.o datalog.o \
-	sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o \
+	sparsematrix.o coadd.o convolve-image.o resample.o \
 	intmap.o histogram.o histogram2d.o
 
 ANBASE_DEPS :=

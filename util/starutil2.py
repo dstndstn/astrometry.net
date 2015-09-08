@@ -1,4 +1,6 @@
-#from pylab import *
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
+
 from math import *  # Needed if we're going to exclude pylab :)
 
 PIl = 3.1415926535897932384626433832795029

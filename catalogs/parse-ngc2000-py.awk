@@ -1,3 +1,5 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 {
 # Is it part of NGC or IC?
 ic = substr($0, 1, 1);

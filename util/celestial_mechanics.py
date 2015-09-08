@@ -2,8 +2,8 @@
 #   celestial mechanics utilities for exoplanet ephemerides
 #
 # intellectual property:
-#   Copyright 2009 David W. Hogg.  All rights reserved.	 Watch this space
-#   for an open-source license to be inserted later.
+#   Copyright 2009 David W. Hogg.  All rights reserved.
+#   Licensed under a 3-clause BSD style license - see LICENSE
 #
 # comments:
 #   - Written for clarity, not speed.  The code is intended to be human-

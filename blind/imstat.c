@@ -8,9 +8,10 @@
   We assume it was originally written by the CFITSIO authors (primarily William
   D. Pence).
 
-  We (the Astrometry.net team) have modified it slightly, and we hereby place
-  our modifications under the GPLv2.
-*/
+  We (the Astrometry.net team) have modified it slightly.
+  # Licensed under a 3-clause BSD style license - see LICENSE
+
+ */
 #include <string.h>
 #include <stdio.h>
 #include "fitsio.h"

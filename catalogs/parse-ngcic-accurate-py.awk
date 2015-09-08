@@ -1,3 +1,5 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 # Parse NGC/IC accurate positions from http://www.ngcic.org/corwin/default.htm
 {
 # NGC or IC?

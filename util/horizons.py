@@ -1,3 +1,11 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
+
+'''
+This code allows one to interact with the JPL Horizons ephemeris
+service via their telnet interface.  Yes, telnet.
+'''
+
 # ohhhhhh yeahhhhh
 import telnetlib as tn
 

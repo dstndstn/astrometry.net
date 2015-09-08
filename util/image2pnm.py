@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 """
-Convert an image in a variety of formats into a pnm file
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 
-Copyright Keir Mierle 2007, Dustin Lang 2008,2009
+Convert an image in a variety of formats into a pnm file
 """
 import sys
 import os

@@ -19,14 +19,20 @@ Latest release: http://astrometry.net/downloads/astrometry.net-latest.tar.gz
 > archival disarray. We hope this will help organize, annotate and make
 > searchable all the world's astronomical information.
 
-Copyright 2006-2014 Michael Blanton, David W. Hogg, Dustin Lang, Keir
-Mierle and Sam Roweis.
+Copyright 2006-2015 Michael Blanton, David W. Hogg, Dustin Lang, Keir
+Mierle and Sam Roweis (the Astrometry.net Team).
 
 Contributions from Sjoert van Velzen, Themos Tsikas (wcs-match.c),
-Andrew Hood, Thomas Stibor, Denis Vida, Ole Streicher and others.
+Andrew Hood, Thomas Stibor, Denis Vida, Ole Streicher, David
+Warde-Farley, Jon Barron, and others.
 
-Licensed under GPLv2.  Please contact us about other licensing
-arrangements.
+Parts of the code written by the Astrometry.net Team are licensed
+under a 3-clause BSD-style license.  See the file LICENSE for the full
+license text.  However, since this code uses libraries licensed under
+the GNU GPL, the whole work is distributed under the GPL version 3 or
+later.
+
+Code development happens at http://github.com/dstndstn/astrometry.net
 
 The documentation is at http://astrometry.net/doc
 
@@ -37,7 +43,6 @@ Additional stuff at http://astrometry.net
 Code snapshots and releases are at http://astrometry.net/downloads
 
 The web service is at http://nova.astrometry.net
-
 
 For academic use, please cite the paper:
 

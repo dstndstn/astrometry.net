@@ -1,3 +1,5 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 from distutils.command.build_ext import build_ext # as _build_py
 #from distutils.command import build_ext as _build_ext
 from distutils.dep_util import newer_group, newer

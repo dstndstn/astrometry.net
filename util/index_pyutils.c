@@ -1,3 +1,7 @@
+/*
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
+ */
 #include "Python.h"
 
 // numpy - this should be in site-packages/numpy/core/include

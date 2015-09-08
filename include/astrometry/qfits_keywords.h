@@ -1,6 +1,10 @@
 /*
  This file was added by the Astrometry.net team.
  Copyright 2007 Dustin Lang.
+
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
+
  */
 
 #ifndef QFITS_KEYWORDS_H

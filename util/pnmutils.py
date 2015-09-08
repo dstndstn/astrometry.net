@@ -1,3 +1,5 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 from numpy import *
 
 # Writes a numpy array as PGM to the given file handle.  The numpy

@@ -1,3 +1,5 @@
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
 from .dr7 import DR7
 from .dr8 import DR8
 from .dr9 import DR9
