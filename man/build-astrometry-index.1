@@ -1,0 +1,128 @@
+.TH BUILD-ASTROMETRY-INDEX "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+build-astrometry-index \- Create astrometry.net index files
+.SH SYNOPSIS
+.B
+build-astrometry-index
+[options]
+\fB\-i\fR \fIcatalog\fR \fB\-o\fR \fIfile\fR \fB-P\fR \fIscale\fR
+.SH DESCRIPTION
+\fBbuild-astrometry-index\fR takes a FITS catalog table containing at least
+\fIRA\fB, \fIDEC\fR, and \fImagnitude\fR columns and converts it into
+an index file that can be used by the astrometry.net programs like
+\fBsolve-index\fR (1).
+.SH OPTIONS
+.TP
+\fB\-i\fR \fIcatalog\fR
+Input FITS catalog: source RA,DEC, etc.
+.TP
+\fB\-e\fR \fIextension\fR
+FITS extension to read when \fB\-i\fR is specified.
+.TP
+\fB\-1\fR \fIindex\fR
+Share another index's stars (alternatively to \fB\-i\fR/\fB\-e\fR).
+.TP
+\fB\-o\fR \fIfile\fR
+Output filename for index
+.TP
+\fB\-N\fR \fInside\fR
+Healpix Nside for quad-building
+.TP
+\fB\-l\fR \fIsize\fR
+Minimum quad size (arcminutes)
+.TP
+\fB\-u\fR \fIsize\fR
+Maximum quad size (arcminutes)
+.TP
+\fB\-P\fR \fInumber\fR
+Use 'preset' values for \fB\-N\fR, \fB\-l\fR, and \fB\-u\fR. The scale-number is the
+last two digits of the pre-cooked index filename \-\- eg., index-205
+is \fB-P\fR \fI5\fR.
+.IP
+\fB\-P\fR \fI0\fR should be good for images about 6 arcmin in size and
+it goes in steps of sqrt(2), so:
+.IP
+\fB\-P\fR \fI2\fR should work for images about 12 arcmin across
+.IP
+\fB\-P\fR \fI4\fR should work for images about 24 arcmin across
+.IP
+\fB\-P\fR \fI6\fR should work for images about 1 degree across
+.IP
+\fB\-P\fR \fI8\fR should work for images about 2 degree across
+.IP
+\fB\-P\fR \fI10\fR should work for images about 4 degree across etc... up to \fB\-P\fR \fI19\fR
+.TP
+\fB\-S\fR \fIcolumn\fR
+Sort column (default: assume the input file is already sorted)
+.TP
+\fB\-f\fR
+Sort in descending order (eg, for FLUX); default ascending (eg, for MAG)
+.TP
+\fB\-A\fR \fIcolumn\fR
+Specify the RA  column name in the input FITS table (default "RA")
+.TP
+\fB\-D\fR \fIcolumn\fR
+Specify the Dec column name in the input FITS table (default "Dec")
+.TP
+\fB\-B\fR \fIval\fR
+Cut any object whose sort-column value is less than \fIval\fR; for
+mags this is a bright limit
+.TP
+\fB\-U\fR
+Healpix Nside for uniformization (default: same as \fB\-n\fR)
+.TP
+\fB\-H\fR \fIbig healpix\fR
+Big healpix; default is all-sky
+.TP
+\fB\-s\fR \fINside\fR
+Big healpix Nside; default is 1
+.TP
+\fB\-m\fR \fImargin\fR
+Add a margin of \fImargin\fR healpixels; default 0
+.TP
+\fB\-n\fR \fIsweeps\fR
+Sweeps (ie, number of stars per fine healpix grid cell); default 10
+.TP
+\fB\-r\fR \fIradius\fR
+Deduplication radius in arcseconds; default no deduplication
+.TP
+\fB\-j\fR \fIjitter\fR
+Positional error of stars in the reference catalog (in arcsec; default 1)
+.TP
+\fB\-d\fR \fIdimquads\fR
+Number of stars in a "quad" (default 4).
+.TP
+\fB\-p\fR \fIpasses\fR
+Number of rounds of quad-building (ie, number of quads per healpix cell, default 16)
+.TP
+\fB\-R\fR \fIreuse\fR
+Number of times a star can be used (default: 8)
+.TP
+\fB\-L\fR \fImax-reuses\fR
+Make extra passes through the healpixes, increasing the \fB\-r\fR
+reuse limit each time, up to \fImax-reuses\fR.
+.TP
+\fB\-E\fR
+Scan through the catalog, checking which healpixes are occupied.
+.TP
+\fB\-I\fR \fIid\fR
+Set the unique ID of this index
+.TP
+\fB\-M\fR
+In-memory (don't use temp files)
+.TP
+\fB\-T\fR
+Don't delete temp files
+.TP
+\fB\-t\fR \fIdir\fR
+Use this temp directory (default: /tmp)
+.TP
+\fB\-v\fR
+Add verbosity.
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+hpsplit (1), solve-field (1)
+.br
+For a tutorial, see http://astrometry.net/doc/build-index.html
