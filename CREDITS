@@ -4,10 +4,10 @@ First, the obvious ones:
 
 -gsl-an/
   GSL (the GNU Scientific Library) v1.11
-  Licensed under the GPL, of course.
+  Licensed under the GPL v3+.
 
 -qfits-an/
-  QFITS library v6.2, licensed under the GPL.  Heavily modified by us.
+  QFITS library v6.2, licensed under the GPL v2+.  Heavily modified by us.
 
 Now, some miscellaneous files:
 
@@ -43,7 +43,7 @@ Now, some miscellaneous files:
   (c) Ben Weaver
 
 -blind/an_mm_malloc.h
-  (c) FSF, from GCC.  Imported for use by ctmf.c
+  (c) FSF, from GCC.  GPL v3+.  Imported for use by ctmf.c
 
 -blind/anet.py
   (c) Josh Bloom, licensed under GPL v3.
