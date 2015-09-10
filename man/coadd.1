@@ -1,0 +1,41 @@
+.TH COADD "1" "July 2015" "0.56" "astrometry.net"
+.SH NAME
+coadd \- Co-add images for astrometry.net
+.SH SYNOPSIS
+.B coadd
+\fIimage\fR \fIext\fR \fIweight\fR \fIext\fR \fIwcs\fR \fIext\fR...
+.IP
+use "none" as weight filename for no weighting
+.SH OPTIONS
+.TP
+\fB\-w\fR \fIfile\fR
+Output WCS file (default: input file)
+.TP
+\fB\-e\fR \fIextension\fR
+FITS extension to read WCS from (default: primary extension, 0)
+.TP
+\fB\-o\fR \fIfile\fR
+Output image file
+.TP
+\fB\-O\fR \fIorder\fR
+Lanczos order (default 3)
+.TP
+\fB\-p\fR \fIplane\fR
+Image plane to read (default 0)
+.TP
+\fB\-N\fR
+Use nearest\-neighbour resampling (default: Lanczos)
+.TP
+\fB\-s\fR \fIsigma\fR
+Smooth before resampling
+.TP
+\fB\-D\fR
+Divide each image by its weight image before starting
+.TP
+\fB\-v\fR
+More verbose
+.SH AUTHOR
+The Astrometry.net team. Principal investigators are David W. Hogg (NYU) and
+Dustin Lang (CMU).
+.SH SEE ALSO
+http://astrometry.net
