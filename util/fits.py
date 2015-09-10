@@ -161,12 +161,16 @@ def cut_array(val, I, name=None, to=None):
             val[I] = to
             return
 
-    if type(val) in [np.ndarray, np.core.defchararray.chararray]:
+    if isinstance(val, (np.ndarray, np.core.defchararray.chararray)):
         # You can't slice a two-dimensional, length-zero, numpy array,
         # with an empty array.
         if len(val) == 0:
             return val
         if to is None:
+            # Indexing an array with an empty index array works, but ONLY if
+            # it is of integer or bool type.
+            if len(I) == 0:
+                return np.array([], val.dtype)
             return val[I]
         else:
             val[I] = to
