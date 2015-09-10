@@ -167,9 +167,10 @@ def cut_array(val, I, name=None, to=None):
         if len(val) == 0:
             return val
         if to is None:
-            # Indexing an array with an empty index array works, but ONLY if
-            # it is of integer or bool type.
-            if len(I) == 0:
+            # Indexing an array with an empty index array works, but
+            # ONLY if it is of integer or bool type.
+            # Check for __len__ because "I" can be a plain int too.
+            if hasattr(I, '__len__') and len(I) == 0:
                 return np.array([], val.dtype)
             return val[I]
         else:
