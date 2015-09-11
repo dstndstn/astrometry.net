@@ -6,6 +6,9 @@
 #ifndef PERMUTED_SORT_H
 #define PERMUTED_SORT_H
 
+// for QSORT_COMPARISON_FUNCTIOn
+#include "os-features.h"
+
 /*
  Computes the permutation array that will cause the "realarray" to be
  sorted according to the "compare" function.
@@ -56,5 +59,12 @@ int compare_ints_desc(const void* v1, const void* v2);
 
 int compare_uchars_asc(const void* v1, const void* v2);
 int compare_uchars_desc(const void* v1, const void* v2);
+
+/*
+ Versions for use with QSORT_R directly (not with permuted_sort).
+ */
+int QSORT_COMPARISON_FUNCTION(compare_floats_asc_r,
+                              void* thunk, const void* v1, const void* v2);
+
 
 #endif

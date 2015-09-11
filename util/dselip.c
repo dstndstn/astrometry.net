@@ -9,11 +9,10 @@
 #include <math.h>
 #include <assert.h>
 
-static int floatcmp(const void *p1, const void *p2) {
-    float f1 = *(float *)p1;
-    float f2 = *(float *)p2;
-    return (f1 > f2)?1:(f1 < f2)?-1:0;
-}
+// for compare_floats_asc
+#include "permutedsort.h"
+// for QSORT_R
+#include "os-features.h"
 
 #ifdef SIMPLEXY_REENTRANT
 
@@ -21,7 +20,7 @@ static int floatcmp(const void *p1, const void *p2) {
 float dselip(unsigned long k, unsigned long n, const float *arr) {
 	float* sorted_data = malloc(sizeof(float) * n);
     memcpy(sorted_data, arr, sizeof(float)*n);
-    qsort(sorted_data, n, sizeof(float), floatcmp);
+    QSORT_R(sorted_data, n, sizeof(float), NULL, compare_floats_asc_r);
 	float kth_item = sorted_data[k];
 	free(sorted_data);
 	return kth_item;
@@ -43,7 +42,7 @@ float dselip(unsigned long k, unsigned long n, float *arr) {
 		//printf("dselip watermark=%lu\n",n);
 	}
 	memcpy(past_data, arr, sizeof(float) * n);
-    qsort(past_data, n, sizeof(float), floatcmp);
+    qsort(past_data, n, sizeof(float), compare_floats_asc);
 	return past_data[k];
 }
 
