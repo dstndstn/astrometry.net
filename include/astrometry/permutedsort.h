@@ -6,7 +6,7 @@
 #ifndef PERMUTED_SORT_H
 #define PERMUTED_SORT_H
 
-// for QSORT_COMPARISON_FUNCTIOn
+// for QSORT_COMPARISON_FUNCTION
 #include "os-features.h"
 
 /*

@@ -22,9 +22,9 @@ Latest release: http://astrometry.net/downloads/astrometry.net-latest.tar.gz
 Copyright 2006-2015 Michael Blanton, David W. Hogg, Dustin Lang, Keir
 Mierle and Sam Roweis (the Astrometry.net Team).
 
-Contributions from Sjoert van Velzen, Themos Tsikas (wcs-match.c),
-Andrew Hood, Thomas Stibor, Denis Vida, Ole Streicher, David
-Warde-Farley, Jon Barron, and others.
+Contributions from Sjoert van Velzen, Themos Tsikas, Andrew Hood,
+Thomas Stibor, Denis Vida, Ole Streicher, David Warde-Farley, Jon
+Barron, Christopher Stumm, and others.
 
 Parts of the code written by the Astrometry.net Team are licensed
 under a 3-clause BSD-style license.  See the file LICENSE for the full
