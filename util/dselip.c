@@ -9,17 +9,19 @@
 #include <math.h>
 #include <assert.h>
 
-#include "radix.h"
+static int floatcmp(const void *p1, const void *p2) {
+    float f1 = *(float *)p1;
+    float f2 = *(float *)p2;
+    return (f1 > f2)?1:(f1 < f2)?-1:0;
+}
 
 #ifdef SIMPLEXY_REENTRANT
 
 // this is slower, because each call needs to malloc, but it is reentrant
 float dselip(unsigned long k, unsigned long n, const float *arr) {
 	float* sorted_data = malloc(sizeof(float) * n);
-	float* temp_arr = malloc(sizeof(float) * n);
-    memcpy(temp_arr, arr, sizeof(float)*n);
-	RadixSort11(temp_arr, sorted_data, n);
-    free(temp_arr);
+    memcpy(sorted_data, arr, sizeof(float)*n);
+    qsort(sorted_data, n, sizeof(float), floatcmp);
 	float kth_item = sorted_data[k];
 	free(sorted_data);
 	return kth_item;
@@ -40,10 +42,8 @@ float dselip(unsigned long k, unsigned long n, float *arr) {
 		high_water_mark = n;
 		//printf("dselip watermark=%lu\n",n);
 	}
-	float* temp_arr = malloc(sizeof(float) * n);
-    memcpy(temp_arr, arr, sizeof(float)*n);
-	RadixSort11(temp_arr, past_data, n);
-    free(temp_arr);
+	memcpy(past_data, arr, sizeof(float) * n);
+    qsort(past_data, n, sizeof(float), floatcmp);
 	return past_data[k];
 }
 
