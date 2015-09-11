@@ -32,10 +32,6 @@ Now, some miscellaneous files:
 -util/qsort_reentrant.{c,h}
   From FreeBSD.  Distributed under the BSD license, big surprise.
 
--util/radix.c
-  (c) Herf Consulting LLC
-  Use for anything you want, just tell me what you do with it.
-
 -sdss/sqlcl.py
   (c) Tamas Budavari
 

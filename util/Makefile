@@ -43,7 +43,7 @@ ANFILES_DEPS += $(QFITS_LIB)
 endif
 
 SIMPLEXY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o \
-	dpeaks.o dselip.o dsigma.o dsmooth.o image2xy.o simplexy.o radix.o ctmf.o
+	dpeaks.o dselip.o dsigma.o dsmooth.o image2xy.o simplexy.o ctmf.o
 ANUTILS_OBJ += $(SIMPLEXY_OBJ)
 
 include $(COMMON)/makefile.cairo
@@ -116,7 +116,7 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	fit-wcs.h sip-utils.h sip.h sip_qfits.h starkd.h starutil.h starutil.inc \
 	starxy.h tic.h \
 	xylist.h coadd.h convolve-image.h resample.h multiindex.h scamp.h \
-	ctmf.h dimage.h image2xy.h radix.h simplexy-common.h simplexy.h \
+	ctmf.h dimage.h image2xy.h simplexy-common.h simplexy.h \
 	tabsort.h wcs-rd2xy.h wcs-xy2rd.h
 
 ANUTILS_H_PATH := $(addprefix $(INCLUDE_DIR)/,$(ANUTILS_H))

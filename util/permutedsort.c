@@ -131,6 +131,12 @@ int compare_int64_desc(const void* v1, const void* v2) {
 	COMPARE(f1, f2, >, <);
 }
 
+// Versions for use with QSORT_R
+int QSORT_COMPARISON_FUNCTION(compare_floats_asc_r,
+                              void* thunk, const void* v1, const void* v2) {
+    return compare_floats_asc(v1, v2);
+}
+
 
 #undef COMPARE
 
