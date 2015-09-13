@@ -90,7 +90,7 @@ int resort_xylist(const char* infn, const char* outfn,
         datstart = anqfits_data_start  (anq, ext);
 
         if (!anqfits_is_table(anq, ext)) {
-            ERROR("Extention %i isn't a table. Skipping", ext);
+            ERROR("Extension %i isn't a table. Skipping", ext);
 			continue;
 		}
         // Copy the header as-is.
