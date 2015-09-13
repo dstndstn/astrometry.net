@@ -74,7 +74,7 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
         datstart = anqfits_data_start  (anq, ext);
         datsize  = anqfits_data_size   (anq, ext);
 		if (!anqfits_is_table(anq, ext)) {
-            ERROR("Extention %i isn't a table. Skipping.\n", ext);
+            ERROR("Extension %i isn't a table. Skipping.\n", ext);
 			continue;
 		}
 		table = anqfits_get_table(anq, ext);
