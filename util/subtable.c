@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (!anqfits_is_table(anq, ext)) {
-			ERROR("extention %i isn't a table.\n", ext);
+			ERROR("Extension %i isn't a table.\n", ext);
 			// HACK - just copy it.
 			return -1;
 		}
