@@ -59,12 +59,6 @@ Now, some miscellaneous files:
   (c) Wm. Randolph Franklin, MIT license
   From http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 
--blind/spike_join.c
-  (c) Christopher Stumm, GPL v2+
-
--catalogs/ucac4-fits.c, ucac4.c, ucac4tofits.c
-  (c) Michal Kočer, Klet Observatory, GPL v2
-
 -libkd/an-fls.h
   (c) Linus Torvalds, GPL v2
 
