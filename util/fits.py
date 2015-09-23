@@ -254,6 +254,9 @@ class tabledata(object):
     def __str__(self):
         return 'tabledata object with %i rows and %i columns' % (len(self), len([k for k in self.__dict__.keys() if not k.startswith('_')]))
     def __repr__(self):
+        if len(self) == 1:
+            return '<tabledata object with %i rows and %i columns: %s>' % (
+                len(self), len(self.columns()), ', '.join(['%s=%s' % (k,self.get(k)[0]) for k in self.columns()]))
         return '<tabledata object with %i rows and %i columns: %s>' % (
             len(self), len(self.columns()), ', '.join(self.columns()))
     
