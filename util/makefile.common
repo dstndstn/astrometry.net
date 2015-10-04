@@ -154,8 +154,12 @@ ifneq ($(origin ARCH_FLAGS),undefined)
 else
   # Try to guess some good compiler flags for this CPU.
 
-  # Use -march=native if it's available (gcc 4.2 and above)
-  ARG := -march=native
+  # Use -march=native if it's available (gcc 4.2 and above) and if we are not packaging 
+  # for a distribution
+  MARCH_NATIVE ?= yes
+  ifeq ($(MARCH_NATIVE),yes)
+    ARG := -march=native
+  endif
   X := $(shell $(CCTEST))
   ifneq ($(X),)
     FLAGS_DEF += $(X)

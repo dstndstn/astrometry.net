@@ -23,6 +23,11 @@
 # is to turn optimization on.  See util/makefile.common for details.
 #export OPTIMIZE = no
 
+# Build package for a Linux disribution? Then -march=native has to be
+# disabled, otherwise the package won't work on all machines.
+# Comment out the following line to disable native flag, default is yes
+#export MARCH_NATIVE = no 
+
 all:
 
 BASEDIR := .
