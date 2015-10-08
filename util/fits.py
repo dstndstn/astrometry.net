@@ -255,8 +255,14 @@ class tabledata(object):
         return 'tabledata object with %i rows and %i columns' % (len(self), len([k for k in self.__dict__.keys() if not k.startswith('_')]))
     def __repr__(self):
         if len(self) == 1:
+            vals = []
+            for k in self.columns():
+                v = self.get(k)
+                if (not np.isscalar(v)) and len(v) == 1:
+                    v = v[0]
+                vals.append(v)
             return '<tabledata object with %i rows and %i columns: %s>' % (
-                len(self), len(self.columns()), ', '.join(['%s=%s' % (k,self.get(k)[0]) for k in self.columns()]))
+                len(self), len(self.columns()), ', '.join(['%s=%s' % (k,v) for k,v in zip(self.columns(), vals)]))
         return '<tabledata object with %i rows and %i columns: %s>' % (
             len(self), len(self.columns()), ', '.join(self.columns()))
     
@@ -265,17 +271,17 @@ class tabledata(object):
         print('tabledata object with %i rows and %i columns:' % (len(self),  len(keys)))
         keys.sort()
         for k in keys:
-            print('  ', k, end='')
+            print('  ', k, end=' ')
             v = self.get(k)
-            print('(%s)' % (str(type(v))), end='')
+            print('(%s)' % (str(type(v))), end=' ')
             if np.isscalar(v):
-                print(v, end='')
+                print(v, end=' ')
             elif hasattr(v, 'shape'):
-                print('shape', v.shape, end='')
+                print('shape', v.shape, end=' ')
             elif hasattr(v, '__len__'):
-                print('length', len(v), end='')
+                print('length', len(v), end=' ')
             else:
-                print(v, end='')
+                print(v, end=' ')
 
             if hasattr(v, 'dtype'):
                 print('dtype', v.dtype, end='')
