@@ -33,14 +33,14 @@ def _read_proc_maps(pid):
 
 def get_memusage(mmaps=True):
     ru = resource.getrusage(resource.RUSAGE_SELF)
-    pgsize = resource.getpagesize()
-    maxrss = (ru.ru_maxrss * pgsize / 1e6)
-    #print 'shared memory size:', (ru.ru_ixrss / 1e6), 'MB'
-    #print 'unshared memory size:', (ru.ru_idrss / 1e6), 'MB'
-    #print 'unshared stack size:', (ru.ru_isrss / 1e6), 'MB'
-    #print 'shared memory size:', ru.ru_ixrss
-    #print 'unshared memory size:', ru.ru_idrss
-    #print 'unshared stack size:', ru.ru_isrss
+    #pgsize = resource.getpagesize()
+    maxrss = float(ru.ru_maxrss) / 1e6
+    # print('shared memory size:', (ru.ru_ixrss / 1e6), 'MB')
+    # print('unshared memory size:', (ru.ru_idrss / 1e6), 'MB')
+    # print('unshared stack size:', (ru.ru_isrss / 1e6), 'MB')
+    # print('shared memory size:', ru.ru_ixrss)
+    # print('unshared memory size:', ru.ru_idrss)
+    # print('unshared stack size:', ru.ru_isrss)
     mu = dict(maxrss=[maxrss, 'MB'])
 
     pid = os.getpid()
@@ -115,7 +115,7 @@ class MemMeas(object):
         self.mem0 = get_memusage(mmaps=False)
     def format_diff(self, other):
         txt = []
-        for k in ['VmPeak', 'VmSize', 'VmRSS', 'VmData']:
+        for k in ['VmPeak', 'VmSize', 'VmRSS', 'VmData', 'maxrss']:
             if not k in self.mem0:
                 continue
             val,unit = self.mem0[k]

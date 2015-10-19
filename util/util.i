@@ -1192,6 +1192,12 @@ anwcs.get_cd = anwcs_get_cd
         return sub;
     }
 
+    sip_t* scale(double factor) {
+        sip_t* s = (sip_t*)calloc(1, sizeof(sip_t));
+        sip_scale($self, s, factor);
+        return s;
+    }
+
     double pixel_scale() { return sip_pixel_scale($self); }
 
     void radec_center(double *p_ra, double *p_dec) {

@@ -434,7 +434,7 @@ double tan_pixel_scale(const tan_t* tan) {
 	return scale;
 }
 
-// returns pixel scale in arcseconds (NOT arcsec^2)
+// returns pixel scale in arcseconds
 double sip_pixel_scale(const sip_t* sip) {
 	return tan_pixel_scale(&(sip->wcstan));
 }

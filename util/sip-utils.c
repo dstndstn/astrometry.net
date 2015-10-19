@@ -89,10 +89,7 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
             NX,NY, xlo, xhi, ylo, yhi);
 
 	// Number of coefficients to solve for:
-	// We only compute the upper triangle polynomial terms, and we
-	// exclude the 0,0 element.
-	//N = (inv_sip_order + 1) * (inv_sip_order + 2) / 2 - 1;
-    // Wait, why do we exclude 0,0?
+	// We only compute the upper triangle polynomial terms
     N = (inv_sip_order + 1) * (inv_sip_order + 2) / 2;
 
 	// Number of samples to fit.
@@ -155,19 +152,21 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 			// Polynomial terms...
 			j = 0;
 			for (p = 0; p <= inv_sip_order; p++)
-				for (q = 0; q <= inv_sip_order; q++)
-					if (//(p + q > 0) &&
-						(p + q <= inv_sip_order)) {
-						assert(j < N);
-						gsl_matrix_set(mA, i, j, pow(U, (double)p) * pow(V, (double)q));
-						j++;
-					}
+				for (q = 0; q <= inv_sip_order; q++) {
+					if (p + q > inv_sip_order)
+                        continue;
+                    assert(j < N);
+                    gsl_matrix_set(mA, i, j,
+                                   pow(U, (double)p) * pow(V, (double)q));
+                    j++;
+                }
 			assert(j == N);
 			gsl_vector_set(b1, i, -fuv);
 			gsl_vector_set(b2, i, -guv);
 			i++;
 		}
 	}
+    assert(i == M);
 
 	// Solve the linear equation.
     if (gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL)) {
@@ -177,17 +176,15 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 
 	// Extract the coefficients
 	j = 0;
-    sip->ap[0][0] = 0.;
-    sip->bp[0][0] = 0.;
 	for (p = 0; p <= inv_sip_order; p++)
-		for (q = 0; q <= inv_sip_order; q++)
-			if (//(p + q > 0) &&
-				(p + q <= inv_sip_order)) {
-				assert(j < N);
-				sip->ap[p][q] = gsl_vector_get(x1, j);
-				sip->bp[p][q] = gsl_vector_get(x2, j);
-				j++;
-			}
+		for (q = 0; q <= inv_sip_order; q++) {
+			if ((p + q > inv_sip_order))
+                continue;
+            assert(j < N);
+            sip->ap[p][q] = gsl_vector_get(x1, j);
+            sip->bp[p][q] = gsl_vector_get(x2, j);
+            j++;
+        }
 	assert(j == N);
 
 	// Check that we found values that actually invert the polynomial.
@@ -525,11 +522,47 @@ void tan_scale(const tan_t* tanin, tan_t* tanout,
 	memmove(tanout, tanin, sizeof(tan_t));
 	tanout->imagew *= scale;
 	tanout->imageh *= scale;
-	// +1 issues?
-	tanout->crpix[0] = 1 + scale * (tanin->crpix[0] - 1);
-	tanout->crpix[1] = 1 + scale * (tanin->crpix[1] - 1);
+
+	tanout->crpix[0] = 0.5 + scale * (tanin->crpix[0] - 0.5);
+	tanout->crpix[1] = 0.5 + scale * (tanin->crpix[1] - 0.5);
 	tanout->cd[0][0] /= scale;
 	tanout->cd[0][1] /= scale;
 	tanout->cd[1][0] /= scale;
 	tanout->cd[1][1] /= scale;
 }
+
+void sip_scale(const sip_t* wcsin, sip_t* wcsout,
+			   double scale) {
+    int i, j;
+	memmove(wcsout, wcsin, sizeof(sip_t));
+    tan_scale(&(wcsin->wcstan), &(wcsout->wcstan), scale);
+    for (i=0; i<=wcsin->a_order; i++) {
+        for (j=0; j<=wcsin->a_order; j++) {
+            if (i + j > wcsin->a_order)
+                continue;
+            wcsout->a[i][j] *= pow(scale, 1 - (i+j));
+        }
+    }
+    for (i=0; i<=wcsin->b_order; i++) {
+        for (j=0; j<=wcsin->b_order; j++) {
+            if (i + j > wcsin->b_order)
+                continue;
+            wcsout->b[i][j] *= pow(scale, 1 - (i+j));
+        }
+    }
+    for (i=0; i<=wcsin->ap_order; i++) {
+        for (j=0; j<=wcsin->ap_order; j++) {
+            if (i + j > wcsin->ap_order)
+                continue;
+            wcsout->ap[i][j] *= pow(scale, 1 - (i+j));
+        }
+    }
+    for (i=0; i<=wcsin->bp_order; i++) {
+        for (j=0; j<=wcsin->bp_order; j++) {
+            if (i + j > wcsin->bp_order)
+                continue;
+            wcsout->bp[i][j] *= pow(scale, 1 - (i+j));
+        }
+    }
+}
+
