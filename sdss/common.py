@@ -425,6 +425,24 @@ class AsTrans(SdssFile):
 
         self._cache_vals()
 
+    @staticmethod
+    def read(fn):
+        import fitsio
+        F = fitsio.FITS(fn, lower=True)
+        phdr = F[0].read_header()
+        band   = phdr['FILTER'].strip()
+        run    = phdr['RUN']
+        camcol = phdr['CAMCOL']
+        field  = 0  # 'FRAME' != field
+        tab = fits_table(F[3].read())
+        assert(len(tab) == 1)
+        tab = tab[0]
+        # print(tab.about())
+        return AsTrans(run, camcol, field, band,
+                       node=np.deg2rad(tab.node),
+                       incl=np.deg2rad(tab.incl),
+                       astrans=tab, cut_to_band=False)
+        
     def __str__(self):
         return (SdssFile.__str__(self) +
                 ' (node=%g, incl=%g)' % (self.node, self.incl))
