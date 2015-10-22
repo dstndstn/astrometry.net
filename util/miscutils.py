@@ -479,6 +479,17 @@ def get_overlapping_region(xlo, xhi, xmin, xmax):
     of an image, [xlo, xhi], and bounds for the image [xmin, xmax],
     returns the range of coordinates that are in-bounds, and the
     corresponding region within the desired cutout.
+
+    For example, say you have an image of shape H,W and you want to
+    cut out a region of halfsize "hs" around pixel coordinate x,y, but
+    so that coordinate x,y is centered in the cutout even if x,y is
+    close to the edge.  You can do:
+
+    cutout = np.zeros((hs*2+1, hs*2+1), img.dtype)
+    iny,outy = get_overlapping_region(y-hs, y+hs, 0, H-1)
+    inx,outx = get_overlapping_region(x-hs, x+hs, 0, W-1)
+    cutout[outy,outx] = img[iny,inx]
+    
     '''
     if xlo > xmax or xhi < xmin or xlo > xhi or xmin > xmax:
         return ([], [])
