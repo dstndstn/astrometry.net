@@ -26,11 +26,10 @@ int eigen_solve_least_squares(ematrix_t* A, evector_t** B,
     //VectorXd;
 
     //Map<MatrixXd> mA(A->data, A->rows, A->cols, RowMajor);
+    int i;
 
     Map<Matrix<double, Dynamic, Dynamic, RowMajor> >
         mA(A->data, A->rows, A->cols);
-
-    //Map<MatrixXd> mB(B->data, B->rows, B->cols, RowMajor);
 
     //cout << "mA:" << mA;
     
@@ -45,7 +44,18 @@ int eigen_solve_least_squares(ematrix_t* A, evector_t** B,
         printf("]\n");
     }
 
-    //cout << "mB:" << mB;
+    for (i=0; i<NB; i++) {
+        printf("mB(%i):\n", i);
+        //Map<MatrixXd> mB(B[i]->data, B[i]->N, RowMajor);
+        Map<VectorXd> mB(B[i]->data, B[i]->N, RowMajor);
+        //cout << "mB:" << mB;
+        printf("[");
+        //for (c=0; c<mB.cols(); c++) {
+        for (c=0; c<mB.size(); c++) {
+            printf("%s %8.3g", c ? "," : " ", mB(c));
+        }
+        printf("]\n");
+    }
 
     return 0;
 }

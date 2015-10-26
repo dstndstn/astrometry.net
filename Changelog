@@ -1,3 +1,25 @@
+0.64:
+	Minor; add sip_scale.  Tag for legacysurvey.org Data Release 2.
+
+0.63:
+	Additional minor changes for Debian packaging.
+
+0.62:
+	More relicensing with permission from contributors; remove radix.c
+
+0.61:
+	Minor changes for Debian packaging.
+
+0.60:
+	Relicense most of the Astrometry.net code proper under a BSD-3
+	license.  Whole package still under GPL-3+ thanks to GNU gsl.
+
+0.57:
+	Makefile fixes: create dirs before install; propagate build flags
+	Add man pages from Ole Streicher
+	Some py3 friendliness
+	Add timingpool.py
+
 0.56:
 	implement anwcs_write_to
 	Makefile files for install-indexes
