@@ -95,7 +95,18 @@ class multiproc(object):
         if wrap or self.wrap_all:
             return self.pool.map_async(funcwrapper(func), iterable)
         return self.pool.map_async(func, iterable)
-        
+
+    def imap_unordered(self, func, iterable, chunksize=None, wrap=False):
+        cs = chunksize
+        if cs is None:
+            cs = self.map_chunksize
+        if self.pool is None:
+            import itertools
+            return itertools.imap(func, iterable)
+        if wrap or self.wrap_all:
+            func = funcwrapper(func)
+        return self.pool.imap_unordered(func, iterable, chunksize=cs)
+    
     def apply(self, f, args, wrap=False, kwargs={}):
         if self.pool is None:
             return FakeAsyncResult(f(*args, **kwargs))

@@ -92,15 +92,10 @@ TimingPoolMeas, that records & reports the pool's worker CPU time.
 # Only _multiprocessing/socket_connection.c is used on non-Windows platforms.
 
 class TimingConnection():
-    def stats(self):
-        return dict(pickle_objs = self.pobjs,
-                    pickle_bytes = self.pbytes,
-                    pickle_megabytes = 1e-6 * self.pbytes,
-                    pickle_cputime = self.ptime,
-                    unpickle_objs = self.upobjs,
-                    unpickle_bytes = self.upbytes,
-                    unpickle_megabytes = 1e-6 * self.upbytes,
-                    unpickle_cputime = self.uptime)
+    '''
+    A *Connection* wrapper that keeps track of how many objects and
+    how many bytes are pickled, and how long that takes.
+    '''
     
     def __init__(self, fd, writable=True, readable=True):
         self.real = Connection(fd, writable=writable, readable=readable)
@@ -110,8 +105,23 @@ class TimingConnection():
         self.upbytes = 0
         self.pobjs = 0
         self.upobjs = 0
+
+    def stats(self):
+        '''
+        Returns statistics of the objects handled by this connection.
+        '''
+        return dict(pickle_objs = self.pobjs,
+                    pickle_bytes = self.pbytes,
+                    pickle_megabytes = 1e-6 * self.pbytes,
+                    pickle_cputime = self.ptime,
+                    unpickle_objs = self.upobjs,
+                    unpickle_bytes = self.upbytes,
+                    unpickle_megabytes = 1e-6 * self.upbytes,
+                    unpickle_cputime = self.uptime)
+
     def poll(self):
         return self.real.poll()
+
     def recv(self):
         bytes = self.real.recv_bytes()
         t0 = time.time()
@@ -135,14 +145,24 @@ class TimingConnection():
         return self.real.close()
 
 def TimingPipe():
+    '''
+    Creates a pipe composed of two TimingConnection objects.
+    '''
     fd1, fd2 = os.pipe()
     c1 = TimingConnection(fd1, writable=False)
     c2 = TimingConnection(fd2, readable=False)
     return c1,c2
 
 class TimingSimpleQueue(multiprocessing.queues.SimpleQueue):
+    '''
+    A *SimpleQueue* subclass that uses a *TimingPipe* object to keep
+    stats on how much pickling objects costs.
+    '''
     # new method
     def stats(self):
+        '''
+        Returns stats on the objects sent through this queue.
+        '''
         S1 = self._reader.stats()
         S2 = self._writer.stats()
         return dict([(k, S1[k]+S2[k]) for k in S1.keys()])
@@ -168,6 +188,9 @@ class TimingSimpleQueue(multiprocessing.queues.SimpleQueue):
 def timing_worker(inqueue, outqueue, progressqueue,
                  initializer=None, initargs=(),
                  maxtasks=None):
+    '''
+    A modified worker thread that tracks how much CPU time is used.
+    '''
     assert(maxtasks is None or (type(maxtasks) == int and maxtasks > 0))
     put = outqueue.put
     get = inqueue.get
@@ -237,6 +260,10 @@ def timing_worker(inqueue, outqueue, progressqueue,
 
         
 def timing_handle_results(outqueue, get, cache, beancounter, pool):
+    '''
+    A modified handle-results thread that tracks how much CPU time is
+    used by workers.
+    '''
     thread = threading.current_thread()
     while 1:
         try:
@@ -380,6 +407,9 @@ def timing_handle_tasks(taskqueue, put, outqueue, progressqueue, pool,
     
 
 class BeanCounter(object):
+    '''
+    A class to keep track of the CPU and Wall time used by workers.
+    '''
     def __init__(self):
         self.cpu = 0.
         self.wall = 0.
@@ -410,6 +440,10 @@ class BeanCounter(object):
         return 'CPU time: %.3fs s, Wall time: %.3fs' % (self.get_cpu(), self.get_wall())
 
 class TimingPoolMeas(object):
+    '''
+    An astrometry.util.ttime Measurement object to measure the resources used
+    by workers, and by pickling objects.
+    '''
     def __init__(self, pool, pickleTraffic=True):
         self.pool = pool
         self.pickleTraffic = pickleTraffic
@@ -417,6 +451,10 @@ class TimingPoolMeas(object):
         return TimingPoolTimestamp(self.pool, self.pickleTraffic)
 
 class TimingPoolTimestamp(object):
+    '''
+    The current resources used by a pool of workers, for
+    astrometry.util.ttime
+    '''
     def __init__(self, pool, pickleTraffic):
         self.pool = pool
         self.t0 = self.now(pickleTraffic)
@@ -442,6 +480,11 @@ class TimingPoolTimestamp(object):
         return stats
 
 class TimingPool(multiprocessing.pool.Pool):
+    '''
+    A python multiprocessing Pool subclass that keeps track of the
+    resources used by workers, and tracks the expense of pickling
+    objects.
+    '''
     def _setup_queues(self):
         self._inqueue  = TimingSimpleQueue()
         self._outqueue = TimingSimpleQueue()
@@ -493,12 +536,12 @@ class TimingPool(multiprocessing.pool.Pool):
         async = self.map_async(func, iterable, chunksize)
         while True:
             try:
-                # print 'Waiting for async result...'
+                #print('map: waiting for map_async result...')
                 res = async.get(1)
-                # print 'Got async result'
+                #print('map: got async result')
                 return res
             except multiprocessing.TimeoutError:
-                # print 'Timeout waiting for async result.'
+                #print('map: timeout waiting for async result.')
                 continue
 
     def map_async(self, func, iterable, chunksize=None, callback=None):
