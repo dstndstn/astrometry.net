@@ -26,7 +26,6 @@ double evector_get(const evector_t* m, int i);
 
 //int eigen_solve_least_squares(const ematrix_t* A, const evector_t** B,
 int eigen_solve_least_squares(ematrix_t* A, evector_t** B,
-                              evector_t** X, evector_t** resids,
-                              int NB);
+                              evector_t** X, int NB);
 
 

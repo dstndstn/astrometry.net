@@ -16,45 +16,44 @@ extern "C" {
 } // fool emacs indenter
 #endif
 
-//int eigen_solve_least_squares(const ematrix_t* A, const evector_t** B,
-
 int eigen_solve_least_squares(ematrix_t* A, evector_t** B,
-                               evector_t** X, evector_t** resids,
-                               int NB) {
-    //
-    //MatrixXd;
-    //VectorXd;
-
-    //Map<MatrixXd> mA(A->data, A->rows, A->cols, RowMajor);
+                               evector_t** X, int NB) {
     int i;
+    int r,c;
 
     Map<Matrix<double, Dynamic, Dynamic, RowMajor> >
         mA(A->data, A->rows, A->cols);
 
-    //cout << "mA:" << mA;
-    
-    int r,c;
+    /*
+     printf("mA:\n");
+     for (r=0; r<mA.rows(); r++) {
+     printf("[");
+     for (c=0; c<mA.cols(); c++) {
+     printf("%s %8.3g", c ? "," : " ", mA(r,c));
+     }
+     printf("]\n");
+     }
+     */
 
-    printf("mA:\n");
-    for (r=0; r<mA.rows(); r++) {
-        printf("[");
-        for (c=0; c<mA.cols(); c++) {
-            printf("%s %8.3g", c ? "," : " ", mA(r,c));
-        }
-        printf("]\n");
-    }
+    /*
+     for (i=0; i<NB; i++) {
+     printf("mB(%i):\n", i);
+     Map<VectorXd> mB(B[i]->data, B[i]->N, RowMajor);
+     printf("[");
+     for (c=0; c<mB.size(); c++) {
+     printf("%s %8.3g", c ? "," : " ", mB(c));
+     }
+     printf("]\n");
+     }
+     */
 
+    JacobiSVD<MatrixXd> svd(mA, ComputeThinU | ComputeThinV);
     for (i=0; i<NB; i++) {
-        printf("mB(%i):\n", i);
-        //Map<MatrixXd> mB(B[i]->data, B[i]->N, RowMajor);
-        Map<VectorXd> mB(B[i]->data, B[i]->N, RowMajor);
-        //cout << "mB:" << mB;
-        printf("[");
-        //for (c=0; c<mB.cols(); c++) {
-        for (c=0; c<mB.size(); c++) {
-            printf("%s %8.3g", c ? "," : " ", mB(c));
-        }
-        printf("]\n");
+        Map<VectorXd> b(B[i]->data, B[i]->N, RowMajor);
+        VectorXd x = svd.solve(b);
+        // copy results back to C space...
+        for (r=0; r<x.size(); r++)
+            evector_set(X[i], r, x[r]);
     }
 
     return 0;
