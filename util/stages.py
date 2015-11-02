@@ -44,6 +44,41 @@ class CallGlobalTime(CallGlobal):
 
 def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
              update=True, write=True, initial_args={}, **kwargs):
+    '''
+    Run to a given *stage*.
+
+    Each stage is a function.
+    
+    Each stage takes a dict and returns None or a dict.
+
+    Each stage (except the first one!) has a prerequisite stage.
+
+    Results after running each stage can be written to a pickle file,
+    and later read instead of running the stage.
+
+    Parameters
+    ----------
+    stage - int or string
+        Stage name
+    picklepat - string
+        Filename pattern to which pickle data should be written
+    stagefunc - function
+        Function to call for each stage.
+    force - list of stage name/number
+        List of stages to run, ignoring existing pickle files
+    forceall - boolean
+        Force running all stages; ignore all existing pickle files
+    prereqs - dict of stage->stage mappings
+        Defines the dependencies between stages
+    update - boolean
+        Update prerequiste dict with results before writing out pickle
+    write - boolean, or list of stages
+        Write a pickle for this stage / all stages?
+    initial_args - dict
+        Arguments to pass to the first stage
+    kwargs - dict
+        Keyword args added to the prerequisites before running each stage
+    '''
     # NOTE, if you add or change args here, be sure to update the recursive
     # "runstage" call below!!
     print 'Runstage', stage
@@ -96,7 +131,7 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
             P.update(R)
         R = P
         
-    if write:
+    if write is True or stage in write:
         print 'Saving pickle', pfn
         print 'Pickling keys:', R.keys()
         # Create directory, if necessary.
