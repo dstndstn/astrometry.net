@@ -130,8 +130,10 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
         if R is not None:
             P.update(R)
         R = P
-        
-    if write is True or stage in write:
+
+    if not write:
+        pass
+    elif (write is True or stage in write):
         print 'Saving pickle', pfn
         print 'Pickling keys:', R.keys()
         # Create directory, if necessary.
