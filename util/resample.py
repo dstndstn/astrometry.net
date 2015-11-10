@@ -11,7 +11,7 @@ class NoOverlapError(OverlapError):
 class SmallOverlapError(OverlapError):
     pass
 
-def resample_with_wcs(targetwcs, wcs, Limages, L, spline=True,
+def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
                       splineFallback = True,
                       splineStep = 25,
                       splineMargin = 12,
