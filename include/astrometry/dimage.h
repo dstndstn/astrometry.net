@@ -9,9 +9,9 @@
 #include <stdint.h>
 
 // this is only really included here so that it can be tested :)
-typedef uint16_t label_t;
+typedef uint16_t dimage_label_t;
 #define LABEL_MAX UINT16_MAX
-label_t collapsing_find_minlabel(label_t label, label_t *equivs);
+dimage_label_t collapsing_find_minlabel(dimage_label_t label, dimage_label_t *equivs);
 
 int dfind2(const int* image, int nx, int ny, int* objectimg, int* p_nobjects);
 int dfind2_u8(const unsigned char* image, int nx, int ny, int* objectimg, int* p_nobjects);

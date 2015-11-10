@@ -67,8 +67,8 @@ int initial_max_groups = 50;
 
 /* Finds the root of this set (which is the min label) but collapses
  * intermediate labels as it goes. */
-label_t collapsing_find_minlabel(label_t label,
-                                 label_t *equivs) {
+dimage_label_t collapsing_find_minlabel(dimage_label_t label,
+                                 dimage_label_t *equivs) {
 	int min;
 	min = label;
 	while (equivs[min] != min)
@@ -81,14 +81,14 @@ label_t collapsing_find_minlabel(label_t label,
 	return min;
 }
 
-static label_t relabel_image(il* on_pixels,
+static dimage_label_t relabel_image(il* on_pixels,
                              int maxlabel,
-                             label_t* equivs,
+                             dimage_label_t* equivs,
                              int* object) {
     int i;
-	label_t maxcontiguouslabel = 0;
-	label_t *number;
-	number = malloc(sizeof(label_t) * maxlabel);
+	dimage_label_t maxcontiguouslabel = 0;
+	dimage_label_t *number;
+	number = malloc(sizeof(dimage_label_t) * maxlabel);
 	assert(number);
 	for (i = 0; i < maxlabel; i++)
 		number[i] = LABEL_MAX;

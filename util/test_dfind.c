@@ -262,9 +262,9 @@ void test_very_nasty(CuTest* tc) {
 }
 
 void test_collapsing_find_simple(CuTest* tc) {
-    label_t equivs[] = {0, 0, 1, 2};
+    dimage_label_t equivs[] = {0, 0, 1, 2};
     /* 0  1  2  3 */
-    label_t minlabel = collapsing_find_minlabel(3, equivs);
+    dimage_label_t minlabel = collapsing_find_minlabel(3, equivs);
 	CuAssertIntEquals(tc, minlabel, 0);
 	CuAssertIntEquals(tc, equivs[0], 0);
 	CuAssertIntEquals(tc, equivs[1], 0);
