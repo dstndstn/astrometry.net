@@ -5,8 +5,6 @@
 from astrometry.util.fits import *
 from astrometry.util.starutil_numpy import *
 from astrometry.util.find_data_file import *
-#from astrometry.util.sip import *
-from astrometry.util.sdss_filenames import *
 from os.path import basename,dirname
 import numpy as np
 
