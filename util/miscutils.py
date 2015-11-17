@@ -252,6 +252,13 @@ def clip_wcs(wcs1, wcs2, makeConvex=True, pix1=None, pix2=None):
 
 
 def polygon_area(poly):
+    '''
+    NOTE, unlike many of the other methods in this module, takes:
+
+    poly = (xx,yy)
+
+    where xx,yy MUST repeat the starting point at the end of the polygon.
+    '''
     xx,yy = poly
     x,y = np.mean(xx), np.mean(yy)
     area = 0.
