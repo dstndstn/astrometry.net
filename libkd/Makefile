@@ -93,7 +93,7 @@ spherematch_c$(PYTHON_SO_EXT): pyspherematch.c setup.py $(SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" \
 	SLIB="$(SLIB)" \
 	INC="$(INC)" \
-	CFLAGS="$(ANUTILS_CFLAGS)" \
+	CFLAGS="$(CFLAGS)" \
 	python setup.py build_ext --inplace --force --build-temp .
 
 # pyspherematch.c includes Python.h -- so have to make sure to add Python.h include path
