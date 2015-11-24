@@ -427,14 +427,19 @@ class AsTrans(SdssFile):
 
     @staticmethod
     def read(fn, F=None, primhdr=None, table=None):
+        '''
+        F: fitsio.FITS object to use an already-open file.
+        primhdr: FITS header object for the primary HDU.
+        table: astrometry.util.fits table
+        '''
         if F is None:
             import fitsio
             F = fitsio.FITS(fn)
         if primhdr is None:
-            phdr = F[0].read_header()
-        band   = phdr['FILTER'].strip()
-        run    = phdr['RUN']
-        camcol = phdr['CAMCOL']
+            primhdr = F[0].read_header()
+        band   = primhdr['FILTER'].strip()
+        run    = primhdr['RUN']
+        camcol = primhdr['CAMCOL']
         field  = 0  # 'FRAME' != field
         if table is None:
             tab = fits_table(F[3].read(lower=True))
