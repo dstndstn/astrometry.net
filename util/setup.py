@@ -39,7 +39,7 @@ c_swig_module = Extension('_util',
                           extra_compile_args = cflags,
                           extra_link_args=link,
                           depends=objs,
-                          swig_opts=['-I'+d for d in inc] + cflags,
+                          swig_opts=['-I'+d for d in inc],
 	)
 
 setup(cmdclass={'build_ext': an_build_ext},
