@@ -42,6 +42,7 @@
 
 #include "qfits_header.h"
 #include "qfits_rw.h"
+#include "wcs-pv2sip.h"
 
 #define true 1
 #define false 0
@@ -1097,7 +1098,20 @@ def fitsio_to_qfits_header(hdr):
     return qhdr
 %}
 
+%include "wcs-pv2sip.h"
 
+%pythoncode %{
+def wcs_pv2sip_hdr(hdr, order=5, xlo=0, xhi=0, ylo=0, yhi=0,
+                   stepsize=0, W=0, H=0):
+    qhdr = fitsio_to_qfits_header(hdr)
+    forcetan = False
+    doshift = 1
+    scamp = False
+
+    sip = wcs_pv2sip_header(qhdr, None, 0, stepsize, xlo, xhi, ylo, yhi, W, H,
+                            order, forcetan, doshift)
+    return sip
+%}
 
 
 %typemap(in) double [ANY] (double temp[$1_dim0]) {

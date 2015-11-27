@@ -99,7 +99,7 @@ qfits_header * qfits_header_read_hdr_string(
         printf("Header string is null; returning null\n");
         return NULL;
     }
-    printf("Parsing header string of length %i\n", nb_char);
+    //printf("Parsing header string of length %i\n", nb_char);
 
     /* Initialise */
     key = val = com = NULL; 

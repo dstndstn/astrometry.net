@@ -117,7 +117,7 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	starxy.h tic.h \
 	xylist.h coadd.h convolve-image.h resample.h multiindex.h scamp.h \
 	ctmf.h dimage.h image2xy.h simplexy-common.h simplexy.h \
-	tabsort.h wcs-rd2xy.h wcs-xy2rd.h
+	tabsort.h wcs-rd2xy.h wcs-xy2rd.h wcs-pv2sip.h
 
 ANUTILS_H_PATH := $(addprefix $(INCLUDE_DIR)/,$(ANUTILS_H))
 

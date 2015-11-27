@@ -162,7 +162,7 @@ int sip_get_image_size(const qfits_header* hdr, int* pW, int* pH) {
         // no IMAGE[WH].  Check for fpack-compressed image.
         int eq;
         char* str = fits_get_dupstring(hdr, "XTENSION");
-        printf("XTENSION: '%s'\n", str);
+        //printf("XTENSION: '%s'\n", str);
         // qfits_header_getstr turns the string double-quotes to single-quotes
         eq = streq(str, "BINTABLE");
         free(str);
