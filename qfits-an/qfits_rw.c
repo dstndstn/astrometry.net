@@ -95,7 +95,11 @@ qfits_header * qfits_header_read_hdr_string(
     int                 i, j;
 
     /* Check input */
-    if (hdr_str==NULL) return NULL;
+    if (hdr_str==NULL) {
+        printf("Header string is null; returning null\n");
+        return NULL;
+    }
+    printf("Parsing header string of length %i\n", nb_char);
 
     /* Initialise */
     key = val = com = NULL; 
@@ -131,6 +135,7 @@ qfits_header * qfits_header_read_hdr_string(
             /* If key or value cannot be found, trigger an error */
             if (key==NULL) {
                 qfits_header_destroy(hdr);
+                printf("Failed to parse line: %s\n", line);
                 return NULL;
             }
             /* Append card to linked-list */
@@ -142,10 +147,12 @@ qfits_header * qfits_header_read_hdr_string(
     /* The last key should be 'END' */
     if (strlen(key)!=3) {
         qfits_header_destroy(hdr);
+        printf("Last key not END\n");
         return NULL;
     } 
     if (key[0]!='E' || key[1]!='N' || key[2]!='D') {
         qfits_header_destroy(hdr);
+        printf("Last key not END\n");
         return NULL;
     }
     

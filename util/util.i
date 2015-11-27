@@ -40,6 +40,9 @@
 
 #include "fit-wcs.h"
 
+#include "qfits_header.h"
+#include "qfits_rw.h"
+
 #define true 1
 #define false 0
 
@@ -1073,6 +1076,29 @@ anwcs.get_cd = anwcs_get_cd
 
 
 %include "starutil.h"
+
+%apply (char *STRING, int LENGTH) { (const unsigned char *, int) };
+
+%include "qfits_header.h"
+%include "qfits_rw.h"
+
+%pythondynamic qfits_header;
+
+%pythoncode %{
+def fitsio_to_qfits_header(hdr):
+    hdrstr = ''
+    for rec in hdr.records():
+        cardstr = rec['card']
+        # pad
+        cardstr = cardstr + ' '*(80 - len(cardstr))
+        hdrstr += cardstr
+    hdrstr += 'END' + ' '*77
+    qhdr = qfits_header_read_hdr_string(hdrstr)
+    return qhdr
+%}
+
+
+
 
 %typemap(in) double [ANY] (double temp[$1_dim0]) {
   int i;

@@ -163,7 +163,7 @@ install-indexes:
 	done
 
 reconfig:
-	-rm -f util/os-features-config.h util/makefile.os-features
+	-rm -f $(INCLUDE_DIR)/os-features-config.h util/makefile.os-features
 	$(MAKE) -C util config
 .PHONY: reconfig
 

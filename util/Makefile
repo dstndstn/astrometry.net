@@ -29,7 +29,7 @@ ANBASE_OBJ := starutil.o mathutil.o bl-sort.o bl.o bt.o healpix-utils.o \
 ANBASE_DEPS :=
 
 ANUTILS_OBJ :=  sip-utils.o fit-wcs.o sip.o \
-	anwcs.o wcs-resample.o gslutils.o
+	anwcs.o wcs-resample.o gslutils.o wcs-pv2sip.o
 
 # Things that it depends on but that aren't linked in
 ANFILES_DEPS :=
@@ -97,7 +97,7 @@ PROGS := an-fitstopnm an-pnmtofits downsample-fits \
 	fits-flip-endian hpsplit wcs-to-tan	query-starkd \
 	get-healpix $(QFITS_UTILS) pad-file wcs-match wcs-pv2sip
 
-MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy fit-wcs
+MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy fit-wcs wcs-pv2sip
 
 all: $(ANBASE_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) $(PROGS) $(MAIN_PROGS)
 

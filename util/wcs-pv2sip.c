@@ -79,42 +79,21 @@ PV2_10  =  -4.717653697970E-04 /      + PV2_10* x**3
 
  */
 
-/**
- Evaluates the given TAN-TPV WCS header on a grid of points,
- fitting a SIP distortion solution to it.
 
- The grid can be specified by either:
 
- double* xy, int Nxy
 
- double stepsize=100, double xlo=0, double xhi=0, double ylo=0, double yhi=0
 
- xlo and xhi, if both 0, default to 1. and the WCS width
- ylo and yhi, if both 0, default to 1. and the WCS height
-
- The number of steps is chosen to be the closest step size to split the range
- xlo to xhi into an integer number of steps.
-
- imageW and imageH, if non-zero, override the image width read from the WCS,
- and ALSO the WCS width/height mentioned above.
-
- */
-int wcs_pv2sip(const char* wcsinfn, int ext,
-			   const char* wcsoutfn,
-			   anbool scamp_head_file,
-
-			   double* xy, int Nxy,
+sip_t* wcs_pv2sip_header(qfits_header* hdr,
+                         double* xy, int Nxy,
                
-               double stepsize,
-               double xlo, double xhi,
-               double ylo, double yhi,
+                         double stepsize,
+                         double xlo, double xhi,
+                         double ylo, double yhi,
 
-			   int imageW, int imageH,
-               int order,
-			   anbool forcetan,
-               int doshift) {
-
-	qfits_header* hdr = NULL;
+                         int imageW, int imageH,
+                         int order,
+                         anbool forcetan,
+                         int doshift) {
 	double* radec = NULL;
 	int rtn = -1;
 	tan_t tanwcs;
@@ -123,6 +102,7 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	int i, j;
     int nx, ny;
     double xstep, ystep;
+    sip_t* sip = NULL;
 
     /**
      From http://iraf.noao.edu/projects/mosaic/tpv.html
@@ -204,59 +184,19 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	double pv2[40];
 	double r;
 
-	if (scamp_head_file) {
-		size_t sz = 0;
-		char* txt;
-		char* prefix;
-		int np;
-		int nt;
-		unsigned char* txthdr;
-		sl* lines;
-		int i;
-		txt = file_get_contents(wcsinfn, &sz, TRUE);
-		if (!txt) {
-			ERROR("Failed to read file %s", wcsinfn);
-			goto bailout;
-		}
-		lines = sl_split(NULL, txt, "\n");
-		prefix =
-			"SIMPLE  =                    T / Standard FITS file                             "
-			"BITPIX  =                    8 / ASCII or bytes array                           "
-			"NAXIS   =                    0 / Minimal header                                 "
-			"EXTEND  =                    T / There may be FITS ext                          "
-			"WCSAXES =                    2 /                                                ";
-		np = strlen(prefix);
-		nt = np + FITS_LINESZ * sl_size(lines);
-		txthdr = malloc(nt);
-		memset(txthdr, ' ', np + FITS_LINESZ * sl_size(lines));
-		memcpy(txthdr, prefix, np);
-		for (i=0; i<sl_size(lines); i++)
-			memcpy(txthdr + np + i*FITS_LINESZ, sl_get(lines, i), strlen(sl_get(lines, i)));
-		sl_free2(lines);
-		hdr = qfits_header_read_hdr_string(txthdr, nt);
-		free(txthdr);
-		free(txt);
-	} else {
-		char* ct;
-		hdr = anqfits_get_header2(wcsinfn, ext);
+    char* ct;
+    ct = fits_get_dupstring(hdr, "CTYPE1");
+    if ((ct && streq(ct, "RA---TPV")) || forcetan) {
+        // http://iraf.noao.edu/projects/ccdmosaic/tpv.html
+        logmsg("Replacing CTYPE1 = %s header with RA---TAN\n", ct);
+        fits_update_value(hdr, "CTYPE1", "RA---TAN");
+    }
+    ct = fits_get_dupstring(hdr, "CTYPE2");
+    if ((ct && streq(ct, "DEC--TPV")) || forcetan) {
+        logmsg("Replacing CTYPE2 = %s header with DEC--TAN\n", ct);
+        fits_update_value(hdr, "CTYPE2", "DEC--TAN");
+    }
 
-		ct = fits_get_dupstring(hdr, "CTYPE1");
-		if ((ct && streq(ct, "RA---TPV")) || forcetan) {
-			// http://iraf.noao.edu/projects/ccdmosaic/tpv.html
-			logmsg("Replacing CTYPE1 = %s header with RA---TAN\n", ct);
-			fits_update_value(hdr, "CTYPE1", "RA---TAN");
-		}
-		ct = fits_get_dupstring(hdr, "CTYPE2");
-		if ((ct && streq(ct, "DEC--TPV")) || forcetan) {
-			logmsg("Replacing CTYPE2 = %s header with DEC--TAN\n", ct);
-			fits_update_value(hdr, "CTYPE2", "DEC--TAN");
-		}
-	}
-	if (!hdr) {
-		ERROR("Failed to read header: file %s, ext %i\n", wcsinfn, ext);
-		goto bailout;
-	}
-	
 	tan_read_header(hdr, &tanwcs);
 
     if (log_get_level() >= LOG_VERB) {
@@ -365,40 +305,131 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
                       rddist + 2*j, rddist + 2*j + 1);
 	}
 
+    sip = malloc(sizeof(sip_t));
+    assert(sip);
     {
-        sip_t sip;
         double* starxyz;
         starxyz = malloc(3 * Nxy * sizeof(double));
         for (i=0; i<Nxy; i++)
             radecdegarr2xyzarr(rddist + i*2, starxyz + i*3);
-        memset(&sip, 0, sizeof(sip_t));
+        memset(sip, 0, sizeof(sip_t));
         rtn = fit_sip_coefficients(starxyz, xy, NULL, Nxy,
-                                   &tanwcs, order, order, &sip);
+                                   &tanwcs, order, order, sip);
         assert(rtn == 0);
 
         if (log_get_level() >= LOG_VERB) {
             printf("Fit SIP:\n");
-            sip_print(&sip);
+            sip_print(sip);
         }
 
         // FIXME? -- use xlo,xhi,ylo,yhi here??  Not clear.
-        sip_compute_inverse_polynomials(&sip, 0, 0, 0, 0, 0, 0);
+        sip_compute_inverse_polynomials(sip, 0, 0, 0, 0, 0, 0);
 
         if (log_get_level() >= LOG_VERB) {
             printf("Fit SIP inverse polynomials:\n");
-            sip_print(&sip);
+            sip_print(sip);
         }
-
-		sip_write_to_file(&sip, wcsoutfn);
         free(starxyz);
     }
+
+ bailout:
+	free(rddist);
+	free(radec);
+    return sip;
+}
+
+
+
+/**
+ Evaluates the given TAN-TPV WCS header on a grid of points,
+ fitting a SIP distortion solution to it.
+
+ The grid can be specified by either:
+
+ double* xy, int Nxy
+
+ double stepsize=100, double xlo=0, double xhi=0, double ylo=0, double yhi=0
+
+ xlo and xhi, if both 0, default to 1. and the WCS width
+ ylo and yhi, if both 0, default to 1. and the WCS height
+
+ The number of steps is chosen to be the closest step size to split the range
+ xlo to xhi into an integer number of steps.
+
+ imageW and imageH, if non-zero, override the image width read from the WCS,
+ and ALSO the WCS width/height mentioned above.
+
+ */
+int wcs_pv2sip(const char* wcsinfn, int ext,
+			   const char* wcsoutfn,
+			   anbool scamp_head_file,
+
+			   double* xy, int Nxy,
+               
+               double stepsize,
+               double xlo, double xhi,
+               double ylo, double yhi,
+
+			   int imageW, int imageH,
+               int order,
+			   anbool forcetan,
+               int doshift) {
+
+	qfits_header* hdr = NULL;
+    sip_t* sip = NULL;
+    int rtn = -1;
+
+	if (scamp_head_file) {
+		size_t sz = 0;
+		char* txt;
+		char* prefix;
+		int np;
+		int nt;
+		unsigned char* txthdr;
+		sl* lines;
+		int i;
+		txt = file_get_contents(wcsinfn, &sz, TRUE);
+		if (!txt) {
+			ERROR("Failed to read file %s", wcsinfn);
+			goto bailout;
+		}
+		lines = sl_split(NULL, txt, "\n");
+		prefix =
+			"SIMPLE  =                    T / Standard FITS file                             "
+			"BITPIX  =                    8 / ASCII or bytes array                           "
+			"NAXIS   =                    0 / Minimal header                                 "
+			"EXTEND  =                    T / There may be FITS ext                          "
+			"WCSAXES =                    2 /                                                ";
+		np = strlen(prefix);
+		nt = np + FITS_LINESZ * sl_size(lines);
+		txthdr = malloc(nt);
+		memset(txthdr, ' ', np + FITS_LINESZ * sl_size(lines));
+		memcpy(txthdr, prefix, np);
+		for (i=0; i<sl_size(lines); i++)
+			memcpy(txthdr + np + i*FITS_LINESZ, sl_get(lines, i), strlen(sl_get(lines, i)));
+		sl_free2(lines);
+		hdr = qfits_header_read_hdr_string(txthdr, nt);
+		free(txthdr);
+		free(txt);
+	} else {
+		hdr = anqfits_get_header2(wcsinfn, ext);
+    }
+	if (!hdr) {
+		ERROR("Failed to read header: file %s, ext %i\n", wcsinfn, ext);
+		goto bailout;
+	}
+
+    sip = wcs_pv2sip_header(hdr, xy, Nxy, stepsize, xlo, xhi, ylo, yhi,
+                            imageW, imageH, order, forcetan, doshift);
+    if (!sip) {
+        goto bailout;
+    }
+    sip_write_to_file(sip, wcsoutfn);
 
 	rtn = 0;
 
  bailout:
-	free(rddist);
 	qfits_header_destroy(hdr);
-	free(radec);
 	return rtn;
 }
 
@@ -446,127 +477,3 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 		 */
 
 
-#include <stdlib.h>
-#include <sys/param.h>
-#include <math.h>
-
-#include "boilerplate.h"
-#include "bl.h"
-
-const char* OPTIONS = "hve:sx:X:y:Y:a:W:H:to:S";
-
-void print_help(char* progname) {
-	BOILERPLATE_HELP_HEADER(stdout);
-	printf("\nUsage: %s [options] <input-wcs> <output-wcs>\n"
-           "   [-o <order>] SIP polynomial order to fit (default: 5)\n"
-		   "   [-e <extension>] FITS HDU number to read WCS from (default 0 = primary)\n"
-           "   [-S]: do NOT do the wcs_shift thing\n"
-		   "   [-s]: treat input as Scamp .head file\n"
-		   "   [-t]: override the CTYPE* cards in the WCS header, and assume they are TAN.\n"
-		   "   [-v]: +verboseness\n"
-		   " Set the IMAGEW, IMAGEH in the output file:\n"
-		   "   [-W <int>]\n"
-		   "   [-H <int>]\n"
-		   " Set the pixel values used to compute the distortion polynomials with:\n"
-		   "   [-x <x-low>] (default: 1)\n"
-		   "   [-y <y-low>] (default: 1)\n"
-		   "   [-X <x-high>] (default: image width)\n"
-		   "   [-Y <y-high>] (default: image width)\n"
-		   "   [-a <step-size>] (default: closest to 100 yielding whole number of steps)\n"
-		   "\n", progname);
-}
-
-
-int main(int argc, char** args) {
-	int loglvl = LOG_MSG;
-	char** myargs;
-	int nargs;
-	int c;
-    int order = 5;
-
-	char* wcsinfn = NULL;
-	char* wcsoutfn = NULL;
-	int ext = 0;
-	anbool scamp = FALSE;
-	double xlo = 0;
-	double xhi = 0;
-	double stepsize = 0;
-	double ylo = 0;
-	double yhi = 0;
-	anbool forcetan = FALSE;
-	int W, H;
-    int doshift = 1;
-
-	W = H = 0;
-
-    while ((c = getopt(argc, args, OPTIONS)) != -1) {
-        switch (c) {
-        case 'S':
-            doshift = 0;
-            break;
-		case 't':
-			forcetan = TRUE;
-			break;
-        case 'o':
-            order = atoi(optarg);
-            break;
-		case 'W':
-			W = atoi(optarg);
-			break;
-		case 'H':
-			H = atoi(optarg);
-			break;
-		case 'x':
-			xlo = atof(optarg);
-			break;
-		case 'X':
-			xhi = atof(optarg);
-			break;
-		case 'a':
-			stepsize = atof(optarg);
-			break;
-		case 'y':
-			ylo = atof(optarg);
-			break;
-		case 'Y':
-			yhi = atof(optarg);
-			break;
-		case 's':
-			scamp = TRUE;
-			break;
-		case 'e':
-			ext = atoi(optarg);
-			break;
-		case 'v':
-			loglvl++;
-			break;
-		case '?':
-		case 'h':
-			print_help(args[0]);
-			exit(0);
-		}
-	}
-	nargs = argc - optind;
-	myargs = args + optind;
-
-	if (nargs != 2) {
-		print_help(args[0]);
-		exit(-1);
-	}
-	wcsinfn = myargs[0];
-	wcsoutfn = myargs[1];
-
-	log_init(loglvl);
-	fits_use_error_system();
-
-	logmsg("Reading WCS (with PV distortions) from %s, ext %i\n", wcsinfn, ext);
-	logmsg("Writing WCS (with SIP distortions) to %s\n", wcsoutfn);
-
-	if (wcs_pv2sip(wcsinfn, ext, wcsoutfn, scamp, NULL, 0,
-                   stepsize, xlo, xhi, ylo, yhi, W, H,
-                   order, forcetan, doshift)) {
-		exit(-1);
-	}
-
-	return 0;
-}
