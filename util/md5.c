@@ -256,38 +256,3 @@ int my_rand_r(int *seedp)
   return (x >> 16) & 0x7fff;
 }
 
-int main( int argc, char *argv[] )
-{
-    FILE *f;
-    int i, j;
-    int repeat;
-    char output[33];
-    md5_context ctx;
-    unsigned char buf[100000];
-    unsigned char md5sum[16];
-
-    // Fill buffer with random, but deterministic data.
-    int random_seed = 1;
-    for (i = 0; i < sizeof(buf); ++i)
-      buf[i] = my_rand_r(&random_seed);
-    
-    repeat = 1;
-    if (argc == 2) repeat = atoi(argv[1]);
-  
-    for (; repeat; --repeat) {
-        md5_starts( &ctx );
-        for (i = 0; i < 512; ++i)
-          md5_update( &ctx, buf+repeat, sizeof( buf )-repeat );
-        md5_finish( &ctx, md5sum );
-
-        for( j = 0; j < 16; j++ )
-        {
-            printf( "%02x", md5sum[j] );
-        }
-
-        printf( "\n" );
-    }
-
-    return( 0 );
-}
-
