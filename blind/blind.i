@@ -11,10 +11,11 @@
 %{
 // numpy.
 #include <numpy/arrayobject.h>
+
 #include <stdint.h>
-#include <sys/param.h>
 #include <stdlib.h>
 
+#include "os-features.h"
 #include "verify.h"
 %}
 

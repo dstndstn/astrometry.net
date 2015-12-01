@@ -6,7 +6,6 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
-#include <sys/param.h>
 #include <assert.h>
 
 #include <cairo.h>

@@ -3,7 +3,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE
 */
 
-#include <sys/param.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <stdlib.h>

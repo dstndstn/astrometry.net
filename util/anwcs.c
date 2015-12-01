@@ -4,7 +4,6 @@
 */
 
 #include <stdio.h>
-#include <sys/param.h>
 #include <assert.h>
 
 #ifdef WCSLIB_EXISTS
@@ -16,6 +15,7 @@
 #include <libwcs/wcs.h>
 #endif
 
+#include "os-features.h"
 #include "qfits_std.h"
 #include "qfits_header.h"
 #include "qfits_rw.h"

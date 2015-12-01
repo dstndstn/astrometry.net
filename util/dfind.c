@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <sys/param.h>
 #include <assert.h>
 
 #include "simplexy-common.h"

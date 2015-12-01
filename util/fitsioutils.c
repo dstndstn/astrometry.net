@@ -9,13 +9,13 @@
 #include <errno.h>
 #include <assert.h>
 #include <math.h>
-#include <sys/param.h>
 
 #include "qfits_convert.h"
 #include "qfits_error.h"
 #include "qfits_std.h"
 #include "qfits_tools.h"
 
+#include "os-features.h"
 #include "anqfits.h"
 #include "fitsioutils.h"
 #include "ioutils.h"

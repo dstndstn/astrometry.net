@@ -4,8 +4,8 @@
 */
 #include <math.h>
 #include <assert.h>
-#include <sys/param.h>
 
+#include "os-features.h"
 #include "fitsioutils.h"
 #include "ioutils.h"
 #include "errors.h"
@@ -332,7 +332,6 @@ sip_t* wcs_pv2sip_header(qfits_header* hdr,
         free(starxyz);
     }
 
- bailout:
 	free(rddist);
 	free(radec);
     return sip;

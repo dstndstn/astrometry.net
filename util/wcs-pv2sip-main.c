@@ -1,6 +1,9 @@
+/*
+# This file is part of the Astrometry.net suite.
+# Licensed under a 3-clause BSD style license - see LICENSE
+*/
 
 #include <stdlib.h>
-#include <sys/param.h>
 #include <math.h>
 
 #include "wcs-pv2sip.h"

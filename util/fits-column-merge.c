@@ -5,9 +5,9 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <sys/param.h>
 #include <errno.h>
 
+#include "os-features.h"
 #include "anqfits.h"
 #include "fitsioutils.h"
 #include "boilerplate.h"

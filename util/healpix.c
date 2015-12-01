@@ -6,7 +6,6 @@
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
-#include <sys/param.h>
 #include <string.h>
 
 #include "healpix.h"

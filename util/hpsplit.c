@@ -8,10 +8,10 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include <sys/param.h>
 #include <arpa/inet.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "healpix.h"
 #include "healpix-utils.h"
 #include "starutil.h"

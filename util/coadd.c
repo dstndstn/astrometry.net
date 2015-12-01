@@ -4,13 +4,13 @@
  */
 #include <stdlib.h>
 #include <math.h>
-#include <sys/param.h>
 
 #include "coadd.h"
 #include "mathutil.h"
 #include "errors.h"
 #include "log.h"
 #include "resample.h"
+#include "os-features.h"
 
 coadd_t* coadd_new_from_wcs(anwcs_t* wcs) {
   int W,H;

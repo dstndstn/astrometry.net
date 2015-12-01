@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <sys/param.h>
 
+#include "os-features.h"
 #include "kdtree.h"
 #include "kdtree_internal.h"
 #include "kdtree_mem.h"

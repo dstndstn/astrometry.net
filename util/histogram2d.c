@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <sys/param.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "histogram2d.h"
 #include "errors.h"
 

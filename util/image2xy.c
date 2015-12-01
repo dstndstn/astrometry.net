@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/types.h>
-#include <sys/param.h>
 #include <unistd.h>
 #include <math.h>
 

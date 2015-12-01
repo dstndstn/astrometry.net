@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <sys/param.h>
 
 #include "tpv.h"
 #include "starutil.h"

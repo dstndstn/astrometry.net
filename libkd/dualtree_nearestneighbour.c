@@ -6,9 +6,9 @@
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
-#include <sys/param.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "dualtree_nearestneighbour.h"
 #include "dualtree.h"
 #include "mathutil.h"

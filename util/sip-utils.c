@@ -3,7 +3,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE
 */
 #include <math.h>
-#include <sys/param.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -11,6 +10,7 @@
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_vector_double.h>
 
+#include "os-features.h"
 #include "sip-utils.h"
 #include "gslutils.h"
 #include "starutil.h"

@@ -16,6 +16,15 @@ char* canonicalize_file_name(const char* fn);
 // This is actually in POSIX1b but may or may not be available.
 int fdatasync(int fd);
 
+// Not POSIX; doesn't exist in Solaris 10
+#include <sys/param.h>
+#ifndef MIN
+#define	MIN(a,b) (((a)<(b))?(a):(b))
+#endif
+#ifndef MAX
+#define	MAX(a,b) (((a)>(b))?(a):(b))
+#endif
+
 /**
    The qsort_r story:
 

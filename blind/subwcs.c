@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
-#include <sys/param.h>
 
 #include "log.h"
 #include "errors.h"

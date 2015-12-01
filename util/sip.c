@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <sys/param.h>
 
+#include "os-features.h"
 #include "sip.h"
 #include "starutil.h"
 #include "mathutil.h"

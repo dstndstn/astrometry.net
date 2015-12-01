@@ -7,7 +7,6 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
-#include <sys/param.h>
 
 /**
 

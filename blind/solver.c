@@ -4,7 +4,6 @@
 */
 
 #include <stdio.h>
-#include <sys/param.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
@@ -12,6 +11,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 
+#include "os-features.h"
 #include "ioutils.h"
 #include "mathutil.h"
 #include "matchobj.h"

@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <sys/param.h>
 
 // DEBUG
 #include <sys/mman.h>

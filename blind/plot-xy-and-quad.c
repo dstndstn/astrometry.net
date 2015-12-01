@@ -11,7 +11,6 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
-#include <sys/param.h>
 
 #include <cairo.h>
 #include <cairo-pdf.h>

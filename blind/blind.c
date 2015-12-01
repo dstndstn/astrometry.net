@@ -13,7 +13,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <sys/param.h>
 #include <libgen.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -22,6 +21,7 @@
 #include <math.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "blind.h"
 #include "tweak.h"
 #include "tweak2.h"

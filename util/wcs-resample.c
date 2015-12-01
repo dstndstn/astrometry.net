@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <sys/param.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "wcs-resample.h"
 #include "sip_qfits.h"
 #include "an-bool.h"

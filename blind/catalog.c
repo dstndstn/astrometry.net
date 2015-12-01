@@ -9,8 +9,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
-#include <sys/param.h>
 
+#include "os-features.h"
 #include "catalog.h"
 #include "fitsioutils.h"
 #include "ioutils.h"

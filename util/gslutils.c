@@ -4,7 +4,6 @@
 */
 
 #include <assert.h>
-#include <sys/param.h>
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_vector_double.h>
 #include <gsl/gsl_permutation.h>
@@ -13,6 +12,7 @@
 #include <gsl/gsl_errno.h>
 #include <stdarg.h>
 
+#include "os-features.h"
 #include "gslutils.h"
 #include "errors.h"
 

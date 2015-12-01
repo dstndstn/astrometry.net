@@ -13,9 +13,9 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <libgen.h>
-#include <sys/param.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "engine.h"
 #include "solver.h"
 #include "index.h"

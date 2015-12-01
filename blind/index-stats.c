@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
-#include <sys/param.h>
 
+#include "os-features.h"
 #include "index.h"
 #include "quadfile.h"
 #include "kdtree.h"

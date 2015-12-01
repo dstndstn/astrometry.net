@@ -8,8 +8,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
-#include <sys/param.h>
 
+#include "os-features.h"
 #include "simplexy-common.h"
 
 /*

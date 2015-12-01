@@ -24,8 +24,8 @@
 #include <libgen.h>
 #include <dirent.h>
 #include <time.h>
-#include <sys/param.h>
 
+#include "os-features.h"
 #include "ioutils.h"
 //#include "os-features.h"
 #include "errors.h"

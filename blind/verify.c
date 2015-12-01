@@ -7,7 +7,6 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
-#include <sys/param.h>
 
 #include "verify.h"
 #include "permutedsort.h"

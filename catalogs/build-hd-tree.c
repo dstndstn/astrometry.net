@@ -47,7 +47,6 @@ deg|deg|
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include <sys/param.h>
 
 #include "kdtree.h"
 #include "kdtree_fits_io.h"

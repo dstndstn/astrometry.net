@@ -6,7 +6,6 @@
 #include <assert.h>
 #include <string.h>
 #include <math.h>
-#include <sys/param.h>
 
 #include "starxy.h"
 #include "permutedsort.h"

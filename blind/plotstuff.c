@@ -9,12 +9,12 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
-#include <sys/param.h>
 #include <assert.h>
 
 #include <cairo.h>
 #include <cairo-pdf.h>
 
+#include "os-features.h"
 #include "plotstuff.h"
 #include "plotfill.h"
 #include "plotxy.h"

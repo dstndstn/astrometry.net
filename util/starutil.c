@@ -8,9 +8,9 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <sys/types.h>
-#include <sys/param.h>
 #include <regex.h>
 
+#include "os-features.h"
 #include "keywords.h"
 #include "mathutil.h"
 #include "starutil.h"

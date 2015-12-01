@@ -3,13 +3,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
-#include <sys/param.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
 
 #include <cairo.h>
 
+#include "os-features.h"
 #include "plotannotations.h"
 #include "hd.h"
 #include "ngc2000.h"

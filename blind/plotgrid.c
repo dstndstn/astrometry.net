@@ -4,9 +4,9 @@
 */
 #include <string.h>
 #include <math.h>
-#include <sys/param.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "plotgrid.h"
 #include "sip-utils.h"
 #include "cairoutils.h"

@@ -10,9 +10,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-#include <sys/param.h>
 
 #include "an-bool.h"
+#include "os-features.h"
 
 #include <cairo.h>
 #include "cairoutils.h"

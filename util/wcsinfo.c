@@ -8,8 +8,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
-#include <sys/param.h>
 
+#include "os-features.h"
 #include "sip.h"
 #include "sip-utils.h"
 #include "sip_qfits.h"

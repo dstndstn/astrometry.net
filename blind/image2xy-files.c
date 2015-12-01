@@ -8,10 +8,10 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/types.h>
-#include <sys/param.h>
 #include <unistd.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "image2xy-files.h"
 #include "image2xy.h"
 #include "fitsio.h"

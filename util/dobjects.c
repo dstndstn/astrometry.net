@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <sys/param.h>
 
+#include "os-features.h"
 #include "dimage.h"
 #include "simplexy-common.h"
 #include "log.h"

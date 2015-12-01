@@ -5,13 +5,13 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include <sys/param.h>
 #include <assert.h>
 #include <stdio.h>
 
 #include "convolve-image.h"
 #include "mathutil.h"
 #include "keywords.h"
+#include "os-features.h"
 
 float* convolve_get_gaussian_kernel_f(double sigma, double nsigma, int* p_k0, int* p_NK) {
 	int K0, NK, i;

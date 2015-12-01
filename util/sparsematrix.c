@@ -3,10 +3,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE
 */
 
-#include <sys/param.h>
 #include <math.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "sparsematrix.h"
 
 struct entry {

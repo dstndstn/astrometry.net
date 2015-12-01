@@ -8,6 +8,7 @@
 // I did this so that we can handle int* and
 // unsigned char* images using the same code.
 
+#include "os-features.h"
 #include "errors.h"
 #include "log.h"
 

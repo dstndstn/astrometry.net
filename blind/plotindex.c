@@ -4,7 +4,6 @@
 */
 #include <string.h>
 #include <math.h>
-#include <sys/param.h>
 #include <assert.h>
 
 #include "plotindex.h"

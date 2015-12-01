@@ -14,9 +14,9 @@
 #define WarnUnusedResult
 %{
 #include "numpy/arrayobject.h"
-#include <sys/param.h>
 #include <stdlib.h>
 
+#include "os-features.h"
 #include "plotstuff.h"
 #include "plotimage.h"
 #include "plotoutline.h"

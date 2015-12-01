@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -21,6 +20,7 @@
 #include <libgen.h>
 #include <getopt.h>
 
+#include "os-features.h"
 #include "ioutils.h"
 #include "fileutils.h"
 #include "bl.h"

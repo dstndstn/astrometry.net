@@ -5,13 +5,12 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include <sys/param.h>
 #include <assert.h>
 
 #include <fenv.h>
 
 #include "resample.h"
-
+#include "os-features.h"
 #include "mathutil.h"
 #include "errors.h"
 #include "log.h"

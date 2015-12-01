@@ -7,7 +7,6 @@
 #include <assert.h>
 #include <string.h>
 #include <math.h>
-#include <sys/param.h>
 
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_vector_double.h>

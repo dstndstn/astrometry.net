@@ -6,9 +6,9 @@
 #include <string.h>
 #include <assert.h>
 #include <stdarg.h>
-#include <sys/param.h>
 #include <errors.h>
 
+#include "os-features.h"
 #include "fitstable.h"
 #include "fitsioutils.h"
 #include "fitsfile.h"

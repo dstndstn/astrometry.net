@@ -2,9 +2,9 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 */
-#include <sys/param.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "plotxy.h"
 #include "xylist.h"
 #include "cairoutils.h"
