@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "cutest.h"
 #include "starutil.h"
 #include "healpix.h"
