@@ -72,7 +72,7 @@ int main() {
 #endif
 
 #if defined(TEST_NETPBM) || defined(TEST_NETPBM_MAKE)
-#include <netpbm/pam.h>
+#include <pam.h>
 int main(int argc, char** args) {
 	struct pam img;
 	pm_init(args[0], 0);
