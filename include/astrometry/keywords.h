@@ -24,7 +24,10 @@
 // lawsuit.  Clang treats inlining differently; see
 //    http://clang.llvm.org/compatibility.html#inline
 
-#if defined __clang__
+#if defined __clang__ || GNUC_PREREQ (5, 0)
+
+// After gcc 5.0, -std=gnu11 is the default (vs -std=gnu89 in previous
+// versions).  This affects inlining semantics, among other things.
 
 #define InlineDeclare
 #define InlineDefineH

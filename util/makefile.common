@@ -117,8 +117,12 @@ ifeq ($(PYTHON_SO_EXT)x,x)
 endif
 
 # gcc 5.1 changes inline semantics
-ARG := -std=gnu89
-FLAGS_DEF += $(shell $(CCTEST))
+#ARG := -std=gnu89
+#FLAGS_DEF += $(shell $(CCTEST))
+# Handled in keywords.h instead
+
+#ARG := -Wno-error=unused-command-line-argument-hard-error-in-future
+#FLAGS_DEF += $(shell $(CCTEST))
 
 ARG := -ffinite-math-only
 FLAGS_DEF += $(shell $(CCTEST))
