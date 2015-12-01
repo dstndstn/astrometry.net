@@ -24,6 +24,14 @@
 #include <assert.h>
 #include <glob.h>
 
+// Some systems (Solaris) don't have these glob symbols.  Don't really need.
+#ifndef GLOB_BRACE
+#define GLOB_BRACE 0
+#endif
+#ifndef GLOB_TILDE
+#define GLOB_TILDE 0
+#endif
+
 #include "os-features.h"
 #include "tic.h"
 #include "fileutils.h"
