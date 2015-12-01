@@ -13,6 +13,8 @@
 # include <sys/types.h>
 #elif __FreeBSD__
 # include <sys/endian.h>
+#elif __sun
+# include <sys/isa_defs.h>
 #else
 # include <endian.h>
 #endif

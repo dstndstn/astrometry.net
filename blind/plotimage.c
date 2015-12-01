@@ -6,6 +6,7 @@
 #include <math.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "plotimage.h"
 #include "cairoutils.h"
 #include "ioutils.h"

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "anwcs.h"
 #include "fitsioutils.h"
 #include "starutil.h"

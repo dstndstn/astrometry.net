@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "os-features.h"
 #include "verify.h"
 #include "permutedsort.h"
 #include "mathutil.h"

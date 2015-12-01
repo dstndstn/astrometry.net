@@ -27,7 +27,12 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
+// from https://groups.google.com/forum/#!topic/astrometry/quGEbY1CgR8
+#if __sun
+# include <stdio.h>
+#else
+# include <sys/cdefs.h>
+#endif
 //__FBSDID("$FreeBSD: src/sys/libkern/qsort.c,v 1.15 2004/07/15 23:58:23 glebius Exp $");
 
 // Astrometry: We want reentrant!

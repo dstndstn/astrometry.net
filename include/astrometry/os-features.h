@@ -25,6 +25,27 @@ int fdatasync(int fd);
 #define	MAX(a,b) (((a)>(b))?(a):(b))
 #endif
 
+// isfinite() on Solaris; from
+// https://code.google.com/p/redis/issues/detail?id=20
+#if defined(__sun) && defined(__GNUC__)
+
+#undef isnan
+#define isnan(x) \
+      __extension__({ __typeof (x) __x_a = (x); \
+      __builtin_expect(__x_a != __x_a, 0); })
+
+#undef isfinite
+#define isfinite(x) \
+      __extension__ ({ __typeof (x) __x_f = (x); \
+      __builtin_expect(!isnan(__x_f - __x_f), 1); })
+
+#undef isinf
+#define isinf(x) \
+      __extension__ ({ __typeof (x) __x_i = (x); \
+      __builtin_expect(!isnan(__x_i) && !isfinite(__x_i), 0); })
+
+#endif
+
 /**
    The qsort_r story:
 

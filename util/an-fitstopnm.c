@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "an-bool.h"
 #include "anqfits.h"
 #include "permutedsort.h"

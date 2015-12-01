@@ -9,6 +9,7 @@
 #include <math.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "dimage.h"
 #include "permutedsort.h"
 #include "simplexy-common.h"

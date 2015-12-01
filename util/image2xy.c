@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "image2xy.h"
 #include "ioutils.h"
 #include "simplexy.h"

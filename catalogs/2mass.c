@@ -7,6 +7,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "2mass.h"
 #include "starutil.h"
 

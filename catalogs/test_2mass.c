@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "os-features.h"
 #include "cutest.h"
 #include "2mass.h"
 #include "2mass-fits.h"
