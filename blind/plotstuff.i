@@ -15,6 +15,7 @@
 %{
 #include "numpy/arrayobject.h"
 #include <stdlib.h>
+#include <math.h>
 
 #include "os-features.h"
 #include "plotstuff.h"
