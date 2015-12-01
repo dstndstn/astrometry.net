@@ -220,7 +220,7 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 	int jlo,jhi,ilo,ihi;
 	lanczos_args_t largs;
 	double xyz[3];
-	bzero(&largs, sizeof(largs));
+	memset(&largs, 0, sizeof(largs));
 	largs.order = lorder;
 	largs.weighted = weighted;
 
