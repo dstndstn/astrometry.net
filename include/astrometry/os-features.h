@@ -44,6 +44,17 @@ int fdatasync(int fd);
       __extension__ ({ __typeof (x) __x_i = (x); \
       __builtin_expect(!isnan(__x_i) && !isfinite(__x_i), 0); })
 
+#undef isnormal
+#define isnormal(x) \
+  __extension__ ({ __typeof(x) __x_n = (x); \
+                   if (__x_n < 0.0) __x_n = -__x_n; \
+                   __builtin_expect(isfinite(__x_n) \
+                                    && (sizeof(__x_n) == sizeof(float) \
+                                          ? __x_n >= __FLT_MIN__ \
+                                          : sizeof(__x_n) == sizeof(long double) \
+                                            ? __x_n >= __LDBL_MIN__ \
+                                            : __x_n >= __DBL_MIN__), 1); })
+
 #endif
 
 /**
