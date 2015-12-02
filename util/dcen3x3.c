@@ -9,6 +9,7 @@
 #include <math.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "simplexy-common.h"
 
 /*
