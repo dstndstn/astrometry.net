@@ -35,6 +35,17 @@
 // does qfits think this platform is big-endian?
 int qfits_is_platform_big_endian(void);
 
+// Not POSIX; doesn't exist in Solaris 10
+#include <sys/param.h>
+#ifndef MIN
+#define	MIN(a,b) (((a)<(b))?(a):(b))
+#endif
+#ifndef MAX
+#define	MAX(a,b) (((a)>(b))?(a):(b))
+#endif
+
+
+
 
 #define QFITS_THREAD_UNSAFE {}
 

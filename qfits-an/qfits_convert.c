@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-#include "os-features.h"
+#include "qfits_std.h"
 #include "qfits_config.h"
 #include "qfits_image.h"
 #include "qfits_byteswap.h"

@@ -41,8 +41,6 @@
 #include <assert.h>
 #include <math.h>
 
-#include "os-features.h"
-
 #include "qfits_config.h"
 #include "qfits_table.h"
 #include "qfits_float.h"
