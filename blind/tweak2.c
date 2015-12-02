@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "bl.h"
 #include "fit-wcs.h"
 #include "sip.h"

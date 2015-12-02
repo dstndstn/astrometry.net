@@ -9,6 +9,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "os-features.h"
 #include "uniformize-catalog.h"
 #include "fitstable.h"
 #include "boilerplate.h"

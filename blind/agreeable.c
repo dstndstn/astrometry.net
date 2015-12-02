@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "starutil.h"
 #include "mathutil.h"
 #include "bl.h"

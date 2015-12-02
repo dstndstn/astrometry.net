@@ -40,7 +40,8 @@
 #include <errno.h>
 #include <assert.h>
 #include <math.h>
-#include <sys/param.h>
+
+#include "os-features.h"
 
 #include "qfits_config.h"
 #include "qfits_table.h"

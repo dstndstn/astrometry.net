@@ -10,6 +10,7 @@
 
 #include "numpy/arrayobject.h"
 
+#include "os-features.h"
 #include "kdtree.h"
 #include "kdtree_fits_io.h"
 #include "dualtree_rangesearch.h"

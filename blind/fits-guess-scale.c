@@ -9,6 +9,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "fits-guess-scale.h"
 #include "anqfits.h"
 #include "sip.h"

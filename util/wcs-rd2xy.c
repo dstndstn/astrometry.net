@@ -96,8 +96,9 @@ int wcs_rd2xy(const char* wcsfn, int wcsext,
             ra  = rd_getra (&rd, j);
             dec = rd_getdec(&rd, j);
 			if (anwcs_radec2pixelxy(wcs, ra, dec, &x, &y)) {
+                static double nan = 1.0/0.0;
 				ERROR("Point RA,Dec = (%g,%g) projects to the opposite side of the sphere", ra, dec);
-				starxy_set(&xy, j, NAN, NAN);
+				starxy_set(&xy, j, nan, nan);
 				continue;
 			}
             starxy_set(&xy, j, x, y);

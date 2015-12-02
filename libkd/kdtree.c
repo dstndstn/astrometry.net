@@ -9,6 +9,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "kdtree.h"
 #include "kdtree_internal.h"
 #include "kdtree_internal_common.h"

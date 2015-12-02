@@ -8,6 +8,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "an-bool.h"
 #include "bl.h"
 #include "boilerplate.h"

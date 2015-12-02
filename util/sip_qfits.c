@@ -9,6 +9,7 @@
 #include "qfits_rw.h"
 #include "qfits_tools.h"
 
+#include "os-features.h"
 #include "sip_qfits.h"
 #include "an-bool.h"
 #include "fitsioutils.h"

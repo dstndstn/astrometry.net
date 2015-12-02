@@ -184,7 +184,7 @@ struct twomass_entry {
 };
 typedef struct twomass_entry twomass_entry;
 
-#define TWOMASS_NULL NAN
+#define TWOMASS_NULL (1.0/0.0)
 
 #define TWOMASS_KEY_NULL 0xffffff
 

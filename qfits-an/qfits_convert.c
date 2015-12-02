@@ -3,8 +3,8 @@
  */
 
 #include <stdint.h>
-#include <sys/param.h>
 
+#include "os-features.h"
 #include "qfits_config.h"
 #include "qfits_image.h"
 #include "qfits_byteswap.h"

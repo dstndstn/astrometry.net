@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <strings.h>
 
+#include "os-features.h"
 #include "errors.h"
 #include "cutest.h"
 #include "kdtree.h"

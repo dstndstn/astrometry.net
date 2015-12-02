@@ -6,6 +6,7 @@
 /**
  Runs the verification procedure in stand-alone mode.
  */
+#include "os-features.h"
 #include "matchfile.h"
 #include "matchobj.h"
 #include "index.h"

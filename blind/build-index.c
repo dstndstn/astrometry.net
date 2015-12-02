@@ -14,6 +14,7 @@
 #include <sys/resource.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "build-index.h"
 #include "boilerplate.h"
 #include "errors.h"

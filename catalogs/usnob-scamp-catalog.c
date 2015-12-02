@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "scamp-catalog.h"
 #include "usnob-fits.h"
 //#include "healpix-utils.h"

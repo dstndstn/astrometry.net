@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "os-features.h"
 #include "index.h"
 #include "starutil.h"
 #include "log.h"

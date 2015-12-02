@@ -115,17 +115,12 @@ demo: demo.o $(SLIB)
 
 DEP_OBJ += fix-bb.o checktree.o
 
-LIBKD_INSTALL := #fix-bb checktree
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/libkd
 
 .PHONY: install
-install: $(LIBKD_INSTALL) $(LIBKD)
+install: $(LIBKD)
 	@echo Installing in directory '$(INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/bin'
-	@for x in $(LIBKD_INSTALL); do \
-		echo cp $$x '$(INSTALL_DIR)/bin'; \
-		cp $$x '$(INSTALL_DIR)/bin'; \
-	done
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
 		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \

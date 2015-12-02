@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <assert.h>
 
+#include "os-features.h"
 #include "uniformize-catalog.h"
 #include "intmap.h"
 #include "healpix.h"
