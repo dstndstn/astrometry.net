@@ -73,7 +73,7 @@ static void sample_percentiles(const float* img, int nx, int ny, int margin,
 		}
 	}
 
-	qsort(pix, np, sizeof(float), compare_floats_asc);
+    QSORT_R(pix, np, sizeof(float), NULL, compare_floats_asc_r);
 
 	if (lo) {
 		i = MIN(np-1, MAX(0, (int)(lop * np)));
