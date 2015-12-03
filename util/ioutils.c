@@ -510,7 +510,8 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 					}
 				}
 // https://groups.google.com/d/msg/astrometry/H0bQBjaoZeo/19pe8DXGoigJ
-#if !(defined(__CYGWIN__))
+// and https://groups.google.com/forum/#!topic/astrometry/quGEbY1CgR8
+#if !(defined(__CYGWIN__) || defined(__sun))
 				if (FD_ISSET(outfd, &errset)) {
 					SYSERROR("error reading from child output stream");
                     rtn = -1;
