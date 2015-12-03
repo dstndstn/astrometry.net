@@ -69,6 +69,12 @@ static void sample_percentiles(const float* img, int nx, int ny, int margin,
 		for (i=0; i<np; i++) {
 			x = margin + (nx - 2*margin) * ( (double)random() / (((double)RAND_MAX)+1.0) );
 			y = margin + (ny - 2*margin) * ( (double)random() / (((double)RAND_MAX)+1.0) );
+            // On Solaris, apparently, random() / RAND_MAX can be a
+            // huge number.  This should have no effect on other
+            // machines.
+            x = x % nx;
+            y = y % ny;
+
 			pix[i] = img[y*nx + x];
 		}
 	}
