@@ -876,9 +876,9 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
 	fits_add_long_comment(hdr, "Start obj: %i", sp->startobj);
 	fits_add_long_comment(hdr, "End obj: %i", sp->endobj);
 
-	fits_add_long_comment(hdr, "Solved_in: %s", bp->solved_in);
-	fits_add_long_comment(hdr, "Solved_out: %s", bp->solved_out);
-	fits_add_long_comment(hdr, "Solvedserver: %s", bp->solvedserver);
+	fits_add_long_comment(hdr, "Solved_in: %s", bp->solved_in ? bp->solved_in : "null");
+	fits_add_long_comment(hdr, "Solved_out: %s", bp->solved_out ? bp->solved_out : "null");
+	fits_add_long_comment(hdr, "Solvedserver: %s", bp->solvedserver ? bp->solvedserver : "null");
 
 	fits_add_long_comment(hdr, "Parity: %i", sp->parity);
 	fits_add_long_comment(hdr, "Codetol: %g", sp->codetol);
