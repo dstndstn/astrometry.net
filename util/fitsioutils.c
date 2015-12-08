@@ -28,7 +28,7 @@
 Malloc
 char* fits_to_string(const qfits_header* hdr, int* size) {
 	int N = qfits_header_n(hdr);
-	char* str;
+	char* str = NULL;
 	int i;
 
 	str = malloc(N * FITS_LINESZ);
@@ -355,7 +355,7 @@ void fits_copy_non_table_headers(qfits_header* dest, const qfits_header* src) {
 char* fits_get_dupstring(const qfits_header* hdr, const char* key) {
 	// qfits_pretty_string() never increases the length of the string
 	char pretty[FITS_LINESZ+1];
-	char* val;
+	char* val = NULL;
 	val = qfits_header_getstr(hdr, key);
 	if (!val)
 		return NULL;
@@ -411,8 +411,8 @@ void fits_header_addf_longstring(qfits_header* hdr, const char* key,
         // Long string - use CONTINUE.
         int len = nb;
         char line[FITS_LINESZ + 1];
-        char* linebuf;
-        char* buf;
+        char* linebuf = NULL;
+        char* buf = NULL;
         anbool addquotes = FALSE;
         anbool escapequotes = FALSE;
         buf = str;
@@ -566,7 +566,7 @@ char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
         char str[FITS_LINESZ+1];
         int len;
         sl* slist;
-		char* cptr;
+		char* cptr = NULL;
         char key[FITS_LINESZ+1];
         char val[FITS_LINESZ+1];
         qfits_header_getitem(hdr, i, key, val, NULL, NULL);
@@ -770,7 +770,7 @@ fits_add_long_history(qfits_header* dst, const char* format, ...) {
 int fits_add_args(qfits_header* hdr, char** args, int argc) {
     sl* s;
     int i;
-    char* ss;
+    char* ss = NULL;
 
     s = sl_new(4);
 	for (i=0; i<argc; i++) {
@@ -1201,8 +1201,8 @@ int fits_check_double_size(const qfits_header* header) {
 }
 
 int fits_check_endian(const qfits_header* header) {
-    char* filestr;
-    char* localstr;
+    char* filestr = NULL;
+    char* localstr = NULL;
 	char pretty[FITS_LINESZ+1];
 
 	filestr = qfits_header_getstr(header, "ENDIAN");
