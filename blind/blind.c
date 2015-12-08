@@ -854,7 +854,7 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
     int Nindexes;
 	fits_add_long_comment(hdr, "-- blind solver parameters: --");
 	if (sp->index) {
-		fits_add_long_comment(hdr, "Index name: %s", sp->index->indexname);
+		fits_add_long_comment(hdr, "Index name: %s", sp->index->indexname?sp->index->indexname:"(null)");
 		fits_add_long_comment(hdr, "Index id: %i", sp->index->indexid);
 		fits_add_long_comment(hdr, "Index healpix: %i", sp->index->healpix);
 		fits_add_long_comment(hdr, "Index healpix nside: %i", sp->index->hpnside);
@@ -866,19 +866,22 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
 	}
     Nindexes = n_indexes(bp);
 	for (i = 0; i < Nindexes; i++)
-		fits_add_long_comment(hdr, "Index(%i): %s", i, get_index_name(bp, i));
+		fits_add_long_comment(hdr, "Index(%i): %s", i, get_index_name(bp, i)?get_index_name(bp, i):"(null)");
 
-	fits_add_long_comment(hdr, "Field name: %s", bp->fieldfname);
+	fits_add_long_comment(hdr, "Field name: %s", bp->fieldfname?bp->fieldfname:"(null)");
 	fits_add_long_comment(hdr, "Field scale lower: %g arcsec/pixel", sp->funits_lower);
 	fits_add_long_comment(hdr, "Field scale upper: %g arcsec/pixel", sp->funits_upper);
-	fits_add_long_comment(hdr, "X col name: %s", bp->xcolname);
-	fits_add_long_comment(hdr, "Y col name: %s", bp->ycolname);
+	fits_add_long_comment(hdr, "X col name: %s", bp->xcolname?bp->xcolname:"(null)");
+	fits_add_long_comment(hdr, "Y col name: %s", bp->ycolname?bp->ycolname:"(null)");
 	fits_add_long_comment(hdr, "Start obj: %i", sp->startobj);
 	fits_add_long_comment(hdr, "End obj: %i", sp->endobj);
-
-	fits_add_long_comment(hdr, "Solved_in: %s", bp->solved_in ? bp->solved_in : "null");
-	fits_add_long_comment(hdr, "Solved_out: %s", bp->solved_out ? bp->solved_out : "null");
-	fits_add_long_comment(hdr, "Solvedserver: %s", bp->solvedserver ? bp->solvedserver : "null");
+	
+	// 'Solved_in' and 'Solvedserver' are often NULL pointers.
+	// If %s is a NULL pointer, vasprintf() causes a segmentation fault (due to strlen()) on Solaris -> added treatment of this case for portability. 
+	// GNU/Linux implementation of vasprintf() catches NULL pointer and prints "(null)" in header. Seems to be an issue on Solaris only.
+	fits_add_long_comment(hdr, "Solved_in: %s", bp->solved_in?bp->solved_in:"(null)");
+	fits_add_long_comment(hdr, "Solved_out: %s", bp->solved_out?bp->solved_out:"(null)");
+	fits_add_long_comment(hdr, "Solvedserver: %s", bp->solvedserver?bp->solvedserver:"(null)");
 
 	fits_add_long_comment(hdr, "Parity: %i", sp->parity);
 	fits_add_long_comment(hdr, "Codetol: %g", sp->codetol);
@@ -1603,4 +1606,3 @@ static int compare_matchobjs(const void* v1, const void* v2) {
         return -1;
     return 1;
 }
-
