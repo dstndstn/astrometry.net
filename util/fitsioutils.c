@@ -380,7 +380,7 @@ void fits_header_addf(qfits_header* hdr, const char* key, const char* comment,
 
 void fits_header_addf_longstring(qfits_header* hdr, const char* key,
                                  const char* comment, const char* format, ...) {
-    char* str;
+    char* str = NULL;
     int nb;
     int linelen;
     va_list lst;
@@ -689,7 +689,7 @@ int fits_update_value(qfits_header* hdr, const char* key, const char* newvalue) 
 static int add_long_line(qfits_header* hdr, const char* keyword, const char* indent, int append, const char* format, va_list lst) {
 	const int charsperline = 60;
 	char* origstr = NULL;
-	char* str;
+	char* str = NULL;
 	int len;
 	int indlen = (indent ? strlen(indent) : 0);
 	len = vasprintf(&origstr, format, lst);
