@@ -668,10 +668,20 @@ char* create_temp_dir(const char* name, const char* dir) {
 		dir = get_temp_dir();
 	}
     asprintf_safe(&tempdir, "%s/tmp.%s.XXXXXX", dir, name);
+    // no mkdtemp() in some versions of Solaris;
+    // https://groups.google.com/forum/#!topic/astrometry/quGEbY1CgR8
+#if defined(__sun)
+    mktemp(tempdir);
+    if (!mkdir(tempdir, 0700)) {
+        SYSERROR("Failed to create temp dir");
+        return NULL;
+    }
+#else
     if (!mkdtemp(tempdir)) {
         SYSERROR("Failed to create temp dir");
         return NULL;
     }
+#endif
     return tempdir;
 }
 
