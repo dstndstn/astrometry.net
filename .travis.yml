@@ -1,6 +1,6 @@
 # Travis-CI.org build script
 
-# try the new containerized infrastructure
+# use the new containerized infrastructure
 sudo: false
 
 language: c
