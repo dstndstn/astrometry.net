@@ -85,6 +85,7 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
 
     x0,y0 = np.round(XY.min(axis=0)).astype(int)
     x1,y1 = np.round(XY.max(axis=0)).astype(int)
+
     if spline:
         # Now we build a spline that maps "target" pixels to "input" pixels
         # spline inputs: pixel coords in the 'target' image
@@ -134,14 +135,34 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         # spline outputs -- pixel coords in the 'input' image
         #    (XX, YY)
         # We use vectorized radec <-> pixelxy functions here
-        ok,XX,YY = wcs.radec2pixelxy(
-            *(targetwcs.pixelxy2radec(
-                xx[np.newaxis,:] + 1,
-				yy[:,np.newaxis] + 1)[-2:]))
+
+        R = targetwcs.pixelxy2radec(xx[np.newaxis,:] + 1,
+                                    yy[:,np.newaxis] + 1)
+        if len(R) == 3:
+            ok = R[0]
+            assert(np.all(ok))
+        ok,XX,YY = wcs.radec2pixelxy(*(R[-2:]))
+        del R
         XX -= 1.
         YY -= 1.
+        assert(np.all(ok))
         del ok
+        
+        # ok,XX,YY = wcs.radec2pixelxy(
+        #     *(targetwcs.pixelxy2radec(
+        #         xx[np.newaxis,:] + 1,
+		# 		yy[:,np.newaxis] + 1)[-2:]))
+        # XX -= 1.
+        # YY -= 1.
+        # del ok
 
+        # print 'Spline inputs:'
+        # print xx
+        # print yy
+        # print 'Spline outputs:'
+        # print XX
+        # print YY
+        
         if ps:
             plt.clf()
             plt.plot(Xo, Yo, 'b.')
@@ -204,6 +225,7 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
             # ok,ra,dec
             R = R[1:]
         ok,fxi,fyi = wcs.radec2pixelxy(*R)
+        assert(np.all(ok))
         # ok,fxi,fyi = wcs.radec2pixelxy(
         #     *targetwcs.pixelxy2radec(ixo[np.newaxis,:] + 1.,
         #                              iyo[:,np.newaxis] + 1.))

@@ -2068,7 +2068,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         char **dataptrarray;
         npy_intp* strideptr;
         PyArray_Descr* dtypes[5];
-        npy_intp i, N;
+        int j;
         
         // we'll do the inner loop ourselves
         flags = NPY_ITER_EXTERNAL_LOOP;
@@ -2097,9 +2097,9 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
 
         op_flags[0] = NPY_ITER_READONLY | NPY_ITER_NBO;
         op_flags[1] = NPY_ITER_READONLY | NPY_ITER_NBO;
-        op_flags[2] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
-        op_flags[3] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
-        op_flags[4] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO;
+        op_flags[2] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO | NPY_ITER_CONTIG | NPY_ITER_ALIGNED;
+        op_flags[3] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO | NPY_ITER_CONTIG | NPY_ITER_ALIGNED;
+        op_flags[4] = NPY_ITER_WRITEONLY | NPY_ITER_ALLOCATE | NPY_ITER_NBO | NPY_ITER_CONTIG | NPY_ITER_ALIGNED;
 
         dtypes[0] = PyArray_DescrFromType(NPY_DOUBLE);
         dtypes[1] = PyArray_DescrFromType(NPY_DOUBLE);
@@ -2109,8 +2109,8 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
 
         iter = NpyIter_MultiNew(5, op, flags, NPY_KEEPORDER, NPY_SAFE_CASTING,
                                 op_flags, dtypes);
-        for (i=0; i<5; i++)
-            Py_DECREF(dtypes[i]);
+        for (j=0; j<5; j++)
+            Py_DECREF(dtypes[j]);
 
         if (!iter)
             return NULL;
@@ -2123,17 +2123,23 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         dataptrarray = NpyIter_GetDataPtrArray(iter);
 
         do {
+            npy_intp i, N;
+            char* src1 = dataptrarray[0];
+            char* src2 = dataptrarray[1];
+            double* dout1 = (double*)(dataptrarray[2]);
+            double* dout2 = (double*)(dataptrarray[3]);
+            int* ok = (int*)dataptrarray[4];
+            N = *innersizeptr;
+
+            //printf("2to2i: N=%i, strides %i,%i\n", N, strideptr[0], strideptr[1]);
+
             // are the inputs contiguous?  (Outputs will be, since we
             // allocated them)
             if ((strideptr[0] == sizeof(double)) &&
                 (strideptr[1] == sizeof(double))) {
                 // printf("Contiguous inputs; going fast\n");
-                double* din1  = (double*)(dataptrarray[0]);
-                double* din2  = (double*)(dataptrarray[1]);
-                double* dout1 = (double*)(dataptrarray[2]);
-                double* dout2 = (double*)(dataptrarray[3]);
-                int* ok = (int*)dataptrarray[4];
-                N = *innersizeptr;
+                double* din1  = (double*)src1;
+                double* din2  = (double*)src2;
                 while (N--) {
                     *ok = func(baton, *din1, *din2, dout1, dout2);
                     ok++;
@@ -2146,14 +2152,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                 // printf("Non-contiguous inputs; going slow\n");
                 npy_intp stride1 = strideptr[0];
                 npy_intp stride2 = strideptr[1];
-                npy_intp size = *innersizeptr;
-                char* src1 = dataptrarray[0];
-                char* src2 = dataptrarray[1];
-                double* dout1 = (double*)dataptrarray[2];
-                double* dout2 = (double*)dataptrarray[3];
-                int* ok = (int*)dataptrarray[4];
-
-                for (i=0; i<size; i++) {
+                for (i=0; i<N; i++) {
                     *ok = func(baton, *((double*)src1), *((double*)src2),
                                dout1, dout2);
                     ok++;
@@ -2619,12 +2618,14 @@ sip_t.iwc2radec = sip_t_iwc2radec
 
 
 def anwcs_t_pixelxy2radec(self, x, y):
-    return anwcs_xy2rd_wrapper(self.this, x, y)
+    ok,r,d =  anwcs_xy2rd_wrapper(self.this, x, y)
+    return (ok == 0),r,d
 anwcs_t.pixelxy2radec_single = anwcs_t.pixelxy2radec
 anwcs_t.pixelxy2radec = anwcs_t_pixelxy2radec
 
 def anwcs_t_radec2pixelxy(self, r, d):
-    return anwcs_rd2xy_wrapper(self.this, r, d)
+    ok,x,y =  anwcs_rd2xy_wrapper(self.this, r, d)
+    return (ok == 0),x,y
 anwcs_t.radec2pixelxy_single = anwcs_t.radec2pixelxy
 anwcs_t.radec2pixelxy = anwcs_t_radec2pixelxy
 
