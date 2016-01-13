@@ -1,5 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
 import matplotlib.cm
 import matplotlib.colors
 import matplotlib.patches
@@ -103,6 +104,7 @@ class PlotSequence(object):
         else:
             self.suffixes = suffixes
         self.pattern = self.basefn + '-%s.%s'
+        self.printfn = True
 
     def skip(self, n=1):
         self.ploti += n
@@ -126,7 +128,8 @@ class PlotSequence(object):
         import pylab as plt
         for fn in self.getnextlist():
             plt.savefig(fn, **kwargs)
-            print 'saved', fn
+            if self.printfn:
+                print('saved', fn)
 
 def loghist(x, y, nbins=100,
             hot=True, doclf=True, docolorbar=True, lo=0.3,
@@ -150,7 +153,7 @@ def loghist(x, y, nbins=100,
 
     if not (np.all(np.isfinite(x)) and np.all(np.isfinite(y))):
         K = np.flatnonzero(np.isfinite(x) * np.isfinite(y))
-        print 'loghist: cutting to', len(K), 'of', len(x), 'finite values'
+        print('loghist: cutting to', len(K), 'of', len(x), 'finite values')
         x = x[K]
         y = y[K]
         
@@ -466,7 +469,7 @@ if __name__ == '__main__':
 
     X = np.arange(25.).reshape((5,5))
     X[2:4,3:4] = np.nan
-    print X
+    print(X)
 
     plt.clf()
     imshow_nan(X, interpolation='nearest')
