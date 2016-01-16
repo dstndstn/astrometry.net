@@ -94,6 +94,11 @@ int* permuted_sort(const void* realarray, int array_stride,
 
 	//printf("d1=%g, d2=%g\n", d1, d2);				   
 
+#define INTCOMPARE(i1, i2, op1, op2)					\
+	if (i1 op1 i2) return -1;							\
+	if (i1 op2 i2) return 1;							\
+	return 0;
+
 int compare_doubles_asc(const void* v1, const void* v2) {
 	const double d1 = *(double*)v1;
 	const double d2 = *(double*)v2;
@@ -120,15 +125,15 @@ int compare_floats_desc(const void* v1, const void* v2) {
 }
 
 int compare_int64_asc(const void* v1, const void* v2) {
-	int64_t f1 = *(int64_t*)v1;
-	int64_t f2 = *(int64_t*)v2;
-	COMPARE(f1, f2, <, >);
+	int64_t i1 = *(int64_t*)v1;
+	int64_t i2 = *(int64_t*)v2;
+	INTCOMPARE(i1, i2, <, >);
 }
 
 int compare_int64_desc(const void* v1, const void* v2) {
-	int64_t f1 = *(int64_t*)v1;
-	int64_t f2 = *(int64_t*)v2;
-	COMPARE(f1, f2, >, <);
+	int64_t i1 = *(int64_t*)v1;
+	int64_t i2 = *(int64_t*)v2;
+	INTCOMPARE(i1, i2, >, <);
 }
 
 // Versions for use with QSORT_R
@@ -139,6 +144,7 @@ int QSORT_COMPARISON_FUNCTION(compare_floats_asc_r,
 
 
 #undef COMPARE
+#undef INTCOMPARE
 
 int compare_ints_asc(const void* v1, const void* v2) {
 	const int d1 = *(int*)v1;
