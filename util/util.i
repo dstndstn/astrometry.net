@@ -1091,7 +1091,9 @@ anwcs.get_cd = anwcs_get_cd
 def fitsio_to_qfits_header(hdr):
     hdrstr = ''
     for rec in hdr.records():
-        cardstr = rec['card']
+        cardstr = rec.get('card', None)
+        if cardstr is None:
+            cardstr = hdr._record2card(rec)
         # pad
         cardstr = cardstr + ' '*(80 - len(cardstr))
         hdrstr += cardstr
@@ -1219,6 +1221,11 @@ def wcs_pv2sip_hdr(hdr, order=5, xlo=0, xhi=0, ylo=0, yhi=0,
     sip_t(const tan_t* other) {
         sip_t* t = (sip_t*)calloc(1, sizeof(sip_t));
         memcpy(&(t->wcstan), other, sizeof(tan_t));
+        return t;
+    }
+
+    sip_t(const qfits_header* hdr) {
+        sip_t* t = sip_read_header(hdr, NULL);
         return t;
     }
 
@@ -1497,6 +1504,15 @@ sip_t.radec_bounds = sip_t_radec_bounds
 
 _real_sip_t_init = sip_t.__init__
 def my_sip_t_init(self, *args, **kwargs):
+    # fitsio header: check for '.records()' function.
+    if len(args) == 1 and hasattr(args[0], 'records'):
+        try:
+            hdr = args[0]
+            qhdr = fitsio_to_qfits_header(hdr)
+            args = [qhdr]
+        except:
+            pass
+
     _real_sip_t_init(self, *args, **kwargs)
     if self.this is None:
         raise RuntimeError('Duck punch!')
@@ -1548,6 +1564,11 @@ Sip = sip_t
     tan_t(const tan_t* other) {
         tan_t* t = (tan_t*)calloc(1, sizeof(tan_t));
         memcpy(t, other, sizeof(tan_t));
+        return t;
+    }
+
+    tan_t(const qfits_header* hdr) {
+        tan_t* t = tan_read_header(hdr, NULL);
         return t;
     }
 
@@ -2650,6 +2671,15 @@ tan_t.radec_bounds = tan_t_radec_bounds
 
 _real_tan_t_init = tan_t.__init__
 def my_tan_t_init(self, *args, **kwargs):
+    # fitsio header: check for '.records()' function.
+    if len(args) == 1 and hasattr(args[0], 'records'):
+        try:
+            hdr = args[0]
+            qhdr = fitsio_to_qfits_header(hdr)
+            args = [qhdr]
+        except:
+            pass
+
     _real_tan_t_init(self, *args, **kwargs)
     if self.this is None:
         raise RuntimeError('Duck punch!')
