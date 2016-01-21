@@ -16,7 +16,7 @@ void test_sorting(CuTest* tc) {
 	double flux[] = { 50, 100, 50, 100, 20, 20, 40, 40 };
 	double bg[]   = {  0,  10, 10,   0, 10,  0,  5,  0 };
 
-	int trueorder[] = { 4, 5, 7, 6, 2, 0, 1, 3 };
+	int trueorder[] = { 4, 5, 6, 7, 0, 2, 1, 3 };
 
 	int i, N;
 	starxy_t* s;
