@@ -280,6 +280,12 @@ endif
 
 FLAGS_DEF += -Winline
 
+
+# If user set FLAGS, use those rather than FLAGS_DEF.
+ifneq ($(origin FLAGS),undefined)
+  FLAGS_DEF := $(FLAGS)
+endif
+
 # fold in the user's CFLAGS, if set...
 CFLAGS_DEF := $(CFLAGS) $(FLAGS_DEF)
 CFLAGS_DEF += -I$(INCLUDE_BASE_DIR)
