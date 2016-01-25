@@ -7,8 +7,7 @@ Nova.astrometry.net: API
 We provide a web-services API that uses JSON to encode the parameters
 and results.
 
-We have code-as-documentation in the `client.py
-<http://trac.astrometry.net/browser/trunk/src/astrometry/net/client/client.py>`_
+We have code-as-documentation in the `client.py <https://github.com/dstndstn/astrometry.net/blob/master/net/client/client.py>`_
 file, but will try to keep this documentation up to date as well.
 
 JSON encoding
@@ -37,7 +36,7 @@ This form demonstrates how the request must be encoded, and what the result look
 
 .. raw:: html
 
-   <form action="http://staging.astrometry.net/api/login" method="POST">
+   <form action="http://nova.astrometry.net/api/login" method="POST">
    <input type="text" name="request-json" size=50 value="{&#34;apikey&#34;: &#34;XXXXXXXX&#34;}" />
    <input type="submit" value="Submit" />
    </form>
@@ -91,7 +90,7 @@ Example:
 
 .. raw:: html
 
-   <form action="http://staging.astrometry.net/api/url_upload" method="POST">
+   <form action="http://nova.astrometry.net/api/url_upload" method="POST">
    <textarea name="request-json" rows=5 cols=80>
    {"session": "####", "url": "http://apod.nasa.gov/apod/image/1206/ldn673s_block1123.jpg", "scale_units": "degwidth", "scale_lower": 0.5, "scale_upper": 1.0, "center_ra": 290, "center_dec": 11, "radius": 2.0 }
    </textarea>
