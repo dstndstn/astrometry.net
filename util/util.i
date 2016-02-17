@@ -2507,6 +2507,70 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         return 0;
     }
 
+
+
+    // np.add.at
+    // a[k] += v
+    static int increment_array(PyObject* py_a, PyObject* py_k, PyObject* py_v) {
+        PyArray_Descr *itype, *dtype;
+        PyObject *np_a=NULL, *np_k=NULL, *np_v=NULL;
+        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED |
+            NPY_ELEMENTSTRIDES;
+        int reqout = req | NPY_WRITEABLE;
+        int64_t *K;
+        double *A, *V;
+        int64_t i,N,M;
+
+        dtype = PyArray_DescrFromType(NPY_DOUBLE);
+        itype = PyArray_DescrFromType(NPY_INT32);
+        Py_INCREF(itype);
+        Py_INCREF(dtype);
+        Py_INCREF(dtype);
+
+        np_a = PyArray_CheckFromAny(py_a, dtype, 1, 1, reqout, NULL);
+        np_k = PyArray_CheckFromAny(py_k, itype, 1, 1, req, NULL);
+        np_v = PyArray_CheckFromAny(py_v, dtype, 1, 1, req, NULL);
+
+        if (!np_a || !np_k || !np_v) {
+            ERR("Failed to PyArray_FromAny the a, k, and v arrays.\n");
+            Py_XDECREF(np_a);
+            Py_XDECREF(np_k);
+            Py_XDECREF(np_v);
+            return -1;
+        }
+        N = (int64_t)PyArray_DIM(np_k, 0);
+        if (PyArray_DIM(np_v, 0) != N) {
+            ERR("Expected k and v arrays to have the same lengths!\n");
+            Py_XDECREF(np_a);
+            Py_XDECREF(np_k);
+            Py_XDECREF(np_v);
+            return -1;
+        }
+        
+        M = (int64_t)PyArray_DIM(np_a, 0);
+
+        A = PyArray_DATA(np_a);
+        K = PyArray_DATA(np_k);
+        V = PyArray_DATA(np_v);
+
+        for (i=0; i<N; i++) {
+            int64_t k = K[i];
+            if ((k < 0) || (k > M)) {
+                printf("Index out of bounds: %li vs size %li\n", k, M);
+                Py_XDECREF(np_a);
+                Py_XDECREF(np_k);
+                Py_XDECREF(np_v);
+                return -1;
+            }
+            A[k] += V[i];
+        }
+
+        Py_DECREF(np_a);
+        Py_DECREF(np_k);
+        Py_DECREF(np_v);
+        return 0;
+    }
+
              
 
 
