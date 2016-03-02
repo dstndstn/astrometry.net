@@ -93,10 +93,12 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         step = splineStep
         xlo = max(0, x0-margin)
         xhi = min(W-1, x1+margin)
-        nx = np.ceil(float(xhi - xlo) / step) + 1
-        xx = np.linspace(xlo, xhi, nx)
         ylo = max(0, y0-margin)
         yhi = min(H-1, y1+margin)
+        if xlo > xhi or ylo > yhi:
+            raise NoOverlapError()
+        nx = np.ceil(float(xhi - xlo) / step) + 1
+        xx = np.linspace(xlo, xhi, nx)
         ny = np.ceil(float(yhi - ylo) / step) + 1
         yy = np.linspace(ylo, yhi, ny)
 
