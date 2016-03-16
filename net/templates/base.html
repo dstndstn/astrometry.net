@@ -55,7 +55,7 @@ $(document).ready(function() {
         <div id="site_header">
             <div id="auth_status">
             {% if user.is_authenticated %}
-                Signed in as <span id="user_info">{{ user.id }} {{ user.get_profile.display_name }} {{ user.username }} ({{ user.email }})</span> |
+                Signed in as <span id="user_info">{{ user.id }} / {{ user.get_profile.display_name }} / {{ user.username }} ({{ user.email }})</span> |
                 <a href="{% url 'signout' %}">Sign Out</a>
             {% else %}
                 Not signed in | 
