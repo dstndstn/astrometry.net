@@ -1,7 +1,7 @@
-sitename = 'nova'
-
 # settings_nova.py
 from settings_common import *
+
+sitename = 'nova'
 
 TEMPDIR = '/data2/tmp'
 DATABASES['default']['NAME'] = 'an-nova'
