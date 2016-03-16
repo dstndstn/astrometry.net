@@ -337,7 +337,7 @@ class DiskFile(models.Model):
         df,created = DiskFile.objects.get_or_create(
             file_hash=hashkey,
             defaults=dict(size=0, file_type='', collection=collection))
-        if created:
+        if created or not os.path.exists(df.get_path()):
             try:
                 # move it into place
                 df.make_dirs()
