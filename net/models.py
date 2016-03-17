@@ -1241,6 +1241,11 @@ class UserProfile(models.Model):
 def get_user_profile(user):
     if user is None:
         return None
+    if not hasattr(user, 'profile'):
+        ##???
+        # AnonymousUsers seem to end up here
+        #print('User:', user, 'dir', dir(user))
+        return None
     profiles = user.profile.all()
     if len(profiles) > 0:
         return profiles[0]
