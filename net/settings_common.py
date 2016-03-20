@@ -22,6 +22,7 @@ GALEX_JPEG_DIR = os.path.join(WEB_DIR, 'GALEX-jpegs')
 #HENRY_DRAPER_CAT = '/data1/catalogs-fits/HD/hd2.fits'
 HENRY_DRAPER_CAT = '/data2/nova/hd.fits'
 TYCHO2_KD = '/data2/nova/tycho2.kd'
+HIPPARCOS_CAT = '/data2/nova/hip.fits'
 
 DATADIR = os.path.join(WEB_DIR, 'data', 'files')
 JOBDIR = os.path.join(WEB_DIR, 'data', 'jobs')

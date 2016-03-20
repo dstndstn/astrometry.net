@@ -195,6 +195,7 @@ def get_empty_opts():
     opt.ngccat = None
     opt.ngcnames = None
     opt.iccat = None
+    opt.hipcat = None
     return opt
 
 if __name__ == '__main__':

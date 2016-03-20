@@ -408,6 +408,7 @@ def get_anns(cal, nbright=0):
     icfn = os.path.join(catdir, 'ic2000.fits')
     brightfn = os.path.join(catdir, 'brightstars.fits')
     hdfn = settings.HENRY_DRAPER_CAT
+    hipfn = settings.HIPPARCOS_CAT
     tycho2fn = settings.TYCHO2_KD
     
     import astrometry.blind.plotann as plotann
@@ -421,6 +422,7 @@ def get_anns(cal, nbright=0):
         opt.hdcat = hdfn
     if rad < 0.25:
         opt.t2cat = tycho2fn
+        opt.hipcat = hipfn
     if rad < 10:
         opt.ngc = True
         opt.ngccat = ngcfn
