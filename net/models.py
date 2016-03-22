@@ -337,7 +337,7 @@ class DiskFile(models.Model):
         df,created = DiskFile.objects.get_or_create(
             file_hash=hashkey,
             defaults=dict(size=0, file_type='', collection=collection))
-        if created:
+        if created or not os.path.exists(df.get_path()):
             try:
                 # move it into place
                 df.make_dirs()
@@ -1240,6 +1240,11 @@ class UserProfile(models.Model):
 
 def get_user_profile(user):
     if user is None:
+        return None
+    if not hasattr(user, 'profile'):
+        ##???
+        # AnonymousUsers seem to end up here
+        #print('User:', user, 'dir', dir(user))
         return None
     profiles = user.profile.all()
     if len(profiles) > 0:

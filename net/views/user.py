@@ -30,11 +30,9 @@ class ProfileForm(forms.ModelForm):
         model = UserProfile
         exclude = ('apikey', 'default_license')
 
-
 def dashboard(request):
-    return render_to_response("dashboard/base.html",
-        {
-        },
+    return render_to_response("dashboard/index.html",
+        {},
         context_instance = RequestContext(request))
 
 @login_required

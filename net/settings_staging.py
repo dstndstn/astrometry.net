@@ -10,3 +10,5 @@ SESSION_COOKIE_NAME = 'StagingAstrometrySession'
 ssh_solver_config = 'an-nova'
 sitename = 'staging'
 
+SOCIAL_AUTH_GITHUB_KEY    = github_secrets[sitename].key
+SOCIAL_AUTH_GITHUB_SECRET = github_secrets[sitename].secret
