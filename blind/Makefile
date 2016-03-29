@@ -349,6 +349,14 @@ build-astrometry-index: build-index-main.o $(SLIB) #$(BUILD_INDEX_OBJS) $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
 ALL_OBJ += build-index-main.o
 
+allquads: allquads-main.o allquads.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
+ALL_OBJ += allquads-main.o allquads.o
+
+startree2: startree2-main.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
+ALL_OBJ += startree2-main.o
+
 astrometry-engine: engine-main.o $(SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 

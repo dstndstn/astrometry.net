@@ -6,6 +6,10 @@
 #ifndef ALLQUADS_H
 #define ALLQUADS_H
 
+#include "starkd.h"
+#include "quadfile.h"
+#include "codefile.h"
+
 struct allquads {
 	int dimquads;
 	int dimcodes;
@@ -16,8 +20,8 @@ struct allquads {
 	char *skdtfn;
 
 	startree_t* starkd;
-	quadfile* quads;
-	codefile* codes;
+	quadfile_t* quads;
+	codefile_t* codes;
 
 	double quad_d2_lower;
 	double quad_d2_upper;
