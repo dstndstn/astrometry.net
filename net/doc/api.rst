@@ -35,6 +35,7 @@ API key.  The formatting steps are:
 Using the `requests` library, this looks like::
 
     import requests
+    import json
     R = requests.post('http://nova.astrometry.net/api/login', data={'request-json': json.dumps({"apikey": "XXXXXXXX"})})
     print(R.text)
     >> u'{"status": "success", "message": "authenticated user: ", "session": "0ps9ztf2kmplhc2gupfne2em5qfn0joy"}'
