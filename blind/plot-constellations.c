@@ -35,7 +35,7 @@
 #include "errors.h"
 #include "log.h"
 
-const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjxvLn:f:MDd:G:g:JF:V:O";
+const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjxvLn:f:MDd:G:g:JF:V:O:";
 
 void print_help(char* progname) {
     BOILERPLATE_HELP_HEADER(stdout);
