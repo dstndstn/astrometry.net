@@ -184,13 +184,7 @@ static void add_text(cairos_t* cairos,
 
 }
 
-static void color_for_radec(double ra, double dec, float* r, float* g, float* b, anbool white) {
-	if (white) {
-		*r = 1;
-		*g = 1;
-		*b = 1;
-		return;
-	}
+static void color_for_radec(double ra, double dec, float* r, float* g, float* b) {
     int con = constellation_containing(ra, dec);
     srand(con);
     *r = ((rand() % 128) + 127) / 255.0;
@@ -604,7 +598,11 @@ int main(int argc, char** args) {
                 // color is chosen for a constellation in each frame.
                 int star = il_get(inboundstars, 0);
                 constellations_get_star_radec(star, &ra, &dec);
-                color_for_radec(ra, dec, &r, &g, &b, whitetext);
+                if (whitetext) {
+                	r = g = b = 1;
+                } else {
+                	color_for_radec(ra, dec, &r, &g, &b);
+                }
                 cairo_set_source_rgba(cairoshapes, r,g,b,0.8);
                 cairo_set_line_width(cairoshapes, cw);
                 cairo_set_source_rgba(cairo, r,g,b,0.8);
@@ -789,7 +787,11 @@ int main(int argc, char** args) {
             if (!justlist) {
                 float r,g,b;
                 // set color based on RA,Dec to match constellations above.
-                color_for_radec(bs->ra, bs->dec, &r, &g, &b, whitetext);
+                if (whitetext) {
+                	r = g = b = 1;
+                } else {
+                	color_for_radec(bs->ra, bs->dec, &r, &g, &b);
+                }
                 cairo_set_source_rgba(cairoshapes, r,g,b,0.8);
                 cairo_set_source_rgba(cairo, r,g,b, 0.8);
             }
