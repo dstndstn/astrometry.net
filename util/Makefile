@@ -166,11 +166,11 @@ ALL_OBJ += wcs-pv2sip.o
 _util$(PYTHON_SO_EXT): util.i lanczos.i $(ANFILES_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(CFLAGS)" \
-	python setup.py build_ext -v --inplace --build-temp .
+	$(PYTHON) setup.py build_ext -v --inplace --build-temp .
 util.py: util.i lanczos.i
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(CFLAGS)" \
-	python setup.py build_ext -v --inplace --build-temp .
+	$(PYTHON) setup.py build_ext -v --inplace --build-temp .
 
 PYUTIL := _util$(PYTHON_SO_EXT) util.py
 pyutil: $(PYUTIL)
