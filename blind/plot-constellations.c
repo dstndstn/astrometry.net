@@ -35,7 +35,7 @@
 #include "errors.h"
 #include "log.h"
 
-const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:g:JF:V:O:";
+const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjxvLn:f:MDd:G:g:JF:V:O:";
 
 void print_help(char* progname) {
     BOILERPLATE_HELP_HEADER(stdout);
@@ -56,6 +56,7 @@ void print_help(char* progname) {
            "   [-b <number-of-bright-stars>]: just plot the <N> brightest stars\n"
            "   [-c]: only plot bright stars that have common names.\n"
            "   [-j]: if a bright star has a common name, only print that\n"
+  		   "   [-x]: plot only white text"
            "   [-v]: be verbose\n"
            "   [-n <width>]: NGC circle width (default 2)\n"
            "   [-f <size>]: font size.\n"
@@ -264,6 +265,8 @@ int main(int argc, char** args) {
 	char valign = 'C';
     sl* json = NULL;
 
+    anbool whitetext = FALSE;
+
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
 		case 'V':
@@ -311,6 +314,9 @@ int main(int argc, char** args) {
             justlist = TRUE;
             outfn = NULL;
             break;
+        case 'x':
+        	whitetext = TRUE;
+        	break;
         case 'v':
             loglvl++;
             break;
@@ -448,7 +454,6 @@ int main(int argc, char** args) {
          -foreground/text: surffg / cairo
          --> gets drawn last.
          */
-
         surffg = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, W, H);
         cairo = cairo_create(surffg);
         cairo_set_line_join(cairo, CAIRO_LINE_JOIN_BEVEL);
@@ -593,7 +598,11 @@ int main(int argc, char** args) {
                 // color is chosen for a constellation in each frame.
                 int star = il_get(inboundstars, 0);
                 constellations_get_star_radec(star, &ra, &dec);
-                color_for_radec(ra, dec, &r,&g,&b);
+                if (whitetext) {
+                	r = g = b = 1;
+                } else {
+                	color_for_radec(ra, dec, &r, &g, &b);
+                }
                 cairo_set_source_rgba(cairoshapes, r,g,b,0.8);
                 cairo_set_line_width(cairoshapes, cw);
                 cairo_set_source_rgba(cairo, r,g,b,0.8);
@@ -778,7 +787,11 @@ int main(int argc, char** args) {
             if (!justlist) {
                 float r,g,b;
                 // set color based on RA,Dec to match constellations above.
-                color_for_radec(bs->ra, bs->dec, &r,&g,&b);
+                if (whitetext) {
+                	r = g = b = 1;
+                } else {
+                	color_for_radec(bs->ra, bs->dec, &r, &g, &b);
+                }
                 cairo_set_source_rgba(cairoshapes, r,g,b,0.8);
                 cairo_set_source_rgba(cairo, r,g,b, 0.8);
             }
