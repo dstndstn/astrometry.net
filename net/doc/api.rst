@@ -129,12 +129,25 @@ python, it will probably be helpful to look at the *client.py* code.
 
 Specifically, the *multipart/form-data* data you send must have two
 parts:
-* The first contains a text field, *request-json*, just
-like the rest of the API calls.  The value of this field is the
-JSON-encoded string.  It should have MIME type *text/plain*, and
-*Content-disposition: form-data; name="request-json"*
-* The second part contains the file data, and should have MIME type *octet-stream*, with *Content-disposition: form-data; name="file"; filename="XXX"* where
-*XXX* is a filename of your choice.
+ * The first contains a text field, *request-json*, just like the rest of the API calls.  The value of this field is the JSON-encoded string.  It should have MIME type *text/plain*, and *Content-disposition: form-data; name="request-json"*
+ * The second part contains the file data, and should have MIME type *octet-stream*, with *Content-disposition: form-data; name="file"; *filename="XXX"* where XXX* is a filename of your choice.
+
+For example, uploading a file containing the text "Hello World", the data sent in the POST would look like this::
+
+    --===============2521702492343980833==
+    Content-Type: text/plain
+    MIME-Version: 1.0
+    Content-disposition: form-data; name="request-json"
+    
+    {"publicly_visible": "y", "allow_modifications": "d", "session": "XXXXXX", "allow_commercial_use": "d"}
+    --===============2521702492343980833==
+    Content-Type: application/octet-stream
+    MIME-Version: 1.0
+    Content-disposition: form-data; name="file"; filename="myfile.txt"
+    
+    Hello World
+    
+    --===============2521702492343980833==--
 
 
 API URL:
