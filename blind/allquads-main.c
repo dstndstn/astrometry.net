@@ -39,7 +39,7 @@
 
 //#include "build-index.h"
 
-const char* OPTIONS = "hi:c:q:u:l:d:I:v";
+const char* OPTIONS = "hi:o:u:l:d:I:v";
 
 static void print_help(char* progname) {
 	BOILERPLATE_HELP_HEADER(stdout);
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 	int argchar;
 	allquads_t* aq;
 	int loglvl = LOG_MSG;
-	int i;
+	int i, N;
     char* catfn = NULL;
 
 	startree_t* starkd;
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
     }
 
 	if (!aq->id)
-		logmsg("Warning: you should set the unique-id for this index (-i).\n");
+		logmsg("Warning: you should set the unique-id for this index (with -I).\n");
 
 	if (aq->dimquads > DQMAX) {
 		ERROR("Quad dimension %i exceeds compiled-in max %i.\n", aq->dimquads, DQMAX);
@@ -156,13 +156,25 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
+    logmsg("Star kd-tree contains %i data points in dimension %i\n",
+           startree_N(starkd), startree_D(starkd));
+    N = startree_N(starkd);
+    for (i=0; i<N; i++) {
+        double ra,dec;
+        int ok;
+        ok = startree_get_radec(starkd, i, &ra, &dec);
+        logmsg("  data %i: ok %i, RA,Dec %g, %g\n", i, ok, ra, dec);
+    }
+
 	if (startree_write_to_file(starkd, aq->skdtfn)) {
 		ERROR("Failed to write star kdtree");
 		exit(-1);
 	}
     startree_close(starkd);
 	fitstable_close(cat);
+    logmsg("Wrote star kdtree to %s\n", aq->skdtfn);
 
+    logmsg("Running allquads...\n");
 	if (allquads_open_outputs(aq)) {
 		exit(-1);
 	}
@@ -177,6 +189,8 @@ int main(int argc, char** argv) {
 
 	allquads_free(aq);
 
+    logmsg("allquads: wrote %s, %s\n", aq->quadfn, aq->codefn);
+
     // build-index:
     //build_index_defaults(&p);
 
@@ -190,6 +204,7 @@ int main(int argc, char** argv) {
     char* tempdir = NULL;
 
     ckdtfn = create_temp_file("ckdt", tempdir);
+    logmsg("Creating code kdtree, reading %s, writing to %s\n", aq->codefn, ckdtfn);
     if (codetree_files(aq->codefn, ckdtfn, 0, 0, 0, 0, argv, argc)) {
         ERROR("codetree failed");
         return -1;
