@@ -130,6 +130,7 @@ startree_t* startree_build(fitstable_t* intable,
 	starkd = startree_new();
 	if (!starkd) {
 		ERROR("Failed to allocate startree");
+        free(xyz);
 		goto bailout;
 	}
 	tt = kdtree_kdtypes_to_treetype(KDT_EXT_DOUBLE, treetype, datatype);
@@ -146,6 +147,7 @@ startree_t* startree_build(fitstable_t* intable,
 		ERROR("Failed to build star kdtree");
 		startree_close(starkd);
 		starkd = NULL;
+        free(xyz);
 		goto bailout;
 	}
 	starkd->tree->name = strdup(STARTREE_NAME);
@@ -192,8 +194,9 @@ startree_t* startree_build(fitstable_t* intable,
 		free(ra);
 	if (dec)
 		free(dec);
-	if (xyz)
-		free(xyz);
+    // NOOO don't free xyz -- it belongs to the kdtree!
+	//if (xyz)
+    //free(xyz);
 	return starkd;
 }
 
