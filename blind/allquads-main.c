@@ -187,8 +187,6 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
-	allquads_free(aq);
-
     logmsg("allquads: wrote %s, %s\n", aq->quadfn, aq->codefn);
 
     // build-index:
@@ -225,6 +223,8 @@ int main(int argc, char** argv) {
         ERROR("Failed to unpermute-stars");
         return -1;
     }
+
+	allquads_free(aq);
 
 	// unpermute-quads
     /*
@@ -271,6 +271,13 @@ int main(int argc, char** argv) {
     quadfile_close(quad);
 
 	printf("Done.\n");
+
+    free(ckdtfn);
+    free(skdt2fn);
+    free(quad2fn);
+    free(ckdt2fn);
+    free(quad3fn);
+
 	return 0;
 }
 
