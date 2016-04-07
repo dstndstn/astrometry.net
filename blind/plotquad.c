@@ -61,7 +61,7 @@ int main(int argc, char *args[]) {
 	float a = 1.0;
     anbool plotmarker = FALSE;
 
-    unsigned char* img;
+    unsigned char* img = NULL;
 	cairo_t* cairo;
 	cairo_surface_t* target;
     float r=1.0, g=1.0, b=1.0;

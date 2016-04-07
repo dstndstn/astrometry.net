@@ -107,6 +107,7 @@ struct augment_xylist_s {
 	anbool invert_image;
 
 	float image_sigma;
+	float image_nsigma;
 
     char* xcol;
     char* ycol;

@@ -174,6 +174,8 @@ static an_option_t options[] = {
 	 "don't try to estimate a smoothly-varying sky background during source extraction."},
 	{'{', "sigma", required_argument, "float",
 	 "set the noise level in the image"},
+    {'\x93', "nsigma", required_argument, "float",
+     "number of sigma for a source detection; default 8"},
 	{'9', "no-remove-lines", no_argument, NULL,
 	 "don't remove horizontal and vertical overdensities of sources."},
 	{':', "uniformize", required_argument, "int",
@@ -321,6 +323,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
 		break;
 	case '{':
 		axy->image_sigma = atof(optarg);
+		break;
+	case '\x93':
+		axy->image_nsigma = atof(optarg);
 		break;
 	case '^':
 		axy->use_sextractor = TRUE;
@@ -941,6 +946,7 @@ int augment_xylist(augment_xylist_t* axy,
 			sxyparams.nobgsub = axy->no_bg_subtraction;
 			sxyparams.sigma = axy->image_sigma;
 			sxyparams.invert = axy->invert_image;
+            sxyparams.plim = axy->image_nsigma;
 
 			// MAGIC 3: downsample by a factor of 2, up to 3 times.
 			if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3, axy->extension,
