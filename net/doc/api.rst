@@ -32,6 +32,20 @@ API key.  The formatting steps are:
 
        http://nova.astrometry.net/api/login
 
+Using the `requests` library, this looks like::
+
+    import requests
+    import json
+    R = requests.post('http://nova.astrometry.net/api/login', data={'request-json': json.dumps({"apikey": "XXXXXXXX"})})
+    print(R.text)
+    >> u'{"status": "success", "message": "authenticated user: ", "session": "0ps9ztf2kmplhc2gupfne2em5qfn0joy"}'
+
+Note the *request-json=VALUE*: we're not sending raw JSON, we're sending the
+JSON-encoded string as though it were a text field called *request-json*.
+
+All the other API calls use this same pattern.  It may be more complicated on
+the client side, but it makes testing and the server side easier.
+
 This form demonstrates how the request must be encoded, and what the result looks like.
 
 .. raw:: html
@@ -55,7 +69,7 @@ log out.
 Submitting a URL
 ----------------
 
-API URL::
+API URL:
 
     http://nova.astrometry.net/api/url_upload
 
@@ -105,11 +119,256 @@ The ``subid`` is the Submission number.  The ``hash`` is the ``sha-1`` hash of t
 
 
 
+Submitting a file
+-----------------
+
+Submitting a file is somewhat complicated, because it has to be formatted
+as a *multipart/form-data* form.  This is exactly the same way an HTML form
+with text fields and a file upload field would do it.  If you are working in
+python, it will probably be helpful to look at the *client.py* code.
+
+Specifically, the *multipart/form-data* data you send must have two
+parts:
+ * The first contains a text field, *request-json*, just like the rest of the API calls.  The value of this field is the JSON-encoded string.  It should have MIME type *text/plain*, and *Content-disposition: form-data; name="request-json"*
+ * The second part contains the file data, and should have MIME type *octet-stream*, with *Content-disposition: form-data; name="file"; *filename="XXX"* where XXX* is a filename of your choice.
+
+For example, uploading a file containing the text "Hello World", the data sent in the POST would look like this::
+
+    --===============2521702492343980833==
+    Content-Type: text/plain
+    MIME-Version: 1.0
+    Content-disposition: form-data; name="request-json"
+    
+    {"publicly_visible": "y", "allow_modifications": "d", "session": "XXXXXX", "allow_commercial_use": "d"}
+    --===============2521702492343980833==
+    Content-Type: application/octet-stream
+    MIME-Version: 1.0
+    Content-disposition: form-data; name="file"; filename="myfile.txt"
+    
+    Hello World
+    
+    --===============2521702492343980833==--
+
+
+API URL:
+
+    http://nova.astrometry.net/api/upload
+
+Arguments:
+
+    Same as URL upload, above.
+
+
+Getting submission status
+-------------------------
+
+When you submit a URL or file, you will get back a *subid* submission
+identifier.  You can use this to query the status of your submission
+as it gets queued and run.  Each submission can have 0 or more "jobs"
+associated with it; a job corresponds to a run of the *solve-field*
+program on your data.
+
+API URL:
+
+    http://nova.astrometry.net/api/submissions/SUBID
+
+Example:
+
+    http://nova.astrometry.net/api/submissions/1019520
+
+Arguments:
+
+    None required.
+
+Returns (example)::
+
+    {"processing_started": "2016-03-29 11:02:11.967627", "job_calibrations": [[1493115, 785516]],
+    "jobs": [1493115], "processing_finished": "2016-03-29 11:02:13.010625",
+    "user": 1, "user_images": [1051223]}
+
+If the job has not started yet, the *jobs* array may be empty.  If the
+*job_calibrations* array is not empty, then we solved your image.
+
+
+Getting job status
+------------------
+
+API URL:
+
+    http://nova.astrometry.net/api/jobs/JOBID
+
+Example:
+
+    http://nova.astrometry.net/api/jobs/1493115
+
+Arguments:
+
+* None required
+
+Returns (example):
+
+    {"status": "success"}
+
+
+Getting job results: calibration
+--------------------------------
+
+API URL:
+
+    http://nova.astrometry.net/api/jobs/JOBID/calibration/
+
+Example:
+
+    http://nova.astrometry.net/api/jobs/1493115/calibration/
+
+Arguments:
+
+* None required
+
+Returns (example)::
+
+    {"parity": 1.0, "orientation": 105.74942079091929,
+    "pixscale": 1.0906710701159739, "radius": 0.8106715896625917,
+    "ra": 169.96633791366915, "dec": 13.221011585315143}
+
+
+Getting job results: tagged objects in your image
+-------------------------------------------------
+
+You can get either all tags (including those added by random people), or
+just the tags added by the web service automatically (known objects in your
+field).
+
+API URL:
+
+* http://nova.astrometry.net/api/jobs/JOBID/tags/
+* http://nova.astrometry.net/api/jobs/JOBID/machine_tags/
+
+Example:
+
+* http://nova.astrometry.net/api/jobs/1493115/tags/
+* http://nova.astrometry.net/api/jobs/1493115/machine_tags/
+
+Arguments:
+
+* None required
+
+Returns (example)::
+
+    {"tags": ["NGC 3628", "M 66", "NGC 3627", "M 65", "NGC 3623"]}
+
+
+Getting job results: known objects in your image
+------------------------------------------------
+
+API URL:
+
+    http://nova.astrometry.net/api/jobs/JOBID/objects_in_field/
+
+Example:
+
+    http://nova.astrometry.net/api/jobs/1493115/objects_in_field/
+
+Arguments:
+
+* None required
+
+Returns (example)::
+
+    {"objects_in_field": ["NGC 3628", "M 66", "NGC 3627", "M 65", "NGC 3623"]}
+
+
+Getting job results: known objects in your image, with coordinates
+------------------------------------------------------------------
+
+API URL:
+
+    http://nova.astrometry.net/api/jobs/JOBID/annotations/
+
+Example:
+
+    http://nova.astrometry.net/api/jobs/1493115/annotations/
+
+Arguments:
+
+* None required
+
+Returns (example, cut)::
+
+    {"annotations": [
+      {"radius": 0.0, "type": "ic", "names": ["IC 2728"],
+       "pixelx": 1604.1727638846828, "pixely": 1344.045125738614},
+      {"radius": 0.0, "type": "hd", "names": ["HD 98388"],
+       "pixelx": 1930.2719762446786, "pixely": 625.1110603737037}
+     ]}
+
+Returns a list of objects in your image, including NGC/IC galaxies,
+Henry Draper catalog stars, etc.  These should be the same list of
+objects annotated in our plots.
+
+
+Getting job results
+-------------------
+
+API URL:
+
+    http://nova.astrometry.net/api/jobs/JOBID/info/
+
+Example:
+
+    http://nova.astrometry.net/api/jobs/1493115/info/
+
+Arguments:
+
+* None required
+
+Returns (example, cut)::
+
+    {"status": "success",
+     "machine_tags": ["NGC 3628", "M 66", "NGC 3627", "M 65", "NGC 3623"],
+     "calibration": {"parity": 1.0, "orientation": 105.74942079091929, 
+        "pixscale": 1.0906710701159739, "radius": 0.8106715896625917, 
+        "ra": 169.96633791366915, "dec": 13.221011585315143},
+     "tags": ["NGC 3628", "M 66", "NGC 3627", "M 65", "NGC 3623"],
+     "original_filename": "Leo Triplet-1.jpg",
+     "objects_in_field": ["NGC 3628", "M 66", "NGC 3627", "M 65", "NGC 3623"]}
+
+
+Getting job results: results files
+----------------------------------
+
+Note that when using the API, you can still request regular URLs to,
+for example, retrieve the WCS file or overlay plots.  Images submitted
+via the API go through exactly the same processing as images submitted
+through the browser interface, so you can find the status or results
+pages and discover the URLs of various data products that we haven't
+documented here.
+
+URLs:
+
+* http://nova.astrometry.net/wcs_file/JOBID
+* http://nova.astrometry.net/new_fits_file/JOBID
+* http://nova.astrometry.net/rdls_file/JOBID
+* http://nova.astrometry.net/axy_file/JOBID
+* http://nova.astrometry.net/corr_file/JOBID
+* http://nova.astrometry.net/annotated_display/JOBID
+* http://nova.astrometry.net/red_green_image_display/JOBID
+* http://nova.astrometry.net/extraction_image_display/JOBID
+
+Examples:
+
+* http://nova.astrometry.net/wcs_file/1493115
+* http://nova.astrometry.net/new_fits_file/1493115
+* http://nova.astrometry.net/rdls_file/1493115
+* http://nova.astrometry.net/axy_file/1493115
+* http://nova.astrometry.net/corr_file/1493115
+* http://nova.astrometry.net/annotated_display/1493115
+* http://nova.astrometry.net/red_green_image_display/1493115
+* http://nova.astrometry.net/extraction_image_display/1493115
+
 Misc Notes
 ----------
 
--currently the SDSS and GALEX overlay views return plots by base64
-encoding them and including them in the JSON results, but there is
-probably a better way to do that...  But regardless, you should be
-able to get back plots if you want them.
+The API and other URLs are defined here:
 
+    https://github.com/dstndstn/astrometry.net/blob/master/net/urls.py#L146

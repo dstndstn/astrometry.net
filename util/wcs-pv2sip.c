@@ -246,8 +246,8 @@ sip_t* wcs_pv2sip_header(qfits_header* hdr,
 
 	if (stepsize == 0)
         stepsize = 100.;
-    nx = MAX(2, round((xhi - xlo)/stepsize));
-    ny = MAX(2, round((yhi - ylo)/stepsize));
+    nx = MAX(order+2, round((xhi - xlo)/stepsize));
+    ny = MAX(order+2, round((yhi - ylo)/stepsize));
     xstep = (xhi - xlo) / (double)(nx - 1);
     ystep = (yhi - ylo) / (double)(ny - 1);
 

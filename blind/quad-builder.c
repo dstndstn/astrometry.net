@@ -23,8 +23,12 @@ static void check_scale(quadbuilder_t* qb, pquad_t* pq) {
 	double invscale;
 	double ABx, ABy;
 	Unused anbool ok;
-	if (!(qb->check_scale_low || qb->check_scale_high))
+	if (!(qb->check_scale_low || qb->check_scale_high)) {
+        logverb("Not checking scale\n");
+        // ??
+        pq->scale_ok = TRUE;
 		return;
+    }
 	sA = qb->starxyz + pq->iA * 3;
 	sB = qb->starxyz + pq->iB * 3;
 	// s2: squared AB dist
@@ -67,9 +71,16 @@ check_inbox(pquad_t* pq, int* inds, int ninds, double* stars) {
 		double r;
 		ind = inds[i];
 		starpos = stars + ind*3;
+        logverb("Star position: [%.4f, %.4f, %.4f]\n",
+                starpos[0], starpos[1], starpos[2]);
+        logverb("MidAB: [%.4f, %.4f, %.4f]\n",
+                pq->midAB[0], pq->midAB[1], pq->midAB[2]);
+
 		ok = star_coords(starpos, pq->midAB, TRUE, &Dy, &Dx);
-		if (!ok)
+		if (!ok) {
+            logverb("star coords not ok\n");
 			continue;
+        }
 		ADx = Dx - pq->Ax;
 		ADy = Dy - pq->Ay;
 		x =  ADx * pq->costheta + ADy * pq->sintheta;
@@ -80,8 +91,10 @@ check_inbox(pquad_t* pq, int* inds, int ninds, double* stars) {
 		// x^2-x + y^2-y + 1/2     <=   1/2
 		// x^2-x + y^2-y           <=   0
 		r = (x*x - x) + (y*y - y);
-		if (r > 0.0)
+		if (r > 0.0) {
+            logverb("star not in circle\n");
 			continue;
+        }
 		inds[destind] = ind;
 		destind++;
 	}
@@ -170,6 +183,7 @@ int quadbuilder_create(quadbuilder_t* qb) {
 	memset(&q, 0, sizeof(quad));
 	for (newpoint=0; newpoint<qb->Nstars; newpoint++) {
 		pquad_t* pq;
+        logverb("Adding new star %i\n", newpoint);
 		// quads with the new star on the diagonal:
 		iB = newpoint;
 		for (iA = 0; iA < newpoint; iA++) {
@@ -180,8 +194,10 @@ int quadbuilder_create(quadbuilder_t* qb) {
 			pq->iB = iB;
 
 			check_scale(qb, pq);
-			if (!pq->scale_ok)
+			if (!pq->scale_ok) {
+                logverb("Dropping pair %i, %i based on scale\n", newpoint, iA);
 				continue;
+            }
 
 			q.star[0] = pq->staridA;
 			q.star[1] = pq->staridB;
@@ -189,8 +205,10 @@ int quadbuilder_create(quadbuilder_t* qb) {
 			pq->check_ok = TRUE;
 			if (qb->check_AB_stars)
 				pq->check_ok = qb->check_AB_stars(qb, pq, qb->check_AB_stars_token);
-			if (!pq->check_ok)
+			if (!pq->check_ok) {
+                logverb("Failed check for AB stars\n");
 				continue;
+            }
 
 			// list the possible internal stars...
 			ninbox = 0;
@@ -200,14 +218,21 @@ int quadbuilder_create(quadbuilder_t* qb) {
 				qb->inbox[ninbox] = iC;
 				ninbox++;
 			}
+
+            logverb("Number of possible internal stars for pair %i, %i: %i\n", newpoint, iA, ninbox);
+
 			// check which ones are inside the box...
 			ninbox = check_inbox(pq, qb->inbox, ninbox, qb->starxyz);
+            logverb("Number of stars in the box: %i\n", ninbox);
+
 			//if (!ninbox)
 			//continue;
 			if (ninbox && qb->check_internal_stars)
 				ninbox = qb->check_internal_stars(qb, q.star[0], q.star[1], qb->inbox, ninbox, qb->check_internal_stars_token);
 			//if (!ninbox)
 			//continue;
+
+            logverb("Number of stars in the box after checking: %i\n", ninbox);
 
 			add_interior_stars(qb, ninbox, qb->inbox, &q, 2, qb->dimquads, 0);
 			if (qb->stop_creating)

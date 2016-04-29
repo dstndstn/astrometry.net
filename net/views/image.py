@@ -614,7 +614,19 @@ def index_tag(req):
         if query:
             if exact:
                 try:
-                    tag = Tag.objects.filter(text__iexact=query).get()
+                    tags = Tag.objects.filter(text__iexact=query)
+                    if tags.count() > 1:
+                        # More than one match: do case-sensitive query
+                        ctags = Tag.objects.filter(text=query)
+                        # note, 'text' is the primary key, so >1 shouldn't be possible
+                        if len(ctags) == 1:
+                            tag = ctags[0]
+                        else:
+                            # Uh, multiple case-insensitive matches but no case-sens
+                            # matches.  Arbitrarily choose first case-insens
+                            tag = tags[0]
+                    else:
+                        tag = tags[0]
                     images = images.filter(tags=tag)
                 except Tag.DoesNotExist:
                     images = UserImage.objects.none() 

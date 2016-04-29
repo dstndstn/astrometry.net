@@ -225,7 +225,7 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
 	mkdir -p '$(ETC_INSTALL_DIR)'
-	python -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('DATA_INSTALL_DIR', '$(DATA_FINAL_DIR)')" > '$(ETC_INSTALL_DIR)/astrometry.cfg'
+	$(PYTHON) -c "import os; print open('../etc/astrometry.cfg-dist').read().replace('DATA_INSTALL_DIR', '$(DATA_FINAL_DIR)')" > '$(ETC_INSTALL_DIR)/astrometry.cfg'
 	mkdir -p '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(INSTALL_H); do \
 		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)'; \
@@ -349,6 +349,14 @@ build-astrometry-index: build-index-main.o $(SLIB) #$(BUILD_INDEX_OBJS) $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
 ALL_OBJ += build-index-main.o
 
+allquads: allquads-main.o allquads.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
+ALL_OBJ += allquads-main.o allquads.o
+
+startree2: startree2-main.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
+ALL_OBJ += startree2-main.o
+
 astrometry-engine: engine-main.o $(SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
@@ -406,14 +414,14 @@ _plotstuff_c$(PYTHON_SO_EXT): plotstuff.i $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	INC="$(ANFILES_INC) $(CAIRO_INC) $(NETPBM_INC)" \
 	CFLAGS_SWIG="$(ANFILES_CFLAGS)" \
 	CFLAGS="$(CFLAGS)" \
-	python setup.py build_ext -v --inplace --build-temp .
+	$(PYTHON) setup.py build_ext -v --inplace --build-temp .
 
 _blind$(PYTHON_SO_EXT): blind.i $(ENGINE_OBJS)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" \
 	SLIB="$(SLIB)" \
 	INC="$(ANFILES_INC)" \
 	CFLAGS="$(ANFILES_CFLAGS)" \
-	python setup-blind.py build_ext -v --inplace --build-temp .
+	$(PYTHON) setup-blind.py build_ext -v --inplace --build-temp .
 
 test_plotstuff-main.c: test_plotstuff.c
 	$(AN_SHELL) $(MAKE_TESTS) $^ > $@

@@ -1934,7 +1934,8 @@ static int kdtree_check_node(const kdtree_t* kd, int nodeid) {
 				Unused dtype* dat = KD_DATA(kd, D, i);
 				assert(dat[dim] <= dsplit);
 				if (dat[dim] > dsplit) {
-					ERROR("kdtree_check: split-plane failure");
+					ERROR("kdtree_check: split-plane failure (1)");
+                    printf("Data item %i, dim %i: %g vs %g\n", i, dim, dat[dim], dsplit);
 					return -1;
 				}
 			}
@@ -1945,7 +1946,7 @@ static int kdtree_check_node(const kdtree_t* kd, int nodeid) {
 				Unused dtype* dat = KD_DATA(kd, D, i);
 				assert(dat[dim] >= dsplit);
 				if (dat[dim] < dsplit) {
-					ERROR("kdtree_check: split-plane failure");
+					ERROR("kdtree_check: split-plane failure (2)");
 					return -1;
 				}
 			}

@@ -84,12 +84,6 @@ int main(int argc, char** args) {
 			printf("  %i: [%g, %g]\n", d, kd->minval[d], kd->maxval[d]);
 	}
 
-	printf("Running kdtree_check...\n");
-	if (kdtree_check(kd)) {
-		printf("kdtree_check failed.\n");
-		exit(-1);
-	}
-
 	if (printData) {
 		int i, d;
 		int dt = kdtree_datatype(kd);
@@ -126,6 +120,12 @@ int main(int argc, char** args) {
 				printf(")\n");
 			}
 		}
+	}
+
+	printf("Running kdtree_check...\n");
+	if (kdtree_check(kd)) {
+		printf("kdtree_check failed.\n");
+		exit(-1);
 	}
 
 	kdtree_fits_close(kd);
