@@ -1135,8 +1135,20 @@ void blind_free_matchobj(MatchObj* mo) {
     }
 	free(mo->refradec);
 	free(mo->fieldxy);
+    free(mo->theta);
+    free(mo->matchodds);
+    free(mo->refxyz);
+    free(mo->refxy);
+    free(mo->refstarid);
+    free(mo->testperm);
 	mo->refradec = NULL;
 	mo->fieldxy = NULL;
+    mo->theta = NULL;
+    mo->matchodds = NULL;
+    mo->refxyz = NULL;
+    mo->refxy = NULL;
+    mo->refstarid = NULL;
+    mo->testperm = NULL;
 
 	if (mo->tagalong) {
 		int i;
