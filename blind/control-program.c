@@ -117,21 +117,66 @@ static void get_next_field(char* fits_image_fn,
         if (isinf(*ra)) {
             char* rastr = qfits_header_getstr(hdr, "RA");
             logverb("Looking for RA header (string): >>%s<<\n", rastr);
-            *ra = atora(qfits_header_getstr(hdr, "RA"));
-            logverb("Parsed to %g\n", *ra);
+            if (rastr) {
+                *ra = atora(qfits_header_getstr(hdr, "RA"));
+                logverb("Parsed to %g\n", *ra);
+            }
         }
         *dec = qfits_header_getdouble(hdr, "DEC", infval);
         logverb("Looking for Dec header (float): %g\n", *dec);
         if (isinf(*dec)) {
             char* decstr = qfits_header_getstr(hdr, "DEC");
             logverb("Looking for Dec header (string): >>%s<<\n", decstr);
-            *dec = atora(qfits_header_getstr(hdr, "DEC"));
-            logverb("Parsed to %g\n", *dec);
+            if (decstr) {
+                *dec = atora(qfits_header_getstr(hdr, "DEC"));
+                logverb("Parsed to %g\n", *dec);
+            }
         }
         qfits_header_destroy(hdr);
         logmsg("Using (RA,Dec) estimate (%g, %g)\n", *ra, *dec);
     }
 }
+
+/* Yuck: a struct required to hold data for the record_match_callback.
+ Only required if you need the list of matched reference and image stars.
+ */
+struct callbackdata {
+    solver_t* solver;
+    MatchObj match;
+};
+
+/* This callback function is only required if you need the list of
+ matched reference and image stars. */
+static anbool record_match_callback(MatchObj* mo, void* userdata) {
+    struct callbackdata* cb = userdata;
+    MatchObj* mymatch = &(cb->match);
+    solver_t* solver = cb->solver;
+    int i;
+    // copy "mo" to "mymatch"
+    memcpy(mymatch, mo, sizeof(MatchObj));
+	// steal these arrays from "mo": we memcpy'd the pointers above, now NULL
+    // them out in "mo" to prevent them from being free'd.
+	mo->theta = NULL;
+	mo->matchodds = NULL;
+	mo->refxyz = NULL;
+	mo->refxy = NULL;
+	mo->refstarid = NULL;
+	mo->testperm = NULL;
+
+    // Convert xyz to RA,Dec
+    mymatch->refradec = malloc(mymatch->nindex * 2 * sizeof(double));
+    for (i=0; i<mymatch->nindex; i++) {
+        xyzarr2radecdegarr(mymatch->refxyz+i*3, mymatch->refradec+i*2);
+    }
+    mymatch->fieldxy = malloc(mymatch->nfield * 2 * sizeof(double));
+    // whew! -- Copy the (permuted) image (field) stars.
+    memcpy(mymatch->fieldxy, solver->vf->xy,
+           mymatch->nfield * 2 * sizeof(double));
+
+    // Accept this match.
+    return TRUE;
+}
+
 
 int main(int argc, char** args) {
     char* configfn = NULL;
@@ -301,6 +346,10 @@ int main(int argc, char** args) {
         anbool solved = FALSE;
         char* img;
         double t0, t1;
+        struct callbackdata cb;
+        cb.solver = solver;
+        MatchObj* match = &(cb.match);
+        memset(match, 0, sizeof(MatchObj));
 
         // Get the next image...
         racenter = 0.0;
@@ -347,6 +396,10 @@ int main(int argc, char** args) {
             goto skip;
         }
 
+        // If you want the list of matched stars, you have to do this ugliness:
+        solver->record_match_callback = record_match_callback;
+        solver->userdata = &cb;
+
         if (sip) {
             logmsg("Trying to verify existing WCS...\n");
             solver_verify_sip_wcs(solver, sip);
@@ -390,6 +443,33 @@ int main(int argc, char** args) {
                 pscale = tan_pixel_scale(wcs);
                 logmsg("Image center is RA,Dec = (%g,%g) degrees, size is %.2g x %.2g arcmin.\n",
                        ra, dec, arcsec2arcmin(pscale * imagew), arcsec2arcmin(pscale * imageh));
+
+                // Print the matched stars...
+                int j;
+                for (j=0; j<match->nfield; j++) {
+                    double fx,fy,fra,fdec;
+                    double rx,ry,rra,rdec;
+                    double weight;
+                    int ti, ri;
+                    ri = match->theta[j];
+                    if (ri < 0)
+                        continue;
+                    ti = j;
+                    rra  = match->refradec[2*ri+0];
+                    rdec = match->refradec[2*ri+1];
+                    if (!tan_radec2pixelxy(wcs, rra, rdec, &rx, &ry))
+                        continue;
+                    fx = match->fieldxy[2*ti+0];
+                    fy = match->fieldxy[2*ti+1];
+                    tan_pixelxy2radec(wcs, fx, fy, &fra, &fdec);
+                    weight = verify_logodds_to_weight(match->matchodds[j]);
+                    logmsg("Match: field xy %.1f,%.1f, radec %.2f,%.2f; index xy %.1f,%.1f, radec %.2f,%.2f, weight %.3f\n",
+                           fx, fy, fra, fdec, rx, ry, rra, rdec, weight);
+                }
+
+                // Free the items allocated in record_match_callback.
+                blind_free_matchobj(match);
+
             } else {
                 logmsg("Failed to solve.\n");
             }
