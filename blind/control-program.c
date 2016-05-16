@@ -384,7 +384,9 @@ int main(int argc, char** args) {
         N = pl_size(engine->indexes);
         for (i=0; i<N; i++) {
             index_t* index = pl_get(engine->indexes, i);
-            if (!index_is_within_range(index, racenter, deccenter, dist2deg(hprange)))
+            if (!isinf(racenter) &&
+                !index_is_within_range(index, racenter, deccenter,
+                                       dist2deg(hprange)))
                 continue;
             logmsg("Adding index %s\n", index->indexname);
             solver_add_index(solver, index);
