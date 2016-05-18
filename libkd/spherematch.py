@@ -17,34 +17,40 @@ def match_xy(x1,y1, x2,y2, R, **kwargs):
 def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
                 nearest=False, indexlist=False, count=False):
     '''
-    (m1,m2,d12) = match_radec(ra1,dec1, ra2,dec2, radius_in_deg)
-
     Cross-matches numpy arrays of RA,Dec points.
 
-    Behaves like spherematch.pro of IDL 
+    Behaves like spherematch.pro of IDL.
 
-    ra1,dec1 (and 2): RA,Dec in degrees of points to match.
-       Must be scalars or numpy arrays.
+    Parameters
+    ----------
+    ra1, dec1, ra2, dec2 : numpy arrays, or scalars.
+        RA,Dec in degrees of points to match.
 
-       radius_in_deg: search radius in degrees.
+    radius_in_deg : float
+        Search radius in degrees.
 
-    notself: if True, avoids returning 'identity' matches;
+    notself : boolean
+        If True, avoids returning 'identity' matches;
         ASSUMES that ra1,dec1 == ra2,dec2.
 
-    nearest: if True, returns only the nearest match in (ra2,dec2)
-        for each point in (ra1,dec1).
+    nearest : boolean
+        If True, returns only the nearest match in *(ra2,dec2)*
+        for each point in *(ra1,dec1)*.
 
-    indexlist: returns a list of length len(ra1), containing None or a
-    list of ints of matched points in ra2,dec2.  Returns this list.
+    indexlist : boolean
+        If True, returns a list of length *len(ra1)*, containing *None*
+        or a list of ints of matched points in *ra2,dec2*.
         
-    Returns:
 
-    m1: indices into the "ra1,dec1" arrays of matching points.
-       Numpy array of ints.
-    m2: same, but for "ra2,dec2".
-    d12: distance, in degrees, between the matching points.
+    Returns
+    -------
+    m1 : numpy array of integers
+        Indices into the *ra1,dec1* arrays of matching points.
+    m2 : numpy array of integers
+        Same, but for *ra2,dec2*.
+    d12 : numpy array, float
+        Distance, in degrees, between the matching points.
     '''
-
     # Convert to coordinates on the unit sphere
     xyz1 = radectoxyz(ra1, dec1)
     #if all(ra1 == ra2) and all(dec1 == dec2):
@@ -176,19 +182,19 @@ def _freetrees(kd1, kd2):
 
 def match(x1, x2, radius, notself=False, permuted=True, indexlist=False):
     '''
-    (indices,dists) = match(x1, x2, radius):
-    OR
-    inds = match(x1, x2, radius, indexlist=True):
+    ::
 
-    Given an N1 x D1 array x1,
-    and   an N2 x D2 array x2,
-    and   radius:
+        (indices,dists) = match(x1, x2, radius):
+
+    Or::
+
+        inds = match(x1, x2, radius, indexlist=True):
 
     Returns the indices (Nx2 int array) and distances (Nx1 float
-    array) between points in "x1" and "x2" that are within "radius"
+    array) between points in *x1* and *x2* that are within *radius*
     Euclidean distance of each other.
 
-    "x1" is N1xD and "x2" is N2xD.  "x1" and "x2" can be the same
+    *x1* is N1xD and *x2* is N2xD.  *x1* and *x2* can be the same
     array.  Dimensions D above 5-10 will probably not run faster than
     naive.
 
@@ -197,11 +203,11 @@ def match(x1, x2, radius, notself=False, permuted=True, indexlist=False):
     and no special handling at the poles.  If you want to match
     celestial coordinates like RA,Dec, see the match_radec function.
 
-    If "indexlist" is True, the return value is a python list with one
+    If *indexlist* is True, the return value is a python list with one
     element per data point in the first tree; that element is a python
     list containing the indices of points matched in the second tree.
 
-    The "indices" return value has a row for each match; the matched
+    The *indices* return value has a row for each match; the matched
     points are:
     x1[indices[:,0],:]
     and
@@ -212,30 +218,23 @@ def match(x1, x2, radius, notself=False, permuted=True, indexlist=False):
 
     >>> from astrometry.util.starutil_numpy import *   
     >>> from astrometry.libkd import spherematch
-
-    # RA,Dec in degrees
+    >>> # RA,Dec in degrees
     >>> ra1  = array([  0,  1, 2, 3, 4, 359,360])
     >>> dec1 = array([-90,-89,-1, 0, 1,  89, 90])
-
-    # xyz: N x 3 array: unit vectors
+    >>> # xyz: N x 3 array: unit vectors
     >>> xyz1 = radectoxyz(ra1, dec1)
-
     >>> ra2  = array([ 45,   1,  4, 4, 4,  0,  1])
     >>> dec2 = array([-89, -88, -1, 0, 2, 89, 89])
     >>> xyz2 = radectoxyz(ra2, dec2)
-
-    # The \'radius\' is now distance between points on the unit sphere --
-    # for small angles, this is ~ angular distance in radians.  You can use
-    # the function:
+    >>> # The \'radius\' is now distance between points on the unit sphere --
+    >>> # for small angles, this is ~ angular distance in radians.  You can use
+    >>> # the function:
     >>> radius_in_deg = 2.
     >>> r = sqrt(deg2distsq(radius_in_deg))
- 
     >>> (inds,dists) = spherematch.match(xyz1, xyz2, r)
-
-    # Now "inds" is an Mx2 array of the matching indices,
-    # and "dists" the distances between them:
-    #  eg,  sqrt(sum((xyz1[inds[:,0],:] - xyz2[inds[:,1],:])**2, axis=1)) = dists
-
+    >>> # Now *inds* is an Mx2 array of the matching indices,
+    >>> # and *dists* the distances between them:
+    >>> #  eg,  sqrt(sum((xyz1[inds[:,0],:] - xyz2[inds[:,1],:])**2, axis=1)) = dists
     >>> print inds
     [[0 0]
      [1 0]
@@ -249,15 +248,12 @@ def match(x1, x2, radius, notself=False, permuted=True, indexlist=False):
      [6 5]
      [5 6]
      [6 6]]
- 
     >>> print sqrt(sum((xyz1[inds[:,0],:] - xyz2[inds[:,1],:])**2, axis=1))
     [ 0.01745307  0.01307557  0.01745307  0.0348995   0.02468143  0.01745307
       0.01745307  0.01745307  0.0003046   0.01745307  0.00060917  0.01745307]
-
     >>> print dists[:,0]
     [ 0.01745307  0.01307557  0.01745307  0.0348995   0.02468143  0.01745307
       0.01745307  0.01745307  0.0003046   0.01745307  0.00060917  0.01745307]
-
     >>> print vstack((ra1[inds[:,0]], dec1[inds[:,0]], ra2[inds[:,1]], dec2[inds[:,1]])).T
     [[  0 -90  45 -89]
      [  1 -89  45 -89]
@@ -272,6 +268,32 @@ def match(x1, x2, radius, notself=False, permuted=True, indexlist=False):
      [359  89   1  89]
      [360  90   1  89]]
 
+    Parameters
+    ----------
+    x1 : numpy array, float, shape N1 x D
+        First array of points to match
+
+    x2 : numpy array, float, shape N2 x D
+        Second array of points to match
+
+    radius : float
+        Scalar Euclidean distance to match
+        
+    Returns
+    -------
+    indices : numpy array, integers, shape M x 2, for M matches
+        The array of matching indices; *indices[:,0]* are indices in *x1*,
+        *indices[:,1]* are indices in *x2*.
+
+    dists : numpy array, floats, length M, for M matches
+        The distances between matched points.
+        
+    If *indexlist* is *True*:
+
+    indices : list of ints of integers
+        The list of matching indices.  One list element per *x1* element,
+        containing a list of matching indices in *x2*.
+        
     '''
     (kd1,kd2) = _buildtrees(x1, x2)
     if indexlist:
@@ -323,6 +345,9 @@ def nearest(x1, x2, maxradius, notself=False, count=False):
 _nearest_func = nearest
 
 def tree_build_radec(ra=None, dec=None, xyz=None):
+    '''
+    Builds a kd-tree given *RA,Dec* or unit-sphere *xyz* coordinates.
+    '''
     if ra is not None:
         (N,) = ra.shape
         xyz = np.zeros((N,3)).astype(float)
@@ -335,28 +360,53 @@ def tree_build_radec(ra=None, dec=None, xyz=None):
 
 def tree_build(X):
     '''
-    X: Numpy array of shape (N,D)
-    Returns: kdtree identifier.
+    Builds a kd-tree given a numpy array of Euclidean points.
+    
+    Parameters
+    ----------
+    X: numpy array of shape (N,D)
+        The points to index.
+        
+    Returns
+    -------
+    kd: integer
+        kd-tree identifier (address).
     '''
     return spherematch_c.kdtree_build(X)
 
 def tree_free(kd):
+    '''
+    Frees a kd-tree previously created with *tree_build*.
+    '''
     spherematch_c.kdtree_free(kd)
 
 def tree_save(kd, fn):
+    '''
+    Writes a kd-tree to the given filename.
+    '''
     rtn = spherematch_c.kdtree_write(kd, fn)
     return rtn
 
 def tree_open(fn, treename=None):
+    '''
+    Reads a kd-tree from the given filename.
+    '''
     if treename is None:
         return spherematch_c.kdtree_open(fn)
     else:
         return spherematch_c.kdtree_open(fn, treename)
 
 def tree_close(kd):
+    '''
+    Closes a kd-tree previously opened with *tree_open*.
+    '''
     return spherematch_c.kdtree_close(kd)
 
 def tree_search(kd, pos, radius, getdists=False, sortdists=False):
+    '''
+    Searches the given kd-tree for points within *radius* of the given
+    position *pos*.
+    '''
     return spherematch_c.kdtree_rangesearch(kd, pos, radius,
                                             int(getdists), int(sortdists))
 
