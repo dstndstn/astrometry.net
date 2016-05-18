@@ -384,7 +384,9 @@ int main(int argc, char** args) {
         N = pl_size(engine->indexes);
         for (i=0; i<N; i++) {
             index_t* index = pl_get(engine->indexes, i);
-            if (!index_is_within_range(index, racenter, deccenter, dist2deg(hprange)))
+            if (!isinf(racenter) &&
+                !index_is_within_range(index, racenter, deccenter,
+                                       dist2deg(hprange)))
                 continue;
             logmsg("Adding index %s\n", index->indexname);
             solver_add_index(solver, index);
@@ -463,7 +465,7 @@ int main(int argc, char** args) {
                     fy = match->fieldxy[2*ti+1];
                     tan_pixelxy2radec(wcs, fx, fy, &fra, &fdec);
                     weight = verify_logodds_to_weight(match->matchodds[j]);
-                    logmsg("Match: field xy %.1f,%.1f, radec %.2f,%.2f; index xy %.1f,%.1f, radec %.2f,%.2f, weight %.3f\n",
+                    logverb("Match: field xy %.1f,%.1f, radec %.2f,%.2f; index xy %.1f,%.1f, radec %.2f,%.2f, weight %.3f\n",
                            fx, fy, fra, fdec, rx, ry, rra, rdec, weight);
                 }
 
