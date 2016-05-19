@@ -31,6 +31,8 @@ Contents:
    backups
    api
    api-util-py
+   pykd
+   ttime
 
 Other places:
 

@@ -193,7 +193,8 @@ class CpuMeas(object):
         '''
         Returns the CPU time used since the *other* timestamp was taken.
 
-        eg:
+        eg::
+
             t0 = CpuMeas()
             # do stuff
             t1 = CpuMeas()
@@ -207,7 +208,8 @@ class CpuMeas(object):
         Returns the wall-clock time in seconds since the *other* timestamp
         was taken.
 
-        eg:
+        eg::
+        
             t0 = CpuMeas()
             # do stuff
             t1 = CpuMeas()
@@ -229,9 +231,11 @@ class CpuMeas(object):
         
 class Time(object):
     '''
-    A class for recording how much time (or other resources) are used by a process.
+    A class for recording how much time (or other resources) are used
+    by a process.  The *CpuMeas* class is used by default; others can
+    be added as desired.
 
-    Use like this:
+    Use like this::
 
         from astrometry.util.ttime import Time, MemMeas
 
