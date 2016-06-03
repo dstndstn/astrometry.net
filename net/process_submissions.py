@@ -739,7 +739,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
         # FIXME -- order by user, etc
 
         for sub in newsubs:
-            print('Enqueuing submission:', sub)
+            print('Enqueuing submission:', str(sub))
             sub.set_processing_started()
             sub.save()
 

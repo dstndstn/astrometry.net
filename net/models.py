@@ -1106,8 +1106,10 @@ class Submission(Hideable):
     #  -> QueuedSubmission
 
     def __str__(self):
-        return ('Submission %i: file <%s>, url %s, proc_started=%s' %
-                (self.id, str(self.disk_file), self.url, str(self.processing_started)))
+        #return ('Submission %i: file <%s>, url %s, proc_started=%s' %
+        #        (self.id, str(self.disk_file), str(self.url), str(self.processing_started)))
+        return ('Submission %i: file <%s>, proc_started=%s' %
+                (self.id, str(self.disk_file), str(self.processing_started)))
 
     def set_error_message(self, msg):
         if len(msg) > 255:
