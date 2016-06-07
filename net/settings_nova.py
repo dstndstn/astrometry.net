@@ -12,5 +12,10 @@ SESSION_COOKIE_NAME = 'NovaAstrometrySession'
 
 ssh_solver_config = 'an-nova'
 
-SOCIAL_AUTH_GITHUB_KEY    = github_secrets[sitename].key
-SOCIAL_AUTH_GITHUB_SECRET = github_secrets[sitename].secret
+try:
+    SOCIAL_AUTH_GITHUB_KEY    = github_secrets[sitename].key
+    SOCIAL_AUTH_GITHUB_SECRET = github_secrets[sitename].secret
+except:
+    SOCIAL_AUTH_GITHUB_KEY    = None
+    SOCIAL_AUTH_GITHUB_SECRET = None
+    
