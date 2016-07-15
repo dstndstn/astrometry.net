@@ -86,8 +86,8 @@ arcmin fields); these are the same scale is the new 4202 files.
 The medium-sized index files are split into 12 "healpix" tiles; each
 one covers 1/12th of the sky.  The small-sized ones are split into 48
 healpixes.   See the maps here; you might not need all of them.
-http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp.png
-http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp2.png
+https://github.com/dstndstn/astrometry.net/blob/master/util/hp.png
+https://github.com/dstndstn/astrometry.net/blob/master/util/hp2.png
 
 +-----------------------+-----------------------------------------+
 | Index Filename        | Range of skymark diameters (arcminutes) |
