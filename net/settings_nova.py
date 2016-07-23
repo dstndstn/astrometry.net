@@ -1,8 +1,10 @@
 sitename = 'nova'
-ENABLE_SOCIAL = True
 
 # settings_nova.py
 from settings_common import *
+
+from settings_social import *
+ENABLE_SOCIAL = True
 
 TEMPDIR = '/data2/tmp'
 DATABASES['default']['NAME'] = 'an-nova'

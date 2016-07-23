@@ -1,6 +1,7 @@
-ENABLE_SOCIAL = True
-
 from settings_common import *
+
+from settings_social import *
+ENABLE_SOCIAL = True
 
 DATABASES['default']['NAME'] = 'an-supernova'
 
