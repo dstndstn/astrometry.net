@@ -1,3 +1,4 @@
+ENABLE_SOCIAL = True
 from settings_common import *
 
 TEMPDIR = '/data2/tmp'

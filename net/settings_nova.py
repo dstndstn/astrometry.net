@@ -1,4 +1,5 @@
 sitename = 'nova'
+ENABLE_SOCIAL = True
 
 # settings_nova.py
 from settings_common import *

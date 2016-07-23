@@ -17,10 +17,10 @@ urlpatterns += patterns('astrometry.net.views.home',
     url(r'^explore/?$', 'explore', name='explore'),
 )
 
-
-urlpatterns += patterns('',
-    url('', include('social.apps.django_app.urls', namespace='social'))
-)
+if settings.ENABLE_SOCIAL:
+    urlpatterns += patterns('',
+                            url('', include('social.apps.django_app.urls', namespace='social'))
+                            )
 
 urlpatterns += patterns('',
                         url(r'^signin/', 'astrometry.net.views.home.signin', name='signin'),
