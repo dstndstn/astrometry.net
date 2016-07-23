@@ -1,3 +1,70 @@
+SOCIAL_TEMPLATE_CONTEXT_PROCESSORS = (
+    'social.apps.django_app.context_processors.backends',
+    'social.apps.django_app.context_processors.login_redirect',
+# 'social.apps.django_app.context_processors.social_auth_by_type_backends',
+)
+
+SOCIAL_INSTALLED_APPS = (
+#'django_openid_auth',
+    'social.apps.django_app.default',
+    # https://docs.djangoproject.com/en/1.7/topics/migrations/#upgrading-from-south
+    #'south',
+)
+SOCIAL_AUTH_BACKENDS = (
+    #'social.backends.open_id.OpenIdAuth',
+    #'social.backends.google.GoogleOpenId',
+    'social.backends.google.GoogleOAuth2',
+    #'social.backends.google.GoogleOAuth',
+    'social.backends.twitter.TwitterOAuth',
+    'social.backends.yahoo.YahooOpenId',
+    #'social.backends.stripe.StripeBackend',
+    #'social.backends.steam.SteamBackend',
+    #'social.backends.reddit.RedditBackend',
+    #'social.backends.amazon.AmazonBackend',
+    #'social.backends.browserid.BrowserIDBackend',
+    #'social.backends.contrib.linkedin.LinkedinBackend',
+    #'social.backends.contrib.skyrock.SkyrockBackend',
+    'social.backends.flickr.FlickrOAuth',
+    #'social.backends.contrib.instagram.InstagramBackend',
+    'social.backends.github.GithubOAuth2',
+    #'social.backends.contrib.yandex.YandexBackend',
+    #'social.backends.contrib.yandex.YandexOAuth2Backend',
+    #'social.backends.contrib.yandex.YaruBackend',
+    #'social.backends.contrib.disqus.DisqusBackend',
+    #####'social.backends.yahoo.YahooOAuth',
+    #'social.backends.contrib.foursquare.FoursquareBackend',
+    #'social.backends.contrib.live.LiveBackend',
+    #'social.backends.contrib.livejournal.LiveJournalBackend',
+    #'social.backends.contrib.douban.DoubanBackend',
+    #'social.backends.contrib.vk.VKOpenAPIBackend',
+    #'social.backends.contrib.vk.VKOAuth2Backend',
+    #'social.backends.contrib.odnoklassniki.OdnoklassnikiBackend',
+    #'social.backends.contrib.odnoklassniki.OdnoklassnikiAppBackend',
+    #'social.backends.contrib.mailru.MailruBackend',
+    #'social.backends.contrib.dailymotion.DailymotionBackend',
+    #'social.backends.contrib.shopify.ShopifyBackend',
+    #'social.backends.contrib.exacttarget.ExactTargetBackend',
+    #'social.backends.contrib.stocktwits.StocktwitsBackend',
+    #'social.backends.contrib.behance.BehanceBackend',
+    #'social.backends.contrib.readability.ReadabilityBackend',
+    #'social.backends.contrib.fedora.FedoraBackend',
+)
+SOCIAL_MIGRATION = {
+    'default': 'social.apps.django_app.default.south_migrations'
+    }
+
+
+# SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/signedin/'
+# SOCIAL_AUTH_LOGIN_ERROR_URL = '/error/'
+# SOCIAL_AUTH_LOGIN_URL = '/'
+# SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/newuser/'
+# SOCIAL_AUTH_NEW_ASSOCIATION_REDIRECT_URL = '/newassoc/'
+# SOCIAL_AUTH_DISCONNECT_REDIRECT_URL = '/'
+# SOCIAL_AUTH_INACTIVE_USER_URL = '/inactive-user/'
+
+#SOCIAL_AUTH_USER_MODEL = 'django.contrib.auth.models.User'
+#SOCIAL_AUTH_USER_MODEL = 'net.MyUser'
+
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
 
