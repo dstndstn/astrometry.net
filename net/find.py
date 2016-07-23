@@ -21,6 +21,8 @@ if __name__ == '__main__':
     parser.add_option('-r', '--rerun', dest='rerun', action='store_true',
                       help='Re-run this submission/job?')
     parser.add_option('--chown', dest='chown', type=int, default=0, help='Change owner of userimage by user id #')
+    parser.add_option('--solve-command',
+                      help='Command to run instead of ssh to actually solve image')
 
     opt,args = parser.parse_args()
     if not (opt.sub or opt.job or opt.uimage):
@@ -67,7 +69,7 @@ if __name__ == '__main__':
         if opt.rerun:
             from process_submissions import try_dojob
             print 'Re-trying job', job.id
-            try_dojob(job, ui)
+            try_dojob(job, ui, None)
 
     if opt.uimage:
         ui = UserImage.objects.all().get(id=opt.uimage)
