@@ -176,9 +176,9 @@ def create_job_logger(job):
     logger.addHandler(fh)
     return MyLogger(logger)
 
-def try_dojob(job, userimage):
+def try_dojob(job, userimage, solve_command):
     try:
-        return dojob(job, userimage)
+        return dojob(job, userimage, solve_command=solve_command)
     except:
         print('Caught exception while processing Job', job)
         traceback.print_exc(None, sys.stdout)
@@ -190,7 +190,7 @@ def try_dojob(job, userimage):
         log.msg('Caught exception while processing Job', job.id)
         log.msg(traceback.format_exc(None))
 
-def dojob(job, userimage, log=None):
+def dojob(job, userimage, log=None, solve_command=None):
     jobdir = job.make_dir()
     #print('Created job dir', jobdir)
     #log = create_job_logger(job)
@@ -297,11 +297,15 @@ def dojob(job, userimage, log=None):
     logfn = job.get_log_file()
     # the "tar" commands both use "-C" to chdir, and the ssh command
     # and redirect uses absolute paths.
-    cmd = ('(echo %(jobid)s; '
-           'tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
-           'ssh -x -T %(sshconfig)s 2>>%(logfile)s | '
-           'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(jobdir)s '
-           '>>%(logfile)s 2>&1' %
+
+    if solve_command is None:
+        solve_command = 'ssh -x -T %(sshconfig)s'
+    
+    cmd = (('(echo %(jobid)s; '
+            'tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
+            + solve_command + ' 2>>%(logfile)s | '
+            'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(jobdir)s '
+            '>>%(logfile)s 2>&1') %
            dict(jobid='job-%s-%i' % (settings.sitename, job.id),
                 axyfile=axyfn, jobdir=jobdir,
                 sshconfig=settings.ssh_solver_config,
@@ -631,7 +635,8 @@ def job_callback(result):
     print('Job callback: Result:', result)
 
 
-def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
+def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
+         solve_command):
     dojob_pool = None
     dosub_pool = None
     if dojob_nthreads > 1:
@@ -766,11 +771,11 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
             qj.save()
 
             if dojob_pool:
-                res = dojob_pool.apply_async(try_dojob, (job, userimage),
+                res = dojob_pool.apply_async(try_dojob, (job, userimage, solve_command),
                                              callback=job_callback)
                 jobresults.append((job.id, res))
             else:
-                dojob(job, userimage)
+                dojob(job, userimage, solve_command=solve_command)
 
 if __name__ == '__main__':
     import optparse
@@ -783,6 +788,11 @@ if __name__ == '__main__':
                       default=20, help='Set the maximum number of times to retry processing a submission')
     parser.add_option('--refreshrate', '-r', dest='refreshrate', type='float',
                       default=5, help='Set how often to check for new jobs and submissions (in seconds)')
+
+    parser.add_option('--solve-command', dest='solvecmd',
+                      help='Command to run instead of ssh to actually solve image')
+    
     opt,args = parser.parse_args()
 
-    main(opt.jobthreads, opt.subthreads, opt.refreshrate, opt.maxsubretries)
+    main(opt.jobthreads, opt.subthreads, opt.refreshrate, opt.maxsubretries,
+         opt.solve_command)
