@@ -789,7 +789,7 @@ if __name__ == '__main__':
     parser.add_option('--refreshrate', '-r', dest='refreshrate', type='float',
                       default=5, help='Set how often to check for new jobs and submissions (in seconds)')
 
-    parser.add_option('--solve-command', dest='solvecmd',
+    parser.add_option('--solve-command',
                       help='Command to run instead of ssh to actually solve image')
     
     opt,args = parser.parse_args()
