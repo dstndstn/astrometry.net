@@ -69,7 +69,7 @@ if __name__ == '__main__':
         if opt.rerun:
             from process_submissions import try_dojob
             print 'Re-trying job', job.id
-            try_dojob(job, ui, None)
+            try_dojob(job, ui, opt.solve_command)
 
     if opt.uimage:
         ui = UserImage.objects.all().get(id=opt.uimage)
