@@ -176,9 +176,10 @@ def create_job_logger(job):
     logger.addHandler(fh)
     return MyLogger(logger)
 
-def try_dojob(job, userimage, solve_command):
+def try_dojob(job, userimage, solve_command, solve_locally):
     try:
-        return dojob(job, userimage, solve_command=solve_command)
+        return dojob(job, userimage, solve_command=solve_command,
+                     solve_locally=solve_locally)
     except:
         print('Caught exception while processing Job', job)
         traceback.print_exc(None, sys.stdout)
@@ -190,7 +191,7 @@ def try_dojob(job, userimage, solve_command):
         log.msg('Caught exception while processing Job', job.id)
         log.msg(traceback.format_exc(None))
 
-def dojob(job, userimage, log=None, solve_command=None):
+def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
     jobdir = job.make_dir()
     #print('Created job dir', jobdir)
     #log = create_job_logger(job)
@@ -298,31 +299,55 @@ def dojob(job, userimage, log=None, solve_command=None):
     # the "tar" commands both use "-C" to chdir, and the ssh command
     # and redirect uses absolute paths.
 
-    if solve_command is None:
-        solve_command = 'ssh -x -T %(sshconfig)s'
-    
-    cmd = (('(echo %(jobid)s; '
-            'tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
-            + solve_command + ' 2>>%(logfile)s | '
-            'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(jobdir)s '
-            '>>%(logfile)s 2>&1') %
-           dict(jobid='job-%s-%i' % (settings.sitename, job.id),
-                axyfile=axyfn, jobdir=jobdir,
-                sshconfig=settings.ssh_solver_config,
-                logfile=logfn))
-    log.msg('command:', cmd)
-    w = os.system(cmd)
-    if not os.WIFEXITED(w):
-        log.msg('Solver failed (sent signal?)')
-        logmsg('Call to solver failed for job', job.id)
-        raise Exception
-    rtn = os.WEXITSTATUS(w)
-    if rtn:
-        log.msg('Solver failed with return value %i' % rtn)
-        logmsg('Call to solver failed for job', job.id, 'with return val', rtn)
-        raise Exception
+    if solve_locally is not None:
 
-    log.msg('Solver completed successfully.')
+        cmd = (('cd %(jobdir)s && %(solvecmd)s %(jobid)s %(axyfile)s >> ' +
+               '%(logfile)s') %
+               dict(jobid='job-%s-%i' % (settings.sitename, job.id),
+                    axyfile=axyfn, jobdir=jobdir,
+                    logfile=logfn))
+        log.msg('command:', cmd)
+        w = os.system(cmd)
+        if not os.WIFEXITED(w):
+            log.msg('Solver failed (sent signal?)')
+            logmsg('Call to solver failed for job', job.id)
+            raise Exception
+        rtn = os.WEXITSTATUS(w)
+        if rtn:
+            log.msg('Solver failed with return value %i' % rtn)
+            logmsg('Call to solver failed for job', job.id, 'with return val',
+                   rtn)
+            raise Exception
+    
+        log.msg('Solver completed successfully.')
+
+    else:
+        if solve_command is None:
+            solve_command = 'ssh -x -T %(sshconfig)s'
+    
+        cmd = (('(echo %(jobid)s; '
+                'tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
+                + solve_command + ' 2>>%(logfile)s | '
+                'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(jobdir)s '
+                '>>%(logfile)s 2>&1') %
+               dict(jobid='job-%s-%i' % (settings.sitename, job.id),
+                    axyfile=axyfn, jobdir=jobdir,
+                    sshconfig=settings.ssh_solver_config,
+                    logfile=logfn))
+        log.msg('command:', cmd)
+        w = os.system(cmd)
+        if not os.WIFEXITED(w):
+            log.msg('Solver failed (sent signal?)')
+            logmsg('Call to solver failed for job', job.id)
+            raise Exception
+        rtn = os.WEXITSTATUS(w)
+        if rtn:
+            log.msg('Solver failed with return value %i' % rtn)
+            logmsg('Call to solver failed for job', job.id, 'with return val',
+                   rtn)
+            raise Exception
+    
+        log.msg('Solver completed successfully.')
 
     # Solved?
     wcsfn = os.path.join(jobdir, wcsfile)
@@ -636,7 +661,7 @@ def job_callback(result):
 
 
 def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
-         solve_command):
+         solve_command, solve_locally):
     dojob_pool = None
     dosub_pool = None
     if dojob_nthreads > 1:
@@ -771,11 +796,11 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             qj.save()
 
             if dojob_pool:
-                res = dojob_pool.apply_async(try_dojob, (job, userimage, solve_command),
+                res = dojob_pool.apply_async(try_dojob, (job, userimage, solve_command, solve_locally),
                                              callback=job_callback)
                 jobresults.append((job.id, res))
             else:
-                dojob(job, userimage, solve_command=solve_command)
+                dojob(job, userimage, solve_command=solve_command, solve_locally=solve_locally)
 
 if __name__ == '__main__':
     import optparse
@@ -791,8 +816,11 @@ if __name__ == '__main__':
 
     parser.add_option('--solve-command',
                       help='Command to run instead of ssh to actually solve image')
+
+    parser.add_option('--solve-locally',
+                      help='Command to run astrometry-engine on this machine, not via ssh')
     
     opt,args = parser.parse_args()
 
     main(opt.jobthreads, opt.subthreads, opt.refreshrate, opt.maxsubretries,
-         opt.solve_command)
+         opt.solve_command, opt.solve_locally)
