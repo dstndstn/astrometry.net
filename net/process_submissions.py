@@ -304,6 +304,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
         cmd = (('cd %(jobdir)s && %(solvecmd)s %(jobid)s %(axyfile)s >> ' +
                '%(logfile)s') %
                dict(jobid='job-%s-%i' % (settings.sitename, job.id),
+                    solvecmd=solve_locally,
                     axyfile=axyfn, jobdir=jobdir,
                     logfile=logfn))
         log.msg('command:', cmd)
@@ -318,7 +319,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
             logmsg('Call to solver failed for job', job.id, 'with return val',
                    rtn)
             raise Exception
-    
+
         log.msg('Solver completed successfully.')
 
     else:
