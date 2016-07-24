@@ -180,14 +180,12 @@ py: $(PYUTIL)
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py \
 	starutil.py starutil_numpy.py \
-	shell.py __init__.py file.py run_command.py w3c_validator.py \
+	shell.py __init__.py file.py run_command.py \
 	filetype.py fits.py fix_sdss_idr.py removelines.py \
-	uniformize.py lsstutils.py casjobs.py \
-	sdss_das.py sdss_filenames.py sdss_get_catalog.py sdss_noise.py \
-	sdss_psf.py sdss_psfield.py sqlcl.py \
+	uniformize.py casjobs.py \
 	usnob_catalog.py usnob_get_image.py usnob_get_region.py \
 	find_data_file.py plotshift.py plotutils.py miscutils.py multiproc.py \
-	yanny.py ttime.py resample.py \
+	ttime.py resample.py \
 	EXIF.py degtohms.py hmstodeg.py horizons.py text2fits.py votabletofits.py \
 	imageutils.py merge-columns.py siap.py stages.py timingpool.py
 
