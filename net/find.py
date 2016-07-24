@@ -23,6 +23,8 @@ if __name__ == '__main__':
     parser.add_option('--chown', dest='chown', type=int, default=0, help='Change owner of userimage by user id #')
     parser.add_option('--solve-command',
                       help='Command to run instead of ssh to actually solve image')
+    parser.add_option('--solve-locally',
+                      help='Command to run astrometry-engine on this machine, not via ssh')
 
     opt,args = parser.parse_args()
     if not (opt.sub or opt.job or opt.uimage):
@@ -69,7 +71,7 @@ if __name__ == '__main__':
         if opt.rerun:
             from process_submissions import try_dojob
             print 'Re-trying job', job.id
-            try_dojob(job, ui, opt.solve_command)
+            try_dojob(job, ui, opt.solve_command, opt.solve_locally)
 
     if opt.uimage:
         ui = UserImage.objects.all().get(id=opt.uimage)
