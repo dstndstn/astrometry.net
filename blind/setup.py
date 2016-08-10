@@ -32,10 +32,10 @@ inc.append('../util') # for util.i
 cflags_swig = strlist(os.environ.get('CFLAGS_SWIG', ''))
 cflags = strlist(os.environ.get('CFLAGS', ''))
 
-print 'link:', link
-print 'objs:', objs
-print 'inc:', inc
-print 'cflags:', cflags_swig + cflags
+print('link:', link)
+print('objs:', objs)
+print('inc:', inc)
+print('cflags:', cflags_swig + cflags)
 
 objs = [
     'plotfill.o', 'plotxy.o',

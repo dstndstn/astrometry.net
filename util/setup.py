@@ -1,3 +1,4 @@
+from __future__ import print_function
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 import os
@@ -27,10 +28,10 @@ objs = strlist(os.environ.get('SLIB', ''))
 inc = strlist(os.environ.get('INC', ''), split='-I')
 cflags = strlist(os.environ.get('CFLAGS', ''))
 
-print 'link:', link
-print 'objs:', objs
-print 'inc:', inc
-print 'cflags:', cflags
+print('link:', link)
+print('objs:', objs)
+print('inc:', inc)
+print('cflags:', cflags)
 
 c_swig_module = Extension('_util',
 						  sources = ['util.i'],

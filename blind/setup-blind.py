@@ -27,10 +27,10 @@ objs = strlist(os.environ.get('SLIB', ''))
 inc = strlist(os.environ.get('INC', ''), split='-I')
 cflags = strlist(os.environ.get('CFLAGS', ''))
 
-print 'link:', link
-print 'objs:', objs
-print 'inc:', inc
-print 'cflags:', cflags
+print('link:', link)
+print('objs:', objs)
+print('inc:', inc)
+print('cflags:', cflags)
 
 c_swig_module = Extension('_blind',
 						  sources = ['blind.i'],

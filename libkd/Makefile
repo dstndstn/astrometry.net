@@ -99,11 +99,11 @@ spherematch_c$(PYTHON_SO_EXT): pyspherematch.c setup.py $(SLIB)
 # pyspherematch.c includes Python.h -- so have to make sure to add Python.h include path
 # (otherwise, get an obscure message from numpy about needing a python built with unicode)
 ifeq ($(MAKECMDGOALS),spherematch_c$(PYTHON_SO_EXT))
-  CFLAGS += $(shell $(PYTHON) -c "from distutils.sysconfig import *; print '-I'+get_python_inc()")
+  CFLAGS += $(shell $(PYTHON) -c "from __future__ import print_function; from distutils.sysconfig import *; print('-I'+get_python_inc())")
   DEP_OBJ += $(PYSPHEREMATCH_OBJ)
 endif
 ifeq ($(MAKECMDGOALS),pyspherematch)
-  CFLAGS += $(shell $(PYTHON) -c "from distutils.sysconfig import *; print '-I'+get_python_inc()")
+  CFLAGS += $(shell $(PYTHON) -c "from __future__ import print_function; from distutils.sysconfig import *; print('-I'+get_python_inc())")
   DEP_OBJ += $(PYSPHEREMATCH_OBJ)
 endif
 

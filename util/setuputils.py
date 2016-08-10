@@ -1,3 +1,4 @@
+from __future__ import print_function
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from run_command import run_command
@@ -8,10 +9,10 @@ def get_libs(pkg, required=True):
 		if required:
 			raise Exception('Failed to find libraries for package ' + pkg)
 		else:
-			print 'Failed to find libraries for (optional) package', pkg
+			print('Failed to find libraries for (optional) package', pkg)
 			return []
 	if err and len(err):
-		print 'pkg-config complained:', err
+		print('pkg-config complained:', err)
 	#print 'pkg-config said:', out
 	#libs = out.replace('\n', ' ').split(' ')
 	libs = out.split()
@@ -26,7 +27,7 @@ def get_include_dirs(pkg):
 	if rtn:
 		raise Exception('Failed to find include paths for package ' + pkg)
 	if err and len(err):
-		print 'pkg-config complained:', err
+		print('pkg-config complained:', err)
 	dirs = out.split()
 	dirs = [l for l in dirs if len(l)]
 	# Strip off the leading "-I"
@@ -40,10 +41,10 @@ def get_lib_dirs(pkg, required=True):
 		if required:
 			raise Exception('Failed to find libraries for package ' + pkg)
 		else:
-			print 'Failed to find libraries for (optional) package', pkg
+			print('Failed to find libraries for (optional) package', pkg)
 			return []
 	if err and len(err):
-		print 'pkg-config said:', err
+		print('pkg-config said:', err)
 	libs = out.split()
 	libs = [l for l in libs if len(l)]
 	# Strip off the leading "-L"
