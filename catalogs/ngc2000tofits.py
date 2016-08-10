@@ -16,7 +16,7 @@ if __name__ == '__main__':
 	# convert to a form that leads to simple updating with the "accurate" versions.
 	nummap = dict([[(x['is_ngc'], x['id']), (x['ra'],x['dec'],x['size'])]
 				   for x in ngc2000])
-	print 'got %i' % len(nummap)
+	print('got %i' % len(nummap))
 
 	# update with "accurate" values.
 	nup = 0
@@ -26,7 +26,7 @@ if __name__ == '__main__':
 			(oldra, olddec, size) = nummap[key]
 			nummap[key] = (x['ra'], x['dec'], size)
 			nup +=1
-	print 'updated %i' % nup
+	print('updated %i' % nup)
 
 	isngc  = array([i for (i,n) in nummap.iterkeys()])
 	ngcnum = array([n for (i,n) in nummap.iterkeys()])
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 	# turn from diameter in arcmin to radius in deg.
 	radius /= (2. * 60.)
 
-	print 'got %i RA (%i ngc)' % (len(ra), sum(isngc))
+	print('got %i RA (%i ngc)' % (len(ra), sum(isngc)))
 
 	prim = pyfits.PrimaryHDU()
 	#phdr = prim.header

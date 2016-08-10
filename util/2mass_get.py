@@ -36,13 +36,13 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 		basefn = '2mass-'
 
 	queryurl = 'http://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_inv'
-	print 'submitting form values:'
+	print('submitting form values:')
 	for k,v in formvals.items():
-		print '  ',k,'=',v
-	print 'encoded as:'
-	print '  ' + urlencode(formvals)
-	print
-	print 'waiting for results...'
+		print('  ',k,'=',v)
+	print('encoded as:')
+	print('  ' + urlencode(formvals))
+	print()
+	print('waiting for results...')
 	socket.setdefaulttimeout(300)
 	f = urlopen(queryurl, urlencode(formvals))
 	doc = f.read()
@@ -52,13 +52,13 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 	if not m:
 		raise 'no results page: server output written to file'
 	resurl = m.group(1)
-	print 'result base url', resurl
+	print('result base url', resurl)
 
 	resurl += 'found.xml'
 
-	print 'requesting result url', resurl
+	print('requesting result url', resurl)
 	res = urlopen(resurl)
-	print
+	print()
 	doc = res.read()
 	write_file(doc, 'res2.xml')
 
@@ -66,29 +66,29 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 
 	imgs = xmldoc.getElementsByTagName('TR')
 	if len(imgs) == 0:
-		print 'no <TR> tags found'
+		print('no <TR> tags found')
 		return None
 
 	urlfns = []
 	for imgtag in imgs:
-		print
+		print()
 		if not imgtag.hasChildNodes():
-			print '<TR> tag has no child node:', imgtag
+			print('<TR> tag has no child node:', imgtag)
 			return None
 		#print 'Image:', imgtag
 		tds = imgtag.getElementsByTagName('TD')
 		if not len(tds):
-			print '<TR> tag has no <TD> child nodes:', imgtag
+			print('<TR> tag has no <TD> child nodes:', imgtag)
 			return None
 
-		print 'Image:',  tds[0].firstChild.data
-		print '  URL:',  tds[1].firstChild.data
-		print '  Band:', tds[11].firstChild.data
-		print '  dataset (asky):', tds[18].firstChild.data
-		print '  date (yymmdd):', tds[22].firstChild.data
-		print '  hem (n/s):', tds[23].firstChild.data
-		print '  scan:', tds[24].firstChild.data
-		print '  image num:', tds[25].firstChild.data
+		print('Image:',  tds[0].firstChild.data)
+		print('  URL:',  tds[1].firstChild.data)
+		print('  Band:', tds[11].firstChild.data)
+		print('  dataset (asky):', tds[18].firstChild.data)
+		print('  date (yymmdd):', tds[22].firstChild.data)
+		print('  hem (n/s):', tds[23].firstChild.data)
+		print('  scan:', tds[24].firstChild.data)
+		print('  image num:', tds[25].firstChild.data)
 
 		url = tds[1].firstChild.data
 		band = tds[11].firstChild.data
@@ -104,21 +104,21 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 
 	fns = []
 	for i,(url,fn) in enumerate(urlfns):
-		print
-		print 'Retrieving file %i of %i' % (i+1, len(urlfns))
-		print
+		print()
+		print('Retrieving file %i of %i' % (i+1, len(urlfns)))
+		print()
 		# -t: num retries
 		cmd = "wget -t 1 -c '%s' -O %s" % (url, fn)
-		print 'Running command:', cmd
+		print('Running command:', cmd)
 
 		rtn = os.system(cmd)
 		# ctrl-C caught: quit, or continue?
 		if os.WIFSIGNALED(rtn):
-			print 'wget exited with signal', os.WTERMSIG(rtn)
+			print('wget exited with signal', os.WTERMSIG(rtn))
 			break
 		if os.WIFEXITED(rtn) and os.WEXITSTATUS(rtn):
 			# returned non-zero.
-			print 'wget exited with value', os.WEXITSTATUS(rtn)
+			print('wget exited with value', os.WEXITSTATUS(rtn))
 			continue
 		
 		fns.append(fn)
@@ -138,8 +138,8 @@ if __name__ == '__main__':
 	(opt, args) = parser.parse_args()
 	if len(args) != 2:
 		parser.print_help()
-		print
-		print 'Got extra arguments:', args
+		print()
+		print('Got extra arguments:', args)
 		sys.exit(-1)
 
 	# parse RA,Dec.

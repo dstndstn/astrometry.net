@@ -23,11 +23,11 @@ l = re.sub(r'\\x(..)\\x(..)""', replace_unicode, l)
 #l = l.decode('utf8')
 
 l = '[' + l + '0 ]'
-print l
+print(l)
 
 j = simplejson.loads(l)
 j = j[:-1]
-print j
+print(j)
 
 nm, nm2, rr, dd = [],[],[],[]
 vmag = []

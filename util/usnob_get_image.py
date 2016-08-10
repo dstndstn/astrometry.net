@@ -58,8 +58,8 @@ def get_usnob_images(ra, dec, raw=15., decw=15., fieldname='',
 	else:
 		knownsources = ['R1','R2','B1','B2']
 		if not sources in knownsources:
-			print 'Unknown source color', sources
-			print 'options:', knownsources
+			print('Unknown source color', sources)
+			print('options:', knownsources)
 			return -1
 		formvals.update({'opstars': 'Yes',
 						 'cat': 'USNO B1.0',
@@ -73,13 +73,13 @@ def get_usnob_images(ra, dec, raw=15., decw=15., fieldname='',
 
 	#queryurl = 'http://www.nofs.navy.mil/cgi-bin/tfch3tI.cgi'
 	queryurl = 'http://www.nofs.navy.mil/cgi-bin/tfch4.test.cgi'
-	print 'submitting form values:'
+	print('submitting form values:')
 	for k,v in formvals.items():
-		print '  ',k,'=',v
-	print 'encoded as:'
-	print '  ' + urlencode(formvals)
-	print
-	print 'waiting for results...'
+		print('  ',k,'=',v)
+	print('encoded as:')
+	print('  ' + urlencode(formvals))
+	print()
+	print('waiting for results...')
 	socket.setdefaulttimeout(300)
 	f = urlopen(queryurl, urlencode(formvals))
 	doc = f.read()
@@ -89,29 +89,29 @@ def get_usnob_images(ra, dec, raw=15., decw=15., fieldname='',
 	if not m:
 		raise RuntimeError('Failed to parse results page: server output written to file ' + fn)
 	resurl = m.group(1)
-	print 'result url', resurl
+	print('result url', resurl)
 
 	if not wait:
 		return resurl
 	fns = []
 	# keep hitting the url... it may be 404 for a while.
 	while True:
-		print 'requesting result url', resurl
+		print('requesting result url', resurl)
 		res = urlopen(resurl)
 		#print 'result info:', res.info()
-		print
+		print()
 		doc = res.read()
 		write_file(doc, 'res2.html')
 
 		mjpeg = re.findall(r'<A HREF="([a-zA-z0-9/_.]*?)  ">jpg  </A>', doc)
-		print 'got jpeg matches:', mjpeg
-		print
+		print('got jpeg matches:', mjpeg)
+		print()
 		if not len(mjpeg):
 			raise Exception('no jpeg results found')
 		if fits:
 			mfits = re.findall(r'<A HREF="(.*?)">FITS</A>', doc)
-			print 'got fits matches:', mfits
-			print
+			print('got fits matches:', mfits)
+			print()
 			if not len(mfits):
 				raise Exception('no fits results found')
 		else:
@@ -126,20 +126,20 @@ def get_usnob_images(ra, dec, raw=15., decw=15., fieldname='',
 
 		for (urls,suffix) in [(mjpeg,''), (mfits,'.fits')]:
 			for url in urls:
-				print 'retrieving image', url
+				print('retrieving image', url)
 				fullurl = urljoin(resurl, url)
-				print 'retrieving url', fullurl
+				print('retrieving url', fullurl)
 				fn = basefn + basename(url) + suffix
 				for trynum in range(100):
 					try:
 						res = urlopen(fullurl)
-						print
-						print 'writing to file', fn
+						print()
+						print('writing to file', fn)
 						write_file(res.read(), fn)
 						break
 					except Exception,e:
-						print 'Error:', e
-						print 'Retrying...'
+						print('Error:', e)
+						print('Retrying...')
 						time.sleep(1)
 				fns.append(fn)
 		break
@@ -160,8 +160,8 @@ if __name__ == '__main__':
 	(opt, args) = parser.parse_args()
 	if len(args) != 2:
 		parser.print_help()
-		print
-		print 'Got extra arguments:', args
+		print()
+		print('Got extra arguments:', args)
 		sys.exit(-1)
 
 	sources = None

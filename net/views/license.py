@@ -34,7 +34,7 @@ def edit(req, license_id):
             license.save()
             redirect_url = req.POST.get('next','/')
         except:
-            print 'failed'
+            print('failed')
             redirect_url = ('/')
             pass
 

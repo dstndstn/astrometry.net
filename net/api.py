@@ -521,4 +521,4 @@ def jobs_by_tag(req):
 if __name__ == '__main__':
     job = Job.objects.get(id=12)
     cal = job.calibration
-    print get_anns(cal)
+    print(get_anns(cal))

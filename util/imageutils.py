@@ -19,9 +19,9 @@ def write_pnm_to(img, f, maxval=255):
 		raise 'write_pnm: img must have <= 3 dimensions.'
 
 	if img.max() > maxval:
-		print 'write_pnm: Some pixel values are > maxval (%i): clipping them.' % maxval
+		print('write_pnm: Some pixel values are > maxval (%i): clipping them.' % maxval)
 	if img.min() < 0:
-		print 'write_pnm: Some pixel values are < 0: clipping them.'
+		print('write_pnm: Some pixel values are < 0: clipping them.')
 	clipped = img.clip(0, maxval)
 
 	maxval = int(maxval)

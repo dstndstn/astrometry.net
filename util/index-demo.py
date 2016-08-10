@@ -23,12 +23,12 @@ if __name__ == '__main__':
 	(xyz,radec,inds,tag) = index_search_stars(index, -117, 0, 0.1, True, use_numpy)
 
 	if use_numpy:
-		print 'Got xyz', xyz.shape
-		print 'Got inds', inds.shape
+		print('Got xyz', xyz.shape)
+		print('Got inds', inds.shape)
 
-	print inds
-	print radec
+	print(inds)
+	print(radec)
 	for k,v in tag.items():
-		print '  ', k, '=', v
+		print('  ', k, '=', v)
 	#print tag
 

@@ -138,7 +138,7 @@ def get_annotations_for_wcs(wcs, opt):
         for r,d,n1,n2,vmag in zip(T.ra, T.dec, T.name1, T.name2, T.vmag):
             if not wcs.is_inside(r, d):
                 continue
-            print 'Bright-star catalog:', n1, n2
+            print('Bright-star catalog:', n1, n2)
             names = []
             n1 = n1.strip()
             if len(n1):
@@ -309,7 +309,7 @@ if __name__ == '__main__':
         jobjs = get_annotations_for_wcs(wcs, opt)
         import json
         j = json.dumps(jobjs)
-        print j
+        print(j)
         sys.exit(0)
 
     fmt = PLOTSTUFF_FORMAT_JPG
@@ -353,7 +353,7 @@ if __name__ == '__main__':
     if opt.pastel:
         ann.constellation_pastel = True
         ann.bright_pastel = True
-        print ann.constellation_pastel
+        print(ann.constellation_pastel)
     if opt.hdcat:
         ann.HD = True
         ann.HD_labels = True

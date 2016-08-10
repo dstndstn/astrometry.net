@@ -24,15 +24,15 @@ from astrometry.util.usnob_cuts import *
 
 
 def trim(infn, outfn):
-	print 'Reading', infn
+	print('Reading', infn)
 	X = fits_table(infn, columns=[
 		'num_detections', 'flags', 'an_diffraction_spike',
 		'field_1', 'field_3', 'magnitude_1', 'magnitude_3',
 		'field_0', 'field_2', 'magnitude_0', 'magnitude_2',
 		'ra', 'dec',
 		])
-	print 'Read', len(X), 'sources'
-	print 'Applying cuts'
+	print('Read', len(X), 'sources')
+	print('Applying cuts')
 	I = usnob_apply_cuts(X)
 
 	# drop now-unwanted columns
@@ -40,10 +40,10 @@ def trim(infn, outfn):
 			  'num_detections' ]:
 		X.delete_column(c)
 	X.cut(I)
-	print 'Kept', len(X), 'sources'
+	print('Kept', len(X), 'sources')
 	del I
 
-	print 'Computing average mags'
+	print('Computing average mags')
 
 	X.field_0 = X.field_0.astype(np.int16)
 	X.field_1 = X.field_1.astype(np.int16)
@@ -62,7 +62,7 @@ def trim(infn, outfn):
 
 	X.r_mag = X.r_mag.astype(np.float32)
 	X.b_mag = X.b_mag.astype(np.float32)
-	print 'Writing output to', outfn
+	print('Writing output to', outfn)
 	X.writeto(outfn)
 	del X
 

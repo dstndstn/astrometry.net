@@ -21,29 +21,29 @@ if __name__ == '__main__':
 	magname = 'r'
 
 	index = index_load(indexfn, 0, None)
-	print index
+	print(index)
 
-	print 'Index', indexfn, 'has', index_nstars(index), 'stars and',
-	print index_nquads(index), 'quads'
+	print('Index', indexfn, 'has', index_nstars(index), 'stars and', end=' ')
+	print(index_nquads(index), 'quads')
 
 	quads = index.quads
-	print 'quads:', quads
+	print('quads:', quads)
 
 	starkd = index.starkd;
-	print 'star kdtree:', starkd
+	print('star kdtree:', starkd)
 
 	tagalong = startree_get_tagalong(starkd)
-	print 'tag-along:', tagalong
+	print('tag-along:', tagalong)
 
 	mags = startree_get_data_column(starkd, magname, None, startree_N(starkd))
-	print 'mags:', mags[:10], '...'
+	print('mags:', mags[:10], '...')
 
-	print 'mag range:', min(mags), max(mags)
+	print('mag range:', min(mags), max(mags))
 
 	mn,mx = [],[]
 	for i in range(index_nquads(index)):
 		if i % 100000 == 0:
-			print 'quad', i, 'of', index_nquads(index)
+			print('quad', i, 'of', index_nquads(index))
 		stars = quadfile_get_stars(quads, i)
 		#print 'stars', stars
 		qmags = [mags[j] for j in stars]

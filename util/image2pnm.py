@@ -57,7 +57,7 @@ verbose = False
 def do_command(cmd):
     logging.debug('Running: "%s"' % cmd)
     if os.system(cmd) != 0:
-        print >>sys.stderr, 'Command failed: %s' % cmd
+        print('Command failed: %s' % cmd, file=sys.stderr)
         sys.exit(-1)
 
 def get_cmd(types, cmds):
@@ -241,8 +241,8 @@ def convert_image(infile, outfile, uncompressed=None, sanitized=None,
     comp = uncompress_file(infile, uncompressed)
                            
     if comp:
-        print 'compressed'
-        print comp
+        print('compressed')
+        print(comp)
         infile = uncompressed
 
     (imgtype, errstr) = image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits, extension, mydir, fix_sdss)
@@ -253,7 +253,7 @@ def convert_image(infile, outfile, uncompressed=None, sanitized=None,
     if errstr:
         logging.error('ERROR: %s' % errstr)
         return -1
-    print imgtype
+    print(imgtype)
     return 0
 
 def main():

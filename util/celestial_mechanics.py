@@ -87,7 +87,7 @@ def orbital_elements_to_ss_xyz(E, observer=None, light_travel=True):
 			break
 		lastdM = dM
 	if ii == 99:
-		print 'Warning: orbital_elements_to_ss_xyz: niters', ii
+		print('Warning: orbital_elements_to_ss_xyz: niters', ii)
 	return x,dx
 
 def orbital_elements_to_xyz(E, observer, light_travel=True, normalize=True):
@@ -238,7 +238,7 @@ def eccentric_anomaly_from_mean_anomaly(M, e, tolerance = default_tolerance,
 		deltaM = (M - mean_anomaly_from_eccentric_anomaly(E, e))
 		E = E + deltaM / (1. - e * cos(E))
 		iteration += 1
-	if verbose: print 'eccentric anomaly iterations:',iteration
+	if verbose: print('eccentric anomaly iterations:',iteration)
 	return E
 
 def eccentric_anomaly_from_true_anomaly(f, e):
@@ -350,17 +350,17 @@ if __name__ == '__main__':
 		arg1 = 0
 	
 	for e in [0.01, 0.1, 0.9, 0.99, 0.999]:
-		print 'eccentricity:', e
+		print('eccentricity:', e)
 		M = arange(-3.16,-3.14,0.001) # easy
 		#M = arange(-10., 10., 2.1)    # easy
 		#M = arange(-0.01,0.01,0.001)  # hard
-		print 'mean anomaly input:', M
+		print('mean anomaly input:', M)
 		E = eccentric_anomaly_from_mean_anomaly(M, e, verbose=True)
-		print 'eccentric anomaly output:', E
+		print('eccentric anomaly output:', E)
 		f = true_anomaly_from_eccentric_anomaly(E, e)
-		print 'true anomaly output:', f
+		print('true anomaly output:', f)
 		M2 = mean_anomaly_from_eccentric_anomaly(E, e)
-		print 'round-trip error:', M2 - M
+		print('round-trip error:', M2 - M)
 	
 	if arg1 == "plot":
 		# This code will do the plotting:

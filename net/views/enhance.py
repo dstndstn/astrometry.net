@@ -39,10 +39,10 @@ def simple_histeq(pixels, getinverse=False, mx=256):
     yy = cs / float(cs[-1])
     xx = np.arange(mx + 1) - 0.5
     I = np.append([0], 1 + np.flatnonzero(np.diff(yy)))
-    print 'mx:', mx
-    print 'xx:', len(xx)
-    print 'yy:', len(yy)
-    print 'I:', I.min(), I.max()
+    print('mx:', mx)
+    print('xx:', len(xx))
+    print('yy:', len(yy))
+    print('I:', I.min(), I.max())
     yy = yy[I]
     xx = xx[I]
     xx[-1] = mx-0.5
@@ -67,7 +67,7 @@ def enhanced_image(req, job_id=None, size=None):
     tt = 'hello %s, job %s, nside %s, hh %s' % (ui, job, nside, hh)
 
     ver = EnhanceVersion.objects.get(name='v4')
-    print 'Using', ver
+    print('Using', ver)
 
     EIms = EnhancedImage.objects.filter(version=ver)
 
@@ -109,7 +109,7 @@ def enhanced_image(req, job_id=None, size=None):
         H,W = targetwcs.get_height(), targetwcs.get_width()
         img = ui.image.get_display_image()
 
-    print tt
+    print(tt)
     ee = np.zeros((H,W,3), np.float32)
 
     imgdata = None
@@ -117,9 +117,9 @@ def enhanced_image(req, job_id=None, size=None):
     ft = df.file_type
     fn = df.get_path()
     if 'JPEG' in ft:
-        print 'Reading', fn
+        print('Reading', fn)
         I = plt.imread(fn)
-        print 'Read', I.shape, I.dtype
+        print('Read', I.shape, I.dtype)
         if len(I.shape) == 2:
             I = I[:,:,np.newaxis].repeat(3, axis=2)
         assert(len(I.shape) == 3)
@@ -182,7 +182,7 @@ def enhanced_image(req, job_id=None, size=None):
 
     plt.savefig(tempfn)
 
-    print 'Wrote', tempfn
+    print('Wrote', tempfn)
     f = open(tempfn)
     res = HttpResponse(f)
     res['Content-Type'] = 'image/png'

@@ -67,7 +67,7 @@ class EnhancedImage(models.Model):
         fn = self.get_imw_path()
         log.debug('Reading %s' % fn)
         fits = fitsio.FITS(fn, 'r')
-        print 'Read', len(fits), 'HDUs'
+        print('Read', len(fits), 'HDUs')
         enhI = fits[0].read()
         enhW = fits[1].read()
         log.debug('Read image %s and weight %s' % (str(enhI.shape), str(enhW.shape)))
@@ -138,7 +138,7 @@ class EnhancedImage(models.Model):
                 # print 'Created'
             except:
                 import traceback
-                print 'Failed to create dir:'
+                print('Failed to create dir:')
                 traceback.print_exc()
                 pass
 

@@ -74,56 +74,56 @@ class Cas(object):
 		redirurl = f.geturl()
 		# older CasJobs version redirects to the job details page:
 		# just pull the jobid out of the redirected URL.
-		print 'Redirected to URL', redirurl
+		print('Redirected to URL', redirurl)
 		pat = re.escape(self.job_details_url().replace('%i','')) +  '([0-9]*)'
 		#print 'pattern:', pat
 		m = re.match(pat, redirurl)
 		if m is not None:
 			jobid = int(m.group(1))
-			print 'jobid:', jobid
+			print('jobid:', jobid)
 			return jobid
 		#write_file(doc, 'sub.out')
 		xmldoc = minidom.parseString(doc)
 		jobids = xmldoc.getElementsByTagName('jobid')
 		if len(jobids) == 0:
-			print 'No <jobid> tag found:'
-			print doc
+			print('No <jobid> tag found:')
+			print(doc)
 			return None
 		if len(jobids) > 1:
-			print 'Multiple <jobid> tags found:'
-			print doc
+			print('Multiple <jobid> tags found:')
+			print(doc)
 			return None
 		jobid = jobids[0]
 		if not jobid.hasChildNodes():
-			print '<jobid> tag has no child node:'
-			print doc
+			print('<jobid> tag has no child node:')
+			print(doc)
 			return None
 		jobid = jobid.firstChild
 		if jobid.nodeType != xml.dom.Node.TEXT_NODE:
-			print 'job id is not a text node:'
-			print doc
+			print('job id is not a text node:')
+			print(doc)
 			return None
 		jobid = int(jobid.data)
 		if jobid == -1:
 			# Error: find error message.
-			print 'Failed to submit query.  Looking for error message...'
+			print('Failed to submit query.  Looking for error message...')
 			founderr = False
 			msgs = xmldoc.getElementsByTagName('message')
 			for msg in msgs:
 				if msg.hasChildNodes():
 					c = msg.firstChild
 					if c.nodeType == xml.dom.Node.TEXT_NODE:
-						print 'Error message:', c.data
+						print('Error message:', c.data)
 						founderr = True
 			if not founderr:
-				print 'Error message not found.  Whole response document:'
-				print
-				print doc
-				print
+				print('Error message not found.  Whole response document:')
+				print()
+				print(doc)
+				print()
 		return jobid
 	
 	def login(self, username, password):
-		print 'Logging in.'
+		print('Logging in.')
 		data = urllib.urlencode({'userid': username, 'password': password})
 		f = urllib2.urlopen(self.login_url(), data)
 		d = f.read()
@@ -142,7 +142,7 @@ class Cas(object):
 	def get_job_status(self, jobid):
 		# print 'Getting job status for', jobid
 		url = self.job_details_url() % jobid
-		print 'Job details URL:', url
+		print('Job details URL:', url)
 		doc = urllib2.urlopen(url).read()
 		for line in doc.split('\n'):
 			for stat in ['Finished', 'Ready', 'Started', 'Failed', 'Cancelled']:
@@ -159,20 +159,20 @@ class Cas(object):
 		try:
 			f = urllib2.urlopen(url)
 		except Exception,e:
-			print 'Failed to drop table', dbname
-			print e
+			print('Failed to drop table', dbname)
+			print(e)
 			return False
 		doc = f.read()
 		(vs,ev) = get_viewstate_and_eventvalidation(doc)
 		data = urllib.urlencode({'yesButton':'Yes',
 								 '__EVENTVALIDATION':ev,
 								 '__VIEWSTATE':vs})
-		print 'Dropping table', dbname
+		print('Dropping table', dbname)
 		try:
 			f = urllib2.urlopen(url, data)
 		except Exception,e:
-			print 'Failed to drop table', dbname
-			print e
+			print('Failed to drop table', dbname)
+			print(e)
 			return False
 		d = f.read()
 		# print 'Got response:'
@@ -194,11 +194,11 @@ class Cas(object):
 			# Referer: http://galex.stsci.edu/casjobs/mydbindex.aspx
 			f = urllib2.urlopen(url)
 		except urllib2.HTTPError,e:
-			print 'HTTPError:', e
-			print '  code', e.code
-			print '  msg', e.msg
-			print '  hdrs', e.hdrs
-			print '  data:', e.fp.read()
+			print('HTTPError:', e)
+			print('  code', e.code)
+			print('  msg', e.msg)
+			print('  hdrs', e.hdrs)
+			print('  data:', e.fp.read())
 			raise e
 		doc = f.read().strip()
 		# write_file(doc, 'r1.html')
@@ -210,14 +210,14 @@ class Cas(object):
 		extra = self.params.get('request_output_extra')
 		if extra is not None:
 			data.update(extra)
-			print 'requesting FITS output of MyDB table', mydbname
-		print 'url', url
-		print 'data', urllib.urlencode(data)
+			print('requesting FITS output of MyDB table', mydbname)
+		print('url', url)
+		print('data', urllib.urlencode(data))
 		try:
 			f = urllib2.urlopen(url, urllib.urlencode(data))
 		except urllib2.HTTPError,e:
-			print 'HTTPError:', e
-			print '  code', e.code
+			print('HTTPError:', e)
+			print('  code', e.code)
 			# print '  reason', e.reason
 			raise e
 		d = f.read()
@@ -228,11 +228,11 @@ class Cas(object):
 
 	def get_ready_outputs(self):
 		url = self.output_url()
-		print 'Hitting output URL', url
+		print('Hitting output URL', url)
 		f = urllib2.urlopen(url)
 		doc = f.read()
 		write_file(doc, 'ready.html')
-		print 'Wrote ready downloads to ready.html'
+		print('Wrote ready downloads to ready.html')
 		urls = []
 		fns = []
 
@@ -270,22 +270,22 @@ class Cas(object):
 						 for x in range(10))
 		if sql.lower().startswith('select '):
 			sql = 'select into mydb.%s' % dbname + sql[6:]
-		print 'Submitting query: "%s"' % sql
+		print('Submitting query: "%s"' % sql)
 		if dbcontext is not None:
 			kwargs = dict(dbcontext=dbcontext)
 		else:
 			kwargs = {}
 		jid = self.submit_query(sql, **kwargs)
-		print 'Submitted job id', jid
-		print 'Waiting for job id:', jid
+		print('Submitted job id', jid)
+		print('Waiting for job id:', jid)
 		while True:
 			jobstatus = self.get_job_status(jid)
-			print 'Job id', jid, 'is', jobstatus
+			print('Job id', jid, 'is', jobstatus)
 			if jobstatus in ['Finished', 'Failed', 'Cancelled']:
 				break
-			print 'Sleeping...'
+			print('Sleeping...')
 			time.sleep(sleeptime)
-		print 'Output-downloads-delete'
+		print('Output-downloads-delete')
 		dodelete = True
 		self.output_and_download([dbname], [outfn], dodelete)
 	
@@ -307,46 +307,46 @@ class Cas(object):
 		dbs = dbs[:]
 		fns = fns[:]
 			
-		print 'Getting list of available downloads...'
+		print('Getting list of available downloads...')
 		(preurls,nil,prefails) = self.get_ready_outputs()
 		#print 'Preurls:', preurls
 		#print 'Prefails:', prefails
 		for db in dbs:
-			print 'Requesting output of', db
+			print('Requesting output of', db)
 			self.request_output(db)
 		while True:
-			print 'Waiting for output to appear...'
+			print('Waiting for output to appear...')
 			(durls,dfns,dfails) = self.get_ready_outputs()
 			(newurls, newfns) = find_new_outputs(durls, dfns, preurls)
 			#print 'URLs:', durls
 			#print 'New URLs:', newurls
-			print 'New outputs available:', newfns
+			print('New outputs available:', newfns)
 			newfails = [f for f in dfails if not f in prefails]
-			print 'New failures:', newfails
+			print('New failures:', newfails)
 			for (fn,db) in zip(fns,dbs):
 				for (dfn,durl) in zip(newfns,newurls):
 					# the filename will contain the db name.
 					if not db in dfn:
 						continue
-					print 'Output', dfn, 'looks like it belongs to database', db
-					print 'Downloading to local file', fn
+					print('Output', dfn, 'looks like it belongs to database', db)
+					print('Downloading to local file', fn)
 					cmd = 'wget -O "%s" "%s"' % (fn, durl)
-					print '  (running: "%s")' % cmd
+					print('  (running: "%s")' % cmd)
 					w = os.system(cmd)
 					if not os.WIFEXITED(w) or os.WEXITSTATUS(w):
-						print 'download failed.'
+						print('download failed.')
 						return -1
 					dbs.remove(db)
 					fns.remove(fn)
 					if dodelete:
-						print 'Deleting database', db
+						print('Deleting database', db)
 						self.drop_table(db)
 			for (fn,db) in zip(fns,dbs):
 				for tab,date,msg in newfails:
 					if db != tab:
 						continue
-					print 'Failure:', tab, 'date', date, 'message', msg
-					print 'looks like it belongs to database', db
+					print('Failure:', tab, 'date', date, 'message', msg)
+					print('looks like it belongs to database', db)
 					dbs.remove(db)
 					fns.remove(fn)
 					if raiseonfail:
@@ -354,7 +354,7 @@ class Cas(object):
 					
 			if not len(dbs):
 			   	break
-			print 'Waiting...'
+			print('Waiting...')
 			time.sleep(sleeptime)
 		return 0
 
@@ -471,20 +471,20 @@ if __name__ == '__main__':
 	cas = surveys[opt.survey]
 
 	if len(args) < 2:
-		print '%s <username> <password> [command <args>]' % sys.argv[0]
-		print
-		print 'commands include:'
-		print '   sqltofits (<sql> or <@sql-file>) output.fits'
-		print '   delete <database> [...]'
-		print '   query  ( <sql> or <@sqlfile> ) [...]'
-		print '   querywait  ( <sql> or <@sqlfile> ) [...]'
-		print '     -> submit query and wait for it to finish'
-		print '   output <database> [...]'
-		print '     -> request that a database be output as a FITS table'
-		print '   outputdownload <database> <filename> [...]'
-		print '     -> request output, wait for it to finish, and download to <filename>'
-		print '   outputdownloaddelete <database> <filename> [...]'
-		print '     -> request output, wait for it to finish, download to <filename>, and drop table.'
+		print('%s <username> <password> [command <args>]' % sys.argv[0])
+		print()
+		print('commands include:')
+		print('   sqltofits (<sql> or <@sql-file>) output.fits')
+		print('   delete <database> [...]')
+		print('   query  ( <sql> or <@sqlfile> ) [...]')
+		print('   querywait  ( <sql> or <@sqlfile> ) [...]')
+		print('     -> submit query and wait for it to finish')
+		print('   output <database> [...]')
+		print('     -> request that a database be output as a FITS table')
+		print('   outputdownload <database> <filename> [...]')
+		print('     -> request output, wait for it to finish, and download to <filename>')
+		print('   outputdownloaddelete <database> <filename> [...]')
+		print('     -> request output, wait for it to finish, download to <filename>, and drop table.')
 		sys.exit(-1)
 
 	instance = 4
@@ -501,44 +501,44 @@ if __name__ == '__main__':
 
 	if cmd == 'delete':
 		if len(args) < 4:
-			print 'Usage: ... delete <db>'
+			print('Usage: ... delete <db>')
 			sys.exit(-1)
 		db = args[3]
-		print 'Dropping', db
+		print('Dropping', db)
 		cas.drop_table(db)
 		sys.exit(0)
 
 	if cmd in ['query', 'querywait']:
 		qs = args[3:]
 		if len(qs) == 0:
-			print 'Usage: ... query <sql> or <@file> [...]'
+			print('Usage: ... query <sql> or <@file> [...]')
 			sys.exit(-1)
 		jids = []
 		for q in qs:
 			if q.startswith('@'):
 				q = read_file(q[1:])
-			print 'Submitting query: "%s"' % q
+			print('Submitting query: "%s"' % q)
 			jobid = cas.submit_query(q, dbcontext=opt.dbcontext)
-			print 'Submitted job id', jobid
+			print('Submitted job id', jobid)
 			jids.append(jobid)
 		if cmd in ['querywait']:
 			# wait for them to finish.
 			while True:
-				print 'Waiting for job ids:', jids
+				print('Waiting for job ids:', jids)
 				for jid in jids:
 					jobstatus = cas.get_job_status(jid)
-					print 'Job id', jid, 'is', jobstatus
+					print('Job id', jid, 'is', jobstatus)
 					if jobstatus in ['Finished', 'Failed', 'Cancelled']:
 						jids.remove(jid)
 				if not len(jids):
 					break
-				print 'Sleeping...'
+				print('Sleeping...')
 				time.sleep(10)
 		sys.exit(0)
 
 	if cmd == 'sqltofits':
 		if len(args) != 5:
-			print 'Usage: ... sqltofits [<sql> or <@file>] output.fits'
+			print('Usage: ... sqltofits [<sql> or <@file>] output.fits')
 			sys.exit(-1)
 		q = args[3]
 		outfn = args[4]
@@ -550,10 +550,10 @@ if __name__ == '__main__':
 	if cmd == 'output':
 		dbs = args[3:]
 		if len(dbs) == 0:
-			print 'Usage: ... output <db> [<db> ...]'
+			print('Usage: ... output <db> [<db> ...]')
 			sys.exit(-1)
 		for db in dbs:
-			print 'Requesting output of db', db
+			print('Requesting output of db', db)
 			cas.request_output(db)
 		sys.exit(0)
 
@@ -561,7 +561,7 @@ if __name__ == '__main__':
 		dodelete = (cmd == 'outputdownloaddelete')
 		dbfns = args[3:]
 		if len(dbfns) == 0 or len(dbfns) % 2 == 1:
-			print 'Usage: ... outputdownload <db> <filename> [...]'
+			print('Usage: ... outputdownload <db> <filename> [...]')
 			sys.exit(-1)
 		dbs = dbfns[0::2]
 		fns = dbfns[1::2]
@@ -569,5 +569,5 @@ if __name__ == '__main__':
 		cas.output_and_download(dbs, fns, dodelete)
 		sys.exit(0)
 
-	print 'Unrecognized command'
+	print('Unrecognized command')
 	

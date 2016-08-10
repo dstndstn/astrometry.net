@@ -316,10 +316,10 @@ class DR8(DR7):
             tempfn = os.path.join(udir, os.path.basename(fn).replace('.bz2', ''))
             #print 'Checking', tempfn
             if os.path.exists(tempfn):
-                print 'File exists:', tempfn
+                print('File exists:', tempfn)
                 return tempfn,True
             else:
-                print 'Saving to', tempfn
+                print('Saving to', tempfn)
                 keep = True
 
         else:
@@ -328,17 +328,17 @@ class DR8(DR7):
 
         cmd = cmd % dict(input = fn, output = tempfn)
         self.logger.debug('cmd: %s' % cmd)
-        print 'command:', cmd
+        print('command:', cmd)
         (rtn,out,err) = run_command(cmd)
         if rtn:
-            print 'Command failed: command', cmd
-            print 'Output:', out
-            print 'Error:', err
-            print 'Return val:', rtn
+            print('Command failed: command', cmd)
+            print('Output:', out)
+            print('Error:', err)
+            print('Return val:', rtn)
             raise RuntimeError('Command failed (return val %i): %s' % (rtn, cmd))
 
-        print out
-        print err
+        print(out)
+        print(err)
         return tempfn,keep
 
 
@@ -375,7 +375,7 @@ class DR8(DR7):
 
         outfn = self.getPath(filetype, run, camcol, field, band,
                              rerun=rerun)
-        print 'Checking for file', outfn
+        print('Checking for file', outfn)
         if outfn is None:
             return None
         if skipExisting and os.path.exists(outfn):
@@ -388,7 +388,7 @@ class DR8(DR7):
                 pass
         url = self.get_url(filetype, run, camcol, field, band=band, rerun=rerun)
         #print 'Did not find file:', outfn
-        print 'Retrieving from URL:', url
+        print('Retrieving from URL:', url)
         if self.curl:
             cmd = "curl -o '%(outfn)s' '%(url)s'"
         else:
@@ -405,10 +405,10 @@ class DR8(DR7):
         self.logger.debug('cmd: %s' % cmd)
         (rtn,out,err) = run_command(cmd)
         if rtn:
-            print 'Command failed: command', cmd
-            print 'Output:', out
-            print 'Error:', err
-            print 'Return val:', rtn
+            print('Command failed: command', cmd)
+            print('Output:', out)
+            print('Error:', err)
+            print('Return val:', rtn)
             return None
 
         if tempsuffix is not None:
@@ -422,10 +422,10 @@ class DR8(DR7):
             self.logger.debug('cmd: %s' % cmd)
             (rtn,out,err) = run_command(cmd)
             if rtn:
-                print 'Command failed: command', cmd
-                print 'Output:', out
-                print 'Error:', err
-                print 'Return val:', rtn
+                print('Command failed: command', cmd)
+                print('Output:', out)
+                print('Error:', err)
+                print('Return val:', rtn)
                 return None
 
         return outfn
@@ -457,7 +457,7 @@ class DR8(DR7):
 
         if fitsio:
 
-            print 'Frame filename', fn
+            print('Frame filename', fn)
             # eg /clusterfs/riemann/raid006/dr10/boss/photoObj/frames/301/2825/1/frame-u-002825-1-0126.fits.bz2
 
             F = fitsio.FITS(fn, lower=True)

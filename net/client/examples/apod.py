@@ -40,8 +40,8 @@ if __name__ == '__main__':
         opt.apikey = os.environ.get('AN_API_KEY', None)
     if opt.apikey is None:
         parser.print_help()
-        print
-        print 'You must either specify --apikey or set AN_API_KEY'
+        print()
+        print('You must either specify --apikey or set AN_API_KEY')
         sys.exit(-1)
 
     useclient = True
@@ -51,15 +51,15 @@ if __name__ == '__main__':
 
     for year in range(1996, 2013):
         for month in range(1, 13):
-            print "apod.py __main__: working on month %d-%02d" % (year, month)
+            print("apod.py __main__: working on month %d-%02d" % (year, month))
             for day in range(1, 32):
                 iurl = get_apod_image_url(apod_url(month, day, year))
                 if iurl is None:
                     continue
                 if useclient:
                     client.url_upload(iurl)
-                    print client.submission_images(1)
+                    print(client.submission_images(1))
                 else:
                     cmd = "python ../client.py --server %s --apikey %s --urlupload \"%s\"" % (opt.server, opt.apikey, iurl)
-                    print cmd
+                    print(cmd)
                     os.system(cmd)

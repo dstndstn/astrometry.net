@@ -79,47 +79,47 @@ class optcallback(object):
     def __init__(self, debug=False):
         self.debug = debug
     def __call__(self, socket, command, option):
-        if self.debug: print 'optcallback: socket', socket, 'command #', ord(command), 'option #', ord(option)
+        if self.debug: print('optcallback: socket', socket, 'command #', ord(command), 'option #', ord(option))
         cnum = command
         onum = option
         if cnum == tn.WILL and onum in [ tn.ECHO, tn.SGA ]:
-            if self.debug: print 'Got WILL', onum
-            if self.debug: print 'Sending IAC DO', onum
+            if self.debug: print('Got WILL', onum)
+            if self.debug: print('Sending IAC DO', onum)
             socket.send(tn.IAC + tn.DO + onum)
         elif cnum == tn.WILL:
-            if self.debug: print 'Got WILL', onum
-            if self.debug: print 'Sending IAC DONT', onum
+            if self.debug: print('Got WILL', onum)
+            if self.debug: print('Sending IAC DONT', onum)
             socket.send(tn.IAC + tn.DONT + onum)
         elif cnum == tn.DO and onum == tn.NAWS:
-            if self.debug: print 'Got DO NAWS'
+            if self.debug: print('Got DO NAWS')
             # 16-bit big-endian W x H (0x00, 0x80) = 128
             reply = (tn.IAC + tn.WILL + tn.NAWS +
                      tn.IAC + tn.SB + tn.NAWS +
                      chr(0) + chr(0x80) + chr(0) + chr(0x80) +
                      tn.IAC + tn.SE)
             if self.debug:
-                print 'Replying:', reply
-                print ' hex: ',
+                print('Replying:', reply)
+                print(' hex: ', end=' ')
                 for c in reply:
-                    print '0x%02x' % ord(c),
-                print
+                    print('0x%02x' % ord(c), end=' ')
+                print()
             socket.send(reply)
         elif cnum == tn.DO and onum == tn.TTYPE:
-            if self.debug: print 'Got DO TTYPE'
+            if self.debug: print('Got DO TTYPE')
             reply = (tn.IAC + tn.WILL + tn.TTYPE +
                      tn.IAC + tn.SB + tn.TTYPE + chr(0) +
                      'DEC-VT100' +
                      tn.IAC + tn.SE)
             if self.debug:
-                print 'Replying:', reply
-                print ' hex: ',
+                print('Replying:', reply)
+                print(' hex: ', end=' ')
                 for c in reply:
-                    print '0x%02x' % ord(c),
-                print
+                    print('0x%02x' % ord(c), end=' ')
+                print()
             socket.send(reply)
         elif cnum == tn.DO: # and onum == tn.TTYPE:
-            if self.debug: print 'Got DO', onum
-            if self.debug: print 'Sending WONT', onum
+            if self.debug: print('Got DO', onum)
+            if self.debug: print('Sending WONT', onum)
             socket.send(tn.IAC + tn.WONT + onum) #tn.TTYPE)
 
         
@@ -174,7 +174,7 @@ Telnet(horizons.jpl.nasa.gov,6775): IAC DO 24
 
 def _horizons_login(debug=False):
     t = tn.Telnet('horizons.jpl.nasa.gov', 6775)
-    print 'Waiting for Horizons...'
+    print('Waiting for Horizons...')
     if debug:
         t.set_debuglevel(10)
     '''
@@ -193,11 +193,11 @@ def _horizons_login(debug=False):
     # # big enough!
     # t.write(ESC + '[50;150R')
 
-    if debug: print 'Waiting for Horizons prompt'
+    if debug: print('Waiting for Horizons prompt')
     txt = t.read_until('Horizons>', 30)
     # Don't do page breaks
     t.write('PAGE\n')
-    if debug: print 'Waiting for Horizons prompt'
+    if debug: print('Waiting for Horizons prompt')
     txt = t.read_until('Horizons>', 30)
     return t
 
@@ -218,13 +218,13 @@ def get_radec_for_jds(bodyname, jd0, jd1, interval='1d', debug=False):
     #txt2 = t.read_until('<cr>: ')
     txt=''
     txt2 = t.read_until('<cr>')
-    print
-    print '--------------------------------'
-    print
-    print txt, txt2
-    print
-    print '--------------------------------'
-    print
+    print()
+    print('--------------------------------')
+    print()
+    print(txt, txt2)
+    print()
+    print('--------------------------------')
+    print()
     t.write('\n')
 
     # if 'EXACT' in txt2:
@@ -248,7 +248,7 @@ def get_radec_for_jds(bodyname, jd0, jd1, interval='1d', debug=False):
     t.write('E\r\n')
     
     txt = t.read_until('Observe, Elements, Vectors  [o,e,v,?]')
-    print txt
+    print(txt)
     t.write('o\n')
     t.read_until('Coordinate center [ <id>,coord,geo  ]')
     t.write('geo\n')
@@ -318,15 +318,15 @@ def get_radec_for_jds(bodyname, jd0, jd1, interval='1d', debug=False):
     header = t.read_until('$$SOE')
     eph = t.read_until('$$EOE')
 
-    print 'Header:', header
-    print 'Eph:', eph
+    print('Header:', header)
+    print('Eph:', eph)
 
     lines = eph.split('\n')
-    print 'first line:', lines[0]
-    print 'last line:', lines[-1]
+    print('first line:', lines[0])
+    print('last line:', lines[-1])
     lines = lines[1:-1]
-    print 'first line:', lines[0]
-    print 'last line:', lines[-1]
+    print('first line:', lines[0])
+    print('last line:', lines[-1])
     
     date,ra,dec = [],[],[]
     for line in lines:
@@ -341,13 +341,13 @@ def get_radec_for_jds(bodyname, jd0, jd1, interval='1d', debug=False):
     
     
 def get_ephemerides_for_jds(bodyname, jds, debug=False):
-    print 'JDs:', jds
+    print('JDs:', jds)
     t = _horizons_login()
     ephs = []
     jd = jds[0]
     margin = 1. / (24.*3600.)
     
-    print 'getting JD', jd
+    print('getting JD', jd)
     t.write( # Body name; if found, it asks "Continue?"
              '%s\n\n' % bodyname +
              # [E]phemeris
@@ -368,11 +368,11 @@ def get_ephemerides_for_jds(bodyname, jds, debug=False):
     txt = t.read_until('Working ...', 10)
     eph = t.read_until('>>> Select...', 60)
     if debug:
-        print 'Got eph: "%s"' % eph
+        print('Got eph: "%s"' % eph)
     ephs.append(eph)
 
     for jd in jds[1:]:
-        print 'getting JD', jd
+        print('getting JD', jd)
         t.write('A\nE\nv\n' +
                 '\neclip\n' +
                 'JD %.9f\n' % jd +
@@ -383,19 +383,19 @@ def get_ephemerides_for_jds(bodyname, jds, debug=False):
         eph2 = t.read_until('>>> Select...', 60)
         ephs.append(eph2)
         if debug:
-            print 'Got eph: "%s"' % eph2
+            print('Got eph: "%s"' % eph2)
         
     t.write('q\n')
     t.close()
 
     if debug:
-        print 'Got text:'
+        print('Got text:')
         for i,txt in enumerate(ephs):
-            print '  ', txt
+            print('  ', txt)
 
             fn = 'txt%i' % i
             write_file(txt, fn)
-            print 'wrote', fn
+            print('wrote', fn)
 
     EE = [Eph(txt=txt, linedelim='\r\n') for txt in ephs]
     return EE
@@ -422,35 +422,35 @@ if __name__ == '__main__':
 
     date0 = opt.start.split('-')
     if len(date0) != 3:
-        print 'Expected YYYY-M-D, got', opt.start
+        print('Expected YYYY-M-D, got', opt.start)
         sys.exit(-1)
     date0 = [int(x, 10) for x in date0]
     date0 = datetime.datetime(*date0)
-    print 'Start date:', date0
+    print('Start date:', date0)
     jd0 = datetojd(date0)
-    print 'Start JD:', jd0
+    print('Start JD:', jd0)
 
     date1 = opt.end.split('-')
     if len(date1) != 3:
-        print 'Expected YYYY-M-D, got', opt.end
+        print('Expected YYYY-M-D, got', opt.end)
         sys.exit(-1)
     date1 = [int(x, 10) for x in date1]
     date1 = datetime.datetime(*date1)
-    print 'End date:', date1
+    print('End date:', date1)
     jd1 = datetojd(date1)
-    print 'End JD:', jd1
+    print('End JD:', jd1)
 
     date,ra,dec = get_radec_for_jds(opt.body, jd0, jd1, debug=opt.verbose,
                                     interval=opt.interval)
     for d,rr,dd in zip(date, ra, dec):
-        print '  ', d, rr, dd
+        print('  ', d, rr, dd)
 
     T = fits_table()
     T.jd  = np.array([datetojd(d) for d in date])
     T.ra  = np.array(ra)
     T.dec = np.array(dec)
     T.writeto(opt.fits)
-    print 'Wrote', opt.fits
+    print('Wrote', opt.fits)
 
     sys.exit(0)
     
@@ -466,12 +466,12 @@ if __name__ == '__main__':
     jd0 = datetojd(datetime.datetime(2013,  9,  1))
     #jd1 = datetojd(datetime.datetime(2014,  3, 31))
     jd1 = datetojd(datetime.datetime(2014,  1,  1))
-    print 'jds', jd0, jd1
+    print('jds', jd0, jd1)
     date,ra,dec = get_radec_for_jds('C/2012 S1', jd0, jd1, debug=True,
                                     interval='1h')
     
     for d,r,dd in zip(date, ra, dec):
-        print '  ', d, r, dd
+        print('  ', d, r, dd)
 
     T = fits_table()
     T.jd  = np.array([datetojd(d) for d in date])

@@ -77,23 +77,23 @@ if __name__ == '__main__':
 	imgfn = sys.argv[1]
 	xyfn = sys.argv[2]
 	
-	print 'FITS Image', imgfn
-	print 'xylist', xyfn
+	print('FITS Image', imgfn)
+	print('xylist', xyfn)
 
 	p = pyfits.open(imgfn)
 	I = p[0].data
-	print 'Image is', I.shape
+	print('Image is', I.shape)
 
 	p = pyfits.open(xyfn)
 	xy = p[1].data
 	x = xy.field('X')
 	y = xy.field('Y')
 	flux = xy.field('FLUX')
-	print 'Sources:', len(x)
+	print('Sources:', len(x))
 
 	hdr = p[1].header
 	sigma = hdr['ESTSIGMA']
-	print 'Estimated sigma', sigma
+	print('Estimated sigma', sigma)
 
 	N = 100
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
 		iy = round(y[i]) - 1
 		cutout = I[iy-1:iy+2, ix-1:ix+2]
 		if cutout.shape != (3,3):
-			print 'cutout is', cutout.shape
+			print('cutout is', cutout.shape)
 			continue
 		#cutout5 = I[range(iy-2, iy+3, 2), range(ix-2, ix+3, 2)]
 		cutout5 = array([ I[range(iy-2, iy+3, 2), ix-2],
@@ -119,10 +119,10 @@ if __name__ == '__main__':
 						  I[range(iy-2, iy+3, 2), ix+2], ])
 						  
 		if cutout5.shape != (3,3):
-			print 'cutout5 has shape', cutout5.shape
-			print 'yrange', range(iy-2, iy+3, 2)
-			print 'xrange', range(ix-2, ix+3, 2)
-			print 'cutout5', cutout5
+			print('cutout5 has shape', cutout5.shape)
+			print('yrange', range(iy-2, iy+3, 2))
+			print('xrange', range(ix-2, ix+3, 2))
+			print('cutout5', cutout5)
 			continue
 
 		for j in xrange(N):
@@ -157,8 +157,8 @@ if __name__ == '__main__':
 	dx2 = array(dx2)
 	dy2 = array(dy2)
 
-	print 'A total of', Nout,  'of', (N*len(x)), '(%i %%)' % int(round(Nout*100./float(N*len(x)))),  'peaks moved outside the 3x3 box.'
-	print 'A total of', Nout2, 'of', (N*len(x)), '(%i %%)' % int(round(Nout2*100./float(N*len(x)))), 'peaks moved outside the 5x5 box.'
+	print('A total of', Nout,  'of', (N*len(x)), '(%i %%)' % int(round(Nout*100./float(N*len(x)))),  'peaks moved outside the 3x3 box.')
+	print('A total of', Nout2, 'of', (N*len(x)), '(%i %%)' % int(round(Nout2*100./float(N*len(x)))), 'peaks moved outside the 5x5 box.')
 	figure()
 	clf()
 	subplot(1,2,1)

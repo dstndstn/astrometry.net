@@ -70,9 +70,9 @@ def test_vs_idl():
 
 		diff = psf - psf0
 
-		print 'Diff:', diff.min(), diff.max()
+		print('Diff:', diff.min(), diff.max())
 		rms = np.sqrt(np.mean(diff**2))
-		print 'RMS:', rms
+		print('RMS:', rms)
 		assert(np.all(np.abs(diff) < 5e-8))
 		assert(rms < 2e-8)
 
@@ -118,7 +118,7 @@ def test_vs_stars_on(run, camcol, field, band, ps):
 	T.cut(T.nchild == 0)
 	T.cut(T.parent == -1)
 	T.cut(T.flux > 1.)
-	print len(T), 'after flux cut'
+	print(len(T), 'after flux cut')
 	#T.cut(T.flux > 10.)
 	#print len(T), 'after flux cut'
 	#T.cut(T.flux > 20.)
@@ -130,7 +130,7 @@ def test_vs_stars_on(run, camcol, field, band, ps):
 	#T.cut(np.argsort(T.mag))
 	T.cut(np.argsort(-np.abs(T.x - T.y)))
 	
-	print len(T), 'PSF stars'
+	print(len(T), 'PSF stars')
 		
 	#R,C = 5,5
 	#plt.clf()
@@ -146,17 +146,17 @@ def test_vs_stars_on(run, camcol, field, band, ps):
 	plt.clf()
 	mx = None
 	for i,(psf,poly) in enumerate(zip(eigenpsfs, eigenpolys)):
-		print
-		print 'Eigen-PSF', i
+		print()
+		print('Eigen-PSF', i)
 		XO,YO,C = poly
 		kk = np.zeros_like(xx)
 		for xo,yo,c in zip(XO,YO,C):
 			dk = (xx ** xo) * (yy ** yo) * c
 			#print 'xo,yo,c', xo,yo,c, '-->', dk
 			kk += dk
-		print 'Max k:', kk.max(), 'min', kk.min()
-		print 'PSF range:', psf.min(), psf.max()
-		print 'Max effect:', max(np.abs(kk.min()), kk.max()) * max(np.abs(psf.min()), psf.max())
+		print('Max k:', kk.max(), 'min', kk.min())
+		print('PSF range:', psf.min(), psf.max())
+		print('Max effect:', max(np.abs(kk.min()), kk.max()) * max(np.abs(psf.min()), psf.max()))
 		
 		plt.subplot(RR,CC, i+1)
 		plt.imshow(psf * kk.max(), **ima)
@@ -171,13 +171,13 @@ def test_vs_stars_on(run, camcol, field, band, ps):
 	#print 'PSFs:', psfs
 	ph,pw = psfs[0].shape
 	psfs = np.array(psfs).reshape(xx.shape + (ph,pw))
-	print 'PSFs shape:', psfs.shape
+	print('PSFs shape:', psfs.shape)
 	psfs = psfs[:,:,15:36,15:36]
 	ny,nx,ph,pw = psfs.shape
 	psfmos = np.concatenate([psfs[i,:,:,:] for i in range(ny)], axis=1)
-	print 'psfmos', psfmos.shape
+	print('psfmos', psfmos.shape)
 	psfmos = np.concatenate([psfmos[i,:,:] for i in range(nx)], axis=1)
-	print 'psfmos', psfmos.shape
+	print('psfmos', psfmos.shape)
 	plt.clf()
 	plt.imshow(np.log10(np.maximum(psfmos + 1e-3, 1e-3)), **ima)
 	ps.savefig()
@@ -277,7 +277,7 @@ def test_vs_stars_on(run, camcol, field, band, ps):
 
 	rmses = [np.sqrt(rms / len(T)) for rms in rmses]
 
-	print 'rms median', np.median(rmses[0]), 'mean', np.mean(rmses[0])
+	print('rms median', np.median(rmses[0]), 'mean', np.mean(rmses[0]))
 
 	r0,r1 = [np.percentile(rmses[0], p) for p in [10,90]]
 	

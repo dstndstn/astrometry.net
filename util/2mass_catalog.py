@@ -25,15 +25,15 @@ def get_2mass_sources(ra, dec, radius=1, basefn=None):
 		twomass_pat = basefn
 
 	hps = healpix_rangesearch(ra, dec, radius, twomass_nside)
-	print '2MASS healpixes in range:', hps
+	print('2MASS healpixes in range:', hps)
 	allU = None
 	for hp in hps:
 		fn = twomass_pat % hp
-		print '2MASS filename:', fn
+		print('2MASS filename:', fn)
 		U = fits_table(fn)
-		print len(U), 'sources'
+		print(len(U), 'sources')
 		I = (degrees_between(ra, dec, U.ra, U.dec) < radius)
-		print '%i 2MASS stars within range.' % sum(I)
+		print('%i 2MASS stars within range.' % sum(I))
 		U = U[I]
 		if allU is None:
 			allU = U
@@ -52,8 +52,8 @@ if __name__ == '__main__':
 	(opt, args) = parser.parse_args()
 	if len(args) != 3:
 		parser.print_help()
-		print
-		print 'Got extra arguments:', args
+		print()
+		print('Got extra arguments:', args)
 		sys.exit(-1)
 
 	# parse RA,Dec.
@@ -69,30 +69,30 @@ if __name__ == '__main__':
 		opts[k] = getattr(opt, k)
 
 	X = get_2mass_sources(ra, dec, **opts)
-	print 'Got %i 2MASS sources.' % len(X)
+	print('Got %i 2MASS sources.' % len(X))
 
 	#print X.about()
 
-	print 'Applying cuts...'
+	print('Applying cuts...')
 	I = logical_not(X.minor_planet)
-	print 'not minor planet:', sum(I)
+	print('not minor planet:', sum(I))
 	qual = X.get(band + '_quality')
 	# work around dumb bug where it's a single-char column rather than a byte.
 	nobrightness = chr(0)
 	I = logical_and(I, (qual != nobrightness))
-	print 'not NO_BRIGHTNESS', sum(I)
-	print len(X)
-	print len(X.j_cc)
+	print('not NO_BRIGHTNESS', sum(I))
+	print(len(X))
+	print(len(X.j_cc))
 	cc = array(X.getcolumn(band + '_cc'))
 	ccnone = chr(0)
 	#print 'cc shape', cc.shape
 	#print cc[:10]
 	#print ccnone
 	I = logical_and(I, (cc == ccnone))
-	print 'CC_NONE', sum(I)
+	print('CC_NONE', sum(I))
 	X = X[I]
-	print '%i pass cuts' % len(X)
+	print('%i pass cuts' % len(X))
 
-	print 'Writing to', outfn
+	print('Writing to', outfn)
 	X.write_to(outfn)
 	

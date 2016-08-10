@@ -51,7 +51,7 @@ def removelines(infile, outfile, xcol='X', ycol='Y', ext=1, cut=None, **kwargs):
     xy = p[ext].data
     hdr = p[ext].header
     if xy is None:
-        print 'removelines.py: Input file contains no sources.'
+        print('removelines.py: Input file contains no sources.')
         pyfits_writeto(p, outfile)
         return 0
     
@@ -59,7 +59,7 @@ def removelines(infile, outfile, xcol='X', ycol='Y', ext=1, cut=None, **kwargs):
     y = xy.field(ycol)
 
     if len(x) == 0:
-        print 'removelines.py: Your FITS file contains 0 sources (rows)'
+        print('removelines.py: Your FITS file contains 0 sources (rows)')
         pyfits_writeto(p, outfile)
         return 0
     
@@ -68,7 +68,7 @@ def removelines(infile, outfile, xcol='X', ycol='Y', ext=1, cut=None, **kwargs):
     I = ix * iy
     xc = x[I]
     yc = y[I]
-    print 'removelines.py: Removed %i sources' % (len(x) - len(xc))
+    print('removelines.py: Removed %i sources' % (len(x) - len(xc)))
 
     p[ext].header.add_history('This xylist was filtered by the "removelines.py" program')
     p[ext].header.add_history('to remove horizontal and vertical lines of sources')
@@ -94,8 +94,8 @@ if __name__ == '__main__':
     
     if len(args) != 2:
         parser.print_help()
-        print
-        print 'Got arguments:', args
+        print()
+        print('Got arguments:', args)
         sys.exit(-1)
 
     infile = args[0]

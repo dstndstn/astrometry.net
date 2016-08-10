@@ -55,7 +55,7 @@ class TestPlotstuff(unittest.TestCase):
 		plot.write(plotfn)
 
 		I2 = plt.imread(plotfn)
-		print I2.shape
+		print(I2.shape)
 		I2 = I2[:,:,0]
 
 		plt.clf()
@@ -68,7 +68,7 @@ class TestPlotstuff(unittest.TestCase):
 		plt.savefig('test-plotstuff-1b.png')
 
 		md = np.max(np.abs((I2-I).ravel()))
-		print 'max diff', md
+		print('max diff', md)
 		self.assertTrue(md < 1./255.)
 
 
@@ -84,9 +84,9 @@ class TestPlotstuff(unittest.TestCase):
 		I = 1./(2.*pi*s**2) * np.exp(((X-CX)**2 + (Y-CY)**2) / (-2*s**2))
 		I /= I.max()
 
-		print 'I sum', I.sum()
-		print 'I max', I.max()
-		print 'first moment', np.mean(I * X) / np.mean(I), np.mean(I * Y) / np.mean(I)
+		print('I sum', I.sum())
+		print('I max', I.max())
+		print('first moment', np.mean(I * X) / np.mean(I), np.mean(I * Y) / np.mean(I))
 		imfn = 'test-plotstuff-2.fits'
 		pyfits.writeto(imfn, I, clobber=True)
 
@@ -112,7 +112,7 @@ class TestPlotstuff(unittest.TestCase):
 		plot.write(plotfn)
 
 		I2 = plt.imread(plotfn)
-		print I2.shape
+		print(I2.shape)
 		I2 = I2[:,:,0]
 
 		plt.clf()
@@ -125,7 +125,7 @@ class TestPlotstuff(unittest.TestCase):
 		plt.savefig('test-plotstuff-2b.png')
 
 		md = np.max(np.abs((I2-I).ravel()))
-		print 'max diff', md
+		print('max diff', md)
 		self.assertTrue(md < 1./255.)
 
 

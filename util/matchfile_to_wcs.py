@@ -56,8 +56,8 @@ if __name__ == '__main__':
 	(options, args) = parser.parse_args()
 	if len(args) != 2:
 		parser.print_help()
-		print
-		print 'Need args <match-input-file> and <wcs-output-file>'
+		print()
+		print('Need args <match-input-file> and <wcs-output-file>')
 		sys.exit(-1)
 
 	matchfn = args[0]

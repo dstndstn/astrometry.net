@@ -6,7 +6,7 @@ import os.path
 
 from numpy.distutils.misc_util import get_numpy_include_dirs
 numpy_inc = get_numpy_include_dirs()
-print 'Numpy inc:', numpy_inc
+print('Numpy inc:', numpy_inc)
 
 def strlist(s, split=' '):
     lst = s.split(split)
@@ -21,10 +21,10 @@ link = strlist(link)
 inc = strlist(os.environ.get('INC', ''), split='-I')
 cflags = strlist(os.environ.get('CFLAGS', ''))
 
-print 'link:', link
+print('link:', link)
 #print 'objs:', objs
-print 'inc:', inc
-print 'cflags:', cflags
+print('inc:', inc)
+print('cflags:', cflags)
 
 c_module = Extension('spherematch_c',
                      sources = ['pyspherematch.c'],

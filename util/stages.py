@@ -35,11 +35,11 @@ class CallGlobalTime(CallGlobal):
         from astrometry.util.ttime import Time
         from datetime import datetime
         t0 = Time()
-        print 'Running stage', stage, 'at', datetime.now().isoformat()
+        print('Running stage', stage, 'at', datetime.now().isoformat())
         rtn = super(CallGlobalTime, self).__call__(stage, **kwargs)
         t1 = Time()
-        print 'Stage', stage, ':', t1-t0
-        print 'Stage', stage, 'finished:', datetime.now().isoformat()
+        print('Stage', stage, ':', t1-t0)
+        print('Stage', stage, 'finished:', datetime.now().isoformat())
         return rtn
 
 def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
@@ -81,7 +81,7 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
     '''
     # NOTE, if you add or change args here, be sure to update the recursive
     # "runstage" call below!!
-    print 'Runstage', stage
+    print('Runstage', stage)
 
     try:
         pfn = picklepat % stage
@@ -90,9 +90,9 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
     
     if os.path.exists(pfn):
         if forceall or stage in force:
-            print 'Ignoring pickle', pfn, 'and forcing stage', stage
+            print('Ignoring pickle', pfn, 'and forcing stage', stage)
         else:
-            print 'Reading pickle', pfn
+            print('Reading pickle', pfn)
             R = unpickle_from_file(pfn)
             return R
 
@@ -116,15 +116,15 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
     Px = P.copy()
     Px.update(kwargs)
 
-    print 'Running stage', stage
-    print 'Prereq keys:', P.keys()
-    print 'Adding kwargs keys:', kwargs.keys()
-    print 'Combined keys:', Px.keys()
+    print('Running stage', stage)
+    print('Prereq keys:', P.keys())
+    print('Adding kwargs keys:', kwargs.keys())
+    print('Combined keys:', Px.keys())
 
     R = stagefunc(stage, **Px)
-    print 'Stage', stage, 'finished'
+    print('Stage', stage, 'finished')
     if R is not None:
-        print 'Result keys:', R.keys()
+        print('Result keys:', R.keys())
 
     if update:
         if R is not None:
@@ -134,8 +134,8 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
     if not write:
         pass
     elif (write is True or stage in write):
-        print 'Saving pickle', pfn
-        print 'Pickling keys:', R.keys()
+        print('Saving pickle', pfn)
+        print('Pickling keys:', R.keys())
         # Create directory, if necessary.
         dirnm = os.path.dirname(pfn)
         if len(dirnm) and not os.path.exists(dirnm):
@@ -144,5 +144,5 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
             except:
                 pass
         pickle_to_file(R, pfn)
-        print 'Saved', pfn
+        print('Saved', pfn)
     return R

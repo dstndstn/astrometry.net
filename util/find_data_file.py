@@ -23,7 +23,7 @@ def find_data_file(fn):
 	#print 'path', pth
 	#if os.path.exists(pth):
 	#		return pth
-	print 'Failed to find data file:', fn
-	print '  searched paths:', searched
+	print('Failed to find data file:', fn)
+	print('  searched paths:', searched)
 	return None
 

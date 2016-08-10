@@ -13,8 +13,8 @@ if __name__ == '__main__':
 	(opt, args) = parser.parse_args()
 	if len(args) != 5:
 		parser.print_help()
-		print
-		print 'Got wrong number of arguments:', args
+		print()
+		print('Got wrong number of arguments:', args)
 		sys.exit(-1)
 
 	ra = float(args[0])

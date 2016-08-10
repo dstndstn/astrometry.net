@@ -388,7 +388,7 @@ if __name__ == '__main__':
     L2 = np.zeros_like(x)
     lanczos3_filter(x, L1)
     lanczos3_filter_table(x, L2, 1)
-    print 'L2 - L1 RMS:', np.sqrt(np.mean((L2-L1)**2))
+    print('L2 - L1 RMS:', np.sqrt(np.mean((L2-L1)**2)))
     
     if True:
         ra,dec = 0.,0.,
@@ -405,11 +405,11 @@ if __name__ == '__main__':
         pix[0,W/2] = 1.
         
         Yo,Xo,Yi,Xi,(cpix,) = resample_with_wcs(cowcs, wcs, [pix], 3)
-        print 'C', cpix
+        print('C', cpix)
         Yo2,Xo2,Yi2,Xi2,(pypix,) = resample_with_wcs(cowcs, wcs, [pix], 3, cinterp=False, table=False)
-        print 'Py', pypix
+        print('Py', pypix)
 
-        print 'RMS', np.sqrt(np.mean((cpix - pypix)**2))
+        print('RMS', np.sqrt(np.mean((cpix - pypix)**2)))
         
         sys.exit(0)
         
@@ -468,19 +468,19 @@ if __name__ == '__main__':
         wcs = Sip(intfn)
         pix = fitsio.read(intfn)
         pix[np.logical_not(np.isfinite(pix))] = 0.
-        print 'pix', pix.shape, pix.dtype
+        print('pix', pix.shape, pix.dtype)
 
     
     for i in range(5):
         t0 = time.clock()
         Yo,Xo,Yi,Xi,ims = resample_with_wcs(cowcs, wcs, [pix], 3)
         t1 = time.clock() - t0
-        print 'C resampling took', t1
+        print('C resampling took', t1)
 
     t0 = time.clock()
     Yo2,Xo2,Yi2,Xi2,ims2 = resample_with_wcs(cowcs, wcs, [pix], 3, cinterp=False, table=False)
     t2 = time.clock() - t0
-    print 'py resampling took', t2
+    print('py resampling took', t2)
     
     out = np.zeros((H,W))
     out[Yo,Xo] = ims[0]
@@ -506,5 +506,5 @@ if __name__ == '__main__':
     plt.colorbar()
     plt.savefig('diff.png')
 
-    print 'Max diff:', np.abs(cout - pyout).max()
+    print('Max diff:', np.abs(cout - pyout).max())
 

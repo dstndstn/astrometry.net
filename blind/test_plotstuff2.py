@@ -26,8 +26,8 @@ class TestPlotstuff2(unittest.TestCase):
 		S = 2.
 		G = 1./(2.*pi*S**2) * np.exp(-((X-cx)**2+(Y-cy)**2)/(2.*S**2))
 		#G /= G.max()
-		print G.sum()
-		print np.sum(G*X), np.sum(G*Y)
+		print(G.sum())
+		print(np.sum(G*X), np.sum(G*Y))
 		imfn = 'test-plotstuff-2.fits'
 		pyfits.writeto(imfn, G, clobber=True)
 
@@ -56,7 +56,7 @@ class TestPlotstuff2(unittest.TestCase):
 		I = plt.imread(plotfn)
 		I = I[:,:,0]
 		sx,sy = (I*X).sum()/I.sum(), (I*Y).sum()/I.sum()
-		print sx,sy
+		print(sx,sy)
 		ex,ey = cx,cy
 		self.assertTrue(abs(sx-ex) < 0.1)
 		self.assertTrue(abs(sy-ey)< 0.1)
@@ -90,8 +90,8 @@ class TestPlotstuff2(unittest.TestCase):
 			I = plt.imread(plotfn)
 			I = I[:,:,0]
 			sx,sy = (I*X).sum()/I.sum(), (I*Y).sum()/I.sum()
-			print sx,sy
-			print ex,ey
+			print(sx,sy)
+			print(ex,ey)
 			self.assertTrue(abs(sx-ex) < 0.1)
 			self.assertTrue(abs(sy-ey) < 0.1)
 
@@ -118,7 +118,7 @@ class TestPlotstuff2(unittest.TestCase):
 		tan = sip.wcstan
 		ddec = 1.2 * 1./W
 		ok,era,edec = anwcs_pixelxy2radec(wcs, cx, cy)
-		print era,edec
+		print(era,edec)
 		for step in range(16):
 			tan.set_crval(tan.crval[0], tan.crval[1] + ddec)
 			edec += ddec
@@ -137,7 +137,7 @@ class TestPlotstuff2(unittest.TestCase):
 
 			#print era,edec
 			#print ra,dec
-			print 'dRA,dDec', ra-era, dec-edec
+			print('dRA,dDec', ra-era, dec-edec)
 			self.assertTrue(abs(ra-era) < 1e-4)
 			self.assertTrue(abs(dec-edec) < 1e-4)
 

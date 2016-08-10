@@ -57,8 +57,8 @@ if __name__ == '__main__':
 	R2 = (DX**2 + DY**2)
 	G = (a1 / (2.*np.pi*s1**2) * np.exp(-R2/(2.*s1**2)) +
 		 a2 / (2.*np.pi*s2**2) * np.exp(-R2/(2.*s2**2)))
-	print 'G sum', G.sum()
-	print 'psf sum', psf.sum()
+	print('G sum', G.sum())
+	print('psf sum', psf.sum())
 	psf /= psf.sum()
 	
 	plt.clf()

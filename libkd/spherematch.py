@@ -73,9 +73,9 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
             #(inds,dists2,counts) = X
             J,I,d,counts = X
             extra = (counts,)
-            print 'I', I.shape, I.dtype
-            print 'J', J.shape, J.dtype
-            print 'counts', counts.shape, counts.dtype
+            print('I', I.shape, I.dtype)
+            print('J', J.shape, J.dtype)
+            print('counts', counts.shape, counts.dtype)
     else:
         X = match(xyz1, xyz2, r, notself=notself, indexlist=indexlist)
         if indexlist:

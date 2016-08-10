@@ -44,7 +44,7 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
     p = pyfits.open(infile)
     xy = p[ext].data
     if xy is None:
-        print 'No sources'
+        print('No sources')
         pyfits_writeto(p, outfile)
         return
     hdr = p[ext].header
@@ -52,7 +52,7 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
     y = xy.field(ycol)
 
     if len(x) == 0:
-        print 'Empty xylist'
+        print('Empty xylist')
         pyfits_writeto(p, outfile)
         return
     
@@ -60,20 +60,20 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
     #  #$)(*&%^ NaNs in LSST source positions.  Seriously, WTF!
     I = logical_and(isfinite(x), isfinite(y))
     if not all(I):
-        print '%i source positions are not finite.' % sum(logical_not(I))
+        print('%i source positions are not finite.' % sum(logical_not(I)))
         x = x[I]
         y = y[I]
     
     W = max(x) - min(x)
     H = max(y) - min(y)
     if W == 0 or H == 0:
-        print 'Area of the rectangle enclosing all image sources: %i x %i' % (W,H)
+        print('Area of the rectangle enclosing all image sources: %i x %i' % (W,H))
         pyfits_writeto(p, outfile)
         return
     NX = int(max(1, round(W / sqrt(W*H / float(n)))))
     NY = int(max(1, round(n / float(NX))))
-    print 'Uniformizing into %i x %i bins' % (NX, NY)
-    print 'Image bounds: x [%g,%g], y [%g,%g]' % (min(x),max(x),min(y),max(y))
+    print('Uniformizing into %i x %i bins' % (NX, NY))
+    print('Image bounds: x [%g,%g], y [%g,%g]' % (min(x),max(x),min(y),max(y)))
 
     ix = (clip(floor((x - min(x)) / float(W) * NX), 0, NX-1)).astype(int)
     iy = (clip(floor((y - min(y)) / float(H) * NY), 0, NY-1)).astype(int)
@@ -126,8 +126,8 @@ if __name__ == '__main__':
     
     if len(args) != 2:
         parser.print_help()
-        print
-        print 'Got arguments:', args
+        print()
+        print('Got arguments:', args)
         sys.exit(-1)
 
     infile = args[0]

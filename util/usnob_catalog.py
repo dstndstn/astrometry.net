@@ -27,14 +27,14 @@ def get_usnob_sources(ra, dec, radius=1, basefn=None):
 		usnob_pat = basefn
 
 	usnobhps = healpix_rangesearch(ra, dec, radius, usnob_nside)
-	print 'USNO-B healpixes in range:', usnobhps
+	print('USNO-B healpixes in range:', usnobhps)
 	allU = None
 	for hp in usnobhps:
 		usnobfn = usnob_pat % hp
-		print 'USNOB filename:', usnobfn
+		print('USNOB filename:', usnobfn)
 		U = table_fields(usnobfn)
 		I = (degrees_between(ra, dec, U.ra, U.dec) < radius)
-		print '%i USNOB stars within range.' % sum(I)
+		print('%i USNOB stars within range.' % sum(I))
 		U = U[I]
 		if allU is None:
 			allU = U
@@ -52,8 +52,8 @@ if __name__ == '__main__':
 	(opt, args) = parser.parse_args()
 	if len(args) != 3:
 		parser.print_help()
-		print
-		print 'Got extra arguments:', args
+		print()
+		print('Got extra arguments:', args)
 		sys.exit(-1)
 
 	# parse RA,Dec.
@@ -67,15 +67,15 @@ if __name__ == '__main__':
 		opts[k] = getattr(opt, k)
 
 	X = get_usnob_sources(ra, dec, **opts)
-	print 'Got %i USNO-B sources.' % len(X)
+	print('Got %i USNO-B sources.' % len(X))
 
-	print 'Applying cuts...'
+	print('Applying cuts...')
 	I = usnob_apply_cuts(X)
 	X = X[I]
-	print len(X), 'pass cuts'
+	print(len(X), 'pass cuts')
 
 	usnob_compute_average_mags(X)
 
-	print 'Writing to', outfn
+	print('Writing to', outfn)
 	X.write_to(outfn)
 	

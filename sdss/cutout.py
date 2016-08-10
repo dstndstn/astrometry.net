@@ -35,11 +35,11 @@ def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg',
             continue
         keepRCF.append((run,camcol,field))
     RCF = keepRCF
-    print len(RCF), 'run/camcol/fields in range'
+    print(len(RCF), 'run/camcol/fields in range')
 
     # size in SDSS pixels of the target image.
     sz = np.hypot(H, W)/2. * targetpixscale / 0.396
-    print 'SDSS sz:', sz
+    print('SDSS sz:', sz)
 
     bandnums = [band_index(b) for b in bands]
     

@@ -116,7 +116,7 @@ def removelines_general(infile, outfile, nt=180, nr=180, thresh1=2.,
 
 
 	I = find(hnorm.ravel() >= thresh1)
-	print '%i peaks are above the coarse threshold' % len(I)
+	print('%i peaks are above the coarse threshold' % len(I))
 	bestri = I / nt
 	bestti = I % nt
 
@@ -162,7 +162,7 @@ def removelines_general(infile, outfile, nt=180, nr=180, thresh1=2.,
 			thisr = x * cos(t) + y * sin(t)
 			keep *= (abs(thisr - r) > subrstep/2.)
 
-	print 'In finer grid: found %i peaks' % len(bestrt)
+	print('In finer grid: found %i peaks' % len(bestrt))
 
 	if plots:
 		clf()
@@ -188,7 +188,7 @@ def exact_hough_normalization():
 	yyflat = yy.ravel()
 	xxflat = xx.ravel()
 	for ti in range(nt):
-		print ti
+		print(ti)
 		t = (ti+0.5) * tstep
 		rr = xxflat * cos(t) + yyflat * sin(t)
 		ri = floor((rr - Rmin) / rstep).astype(int)
@@ -209,8 +209,8 @@ if __name__ == '__main__':
 		args.remove('-p')
 
 	if len(args) != 2:
-		print 'Usage: %s [options] <input-file> <output-file>' % sys.argv[0]
-		print '   [-p]: create plots'
+		print('Usage: %s [options] <input-file> <output-file>' % sys.argv[0])
+		print('   [-p]: create plots')
 		exit(-1)
 
 	infile = args[0]

@@ -18,10 +18,10 @@ if __name__ == '__main__':
     infns = args[:-1]
     outfn = args[-1]
 
-    print 'Writing to output file', outfn
+    print('Writing to output file', outfn)
     T = None
     for fn in infns:
-        print 'Reading input', fn
+        print('Reading input', fn)
         Ti = fits_table(fn)
         if T is None:
             T = Ti

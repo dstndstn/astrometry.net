@@ -18,15 +18,15 @@ def get_urls(urls, outfn, curl=False):
 				cmd += '-O %s ' % outfn
 
 		cmd += '\"%s\"' % url
-		print 'Running:', cmd
+		print('Running:', cmd)
 		(rtn, out, err) = run_command(cmd)
 		if rtn == 0:
 			return True
 		if rtn:
-			print 'Command failed: command', cmd
-			print 'Output:', out
-			print 'Error:', err
-			print 'Return val:', rtn
+			print('Command failed: command', cmd)
+			print('Output:', out)
+			print('Error:', err)
+			print('Return val:', rtn)
 	return False
 
 def sdss_das_get_suffix(filetype):
@@ -37,7 +37,7 @@ def sdss_das_get_url(filetype, run, camcol, field, rerun, band, suffix=None):
 		suffix = sdss_das_get_suffix(filetype)
 	path = sdss_path(filetype, run, camcol, field, band, rerun)
 	if path is None:
-		print 'Unknown SDSS filetype', filetype
+		print('Unknown SDSS filetype', filetype)
 		return None
 	return 'http://das.sdss.org/imaging/' + path + suffix
 
@@ -62,18 +62,18 @@ def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, su
 		return False
 
 	if suffix == '.gz' and gunzip:
-		print 'gzipped file; outfn=', outfn
+		print('gzipped file; outfn=', outfn)
 		gzipfn = outfn
 		outfn = gzipfn.replace('.gz', '')
 		if os.path.exists(gzipfn):
 			cmd = 'gunzip -cd %s > %s' % (gzipfn, outfn)
-			print 'Running:', cmd
+			print('Running:', cmd)
 			(rtn, out, err) = run_command(cmd)
 			if rtn:
-				print 'Command failed: command', cmd
-				print 'Output:', out
-				print 'Error:', err
-				print 'Return val:', rtn
+				print('Command failed: command', cmd)
+				print('Output:', out)
+				print('Error:', err)
+				print('Return val:', rtn)
 	return outfn
 
 def sdss_das_get_fpc(run, camcol, field, band, outfn=None, reruns=None):
@@ -104,8 +104,8 @@ if __name__ == '__main__':
 	(opt, args) = parser.parse_args()
 	if not len(args):
 		parser.print_help()
-		print
-		print 'Must specify types of data desired'
+		print()
+		print('Must specify types of data desired')
 		sys.exit(-1)
 
 	run = opt.run
@@ -115,8 +115,8 @@ if __name__ == '__main__':
 
 	if run is None or field is None or camcol is None:
 		parser.print_help()
-		print
-		print 'Must supply --run, --field, --camcol'
+		print()
+		print('Must supply --run, --field, --camcol')
 		sys.exit(-1)
 
 	argdict = {}
@@ -131,7 +131,7 @@ if __name__ == '__main__':
 		sdss = DR7()
 		
 	for filetype in args:
-		print 'Retrieving', filetype, '...'
+		print('Retrieving', filetype, '...')
 		fn = sdss.retrieve(filetype, run, camcol, field, **argdict)
 		#sdss_das_get(filetype, None, run, camcol, field, curl=opt.curl, **argdict)
 

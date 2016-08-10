@@ -62,16 +62,16 @@ if __name__ == '__main__':
 
 	for (ra,dec) in radecs[order]:
 		(jpeg,fits) = get_usnob_images(ra, dec, fits=True, survey=opt.survey, justurls=True)
-		print 'got jpeg urls:', jpeg
-		print 'got fits urls:', fits
+		print('got jpeg urls:', jpeg)
+		print('got fits urls:', fits)
 		if opt.plate is None:
 			keepjpeg = jpeg
 			keepfits = fits
 		else:
 			keepjpeg = [u for u in jpeg if opt.plate in u]
 			keepfits = [u for u in fits if opt.plate in u]
-			print 'keep jpeg urls:', keepjpeg
-			print 'keep fits urls:', keepfits
+			print('keep jpeg urls:', keepjpeg)
+			print('keep fits urls:', keepfits)
 		base = opt.prefix + '-%.3f-%.3f-' % (ra,dec)
 		for url in keepjpeg:
 			# like "fchlwFxSl_so0194.000.jpg"
@@ -79,9 +79,9 @@ if __name__ == '__main__':
 			urlfn = urlfn.split('_')[-1]
 			fn = base + urlfn
 			if opt.cont and os.path.exists(fn):
-				print 'File', fn, 'exists.'
+				print('File', fn, 'exists.')
 				continue
-			print 'retrieving', url, 'to', fn
+			print('retrieving', url, 'to', fn)
 			res = urlopen(url)
 			write_file(res.read(), fn)
 		for url in keepfits:
@@ -89,9 +89,9 @@ if __name__ == '__main__':
 			urlfn = urlfn.split('_')[-1]
 			fn = base + urlfn + '.fits'
 			if opt.cont and os.path.exists(fn):
-				print 'File', fn, 'exists.'
+				print('File', fn, 'exists.')
 				continue
-			print 'retrieving', url, 'to', fn
+			print('retrieving', url, 'to', fn)
 			res = urlopen(url)
 			write_file(res.read(), fn)
 		

@@ -87,7 +87,7 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 
     # Describe output file we're about to write...
     if verbose:
-        print 'Outputting:'
+        print('Outputting:')
         fitsin.info()
 
     try:
@@ -110,7 +110,7 @@ def main():
     (options, args) = parser.parse_args()
 
     if len(args) != 2:
-        print 'Usage: fits2fits.py [--verbose] input.fits output.fits'
+        print('Usage: fits2fits.py [--verbose] input.fits output.fits')
         return -1
 
     logformat = '%(message)s'
@@ -125,7 +125,7 @@ def main():
     errmsg = fits2fits(infn, outfn, fix_idr=options.fix_idr,
                        verbose=options.verbose)
     if errmsg is not None:
-        print 'fits2fits.py failed:', errmsg
+        print('fits2fits.py failed:', errmsg)
         return -1
     return 0
 

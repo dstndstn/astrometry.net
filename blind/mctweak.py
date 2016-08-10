@@ -117,14 +117,14 @@ def mctweak(wcs, xy, rd):
     # Initial args
     args,sigs = get_sip_args(wcs)
 
-    print 'Args:', args
-    print 'Sigs:', sigs
-    print 'Number of arguments:', len(args)
-    print 'Logodds:', obj(args)
+    print('Args:', args)
+    print('Sigs:', sigs)
+    print('Number of arguments:', len(args))
+    print('Logodds:', obj(args))
 
     ndim, nwalkers = len(args), 100
     p0 = emcee.utils.sample_ball(args, sigs, size=nwalkers)
-    print 'p0', p0.shape
+    print('p0', p0.shape)
 
     ps = PlotSequence('mctweak')
 
@@ -135,11 +135,11 @@ def mctweak(wcs, xy, rd):
     lnp0, rstate = None, None
     pp = []
     for step in range(10000):
-        print 'Step', step
+        print('Step', step)
         p0,lnp0,rstate = sampler.run_mcmc(p0, 1, lnprob0=lnp0, rstate0=rstate)
-        print 'Best logprob:', np.max(lnp0)
+        print('Best logprob:', np.max(lnp0))
         i = np.argmax(lnp0)
-        print 'Best args:', p0[i,:]
+        print('Best args:', p0[i,:])
 
         pp.extend(sampler.flatchain)
         sampler.reset()
@@ -209,7 +209,7 @@ def mctweak(wcs, xy, rd):
         ps.savefig()
 
         pp = np.vstack(pp)
-        print 'pp', pp.shape
+        print('pp', pp.shape)
         
         # plt.clf()
         # triangle.corner(pp, plot_contours=False)

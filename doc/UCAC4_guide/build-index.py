@@ -32,11 +32,11 @@ file_range = [0, 11]
 run_name = time.strftime('%Y%m%d')
 
 
-print 'Running index generation with following parameters:'
-print '\t Scale range: ', scale_range
-print '\t Base file name: ', base_file_name + '??' + extenstion
-print '\t File range: ', file_range
-print '\t Run name: ', run_name
+print('Running index generation with following parameters:')
+print('\t Scale range: ', scale_range)
+print('\t Base file name: ', base_file_name + '??' + extenstion)
+print('\t File range: ', file_range)
+print('\t Run name: ', run_name)
 
 for file_no in range(file_range[0], file_range[1]+1):
 	for scale in range(scale_range[0], scale_range[1]+1):
@@ -45,7 +45,7 @@ for file_no in range(file_range[0], file_range[1]+1):
 
 		base_command = 'build-astrometry-index -i '+base_file_name+file_no+extenstion+' -o index-ucac4-'+scale+'-'+file_no+'.fits -P '+scale+' -S MAG -H '+file_no+' -s 1 -I '+run_name+scale.zfill(2)
 		
-		print base_command
+		print(base_command)
 
 		#Run command
 		os.system(base_command)

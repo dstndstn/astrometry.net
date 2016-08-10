@@ -22,13 +22,13 @@ def test_astrans(sdss, r,c,f,b):
 
 
 	for r,d in zip(ra,dec):
-		print 'ra,dec', r,d
+		print('ra,dec', r,d)
 		#print 'py:'
 		x1,y1 = astrans.radec_to_pixel_single_py(r, d)
-		print '  py', x1,y1
+		print('  py', x1,y1)
 		#print 'c:'
 		x2,y2 = astrans.radec_to_pixel_single_c(r, d)
-		print '  c', x2,y2
+		print('  c', x2,y2)
 		assert(np.abs(x1 - x2) < 1e-6)
 		assert(np.abs(y1 - y2) < 1e-6)
 
@@ -75,23 +75,23 @@ if __name__ == '__main__':
 	sys.exit(0)
 
 	fnew  = sdss.readFrame(4623, 1, 203, 'r', filename='frame-r-004623-1-0203.fits')
-	print 'fnew:', fnew
+	print('fnew:', fnew)
 	forig = sdss.readFrame(4623, 1, 203, 'r', 'frame-r-004623-1-0203.fits.orig')
-	print 'forig:', forig
+	print('forig:', forig)
 
 	frame = sdss.readFrame(3712, 3, 187, 'r')
-	print 'frame:', frame
+	print('frame:', frame)
 	img = frame.getImage()
-	print '  image', img.shape
+	print('  image', img.shape)
 
 	fpobj = sdss.readFpObjc(6581, 2, 135)
-	print 'fpobj:', fpobj
+	print('fpobj:', fpobj)
 
 	fpm = sdss.readFpM(6581, 2, 135, 'i')
-	print 'fpm:', fpm
+	print('fpm:', fpm)
 
 	psf = sdss.readPsField(6581, 2, 135)
-	print 'psfield:', psf
+	print('psfield:', psf)
 
 
 	

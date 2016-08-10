@@ -12,16 +12,16 @@ def siap_parse_result(fn=None):
     table = tables[0]
     
     fields = table.getElementsByTagName('FIELD')
-    print '%i fields' % len(fields)
+    print('%i fields' % len(fields))
     fieldnames = []
     fieldtypes = []
     fieldparser = []
     fieldisarray = []
     for f in fields:
         name = f.getAttribute('name').lower().replace('[]', '')
-        print 'field:', name,
+        print('field:', name, end=' ')
         ftype = f.getAttribute('datatype').lower()
-        print '(%s)' % ftype
+        print('(%s)' % ftype)
         farray = f.hasAttribute('arraysize')
 
         ftmap = {'int':int,
@@ -40,7 +40,7 @@ def siap_parse_result(fn=None):
     data = data[0]
 
     rows = data.getElementsByTagName('TR')
-    print '%i rows' % len(rows)
+    print('%i rows' % len(rows))
 
     datarows = []
     for r in rows:

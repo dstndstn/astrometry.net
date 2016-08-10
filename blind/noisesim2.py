@@ -39,10 +39,10 @@ def procrustes(X, Y):
     T = Transform()
     sx = X.shape
     if sx[0] != 2:
-        print 'X must be 2xN'
+        print('X must be 2xN')
     sy = Y.shape
     if sy[0] != 2:
-        print 'Y must be 2xN'
+        print('Y must be 2xN')
     N = sx[1]
 
     mx = X.mean(axis=1).reshape(2,1)
@@ -103,11 +103,11 @@ def test_procrustes_1():
 
     t2 = procrustes(pts, tpts)
 
-    print 'pts:', pts
-    print 'tpts:', tpts
+    print('pts:', pts)
+    print('tpts:', tpts)
 
-    print 't1 is', t1
-    print 't2 is', t2
+    print('t1 is', t1)
+    print('t2 is', t2)
 
 
 def draw_sample(inoise=1, fnoise=0, iqnoise=-1,

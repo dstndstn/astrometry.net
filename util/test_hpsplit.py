@@ -31,7 +31,7 @@ assert(rtn == 0)
 ps = PlotSequence('test_hpsplit')
 for hp in range(12):
     T = fits_table(splitpat % hp)
-    print 'Healpix', hp, 'got', len(T)
+    print('Healpix', hp, 'got', len(T))
     plt.clf()
     plothist(T.ra, T.dec, 360, range=((0,360),(-90,90)))
     vv = np.linspace(0, 1, 100)

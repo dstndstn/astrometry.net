@@ -18,7 +18,7 @@ if __name__ == '__main__':
 	df = DiskFile.from_file(fn)
 	df.set_size_and_file_type()
 	df.save()
-	print 'Made DiskFile', df
+	print('Made DiskFile', df)
 
 	# EVIL
 	#Submission.objects.all().delete()
@@ -26,4 +26,4 @@ if __name__ == '__main__':
 	sub = Submission(disk_file=df, scale_type='ul', scale_units='degwidth')
 	sub.original_filename = fn
 	sub.save()
-	print 'Made Submission', sub
+	print('Made Submission', sub)

@@ -32,26 +32,26 @@ def fix_sdss_idr(hdu):
 	hdr = hdu.header.copy()
 
 	if hdr.get('SIMPLE', True):
-		print 'SIMPLE = T: not an SDSS idR file.'
+		print('SIMPLE = T: not an SDSS idR file.')
 		return hdu
-	print 'Setting SIMPLE = True'
+	print('Setting SIMPLE = True')
 	hdr.remove('SIMPLE')
 	hdr.set('SIMPLE', True, 'FITS compliant (via fix-sdss-idr.py)')
 
 	if 'SDSS' in hdr:
-		print 'Setting SDSS = True'
+		print('Setting SDSS = True')
 		hdr.remove('SDSS')
 		hdr.set('SDSS', True, 'SDSS (via fix-sdss-idr.py)')
 	else:
-		print 'No SDSS header card: not an SDSS idR file.'
+		print('No SDSS header card: not an SDSS idR file.')
 		return hdu
 
 	if 'UNSIGNED' in hdr:
-		print 'Setting UNSIGNED = True'
+		print('Setting UNSIGNED = True')
 		hdr.remove('UNSIGNED')
 		hdr.set('UNSIGNED', True, 'SDSS unsigned ints')
 	else:
-		print 'No UNSIGNED header card: not an SDSS idR file.'
+		print('No UNSIGNED header card: not an SDSS idR file.')
 		return hdu
 
 	#hdr._updateHDUtype()
@@ -64,20 +64,20 @@ def fix_sdss_idr(hdu):
 
 	newhdu.data = newhdu.data.astype(numpy.int32)
 	newhdu.data[newhdu.data < 0] += 2**16
-	print 'data type:', newhdu.data.dtype
-	print 'data range:', newhdu.data.min(), 'to', newhdu.data.max()
+	print('data type:', newhdu.data.dtype)
+	print('data range:', newhdu.data.min(), 'to', newhdu.data.max())
 	return newhdu
 
 def fix_sdss_idr_file(infile, outfile):
-	print 'Reading', infile
+	print('Reading', infile)
 	newhdu = fix_sdss_idr(pyfits.open(infile)[0])
-	print 'Writing', outfile
+	print('Writing', outfile)
 	pyfits_wireto(newhdu, outfile)
 
 
 if __name__ == '__main__':
 	if len(sys.argv) != 3:
-		print 'Usage: %s <input-fits-file> <output-fits-file>' % sys.argv[0]
+		print('Usage: %s <input-fits-file> <output-fits-file>' % sys.argv[0])
 		sys.exit(-1)
 	infile = sys.argv[1]
 	outfile = sys.argv[2]

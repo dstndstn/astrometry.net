@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     opt,args = parser.parse_args()
     if not (opt.sub or opt.job or opt.uimage):
-        print 'Must specify one of --sub, --job, or --userimage'
+        print('Must specify one of --sub, --job, or --userimage')
         parser.print_help()
         sys.exit(-1)
 
@@ -37,50 +37,50 @@ if __name__ == '__main__':
 
     if opt.sub:
         sub = Submission.objects.all().get(id=opt.sub)
-        print 'Submission', sub
+        print('Submission', sub)
         if sub.disk_file is None:
-            print '  no disk file'
+            print('  no disk file')
         else:
-            print 'Path', sub.disk_file.get_path()
+            print('Path', sub.disk_file.get_path())
         uis = sub.user_images.all()
-        print 'UserImages:', len(uis)
+        print('UserImages:', len(uis))
         for ui in uis:
-            print '  ', ui
-            print '  with Jobs:', len(ui.jobs.all())
+            print('  ', ui)
+            print('  with Jobs:', len(ui.jobs.all()))
             for j in ui.jobs.all():
-                print '    ', j
+                print('    ', j)
 
         if opt.rerun:
             from process_submissions import try_dosub
-            print 'Re-trying sub', sub.id
+            print('Re-trying sub', sub.id)
             try_dosub(sub, 1)
 
     if opt.job:
         job = Job.objects.all().get(id=opt.job)
-        print 'Job', job
-        print job.get_dir()
+        print('Job', job)
+        print(job.get_dir())
         ui = job.user_image
-        print 'UserImage:', ui
-        print 'User', ui.user
+        print('UserImage:', ui)
+        print('User', ui.user)
         im = ui.image
-        print 'Image', im
+        print('Image', im)
         sub = ui.submission
-        print 'Submission', sub
-        print sub.disk_file.get_path()
+        print('Submission', sub)
+        print(sub.disk_file.get_path())
 
         if opt.rerun:
             from process_submissions import try_dojob
-            print 'Re-trying job', job.id
+            print('Re-trying job', job.id)
             try_dojob(job, ui, opt.solve_command, opt.solve_locally)
 
     if opt.uimage:
         ui = UserImage.objects.all().get(id=opt.uimage)
-        print 'UserImage', ui
+        print('UserImage', ui)
 
         if opt.chown:
             user = User.objects.all().get(id=opt.chown)
-            print 'User:', user
-            print 'chowning', ui, 'to', user
+            print('User:', user)
+            print('chowning', ui, 'to', user)
             ui.user = user
             ui.save()
         

@@ -82,23 +82,23 @@ if __name__ == '__main__':
 		sys.exit(0)
 
 	for indfn in args:
-		print 'Reading index', indfn
+		print('Reading index', indfn)
 		null = None
 		I = index_load(indfn, 0, null)
-		print 'Loaded.'
+		print('Loaded.')
 		NS = index_nstars(I)
 		NQ = index_nquads(I)
-		print 'Index has', NS, 'stars and', NQ, 'quads'
+		print('Index has', NS, 'stars and', NQ, 'quads')
 		DQ = index_get_quad_dim(I)
-		print 'Index has "quads" with %i stars' % (DQ)
+		print('Index has "quads" with %i stars' % (DQ))
 		DC = index_get_quad_dim(I)
-		print 'Index has %i-dimensional codes' % (DC)
+		print('Index has %i-dimensional codes' % (DC))
 
 		iname = os.path.basename(I.indexname).replace('.fits', '')
 		# stars
-		print 'Getting stars...'
+		print('Getting stars...')
 		stars = index_get_stars(I)
-		print stars.shape
+		print(stars.shape)
 
 		ra,dec = xyztoradec(stars)
 		ra += (ra > 180)*-360
@@ -110,9 +110,9 @@ if __name__ == '__main__':
 		(H,xe,ye) = histogram2d(ra, dec, bins=(100,100), range=rng)
 		H=H.T
 		binarea = (xe[1]-xe[0])*(ye[1]-ye[0])
-		print 'Bin area:', binarea, 'deg^2'
+		print('Bin area:', binarea, 'deg^2')
 		binarea *= 3600.
-		print binarea, 'arcmin^2'
+		print(binarea, 'arcmin^2')
 		imshow(H/binarea, extent=(min(xe), max(xe), min(ye), max(ye)),
 			   aspect='auto',
 			   interpolation='nearest', origin='lower', cmap=antigray)
@@ -124,9 +124,9 @@ if __name__ == '__main__':
 		savefig(opt.prefix + 'stars-2.png')
 
 		R = opt.range
-		print 'Finding pairs within', R, 'arcsec'
+		print('Finding pairs within', R, 'arcsec')
 		inds,dists = match(stars, stars, deg2rad(R/3600.))
-		print 'inds', inds.shape, 'dists', dists.shape
+		print('inds', inds.shape, 'dists', dists.shape)
 
 		notself = (inds[:,0] != inds[:,1])
 		clf()
@@ -138,9 +138,9 @@ if __name__ == '__main__':
 
 
 		# codes
-		print 'Getting codes...'
+		print('Getting codes...')
 		codes = index_get_codes(I)
-		print 'shape', codes.shape
+		print('shape', codes.shape)
 
 		# code slices
 		cx = codes[:,0]

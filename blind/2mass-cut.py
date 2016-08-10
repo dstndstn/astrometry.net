@@ -20,7 +20,7 @@ if __name__ == '__main__':
 	infn = args[0]
 	outfn = args[1]
 
-	print 'Reading %s, writing %s' % (infn, outfn)
+	print('Reading %s, writing %s' % (infn, outfn))
 	T = fits_table(infn)
 	qual_col = '%s_quality' % lband
 	cc_col = '%s_cc' % lband
@@ -32,7 +32,7 @@ if __name__ == '__main__':
 	#     (entry->j_cc == TWOMASS_CC_NONE)) {
 		
 	I = logical_and(qual != chr(0), cc == chr(0))
-	print 'Keeping %i of %i sources' % (sum(I), len(I))
+	print('Keeping %i of %i sources' % (sum(I), len(I)))
 
 	T[I].write_to(outfn, columns=['ra','dec',mag_col])
 

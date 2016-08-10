@@ -1251,7 +1251,7 @@ def get_user_profile(user):
         return profiles[0]
     # Create new profile?
     profile = UserProfile(user=user)
-    print 'Creating new profile for user', user
+    print('Creating new profile for user', user)
     profile.create_api_key()
     profile.create_default_license()
     if user.get_full_name():

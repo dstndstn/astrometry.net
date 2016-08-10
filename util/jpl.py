@@ -67,7 +67,7 @@ def parse_orbital_elements(s, needSystemGM=True):
 	if needSystemGM:
 		m = sysgmrex.search(s)
 		if not m:
-			print 'Did not find "System GM" entry'
+			print('Did not find "System GM" entry')
 			return None
 		gm = float(m.group('gm'))
 	else:

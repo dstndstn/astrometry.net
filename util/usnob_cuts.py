@@ -12,11 +12,11 @@ def usnob_apply_cuts(X):
 
 	if hasattr(X, 'an_diffraction_spike'):
 		f = X.an_diffraction_spike
-		print 'f shape', f.shape
+		print('f shape', f.shape)
 		#u = unique(f)
 		#print 'unique flags:', u
 		for j in range(8):
-			print 'flag', j, 'vals', np.unique(f[:,j])
+			print('flag', j, 'vals', np.unique(f[:,j]))
 		I *= (np.logical_not(f[:,7]) * np.logical_not(f[:,6]))
 		#X = X[good]
 		#print '%i pass AN diffraction spike cut' % len(X)

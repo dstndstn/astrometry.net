@@ -85,7 +85,7 @@ class MultipartPostHandler(urllib2.BaseHandler):
                 contenttype = 'multipart/form-data; boundary=%s' % boundary
                 if(request.has_header('Content-Type')
                    and request.get_header('Content-Type').find('multipart/form-data') != 0):
-                    print "Replacing %s with %s" % (request.get_header('content-type'), 'multipart/form-data')
+                    print("Replacing %s with %s" % (request.get_header('content-type'), 'multipart/form-data'))
                 request.add_unredirected_header('Content-Type', contenttype)
 
             request.add_data(data)
@@ -146,12 +146,12 @@ class ImageContainer:
 		self.time_started= datetime.datetime.now()
 		self.status      = "submitted"
 		if self.verbose:
-			print "** Submitting WCS request for image = %s" % self.name
-			print datetime.datetime.now()
+			print("** Submitting WCS request for image = %s" % self.name)
+			print(datetime.datetime.now())
 		self.req  = opener.open(self.astrometry_dot_net_url + "index.php", self.call_string)
 		if self.verbose:
-			print "   (Finished uploading image = %s)" % self.name
-			print datetime.datetime.now()
+			print("   (Finished uploading image = %s)" % self.name)
+			print(datetime.datetime.now())
 		self.status      = "returned"
 	
 	def _get_req_id(self):
@@ -171,7 +171,7 @@ class ImageContainer:
 	
 	def _get_job_status(self,timeout=200.0):
 		if self.status != "got req id":
-			print "bad job status"
+			print("bad job status")
 			return
 			
 		got_status = False
@@ -179,7 +179,7 @@ class ImageContainer:
 		call = self.astrometry_dot_net_url + "status.php?" + urllib.urlencode({"job": self.reqid})
 		timeout = datetime.timedelta(seconds=timeout)
 		if self.verbose:
-			print "   If you'd like to check the status of %s, go to: \n    %s" % (self.name,call)
+			print("   If you'd like to check the status of %s, go to: \n    %s" % (self.name,call))
 		while not got_status and datetime.datetime.now() - start < timeout:
 			f = urllib.urlopen(call)
 			tmp = f.readlines()
@@ -236,7 +236,7 @@ class ImageContainer:
 			self.name += ".gz"
 
 		if self.verbose:	
-			print "Finished WCS request for image %s (%s)" % (self.name,self.stat)
+			print("Finished WCS request for image %s (%s)" % (self.name,self.stat))
 		
 		
 class AstrometrySolver:
@@ -253,7 +253,7 @@ class AstrometrySolver:
 		
 		if imgfile is None or not os.path.isfile(imgfile):
 			if self.verbose:
-				print "! imgfile is bad"
+				print("! imgfile is bad")
 			return
 		tmp =copy.copy(self.job_dict)
 		tmp.update({"imgfile": open(imgfile,"rb"), "fsl": pixel_size_range[0], "fsu": pixel_size_range[1], "tweak": int(tweak_astrometry)})
@@ -270,7 +270,7 @@ class AstrometrySolver:
 	
 	def get_wcs(self,imlist=None,howmany_at_a_time=5,pixel_size_range = [0.2,1.1]):
 		
-		print "Verbose is set to %s" % repr(self.verbose)
+		print("Verbose is set to %s" % repr(self.verbose))
 		if imlist is None:
 			return
 		
@@ -305,10 +305,10 @@ class AstrometrySolver:
 if __name__ == "__main__":
 	
 	if len(sys.argv) <= 1:
-		print __doc__
+		print(__doc__)
 	else:
 		a = AstrometrySolver()
 		a.get_wcs(imlist=sys.argv[1:],pixel_size_range = [0.2,2])
-		print a
+		print(a)
 	
 		

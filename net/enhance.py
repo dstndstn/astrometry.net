@@ -148,7 +148,7 @@ if __name__ == '__main__':
         fn = 'orion-%i.fits' % (i+1)
         if not os.path.exists(fn):
             cmd = 'wget -O %s %s' % (fn, url)
-            print cmd
+            print(cmd)
             os.system(cmd)
         images.append(fn)
     
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
         wcs = Sip(wcsfn)
         img = fitsio.read(imgfn)
-        print 'img shape', img.shape
+        print('img shape', img.shape)
         three,imh,imw = img.shape
         imx = np.zeros((imh,imw,three), np.float32)
         for i in range(3):
@@ -168,9 +168,9 @@ if __name__ == '__main__':
         try:
             Yo,Xo,Yi,Xi,nil = resample_with_wcs(targetwcs, wcs, [], 3)
         except NoOverlapError:
-            print 'No actual overlap'
+            print('No actual overlap')
             continue
-        print len(Yo), 'resampled pixels'
+        print(len(Yo), 'resampled pixels')
         if len(Yo) == 0:
             continue
 
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     # test stretching
     img = plt.imread('demo/apod1.jpg')
     (H,W,B) = img.shape
-    print 'Image', img.shape, img.dtype
+    print('Image', img.shape, img.dtype)
 
     imx = np.sqrt(img.astype(np.float32) / 255.)
 

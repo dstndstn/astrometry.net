@@ -35,9 +35,9 @@ def whynot(field, index, qidx, wcs):
 	rad = arcsec2deg(wcs.get_pixel_scale() * hypot(wcs.get_width(), wcs.get_height()))
 	
 	(xyz, radec, starinds) = index_search_stars(index, ra, dec, rad)
-	print 'xyz', xyz.shape
-	print 'radec', radec.shape
-	print 'starinds', starinds.shape
+	print('xyz', xyz.shape)
+	print('radec', radec.shape)
+	print('starinds', starinds.shape)
 
 	istars = tabledata()
 	istars.xyz = xyz
@@ -46,7 +46,7 @@ def whynot(field, index, qidx, wcs):
 
 	W,H = wcs.get_width(), wcs.get_height()
 	pix = array([wcs.radec2pixelxy(r, d) for (r,d) in radec])
-	print 'pix', pix.shape
+	print('pix', pix.shape)
 	# within image bounds
 	I = (pix[:,0] > 0) * (pix[:,0] < W) * (pix[:,1] > 0) * (pix[:,1] < H)
 
@@ -57,10 +57,10 @@ def whynot(field, index, qidx, wcs):
 	rad = nsigma * sigma
 
 	fieldxy = vstack((field.x, field.y)).T
-	print 'field', fieldxy.shape
+	print('field', fieldxy.shape)
 
 	(cinds, cdists) = match(pix, fieldxy, rad)
-	print 'matches:', cinds.shape
+	print('matches:', cinds.shape)
 	#print cdists.shape
 
 	corrs = tabledata()
@@ -78,7 +78,7 @@ def whynot(field, index, qidx, wcs):
 		allquads.append(quads)
 
 	allquads = unique(hstack(allquads))
-	print '%i unique quads touch stars in the field' % len(allquads)
+	print('%i unique quads touch stars in the field' % len(allquads))
 
 	'''
 	"quads" object: all quads that touch index stars in this field.
@@ -92,7 +92,7 @@ def whynot(field, index, qidx, wcs):
 	quads.quad = allquads
 
 	qstars = quadfile_get_stars_for_quads(quadfile_addr(index), quads.quad)
-	print 'stars in quads:', qstars.shape
+	print('stars in quads:', qstars.shape)
 	#print qstars
 
 	quads.stars = qstars
@@ -106,8 +106,8 @@ def whynot(field, index, qidx, wcs):
 	quads.allin = allin
 
 	quadsin = quads[allin]
-	print '%i quads use stars that are in the field' % (len(quadsin))
-	print 'stars:', starinds
+	print('%i quads use stars that are in the field' % (len(quadsin)))
+	print('stars:', starinds)
 
 	c_s2f = {}
 	for c in corrs: #i in range(len(corrs)):
@@ -152,10 +152,10 @@ def whynot(field, index, qidx, wcs):
 	#forder = argsort([max(x) for x in okquads.fq2])
 	#okquads = okquads[forder]
 
-	print 'ok quads:', len(okquads)
-	print 'quad nums:', okquads.quad
-	print 'stars:', okquads.stars
-	print 'field stars:', okquads.fq2
+	print('ok quads:', len(okquads))
+	print('quad nums:', okquads.quad)
+	print('stars:', okquads.stars)
+	print('field stars:', okquads.fq2)
 
 	#qmatches = table_data()
 	#fqs = []
@@ -175,14 +175,14 @@ def whynot(field, index, qidx, wcs):
 	forder = argsort([max(fq) for fq,okq in qmatches])
 	#print 'forder', forder
 
-	print
-	print 'Quads in the order they will be found'
+	print()
+	print('Quads in the order they will be found')
 	for i in forder:
 		fq,okq = qmatches[i]
-		print
-		print 'object', max(fq)
-		print 'field stars', fq
-		print 'quad:', okq.quad
+		print()
+		print('object', max(fq))
+		print('field stars', fq)
+		print('quad:', okq.quad)
 
 
 
@@ -196,22 +196,22 @@ def whynot(field, index, qidx, wcs):
 	mystars = istars[I]
 	order = argsort(mystars.sweep)
 
-	print
-	print
-	print 'Index stars:',
+	print()
+	print()
+	print('Index stars:', end=' ')
 	for ms in mystars[order]:
-		print
-		print 'Star', ms.starind, 'sweep', ms.sweep, 'radec', ms.radec
-		print 'Field star(s) nearby:', len(c_s2f.get(ms.starind, []))
+		print()
+		print('Star', ms.starind, 'sweep', ms.sweep, 'radec', ms.radec)
+		print('Field star(s) nearby:', len(c_s2f.get(ms.starind, [])))
 		for c in corrs[corrs.star == ms.starind]:
-			print '  field star', c.field, 'dist', c.dist, 'pixels'
+			print('  field star', c.field, 'dist', c.dist, 'pixels')
 		myquads = quads[array([(ms.starind in q.stars) for q in quads])]
-		print 'In %i quads' % len(myquads)
+		print('In %i quads' % len(myquads))
 		for q in myquads:
-			print '  quad %i: %i stars in the field' % (q.quad, sum(q.starsinfield))
+			print('  quad %i: %i stars in the field' % (q.quad, sum(q.starsinfield)))
 			if q.allin:
-				print '    stars:', q.stars
-				print '    correspondences for stars:', [c_s2f.get(s, None) for s in q.stars]
+				print('    stars:', q.stars)
+				print('    correspondences for stars:', [c_s2f.get(s, None) for s in q.stars])
 
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ t0 = time()
 (inds,dists) = spherematch.match(x1, x2, r)
 dt = time() - t0
 
-print 'spherematch.match: found', len(inds), 'pairs in', int(dt*1000.), 'ms'
+print('spherematch.match: found', len(inds), 'pairs in', int(dt*1000.), 'ms')
 
 order = np.argsort(inds[:,0]*N2 + inds[:,1])
 inds = inds[order]
@@ -36,16 +36,16 @@ dt = time() - t0
 pairs = np.array(pairs)
 truedists = np.sqrt(np.array(truedists))
 
-print 'naive			: found', len(pairs), 'pairs in', int(dt*1000.), 'ms'
+print('naive			: found', len(pairs), 'pairs in', int(dt*1000.), 'ms')
 
 order = np.argsort(pairs[:,0]*N2 + pairs[:,1])
 pairs = pairs[order]
 
 ok = np.array_equal(pairs, inds)
-print 'Indices equal:', ok
+print('Indices equal:', ok)
 
 ok = np.array_equal(truedists[order], dists.ravel())
-print 'Dists equal:', ok
+print('Dists equal:', ok)
 
 
 t0 = time()

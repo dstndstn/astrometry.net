@@ -232,7 +232,7 @@ def upload_file(request):
                     try:
                         sub.album = Album.objects.get(pk=int(form.cleaned_data['album']))
                     except Exception as e:
-                        print e
+                        print(e)
 
             default_license = None
             if not request.user.is_authenticated():

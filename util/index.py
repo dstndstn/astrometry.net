@@ -28,11 +28,11 @@ def index_get_tagalong_columns(index):
 	cols = []
 	for i in range(N):
 		col = startree_get_tagalong_column_name(skdt, i)
-		print 'column:', col
+		print('column:', col)
 		ft = startree_get_tagalong_column_fits_type(skdt, i)
-		print 'fits type', ft
+		print('fits type', ft)
 		arr = startree_get_tagalong_column_array_size(skdt, i)
-		print 'array size', arr
+		print('array size', arr)
 		cols.append((col, ft, arr))
 	return cols
 

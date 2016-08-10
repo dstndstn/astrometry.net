@@ -43,7 +43,7 @@ for month in sys.argv[1:]:
 		#wcsfn = path + "wcs.fits"
 		#print wcsfn
 		#print job
-		print path
+		print(path)
 		cmd = "pngtopnm " + path + "fullsize.png | pnmtojpeg > " + outdir + "csk-" + job + ".jpg"
 		backtick(cmd)
 		cmd = "cp " + path + "wcs.fits " + outdir + "csk-" + job + ".wcs"

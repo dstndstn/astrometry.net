@@ -78,7 +78,7 @@ def plot_sdss_image(wcsfn, plotfn, image_scale=1.0, debug_ps=None):
         if debug_ps is not None:
             fn = debug_ps.getnext()
             plot.write(fn)
-            print 'Wrote', fn
+            print('Wrote', fn)
         
     if debug_ps is not None:
         out = plot.outline
@@ -89,7 +89,7 @@ def plot_sdss_image(wcsfn, plotfn, image_scale=1.0, debug_ps=None):
             ps.plot_outline_set_wcs_file(out, swcsfn, 0)
             plot.plot('outline')
         plot.write(fn)
-        print 'Wrote', fn
+        print('Wrote', fn)
 
     plot.write(plotfn)
 
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     if True:
         wcs = anutil.Tan(wcsfn)
         scale = 640. / wcs.get_width()
-        print 'Scale', scale
+        print('Scale', scale)
         
     from astrometry.util.plotutils import *
 

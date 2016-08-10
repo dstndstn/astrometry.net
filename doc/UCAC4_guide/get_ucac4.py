@@ -77,33 +77,33 @@ successes = 0
 for i in range(start_z, end_z+1):
 	name = 'z'+str(i).zfill(3)
 
-	print 'Downloading: '+name
+	print('Downloading: '+name)
 	try:
 		Download_File(name)
 
 		successes += 1
 	except:
 		fail_list.append(name)
-		print 'ERROR downloading file: ', name
+		print('ERROR downloading file: ', name)
 
 # Retry failed downloads
 for i in range(No_retries):
 	for name in fail_list:
-		print 'Retrying:', name
+		print('Retrying:', name)
 		try:
 			Download_File(name)
 			successes += 1
 			fail_list.pop(fail_list.index(name))
 		except:
-			print 'Will retry', name, 'again...'
+			print('Will retry', name, 'again...')
 
 
 if len(fail_list) == 0:
-	print 'SUCCESS! All files downloaded successfully!'
+	print('SUCCESS! All files downloaded successfully!')
 elif successes > 0:
-	print 'WARNING! PARTIAL SUCCESS:'
-	print successes, 'files downloaded successfully,', len(fail_list), 'failed!'
-	print 'These files were NOT downloaded:', fail_list
+	print('WARNING! PARTIAL SUCCESS:')
+	print(successes, 'files downloaded successfully,', len(fail_list), 'failed!')
+	print('These files were NOT downloaded:', fail_list)
 else:
-	print 'ERROR! ALL FILES FAILED TO DOWNLOAD!'
-	print 'Check your internet connection or try downloading later...'
+	print('ERROR! ALL FILES FAILED TO DOWNLOAD!')
+	print('Check your internet connection or try downloading later...')

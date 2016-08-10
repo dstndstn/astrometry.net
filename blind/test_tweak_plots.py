@@ -10,7 +10,7 @@ import tt
 
 def savefig(fn):
 	from pylab import savefig as sf
-	print 'Saving', fn
+	print('Saving', fn)
 	sf(fn)
 
 if __name__ == '__main__':
