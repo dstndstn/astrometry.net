@@ -127,7 +127,8 @@ int dmedsmooth_grid(const float* image,
                 nm = nb / 2;
                 grid[i + j*nxgrid] = dselip(nm, nb, arr);
             } else {
-                grid[i + j*nxgrid] = image[(long)xlo[i] + ((long)ylo[j]) * nx];
+                //grid[i + j*nxgrid] = image[(long)xlo[i] + ((long)ylo[j]) * nx];
+                grid[i + j*nxgrid] = 0.0;
             }
         }
     }
