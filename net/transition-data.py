@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+from __future__ import print_function
 import sys
 import os
 p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

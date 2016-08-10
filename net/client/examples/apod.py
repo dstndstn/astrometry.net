@@ -4,6 +4,7 @@
 # BUGS:
 # - Brittle code; must be run from directory client/examples; dies if APOD reformats urls or html.
 # - Runs client using os.system() instead of importing client and executing it; see if False block at end.
+from __future__ import print_function
 
 import re
 import os

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pylab as plt
 import numpy as np
 

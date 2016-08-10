@@ -9,6 +9,8 @@ Options:
 		-l		   : skip first line of output with column names
 		-v	   : verbose mode dumps settings in header
 		-h	   : show this message"""
+        
+from __future__ import print_function
 
 formats = ['csv','xml','html']
 

@@ -5,6 +5,7 @@
 
 Convert an image in a variety of formats into a pnm file
 """
+from __future__ import print_function
 import sys
 import os
 import os.path

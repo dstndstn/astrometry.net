@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'

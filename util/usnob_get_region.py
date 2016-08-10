@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
 from urllib2 import urlopen
 from urllib import urlencode
 from urlparse import urlparse, urljoin

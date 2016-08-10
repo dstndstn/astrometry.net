@@ -4,6 +4,7 @@
 
 # Used to trim down the "hpslit"-merged USNO-B files before
 # building indices out of them.
+from __future__ import print_function
 
 import sys
 from optparse import OptionParser

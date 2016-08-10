@@ -82,6 +82,7 @@
 # ----- See 'changes.txt' file for all contributors and changes ----- #
 #
 
+from __future__ import print_function
 
 # Don't throw an exception when given an out of range character.
 def make_string(seq):

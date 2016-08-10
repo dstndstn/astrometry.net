@@ -1,5 +1,6 @@
 # This file is part of libkd.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
 from astrometry.libkd import spherematch
 import numpy as np
 from time import time

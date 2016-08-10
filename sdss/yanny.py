@@ -21,6 +21,7 @@ were only ever intended to be supported for type ``char``.
 
 .. _specifications: http://www.sdss3.org/dr8/software/par.php
 """
+from __future__ import print_function
 
 __author__ = 'Benjamin Weaver <benjamin.weaver@nyu.edu>'
 
