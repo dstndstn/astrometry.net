@@ -2,6 +2,7 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 
 from astrometry.util.fits import *
 from astrometry.util.starutil_numpy import *
@@ -321,7 +322,7 @@ def main():
     for (r,c,f,ra1,dec1) in rcfs:
         print('wget "http://cas.sdss.org/dr7/en/get/frameByRCFZ.asp?R=%i&C=%i&F=%i&Z=0&submit1=Get+Image" -O sdss-%04i-%i-%04i.jpg' % (r,c,f,r,c,f))
 
-    from sdss_das import sdss_das_get
+    from .sdss_das import sdss_das_get
     for (r,c,f,ra1,dec1) in rcfs:
         for t in opt.filetypes:
             for b in opt.bands:

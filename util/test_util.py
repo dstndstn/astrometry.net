@@ -1,10 +1,11 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 from util import *
 import numpy as np
 import time
-from starutil_numpy import *
+from .starutil_numpy import *
 
 
 tan = Tan(5., 10., 500.5, 500.5,
@@ -64,7 +65,7 @@ print(np.array(sip.ap).reshape((10,10))[:5,:5])
 print('BP:')
 print(np.array(sip.bp).reshape((10,10))[:5,:5])
 
-from plotSipDistortion import plotDistortion
+from .plotSipDistortion import plotDistortion
 import pylab as plt
 
 plotDistortion(sip, 1000, 1000, 15, exaggerate=10.)

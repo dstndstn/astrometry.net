@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 import random
 import os
 import errno
@@ -16,10 +17,10 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 
 from astrometry.net.settings import *
-from wcs import *
-from log import *
+from .wcs import *
+from .log import *
 
-from enhance_models import *
+from .enhance_models import *
 
 from astrometry.util.starutil_numpy import ra2hmsstring, dec2dmsstring
 from astrometry.util.filetype import filetype_short

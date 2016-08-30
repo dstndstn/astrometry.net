@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 import base64
 
 from functools import wraps
@@ -19,9 +20,9 @@ from django.views.decorators.csrf import csrf_exempt
 # astrometry.net imports
 from astrometry.net.models import *
 from astrometry.net.views.submission import handle_upload
-from api_util import *
-from log import *
-from tmpfile import *
+from .api_util import *
+from .log import *
+from .tmpfile import *
 import settings
 
 # Content-type to return for JSON outputs.
@@ -213,7 +214,7 @@ def write_wcs_file(req, wcsfn):
 @requires_json_args
 @requires_json_session
 def api_sdss_image_for_wcs(req):
-    from sdss_image import plot_sdss_image
+    from .sdss_image import plot_sdss_image
     wcsfn = get_temp_file()
     plotfn = get_temp_file()
     write_wcs_file(req, wcsfn)
@@ -226,7 +227,7 @@ def api_sdss_image_for_wcs(req):
 @requires_json_args
 @requires_json_session
 def api_galex_image_for_wcs(req):
-    from galex_jpegs import plot_into_wcs
+    from .galex_jpegs import plot_into_wcs
     wcsfn = get_temp_file()
     plotfn = get_temp_file()
     write_wcs_file(req, wcsfn)

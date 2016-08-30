@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 # settings_test.py
-from settings_common import *
+from .settings_common import *
 
 ENABLE_SOCIAL = False
 

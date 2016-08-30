@@ -159,7 +159,7 @@ class Cas(object):
         url = self.drop_url() % dbname
         try:
             f = urllib2.urlopen(url)
-        except Exception,e:
+        except Exception as e:
             print('Failed to drop table', dbname)
             print(e)
             return False
@@ -171,7 +171,7 @@ class Cas(object):
         print('Dropping table', dbname)
         try:
             f = urllib2.urlopen(url, data)
-        except Exception,e:
+        except Exception as e:
             print('Failed to drop table', dbname)
             print(e)
             return False
@@ -194,7 +194,7 @@ class Cas(object):
             # f = urllib2.urlopen(request)
             # Referer: http://galex.stsci.edu/casjobs/mydbindex.aspx
             f = urllib2.urlopen(url)
-        except urllib2.HTTPError,e:
+        except urllib2.HTTPError as e:
             print('HTTPError:', e)
             print('  code', e.code)
             print('  msg', e.msg)
@@ -216,7 +216,7 @@ class Cas(object):
         print('data', urllib.urlencode(data))
         try:
             f = urllib2.urlopen(url, urllib.urlencode(data))
-        except urllib2.HTTPError,e:
+        except urllib2.HTTPError as e:
             print('HTTPError:', e)
             print('  code', e.code)
             # print '  reason', e.reason

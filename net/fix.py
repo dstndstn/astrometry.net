@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 import sys
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
@@ -6,7 +7,7 @@ p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(p)
 import settings
 from astrometry.net.models import *
-from log import *
+from .log import *
 
 
 

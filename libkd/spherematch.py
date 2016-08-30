@@ -164,7 +164,7 @@ def _cleaninputs(x1, x2):
     (N1,D1) = fx1.shape
     (N2,D2) = fx2.shape
     if D1 != D2:
-        raise ValueError, 'Arrays must have the same dimensionality'
+        raise ValueError('Arrays must have the same dimensionality')
     return (fx1,fx2)
 
 def _buildtrees(x1, x2):

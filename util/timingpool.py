@@ -708,7 +708,7 @@ if __name__ == '__main__':
         def __iter__(self):
             return self
         def next(self):
-            return self.y.next()
+            return next(self.y)
         def __len__(self):
             return self.n
 

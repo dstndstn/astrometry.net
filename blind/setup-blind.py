@@ -1,3 +1,4 @@
+from __future__ import print_function
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 import os

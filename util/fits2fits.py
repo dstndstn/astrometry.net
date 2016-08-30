@@ -93,7 +93,7 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 
     try:
         pyfits_writeto(fitsin, outfile, output_verify='warn')
-    except pyfits.VerifyError, ve:
+    except pyfits.VerifyError as ve:
         return ('Verification of output file failed: your FITS file is probably too broken to automatically fix.' +
                 '  Error message is:' + str(ve))
     fitsin.close()

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 import os
@@ -11,8 +12,8 @@ except ImportError:
 from astrometry.util.fits import fits_table
 import numpy as np
 
-from common import *
-from dr9 import *
+from .common import *
+from .dr9 import *
 
 class DR10(DR9):
 

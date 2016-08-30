@@ -6,13 +6,14 @@
 Convert an image in a variety of formats into a pnm file
 """
 from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import os
 import os.path
 import tempfile
 
 if __name__ == '__main__':
-    import addpath
+    from . import addpath
     addpath.addpath()
 
 from astrometry.util.shell import shell_escape
@@ -158,7 +159,7 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 
     if (ext == fitsext) and fix_sdss and no_fits2fits:
         # We want to run fix_sdss_idr even if no_fits2fits is set.
-        from fix_sdss_idr import is_sdss_idr_file, fix_sdss_idr_file
+        from .fix_sdss_idr import is_sdss_idr_file, fix_sdss_idr_file
 
         if is_sdss_idr_file(infile):
             (f, fixidr) = tempfile.mkstemp('fix_sdss_idr', outfile_file, outfile_dir)
@@ -172,7 +173,7 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
     # misbehaved FITS files. fits2fits is a sanitizer.
     if (ext == fitsext) and (not no_fits2fits):
 
-        from fits2fits import fits2fits as fits2fits
+        from .fits2fits import fits2fits as fits2fits
 
         if not sanitized:
             (f, sanitized) = tempfile.mkstemp('sanitized', outfile_file, outfile_dir)

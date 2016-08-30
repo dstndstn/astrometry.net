@@ -5,7 +5,7 @@ import numpy
 
 def write_pnm_to(img, f, maxval=255):
     if len(img.shape) == 1:
-        raise 'write_pnm: img is one-dimensional: must be 2 or 3.'
+        raise RuntimeError('write_pnm: img is one-dimensional: must be 2 or 3.')
     elif len(img.shape) == 2:
         #pnmtype = 'G'
         pnmcode = 5
@@ -15,9 +15,9 @@ def write_pnm_to(img, f, maxval=255):
         #pnmtype = 'P'
         pnmcode = 6
         if planes != 3:
-            raise 'write_pnm: img must have 3 planes, not %i' % planes
+            raise RuntimeError('write_pnm: img must have 3 planes, not %i' % planes)
     else:
-        raise 'write_pnm: img must have <= 3 dimensions.'
+        raise RuntimeError('write_pnm: img must have <= 3 dimensions.')
 
     if img.max() > maxval:
         print('write_pnm: Some pixel values are > maxval (%i): clipping them.' % maxval)
@@ -27,9 +27,9 @@ def write_pnm_to(img, f, maxval=255):
 
     maxval = int(maxval)
     if maxval > 65535:
-        raise 'write_pnm: maxval must be <= 65535'
+        raise RuntimeError('write_pnm: maxval must be <= 65535')
     if maxval < 0:
-        raise 'write_pnm: maxval must be positive'
+        raise RuntimeError('write_pnm: maxval must be positive')
 
     f.write('P%i %i %i %i ' % (pnmcode, w, h, maxval))
     if maxval <= 255:

@@ -112,7 +112,7 @@ if __name__ == '__main__':
             ftp.dir(d, crawl.add_item)
             crawl.write_stack()
             nrequests += 1
-        except Exception, e:
+        except Exception as e:
             print('caught exception:', e)
             sys.stdout.flush()
             crawl.dirstack.append(d)

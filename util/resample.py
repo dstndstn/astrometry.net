@@ -1,6 +1,7 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 import numpy as np
 
 class ResampleError(Exception):
@@ -328,7 +329,7 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
     laccs: list of [float, 1-d numpy array, len n]: outputs
     limages list of [float, 2-d numpy array, shape h,w]: inputs
     '''
-    from miscutils import lanczos_filter
+    from .miscutils import lanczos_filter
     lfunc = lanczos_filter
     if L == 3:
         try:

@@ -138,7 +138,7 @@ def get_usnob_images(ra, dec, raw=15., decw=15., fieldname='',
                         print('writing to file', fn)
                         write_file(res.read(), fn)
                         break
-                    except Exception,e:
+                    except Exception as e:
                         print('Error:', e)
                         print('Retrying...')
                         time.sleep(1)

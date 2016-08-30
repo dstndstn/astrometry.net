@@ -32,7 +32,7 @@ class NanColormap(matplotlib.colors.Colormap):
     def __getattr__(self, name):
         ''' delegate to underlying colormap. '''
         return getattr(self.cmap, name)
-    
+
 def _imshow_better_defaults(imshowfunc, X, interpolation='nearest', origin='lower',
                             cmap='gray', ticks=True, **kwargs):
     '''
@@ -156,7 +156,7 @@ def loghist(x, y, nbins=100,
         print('loghist: cutting to', len(K), 'of', len(x), 'finite values')
         x = x[K]
         y = y[K]
-        
+
     if clamp is True:
         clamp = rng
     if clamp is not None:
@@ -229,7 +229,7 @@ def plothist(x, y, nbins=100, log=False,
     if log:
         return loghist(x, y, nbins=nbins, doclf=doclf, docolorbar=docolorbar,
                        dohot=dohot, imshowargs=imshowargs) #, **kwargs)
-                       
+
     if doclf:
         plt.clf()
     (H,xe,ye) = np.histogram2d(x, y, nbins, **hist2dargs)
@@ -378,7 +378,7 @@ def hist2d_with_outliers(x, y, xbins, ybins, nout):
       outliers: array of integer indices of the outliers
       xe: x edges chosen by histgram2d
       ye: y edges chosen by histgram2d
-      
+
     '''
     # returns (density image, indices of outliers)
     (H,xe,ye) = plt.histogram2d(x, y, (xbins,ybins))
@@ -401,18 +401,18 @@ def hist2d_with_outliers(x, y, xbins, ybins, nout):
 def circle(xy=None, x=None, y=None, **kwargs):
     if xy is None:
         if x is None or y is None:
-            raise 'circle: need x and y'
+            raise RuntimeError('circle: need x and y')
         xy = np.array([x,y])
     c = matplotlib.patches.Circle(xy=xy, **kwargs)
     a=plt.gca()
     c.set_clip_box(a.bbox)
     a.add_artist(c)
     return c
-    
+
 def ellipse(xy=None, x=None, y=None, **kwargs):
     if xy is None:
         if x is None or y is None:
-            raise 'ellipse: need x and y'
+            raise RuntimeError('ellipse: need x and y')
         xy = np.array([x,y])
     c = matplotlib.patches.Ellipse(xy=xy, **kwargs)
     a=plt.gca()
@@ -477,10 +477,10 @@ if __name__ == '__main__':
 
     dimshow(X)
     plt.savefig('2.png')
-    
+
     replace_matplotlib_functions()
-    
+
     plt.clf()
     plt.imshow(X, interpolation='nearest')
     plt.savefig('3.png')
-    
+

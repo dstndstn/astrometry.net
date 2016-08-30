@@ -1,3 +1,4 @@
+from __future__ import print_function
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 import os
@@ -32,10 +33,10 @@ inc.append('../util') # for util.i
 cflags_swig = strlist(os.environ.get('CFLAGS_SWIG', ''))
 cflags = strlist(os.environ.get('CFLAGS', ''))
 
-print('link:', link)
-print('objs:', objs)
-print('inc:', inc)
-print('cflags:', cflags_swig + cflags)
+print(('link:', link))
+print(('objs:', objs))
+print(('inc:', inc))
+print(('cflags:', cflags_swig + cflags))
 
 objs = [
     'plotfill.o', 'plotxy.o',

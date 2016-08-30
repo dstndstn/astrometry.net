@@ -1,6 +1,7 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from math import pi,cos,sin,radians,degrees,asin,atan2,sqrt,acos,floor
+from functools import reduce
 
 def hms2ra(h, m, s):
     return 15. * (h + (m + s/60.)/60.)

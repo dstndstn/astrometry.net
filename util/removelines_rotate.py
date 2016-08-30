@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
+from __future__ import absolute_import
 import matplotlib
 matplotlib.use('Agg')
 import os
@@ -10,20 +12,20 @@ import logging
 from pylab import *
 from optparse import OptionParser
 
-from removelines import hist_remove_lines
+from .removelines import hist_remove_lines
 from astrometry.util.fits import pyfits_writeto
 
 if __name__ == '__main__':
     try:
-                try:
-                        import pyfits
-                except ImportError:
-                        try:
-                                from astropy.io import fits as pyfits
-                        except ImportError:
-                                raise ImportError(
-                                        "Cannot import either pyfits or astropy.io.fits"
-                                        )
+        try:
+            import pyfits
+        except ImportError:
+            try:
+                from astropy.io import fits as pyfits
+            except ImportError:
+                raise ImportError(
+                    "Cannot import either pyfits or astropy.io.fits"
+                )
         import astrometry
         from astrometry.util.shell import shell_escape
         from astrometry.util.filetype import filetype_short
@@ -48,7 +50,7 @@ try:
 except ImportError:
     try:
         from astropy.io import fits as pyfits
-        except ImportError:
+    except ImportError:
             raise ImportError("Cannot import either pyfits or astropy.io.fits")
 from numpy import *
 from numpy.random import rand
@@ -63,7 +65,7 @@ if False:
     # We're ignoring empty bins.
     occupied = nonzero(counts)[0]
     noccupied = len(occupied)
-    #k = (counts[occupied] - 1) 
+    #k = (counts[occupied] - 1)
     #mean = sum(k) / float(noccupied)
     k = counts[occupied]
     mean = sum(k) / ((max(x) - min(x)) / binwidth) * sqrt(2.)
@@ -75,10 +77,10 @@ if False:
         axhline(thresh, color='r')
 
     print 'mean', mean, 'thresh:', thresh, 'max:', max(k)
-    
+
     #logpoisson = k*log(mean) - mean - array([sum(log(1 + arange(kk))) for kk in k])
     #uk = unique(k)
-    #ulogpoisson = uk*log(mean) - mean - array([sum(1+arange(kk)) for kk in uk])    
+    #ulogpoisson = uk*log(mean) - mean - array([sum(1+arange(kk)) for kk in uk])
     #print
     #for (uuk,ull) in zip(uk,ulogpoisson):
     #    print uuk,ull
@@ -124,7 +126,7 @@ def removelines(infile, outfile, xcol='X', ycol='Y', plots=False, cut=None, **kw
         yy -= min(yy)
 
         if plots:
-            print
+            print()
             clf()
             subplot(2,2,1)
             plot(xx, yy, 'r.')
@@ -152,11 +154,11 @@ def removelines(infile, outfile, xcol='X', ycol='Y', plots=False, cut=None, **kw
             plot(xx[removed], yy[removed], 'b.')
             savefig('rot-%04i.png' % i)
 
-        print 'angle', angle, 'removed', (len(x) - sum(ix*iy))
+        print('angle', angle, 'removed', (len(x) - sum(ix*iy)))
 
     xc = x[I]
     yc = y[I]
-    print 'removelines.py: Removed %i sources' % (len(x) - len(xc))
+    print('removelines.py: Removed %i sources' % (len(x) - len(xc)))
 
     if plots:
         plot(xc, yc, 'o', mec='r', mfc='none')

@@ -51,7 +51,7 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 
     m = re.search(r'<base href="(.*)" />', doc)
     if not m:
-        raise 'no results page: server output written to file'
+        raise RuntimeError('no results page: server output written to file')
     resurl = m.group(1)
     print('result base url', resurl)
 
@@ -121,7 +121,7 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
             # returned non-zero.
             print('wget exited with value', os.WEXITSTATUS(rtn))
             continue
-        
+
         fns.append(fn)
     return fns
 

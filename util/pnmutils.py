@@ -8,7 +8,7 @@ from numpy import *
 def write_pgm(x, f, maxval=255):
     (h,w) = x.shape
     if maxval >= 65536:
-        raise 'write_pgm: maxval must be < 65536'
+        raise RuntimeError('write_pgm: maxval must be < 65536')
 
     f.write('P5 %i %i %i\n' % (w, h, maxval))
     if maxval <= 255:
@@ -23,7 +23,7 @@ def write_pgm(x, f, maxval=255):
 def write_ppm(x, f, maxval=255):
     (h,w,d) = x.shape
     if maxval >= 65536:
-        raise 'write_pgm: maxval must be < 65536'
+        raise RuntimeError('write_pgm: maxval must be < 65536')
     if d != 3:
         raise Exception('array must have shape H x W x 3; got ' + x.shape)
 

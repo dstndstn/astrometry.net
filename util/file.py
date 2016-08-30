@@ -1,6 +1,7 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import cPickle
@@ -50,7 +51,7 @@ def unpickle_from_file(fn):
     return data
 
 def get_svn_version():
-    from run_command import run_command
+    from .run_command import run_command
     version = {}
     rtn,out,err = run_command('svn info')
     if rtn != 0:
@@ -70,7 +71,7 @@ def get_git_version():
     eg,
     {'commit': 'a5c7865efd188715a8436ef7be23e38448e2aa60', 'describe': 'v1.0'}
     '''
-    from run_command import run_command
+    from .run_command import run_command
     version = {}
     rtn,out,err = run_command('git log --max-count=1 | head -n 1')
     assert(rtn == 0)

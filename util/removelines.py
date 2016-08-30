@@ -2,13 +2,14 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 import sys
 import logging
 from optparse import OptionParser
 
 if __name__ == '__main__':
-    import addpath
+    from . import addpath
     addpath.addpath()
 
 import numpy

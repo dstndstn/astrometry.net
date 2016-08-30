@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # django-openid-auth -  OpenID integration for django.contrib.auth
 #
 # Copyright (C) 2007 Simon Willison
@@ -59,7 +60,7 @@ from astrometry.net.models import *
 from astrometry.net.settings import *
 from astrometry.net.util import choicify
 
-from log import *
+from .log import *
 
 next_url_re = re.compile('^/[-\w/]+$')
 
@@ -197,7 +198,7 @@ def login_begin(request, template_name='openid/login.html',
     consumer = make_consumer(request)
     try:
         openid_request = consumer.begin(openid_url)
-    except DiscoveryFailure, exc:
+    except DiscoveryFailure as exc:
         return render_failure(
             request, "OpenID discovery error: %s" % (str(exc),), status=500)
 

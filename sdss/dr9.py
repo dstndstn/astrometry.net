@@ -1,6 +1,7 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 try:
     import pyfits
@@ -12,8 +13,8 @@ except ImportError:
 from astrometry.util.fits import fits_table
 import numpy as np
 
-from common import *
-from dr8 import *
+from .common import *
+from .dr8 import *
 
 class DR9(DR8):
 

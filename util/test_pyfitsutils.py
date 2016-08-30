@@ -1,8 +1,11 @@
-/*
+#/*
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
-*/
-from fits import *
+#*/
+from __future__ import print_function
+from __future__ import absolute_import
+
+from .fits import *
 import numpy as np
 import unittest
 
@@ -34,23 +37,23 @@ class TestSlices(unittest.TestCase):
 
     def testNumpySlicing(self):
         A = np.arange(10)
-        print A[:3]
-        print A[3:6]
-        print A[7:]
-        print A[1:7:2]
+        print(A[:3])
+        print(A[3:6])
+        print(A[7:])
+        print(A[1:7:2])
 
         A = list(A)
-        print A[:3]
-        print A[3:6]
-        print A[7:]
-        print A[1:7:2]
+        print(A[:3])
+        print(A[3:6])
+        print(A[7:])
+        print(A[1:7:2])
 
         A = np.arange(10)
         A = A[:,np.newaxis].repeat(2, axis=1)
-        print A[:3]
-        print A[3:6]
-        print A[7:]
-        print A[1:7:2]
+        print(A[:3])
+        print(A[3:6])
+        print(A[7:])
+        print(A[1:7:2])
 
     def testSlice2(self):
         T1 = self.T[self.T.x1 < 4]

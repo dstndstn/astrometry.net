@@ -2,9 +2,10 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 import sys
 
-from starutil_numpy import *
+from .starutil_numpy import *
 
 if __name__ == '__main__':
     args = sys.argv[1:]
