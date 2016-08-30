@@ -34,22 +34,22 @@ print('inc:', inc)
 print('cflags:', cflags)
 
 c_swig_module = Extension('_util',
-						  sources = ['util.i'],
-						  include_dirs = numpy_inc + inc + ['.'],
-						  extra_objects = objs,
+                          sources = ['util.i'],
+                          include_dirs = numpy_inc + inc + ['.'],
+                          extra_objects = objs,
                           extra_compile_args = cflags,
                           extra_link_args=link,
                           depends=objs,
                           swig_opts=['-I'+d for d in inc],
-	)
+    )
 
 setup(cmdclass={'build_ext': an_build_ext},
-	  name = 'Access to Astrometry.net utils in python',
+      name = 'Access to Astrometry.net utils in python',
       version = '1.0',
       description = '',
       author = 'Astrometry.net (Dustin Lang)',
       author_email = 'dstn@cmu.edu',
       url = 'http://astrometry.net',
       py_modules = [ 'util' ],
-	  ext_modules = [c_swig_module])
+      ext_modules = [c_swig_module])
 

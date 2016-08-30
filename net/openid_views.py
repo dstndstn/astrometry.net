@@ -250,7 +250,7 @@ def login_begin(request, template_name='openid/login.html',
         else:
             return_to += '?'
         return_to += urllib.urlencode({redirect_field_name: redirect_to})
-    logmsg('login_begin done')	
+    logmsg('login_begin done')    
     return render_openid_request(request, openid_request, return_to)
 
 

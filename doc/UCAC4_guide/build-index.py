@@ -40,13 +40,13 @@ print('\t File range: ', file_range)
 print('\t Run name: ', run_name)
 
 for file_no in range(file_range[0], file_range[1]+1):
-	for scale in range(scale_range[0], scale_range[1]+1):
-		file_no = str(file_no).zfill(2)
-		scale = str(scale)
+    for scale in range(scale_range[0], scale_range[1]+1):
+        file_no = str(file_no).zfill(2)
+        scale = str(scale)
 
-		base_command = 'build-astrometry-index -i '+base_file_name+file_no+extenstion+' -o index-ucac4-'+scale+'-'+file_no+'.fits -P '+scale+' -S MAG -H '+file_no+' -s 1 -I '+run_name+scale.zfill(2)
-		
-		print(base_command)
+        base_command = 'build-astrometry-index -i '+base_file_name+file_no+extenstion+' -o index-ucac4-'+scale+'-'+file_no+'.fits -P '+scale+' -S MAG -H '+file_no+' -s 1 -I '+run_name+scale.zfill(2)
+        
+        print(base_command)
 
-		#Run command
-		os.system(base_command)
+        #Run command
+        os.system(base_command)

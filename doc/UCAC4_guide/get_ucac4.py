@@ -34,41 +34,41 @@ No_retries = 5
 prefix = 'http://cdsarc.u-strasbg.fr/viz-bin/ftp-index?/ftp/cats/aliases/U/UCAC4/UCAC4/u4b/'
 
 def Convert_Dec_to_Znum(start_dec, end_dec):
-	""" Convert declination range to UCAC4 file number range. """
-	z_file_constatnt = 180.0/900
+    """ Convert declination range to UCAC4 file number range. """
+    z_file_constatnt = 180.0/900
 
-	if start_dec < end_dec:
-		temp = start_dec
-		start_dec = end_dec
-		end_dec = start_dec
+    if start_dec < end_dec:
+        temp = start_dec
+        start_dec = end_dec
+        end_dec = start_dec
 
-	if start_dec > +90.0:
-		start_dec = +90.0
+    if start_dec > +90.0:
+        start_dec = +90.0
 
-	if end_dec < -90.0:
-		end_dec = -90.0
+    if end_dec < -90.0:
+        end_dec = -90.0
 
-	start_z = int(-(start_dec-90)/z_file_constatnt) + 1
-	end_z = int(-(end_dec-90)/z_file_constatnt)
+    start_z = int(-(start_dec-90)/z_file_constatnt) + 1
+    end_z = int(-(end_dec-90)/z_file_constatnt)
 
-	return start_z, end_z
+    return start_z, end_z
 
 def Download_File(name):
-	""" Download UCAC4 file. """
+    """ Download UCAC4 file. """
 
-	url_name = prefix+name
-	ucac_file = urllib.URLopener()
-	ucac_file.retrieve(url_name, name)
-	
-	inp = open(name, 'rb')
-	bz2_file = bz2.BZ2File(name+'.bz2', 'wb', compresslevel=1) 
-	copyfileobj(inp, bz2_file)
-	inp.close()
-	bz2_file.close()
+    url_name = prefix+name
+    ucac_file = urllib.URLopener()
+    ucac_file.retrieve(url_name, name)
+    
+    inp = open(name, 'rb')
+    bz2_file = bz2.BZ2File(name+'.bz2', 'wb', compresslevel=1) 
+    copyfileobj(inp, bz2_file)
+    inp.close()
+    bz2_file.close()
 
-	os.remove(name)
+    os.remove(name)
 
-	return 0
+    return 0
 
 start_z, end_z = Convert_Dec_to_Znum(start_dec, end_dec)
 
@@ -76,35 +76,35 @@ start_z, end_z = Convert_Dec_to_Znum(start_dec, end_dec)
 fail_list = []
 successes = 0
 for i in range(start_z, end_z+1):
-	name = 'z'+str(i).zfill(3)
+    name = 'z'+str(i).zfill(3)
 
-	print('Downloading: '+name)
-	try:
-		Download_File(name)
+    print('Downloading: '+name)
+    try:
+        Download_File(name)
 
-		successes += 1
-	except:
-		fail_list.append(name)
-		print('ERROR downloading file: ', name)
+        successes += 1
+    except:
+        fail_list.append(name)
+        print('ERROR downloading file: ', name)
 
 # Retry failed downloads
 for i in range(No_retries):
-	for name in fail_list:
-		print('Retrying:', name)
-		try:
-			Download_File(name)
-			successes += 1
-			fail_list.pop(fail_list.index(name))
-		except:
-			print('Will retry', name, 'again...')
+    for name in fail_list:
+        print('Retrying:', name)
+        try:
+            Download_File(name)
+            successes += 1
+            fail_list.pop(fail_list.index(name))
+        except:
+            print('Will retry', name, 'again...')
 
 
 if len(fail_list) == 0:
-	print('SUCCESS! All files downloaded successfully!')
+    print('SUCCESS! All files downloaded successfully!')
 elif successes > 0:
-	print('WARNING! PARTIAL SUCCESS:')
-	print(successes, 'files downloaded successfully,', len(fail_list), 'failed!')
-	print('These files were NOT downloaded:', fail_list)
+    print('WARNING! PARTIAL SUCCESS:')
+    print(successes, 'files downloaded successfully,', len(fail_list), 'failed!')
+    print('These files were NOT downloaded:', fail_list)
 else:
-	print('ERROR! ALL FILES FAILED TO DOWNLOAD!')
-	print('Check your internet connection or try downloading later...')
+    print('ERROR! ALL FILES FAILED TO DOWNLOAD!')
+    print('Check your internet connection or try downloading later...')

@@ -30,25 +30,25 @@ pgmext = 'pgm'
 an_fitstopnm_ext_cmd = 'an-fitstopnm -e %i -i %%s > %%s'
 
 imgcmds = {fitstype : (fitsext, 'an-fitstopnm -i %s > %s'),
-	   'JPEG image data'  : ('jpg',  'jpegtopnm %s > %s'),
-	   'PNG image data'       : ('png',      'pngtopnm %s > %s'),
-	   'PNG image'    : ('png',      'pngtopnm %s > %s'),
-	   'GIF image data'       : ('gif',      'giftopnm %s > %s'),
-	   'Netpbm PPM'       : ('ppm',      'ppmtoppm < %s > %s'),
-	   'Netpbm PPM "rawbits" image data' : ('ppm',  'cp %s %s'),
-	   'Netpbm PGM'       : ('pgm',      pgmcmd),
-	   'Netpbm PGM "rawbits" image data' : ('pgm',  pgmcmd),
-	   'TIFF image data'  : ('tiff',  'tifftopnm %s > %s'),
-	   'PC bitmap' : ('bmp', 'bmptopnm %s > %s'),
-	   # RAW is not recognized by 'file'; we have to use 'dcraw',
-	   # but we still store this here for convenience.
-	   'raw'              : ('raw', 'dcraw -4 -c %s > %s'),
-	   }
+       'JPEG image data'  : ('jpg',  'jpegtopnm %s > %s'),
+       'PNG image data'       : ('png',      'pngtopnm %s > %s'),
+       'PNG image'    : ('png',      'pngtopnm %s > %s'),
+       'GIF image data'       : ('gif',      'giftopnm %s > %s'),
+       'Netpbm PPM'       : ('ppm',      'ppmtoppm < %s > %s'),
+       'Netpbm PPM "rawbits" image data' : ('ppm',  'cp %s %s'),
+       'Netpbm PGM'       : ('pgm',      pgmcmd),
+       'Netpbm PGM "rawbits" image data' : ('pgm',  pgmcmd),
+       'TIFF image data'  : ('tiff',  'tifftopnm %s > %s'),
+       'PC bitmap' : ('bmp', 'bmptopnm %s > %s'),
+       # RAW is not recognized by 'file'; we have to use 'dcraw',
+       # but we still store this here for convenience.
+       'raw'              : ('raw', 'dcraw -4 -c %s > %s'),
+       }
 
 compcmds = {'gzip compressed data'    : ('gz',      'gunzip -c %s > %s'),
-	    "compress'd data 16 bits" : ('gz',      'gunzip -c %s > %s'),
-	    'bzip2 compressed data'   : ('bz2', 'bunzip2 -k -c %s > %s')
-	    }
+        "compress'd data 16 bits" : ('gz',      'gunzip -c %s > %s'),
+        'bzip2 compressed data'   : ('bz2', 'bunzip2 -k -c %s > %s')
+        }
 
 # command to identify a RAW image.
 raw_id_cmd = 'dcraw -i %s >/dev/null 2> /dev/null'
@@ -191,13 +191,13 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
         original_outfile = outfile
         outfile_dir = os.path.dirname(outfile)
         (f, outfile) = tempfile.mkstemp(suffix='.pnm',
-					dir=outfile_dir)
+                    dir=outfile_dir)
         # we might rename this file later, so don't add it to the list of
         # tempfiles to delete until later...
         os.close(f)
         logging.debug('temporary output file: %s' % outfile)
-	# print 'force_ppm: original output file', original_outfile
-	# print 'temp:', outfile
+    # print 'force_ppm: original output file', original_outfile
+    # print 'temp:', outfile
 
     if ext == fitsext and extension:
         cmd = an_fitstopnm_ext_cmd % extension
