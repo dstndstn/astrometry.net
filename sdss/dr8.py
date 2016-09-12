@@ -1,6 +1,7 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 from astrometry.util.fits import fits_table
 import numpy as np
@@ -20,9 +21,9 @@ except:
         except ImportError:
             raise ImportError("Cannot import either pyfits or astropy.io.fits")
 
-from common import *
-from dr7 import *
-from yanny import *
+from .common import *
+from .dr7 import *
+from .yanny import *
 from astrometry.util.run_command import run_command
 
 class Frame(SdssFile):

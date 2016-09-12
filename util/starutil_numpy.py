@@ -3,6 +3,7 @@
 from numpy import *
 import datetime
 import numpy as np
+from functools import reduce
 
 arcsecperrad = 3600. * 180. / np.pi
 axistilt = 23.44 # degrees

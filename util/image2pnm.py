@@ -6,13 +6,14 @@
 Convert an image in a variety of formats into a pnm file
 """
 from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import os
 import os.path
 import tempfile
 
 if __name__ == '__main__':
-    import addpath
+    from . import addpath
     addpath.addpath()
 
 from astrometry.util.shell import shell_escape
@@ -30,25 +31,25 @@ pgmext = 'pgm'
 an_fitstopnm_ext_cmd = 'an-fitstopnm -e %i -i %%s > %%s'
 
 imgcmds = {fitstype : (fitsext, 'an-fitstopnm -i %s > %s'),
-	   'JPEG image data'  : ('jpg',  'jpegtopnm %s > %s'),
-	   'PNG image data'       : ('png',      'pngtopnm %s > %s'),
-	   'PNG image'    : ('png',      'pngtopnm %s > %s'),
-	   'GIF image data'       : ('gif',      'giftopnm %s > %s'),
-	   'Netpbm PPM'       : ('ppm',      'ppmtoppm < %s > %s'),
-	   'Netpbm PPM "rawbits" image data' : ('ppm',  'cp %s %s'),
-	   'Netpbm PGM'       : ('pgm',      pgmcmd),
-	   'Netpbm PGM "rawbits" image data' : ('pgm',  pgmcmd),
-	   'TIFF image data'  : ('tiff',  'tifftopnm %s > %s'),
-	   'PC bitmap' : ('bmp', 'bmptopnm %s > %s'),
-	   # RAW is not recognized by 'file'; we have to use 'dcraw',
-	   # but we still store this here for convenience.
-	   'raw'              : ('raw', 'dcraw -4 -c %s > %s'),
-	   }
+       'JPEG image data'  : ('jpg',  'jpegtopnm %s > %s'),
+       'PNG image data'       : ('png',      'pngtopnm %s > %s'),
+       'PNG image'    : ('png',      'pngtopnm %s > %s'),
+       'GIF image data'       : ('gif',      'giftopnm %s > %s'),
+       'Netpbm PPM'       : ('ppm',      'ppmtoppm < %s > %s'),
+       'Netpbm PPM "rawbits" image data' : ('ppm',  'cp %s %s'),
+       'Netpbm PGM'       : ('pgm',      pgmcmd),
+       'Netpbm PGM "rawbits" image data' : ('pgm',  pgmcmd),
+       'TIFF image data'  : ('tiff',  'tifftopnm %s > %s'),
+       'PC bitmap' : ('bmp', 'bmptopnm %s > %s'),
+       # RAW is not recognized by 'file'; we have to use 'dcraw',
+       # but we still store this here for convenience.
+       'raw'              : ('raw', 'dcraw -4 -c %s > %s'),
+       }
 
 compcmds = {'gzip compressed data'    : ('gz',      'gunzip -c %s > %s'),
-	    "compress'd data 16 bits" : ('gz',      'gunzip -c %s > %s'),
-	    'bzip2 compressed data'   : ('bz2', 'bunzip2 -k -c %s > %s')
-	    }
+        "compress'd data 16 bits" : ('gz',      'gunzip -c %s > %s'),
+        'bzip2 compressed data'   : ('bz2', 'bunzip2 -k -c %s > %s')
+        }
 
 # command to identify a RAW image.
 raw_id_cmd = 'dcraw -i %s >/dev/null 2> /dev/null'
@@ -158,7 +159,7 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 
     if (ext == fitsext) and fix_sdss and no_fits2fits:
         # We want to run fix_sdss_idr even if no_fits2fits is set.
-        from fix_sdss_idr import is_sdss_idr_file, fix_sdss_idr_file
+        from .fix_sdss_idr import is_sdss_idr_file, fix_sdss_idr_file
 
         if is_sdss_idr_file(infile):
             (f, fixidr) = tempfile.mkstemp('fix_sdss_idr', outfile_file, outfile_dir)
@@ -172,7 +173,7 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
     # misbehaved FITS files. fits2fits is a sanitizer.
     if (ext == fitsext) and (not no_fits2fits):
 
-        from fits2fits import fits2fits as fits2fits
+        from .fits2fits import fits2fits as fits2fits
 
         if not sanitized:
             (f, sanitized) = tempfile.mkstemp('sanitized', outfile_file, outfile_dir)
@@ -191,13 +192,13 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
         original_outfile = outfile
         outfile_dir = os.path.dirname(outfile)
         (f, outfile) = tempfile.mkstemp(suffix='.pnm',
-					dir=outfile_dir)
+                    dir=outfile_dir)
         # we might rename this file later, so don't add it to the list of
         # tempfiles to delete until later...
         os.close(f)
         logging.debug('temporary output file: %s' % outfile)
-	# print 'force_ppm: original output file', original_outfile
-	# print 'temp:', outfile
+    # print 'force_ppm: original output file', original_outfile
+    # print 'temp:', outfile
 
     if ext == fitsext and extension:
         cmd = an_fitstopnm_ext_cmd % extension

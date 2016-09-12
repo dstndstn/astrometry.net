@@ -37,7 +37,7 @@ def explore(req):
         'recent_images': recent_images,
         'newest_users': newest_users,
         'popular_tags': popular_tags,
-		'recent_comments': recent_comments,
+        'recent_comments': recent_comments,
     }
     return render(req, 'explore.html', context)
     

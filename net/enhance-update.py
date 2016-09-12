@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 import matplotlib
 matplotlib.use('Agg')
 import pylab as plt
@@ -153,7 +154,7 @@ def addcal(cal, version, hpmod, hpnum, ps):
         assert(enhI.shape[2] == 3)
         assert(I.shape[2] == 3)
 
-        from enhance import EnhanceImage
+        from .enhance import EnhanceImage
 
         Eimg = EnhanceImage(0,0)
         # Reshape arrays as required by "EnhanceImage".

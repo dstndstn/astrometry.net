@@ -163,7 +163,7 @@ def user_profile(req, user_id=None):
 
     context = {
         'display_user': user,
-		'recent_images': user.user_images.public_only(req.user),	
+        'recent_images': user.user_images.public_only(req.user),    
         'recent_submissions': user.submissions.all().order_by('-submitted_on')[:10],
         'profile': get_user_profile(req.user),
     }

@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 import sys
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
@@ -6,7 +7,7 @@ p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(p)
 import settings
 from astrometry.net.models import *
-from log import *
+from .log import *
 from django.contrib.auth.models import User
 
 import logging
@@ -52,7 +53,7 @@ if __name__ == '__main__':
                 print('    ', j)
 
         if opt.rerun:
-            from process_submissions import try_dosub
+            from .process_submissions import try_dosub
             print('Re-trying sub', sub.id)
             try_dosub(sub, 1)
 
@@ -70,7 +71,7 @@ if __name__ == '__main__':
         print(sub.disk_file.get_path())
 
         if opt.rerun:
-            from process_submissions import try_dojob
+            from .process_submissions import try_dojob
             print('Re-trying job', job.id)
             try_dojob(job, ui, opt.solve_command, opt.solve_locally)
 

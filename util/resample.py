@@ -1,6 +1,7 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 import numpy as np
 
 class ResampleError(Exception):
@@ -78,9 +79,9 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
     # many out-of-bounds pixels...
     XY = []
     for x,y in [(0,0), (w-1,0), (w-1,h-1), (0, h-1)]:
-		# [-2:]: handle ok,ra,dec or ra,dec
+        # [-2:]: handle ok,ra,dec or ra,dec
         ok,xw,yw = targetwcs.radec2pixelxy(
-			*(wcs.pixelxy2radec(float(x + 1), float(y + 1))[-2:]))
+            *(wcs.pixelxy2radec(float(x + 1), float(y + 1))[-2:]))
         XY.append((xw - 1, yw - 1))
     XY = np.array(XY)
 
@@ -154,7 +155,7 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         # ok,XX,YY = wcs.radec2pixelxy(
         #     *(targetwcs.pixelxy2radec(
         #         xx[np.newaxis,:] + 1,
-		# 		yy[:,np.newaxis] + 1)[-2:]))
+        #         yy[:,np.newaxis] + 1)[-2:]))
         # XX -= 1.
         # YY -= 1.
         # del ok
@@ -328,7 +329,7 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
     laccs: list of [float, 1-d numpy array, len n]: outputs
     limages list of [float, 2-d numpy array, shape h,w]: inputs
     '''
-    from miscutils import lanczos_filter
+    from .miscutils import lanczos_filter
     lfunc = lanczos_filter
     if L == 3:
         try:

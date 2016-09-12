@@ -278,8 +278,8 @@ def annotated_image(req, jobid=None, size='full'):
     if rad > 10:
         args.append('--no-ngc')
 
-	if rad > 30:
-		args.append('--no-bright')
+    if rad > 30:
+        args.append('--no-bright')
             
     cmd = ' '.join(args + ['%s %s %s' % (wcsfn, pnmfn, annfn)])
 

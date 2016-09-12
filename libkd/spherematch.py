@@ -90,66 +90,66 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
 
 
 def cluster_radec(ra, dec, R, singles=False):
-	'''
-	Finds connected groups of objects in RA,Dec space.
+    '''
+    Finds connected groups of objects in RA,Dec space.
 
-	Returns a list of lists of indices that are connected,
-	EXCLUDING singletons.
+    Returns a list of lists of indices that are connected,
+    EXCLUDING singletons.
 
     If *singles* is *True*, also returns the indices of singletons.
-	'''
-	I,J,d = match_radec(ra, dec, ra, dec, R, notself=True)
+    '''
+    I,J,d = match_radec(ra, dec, ra, dec, R, notself=True)
 
-	# 'mgroups' maps each index in a group to a list of the group members
-	mgroups = {}
-	# 'ugroups' is a list of the unique groups
-	ugroups = []
-	
-	for i,j in zip(I,J):
-		# Are both sources already in groups?
-		if i in mgroups and j in mgroups:
-			# Are they already in the same group?
-			if mgroups[i] == mgroups[j]:
-				continue
-			# merge if they are different;
-			# assert(they are disjoint)
-			lsti = mgroups[i]
-			lstj = mgroups[j]
-			merge = lsti + lstj
-			for k in merge:
-				mgroups[k] = merge
+    # 'mgroups' maps each index in a group to a list of the group members
+    mgroups = {}
+    # 'ugroups' is a list of the unique groups
+    ugroups = []
+    
+    for i,j in zip(I,J):
+        # Are both sources already in groups?
+        if i in mgroups and j in mgroups:
+            # Are they already in the same group?
+            if mgroups[i] == mgroups[j]:
+                continue
+            # merge if they are different;
+            # assert(they are disjoint)
+            lsti = mgroups[i]
+            lstj = mgroups[j]
+            merge = lsti + lstj
+            for k in merge:
+                mgroups[k] = merge
 
-			ugroups.remove(lsti)
-			ugroups.remove(lstj)
-			ugroups.append(merge)
+            ugroups.remove(lsti)
+            ugroups.remove(lstj)
+            ugroups.append(merge)
 
-		elif i in mgroups:
-			# Add j to i's group
-			lst = mgroups[i]
-			lst.append(j)
-			mgroups[j] = lst
-		elif j in mgroups:
-			# Add i to j's group
-			lst = mgroups[j]
-			lst.append(i)
-			mgroups[i] = lst
-		else:
-			# Create a new group
-			lst = [i,j]
-			mgroups[i] = lst
-			mgroups[j] = lst
+        elif i in mgroups:
+            # Add j to i's group
+            lst = mgroups[i]
+            lst.append(j)
+            mgroups[j] = lst
+        elif j in mgroups:
+            # Add i to j's group
+            lst = mgroups[j]
+            lst.append(i)
+            mgroups[i] = lst
+        else:
+            # Create a new group
+            lst = [i,j]
+            mgroups[i] = lst
+            mgroups[j] = lst
 
-			ugroups.append(lst)
+            ugroups.append(lst)
 
 
-	if singles:
-		S = np.ones(len(ra), bool)
-		for g in ugroups:
-			S[np.array(g)] = False
-		S = np.flatnonzero(S)
-		return ugroups,S
+    if singles:
+        S = np.ones(len(ra), bool)
+        for g in ugroups:
+            S[np.array(g)] = False
+        S = np.flatnonzero(S)
+        return ugroups,S
 
-	return ugroups
+    return ugroups
 
 
 
@@ -164,7 +164,7 @@ def _cleaninputs(x1, x2):
     (N1,D1) = fx1.shape
     (N2,D2) = fx2.shape
     if D1 != D2:
-        raise ValueError, 'Arrays must have the same dimensionality'
+        raise ValueError('Arrays must have the same dimensionality')
     return (fx1,fx2)
 
 def _buildtrees(x1, x2):

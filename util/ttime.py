@@ -1,6 +1,7 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import re
@@ -112,7 +113,7 @@ def count_file_descriptors():
 
     try:
         # OSX: "lsof"
-        from run_command import run_command as rc
+        from .run_command import run_command as rc
         cmd = 'lsof -p %i' % os.getpid()
         rtn,out,err = rc(cmd)
         if rtn == 0:

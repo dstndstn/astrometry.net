@@ -1,3 +1,4 @@
+from __future__ import print_function
 # This file is part of libkd.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from distutils.core import setup, Extension
@@ -20,10 +21,10 @@ objs = strlist(os.environ.get('SLIB', ''))
 inc = strlist(os.environ.get('INC', ''), split='-I')
 cflags = strlist(os.environ.get('CFLAGS', ''))
 
-print('link:', link)
-print('objs:', objs)
-print('inc:', inc)
-print('cflags:', cflags)
+print(('link:', link))
+print(('objs:', objs))
+print(('inc:', inc))
+print(('cflags:', cflags))
 
 c_module = Extension('spherematch_c',
                      sources = ['pyspherematch.c'],

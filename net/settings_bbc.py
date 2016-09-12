@@ -1,4 +1,5 @@
-from settings_common import *
+from __future__ import absolute_import
+from .settings_common import *
 
 TEMPDIR = '/data2/tmp'
 DATABASES['default']['NAME'] = 'an-bbc'
