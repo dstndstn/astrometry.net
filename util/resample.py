@@ -299,7 +299,7 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         laccs = [np.zeros(nn, np.float32) for im in Limages]
 
         if cinterp:
-            from util import lanczos3_interpolate
+            from .util import lanczos3_interpolate
             # ixi = ixi.astype(np.int)
             # iyi = iyi.astype(np.int)
             # print 'ixi/iyi', ixi.shape, ixi.dtype, iyi.shape, iyi.dtype
@@ -333,7 +333,7 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
     lfunc = lanczos_filter
     if L == 3:
         try:
-            from util import lanczos3_filter, lanczos3_filter_table
+            from .util import lanczos3_filter, lanczos3_filter_table
             # 0: no rangecheck
             if table:
                 #lfunc = lambda nil,x,y: lanczos3_filter_table(x,y, 0)

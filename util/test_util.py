@@ -2,9 +2,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
 from __future__ import absolute_import
-from util import *
 import numpy as np
 import time
+from .util import *
 from .starutil_numpy import *
 
 
