@@ -454,7 +454,8 @@ class tabledata(object):
                 raise
                 
     def write_to(self, fn, columns=None, header='default', primheader=None,
-                 use_fitsio=True, append=False, append_to_hdu=None):
+                 use_fitsio=True, append=False, append_to_hdu=None,
+                 **kwargs):
 
         fitsio = None
         if use_fitsio:
@@ -477,11 +478,11 @@ class tabledata(object):
                 header = None
             try:
                 if append and append_to_hdu is not None:
-                    fits[append_to_hdu].append(arrays, names=columns, header=header)
+                    fits[append_to_hdu].append(arrays, names=columns, header=header, **kwargs)
                 else:
                     if primheader is not None:
                         fits.write(None, header=primheader)
-                    fits.write(arrays, names=columns, header=header)
+                    fits.write(arrays, names=columns, header=header, **kwargs)
                 fits.close()
             except:
                 print('Failed to write FITS table')
