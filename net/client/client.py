@@ -85,9 +85,9 @@ class Client(object):
                     # doesn't provide the flexibility to override, so we
                     # have to copy-n-paste-n-modify.
                     for h, v in msg.items():
-                        print(('%s: %s\r\n' % (h,v)), end=' ', file=self._fp)
+                        print(('%s: %s\r\n' % (h,v)), end='', file=self._fp)
                     # A blank line always separates headers from body
-                    print('\r\n', end=' ', file=self._fp)
+                    print('\r\n', end='', file=self._fp)
 
                 # The _write_multipart method calls "clone" for the
                 # subparts.  We hijack that, setting root=False
