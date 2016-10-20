@@ -6,13 +6,6 @@ from astrometry.util.fits import fits_table
 from astrometry.util.miscutils import get_overlapping_region
 import numpy as np
 from functools import reduce
-try:
-    import pyfits
-except ImportError:
-    try:
-        from astropy.io import fits as pyfits
-    except ImportError:
-        raise ImportError("Cannot import either pyfits or astropy.io.fits")
 
 try:
     import cutils
@@ -278,12 +271,18 @@ class SdssDR(object):
         self.basedir = dirnm
 
     def _open(self, fn):
+        try:
+            import pyfits
+        except ImportError:
+            try:
+                from astropy.io import fits as pyfits
+            except ImportError:
+                raise ImportError("Cannot import either pyfits or astropy.io.fits")
         if self.basedir is not None:
             path = os.path.join(self.basedir, fn)
         else:
             path = fn
         return pyfits.open(path)
-
 
 class SdssFile(object):
     def __init__(self, run=None, camcol=None, field=None, band=None, rerun=None,

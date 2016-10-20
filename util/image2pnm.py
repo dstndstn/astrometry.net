@@ -13,9 +13,10 @@ import os.path
 import tempfile
 
 if __name__ == '__main__':
-    from . import addpath
-    addpath.addpath()
-
+    #from . import addpath
+    #addpath.addpath()
+    #sys.path.append(os.path.join(__file__), os.path.pardir, 'lib', 'python')
+    pass
 from astrometry.util.shell import shell_escape
 from astrometry.util.filetype import filetype_short
 import logging

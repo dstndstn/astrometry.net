@@ -9,9 +9,10 @@ import logging
 from optparse import OptionParser
 
 if __name__ == '__main__':
-    from . import addpath
-    addpath.addpath()
-
+    #from . import addpath
+    #addpath.addpath()
+    pass
+    
 import numpy
 try:
     import pyfits
