@@ -381,6 +381,7 @@ class DR8(DR7):
         if outfn is None:
             return None
         if skipExisting and os.path.exists(outfn):
+            #print('Exists')
             return outfn
         outdir = os.path.dirname(outfn)
         if not os.path.exists(outdir):
