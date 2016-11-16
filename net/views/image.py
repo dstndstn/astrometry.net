@@ -437,6 +437,7 @@ def red_green_image(req, job_id=None, size='full'):
         plot.color = 'white'
         plot.alpha = 1.
         if sub.use_sextractor:
+            xy = plot.xy
             xy.xcol = 'X_IMAGE'
             xy.ycol = 'Y_IMAGE'
         plot.plot('image')
