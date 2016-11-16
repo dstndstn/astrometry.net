@@ -327,6 +327,11 @@ demo_dsmooth: demo_dsmooth.o $(CAIRO_SLIB)
 control-program: control-program.o $(SLIB)
 ALL_OBJ += control-program.o
 
+whynot: whynot.o $(PLOTSTUFF) $(CAIRO_SLIB) $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(CAIRO_LIBS) $(LDLIBS)
+
+quadidx: quadidx.o $(SLIB)
+
 image2xy: image2xy-main.o image2xy-files.o $(CFITS_SLIB) $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 

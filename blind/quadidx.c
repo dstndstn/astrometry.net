@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	char *idxfname = NULL;
 	char *quadfname = NULL;
 	il** quadlist;
-	quadfile* quads;
+	quadfile_t* quads;
 	qidxfile* qidx;
 	int q;
 	int i;

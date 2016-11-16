@@ -3,9 +3,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
 import os
+import sys
 import fnmatch
 from astrometry.blind.plotstuff_c import *
-from astrometry.util.sip import *
+#from astrometry.util.sip import *
 from numpy import *
 from optparse import OptionParser
 
@@ -23,8 +24,6 @@ if __name__ == '__main__':
     width = float(args[2])
     indexfn = args[3]
     outfn = args[4]
-
-    log_init(3);
 
     pargs = plotstuff_new()
     pargs.outformat = PLOTSTUFF_FORMAT_PNG
@@ -53,7 +52,7 @@ if __name__ == '__main__':
     index = plot_index_get(pargs)
     plot_index_add_file(index, indexfn)
     index.stars = 1
-    index.quads = 0
+    index.quads = 1
     plotstuff_run_command(pargs, 'index')
 
     plotstuff_output(pargs)

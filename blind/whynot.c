@@ -14,6 +14,7 @@
 #include "starutil.h"
 #include "mathutil.h"
 #include "bl.h"
+#include "bl-sort.h"
 #include "matchobj.h"
 #include "catalog.h"
 #include "tic.h"
@@ -368,7 +369,7 @@ int main(int argc, char** args) {
 			starinds[Ngood] = starnum;
 			Ngood++;
 		}
-		logmsg("Found %i index stars inside the field.\n", il_size(starlist));
+		logmsg("Found %i index stars inside the field.\n", (int)il_size(starlist));
 
 		assert(Ngood == il_size(starlist));
 		assert(Ngood * 2 == dl_size(starxylist));
@@ -554,7 +555,7 @@ int main(int argc, char** args) {
 				il_append(istars[j].allquads, quads[k]);
 			}
 		}
-		logmsg("Found %i quads partially contained in the field.\n", il_size(uniqquadlist));
+		logmsg("Found %i quads partially contained in the field.\n", (int)il_size(uniqquadlist));
 
         dimquads = quadfile_dimquads(indx->quads);
         dimcodes = dimquad2dimcode(dimquads);
@@ -586,7 +587,7 @@ int main(int argc, char** args) {
 				continue;
 			il_append(fullquadlist, quad);
 		}
-		logmsg("Found %i quads fully contained in the field.\n", il_size(fullquadlist));
+		logmsg("Found %i quads fully contained in the field.\n", (int)il_size(fullquadlist));
 
 
 		{
@@ -750,7 +751,7 @@ int main(int argc, char** args) {
             for (k=0; k<dimquads; k++)
                 il_insert_unique_ascending(starsinquadslist, stars[k]);
 		}
-		logmsg("Found %i index stars involved in quads (with at least one star contained in the image).\n", il_size(starsinquadslist));
+		logmsg("Found %i index stars involved in quads (with at least one star contained in the image).\n", (int)il_size(starsinquadslist));
 
 		// Find the stars that are in quads that are completely contained.
 		starsinquadsfull = il_new(16);
@@ -762,7 +763,7 @@ int main(int argc, char** args) {
             for (k=0; k<dimquads; k++)
                 il_insert_unique_ascending(starsinquadsfull, stars[k]);
 		}
-		logmsg("Found %i index stars involved in quads (with all stars contained in the image).\n", il_size(starsinquadsfull));
+		logmsg("Found %i index stars involved in quads (with all stars contained in the image).\n", (int)il_size(starsinquadsfull));
 
 		// For each index object involved in quads, search for a correspondence.
 		corrstars = il_new(16);
@@ -805,7 +806,7 @@ int main(int argc, char** args) {
               }*/
 		}
 		logmsg("Found %i correspondences for stars involved in quads (with at least one star in the field).\n",
-				il_size(corrstars));
+                       (int)il_size(corrstars));
 
 		// Find quads built only from stars with correspondences.
 		corrquads = il_new(16);
@@ -849,7 +850,7 @@ int main(int argc, char** args) {
 				continue;
 			il_append(corrfullquads, quad);
 		}
-		logmsg("Found %i quads built from stars with correspondencs, fully contained in the field.\n", il_size(corrfullquads));
+		logmsg("Found %i quads built from stars with correspondencs, fully contained in the field.\n", (int)il_size(corrfullquads));
 
 		foundquads = bl_new(16, sizeof(foundquad_t));
 
