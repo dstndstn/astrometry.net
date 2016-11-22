@@ -12,15 +12,9 @@ import os
 import os.path
 import tempfile
 
-if __name__ == '__main__':
-    #from . import addpath
-    #addpath.addpath()
-    #sys.path.append(os.path.join(__file__), os.path.pardir, 'lib', 'python')
-    pass
 from astrometry.util.shell import shell_escape
 from astrometry.util.filetype import filetype_short
 import logging
-
 
 fitstype = 'FITS image data'
 fitsext = 'fits'
@@ -134,13 +128,10 @@ def find_program(mydir, cmd):
     logging.info('path', p, 'does not exist.')
     return None
 
-def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
-              no_fits2fits=False, extension=None, mydir=None,
-              fix_sdss=False):
+def image2pnm(infile, outfile, force_ppm=False, extension=None, mydir=None):
     """
     infile: input filename.
     outfile: output filename.
-    sanitized: for FITS images, output filename of sanitized (fits2fits'd) image.
     force_ppm: boolean, convert PGM to PPM so that the output is always PPM.
 
     Returns: (type, error)
@@ -155,39 +146,7 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
         return (None, 'Image type not recognized: ' + err)
 
     tempfiles = []
-
     (outfile_dir, outfile_file) = os.path.split(outfile)
-
-    if (ext == fitsext) and fix_sdss and no_fits2fits:
-        # We want to run fix_sdss_idr even if no_fits2fits is set.
-        from .fix_sdss_idr import is_sdss_idr_file, fix_sdss_idr_file
-
-        if is_sdss_idr_file(infile):
-            (f, fixidr) = tempfile.mkstemp('fix_sdss_idr', outfile_file, outfile_dir)
-            os.close(f)
-            tempfiles.append(fixidr)
-            logging.debug('fix_sdss_idr(in="%s", out="%s")' % (infile, fixidr))
-            fix_sdss_idr_file(infile, fixidr)
-            infile = fixidr
-
-    # If it's a FITS file we want to filter it first because of the many
-    # misbehaved FITS files. fits2fits is a sanitizer.
-    if (ext == fitsext) and (not no_fits2fits):
-
-        from .fits2fits import fits2fits as fits2fits
-
-        if not sanitized:
-            (f, sanitized) = tempfile.mkstemp('sanitized', outfile_file, outfile_dir)
-            os.close(f)
-            tempfiles.append(sanitized)
-        else:
-            assert sanitized != infile
-        logging.debug('fits2fits(in="%s", out="%s", fix_idr=%s)' %
-                      (infile, sanitized, str(fix_sdss)))
-        errstr = fits2fits(infile, sanitized, fix_idr=fix_sdss)
-        if errstr:
-            return (None, errstr)
-        infile = sanitized
 
     if force_ppm:
         original_outfile = outfile
@@ -198,8 +157,6 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
         # tempfiles to delete until later...
         os.close(f)
         logging.debug('temporary output file: %s' % outfile)
-    # print 'force_ppm: original output file', original_outfile
-    # print 'temp:', outfile
 
     if ext == fitsext and extension:
         cmd = an_fitstopnm_ext_cmd % extension
@@ -224,14 +181,11 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 
     for fn in tempfiles:
         os.unlink(fn)
-
     # Success
     return (ext, None)
-    
 
-def convert_image(infile, outfile, uncompressed=None, sanitized=None,
-                  force_ppm=False, no_fits2fits=False, extension=None,
-                  mydir=None, fix_sdss=False):
+def convert_image(infile, outfile, uncompressed=None, force_ppm=False,
+                  extension=None, mydir=None);
     tempfiles = []
     # if the caller didn't specify where to put the uncompressed file,
     # create a tempfile.
@@ -240,16 +194,14 @@ def convert_image(infile, outfile, uncompressed=None, sanitized=None,
         (f, uncompressed) = tempfile.mkstemp('', 'uncomp', outfile_dir)
         os.close(f)
         tempfiles.append(uncompressed)
-
     comp = uncompress_file(infile, uncompressed)
-                           
     if comp:
         print('compressed')
         print(comp)
         infile = uncompressed
 
-    (imgtype, errstr) = image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits, extension, mydir, fix_sdss)
-
+    (imgtype, errstr) = image2pnm(infile, outfile, force_ppm=force_ppm,
+                                  extension=extension, mydir=mydir)
     for fn in tempfiles:
         os.unlink(fn)
 
@@ -269,10 +221,6 @@ def main():
                       dest='uncompressed_outfile',
                       help='uncompressed temporary FILE', metavar='FILE',
                       default='')
-    parser.add_option('-s', '--sanitized-fits-outfile',
-                      dest='sanitized_outfile',
-                      help='sanitized temporary fits FILE', metavar='FILE',
-                      default='')
     parser.add_option('-o', '--outfile',
                       dest='outfile',
                       help='output pnm image FILE', metavar='FILE')
@@ -282,12 +230,6 @@ def main():
     parser.add_option('-e', '--extension',
                       dest='extension', type='int',
                       help='FITS extension to read')
-    parser.add_option('-2', '--no-fits2fits',
-                      action='store_true', dest='no_fits2fits',
-                      help="don't sanitize FITS files")
-    parser.add_option('-S', '--fix-sdss',
-                      action='store_true', dest='fix_sdss',
-                      help="fix SDSS idR files")
     parser.add_option('-v', '--verbose',
                       action='store_true', dest='verbose',
                       help='be chatty')
@@ -318,9 +260,8 @@ def main():
                          options.uncompressed_outfile,
                          options.sanitized_outfile,
                          options.force_ppm,
-                         options.no_fits2fits,
                          options.extension,
-                         mydir, fix_sdss=options.fix_sdss)
+                         mydir)
 
 if __name__ == '__main__':
     sys.exit(main())

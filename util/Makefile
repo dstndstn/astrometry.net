@@ -178,7 +178,7 @@ pyutil: $(PYUTIL)
 py: $(PYUTIL)
 .PHONY: py
 
-PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py \
+PYTHON_INSTALL := image2pnm.py addpath.py \
 	starutil.py starutil_numpy.py \
 	shell.py __init__.py file.py run_command.py \
 	filetype.py fits.py fix_sdss_idr.py removelines.py \
@@ -191,7 +191,7 @@ PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py \
 
 # celestial_mechanics.py (needs license)
 
-PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py \
+PYTHON_EXECS := image2pnm.py removelines.py uniformize.py \
 	degtohms.py hmstodeg.py text2fits.py votabletofits.py \
 	merge-columns.py
 

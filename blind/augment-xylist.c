@@ -164,8 +164,6 @@ static an_option_t options[] = {
      "compromise between background-subtracted and non-background-subtracted flux"},
     {'6', "extension",      required_argument, "int",
      "FITS extension to read image from."},
-	{'2', "no-fits2fits",   no_argument, NULL,
-     "don't sanitize FITS files; assume they're already valid"},
 	{';', "invert",         no_argument, NULL,
 	 "invert the image (for black-on-white images)"},
     {'z', "downsample",     required_argument, "int",
@@ -184,8 +182,6 @@ static an_option_t options[] = {
 	 "don't uniformize the field stars during verification"},
 	{'\x83', "no-verify-dedup", no_argument, NULL,
 	 "don't deduplicate the field stars during verification"},
-	{'0', "no-fix-sdss",    no_argument, NULL,
-	 "don't try to fix SDSS idR files."},
 	{'C', "cancel",		   required_argument, "filename",
      "filename whose creation signals the process to stop"},
 	{'S', "solved",		   required_argument, "filename",
@@ -344,9 +340,6 @@ int augment_xylist_parse_option(char argchar, char* optarg,
 	case ':':
 		axy->uniformize = atoi(optarg);
 		break;
-	case '0':
-		axy->no_fix_sdss = TRUE;
-		break;
     case '3':
         axy->ra_center = atora(optarg);
         if (axy->ra_center == HUGE_VAL) {
@@ -465,9 +458,6 @@ int augment_xylist_parse_option(char argchar, char* optarg,
     case 'm':
         axy->tempdir = optarg;
         break;
-    case '2':
-        axy->no_fits2fits = TRUE;
-        break;
     case 'F':
         if (parse_fields_string(axy->fields, optarg)) {
             ERROR("Failed to parse fields specification \"%s\"", optarg);
@@ -569,7 +559,7 @@ int parse_scale_units(const char* units) {
 	return -1;
 }
 
-// run(): ppmtopgm, pnmtofits, fits2fits.py, sextractor
+// run(): ppmtopgm, pnmtofits, sextractor
 // backtick(): pnmfile, image2pnm.py
 
 static void append_escape(sl* list, const char* fn) {
@@ -732,16 +722,6 @@ int augment_xylist(augment_xylist_t* axy,
 			}
 
 			append_executable(cmd, "image2pnm.py", me);
-			//if (!verbose)
-			//sl_append(cmd, "--quiet");
-			if (axy->no_fits2fits)
-				sl_append(cmd, "--no-fits2fits");
-			else {
-				sl_append(cmd, "--sanitized-fits-outfile");
-				append_escape(cmd, sanitizedfn);
-			}
-			if (!axy->no_fix_sdss)
-				sl_append(cmd, "--fix-sdss");
 			if (axy->extension) {
 				sl_append(cmd, "--extension");
 				sl_appendf(cmd, "%i", axy->extension);
@@ -794,13 +774,11 @@ int augment_xylist(augment_xylist_t* axy,
 		}
 
 		if (axy->isfits) {
-            if (axy->no_fits2fits) {
+
                 if (iscompressed)
                     fitsimgfn = uncompressedfn;
                 else
                     fitsimgfn = axy->imagefn;
-            } else
-                fitsimgfn = sanitizedfn;
 
             if (axy->try_verify) {
                 char* errstr;
@@ -962,8 +940,6 @@ int augment_xylist(augment_xylist_t* axy,
 
 	} else {
 		// xylist.
-		// if --xylist is given:
-		//	 -fits2fits.py sanitize
         xylsfn = axy->xylsfn;
         if (axy->sortcol)
             dosort = TRUE;
@@ -1040,7 +1016,6 @@ int augment_xylist(augment_xylist_t* axy,
         dl_free(estscales);
     }
 
-	// fits2fits
 	// remove lines
 	// sort
 	// uniformize
@@ -1056,8 +1031,6 @@ int augment_xylist(augment_xylist_t* axy,
 			sortedxylsfn = axy->keepxylsfn;
 		} else if (!axy->no_removelines) {
 			nolinesfn = axy->keepxylsfn;
-		} else if (!axy->imagefn && !axy->no_fits2fits) {
-			sanexylsfn = axy->keepxylsfn;
 		} else {
 			// copy xylsfn to axy->keepxylsfn.
 			if (copy_file(xylsfn, axy->keepxylsfn)) {
@@ -1066,20 +1039,6 @@ int augment_xylist(augment_xylist_t* axy,
 				return -1;
 			}
 		}
-	}
-
-	if (!axy->imagefn && !axy->no_fits2fits) {
-		if (!sanexylsfn) {
-			sanexylsfn = create_temp_file("sanexyls", axy->tempdir);
-			sl_append_nocopy(tempfiles, sanexylsfn);
-		}
-		append_executable(cmd, "fits2fits.py", me);
-		if (verbose)
-			sl_append(cmd, "--verbose");
-		append_escape(cmd, xylsfn);
-		append_escape(cmd, sanexylsfn);
-		run(cmd, verbose);
-		xylsfn = sanexylsfn;
 	}
 
 	if (!axy->no_removelines) {
