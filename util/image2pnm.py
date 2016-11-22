@@ -245,7 +245,7 @@ def main():
     # executables.
     if (len(sys.argv) > 0):
         mydir = os.path.dirname(sys.argv[0])
-
+        
     global verbose
     verbose = options.verbose
 

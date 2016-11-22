@@ -560,7 +560,7 @@ int parse_scale_units(const char* units) {
 }
 
 // run(): ppmtopgm, pnmtofits, sextractor
-// backtick(): pnmfile, image2pnm.py
+// backtick(): pnmfile, image2pnm
 
 static void append_escape(sl* list, const char* fn) {
     sl_append_nocopy(list, shell_escape(fn));
@@ -662,7 +662,6 @@ int augment_xylist(augment_xylist_t* axy,
     FILE* fout = NULL;
     char *fitsimgfn = NULL;
 	dl* scales;
-	char* sanexylsfn = NULL;
 	char* nolinesfn = NULL;
 	char* sortedxylsfn = NULL;
 	char* unixylsfn = NULL;
@@ -721,7 +720,7 @@ int augment_xylist(augment_xylist_t* axy,
 				sl_append_nocopy(tempfiles, pnmfn);
 			}
 
-			append_executable(cmd, "image2pnm.py", me);
+			append_executable(cmd, "image2pnm", me);
 			if (axy->extension) {
 				sl_append(cmd, "--extension");
 				sl_appendf(cmd, "%i", axy->extension);

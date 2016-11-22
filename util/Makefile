@@ -191,9 +191,12 @@ PYTHON_INSTALL := image2pnm.py addpath.py \
 
 # celestial_mechanics.py (needs license)
 
-PYTHON_EXECS := image2pnm.py removelines.py uniformize.py \
-	degtohms.py hmstodeg.py text2fits.py votabletofits.py \
-	merge-columns.py
+PYTHON_DRIVERS := image2pnm 
+#removelines.py uniformize.py \
+#	degtohms.py hmstodeg.py text2fits.py votabletofits.py \
+#	merge-columns.py
+
+PYTHON_EXECS := $(addprefix ../bin/,$(PYTHON_DRIVERS))
 
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/util
 LINK_DIR := $(PY_BASE_LINK_DIR)/util
@@ -219,8 +222,10 @@ install-core: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
 	mkdir -p '$(BIN_INSTALL_DIR)'
 	@for x in $(PYTHON_EXECS); do \
-		echo ln -f -s '$(PY_INSTALL_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
-		ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
+		echo cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
+		cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
+		echo chmod 755 '$(BIN_INSTALL_DIR)/'$$x; \
+		chmod 755 '$(BIN_INSTALL_DIR)/'$$x; \
 	done
 	@echo Installing executables into '$(BIN_INSTALL_DIR)'...
 	@for x in $(PROGS) $(MAIN_PROGS); do \
