@@ -185,7 +185,7 @@ def image2pnm(infile, outfile, force_ppm=False, extension=None, mydir=None):
     return (ext, None)
 
 def convert_image(infile, outfile, uncompressed=None, force_ppm=False,
-                  extension=None, mydir=None);
+                  extension=None, mydir=None):
     tempfiles = []
     # if the caller didn't specify where to put the uncompressed file,
     # create a tempfile.
@@ -257,11 +257,10 @@ def main():
     logging.raiseExceptions = False
         
     return convert_image(options.infile, options.outfile,
-                         options.uncompressed_outfile,
-                         options.sanitized_outfile,
-                         options.force_ppm,
-                         options.extension,
-                         mydir)
+                         uncompressed=options.uncompressed_outfile,
+                         force_ppm=options.force_ppm,
+                         extension=options.extension,
+                         mydir=mydir)
 
 if __name__ == '__main__':
     sys.exit(main())
