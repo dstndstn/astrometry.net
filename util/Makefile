@@ -185,15 +185,13 @@ PYTHON_INSTALL := image2pnm.py addpath.py \
 	uniformize.py casjobs.py \
 	usnob_catalog.py usnob_get_image.py usnob_get_region.py \
 	find_data_file.py plotshift.py plotutils.py miscutils.py multiproc.py \
-	ttime.py resample.py \
-	EXIF.py horizons.py \
-	imageutils.py merge-columns.py siap.py stages.py timingpool.py
+	ttime.py resample.py EXIF.py horizons.py \
+	imageutils.py siap.py stages.py timingpool.py
 
 # celestial_mechanics.py (needs license)
 
 PYTHON_DRIVERS := image2pnm removelines uniformize degtohms hmstodeg \
-	text2fits votabletofits
-#	merge-columns.py
+	text2fits votabletofits merge-columns
 
 PYTHON_EXECS := $(addprefix ../bin/,$(PYTHON_DRIVERS))
 
