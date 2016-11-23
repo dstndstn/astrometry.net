@@ -5,7 +5,17 @@ from __future__ import print_function
 from __future__ import absolute_import
 import sys
 
-from .starutil_numpy import *
+# Assume this script is in $(INSTALL_DIR)/bin/ and the
+# python base directory is in $(INSTALL_DIR)/lib/python/ .
+try:
+    # If the PYTHONPATH is already set up, don't mess with it.
+    import astrometry.util.starutil_numpy
+except:
+    import os
+    sys.path.insert(1, os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                                    'lib', 'python'))
+from astrometry.util.starutil_numpy import (hmsstring2ra, dmsstring2dec,
+                                            ra2hmsstring, dec2dmsstring)
 
 if __name__ == '__main__':
     args = sys.argv[1:]
