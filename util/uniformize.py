@@ -73,7 +73,7 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
             thisrow.append(b[i])
         thisrow.sort()
         J += thisrow
-    J = array(J)
+    J = np.array(J)
     p[ext].header.add_history('This xylist was filtered by the "uniformize.py" program')
     p[ext].data = p[ext].data[J]
     pyfits_writeto(p, outfile)
