@@ -679,7 +679,7 @@ int augment_xylist(augment_xylist_t* axy,
 
 	if (axy->imagefn) {
 		// if --image is given:
-		//	 -run image2pnm.py
+		//	 -run image2pnm
 		//	 -if it's a FITS image, keep the original (well, sanitized version)
 		//	 -otherwise, run ppmtopgm (if necessary) and pnmtofits.
 		//	 -run image2xy to generate xylist
@@ -739,7 +739,8 @@ int augment_xylist(augment_xylist_t* axy,
 			append_escape(cmd, pnmfn);
 			if (axy->force_ppm)
 				sl_append(cmd, "--ppm");
-
+            sl_append(cmd, "--mydir");
+            append_escape(cmd, me);
 			lines = backtick(cmd, verbose);
 
 			axy->isfits = FALSE;

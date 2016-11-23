@@ -46,7 +46,7 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
         print('Area of the rectangle enclosing all image sources: %i x %i' % (W,H))
         pyfits_writeto(p, outfile)
         return
-    NX = int(max(1, np.round(W / sqrt(W*H / float(n)))))
+    NX = int(max(1, np.round(W / np.sqrt(W*H / float(n)))))
     NY = int(max(1, np.round(n / float(NX))))
     print('Uniformizing into %i x %i bins' % (NX, NY))
     print('Image bounds: x [%g,%g], y [%g,%g]' % (min(x),max(x),min(y),max(y)))

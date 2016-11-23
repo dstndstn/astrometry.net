@@ -115,17 +115,24 @@ def get_image_type(infile):
         return (ext, cmd, None)
     return (None, None, 'Unknown image type "%s"' % typeinfo)
 
-def find_program(mydir, cmd):
+def find_program(dirs, cmd):
     # pull off the executable name.
     parts = cmd.split(' ', 1)
     prog = parts[0]
     # try the same directory - this should work for installed
     # versions where image2pnm.py and an-fitstopnm are both in
     # "bin".
-    p = os.path.join(mydir, prog)
-    if os.path.exists(p):
-        return ' '.join([p, parts[1]])
-    logging.info('path', p, 'does not exist.')
+    print('find_program: dirs', dirs, 'cmd', cmd)
+    for mydir in dirs:
+        # If mydir is actually a file, get its dir
+        if os.path.isfile(mydir):
+            mydir = os.path.dirname(mydir)
+            print('mydir ->', mydir)
+        p = os.path.join(mydir, prog)
+        print('path', p)
+        if os.path.exists(p):
+            return ' '.join([p, parts[1]])
+        logging.info('path', p, 'does not exist.')
     return None
 
 def image2pnm(infile, outfile, force_ppm=False, extension=None, mydir=None):
@@ -230,6 +237,7 @@ def main():
     parser.add_option('-e', '--extension',
                       dest='extension', type='int',
                       help='FITS extension to read')
+    parser.add_option('--mydir', help='Set directory to search for an-fitstopnm')
     parser.add_option('-v', '--verbose',
                       action='store_true', dest='verbose',
                       help='be chatty')
@@ -243,8 +251,13 @@ def main():
 
     # Find the path to this executable and use it to find other Astrometry.net
     # executables.
-    if (len(sys.argv) > 0):
-        mydir = os.path.dirname(sys.argv[0])
+    dirs = []
+    if options.mydir:
+        dirs.append(options.mydir)
+    if len(sys.argv):
+        dirs.append(os.path.dirname(sys.argv[0]))
+    # util/ -- useful when running from source directory
+    dirs.append(os.path.dirname(__file__))
         
     global verbose
     verbose = options.verbose
@@ -260,7 +273,7 @@ def main():
                          uncompressed=options.uncompressed_outfile,
                          force_ppm=options.force_ppm,
                          extension=options.extension,
-                         mydir=mydir)
+                         mydir=dirs)
 
 if __name__ == '__main__':
     sys.exit(main())
