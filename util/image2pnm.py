@@ -122,14 +122,11 @@ def find_program(dirs, cmd):
     # try the same directory - this should work for installed
     # versions where image2pnm.py and an-fitstopnm are both in
     # "bin".
-    print('find_program: dirs', dirs, 'cmd', cmd)
     for mydir in dirs:
         # If mydir is actually a file, get its dir
         if os.path.isfile(mydir):
             mydir = os.path.dirname(mydir)
-            print('mydir ->', mydir)
         p = os.path.join(mydir, prog)
-        print('path', p)
         if os.path.exists(p):
             return ' '.join([p, parts[1]])
         logging.info('path', p, 'does not exist.')
