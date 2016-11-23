@@ -1047,7 +1047,7 @@ int augment_xylist(augment_xylist_t* axy,
 		}
 		logverb("Removing lines of (spurious) sources from xylist \"%s\", writing to \"%s\"\n",
 				xylsfn, nolinesfn);
-		append_executable(cmd, "removelines.py", me);
+		append_executable(cmd, "removelines", me);
 		if (axy->xcol)
 			sl_appendf(cmd, "-X %s", axy->xcol);
 		if (axy->ycol)

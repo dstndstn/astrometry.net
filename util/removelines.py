@@ -7,12 +7,6 @@ import os
 import sys
 import logging
 from optparse import OptionParser
-
-if __name__ == '__main__':
-    #from . import addpath
-    #addpath.addpath()
-    pass
-    
 import numpy
 try:
     import pyfits
@@ -82,8 +76,7 @@ def removelines(infile, outfile, xcol='X', ycol='Y', ext=1, cut=None, **kwargs):
 
     return 0
 
-
-if __name__ == '__main__':
+def main():
     parser = OptionParser(usage='%prog [options] <input-xylist> <output-xylist>')
 
     parser.add_option('-X', dest='xcol', help='Name of X column in input table')
@@ -103,7 +96,8 @@ if __name__ == '__main__':
 
     infile = args[0]
     outfile = args[1]
-    rtn = removelines(infile, outfile, xcol=opt.xcol, ycol=opt.ycol,
-                      cut=opt.cut, ext=opt.ext)
-    sys.exit(rtn)
+    return removelines(infile, outfile, xcol=opt.xcol, ycol=opt.ycol,
+                       cut=opt.cut, ext=opt.ext)
 
+if __name__ == '__main__':
+    sys.exit(main())

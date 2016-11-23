@@ -6,10 +6,10 @@ import sys
 # python base directory is in $(INSTALL_DIR)/lib/python/ .
 try:
     # If the PYTHONPATH is already set up, don't mess with it.
-    import astrometry.util.image2pnm
+    import astrometry.util.removelines
 except:
     import os
     sys.path.insert(1, os.path.join(os.path.dirname(os.path.dirname(__file__)),
                                     'lib', 'python'))
-from astrometry.util.image2pnm import main
+from astrometry.util.removelines import main
 sys.exit(main())
