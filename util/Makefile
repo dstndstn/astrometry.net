@@ -191,8 +191,7 @@ PYTHON_INSTALL := image2pnm.py addpath.py \
 
 # celestial_mechanics.py (needs license)
 
-PYTHON_DRIVERS := image2pnm removelines 
-# uniformize.py \
+PYTHON_DRIVERS := image2pnm removelines uniformize
 #	degtohms.py hmstodeg.py text2fits.py votabletofits.py \
 #	merge-columns.py
 

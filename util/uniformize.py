@@ -7,32 +7,8 @@ import sys
 import logging
 from optparse import OptionParser
 
-if __name__ == '__main__':
-    try:
-        try:
-            import pyfits
-        except ImportError:
-            try:
-                from astropy.io import fits as pyfits
-            except ImportError:
-                raise ImportError("Cannot import either pyfits or astropy.io.fits")
-        import astrometry
-        from astrometry.util.shell import shell_escape
-        from astrometry.util.filetype import filetype_short
-    except ImportError:
-        me = sys.argv[0]
-        path = os.path.realpath(me)
-        utildir = os.path.dirname(path)
-        assert(os.path.basename(utildir) == 'util')
-        andir = os.path.dirname(utildir)
-        rootdir = os.path.dirname(andir)
-        sys.path.insert(1, andir)
-        sys.path.insert(2, rootdir)
-
-import numpy
-from numpy import *
-from numpy.random import rand
-from astrometry.util.fits import *
+import numpy as np
+from astrometry.util.fits import pyfits_writeto
 try:
     import pyfits
 except ImportError:
@@ -51,7 +27,6 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
     hdr = p[ext].header
     x = xy.field(xcol)
     y = xy.field(ycol)
-
     if len(x) == 0:
         print('Empty xylist')
         pyfits_writeto(p, outfile)
@@ -59,9 +34,9 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
     
     # use IMAGEW,H, or compute bounds?
     #  #$)(*&%^ NaNs in LSST source positions.  Seriously, WTF!
-    I = logical_and(isfinite(x), isfinite(y))
+    I = np.logical_and(np.isfinite(x), np.isfinite(y))
     if not all(I):
-        print('%i source positions are not finite.' % sum(logical_not(I)))
+        print('%i source positions are not finite.' % np.sum(np.logical_not(I)))
         x = x[I]
         y = y[I]
     
@@ -71,27 +46,23 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
         print('Area of the rectangle enclosing all image sources: %i x %i' % (W,H))
         pyfits_writeto(p, outfile)
         return
-    NX = int(max(1, round(W / sqrt(W*H / float(n)))))
-    NY = int(max(1, round(n / float(NX))))
+    NX = int(max(1, np.round(W / sqrt(W*H / float(n)))))
+    NY = int(max(1, np.round(n / float(NX))))
     print('Uniformizing into %i x %i bins' % (NX, NY))
     print('Image bounds: x [%g,%g], y [%g,%g]' % (min(x),max(x),min(y),max(y)))
 
-    ix = (clip(floor((x - min(x)) / float(W) * NX), 0, NX-1)).astype(int)
-    iy = (clip(floor((y - min(y)) / float(H) * NY), 0, NY-1)).astype(int)
-    #print ix, iy
-    assert(all(ix >= 0))
-    assert(all(ix < NX))
-    assert(all(iy >= 0))
-    assert(all(iy < NY))
+    ix = (np.clip(np.floor((x - min(x)) / float(W) * NX), 0, NX-1)).astype(int)
+    iy = (np.clip(np.floor((y - min(y)) / float(H) * NY), 0, NY-1)).astype(int)
+    assert(np.all(ix >= 0))
+    assert(np.all(ix < NX))
+    assert(np.all(iy >= 0))
+    assert(np.all(iy < NY))
     I = iy * NX + ix
-    assert(all(I >= 0))
-    assert(all(I < NX*NY))
-    #print 'len(I):', len(I)
-    #print I.shape
+    assert(np.all(I >= 0))
+    assert(np.all(I < NX*NY))
     bins = [[] for i in range(NX*NY)]
     for j,i in enumerate(I):
         bins[int(i)].append(j)
-    #print bins
     maxlen = max([len(b) for b in bins])
     J = []
     for i in range(maxlen):
@@ -100,19 +71,15 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
             if i >= len(b):
                 continue
             thisrow.append(b[i])
-            # J.append(b[i])
         thisrow.sort()
         J += thisrow
-
     J = array(J)
-    #print 'len(J):', len(J)
     p[ext].header.add_history('This xylist was filtered by the "uniformize.py" program')
     p[ext].data = p[ext].data[J]
     pyfits_writeto(p, outfile)
     return 0
 
-
-if __name__ == '__main__':
+def main():
     parser = OptionParser(usage='%prog [options] <input-xylist> <output-xylist>')
 
     parser.add_option('-X', dest='xcol', help='Name of X column in input table',
@@ -133,7 +100,9 @@ if __name__ == '__main__':
 
     infile = args[0]
     outfile = args[1]
-    rtn = uniformize(infile, outfile, opt.n, xcol=opt.xcol, ycol=opt.ycol,
-                     ext=opt.ext)
-    sys.exit(rtn)
+    return uniformize(infile, outfile, opt.n, xcol=opt.xcol, ycol=opt.ycol,
+                      ext=opt.ext)
+
+if __name__ == '__main__':
+    sys.exit(main())
 

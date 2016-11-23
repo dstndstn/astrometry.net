@@ -1106,7 +1106,7 @@ int augment_xylist(augment_xylist_t* axy,
             unixylsfn = create_temp_file("uniform", axy->tempdir);
             sl_append_nocopy(tempfiles, unixylsfn);
 		}
-		append_executable(cmd, "uniformize.py", me);
+		append_executable(cmd, "uniformize", me);
 		sl_appendf(cmd, "-n %i", axy->uniformize);
 		if (axy->xcol)
 			sl_appendf(cmd, "-X %s", axy->xcol);
