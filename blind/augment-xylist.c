@@ -568,6 +568,12 @@ static void append_escape(sl* list, const char* fn) {
 static void append_executable(sl* list, const char* fn, const char* me) {
     char* exec = find_executable(fn, me);
     if (!exec) {
+        char* binfn = NULL;
+        asprintf_safe(&binfn, "../bin/%s", fn);
+        exec = find_executable(binfn, me);
+        free(binfn);
+    }
+    if (!exec) {
         ERROR("Couldn't find executable \"%s\"", fn);
         exit(-1);
     }
