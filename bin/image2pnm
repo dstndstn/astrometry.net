@@ -9,7 +9,6 @@ try:
     import astrometry.util.image2pnm
 except:
     import os
-    sys.path.insert(1, os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                                    'lib', 'python'))
+    sys.path.insert(1, os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'lib', 'python')))
 from astrometry.util.image2pnm import main
 sys.exit(main())
