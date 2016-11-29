@@ -572,6 +572,10 @@ static void after_solved(augment_xylist_t* axy,
 		logmsg("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
 		logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
 		logmsg("Field rotation angle: up is %g degrees E of N\n", orient);
+                // Note, negative determinant = positive parity.
+                double det = sip_det_cd(&wcs);
+                logmsg("Field parity: %s\n", (det < 0 ? "pos" : "neg"));
+
 	} else {
 		logmsg("Did not solve (or no WCS file was written).\n");
 	}
