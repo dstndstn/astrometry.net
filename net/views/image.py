@@ -421,7 +421,7 @@ def sdss_image(req, calid=None, size='full'):
         logmsg('Cache hit for key "%s"' % key)
     f = open(df.get_path())
     res = HttpResponse(f)
-    res['Content-Type'] = 'image/png'
+    res['Content-Type'] = 'image/jpeg'
     return res
 
 def red_green_image(req, job_id=None, size='full'):
