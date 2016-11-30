@@ -427,6 +427,7 @@ def sdss_image(req, calid=None, size='full'):
 def red_green_image(req, job_id=None, size='full'):
     job = get_object_or_404(Job, pk=job_id)
     ui = job.user_image
+    sub = ui.submission
     img = ui.image
     if size == 'display':
         scale = float(img.get_display_image().width)/img.width
@@ -454,6 +455,10 @@ def red_green_image(req, job_id=None, size='full'):
         pimg.format = PLOTSTUFF_FORMAT_PPM
         plot.color = 'white'
         plot.alpha = 1.
+        if sub.use_sextractor:
+            xy = plot.xy
+            xy.xcol = 'X_IMAGE'
+            xy.ycol = 'Y_IMAGE'
         plot.plot('image')
 
         # plot red

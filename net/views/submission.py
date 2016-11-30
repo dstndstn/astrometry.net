@@ -174,12 +174,13 @@ class SubmissionForm(forms.ModelForm):
                 raise forms.ValidationError("You must select a file to upload.") 
         elif upload_type == 'url':
             url = self.cleaned_data.get('url','')
-            if not (url.startswith('http://') or url.startswith('ftp://')):
+            if not (url.startswith('http://') or url.startswith('ftp://') or url.startswith('https://')):
                 url = 'http://' + url
-            if url.startswith('http://http://') or url.startswith('http://ftp://'):
+            if url.startswith('http://http://') or url.startswith('http://ftp://') or url.startswith('http://https://'):
                 url = url[7:]
             if len(url) == 0:
                 raise forms.ValidationError("You must enter a url to upload.")
+            print('Cleaned URL:', url)
             urlvalidator = URLValidator()
             try:
                 urlvalidator(url)
