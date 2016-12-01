@@ -455,6 +455,7 @@ class tabledata(object):
                 
     def write_to(self, fn, columns=None, header='default', primheader=None,
                  use_fitsio=True, append=False, append_to_hdu=None,
+                 fits_object=None,
                  **kwargs):
 
         fitsio = None
@@ -469,7 +470,10 @@ class tabledata(object):
 
         if fitsio:
             arrays = [self.get(c) for c in columns]
-            fits = fitsio.FITS(fn, 'rw', clobber=(not append))
+            if fits_object is not None:
+                fits = fits_object
+            else:
+                fits = fitsio.FITS(fn, 'rw', clobber=(not append))
 
             arrays = [np.array(a) if isinstance(a,list) else a
                       for a in arrays]
@@ -496,7 +500,6 @@ class tabledata(object):
                     print()
                 raise
             return
-
 
         fc = self.to_fits_columns(columns)
         T = pyfits.new_table(fc)
