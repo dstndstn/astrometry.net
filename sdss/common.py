@@ -271,6 +271,18 @@ class SdssDR(object):
         self.basedir = dirnm
 
     def _open(self, fn):
+
+        if self.basedir is not None:
+            path = os.path.join(self.basedir, fn)
+        else:
+            path = fn
+
+        try:
+            import fitsio
+            return fitsio_wrapper(fitsio.FITS(fn))
+        except ImportError:
+            pass
+
         try:
             import pyfits
         except ImportError:
@@ -278,12 +290,19 @@ class SdssDR(object):
                 from astropy.io import fits as pyfits
             except ImportError:
                 raise ImportError("Cannot import either pyfits or astropy.io.fits")
-        if self.basedir is not None:
-            path = os.path.join(self.basedir, fn)
-        else:
-            path = fn
         return pyfits.open(path)
 
+class fitsio_hdu_wrapper(object):
+    @property
+    def data(self):
+        return self
+    
+class fitsio_wrapper(object):
+    def __init__(self, F):
+        self.F = F
+    def __getitem__(self, k):
+        return fitsio_hdu_wrapper(self.F[k])
+    
 class SdssFile(object):
     def __init__(self, run=None, camcol=None, field=None, band=None, rerun=None,
                  **kwargs):

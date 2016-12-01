@@ -487,7 +487,10 @@ class tabledata(object):
                     if primheader is not None:
                         fits.write(None, header=primheader)
                     fits.write(arrays, names=columns, header=header, **kwargs)
-                fits.close()
+
+                # If we were passed in a fits object, don't close it.
+                if fits_object is None:
+                    fits.close()
             except:
                 print('Failed to write FITS table')
                 print('Columns:')
