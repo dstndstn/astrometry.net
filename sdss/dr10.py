@@ -1,17 +1,6 @@
 from __future__ import absolute_import
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
-import os
-try:
-    import pyfits
-except ImportError:
-    try:
-        from astropy.io import fits as pyfits
-    except ImportError:
-        raise ImportError("Cannot import either pyfits or astropy.io.fits")
-from astrometry.util.fits import fits_table
-import numpy as np
-
 from .common import *
 from .dr9 import *
 
