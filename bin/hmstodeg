@@ -12,8 +12,8 @@ try:
     import astrometry.util.starutil_numpy
 except:
     import os
-    sys.path.insert(1, os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                                    'lib', 'python'))
+    sys.path.insert(1, os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'lib', 'python')))
+
 from astrometry.util.starutil_numpy import (hmsstring2ra, dmsstring2dec,
                                             ra2hmsstring, dec2dmsstring)
 

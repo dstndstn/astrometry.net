@@ -12,8 +12,8 @@ try:
     import astrometry.util.fits
 except:
     import os
-    sys.path.insert(1, os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                                    'lib', 'python'))
+    sys.path.insert(1, os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'lib', 'python')))
+
 from astrometry.util.fits import streaming_text_table
 
 p = OptionParser(usage='Usage: %prog [options] <input-text-file> <output-fits-table>')
