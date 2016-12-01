@@ -2,17 +2,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
 from __future__ import absolute_import
-import os
-try:
-    import pyfits
-except ImportError:
-    try:
-        from astropy.io import fits as pyfits
-    except ImportError:
-        raise ImportError("Cannot import either pyfits or astropy.io.fits")
-from astrometry.util.fits import fits_table
-import numpy as np
-
 from .common import *
 from .dr8 import *
 
@@ -32,8 +21,6 @@ class DR9(DR8):
         
     def _get_runlist_filename(self):
         return self._get_data_file('runList-dr9.par')
-
-
 
 
 if __name__ == '__main__':
