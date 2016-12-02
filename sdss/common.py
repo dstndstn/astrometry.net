@@ -279,7 +279,7 @@ class SdssDR(object):
 
         try:
             import fitsio
-            return fitsio_wrapper(fitsio.FITS(fn))
+            return fitsio_wrapper(fitsio.FITS(path))
         except ImportError:
             pass
 
@@ -292,16 +292,13 @@ class SdssDR(object):
                 raise ImportError("Cannot import either pyfits or astropy.io.fits")
         return pyfits.open(path)
 
-class fitsio_hdu_wrapper(object):
-    @property
-    def data(self):
-        return self
-    
 class fitsio_wrapper(object):
     def __init__(self, F):
         self.F = F
     def __getitem__(self, k):
-        return fitsio_hdu_wrapper(self.F[k])
+        hdu = self.F[k]
+        hdu.data = hdu
+        return hdu
     
 class SdssFile(object):
     def __init__(self, run=None, camcol=None, field=None, band=None, rerun=None,
