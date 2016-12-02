@@ -1,3 +1,6 @@
+0.69:
+	Tiny bugfixes over 0.68
+
 0.68:
 	Add extra driver programs for python executables (image2pnm, etc), named X rather than X.py.  Some python3 compatibility fixes.
 
