@@ -242,7 +242,18 @@ void fitstable_endian_flip_row_data(fitstable_t* table, void* data) {
 		int j;
 		fitscol_t* col = getcol(table, i);
 		for (j=0; j<col->arraysize; j++) {
-			endian_swap(cursor, col->fitssize);
+                    /*
+                     if (col->fitssize == 8)
+                     printf("col '%s': d=%g, i=%li\n",
+                     col->colname, *((double*)cursor), *((uint64_t*)cursor));
+                     */
+                    endian_swap(cursor, col->fitssize);
+                    /*
+                     if (col->fitssize == 8)
+                     printf(" --> d=%g, i=%li\n",
+                     *((double*)cursor), *((uint64_t*)cursor));
+                     */
+
 			cursor += col->fitssize;
 		}
 	}
@@ -707,6 +718,7 @@ static int write_one(fitstable_t* table, const void* struc, anbool flip,
                 free(buf);
                 buf = malloc(sz);
             }
+
             fits_convert_data(buf, col->fitssize, col->fitstype,
                               columndata, col->csize, col->ctype,
                               col->arraysize, 1);

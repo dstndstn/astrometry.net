@@ -87,6 +87,7 @@ int main(int argc, char *argv[]) {
     char* backref = NULL;
         
     fitstable_t* intable;
+    fitstable_t* intable2;
     fitstable_t** outtables;
 
     anbool anycols = FALSE;
@@ -329,6 +330,15 @@ int main(int argc, char *argv[]) {
         NR = fitstable_nrows(intable);
         logmsg("Got %i rows\n", NR);
 
+        // For '-e', we need to endian-flip the input rows, which requires
+        // knowing the columns... we use 'intable2' just for that.
+        intable2 = fitstable_open(infn);
+        if (!intable2) {
+            ERROR("Couldn't read catalog %s", infn);
+            exit(-1);
+        }
+        fitstable_add_fits_columns_as_struct(intable2);
+
         any = fitscolumn_any_type();
         dubl = fitscolumn_double_type();
 
@@ -352,6 +362,7 @@ int main(int argc, char *argv[]) {
             double* rd;
             void* rowdata;
             void* rdata;
+            anbool flipped;
 
             if (r && ((r % 100000) == 0)) {
                 logmsg("Reading row %i of %i\n", r, NR);
@@ -408,7 +419,7 @@ int main(int argc, char *argv[]) {
             rowdata = buffered_read(rowbuf);
             assert(rowdata);
 
-
+            flipped = FALSE;
             j=0;
             while (1) {
                 if (hps) {
@@ -492,8 +503,14 @@ int main(int argc, char *argv[]) {
                      ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
                      }
                      */
-                    //fitstable_endian_flip_row_data(intable, rdata);
-                    fitstable_endian_flip_row_data(outtables[hp], rdata);
+                    printf("Endian flipping row\n");
+                    if (!flipped) {
+                        // if we're writing to multiple output
+                        // healpixes, only flip once!
+                        flipped = TRUE;
+                        fitstable_endian_flip_row_data(intable2, rdata);
+                    }
+                    //fitstable_endian_flip_row_data(outtables[hp], rdata);
                     if (fitstable_write_struct(outtables[hp], rdata)) {
                          ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
                      }
