@@ -34,7 +34,7 @@
  rows that are within (or within range) of the healpix.
  */
 
-const char* OPTIONS = "hvn:r:d:m:o:gc:t:b:";
+const char* OPTIONS = "hvn:r:d:m:o:gc:e:t:b:";
 
 void printHelp(char* progname) {
     BOILERPLATE_HELP_HEADER(stdout);
@@ -46,6 +46,7 @@ void printHelp(char* progname) {
            "    [-m <margin in deg>]: add a margin of this many degrees around the healpixes; default 0\n"
            "    [-g]: gzip'd inputs\n"
            "    [-c <name>]: copy given column name to the output files\n"
+           "    [-e <name>]: copy given column name to the output files, converting to FITS type E (float)\n"
            "    [-t <temp-dir>]: use the given temp dir; default is /tmp\n"
            "    [-b <backref-file>]: save the filenumber->filename map in this file; enables writing backreferences too\n"
            "    [-v]: +verbose\n"
@@ -77,6 +78,7 @@ int main(int argc, char *argv[]) {
     char* tempdir = "/tmp";
     anbool gzip = FALSE;
     sl* cols = sl_new(16);
+    sl* e_cols = sl_new(16);
     int loglvl = LOG_MSG;
     int nside = 1;
     double margin = 0.0;
@@ -86,6 +88,8 @@ int main(int argc, char *argv[]) {
         
     fitstable_t* intable;
     fitstable_t** outtables;
+
+    anbool anycols = FALSE;
 
     char** myargs;
     int nmyargs;
@@ -101,6 +105,9 @@ int main(int argc, char *argv[]) {
             break;
         case 'c':
             sl_append(cols, optarg);
+            break;
+        case 'e':
+            sl_append(e_cols, optarg);
             break;
         case 'g':
             gzip = TRUE;
@@ -136,6 +143,11 @@ int main(int argc, char *argv[]) {
         sl_free2(cols);
         cols = NULL;
     }
+    if (sl_size(e_cols) == 0) {
+        sl_free2(e_cols);
+        e_cols = NULL;
+    }
+    anycols = (cols || e_cols);
 
     nmyargs = argc - optind;
     myargs = argv + optind;
@@ -421,8 +433,12 @@ int main(int argc, char *argv[]) {
                         exit(-1);
                     }
                     // Set the output table structure.
-                    if (cols) {
-                        fitstable_add_fits_columns_as_struct3(intable, out, cols, 0);
+                    if (anycols) {
+                        if (cols)
+                            fitstable_add_fits_columns_as_struct3(intable, out, cols, 0);
+                        if (e_cols)
+                            fitstable_add_fits_columns_as_struct4(intable, out, e_cols, 0, TFITS_BIN_TYPE_E);
+
                     } else
                         fitstable_add_fits_columns_as_struct2(intable, out);
 
@@ -470,10 +486,18 @@ int main(int argc, char *argv[]) {
                     rdata = rowdata;
                 }
 
-                if (cols) {
-                    if (fitstable_write_struct_noflip(outtables[hp], rdata)) {
-                        ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
-                    }
+                if (anycols) {
+                    /*
+                     if (fitstable_write_struct_noflip(outtables[hp], rdata)) {
+                     ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
+                     }
+                     */
+                    //fitstable_endian_flip_row_data(intable, rdata);
+                    fitstable_endian_flip_row_data(outtables[hp], rdata);
+                    if (fitstable_write_struct(outtables[hp], rdata)) {
+                         ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
+                     }
+                    
                 } else {
                     if (fitstable_write_row_data(outtables[hp], rdata)) {
                         ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
@@ -537,6 +561,7 @@ int main(int argc, char *argv[]) {
     free(outtables);
     sl_free2(infns);
     sl_free2(cols);
+    sl_free2(e_cols);
 
     free(mincaps);
     free(maxcaps);
