@@ -503,7 +503,6 @@ int main(int argc, char *argv[]) {
                      ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
                      }
                      */
-                    printf("Endian flipping row\n");
                     if (!flipped) {
                         // if we're writing to multiple output
                         // healpixes, only flip once!
