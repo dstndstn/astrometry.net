@@ -104,18 +104,18 @@ void augment_xylist_print_special_opts(an_option_t* opt, bl* opts, int index,
 }
 
 static an_option_t options[] = {
-    {'i', "image",		   required_argument, NULL, NULL},
-    {'x', "xylist",		   required_argument, NULL, NULL},
-    {'o', "out",		   required_argument, "filename",
+    {'i', "image",                 required_argument, NULL, NULL},
+    {'x', "xylist",                required_argument, NULL, NULL},
+    {'o', "out",                   required_argument, "filename",
      "output augmented xylist filename"},
     {'\x01', "options",       no_argument, NULL, NULL},
-    {'h', "help",		   no_argument, NULL,
+    {'h', "help",                  no_argument, NULL,
      "print this help message" },
     {'v', "verbose",       no_argument, NULL,
      "be more chatty" },
     {'7', "no-delete-temp", no_argument, NULL,
      "don't delete temp files (for debugging)\n"},
-    {'L', "scale-low",	   required_argument, "scale",
+    {'L', "scale-low",     required_argument, "scale",
      "lower bound of image scale estimate"},
     {'H', "scale-high",   required_argument, "scale",
      "upper bound of image scale estimate"},
@@ -154,7 +154,7 @@ static an_option_t options[] = {
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'5', "radius",         required_argument, "degrees",
      "only search in indexes within 'radius' of the field center given by ('ra', 'dec')"},
-    {'d', "depth",		   required_argument, NULL, NULL},
+    {'d', "depth",                 required_argument, NULL, NULL},
     {'|', "objs",           required_argument, "int",
      "cut the source list to have this many items (after sorting, if applicable)."},
     {'l', "cpulimit",       required_argument, "seconds",
@@ -182,15 +182,15 @@ static an_option_t options[] = {
      "don't uniformize the field stars during verification"},
     {'\x83', "no-verify-dedup", no_argument, NULL,
      "don't deduplicate the field stars during verification"},
-    {'C', "cancel",		   required_argument, "filename",
+    {'C', "cancel",                required_argument, "filename",
      "filename whose creation signals the process to stop"},
-    {'S', "solved",		   required_argument, "filename",
+    {'S', "solved",                required_argument, "filename",
      "output file to mark that the solver succeeded"},
     {'I', "solved-in",     required_argument, "filename",
      "input filename for solved file"},
-    {'M', "match",		   required_argument, "filename",
+    {'M', "match",                 required_argument, "filename",
      "output filename for match file"},
-    {'R', "rdls",		   required_argument, "filename",
+    {'R', "rdls",                  required_argument, "filename",
      "output filename for RDLS file"},
     {'\x80', "sort-rdls",    required_argument, "column",
      "sort the RDLS file by this column; default is ascending; use "
@@ -199,15 +199,15 @@ static an_option_t options[] = {
      "grab tag-along column from index into RDLS file"},
     {'<', "tag-all",       no_argument, NULL,
      "grab all tag-along columns from index into RDLS file"},
-    {'j', "scamp-ref",	   required_argument, "filename",
+    {'j', "scamp-ref",     required_argument, "filename",
      "output filename for SCAMP reference catalog"},
     {'B', "corr",          required_argument, "filename",
      "output filename for correspondences"},
-    {'W', "wcs",		   required_argument, "filename",
+    {'W', "wcs",                   required_argument, "filename",
      "output filename for WCS file"},
-    {'P', "pnm",		   required_argument, "filename",
+    {'P', "pnm",                   required_argument, "filename",
      "save the PNM file as <filename>"},
-    {'f', "force-ppm",	   no_argument, NULL,
+    {'f', "force-ppm",     no_argument, NULL,
      "force the PNM file to be a PPM"},
     {'k', "keep-xylist",   required_argument, "filename",
      "save the (unaugmented) xylist to <filename>"},
@@ -227,7 +227,7 @@ static an_option_t options[] = {
      "set the WCS reference point to the given position"},
     {'\\', "crpix-y",  required_argument, "pix",
      "set the WCS reference point to the given position"},
-    {'T', "no-tweak",	   no_argument,	NULL,
+    {'T', "no-tweak",      no_argument, NULL,
      "don't fine-tune WCS by computing a SIP polynomial"},
     {'t', "tweak-order",    required_argument, "int",
      "polynomial order of SIP WCS corrections"},
@@ -240,9 +240,9 @@ static an_option_t options[] = {
     // placeholder for printing "The following are for xylist inputs only"
     {'\0', "xylist-only", no_argument, NULL, NULL},
     {'F', "fields",         required_argument, NULL, NULL},
-    {'w', "width",		   required_argument, "pixels",
+    {'w', "width",                 required_argument, "pixels",
      "specify the field width"},
-    {'e', "height",		   required_argument, "pixels", 
+    {'e', "height",                required_argument, "pixels", 
      "specify the field height"},
     {'X', "x-column",       required_argument, "column-name",
      "the FITS column containing the X coordinate of the sources"},
@@ -679,10 +679,10 @@ int augment_xylist(augment_xylist_t* axy,
 
     if (axy->imagefn) {
         // if --image is given:
-        //	 -run image2pnm
-        //	 -if it's a FITS image, keep the original (well, sanitized version)
-        //	 -otherwise, run ppmtopgm (if necessary) and pnmtofits.
-        //	 -run image2xy to generate xylist
+        //       -run image2pnm
+        //       -if it's a FITS image, keep the original (well, sanitized version)
+        //       -otherwise, run ppmtopgm (if necessary) and pnmtofits.
+        //       -run image2xy to generate xylist
         char *uncompressedfn;
         char *sanitizedfn;
         char *pnmfn = NULL;
@@ -764,7 +764,7 @@ int augment_xylist(augment_xylist_t* axy,
                 exit(-1);
             }
             line = sl_get(lines, 0);
-            // eg	"/tmp/pnm:	 PPM raw, 800 by 510  maxval 255"
+            // eg       "/tmp/pnm:       PPM raw, 800 by 510  maxval 255"
             if (strlen(pnmfn) + 1 >= strlen(line)) {
                 ERROR("Failed to parse output from pnmfile: \"%s\"", line);
                 exit(-1);
