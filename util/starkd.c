@@ -316,6 +316,7 @@ int startree_close(startree_t* s) {
     if (s->tree) {
         if (s->writing) {
             free(s->tree->data.any);
+            s->tree->data.any = NULL;
             kdtree_free(s->tree);
 			free(s->sweep);
 		}
