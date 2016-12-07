@@ -680,11 +680,10 @@ int augment_xylist(augment_xylist_t* axy,
     if (axy->imagefn) {
         // if --image is given:
         //       -run image2pnm
-        //       -if it's a FITS image, keep the original (well, sanitized version)
+        //       -if it's a FITS image, keep the original
         //       -otherwise, run ppmtopgm (if necessary) and pnmtofits.
         //       -run image2xy to generate xylist
         char *uncompressedfn;
-        char *sanitizedfn;
         char *pnmfn = NULL;
         sl* lines;
         anbool iscompressed = FALSE;
@@ -694,9 +693,7 @@ int augment_xylist(augment_xylist_t* axy,
         anbool want_pnm = TRUE;
 
         uncompressedfn = create_temp_file("uncompressed", axy->tempdir);
-        sanitizedfn = create_temp_file("sanitized", axy->tempdir);
         sl_append_nocopy(tempfiles, uncompressedfn);
-        sl_append_nocopy(tempfiles, sanitizedfn);
 
         if (axy->assume_fits_image) {
             axy->isfits = TRUE;
