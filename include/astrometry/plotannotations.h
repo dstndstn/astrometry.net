@@ -53,6 +53,7 @@ int plot_annotations_add_named_target(plotann_t* ann, const char* target);
 void plot_annotations_add_target(plotann_t* ann, double ra, double dec,
 								 const char* name);
 
+void plot_annotations_clear_targets(plotann_t* ann);
 
 DECLARE_PLOTTER(annotations);
 

@@ -240,6 +240,11 @@ if __name__ == '__main__':
     parser.add_option('--target', '-t', dest='target', action='append',
                       default=[],
                       help='Add named target (eg "M 31", "NGC 1499")')
+
+    parser.add_option('--target-rd', '-T', dest='targetrd', nargs=3, action='append',
+                      default=[],
+                      help='Add a custom target with RA,Dec (eg, "-T \'My Star\' 34.33 0.87"')
+
     parser.add_option('--no-grid', dest='grid', action='store_false',
                       default=True, help='Turn off grid lines')
     parser.add_option('--grid-size', dest='gridsize', type=float,
@@ -262,7 +267,7 @@ if __name__ == '__main__':
                       help='Text vertical alignment')
     parser.add_option('--tox', dest='tox', default=0, type=float,
                       help='Text offset x')
-    parser.add_option('--toy', dest='toy', default=0, type=float,
+    parser.add_option('--toy', dest='toy', default=-10, type=float,
                       help='Text offset y')
     parser.add_option('--lw', dest='lw', default=2, type=float,
                       help='Annotations line width')
@@ -377,7 +382,27 @@ if __name__ == '__main__':
         for t in opt.target:
             if plot_annotations_add_named_target(ann, t):
                 raise RuntimeError('Unknown target', t)
-
+    # if you want to plot normal vs named targets differently:
+    # plot.plot('annotations')
+    # ann.clear_targets()
+    # ann.NGC = False
+    # ann.constellations = False
+    # ann.bright = False
+    # ann.HD = False
+    # plot.color = 'red'
+    if len(opt.targetrd):
+        for name,ra,dec in opt.targetrd:
+            try:
+                ra = float(ra)
+            except:
+                print('Failed to parse RA string as float:', ra)
+                raise
+            try:
+                dec = float(dec)
+            except:
+                print('Failed to parse Dec string:', dec)
+                raise
+            ann.add_target(ra, dec, name)
     plot.plot('annotations')
 
     for rdfn in opt.rd:

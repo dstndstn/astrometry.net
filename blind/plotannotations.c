@@ -572,6 +572,10 @@ void plot_annotations_add_target(plotann_t* ann, double ra, double dec,
 	bl_append(ann->targets, &tar);
 }
 
+void plot_annotations_clear_targets(plotann_t* ann) {
+    bl_remove_all(ann->targets);
+}
+
 void plot_annotations_free(plot_args_t* args, void* baton) {
 	plotann_t* ann = (plotann_t*)baton;
 	free(ann->hd_catalog);
