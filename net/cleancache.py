@@ -10,6 +10,9 @@ import settings
 from astrometry.net.models import *
 from astrometry.util.file import *
 
+import django
+django.setup()
+
 
 def clean_dfs():
     for df in DiskFile.objects.all().order_by('file_hash'):
@@ -72,7 +75,72 @@ def delete_orphaned_diskfiles():
         ndel += 1
     print('Deleted', ndel, 'DiskFiles')
 
+
+
+def clean_cache():
+    cfs = CachedFile.objects.all()
+    print cfs.count(), 'CachedFiles'
+    #cfs = cfs.filter(key__contains='galex')
+    #print cfs.count(), 'GALEX cached files'
+    cfs = cfs.filter(key__contains='sdss_size')
+    print cfs.count(), 'SDSS cached files'
+
+    def do_delete(delcfs, deldfs, delfiles):
+        delcfs = list(delcfs)
+        deldfs = list(deldfs)
+        delfiles = list(delfiles)
+        print 'Total of', len(delcfs), 'CachedFiles to delete'
+        print 'Total of', len(delfiles), 'files to delete'
+        print 'Total of', len(deldfs), 'DiskFiles to delete'
+        print 'Deleting CachedFiles...'
+        for cf in delcfs:
+            cf.delete()
+        print 'Deleting DiskFiles...'
+        for df in deldfs:
+            df.delete()
+        print 'Deleting Files...'
+        for fn in delfiles:
+            os.unlink(fn)
+
+
+    delfiles = set()
+    delcfs = set()
+    deldfs = set()
+
+    for i,cf in enumerate(cfs):
+        if i % 1000 == 0:
+            do_delete(delcfs, deldfs, delfiles)
+
+            delfiles = set()
+            delcfs = set()
+            deldfs = set()
+
+        print
+        print cf.key
+        try:
+            df = cf.disk_file
+        except:
+            print('DiskFile not found -- deleting CachedFile')
+            delcfs.add(cf)
+            continue
+        path = df.get_path()
+        print '->', path
+        print 'Other CachedFiles sharing this DiskFile:'
+        for ocf in df.cachedfile_set.all():
+            print '  ', ocf.key
+            delcfs.add(ocf)
+        delcfs.add(cf)
+        deldfs.add(df)
+        delfiles.add(path)
+
+    do_delete(delcfs, deldfs, delfiles)
+
+
 if __name__ == '__main__':
+
+    clean_cache()
+    sys.exit(0)
+
 
     # Remove resized FITS image to retro-fix bug in an-fitstopnm
     unlink_resized_fits()
@@ -102,8 +170,6 @@ if __name__ == '__main__':
     #     nbytes += sz
     # print 'Total of', nbytes, 'bytes'
         
-
-
 def clean_cache():
     cfs = CachedFile.objects.all()
     print(cfs.count(), 'CachedFiles')

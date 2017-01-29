@@ -388,7 +388,7 @@ def sdss_image(req, calid=None, size='full'):
     df = CachedFile.get(key)
     if df is None:
         wcsfn = cal.get_wcs_file()
-        #plotfn = get_temp_file()
+        plotfn = get_temp_file()
 
         from astrometry.util.util import Tan
         wcs = Tan(wcsfn)
@@ -401,18 +401,23 @@ def sdss_image(req, calid=None, size='full'):
         else:
             scale = 1.0
         
-        url = 'http://legacysurvey.org/viewer-dev/sdss-wcs/?crval1=%.6f&crval2=%.6f&crpix1=%.2f&crpix2=%.2f&cd11=%.6g&cd12=%.6g&cd21=%.6g&cd22=%.6g&imagew=%i&imageh=%i' % (wcs.crval[0], wcs.crval[1], wcs.crpix[0], wcs.crpix[1], wcs.cd[0], wcs.cd[1], wcs.cd[2], wcs.cd[3], int(wcs.imagew), int(wcs.imageh))
-        print('Retrieving:', url)
+        # urlargs = urllib.urlencode(dict(crval1='%.6f' % wcs.crval[0],
+        #                                 crval2='%.6f' % wcs.crval[1],
+        #                                 crpix1='%.2f' % wcs.crpix[0],
+        #                                 crpix2='%.2f' % wcs.crpix[1],
+        #                                 cd11='%.6g' % wcs.cd[0],
+        #                                 cd12='%.6g' % wcs.cd[1],
+        #                                 cd21='%.6g' % wcs.cd[2],
+        #                                 cd22='%.6g' % wcs.cd[3],
+        #                                 imagew='%i' % int(wcs.imagew),
+        #                                 imageh='%i' % int(wcs.imageh)))
+        # url = 'http://legacysurvey.org/viewer-dev/sdss-wcs/?' + urlargs
+        # print('Retrieving:', url)
+        # #f = urllib.urlopen(url)
+        # plotfn,headers = urllib.urlretrieve(url, plotfn)
+        # #print('Headers:', headers)
 
-        import urllib
-        plotfn,headers = urllib2.urlretrieve(url)
-
-        # jwcs = json.dumps(dict(
-        #     crval1=wcs.crval[0], crval2=wcs.crval[1],
-        #     crpix1=wcs.crpix[0], crpix2=wcs.crpix[1],
-        #     cd11=wcs.cd[0], cd12=wcs.cd[1], cd21=wcs.cd[2], cd22=wcs.cd[3],
-        #     imagew=wcs.imagew, imageh=wcs.imageh))
-        # plot_sdss_image(wcsfn, plotfn, scale)
+        plot_sdss_image(wcsfn, plotfn, scale)
 
         # cache
         logmsg('Caching key "%s"' % key)
