@@ -392,6 +392,17 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
     // arcmin
     imsize = imscale * MIN(pargs->W, pargs->H) / 60.0;
 
+    double ra_center, dec_center, radius_deg;
+
+    // image RA,Dec center and radius, for quick filtering
+    if (plotstuff_get_radec_center_and_radius(pargs, &ra_center, &dec_center,
+                                              &radius_deg)) {
+        logmsg("Error getting image RA,Dec center and radius");
+        return;
+    }
+    // bit of margin
+    radius_deg *= 1.1;
+
     N = ngc_num_entries();
     logverb("Checking %i NGC/IC objects.\n", N);
 
@@ -405,6 +416,11 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
         ngc = ngc_get_entry_accurate(i);
         if (!ngc)
             break;
+
+        // Quick filter
+        if (deg_between_radecdeg(ra_center, dec_center, ngc->ra, ngc->dec) > radius_deg)
+            continue;
+
         if (ngc->size < imsize * ann->ngc_fraction) {
             // FIXME -- just plot an X-mark with label.
             debug("%s %i: size %g arcmin < limit of %g\n",
