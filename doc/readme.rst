@@ -397,14 +397,6 @@ Tricks and Tips
     $ solve-field --downsample 4 ...
 
 
-* When solve-field processes FITS files, it runs them through a
-  "sanitizer" which tries to clean up non-standards-compliant images.
-  If your FITS files are compliant, this is a waste of time, and you can
-  avoid doing it::
-
-    $ solve-field --no-fits2fits ...
-
-
 * When solve-field processes FITS images, it looks for an existing
   WCS header.  If one is found, it tries to verify that header before
   trying to solve the image blindly.  You can prevent this with::
@@ -484,7 +476,7 @@ Tricks and Tips
 
   ::
 
-    $ solve-field input.xy --no-fits2fits --continue ...
+    $ solve-field input.xy --continue ...
 
   To skip previously solved inputs (note that this assumes single-HDU
   inputs)::
