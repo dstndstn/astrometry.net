@@ -12,7 +12,7 @@ A: Disable things that require numpy.
 
 Some parts of the code need the "numpy" python package.  To disable things that need numpy::
 
-    solve-field --no-fits2fits --no-remove-lines --uniformize 0  [....usual arguments...]
+    solve-field --no-remove-lines --uniformize 0  [....usual arguments...]
 
 
 Q: Is there a way to plot a grid of RA and Dec on the images?

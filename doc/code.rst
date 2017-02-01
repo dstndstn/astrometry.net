@@ -30,7 +30,6 @@ creates these "axy" files.
 * run *image2pnm.py* to uncompress and convert images to PNM.
 * for non-FITS images, run *ppmtopgm* and *an-pnmtofits* to produce FITS
 * run *image2xy* (or SourceExtractor) to generate list of (x,y) star coordinates (xylist)
-* for FITS files, run *fits2fits.py* to clean file
 * run *removelines.py* to remove lines of sources from the xylist
 * run *resort_xylist()* to sort by a combination of brightness and background
 * run *uniformize.py* to select a spatially uniform subset of stars
