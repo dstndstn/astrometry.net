@@ -74,7 +74,7 @@ settings.LOGGING['loggers'][''] = {
     'propagate': True,
 }
 from astrometry.net.models import *
-from .log import *
+from log import *
 
 from django.utils.log import dictConfig
 from django.db.models import Count

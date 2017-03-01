@@ -21,9 +21,9 @@ logging.basicConfig(format='%(message)s',
                     level=logging.DEBUG)
 
 def bounce_try_dojob(jobid):
-    print 'Trying Job ID', jobid
+    print('Trying Job ID', jobid)
     job = Job.objects.filter(id=jobid)[0]
-    print 'Found Job', job
+    print('Found Job', job)
     return try_dojob(job, job.user_image)
 
 if __name__ == '__main__':
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     opt,args = parser.parse_args()
     if not (opt.sub or opt.job or opt.uimage or opt.ssh or opt.empty):
-        print 'Must specify one of --sub, --job, or --userimage (or --ssh or --empty)'
+        print('Must specify one of --sub, --job, or --userimage (or --ssh or --empty)')
 
         parser.print_help()
         sys.exit(-1)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         failedsubs = []
         failedjobs = []
         for sub in subs:
-            print 'Checking submission', sub.id
+            print('Checking submission', sub.id)
             allfailed = True
             # last failed Job
             failedjob = None
@@ -78,12 +78,12 @@ if __name__ == '__main__':
             for ui in uis:
                 jobs = ui.jobs.all()
                 for job in jobs:
-                    print '  job', job.id
+                    print('  job', job.id)
                     if job.status == 'S':
-                        print '    -> succeeded'
+                        print('    -> succeeded')
                         allfailed = False
                         break
-                    print '    error msg', job.error_message
+                    print('    error msg', job.error_message)
                     logfn = job.get_log_file()
                     if not os.path.exists(logfn):
                         failedjob = job
@@ -96,7 +96,7 @@ if __name__ == '__main__':
                         if not 'ssh: connect to host astro.cs.toronto.edu port 22:' in log:
                             allfailed = False
                             break
-                        print 'SSH failed'
+                        print('SSH failed')
                         failedjob = job
 
                     if opt.empty:
@@ -106,11 +106,11 @@ if __name__ == '__main__':
 
             if not allfailed:
                 continue
-            print 'All jobs failed for sub', sub.id #, 'via ssh failure'
+            print('All jobs failed for sub', sub.id) #, 'via ssh failure')
             failedsubs.append(sub)
             failedjobs.append(failedjob)
 
-        print 'Found total of', len(failedsubs), 'failed Submissions'
+        print('Found total of', len(failedsubs), 'failed Submissions')
         if opt.rerun:
             from process_submissions import try_dosub, try_dojob
             if opt.threads is not None:
@@ -124,7 +124,7 @@ if __name__ == '__main__':
 
             else:
                 for sub in failedsubs:
-                    print 'Re-trying sub', sub.id
+                    print('Re-trying sub', sub.id)
                     try_dosub(sub, 1)
             
 
@@ -135,6 +135,8 @@ if __name__ == '__main__':
             print('  no disk file')
         else:
             print('Path', sub.disk_file.get_path())
+            print('Is fits image:', sub.disk_file.is_fits_image())
+            print('Is fits image:', sub.disk_file.file_type)
         uis = sub.user_images.all()
         print('UserImages:', len(uis))
         for ui in uis:
@@ -149,7 +151,7 @@ if __name__ == '__main__':
             try_dosub(sub, 1)
 
         if opt.delete:
-            print 'Deleting submission', sub
+            print('Deleting submission', sub)
             sub.delete()
 
     if opt.job:

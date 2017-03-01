@@ -1,3 +1,5 @@
+import astrometry.net.secrets.auth as authsecrets
+
 SOCIAL_TEMPLATE_CONTEXT_PROCESSORS = (
     'social.apps.django_app.context_processors.backends',
     'social.apps.django_app.context_processors.login_redirect',
