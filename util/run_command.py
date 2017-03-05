@@ -3,6 +3,7 @@
 import subprocess
 import os
 import select
+import sys
 from subprocess import PIPE
 
 # Returns (rtn, out, err)
@@ -53,8 +54,12 @@ def run_command(cmd, timeout=None, callback=None, stdindata=None):
     fout.close()
     ferr.close()
     w = child.wait()
-    out = ''.join(outbl)
-    err = ''.join(errbl)
+    if (sys.version_info > (3,0)):
+        out = ''.join(map(lambda x: x.decode(), outbl))
+        err = ''.join(map(lambda x: x.decode(), errbl))
+    else:
+        out = ''.join(outbl)
+        err = ''.join(errbl)
     if not os.WIFEXITED(w):
         return (-100, out, err)
     rtn = os.WEXITSTATUS(w)

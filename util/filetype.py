@@ -2,6 +2,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE
 
 import os
+import sys
 
 from astrometry.util.shell import shell_escape
 from astrometry.util.run_command import run_command
@@ -9,7 +10,10 @@ from astrometry.util.run_command import run_command
 # DEBUG
 import logging
 def logverb(*msg):
-    logging.debug(' '.join([str(m).decode('latin_1', 'backslashreplace') for m in msg]))
+    if (sys.version_info > (3,0)):
+        logging.debug(' '.join(msg))
+    else:
+        logging.debug(' '.join([str(m).decode('latin_1', 'backslashreplace') for m in msg]))
 
 # Returns a list (usually with just one element) of 2-tuples:
 #  [ (filetype, detail), (filetype, detail) ]
