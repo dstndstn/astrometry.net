@@ -55,6 +55,13 @@ CentOS 6.5 / Fedora / RedHat / RHEL -- Detailed Instructions:
 See these `instructions from James Chamberlain <http://plaidhat.com/code/astrometry.php>`_.
 
 
+Arch Linux
+^^^^^^^^^^
+
+A package can be installed from the `Arch Linux (AUR)
+<https://aur.archlinux.org/packages/astrometry.net/>`_.
+
+
 Mac OS X using homebrew:
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
