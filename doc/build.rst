@@ -34,6 +34,7 @@ For full functionality, you will need:
   * bzip2
   * python (probably >= 2.4)
   * numpy
+  * swig
   * pyfits: http://www.stsci.edu/resources/software_hardware/pyfits (version >= 3.1)
   * cfitsio: http://heasarc.gsfc.nasa.gov/fitsio/
  
