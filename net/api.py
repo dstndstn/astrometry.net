@@ -10,6 +10,8 @@ if __name__ == '__main__':
     import sys
     fn = os.path.dirname(os.path.dirname(__file__))
     sys.path.append(fn)
+    import django
+    django.setup()
 
 from django.contrib import auth
 from django.shortcuts import get_object_or_404
@@ -521,6 +523,7 @@ def jobs_by_tag(req):
 
 
 if __name__ == '__main__':
-    job = Job.objects.get(id=12)
+    #job = Job.objects.get(id=12)
+    job = Job.objects.get(id=1649169)
     cal = job.calibration
     print(get_anns(cal))

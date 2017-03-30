@@ -34,6 +34,7 @@ For full functionality, you will need:
   * bzip2
   * python (probably >= 2.4)
   * numpy
+  * swig
   * pyfits: http://www.stsci.edu/resources/software_hardware/pyfits (version >= 3.1)
   * cfitsio: http://heasarc.gsfc.nasa.gov/fitsio/
  
@@ -52,6 +53,13 @@ CentOS 6.5 / Fedora / RedHat / RHEL -- Detailed Instructions:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 See these `instructions from James Chamberlain <http://plaidhat.com/code/astrometry.php>`_.
+
+
+Arch Linux
+^^^^^^^^^^
+
+A package can be installed from the `Arch Linux (AUR)
+<https://aur.archlinux.org/packages/astrometry.net/>`_.
 
 
 Mac OS X using homebrew:

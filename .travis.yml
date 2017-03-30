@@ -37,6 +37,8 @@ addons:
     - python-numpy
     - swig
     - gsl-bin
-    - libgsl10-dev
+    - libgsl0-dev
+
+#    - libgsl10-dev
 
 

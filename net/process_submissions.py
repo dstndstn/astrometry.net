@@ -181,6 +181,19 @@ def try_dojob(job, userimage, solve_command, solve_locally):
     try:
         return dojob(job, userimage, solve_command=solve_command,
                      solve_locally=solve_locally)
+    except OSError as e:
+        import os.errno
+        # Too many open files
+        if e.errno == os.errno.EMFILE:
+            sys.exit(-1)
+    except IOError as e:
+        import errno
+        # Too many open files
+        print('Caught IOError')
+        print('Errno:', e.errno)
+        if e.errno == errno.EMFILE:
+            print('Too many open files!')
+            sys.exit(-1)
     except:
         print('Caught exception while processing Job', job)
         traceback.print_exc(None, sys.stdout)
@@ -770,8 +783,13 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
 
         # FIXME -- order by user, etc
 
+
+        ## HACK -- order 'newuis' to do the newest ones first... helpful when there
+        # is a big backlog.
+        newuis = newuis.order_by('-submission__submitted_on')
+
         for sub in newsubs:
-            print('Enqueuing submission:', sub)
+            print('Enqueuing submission:', str(sub))
             sub.set_processing_started()
             sub.save()
 
