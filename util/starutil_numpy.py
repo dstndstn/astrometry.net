@@ -11,6 +11,31 @@ axistilt = 23.44 # degrees
 def ra_normalize(ra):
     return np.mod(ra, 360.)
 
+def ra_ranges_overlap(ralo, rahi, ra1, ra2):
+    ''' Given two ranges, [ralo,rahi], [ra1,ra2], returns True if they overlap.'''
+    import numpy as np
+    x1 = np.cos(np.deg2rad(ralo))
+    y1 = np.sin(np.deg2rad(ralo))
+
+    x2 = np.cos(np.deg2rad(rahi))
+    y2 = np.sin(np.deg2rad(rahi))
+
+    x3 = np.cos(np.deg2rad(ra1))
+    y3 = np.sin(np.deg2rad(ra1))
+
+    x4 = np.cos(np.deg2rad(ra2))
+    y4 = np.sin(np.deg2rad(ra2))
+
+    #cw31 = x1*y3 - x3*y1
+    cw32 = x2*y3 - x3*y2
+
+    cw41 = x1*y4 - x4*y1
+    #cw42 = x2*y4 - x4*y2
+
+    #print('3:', cw31, cw32)
+    #print('4:', cw41, cw42)
+    return np.logical_and(cw32 <= 0, cw41 >= 0)
+
 #
 def transform(long, lat, poleTo, poleFrom):
     (alphaGP,deltaGP) = deg2rad(poleFrom[0]), deg2rad(poleFrom[1])
@@ -634,3 +659,12 @@ def dist2deg(dist):
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+
+    assert(ra_ranges_overlap(359, 1, 0.5, 1.5) == True)
+    assert(ra_ranges_overlap(359, 1, 358, 0.)  == True)
+    assert(ra_ranges_overlap(359, 1, 358, 2.)  == True)
+    assert(ra_ranges_overlap(359, 1, 359.5, 0.5) == True)
+    assert(ra_ranges_overlap(359, 1, 357, 358) == False)
+    assert(ra_ranges_overlap(359, 1, 2, 3) == False)
+    assert(ra_ranges_overlap(359, 1, 179, 181) == False)
+    assert(ra_ranges_overlap(359, 1, 90, 270) == False)
