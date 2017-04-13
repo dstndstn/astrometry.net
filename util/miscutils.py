@@ -475,6 +475,9 @@ def lanczos_filter(order, x, out=None):
     nz = np.flatnonzero(nz)
     if out is None:
         out = np.zeros(x.shape, dtype=float)
+    else:
+        out[x < -order] = 0.
+        out[x >  order] = 0.
     pinz = pi * x.flat[nz]
     out.flat[nz] = order * np.sin(pinz) * np.sin(pinz / order) / (pinz**2)
     out[x == 0] = 1.
