@@ -409,11 +409,11 @@ void test_healpix_distance_to_radec(CuTest *ct) {
 
   rd[0] = rd[1] = -1.0;
   d = healpix_distance_to_radec(4, 1, 45+1, 0, rd);
-  CuAssertDblEquals(ct, 45, rd[0], 0);
+  CuAssertDblEquals(ct, 45, rd[0], 1e-12);
   CuAssertDblEquals(ct, 0,  rd[1], 1e-8);
 
   d = healpix_distance_to_radec(4, 1, 45+1, 0+1, rd);
-  CuAssertDblEquals(ct, 45, rd[0], 0);
+  CuAssertDblEquals(ct, 45, rd[0], 1e-12);
   CuAssertDblEquals(ct, 0,  rd[1], 0);
   // really??
 

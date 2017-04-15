@@ -37,7 +37,7 @@ void test_big_list(CuTest* tc) {
     big->tail = nodes + (N-1);
     big->N = (size_t)blocksize * (size_t)N;
 
-    bl_print_structure(big);
+    //bl_print_structure(big);
 
     printf("N %zu\n", il_size(big));
     printf("check: %s\n", (bl_check_consistency(big) ? "bad" : "ok"));
