@@ -8,19 +8,26 @@ compiler:
   - gcc
   - clang
 env:
-  - PY=2
-  - PY=3
-#python:
-#  - '2.7'
-#  - '3.4'
+  - PY=python2
+  - PY=python3
 
 # Apparently the wcslib version they have (4.8.3) doesn't use pkg-config
 # And netpbm include files are right in /usr/include, not in /usr/include/netpbm
 
+before_script:
+    - pip install astropy
+
 script:
     - which python
     - python --version
+    - which python2
     - which python3
+    - mkdir -p ~/bin
+    - export PATH=~/bin:${PATH}
+    - ls -l $(which $PY)
+    - ln -s $(which $PY) ~/bin/python
+    - which python
+    - python --version
     - export WCSLIB_INC="-I/usr/include/wcslib-4.8.3"
     - export WCSLIB_LIB="-lwcs"
     - make
@@ -52,6 +59,7 @@ addons:
     - swig
     - gsl-bin
     - libgsl0-dev
+    - python3
 
 #    - libgsl10-dev
 
