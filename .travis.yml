@@ -7,14 +7,20 @@ language: c
 compiler:
   - gcc
   - clang
-python:
-  - '2.7'
-  - '3.4'
+env:
+  - PY=2
+  - PY=3
+#python:
+#  - '2.7'
+#  - '3.4'
 
 # Apparently the wcslib version they have (4.8.3) doesn't use pkg-config
 # And netpbm include files are right in /usr/include, not in /usr/include/netpbm
 
 script:
+    - which python
+    - python --version
+    - which python3
     - export WCSLIB_INC="-I/usr/include/wcslib-4.8.3"
     - export WCSLIB_LIB="-lwcs"
     - make
