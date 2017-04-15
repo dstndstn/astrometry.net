@@ -7,73 +7,49 @@ import os
 import sys
 import logging
 from optparse import OptionParser
-import numpy
-try:
-    import pyfits
-except ImportError:
-    try:
-        from astropy.io import fits as pyfits
-    except ImportError:
-        raise ImportError("Cannot import either pyfits or astropy.io.fits")
-from numpy import *
-from numpy.random import rand
-from astrometry.util.fits import pyfits_writeto
+import numpy as np
+from astrometry.util.fits import fits_table
 
 # Returns a numpy array of booleans
 def hist_remove_lines(x, binwidth, binoffset, logcut):
-    bins = -binoffset + arange(0, max(x)+binwidth, binwidth)
-    (counts, thebins) = histogram(x, bins)
+    bins = -binoffset + np.arange(0, max(x)+binwidth, binwidth)
+    (counts, thebins) = np.histogram(x, bins)
 
     # We're ignoring empty bins.
-    occupied = nonzero(counts > 0)[0]
+    occupied = np.nonzero(counts > 0)[0]
     noccupied = len(occupied)
     k = (counts[occupied] - 1) 
     mean = sum(k) / float(noccupied)
-    logpoisson = k*log(mean) - mean - array([sum(arange(kk)) for kk in k])
+    logpoisson = k*np.log(mean) - mean - np.array([sum(np.arange(kk)) for kk in k])
     badbins = occupied[logpoisson < logcut]
     if len(badbins) == 0:
-        return array([True] * len(x))
+        return np.array([True] * len(x))
 
     badleft = bins[badbins]
     badright = badleft + binwidth
 
-    badpoints = sum(array([(x >= L)*(x < R) for (L,R) in zip(badleft, badright)]), 0)
+    badpoints = sum(np.array([(x >= L)*(x < R) for (L,R) in
+                              zip(badleft, badright)]), 0)
     return (badpoints == 0)
-
 
 def removelines(infile, outfile, xcol='X', ycol='Y', ext=1, cut=None, **kwargs):
     if cut is None:
         cut = 100
-    p = pyfits.open(infile)
-    xy = p[ext].data
-    hdr = p[ext].header
-    if xy is None:
+    T = fits_table(infile, lower=False)
+    if len(T) == 0:
         print('removelines.py: Input file contains no sources.')
-        pyfits_writeto(p, outfile)
+        T.writeto(outfile)
         return 0
     
-    x = xy.field(xcol)
-    y = xy.field(ycol)
-
-    if len(x) == 0:
-        print('removelines.py: Your FITS file contains 0 sources (rows)')
-        pyfits_writeto(p, outfile)
-        return 0
-    
-    ix = hist_remove_lines(x, 1, 0.5, logcut=-cut)
-    iy = hist_remove_lines(y, 1, 0.5, logcut=-cut)
-    I = ix * iy
-    xc = x[I]
-    yc = y[I]
-    print('removelines.py: Removed %i sources' % (len(x) - len(xc)))
-
-    p[ext].header.add_history('This xylist was filtered by the "removelines.py" program')
-    p[ext].header.add_history('to remove horizontal and vertical lines of sources')
-    p[ext].header['REMLINEN'] = (len(x) - len(xc), 'Number of sources removed by "removelines.py"')
-
-    p[ext].data = p[ext].data[I]
-    pyfits_writeto(p, outfile)
-
+    ix = hist_remove_lines(T.get(xcol), 1, 0.5, logcut=-cut)
+    iy = hist_remove_lines(T.get(ycol), 1, 0.5, logcut=-cut)
+    Norig = len(T)
+    T.cut(ix * iy)
+    print('removelines.py: Removed %i sources' % (Norig - len(T)))
+    #header.add_history('This xylist was filtered by the "removelines.py" program')
+    #header.add_history('to remove horizontal and vertical lines of sources')
+    #header['REMLINEN'] = (len(x) - len(xc), 'Number of sources removed by "removelines.py"')
+    T.writeto(outfile)
     return 0
 
 def main():

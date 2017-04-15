@@ -8,30 +8,16 @@ import logging
 from optparse import OptionParser
 
 import numpy as np
-from astrometry.util.fits import pyfits_writeto
-try:
-    import pyfits
-except ImportError:
-    try:
-        from astropy.io import fits as pyfits
-    except ImportError:
-        raise ImportError("Cannot import either pyfits or astropy.io.fits")
+from astrometry.util.fits import fits_table
 
 def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
-    p = pyfits.open(infile)
-    xy = p[ext].data
-    if xy is None:
+    T = fits_table(infile, lower=False)
+    if len(T) == 0:
         print('No sources')
-        pyfits_writeto(p, outfile)
+        T.writeto(outfile)
         return
-    hdr = p[ext].header
-    x = xy.field(xcol)
-    y = xy.field(ycol)
-    if len(x) == 0:
-        print('Empty xylist')
-        pyfits_writeto(p, outfile)
-        return
-    
+    x = T.get(xcol)
+    y = T.get(ycol)
     # use IMAGEW,H, or compute bounds?
     #  #$)(*&%^ NaNs in LSST source positions.  Seriously, WTF!
     I = np.logical_and(np.isfinite(x), np.isfinite(y))
@@ -39,12 +25,13 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
         print('%i source positions are not finite.' % np.sum(np.logical_not(I)))
         x = x[I]
         y = y[I]
+        T.cut(I)
     
     W = max(x) - min(x)
     H = max(y) - min(y)
     if W == 0 or H == 0:
         print('Area of the rectangle enclosing all image sources: %i x %i' % (W,H))
-        pyfits_writeto(p, outfile)
+        T.writeto(outfile)
         return
     NX = int(max(1, np.round(W / np.sqrt(W*H / float(n)))))
     NY = int(max(1, np.round(n / float(NX))))
@@ -74,9 +61,9 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
         thisrow.sort()
         J += thisrow
     J = np.array(J)
-    p[ext].header.add_history('This xylist was filtered by the "uniformize.py" program')
-    p[ext].data = p[ext].data[J]
-    pyfits_writeto(p, outfile)
+    #header.add_history('This xylist was filtered by the "uniformize.py" program')
+    T.cut(J)
+    T.writeto(outfile)
     return 0
 
 def main():
