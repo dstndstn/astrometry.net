@@ -15,7 +15,7 @@ env:
 # And netpbm include files are right in /usr/include, not in /usr/include/netpbm
 
 before_script:
-    - pip install fitsio
+    - pip install fitsio --user
 
 script:
     - which python
