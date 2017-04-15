@@ -35,9 +35,10 @@ script:
     - ls -l $(which pip$PY)
     - ln -s $(which pip$PY) ~/bin/pip
     - which pip
-    - echo $PYTHONPATH
-    - dpkg -L python-numpy
-    - python -c "import numpy"
+    #- echo $PYTHONPATH
+    #- dpkg -L python-numpy
+    #- python -c "import numpy"
+    - pip install numpy --user
     - pip install fitsio --user
     - python -c "import fitsio"
     - export WCSLIB_INC="-I/usr/include/wcslib-4.8.3"
@@ -69,14 +70,14 @@ addons:
     - wcslib-dev
     - libcfitsio3
     - libcfitsio3-dev
-    - python-numpy
     - swig
     - gsl-bin
     - libgsl0-dev
-    - python3
-    - python3-dev
-    - python3-numpy
-    - python3-pip
+    # - python3
+    # - python3-dev
+    # - python3-pip
+    # - python3-numpy
+    # - python-numpy
 
 # ugh, no python3-pip in 'precise'
 #    - python3-setuptools
