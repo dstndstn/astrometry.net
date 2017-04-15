@@ -41,6 +41,8 @@ script:
     - pip install numpy --user
     - pip install fitsio --user
     - python -c "import fitsio"
+    - dpkg -L wcslib-dev
+    - pkg-config --cflags wcslib-dev
     - export WCSLIB_INC="-I/usr/include/wcslib-4.8.3"
     - export WCSLIB_LIB="-lwcs"
     - make
