@@ -35,6 +35,9 @@ script:
     - ls -l $(which pip$PY)
     - ln -s $(which pip$PY) ~/bin/pip
     - which pip
+    - echo $PYTHONPATH
+    - dpkg -L python-numpy
+    - python -c "import numpy"
     - pip install fitsio --user
     - python -c "import fitsio"
     - export WCSLIB_INC="-I/usr/include/wcslib-4.8.3"
