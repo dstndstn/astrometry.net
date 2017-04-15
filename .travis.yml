@@ -25,6 +25,7 @@ script:
     - ln -s $(which python$PY) ~/bin/python
     - which python
     - python --version
+    - if [ $PY -eq 3 ]; then easy_install3 --user pip; fi
     - which pip2
     - which pip3
     - ls -l $(which pip$PY)
@@ -67,9 +68,11 @@ addons:
     - libgsl0-dev
     - python3
     - python3-dev
-    - python3-pip
     - python3-numpy
+    - python3-setuptools
 
+# ugh, no python3-pip in this version of ubuntu
+#    - python3-pip
 #    - libgsl10-dev
 
 
