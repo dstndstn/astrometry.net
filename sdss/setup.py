@@ -11,7 +11,7 @@ setup(cmdclass={'build_ext': an_build_ext},
       name='C utils for Astrometry.net SDSS routines',
       version = '1.0',
       author = 'Lang & Hogg',
-      author_email = 'dstn@cmu.edu',
+      author_email = 'dstndstn@gmail.com',
       url = 'http://astrometry.net',
       ext_modules = [Extension('_cutils', ['cutils.i'], libraries=['m'])],
     )

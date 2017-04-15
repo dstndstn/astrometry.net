@@ -60,6 +60,7 @@ addons:
     - gsl-bin
     - libgsl0-dev
     - python3
+    - python3-dev
 
 #    - libgsl10-dev
 
