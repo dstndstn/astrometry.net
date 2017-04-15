@@ -31,6 +31,7 @@ script:
     - ln -s $(which pip$PY) ~/bin/pip
     - which pip
     - pip install fitsio --user
+    - python -c "import fitsio"
     - export WCSLIB_INC="-I/usr/include/wcslib-4.8.3"
     - export WCSLIB_LIB="-lwcs"
     - make
