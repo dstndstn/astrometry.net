@@ -29,7 +29,7 @@ script:
     - ln -s $(which python$PY) ~/bin/python
     - which python
     - python --version
-    - if [ $PY -eq 3 ]; then easy_install3 --user pip; fi
+    #- if [ $PY -eq 3 ]; then easy_install3 --user pip; fi
     - which pip2
     - which pip3
     - ls -l $(which pip$PY)
