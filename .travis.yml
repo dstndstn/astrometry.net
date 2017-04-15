@@ -7,6 +7,9 @@ language: c
 compiler:
   - gcc
   - clang
+python:
+  - '2.7'
+  - '3.4'
 
 # Apparently the wcslib version they have (4.8.3) doesn't use pkg-config
 # And netpbm include files are right in /usr/include, not in /usr/include/netpbm
@@ -21,6 +24,9 @@ script:
     - (cd util; ./test)
     - (cd blind; ./test)
     - (cd libkd; ./test)
+    - build-astrometry-index -d 3 -o index-9918.fits -P 18 -S mag -B 0.1 -s 0 -r 1 -I 9918 -M -i demo/tycho2-mag6.fits
+    - echo -e 'add_path .\ninparallel\nindex index-9918.fits' > 99.cfg
+    - solve-field --config 99.cfg demo/apod4.jpg  --continue
 
 # install:
 #   - sudo apt-get update -qq
