@@ -139,7 +139,7 @@ static void hpmap(int nside, const char* fn) {
   fprintf(stderr, "clf()\n");
 }
 
-void test_make_map(CuTest* ct) {
+void testX_make_map(CuTest* ct) {
   fprintf(stderr, "%s", "from pylab import *\n");
   fprintf(stderr, "clf()\n"
 	  "def wrapxy(x,y):\n"
