@@ -16,19 +16,23 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 from __future__ import print_function
 
+
 # Start dectination (in degrees, e.g. +50.0)
 start_dec = +90.0
 
 # End declination (in degrees, e.g. -30.0)
 end_dec = -90.0
 
-import urllib
+try:
+    from urllib.request import URLopener
+except ImportError:
+    from urllib import URLopener
 import os
 from shutil import copyfileobj
 import bz2
 
 # Retry failed downloads (how many times?)
-No_retries = 5 
+No_retries = 5
 
 # The URL prefix to the FTP repository
 prefix = 'http://cdsarc.u-strasbg.fr/viz-bin/ftp-index?/ftp/cats/aliases/U/UCAC4/UCAC4/u4b/'
@@ -57,11 +61,11 @@ def Download_File(name):
     """ Download UCAC4 file. """
 
     url_name = prefix+name
-    ucac_file = urllib.URLopener()
+    ucac_file = URLopener()
     ucac_file.retrieve(url_name, name)
-    
+
     inp = open(name, 'rb')
-    bz2_file = bz2.BZ2File(name+'.bz2', 'wb', compresslevel=1) 
+    bz2_file = bz2.BZ2File(name+'.bz2', 'wb', compresslevel=1)
     copyfileobj(inp, bz2_file)
     inp.close()
     bz2_file.close()
