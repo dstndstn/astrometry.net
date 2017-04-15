@@ -29,20 +29,13 @@ script:
     - ln -s $(which python$PY) ~/bin/python
     - which python
     - python --version
-    #- if [ $PY -eq 3 ]; then easy_install3 --user pip; fi
     - which pip2
     - which pip3
     - ls -l $(which pip$PY)
     - ln -s $(which pip$PY) ~/bin/pip
     - which pip
-    #- echo $PYTHONPATH
-    #- dpkg -L python-numpy
-    #- python -c "import numpy"
     - pip install numpy --user
     - pip install fitsio --user
-    - python -c "import fitsio"
-    #- dpkg -L wcslib-dev
-    #- pkg-config --cflags wcslib-dev
     - export WCSLIB_INC="-I/usr/include/wcslib-4.20"
     - export WCSLIB_LIB="-lwcs"
     - make
@@ -75,11 +68,13 @@ addons:
     - swig
     - gsl-bin
     - libgsl0-dev
-    # - python3
-    # - python3-dev
-    # - python3-pip
-    # - python3-numpy
-    # - python-numpy
+
+# The trusty image py3 already (in /opt); and use pip to install numpy.
+# - python3
+# - python3-dev
+# - python3-pip
+# - python3-numpy
+# - python-numpy
 
 # ugh, no python3-pip in 'precise'
 #    - python3-setuptools
