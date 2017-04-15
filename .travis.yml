@@ -3,6 +3,10 @@
 # use the new containerized infrastructure
 sudo: false
 
+# Default distro, precise (12.04 LTS) has ancient python3.2 that doesn't
+# support requests, required for pip3.
+dist: trusty
+
 language: c
 compiler:
   - gcc
