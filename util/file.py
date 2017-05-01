@@ -4,7 +4,11 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import os
-import cPickle
+try:
+    # py2
+    import cPickle as pickle
+except:
+    import pickle
 
 def trymakedirs(fn, dir=False):
     if dir is True:
@@ -40,12 +44,12 @@ def write_file(data, fn):
 def pickle_to_file(data, fn):
     f = open(fn, 'wb')
     # MAGIC -1: highest pickle protocol
-    cPickle.dump(data, f, -1)
+    pickle.dump(data, f, -1)
     f.close()
 
 def unpickle_from_file(fn):
     f = open(fn, 'rb')
-    data = cPickle.load(f)
+    data = pickle.load(f)
     # necessary?
     f.close()
     return data
