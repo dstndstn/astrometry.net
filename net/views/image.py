@@ -124,7 +124,11 @@ def user_image(req, user_image_id=None):
         ]
     else:
         selected_flags = None
-        
+
+    parity = (calib.get_parity() < 0)
+    wcs = calib.raw_tan
+    wwturl = 'http://www.worldwidetelescope.org/wwtweb/ShowImage.aspx?reverseparity=%s&scale=%.6f&name=%s&imageurl=%s&credits=Astrometry.net+User+(All+Rights+Reserved)&creditsUrl=&ra=%.6f&dec=%.6f&x=%.1f&y=%.1f&rotation=%.2f&thumb=%s' % (parity, wcs.get_pixscale(), uimage.original_file_name, req.build_absolute_uri(fullsize_url), wcs.crval1, wcs.crval2, wcs.crpix1, wcs.crpix2, wcs.get_orientation(), req.build_absolute_uri(display_url))
+
     logmsg(uimage.get_absolute_url())
     context = {
         'request': req,
@@ -141,6 +145,7 @@ def user_image(req, user_image_id=None):
         'image_type': image_type,
         'flags': flags,
         'selected_flags': selected_flags,
+        'wwt_url': wwturl,
     }
 
     if uimage.is_public() or (req.user.is_authenticated() and uimage.user == req.user):
