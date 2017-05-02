@@ -66,7 +66,7 @@ class multiproc(object):
             if nthreads == 1:
                 self.pool = None
                 # self.map = map
-                self.applyfunc = apply
+                self.applyfunc = lambda f,a,k: f(*a, **k)
                 if init is not None:
                     init(*initargs)
             else:
@@ -87,7 +87,7 @@ class multiproc(object):
             #print 'args', args
             #print 'cs', cs
             return self.pool.map(f, args, cs)
-        return map(f, args)
+        return list(map(f, args))
 
     def map_async(self, func, iterable, wrap=False):
         if self.pool is None:
@@ -102,7 +102,12 @@ class multiproc(object):
             cs = self.map_chunksize
         if self.pool is None:
             import itertools
-            return itertools.imap(func, iterable)
+            if 'imap' in dir(itertools):
+                # py2
+                return itertools.imap(func, iterable)
+            else:
+                # py3
+                return map(func, iterable)
         if wrap or self.wrap_all:
             func = funcwrapper(func)
         return self.pool.imap_unordered(func, iterable, chunksize=cs)

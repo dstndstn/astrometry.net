@@ -97,21 +97,17 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
             R = unpickle_from_file(pfn)
             return R
 
-    if stage <= 0:
+    try:
+        prereq = prereqs[stage]
+    except KeyError:
+        prereq = stage - 1
+
+    if prereq is None:
         P = initial_args
     else:
-        try:
-            prereq = prereqs[stage]
-        except KeyError:
-            prereq = stage - 1
-
-        if prereq is None:
-            P = initial_args
-
-        else:
-            P = runstage(prereq, picklepat, stagefunc,
-                         force=force, forceall=forceall, prereqs=prereqs, update=update,
-                         write=write, initial_args=initial_args, **kwargs)
+        P = runstage(prereq, picklepat, stagefunc,
+                     force=force, forceall=forceall, prereqs=prereqs, update=update,
+                     write=write, initial_args=initial_args, **kwargs)
 
     #P.update(kwargs)
     Px = P.copy()
