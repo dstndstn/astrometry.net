@@ -205,6 +205,10 @@ $(document).ready(function() {
             <td>KMZ (<a href="http://www.google.com/sky/">Google Sky</a>):</td>
             <td><a href="{% url 'kml-file' jobid=job.id %}?ignore=.kmz">image.kmz</a></td>
         </tr>
+        <tr>
+          <td>World Wide Telescope:</td>
+          <td><a href="{{ wwt_url }}">view in WorldWideTelescope</a></td>
+	</tr>
         </table>
         <br />
 
