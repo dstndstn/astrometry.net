@@ -146,7 +146,7 @@ if __name__ == '__main__':
                 print('    ', j)
 
         if opt.rerun:
-            from .process_submissions import try_dosub
+            from process_submissions import try_dosub
             print('Re-trying sub', sub.id)
             try_dosub(sub, 1)
 
