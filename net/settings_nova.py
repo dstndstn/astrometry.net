@@ -2,9 +2,9 @@ from __future__ import absolute_import
 sitename = 'nova'
 
 # settings_nova.py
-from .settings_common import *
+from settings_common import *
 
-from .settings_social import *
+from settings_social import *
 ENABLE_SOCIAL = True
 SOUTH_MIGRATION_MODULES.update(SOCIAL_MIGRATION)
 TEMPLATE_CONTEXT_PROCESSORS += SOCIAL_TEMPLATE_CONTEXT_PROCESSORS

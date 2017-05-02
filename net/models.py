@@ -272,7 +272,7 @@ class DiskFile(models.Model):
         return 'DiskFile: %s, size %i, type %s, coll %s' % (self.file_hash, self.size, self.file_type, self.collection)
 
     def is_fits_image(self):
-        return self.file_type == 'FITS image data'
+        return self.file_type.startswith('FITS image data')
 
     def set_size_and_file_type(self):
         fn = self.get_path()
