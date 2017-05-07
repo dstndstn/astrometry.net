@@ -132,8 +132,14 @@ def user_image(req, user_image_id=None):
             wcs = calib.tweaked_tan
         imgurl   = req.build_absolute_uri(images['original'])
         thumburl = req.build_absolute_uri(images['original_display'])
-    
-        wwturl = 'http://www.worldwidetelescope.org/wwtweb/ShowImage.aspx?reverseparity=%s&scale=%.6f&name=%s&imageurl=%s&credits=Astrometry.net+User+(All+Rights+Reserved)&creditsUrl=&ra=%.6f&dec=%.6f&x=%.1f&y=%.1f&rotation=%.2f&thumb=%s' % (parity, wcs.get_pixscale(), uimage.original_file_name, imgurl, wcs.crval1, wcs.crval2, wcs.crpix1, wcs.imageh - wcs.crpix2, wcs.get_orientation(), thumburl)
+
+        fits = uimage.image.disk_file.is_fits_image()
+        y = wcs.imageh - wcs.crpix2
+        orient = wcs.get_orientation()
+        if fits:
+            orient += 180.
+        
+        wwturl = 'http://www.worldwidetelescope.org/wwtweb/ShowImage.aspx?reverseparity=%s&scale=%.6f&name=%s&imageurl=%s&credits=Astrometry.net+User+(All+Rights+Reserved)&creditsUrl=&ra=%.6f&dec=%.6f&x=%.1f&y=%.1f&rotation=%.2f&thumb=%s' % (parity, wcs.get_pixscale(), uimage.original_file_name, imgurl, wcs.crval1, wcs.crval2, wcs.crpix1, y, orient, thumburl)
     else:
         wwturl = None
     
