@@ -52,6 +52,8 @@ script:
     - solve-field --config 99.cfg demo/apod4.jpg  --continue
     - tablist demo/apod4.match
     - listhead demo/apod4.wcs
+    - export PYTHONPATH=${PYTHONPATH}:~/an/lib/python
+    - python -c "import astrometry.libkd.spherematch"
 
 # install:
 #   - sudo apt-get update -qq
