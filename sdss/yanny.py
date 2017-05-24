@@ -328,10 +328,10 @@ class yanny(dict):
             return None
         if variable not in self.columns(structure):
             return None
-        defl = filter(lambda x: x.find(structure.lower()) > 0,
-            self['symbols']['struct'])
-        defu = filter(lambda x: x.find(structure.upper()) > 0,
-            self['symbols']['struct'])
+        defl = list(filter(lambda x: x.find(structure.lower()) > 0,
+            self['symbols']['struct']))
+        defu = list(filter(lambda x: x.find(structure.upper()) > 0,
+            self['symbols']['struct']))
         if len(defl) != 1 and len(defu) != 1:
             return None
         elif len(defl) == 1:
