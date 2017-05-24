@@ -2,6 +2,8 @@ Astrometry.net
 ==============
 
 [![Build Status](https://travis-ci.org/dstndstn/astrometry.net.png?branch=master)](https://travis-ci.org/dstndstn/astrometry.net)
+[![Tag Version](https://img.shields.io/github/tag/dstndstn/astrometry.net.svg)](https://github.com/dstndstn/astrometry.net/tags)
+[![License](https://img.shields.io/:license-bsd3-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 Automatic recognition of astronomical images; or standards-compliant
 astrometric metadata from data.
