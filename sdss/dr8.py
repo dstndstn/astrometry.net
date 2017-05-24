@@ -6,8 +6,14 @@ import os
 from astrometry.util.fits import fits_table
 import numpy as np
 import logging
-import urlparse
 import tempfile
+
+import sys
+py3 = (sys.version_info[0] >= 3)
+if py3:
+    from urllib.parse import urljoin
+else:
+    from urlparse import urljoin
 
 fitsio = None
 try:
@@ -368,7 +374,7 @@ class DR8(DR7):
         if rerun is None:
             rerun = self.get_rerun(run, field)
         path = self.daspaths[filetype]
-        url = urlparse.urljoin(self.dasurl, path % dict(
+        url = urljoin(self.dasurl, path % dict(
             run=run, camcol=camcol, field=field, rerun=rerun, band=band))
         return url
     

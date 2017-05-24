@@ -507,6 +507,52 @@ void log_set_level(int lvl);
     #undef LANCZOS_INTERP_FUNC
     #undef L
 
+    static int lanczos5_filter(PyObject* np_dx, PyObject* np_f) {
+        npy_intp N;
+        npy_intp i;
+        float* dx;
+        float* f;
+
+        if (!PyArray_Check(np_dx) ||
+            !PyArray_Check(np_f ) ||
+            !PyArray_ISNOTSWAPPED(np_dx) ||
+            !PyArray_ISNOTSWAPPED(np_f ) ||
+            !PyArray_ISFLOAT(np_dx) ||
+            !PyArray_ISFLOAT(np_f ) ||
+            (PyArray_ITEMSIZE(np_dx) != sizeof(float)) ||
+            (PyArray_ITEMSIZE(np_f ) != sizeof(float)) ||
+            !(PyArray_NDIM(np_dx) == 1) ||
+            !(PyArray_NDIM(np_f ) == 1) ||
+            !PyArray_ISCONTIGUOUS(np_dx) ||
+            !PyArray_ISCONTIGUOUS(np_f ) ||
+            !PyArray_ISWRITEABLE(np_f)
+            ) {
+            ERR("Arrays aren't right type\n");
+            return -1;
+        }
+        N = PyArray_DIM(np_dx, 0);
+        if (PyArray_DIM(np_f, 0) != N) {
+            ERR("Input and output must have same dimensions\n");
+            return -1;
+        }
+        dx = PyArray_DATA(np_dx);
+        f = PyArray_DATA(np_f);
+        const double fifthpi = M_PI / 5.0;
+        const double pisq = M_PI * M_PI;
+        const double fiveopisq = 5. / pisq;
+        for (i=N; i>0; i--, dx++, f++) {
+            double x = *dx;
+            if (x < -5.0 || x > 5.0) {
+                *f = 0.0;
+            } else if (x == 0) {
+                *f = 1.0;
+            } else {
+                *f = fiveopisq * sin(M_PI * x) * sin(fifthpi * x) / (x * x);
+            }
+        }
+        return 0;
+    }
+        
     static int lanczos3_filter(PyObject* np_dx, PyObject* np_f) {
         npy_intp N;
         npy_intp i;
