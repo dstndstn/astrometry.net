@@ -1,5 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
 
 """
 NAME:
@@ -60,7 +61,7 @@ def source_extract(image_data, srcext=None):
                               maxnpeaks=maxnpeaks, maxsize=maxsize,
                               halfbox=halfbox)
 
-    print 'simplexy: shapes',x.shape, y.shape
+    print('simplexy: shapes',x.shape, y.shape)
 
     cx = pyfits.Column(name='X', format='E', array=x, unit='pix')
     cy = pyfits.Column(name='Y', format='E', array=y, unit='pix')
@@ -100,11 +101,11 @@ def extract(fitsfile):
 
     for i, hdu in enumerate(fitsfile):
         if (i == 0 and hdu.data != None) or isinstance(hdu, pyfits.ImageHDU):
-            print hdu.data.shape+(i,)
+            print(hdu.data.shape+(i,))
             if i == 0:
-                print 'Image: Primary HDU (number 0) %sx%s' % hdu.data.shape
+                print('Image: Primary HDU (number 0) %sx%s' % hdu.data.shape)
             else:
-                print 'Image: Extension HDU (number %s) %sx%s' % tuple((i,)+hdu.data.shape)
+                print('Image: Extension HDU (number %s) %sx%s' % tuple((i,)+hdu.data.shape))
 
             tbhdu = source_extract(image_data)
 
@@ -114,7 +115,7 @@ def extract(fitsfile):
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print "Usage: image2xy.py image.fits"
+        print("Usage: image2xy.py image.fits")
     else:
         infile = sys.argv[1]
         fitsfile = pyfits.open(infile)
@@ -124,7 +125,7 @@ if __name__ == '__main__':
             outfile.writeto(newfile)
         except IOError:
             # File probably exists
-            print 'File %s appears to already exist; deleting!' % newfile
+            print('File %s appears to already exist; deleting!' % newfile)
             import os
             os.unlink(newfile)
             outfile.writeto(newfile)

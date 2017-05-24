@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
 import sys
 from optparse import OptionParser
 from astrometry.util.util import *
@@ -21,7 +22,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if opt.pixscale is None and opt.size is None:
-        print 'Must specify --pixscale or --size'
+        print('Must specify --pixscale or --size')
         parser.print_help()
         sys.exit(-1)
     pixscale = 0.
@@ -31,7 +32,7 @@ if __name__ == '__main__':
         pixscale = opt.pixscale / 3600.
 
     if opt.ra is None or opt.dec is None:
-        print 'Must specify --ra and --dec'
+        print('Must specify --ra and --dec')
         parser.print_help()
         sys.exit(-1)
 

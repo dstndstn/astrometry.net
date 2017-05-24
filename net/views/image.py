@@ -124,7 +124,25 @@ def user_image(req, user_image_id=None):
         ]
     else:
         selected_flags = None
+
+    if job and job.calibration:
+        parity = (calib.get_parity() < 0)
+        wcs = calib.raw_tan
+        if calib.tweaked_tan is not None:
+            wcs = calib.tweaked_tan
+        imgurl   = req.build_absolute_uri(images['original'])
+        thumburl = req.build_absolute_uri(images['original_display'])
+
+        fits = uimage.image.disk_file.is_fits_image()
+        y = wcs.imageh - wcs.crpix2
+        orient = wcs.get_orientation()
+        if fits:
+            orient += 180.
         
+        wwturl = 'http://www.worldwidetelescope.org/wwtweb/ShowImage.aspx?reverseparity=%s&scale=%.6f&name=%s&imageurl=%s&credits=Astrometry.net+User+(All+Rights+Reserved)&creditsUrl=&ra=%.6f&dec=%.6f&x=%.1f&y=%.1f&rotation=%.2f&thumb=%s' % (parity, wcs.get_pixscale(), uimage.original_file_name, imgurl, wcs.crval1, wcs.crval2, wcs.crpix1, y, orient, thumburl)
+    else:
+        wwturl = None
+    
     logmsg(uimage.get_absolute_url())
     context = {
         'request': req,
@@ -141,6 +159,7 @@ def user_image(req, user_image_id=None):
         'image_type': image_type,
         'flags': flags,
         'selected_flags': selected_flags,
+        'wwt_url': wwturl,
     }
 
     if uimage.is_public() or (req.user.is_authenticated() and uimage.user == req.user):
@@ -278,8 +297,8 @@ def annotated_image(req, jobid=None, size='full'):
     if rad > 10:
         args.append('--no-ngc')
 
-	if rad > 30:
-		args.append('--no-bright')
+    if rad > 30:
+        args.append('--no-bright')
             
     cmd = ' '.join(args + ['%s %s %s' % (wcsfn, pnmfn, annfn)])
 
@@ -389,12 +408,36 @@ def sdss_image(req, calid=None, size='full'):
     if df is None:
         wcsfn = cal.get_wcs_file()
         plotfn = get_temp_file()
+
+        from astrometry.util.util import Tan
+        wcs = Tan(wcsfn)
+        
         if size == 'display':
             image = cal.job.user_image
             scale = float(image.image.get_display_image().width)/image.image.width
+            wcs = wcs.scale(scale)
+
         else:
             scale = 1.0
+        
+        # urlargs = urllib.urlencode(dict(crval1='%.6f' % wcs.crval[0],
+        #                                 crval2='%.6f' % wcs.crval[1],
+        #                                 crpix1='%.2f' % wcs.crpix[0],
+        #                                 crpix2='%.2f' % wcs.crpix[1],
+        #                                 cd11='%.6g' % wcs.cd[0],
+        #                                 cd12='%.6g' % wcs.cd[1],
+        #                                 cd21='%.6g' % wcs.cd[2],
+        #                                 cd22='%.6g' % wcs.cd[3],
+        #                                 imagew='%i' % int(wcs.imagew),
+        #                                 imageh='%i' % int(wcs.imageh)))
+        # url = 'http://legacysurvey.org/viewer-dev/sdss-wcs/?' + urlargs
+        # print('Retrieving:', url)
+        # #f = urllib.urlopen(url)
+        # plotfn,headers = urllib.urlretrieve(url, plotfn)
+        # #print('Headers:', headers)
+
         plot_sdss_image(wcsfn, plotfn, scale)
+
         # cache
         logmsg('Caching key "%s"' % key)
         df = CachedFile.add(key, plotfn)
@@ -402,12 +445,13 @@ def sdss_image(req, calid=None, size='full'):
         logmsg('Cache hit for key "%s"' % key)
     f = open(df.get_path())
     res = HttpResponse(f)
-    res['Content-Type'] = 'image/png'
+    res['Content-Type'] = 'image/jpeg'
     return res
 
 def red_green_image(req, job_id=None, size='full'):
     job = get_object_or_404(Job, pk=job_id)
     ui = job.user_image
+    sub = ui.submission
     img = ui.image
     if size == 'display':
         scale = float(img.get_display_image().width)/img.width
@@ -435,6 +479,10 @@ def red_green_image(req, job_id=None, size='full'):
         pimg.format = PLOTSTUFF_FORMAT_PPM
         plot.color = 'white'
         plot.alpha = 1.
+        if sub.use_sextractor:
+            xy = plot.xy
+            xy.xcol = 'X_IMAGE'
+            xy.ycol = 'Y_IMAGE'
         plot.plot('image')
 
         # plot red
@@ -614,7 +662,19 @@ def index_tag(req):
         if query:
             if exact:
                 try:
-                    tag = Tag.objects.filter(text__iexact=query).get()
+                    tags = Tag.objects.filter(text__iexact=query)
+                    if tags.count() > 1:
+                        # More than one match: do case-sensitive query
+                        ctags = Tag.objects.filter(text=query)
+                        # note, 'text' is the primary key, so >1 shouldn't be possible
+                        if len(ctags) == 1:
+                            tag = ctags[0]
+                        else:
+                            # Uh, multiple case-insensitive matches but no case-sens
+                            # matches.  Arbitrarily choose first case-insens
+                            tag = tags[0]
+                    else:
+                        tag = tags[0]
                     images = images.filter(tags=tag)
                 except Tag.DoesNotExist:
                     images = UserImage.objects.none() 

@@ -1,12 +1,15 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
+from __future__ import absolute_import
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 
 from astrometry.util.resample import resample_with_wcs, ResampleError
 
-from fields import radec_to_sdss_rcf
-from common import band_name, band_index, AsTransWrapper
+from .fields import radec_to_sdss_rcf
+from .common import band_name, band_index, AsTransWrapper
+from functools import reduce
 
 def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg',
                     get_rawvals_only=False,
@@ -35,11 +38,11 @@ def get_sdss_cutout(targetwcs, sdss, get_rawvals=False, bands='irg',
             continue
         keepRCF.append((run,camcol,field))
     RCF = keepRCF
-    print len(RCF), 'run/camcol/fields in range'
+    print(len(RCF), 'run/camcol/fields in range')
 
     # size in SDSS pixels of the target image.
     sz = np.hypot(H, W)/2. * targetpixscale / 0.396
-    print 'SDSS sz:', sz
+    print('SDSS sz:', sz)
 
     bandnums = [band_index(b) for b in bands]
     
@@ -131,7 +134,7 @@ if __name__ == '__main__':
     matplotlib.use('Agg')
     import pylab as plt
 
-    from dr10 import DR10
+    from .dr10 import DR10
     from astrometry.util.util import Tan
     
     tempdir = tempfile.gettempdir()

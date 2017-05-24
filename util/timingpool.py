@@ -582,7 +582,7 @@ class TimingPool(multiprocessing.pool.Pool):
     #  -handle_results -> timing_handle_results
     # And add _beancounter.
     def __init__(self, processes=None, initializer=None, initargs=(),
-                 maxtasksperchild=None, taskqueuesize=0):
+                 maxtasksperchild=None, taskqueuesize=0, context=None):
         '''
         taskqueuesize: maximum number of tasks to put on the queue;
           this is actually done by keeping a progressqueue, written-to
@@ -595,6 +595,12 @@ class TimingPool(multiprocessing.pool.Pool):
           implemented via pipes with unknown, OS-controlled capacity
           in units of bytes.)
         '''
+        if context is None:
+            # py3
+            import multiprocessing.pool
+            if 'get_context' in dir(multiprocessing.pool):
+                self._ctx = multiprocessing.pool.get_context()
+
         self._beancounter = BeanCounter()
         self._setup_queues()
         self._taskqueue = queue.Queue()
@@ -708,7 +714,7 @@ if __name__ == '__main__':
         def __iter__(self):
             return self
         def next(self):
-            return self.y.next()
+            return next(self.y)
         def __len__(self):
             return self.n
 

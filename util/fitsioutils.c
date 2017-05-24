@@ -675,15 +675,10 @@ void fits_header_add_int(qfits_header* hdr, const char* key, int val,
 }
 
 int fits_update_value(qfits_header* hdr, const char* key, const char* newvalue) {
-  char oldcomment[FITS_LINESZ + 1];
-  char* c = qfits_header_getcom(hdr, key);
-  if (!c) {
-    return -1;
-  }
-  // hmm, not sure I need to copy this...
-  strncpy(oldcomment, c, FITS_LINESZ);
-  qfits_header_mod(hdr, key, newvalue, oldcomment);
-  return 0;
+    // update the FITS header value, keeping the key and comment constant
+    char* comment = qfits_header_getcom(hdr, key);
+    qfits_header_mod(hdr, key, newvalue, comment);
+    return 0;
 }
 
 static int add_long_line(qfits_header* hdr, const char* keyword, const char* indent, int append, const char* format, va_list lst) {

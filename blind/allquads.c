@@ -95,6 +95,8 @@ int allquads_create_quads(allquads_t* aq) {
 
 	N = startree_N(aq->starkd);
 
+    logverb("check scale high: %i\n", qb->check_scale_high);
+
 	if (!qb->check_scale_high) {
 		int* inds;
 		inds = malloc(N * sizeof(int));

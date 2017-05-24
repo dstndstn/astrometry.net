@@ -103,7 +103,6 @@ startree_t* startree_build(fitstable_t* intable,
 	if (!Nleaf)
 		Nleaf = 25;
 
-
 	ra = fitstable_read_column(intable, racol, TFITS_BIN_TYPE_D);
 	if (!ra) {
 		ERROR("Failed to read RA from column %s", racol);
@@ -114,6 +113,7 @@ startree_t* startree_build(fitstable_t* intable,
 		ERROR("Failed to read RA from column %s", racol);
 		goto bailout;
 	}
+    printf("First RA,Dec: %g,%g\n", ra[0], dec[0]);
 	N = fitstable_nrows(intable);
 	xyz = malloc(N * 3 * sizeof(double));
 	if (!xyz) {
@@ -125,13 +125,16 @@ startree_t* startree_build(fitstable_t* intable,
 	ra = NULL;
 	free(dec);
 	dec = NULL;
+    printf("First x,y,z: %g,%g,%g\n", xyz[0], xyz[1], xyz[2]);
 
 	starkd = startree_new();
 	if (!starkd) {
 		ERROR("Failed to allocate startree");
+        free(xyz);
 		goto bailout;
 	}
 	tt = kdtree_kdtypes_to_treetype(KDT_EXT_DOUBLE, treetype, datatype);
+    printf("Treetype: 0x%x\n", tt);
 	starkd->tree = kdtree_new(N, 3, Nleaf);
 	for (d=0; d<3; d++) {
 		low[d] = -1.0;
@@ -144,9 +147,17 @@ startree_t* startree_build(fitstable_t* intable,
 		ERROR("Failed to build star kdtree");
 		startree_close(starkd);
 		starkd = NULL;
+        free(xyz);
 		goto bailout;
 	}
 	starkd->tree->name = strdup(STARTREE_NAME);
+
+    printf("After kdtree_build:\n");
+    kdtree_print(starkd->tree);
+    {
+        double* treed = kdtree_get_data(starkd->tree, 0);
+        printf("First data elements in tree: %g,%g,%g\n", treed[0], treed[1], treed[2]);
+    }
 
 	inhdr = fitstable_get_primary_header(intable);
     hdr = startree_header(starkd);
@@ -183,8 +194,9 @@ startree_t* startree_build(fitstable_t* intable,
 		free(ra);
 	if (dec)
 		free(dec);
-	if (xyz)
-		free(xyz);
+    // NOOO don't free xyz -- it belongs to the kdtree!
+	//if (xyz)
+    //free(xyz);
 	return starkd;
 }
 

@@ -242,7 +242,18 @@ void fitstable_endian_flip_row_data(fitstable_t* table, void* data) {
 		int j;
 		fitscol_t* col = getcol(table, i);
 		for (j=0; j<col->arraysize; j++) {
-			endian_swap(cursor, col->fitssize);
+                    /*
+                     if (col->fitssize == 8)
+                     printf("col '%s': d=%g, i=%li\n",
+                     col->colname, *((double*)cursor), *((uint64_t*)cursor));
+                     */
+                    endian_swap(cursor, col->fitssize);
+                    /*
+                     if (col->fitssize == 8)
+                     printf(" --> d=%g, i=%li\n",
+                     *((double*)cursor), *((uint64_t*)cursor));
+                     */
+
 			cursor += col->fitssize;
 		}
 	}
@@ -422,10 +433,11 @@ int fitstable_n_fits_columns(const fitstable_t* tab) {
 	return tab->table->nc;
 }
 
-int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
+int fitstable_add_fits_columns_as_struct4(const fitstable_t* intab,
 					  fitstable_t* outtab,
 					  const sl* colnames,
-					  int c_offset) {
+					  int c_offset,
+                                          tfits_type fitstype) {
 	int i, NC;
 	int noc = ncols(outtab);
 	NC = sl_size(colnames);
@@ -443,8 +455,14 @@ int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
 		// We give the offset of the column in the *input* table, so that
 		// the resulting "outtab" can handle raw data from the "intab".
 		off = fits_offset_of_column(intab->table, j);
-		fitstable_add_read_column_struct(outtab, qcol->atom_type, qcol->atom_nb,
-						 c_offset + off, qcol->atom_type, qcol->tlabel, TRUE);
+
+                if (fitstype == TFITS_BIN_TYPE_UNKNOWN)
+                    fitstable_add_read_column_struct(outtab, qcol->atom_type, qcol->atom_nb,
+                                                     c_offset + off, qcol->atom_type, qcol->tlabel, TRUE);
+                else
+                    fitstable_add_read_column_struct(outtab, qcol->atom_type, qcol->atom_nb,
+                                                     c_offset + off, fitstype, qcol->tlabel, TRUE);
+
 		// set the FITS column number.
 		col = getcol(outtab, ncols(outtab)-1);
 		col->col = noc + i;
@@ -452,8 +470,16 @@ int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
 	return 0;
 }
 
+int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
+					  fitstable_t* outtab,
+					  const sl* colnames,
+					  int c_offset) {
+    return fitstable_add_fits_columns_as_struct4(intab, outtab, colnames,
+                                                 c_offset, TFITS_BIN_TYPE_UNKNOWN);
+}
+
 void fitstable_add_fits_columns_as_struct2(const fitstable_t* intab,
-										   fitstable_t* outtab) {
+                                           fitstable_t* outtab) {
 	int i, NC;
 	int off = 0;
 	int noc = ncols(outtab);
@@ -692,6 +718,7 @@ static int write_one(fitstable_t* table, const void* struc, anbool flip,
                 free(buf);
                 buf = malloc(sz);
             }
+
             fits_convert_data(buf, col->fitssize, col->fitstype,
                               columndata, col->csize, col->ctype,
                               col->arraysize, 1);

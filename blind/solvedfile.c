@@ -200,8 +200,8 @@ int solvedfile_set_array(char* fn, anbool* vals, int N) {
 
 	solvedfile_setsize(fn, N);
 
-	// (file mode 777; umask will modify this, if set).
-	f = open(fn, O_WRONLY | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG | S_IRWXO);
+	// (file mode 666; umask will modify this, if set).
+	f = open(fn, O_WRONLY | O_CREAT | O_SYNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if (f == -1) {
 		fprintf(stderr, "Error: failed to open file %s for writing: %s\n",
 				fn, strerror(errno));
@@ -256,8 +256,8 @@ int solvedfile_set(char* fn, int fieldnum) {
     // 1-index
     fieldnum--;
 
-	// (file mode 777; umask will modify this, if set).
-	f = open(fn, O_WRONLY | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG | S_IRWXO);
+	// (file mode 666; umask will modify this, if set).
+	f = open(fn, O_WRONLY | O_CREAT | O_SYNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if (f == -1) {
 		fprintf(stderr, "Error: failed to open file %s for writing: %s\n",
 				fn, strerror(errno));

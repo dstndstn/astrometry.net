@@ -1,63 +1,61 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
-try:
-    import pyfits
-except ImportError:
-    try:
-        from astropy.io import fits as pyfits
-    except ImportError:
-        raise ImportError("Cannot import either pyfits or astropy.io.fits")
-from numpy import *
+from __future__ import print_function
+
+from astrometry.util.fits import fits_table
+
 from ngc2000 import ngc2000, ngc2000accurate
 from astrometry.util.fits import *
 
 if __name__ == '__main__':
 
-	# convert to a form that leads to simple updating with the "accurate" versions.
-	nummap = dict([[(x['is_ngc'], x['id']), (x['ra'],x['dec'],x['size'])]
-				   for x in ngc2000])
-	print 'got %i' % len(nummap)
+    T = fits_table()
+    for key in ['is_ngc', 'ra', 'dec', 'size', 'classification']:
+        T.set(key, [x[key] for x in ngc2000])
+    # special keyword
+    T.num = [x['id'] for x in ngc2000]
+    T.to_np_arrays()
 
-	# update with "accurate" values.
-	nup = 0
-	for x in ngc2000accurate:
-		key = (x['is_ngc'], x['id'])
-		if key in nummap:
-			(oldra, olddec, size) = nummap[key]
-			nummap[key] = (x['ra'], x['dec'], size)
-			nup +=1
-	print 'updated %i' % nup
+    # update with ngc2000-accurate positions
+    # build map to destination indices
+    imap = dict([((isit,n), i) for i,(isit,n) in
+                 enumerate(zip(T.is_ngc, T.num))])
 
-	isngc  = array([i for (i,n) in nummap.iterkeys()])
-	ngcnum = array([n for (i,n) in nummap.iterkeys()])
-	ra     = array([r for (r,d,s) in nummap.itervalues()])
-	dec    = array([d for (r,d,s) in nummap.itervalues()])
-	radius = array([s for (r,d,s) in nummap.itervalues()])
-	# turn from diameter in arcmin to radius in deg.
-	radius /= (2. * 60.)
+    nup = 0
+    for x in ngc2000accurate:
+        key = (x['is_ngc'], x['id'])
+        try:
+            i = imap[key]
+        except KeyError:
+            continue
+        T.ra [i] = x['ra']
+        T.dec[i] = x['dec']
+        nup +=1
+    print('updated %i' % nup)
 
-	print 'got %i RA (%i ngc)' % (len(ra), sum(isngc))
+    # turn from diameter in arcmin to radius in deg.
+    T.radius = T.size / (2. * 60.)
+    T.delete_column('size')
 
-	prim = pyfits.PrimaryHDU()
-	#phdr = prim.header
-	#phdr.update('AN_FILE', 'RDLS', 'Astrometry.net RA,Dec list')
-	table = pyfits.new_table(
-		[pyfits.Column(name='NGCNUM', format='1I', array=ngcnum[isngc], unit=''),
-		 pyfits.Column(name='RA', format='1E', array=ra[isngc], unit='deg'),
-		 pyfits.Column(name='DEC', format='1E', array=dec[isngc], unit='deg'),
-		 pyfits.Column(name='RADIUS', format='1E', array=radius[isngc], unit='deg'),
-		 ])
-	pyfits_writeto(pyfits.HDUList([prim, table]), 'ngc.fits')
+    T.name = np.array(['NGC %i' % n if isngc else 'IC %i' % n
+                       for n,isngc in zip(T.num, T.is_ngc)])
 
-	isic = logical_not(isngc)
+    units_dict = dict(ra='deg', dec='deg', radius='deg')
+    units = [units_dict.get(c, None) for c in T.get_columns()]
 
-	prim = pyfits.PrimaryHDU()
-	#phdr = prim.header
-	#phdr.update('AN_FILE', 'RDLS', 'Astrometry.net RA,Dec list')
-	table = pyfits.new_table(
-		[pyfits.Column(name='ICNUM', format='1I', array=ngcnum[isic], unit=''),
-		 pyfits.Column(name='RA', format='1E', array=ra[isic], unit='deg'),
-		 pyfits.Column(name='DEC', format='1E', array=dec[isic], unit='deg'),
-		 pyfits.Column(name='RADIUS', format='1E', array=radius[isic], unit='deg'),
-		 ])
-	pyfits_writeto(pyfits.HDUList([prim, table]), 'ic.fits')
+    for k in ['ra','dec','radius']:
+        T.set(k, T.get(k).astype(np.float32))
+    T.num = T.num.astype(np.int16)
+
+    NGC = T[T.is_ngc]
+    NGC.rename('num', 'ngcnum')
+    NGC.delete_column('is_ngc')
+    units = [units_dict.get(c, '') for c in NGC.get_columns()]
+    NGC.writeto('ngc2000.fits', units=units)
+
+    IC = T[np.logical_not(T.is_ngc)]
+    IC.rename('num', 'icnum')
+    IC.delete_column('is_ngc')
+    units = [units_dict.get(c, '') for c in IC.get_columns()]
+    IC.writeto('ic2000.fits', units=units)
+    

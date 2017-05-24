@@ -87,6 +87,10 @@ static int parse_hms_string(const char* str,
         "^([+-])?([[:digit:]]{1,2}):"
         "([[:digit:]]{1,2}):"
         "([[:digit:]]*(\\.[[:digit:]]*)?)$";
+
+    if (!str)
+        return 1;
+
     if (regcomp(&re, restr, REG_EXTENDED)) {
         ERROR("Failed to compile H:M:S regex \"%s\"", restr);
         return -1;
@@ -129,6 +133,10 @@ double atora(const char* str) {
     double sec;
     int rtn;
 
+    if (!str) {
+        //ERROR("Null string to atora()");
+        return HUGE_VAL;
+    }
     rtn = parse_hms_string(str, &sgn, &hr, &min, &sec);
     if (rtn == -1) {
         ERROR("Failed to run regex");

@@ -217,6 +217,10 @@ int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
 										  fitstable_t* outtab,
 					  const sl* columns, int c_offset);
 
+int fitstable_add_fits_columns_as_struct4(const fitstable_t* intab,
+                                          fitstable_t* outtab,
+					  const sl* columns, int c_offset,
+                                          tfits_type fitstype);
 
 // reading:
 int fitstable_find_fits_column(fitstable_t* t, const char* colname,

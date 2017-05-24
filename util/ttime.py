@@ -1,6 +1,7 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import re
@@ -32,6 +33,15 @@ def _read_proc_maps(pid):
     return dict(mmaps=t, mmaps_parsed=parsed, mmaps_total=addrsum)
 
 def get_memusage(mmaps=True):
+    '''
+    Retrieves memory usage information from the *resource* module and from
+    reading the */proc* filesystem.
+
+    Returns:
+    --------
+    Dictionary of *quantity* to *(value, unit)* tuples.  Value is a float,
+    unit is "MB", for example.
+    '''
     ru = resource.getrusage(resource.RUSAGE_SELF)
     #pgsize = resource.getpagesize()
     maxrss = float(ru.ru_maxrss) / 1e6
@@ -74,6 +84,9 @@ def get_procio():
     return dd
     
 def memusage():
+    '''
+    Prints current memory usage.
+    '''
     mu = get_memusage()
     print('Memory usage:')
     print('max rss:', mu['maxrss'], 'MB')
@@ -85,6 +98,11 @@ def memusage():
         print('Number of mmaps:', len(mu['mmaps']))
 
 def count_file_descriptors():
+    '''
+    Returns the number of file descriptors used by the current process.
+    On Linux this uses the */proc* filesystem; on Mac OSX it uses the *lsof*
+    command.
+    '''
     procfn = '/proc/%d/fd' % os.getpid()
     try:
         # Linux: /proc/PID/fd/*
@@ -95,7 +113,7 @@ def count_file_descriptors():
 
     try:
         # OSX: "lsof"
-        from run_command import run_command as rc
+        from .run_command import run_command as rc
         cmd = 'lsof -p %i' % os.getpid()
         rtn,out,err = rc(cmd)
         if rtn == 0:
@@ -105,12 +123,18 @@ def count_file_descriptors():
     return 0
 
 class FileDescriptorMeas(object):
+    '''
+    A measurement class for the *Time* class that measures file descriptors.
+    '''
     def __init__(self):
         self.fds = count_file_descriptors()
     def format_diff(self, other):
         return 'Open files: %i' % self.fds
             
 class MemMeas(object):
+    '''
+    A measurement class for the *Time* class that measures memory usage.
+    '''
     def __init__(self):
         self.mem0 = get_memusage(mmaps=False)
     def format_diff(self, other):
@@ -128,6 +152,9 @@ class MemMeas(object):
         return ', '.join([] + txt)
 
 class IoMeas(object):
+    '''
+    A measurement class for the *Time* class that measures disk I/O.
+    '''    
     def __init__(self):
         self.io0 = get_procio()
     def format_diff(self, other):
@@ -154,6 +181,9 @@ class IoMeas(object):
         return ', '.join([] + txt)
 
 class CpuMeas(object):
+    '''
+    A measurement class for the *Time* class that measures CPU and Wall tim.
+    '''    
     def __init__(self):
         import datetime
         from time import clock
@@ -161,8 +191,32 @@ class CpuMeas(object):
         self.cpu = clock()
 
     def cpu_seconds_since(self, other):
+        '''
+        Returns the CPU time used since the *other* timestamp was taken.
+
+        eg::
+
+            t0 = CpuMeas()
+            # do stuff
+            t1 = CpuMeas()
+            dt = t1.cpu_seconds_since(t0)
+            print('That took', dt, 'seconds of CPU time')
+        '''
         return self.cpu - other.cpu
+
     def wall_seconds_since(self, other):
+        '''
+        Returns the wall-clock time in seconds since the *other* timestamp
+        was taken.
+
+        eg::
+        
+            t0 = CpuMeas()
+            # do stuff
+            t1 = CpuMeas()
+            dt = t1.wall_seconds_since(t0)
+            print('That took', dt, 'seconds')
+        '''
         dwall = (self.wall - other.wall)
         # python2.7
         if hasattr(dwall, 'total_seconds'):
@@ -177,6 +231,24 @@ class CpuMeas(object):
         return 'Wall: %.2f s, CPU: %.2f s' % (dwall, dcpu)
         
 class Time(object):
+    '''
+    A class for recording how much time (or other resources) are used
+    by a process.  The *CpuMeas* class is used by default; others can
+    be added as desired.
+
+    Use like this::
+
+        from astrometry.util.ttime import Time, MemMeas
+
+        # measure memory usage too
+        Time.add_measurement(MemMeas)
+        
+        def mymethod():
+            t0 = Time()
+            # do stuff
+            t1 = Time()
+            print('Time taken:', t1-t0)
+    '''
     @staticmethod
     def add_measurement(m):
         Time.measurements.append(m)

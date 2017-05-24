@@ -1,5 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
 import matplotlib
 matplotlib.use('Agg')
 
@@ -30,7 +31,7 @@ def plot_distortions(wcsfn, ex=1, ngridx=10, ngridy=10, stepx=10, stepy=10):
         for y in Y:
             dx,dy = wcs.get_distortion(x, y)
             ux,uy = wcs.get_undistortion(dx, dy)
-            print 'x,y', (x,y), 'dx,dy', (dx,dy), 'ux,uy', (ux,uy)
+            print('x,y', (x,y), 'dx,dy', (dx,dy), 'ux,uy', (ux,uy))
             xx.append(x)
             yy.append(y)
             DX.append(dx)

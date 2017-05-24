@@ -16,6 +16,23 @@
 #include <stdio.h>
 #include "fitsio.h"
 
+void print_usage() {
+    printf("Usage:  tablist [-r] [-w 100] filename[ext][col filter][row filter] \n");
+    printf("\n");
+    printf("List the contents of a FITS table \n");
+    printf(" -r: Don't output column headers or row numbers \n");
+    printf(" -w 100: Print up to 100 characters per line; default 80\n");
+    printf("\n");
+    printf("Examples: \n");
+    printf("  tablist tab.fits[GTI]           - list the GTI extension\n");
+    printf("  tablist tab.fits[1][#row < 101] - list first 100 rows\n");
+    printf("  tablist tab.fits[1][col X;Y]    - list X and Y cols only\n");
+    printf("  tablist tab.fits[1][col -PI]    - list all but the PI col\n");
+    printf("  tablist tab.fits[1][col -PI][#row < 101]  - combined case\n");
+    printf("\n");
+    printf("Display formats can be modified with the TDISPn keywords.\n");
+}
+
 int main(int argc, char *argv[])
 {
     fitsfile *fptr;      /* FITS file pointer, defined in fitsio.h */
@@ -25,25 +42,15 @@ int main(int argc, char *argv[])
     int hdunum, hdutype = ANY_HDU, ncols, ii, anynul, dispwidth[1000];
     long nelements[1000];
     int firstcol, lastcol = 1, linewidth;
+    int max_linewidth = 80;
     int elem, firstelem, lastelem = 0, nelems;
     long jj, nrows, kk;
 	int quiet = 0;
+    int i;
 	
-    if (argc != 2 && argc != 3) {
-		printf("Usage:  tablist [-r] filename[ext][col filter][row filter] \n");
-		printf("\n");
-		printf("List the contents of a FITS table \n");
-		printf(" -r: Don't output column headers or row numbers \n");
-		printf("\n");
-		printf("Examples: \n");
-		printf("  tablist tab.fits[GTI]           - list the GTI extension\n");
-		printf("  tablist tab.fits[1][#row < 101] - list first 100 rows\n");
-		printf("  tablist tab.fits[1][col X;Y]    - list X and Y cols only\n");
-		printf("  tablist tab.fits[1][col -PI]    - list all but the PI col\n");
-		printf("  tablist tab.fits[1][col -PI][#row < 101]  - combined case\n");
-		printf("\n");
-		printf("Display formats can be modified with the TDISPn keywords.\n");
-		return(0);
+    if (argc < 2) {
+        print_usage();
+        return 0;
     }
 
     if (fits_open_file(&fptr, argv[argc-1], READONLY, &status)) {
@@ -62,9 +69,22 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	if (argv[1][0] == '-' && argv[1][1] == 'r') {
-		quiet = 1;
-	}
+    for (i=1; i<argc-1; i++) {
+        if (argv[i][0] != '-') {
+            printf("Error: failed to parse command line; expected flag but got \"%s\"\n", argv[i]);
+            return -1;
+        }
+        char flag = argv[i][1];
+        if (flag == 'r') {
+            quiet = 1;
+        } else if (flag == 'w') {
+            max_linewidth = atoi(argv[i+1]);
+            i++;
+        } else {
+            printf("Error: failed to parse command line flag -%c\n", flag);
+            return -1;
+        }
+    }
 
 	fits_get_num_rows(fptr, &nrows, &status);
 	fits_get_num_cols(fptr, &ncols, &status);
@@ -73,7 +93,8 @@ int main(int argc, char *argv[])
 		fits_get_coltype(fptr, jj, NULL, &nelements[jj], NULL, &status);
 	//printf("nelements[%i] = %i.\n", (int)jj, (int)nelements[jj]);
 
-	/* find the number of columns that will fit within 80 characters */
+	/* find the number of columns that will fit within max_linewidth
+     characters */
 	for (;;) {
 		int breakout = 0;
 		linewidth = 0;
@@ -96,7 +117,7 @@ int main(int argc, char *argv[])
 			nelems = nelements[lastcol];
 			for (lastelem = elem; lastelem <= nelems; lastelem++) {
 				int nextwidth = linewidth + dispwidth[lastcol] + 1;
-				if (nextwidth > 80) {
+				if (nextwidth > max_linewidth) {
 					breakout = 1;
 					break;
 				}

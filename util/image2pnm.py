@@ -5,19 +5,16 @@
 
 Convert an image in a variety of formats into a pnm file
 """
+from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import os
 import os.path
 import tempfile
 
-if __name__ == '__main__':
-    import addpath
-    addpath.addpath()
-
 from astrometry.util.shell import shell_escape
 from astrometry.util.filetype import filetype_short
 import logging
-
 
 fitstype = 'FITS image data'
 fitsext = 'fits'
@@ -29,25 +26,25 @@ pgmext = 'pgm'
 an_fitstopnm_ext_cmd = 'an-fitstopnm -e %i -i %%s > %%s'
 
 imgcmds = {fitstype : (fitsext, 'an-fitstopnm -i %s > %s'),
-	   'JPEG image data'  : ('jpg',  'jpegtopnm %s > %s'),
-	   'PNG image data'       : ('png',      'pngtopnm %s > %s'),
-	   'PNG image'    : ('png',      'pngtopnm %s > %s'),
-	   'GIF image data'       : ('gif',      'giftopnm %s > %s'),
-	   'Netpbm PPM'       : ('ppm',      'ppmtoppm < %s > %s'),
-	   'Netpbm PPM "rawbits" image data' : ('ppm',  'cp %s %s'),
-	   'Netpbm PGM'       : ('pgm',      pgmcmd),
-	   'Netpbm PGM "rawbits" image data' : ('pgm',  pgmcmd),
-	   'TIFF image data'  : ('tiff',  'tifftopnm %s > %s'),
-	   'PC bitmap' : ('bmp', 'bmptopnm %s > %s'),
-	   # RAW is not recognized by 'file'; we have to use 'dcraw',
-	   # but we still store this here for convenience.
-	   'raw'              : ('raw', 'dcraw -4 -c %s > %s'),
-	   }
+       'JPEG image data'  : ('jpg',  'jpegtopnm %s > %s'),
+       'PNG image data'       : ('png',      'pngtopnm %s > %s'),
+       'PNG image'    : ('png',      'pngtopnm %s > %s'),
+       'GIF image data'       : ('gif',      'giftopnm %s > %s'),
+       'Netpbm PPM'       : ('ppm',      'ppmtoppm < %s > %s'),
+       'Netpbm PPM "rawbits" image data' : ('ppm',  'cp %s %s'),
+       'Netpbm PGM'       : ('pgm',      pgmcmd),
+       'Netpbm PGM "rawbits" image data' : ('pgm',  pgmcmd),
+       'TIFF image data'  : ('tiff',  'tifftopnm %s > %s'),
+       'PC bitmap' : ('bmp', 'bmptopnm %s > %s'),
+       # RAW is not recognized by 'file'; we have to use 'dcraw',
+       # but we still store this here for convenience.
+       'raw'              : ('raw', 'dcraw -4 -c %s > %s'),
+       }
 
 compcmds = {'gzip compressed data'    : ('gz',      'gunzip -c %s > %s'),
-	    "compress'd data 16 bits" : ('gz',      'gunzip -c %s > %s'),
-	    'bzip2 compressed data'   : ('bz2', 'bunzip2 -k -c %s > %s')
-	    }
+        "compress'd data 16 bits" : ('gz',      'gunzip -c %s > %s'),
+        'bzip2 compressed data'   : ('bz2', 'bunzip2 -k -c %s > %s')
+        }
 
 # command to identify a RAW image.
 raw_id_cmd = 'dcraw -i %s >/dev/null 2> /dev/null'
@@ -57,7 +54,7 @@ verbose = False
 def do_command(cmd):
     logging.debug('Running: "%s"' % cmd)
     if os.system(cmd) != 0:
-        print >>sys.stderr, 'Command failed: %s' % cmd
+        print('Command failed: %s' % cmd, file=sys.stderr)
         sys.exit(-1)
 
 def get_cmd(types, cmds):
@@ -118,26 +115,27 @@ def get_image_type(infile):
         return (ext, cmd, None)
     return (None, None, 'Unknown image type "%s"' % typeinfo)
 
-def find_program(mydir, cmd):
+def find_program(dirs, cmd):
     # pull off the executable name.
     parts = cmd.split(' ', 1)
     prog = parts[0]
     # try the same directory - this should work for installed
     # versions where image2pnm.py and an-fitstopnm are both in
     # "bin".
-    p = os.path.join(mydir, prog)
-    if os.path.exists(p):
-        return ' '.join([p, parts[1]])
-    logging.info('path', p, 'does not exist.')
+    for mydir in dirs:
+        # If mydir is actually a file, get its dir
+        if os.path.isfile(mydir):
+            mydir = os.path.dirname(mydir)
+        p = os.path.join(mydir, prog)
+        if os.path.exists(p):
+            return ' '.join([p, parts[1]])
+        logging.info('path', p, 'does not exist.')
     return None
 
-def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
-              no_fits2fits=False, extension=None, mydir=None,
-              fix_sdss=False):
+def image2pnm(infile, outfile, force_ppm=False, extension=None, mydir=None):
     """
     infile: input filename.
     outfile: output filename.
-    sanitized: for FITS images, output filename of sanitized (fits2fits'd) image.
     force_ppm: boolean, convert PGM to PPM so that the output is always PPM.
 
     Returns: (type, error)
@@ -152,51 +150,17 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
         return (None, 'Image type not recognized: ' + err)
 
     tempfiles = []
-
     (outfile_dir, outfile_file) = os.path.split(outfile)
-
-    if (ext == fitsext) and fix_sdss and no_fits2fits:
-        # We want to run fix_sdss_idr even if no_fits2fits is set.
-        from fix_sdss_idr import is_sdss_idr_file, fix_sdss_idr_file
-
-        if is_sdss_idr_file(infile):
-            (f, fixidr) = tempfile.mkstemp('fix_sdss_idr', outfile_file, outfile_dir)
-            os.close(f)
-            tempfiles.append(fixidr)
-            logging.debug('fix_sdss_idr(in="%s", out="%s")' % (infile, fixidr))
-            fix_sdss_idr_file(infile, fixidr)
-            infile = fixidr
-
-    # If it's a FITS file we want to filter it first because of the many
-    # misbehaved FITS files. fits2fits is a sanitizer.
-    if (ext == fitsext) and (not no_fits2fits):
-
-        from fits2fits import fits2fits as fits2fits
-
-        if not sanitized:
-            (f, sanitized) = tempfile.mkstemp('sanitized', outfile_file, outfile_dir)
-            os.close(f)
-            tempfiles.append(sanitized)
-        else:
-            assert sanitized != infile
-        logging.debug('fits2fits(in="%s", out="%s", fix_idr=%s)' %
-                      (infile, sanitized, str(fix_sdss)))
-        errstr = fits2fits(infile, sanitized, fix_idr=fix_sdss)
-        if errstr:
-            return (None, errstr)
-        infile = sanitized
 
     if force_ppm:
         original_outfile = outfile
         outfile_dir = os.path.dirname(outfile)
         (f, outfile) = tempfile.mkstemp(suffix='.pnm',
-					dir=outfile_dir)
+                    dir=outfile_dir)
         # we might rename this file later, so don't add it to the list of
         # tempfiles to delete until later...
         os.close(f)
         logging.debug('temporary output file: %s' % outfile)
-	# print 'force_ppm: original output file', original_outfile
-	# print 'temp:', outfile
 
     if ext == fitsext and extension:
         cmd = an_fitstopnm_ext_cmd % extension
@@ -221,14 +185,11 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 
     for fn in tempfiles:
         os.unlink(fn)
-
     # Success
     return (ext, None)
-    
 
-def convert_image(infile, outfile, uncompressed=None, sanitized=None,
-                  force_ppm=False, no_fits2fits=False, extension=None,
-                  mydir=None, fix_sdss=False):
+def convert_image(infile, outfile, uncompressed=None, force_ppm=False,
+                  extension=None, mydir=None):
     tempfiles = []
     # if the caller didn't specify where to put the uncompressed file,
     # create a tempfile.
@@ -237,23 +198,21 @@ def convert_image(infile, outfile, uncompressed=None, sanitized=None,
         (f, uncompressed) = tempfile.mkstemp('', 'uncomp', outfile_dir)
         os.close(f)
         tempfiles.append(uncompressed)
-
     comp = uncompress_file(infile, uncompressed)
-                           
     if comp:
-        print 'compressed'
-        print comp
+        print('compressed')
+        print(comp)
         infile = uncompressed
 
-    (imgtype, errstr) = image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits, extension, mydir, fix_sdss)
-
+    (imgtype, errstr) = image2pnm(infile, outfile, force_ppm=force_ppm,
+                                  extension=extension, mydir=mydir)
     for fn in tempfiles:
         os.unlink(fn)
 
     if errstr:
         logging.error('ERROR: %s' % errstr)
         return -1
-    print imgtype
+    print(imgtype)
     return 0
 
 def main():
@@ -266,10 +225,6 @@ def main():
                       dest='uncompressed_outfile',
                       help='uncompressed temporary FILE', metavar='FILE',
                       default='')
-    parser.add_option('-s', '--sanitized-fits-outfile',
-                      dest='sanitized_outfile',
-                      help='sanitized temporary fits FILE', metavar='FILE',
-                      default='')
     parser.add_option('-o', '--outfile',
                       dest='outfile',
                       help='output pnm image FILE', metavar='FILE')
@@ -279,12 +234,7 @@ def main():
     parser.add_option('-e', '--extension',
                       dest='extension', type='int',
                       help='FITS extension to read')
-    parser.add_option('-2', '--no-fits2fits',
-                      action='store_true', dest='no_fits2fits',
-                      help="don't sanitize FITS files")
-    parser.add_option('-S', '--fix-sdss',
-                      action='store_true', dest='fix_sdss',
-                      help="fix SDSS idR files")
+    parser.add_option('--mydir', help='Set directory to search for an-fitstopnm')
     parser.add_option('-v', '--verbose',
                       action='store_true', dest='verbose',
                       help='be chatty')
@@ -298,9 +248,14 @@ def main():
 
     # Find the path to this executable and use it to find other Astrometry.net
     # executables.
-    if (len(sys.argv) > 0):
-        mydir = os.path.dirname(sys.argv[0])
-
+    dirs = []
+    if options.mydir:
+        dirs.append(options.mydir)
+    if len(sys.argv):
+        dirs.append(os.path.dirname(sys.argv[0]))
+    # util/ -- useful when running from source directory
+    dirs.append(os.path.dirname(__file__))
+        
     global verbose
     verbose = options.verbose
 
@@ -312,12 +267,10 @@ def main():
     logging.raiseExceptions = False
         
     return convert_image(options.infile, options.outfile,
-                         options.uncompressed_outfile,
-                         options.sanitized_outfile,
-                         options.force_ppm,
-                         options.no_fits2fits,
-                         options.extension,
-                         mydir, fix_sdss=options.fix_sdss)
+                         uncompressed=options.uncompressed_outfile,
+                         force_ppm=options.force_ppm,
+                         extension=options.extension,
+                         mydir=dirs)
 
 if __name__ == '__main__':
     sys.exit(main())

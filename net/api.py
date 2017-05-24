@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import base64
 
 from functools import wraps
@@ -8,6 +10,8 @@ if __name__ == '__main__':
     import sys
     fn = os.path.dirname(os.path.dirname(__file__))
     sys.path.append(fn)
+    import django
+    django.setup()
 
 from django.contrib import auth
 from django.shortcuts import get_object_or_404
@@ -18,9 +22,9 @@ from django.views.decorators.csrf import csrf_exempt
 # astrometry.net imports
 from astrometry.net.models import *
 from astrometry.net.views.submission import handle_upload
-from api_util import *
-from log import *
-from tmpfile import *
+from .api_util import *
+from .log import *
+from .tmpfile import *
 import settings
 
 # Content-type to return for JSON outputs.
@@ -212,7 +216,7 @@ def write_wcs_file(req, wcsfn):
 @requires_json_args
 @requires_json_session
 def api_sdss_image_for_wcs(req):
-    from sdss_image import plot_sdss_image
+    from .sdss_image import plot_sdss_image
     wcsfn = get_temp_file()
     plotfn = get_temp_file()
     write_wcs_file(req, wcsfn)
@@ -225,7 +229,7 @@ def api_sdss_image_for_wcs(req):
 @requires_json_args
 @requires_json_session
 def api_galex_image_for_wcs(req):
-    from galex_jpegs import plot_into_wcs
+    from .galex_jpegs import plot_into_wcs
     wcsfn = get_temp_file()
     plotfn = get_temp_file()
     write_wcs_file(req, wcsfn)
@@ -408,6 +412,7 @@ def get_anns(cal, nbright=0):
     icfn = os.path.join(catdir, 'ic2000.fits')
     brightfn = os.path.join(catdir, 'brightstars.fits')
     hdfn = settings.HENRY_DRAPER_CAT
+    hipfn = settings.HIPPARCOS_CAT
     tycho2fn = settings.TYCHO2_KD
     
     import astrometry.blind.plotann as plotann
@@ -421,6 +426,7 @@ def get_anns(cal, nbright=0):
         opt.hdcat = hdfn
     if rad < 0.25:
         opt.t2cat = tycho2fn
+        opt.hipcat = hipfn
     if rad < 10:
         opt.ngc = True
         opt.ngccat = ngcfn
@@ -517,6 +523,7 @@ def jobs_by_tag(req):
 
 
 if __name__ == '__main__':
-    job = Job.objects.get(id=12)
+    #job = Job.objects.get(id=12)
+    job = Job.objects.get(id=1649169)
     cal = job.calibration
-    print get_anns(cal)
+    print(get_anns(cal))

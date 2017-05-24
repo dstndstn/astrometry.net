@@ -20,6 +20,7 @@ Contents:
    api
    nova
    oaq
+   code
 
 .. toctree::
    :hidden:
@@ -27,10 +28,11 @@ Contents:
    net/orientation
    net/api
    net/models
-   dev
    backups
    api
    api-util-py
+   pykd
+   ttime
 
 Other places:
 
@@ -41,7 +43,6 @@ Other places:
 Internal docs:
 
 * :ref:`nova_orient`
-* :ref:`svn_checkout`
 * :ref:`backups`
 
 Indices and tables

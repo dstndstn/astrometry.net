@@ -1,3 +1,4 @@
+from __future__ import print_function
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
@@ -34,7 +35,7 @@ def edit(req, license_id):
             license.save()
             redirect_url = req.POST.get('next','/')
         except:
-            print 'failed'
+            print('failed')
             redirect_url = ('/')
             pass
 

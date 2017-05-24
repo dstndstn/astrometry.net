@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 if __name__ == '__main__':
@@ -9,18 +10,21 @@ import settings
 from astrometry.net.models import *
 from astrometry.util.file import *
 
+import django
+django.setup()
+
 
 def clean_dfs():
     for df in DiskFile.objects.all().order_by('file_hash'):
         if os.path.exists(df.get_path()):
             continue
-        print 'Does not exist:', df
+        print('Does not exist:', df)
 
         ocoll = df.collection
         for coll in ['cached', 'resized', 'uploaded', 'uploaded-gunzip', 'uploaded-untar']:
             df.collection = coll
             if os.path.exists(df.get_path()):
-                print '--> found in', coll
+                print('--> found in', coll)
                 df.save()
                 continue
 
@@ -34,28 +38,28 @@ def clean_dfs():
 
 def unlink_resized_fits():
     uis = UserImage.objects.filter(image__disk_file__file_type='FITS image data')
-    print uis.count(), 'UserImages are FITS'
+    print(uis.count(), 'UserImages are FITS')
     for ui in uis:
         im = ui.image
         im.display_image = None
         im.thumbnail = None
         im.save()
-    print 'Updated', len(uis), 'UserImages'
+    print('Updated', len(uis), 'UserImages')
 
 
 def delete_orphaned_images():
-    print 'Checking for orphaned Images...'
+    print('Checking for orphaned Images...')
     ndel = 0
     for im in Image.objects.all():
         used = (im.userimage_set.count() +
                 im.image_thumbnail_set.count() +
                 im.image_display_set.count())
-        print 'Image', im.id, 'used', used, 'times'
+        print('Image', im.id, 'used', used, 'times')
         if used > 0:
             continue
         im.delete()
         ndel += 1
-    print 'Deleted', ndel, 'Images'
+    print('Deleted', ndel, 'Images')
 
 def delete_orphaned_diskfiles():
     ndel = 0
@@ -63,15 +67,80 @@ def delete_orphaned_diskfiles():
         used = (df.image_set.count() + 
                 df.submissions.count() +
                 df.cachedfile_set.count())
-        print 'DiskFile', df.file_hash, 'used', used, 'times'
+        print('DiskFile', df.file_hash, 'used', used, 'times')
         if used > 0:
             continue
         os.remove(df.get_path())
         df.delete()
         ndel += 1
-    print 'Deleted', ndel, 'DiskFiles'
+    print('Deleted', ndel, 'DiskFiles')
+
+
+
+def clean_cache():
+    cfs = CachedFile.objects.all()
+    print cfs.count(), 'CachedFiles'
+    #cfs = cfs.filter(key__contains='galex')
+    #print cfs.count(), 'GALEX cached files'
+    cfs = cfs.filter(key__contains='sdss_size')
+    print cfs.count(), 'SDSS cached files'
+
+    def do_delete(delcfs, deldfs, delfiles):
+        delcfs = list(delcfs)
+        deldfs = list(deldfs)
+        delfiles = list(delfiles)
+        print 'Total of', len(delcfs), 'CachedFiles to delete'
+        print 'Total of', len(delfiles), 'files to delete'
+        print 'Total of', len(deldfs), 'DiskFiles to delete'
+        print 'Deleting CachedFiles...'
+        for cf in delcfs:
+            cf.delete()
+        print 'Deleting DiskFiles...'
+        for df in deldfs:
+            df.delete()
+        print 'Deleting Files...'
+        for fn in delfiles:
+            os.unlink(fn)
+
+
+    delfiles = set()
+    delcfs = set()
+    deldfs = set()
+
+    for i,cf in enumerate(cfs):
+        if i % 1000 == 0:
+            do_delete(delcfs, deldfs, delfiles)
+
+            delfiles = set()
+            delcfs = set()
+            deldfs = set()
+
+        print
+        print cf.key
+        try:
+            df = cf.disk_file
+        except:
+            print('DiskFile not found -- deleting CachedFile')
+            delcfs.add(cf)
+            continue
+        path = df.get_path()
+        print '->', path
+        print 'Other CachedFiles sharing this DiskFile:'
+        for ocf in df.cachedfile_set.all():
+            print '  ', ocf.key
+            delcfs.add(ocf)
+        delcfs.add(cf)
+        deldfs.add(df)
+        delfiles.add(path)
+
+    do_delete(delcfs, deldfs, delfiles)
+
 
 if __name__ == '__main__':
+
+    clean_cache()
+    sys.exit(0)
+
 
     # Remove resized FITS image to retro-fix bug in an-fitstopnm
     unlink_resized_fits()
@@ -101,27 +170,25 @@ if __name__ == '__main__':
     #     nbytes += sz
     # print 'Total of', nbytes, 'bytes'
         
-
-
 def clean_cache():
     cfs = CachedFile.objects.all()
-    print cfs.count(), 'CachedFiles'
+    print(cfs.count(), 'CachedFiles')
     cfs = cfs.filter(key__contains='galex')
-    print cfs.count(), 'GALEX cached files'
+    print(cfs.count(), 'GALEX cached files')
 
     delfiles = []
     delcfs = []
     deldfs = []
 
     for cf in cfs:
-        print
-        print cf.key
+        print()
+        print(cf.key)
         df = cf.disk_file
         path = df.get_path()
-        print '->', path
-        print 'Other CachedFiles sharing this DiskFile:'
+        print('->', path)
+        print('Other CachedFiles sharing this DiskFile:')
         for ocf in df.cachedfile_set.all():
-            print '  ', ocf.key
+            print('  ', ocf.key)
             delcfs.append(ocf)
         delcfs.append(cf)
         deldfs.append(df)
@@ -130,9 +197,9 @@ def clean_cache():
     delcfs = list(set(delcfs))
     deldfs = list(set(deldfs))
     delfiles = list(set(delfiles))
-    print 'Total of', len(delcfs), 'CachedFiles to delete'
-    print 'Total of', len(delfiles), 'files to delete'
-    print 'Total of', len(deldfs), 'DiskFiles to delete'
+    print('Total of', len(delcfs), 'CachedFiles to delete')
+    print('Total of', len(delfiles), 'files to delete')
+    print('Total of', len(deldfs), 'DiskFiles to delete')
     for cf in delcfs:
         cf.delete()
     for df in deldfs:

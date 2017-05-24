@@ -245,7 +245,8 @@ class tabledata(object):
             X = self.td[self.i]
             self.i += 1
             return X
-
+        # py3
+        __next__ = next
 
     def __init__(self, header=None):
         self._length = 0
@@ -454,7 +455,9 @@ class tabledata(object):
                 raise
                 
     def write_to(self, fn, columns=None, header='default', primheader=None,
-                 use_fitsio=True, append=False, append_to_hdu=None):
+                 use_fitsio=True, append=False, append_to_hdu=None,
+                 fits_object=None,
+                 **kwargs):
 
         fitsio = None
         if use_fitsio:
@@ -468,21 +471,36 @@ class tabledata(object):
 
         if fitsio:
             arrays = [self.get(c) for c in columns]
-            fits = fitsio.FITS(fn, 'rw', clobber=(not append))
+            if fits_object is not None:
+                fits = fits_object
+            else:
+                fits = fitsio.FITS(fn, 'rw', clobber=(not append))
 
             arrays = [np.array(a) if isinstance(a,list) else a
                       for a in arrays]
-
+            # py3
+            if b' ' != ' ':
+                aa = []
+                for a in arrays:
+                    if 'U' in str(a.dtype):
+                        aa.append(a.astype(np.bytes_))
+                    else:
+                        aa.append(a)
+                arrays = aa
+            
             if header == 'default':
                 header = None
             try:
                 if append and append_to_hdu is not None:
-                    fits[append_to_hdu].append(arrays, names=columns, header=header)
+                    fits[append_to_hdu].append(arrays, names=columns, header=header, **kwargs)
                 else:
                     if primheader is not None:
                         fits.write(None, header=primheader)
-                    fits.write(arrays, names=columns, header=header)
-                fits.close()
+                    fits.write(arrays, names=columns, header=header, **kwargs)
+
+                # If we were passed in a fits object, don't close it.
+                if fits_object is None:
+                    fits.close()
             except:
                 print('Failed to write FITS table')
                 print('Columns:')
@@ -495,7 +513,6 @@ class tabledata(object):
                     print()
                 raise
             return
-
 
         fc = self.to_fits_columns(columns)
         T = pyfits.new_table(fc)
@@ -683,8 +700,8 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
                     from astropy.io import fits as pyfits
                     isrecarray = (type(data) == pyfits.fitsrec.FITS_rec)
                 except:
-                    import traceback
-                    traceback.print_exc()
+                    #import traceback
+                    #traceback.print_exc()
                     pass
         #if not isrecarray:
         #    if type(data) == np.recarray:
@@ -749,6 +766,17 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
             if lower:
                 c = c.lower()
             T.set(c, col)
+
+    # py3: convert FITS strings from Python bytes to strings.
+    if b' ' != ' ':
+        # py3
+        for c in columns:
+            X = T.get(c)
+            t = str(X.dtype)
+            if 'S' in t:
+                X = X.astype(np.str)
+                T.set(c, X)
+                print('Converted', c, 'from', t, 'to', X.dtype)
 
     return T
 

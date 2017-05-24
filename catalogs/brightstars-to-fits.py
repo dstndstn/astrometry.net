@@ -1,5 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
 import simplejson
 import re
 
@@ -23,11 +24,11 @@ l = re.sub(r'\\x(..)\\x(..)""', replace_unicode, l)
 #l = l.decode('utf8')
 
 l = '[' + l + '0 ]'
-print l
+print(l)
 
 j = simplejson.loads(l)
 j = j[:-1]
-print j
+print(j)
 
 nm, nm2, rr, dd = [],[],[],[]
 vmag = []

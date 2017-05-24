@@ -1,12 +1,13 @@
 # This file is part of libkd.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
 from distutils.core import setup, Extension
 import numpy
 import os.path
 
 from numpy.distutils.misc_util import get_numpy_include_dirs
 numpy_inc = get_numpy_include_dirs()
-print 'Numpy inc:', numpy_inc
+print('Numpy inc:', numpy_inc)
 
 def strlist(s, split=' '):
     lst = s.split(split)
@@ -21,10 +22,10 @@ link = strlist(link)
 inc = strlist(os.environ.get('INC', ''), split='-I')
 cflags = strlist(os.environ.get('CFLAGS', ''))
 
-print 'link:', link
+print('link:', link)
 #print 'objs:', objs
-print 'inc:', inc
-print 'cflags:', cflags
+print('inc:', inc)
+print('cflags:', cflags)
 
 c_module = Extension('spherematch_c',
                      sources = ['pyspherematch.c'],
@@ -38,7 +39,7 @@ setup(name = 'Kdtree matching in Python',
       version = '1.0',
       description = 'This package finds near neighbours in two sets of points',
       author = 'Astrometry.net (Dustin Lang)',
-      author_email = 'dstn@cmu.edu',
+      author_email = 'dstndstn@gmail.com',
       url = 'http://astrometry.net',
       py_modules = [ 'spherematch' ],
       ext_modules = [c_module])

@@ -1,0 +1,15 @@
+#! /usr/bin/env python
+from __future__ import print_function
+from __future__ import absolute_import
+import sys
+# Assume this script is in $(INSTALL_DIR)/bin/ and the
+# python base directory is in $(INSTALL_DIR)/lib/python/ .
+try:
+    # If the PYTHONPATH is already set up, don't mess with it.
+    import astrometry.util.uniformize
+except:
+    import os
+    sys.path.insert(1, os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'lib', 'python')))
+
+from astrometry.util.uniformize import main
+sys.exit(main())

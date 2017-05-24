@@ -5,6 +5,11 @@
 
 #include "Python.h"
 
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#define PyInt_FromLong PyLong_FromLong
+#endif
+
 #include <stdio.h>
 #include <assert.h>
 
@@ -764,9 +769,35 @@ static PyMethodDef spherematchMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+
+
+#if defined(IS_PY3K)
+
+static struct PyModuleDef spherematch_module = {
+    PyModuleDef_HEAD_INIT,
+    "spherematch_c",
+    NULL,
+    0,
+    spherematchMethods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyObject* PyInit_spherematch_c() {
+    PyObject *res = PyModule_Create(&spherematch_module);
+    return res;
+}
+
+#else
+
+
+
 PyMODINIT_FUNC
 initspherematch_c(void) {
     Py_InitModule("spherematch_c", spherematchMethods);
     import_array();
 }
 
+#endif

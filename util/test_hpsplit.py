@@ -1,5 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
 import matplotlib
 matplotlib.use('Agg')
 import pylab as plt
@@ -31,7 +32,7 @@ assert(rtn == 0)
 ps = PlotSequence('test_hpsplit')
 for hp in range(12):
     T = fits_table(splitpat % hp)
-    print 'Healpix', hp, 'got', len(T)
+    print('Healpix', hp, 'got', len(T))
     plt.clf()
     plothist(T.ra, T.dec, 360, range=((0,360),(-90,90)))
     vv = np.linspace(0, 1, 100)

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import matplotlib
 matplotlib.use('Agg')
 import pylab as plt
@@ -30,10 +32,10 @@ def addcal(cal, version, hpmod, hpnum, ps):
     tan = cal.raw_tan
     try:
         if not cal.job.user_image.publicly_visible:
-            print 'Image not public'
+            print('Image not public')
             return False
     except:
-        print 'Error querying publicly_visible:'
+        print('Error querying publicly_visible:')
         import traceback
         traceback.print_exc()
         return False
@@ -45,7 +47,7 @@ def addcal(cal, version, hpmod, hpnum, ps):
     #if not 'image' in ft:
     # HACK HACK HACK
     if not ('JPEG' in ft or 'PNG image' in ft):
-        print 'Not JPEG/PNG:', ft
+        print('Not JPEG/PNG:', ft)
         return False
 
     wcsfn = cal.get_wcs_file()
@@ -57,13 +59,13 @@ def addcal(cal, version, hpmod, hpnum, ps):
     ft = df.file_type
     fn = df.get_path()
     if not os.path.exists(fn):
-        print 'WARNING: does not exist:', fn
+        print('WARNING: does not exist:', fn)
         return False
 
     if 'JPEG' in ft or 'PNG image' in ft:
-        print 'Reading', fn
+        print('Reading', fn)
         I = plt.imread(fn)
-        print 'Read', I.shape, I.dtype
+        print('Read', I.shape, I.dtype)
         if len(I.shape) == 2:
             I = I[:,:,np.newaxis].repeat(3, axis=2)
         assert(len(I.shape) == 3)
@@ -72,7 +74,7 @@ def addcal(cal, version, hpmod, hpnum, ps):
         # vertical FLIP to match WCS
         I = I[::-1,:,:]
         u = np.unique(I.ravel())
-        print 'Number of unique pixel values:', len(u)
+        print('Number of unique pixel values:', len(u))
         if I.dtype != np.uint8:
             #print 'Datatype:', I.dtype
             return False
@@ -83,12 +85,12 @@ def addcal(cal, version, hpmod, hpnum, ps):
     #print 'WCS', wcs
 
     nside,hh = get_healpixes_touching_wcs(tan, topscale=topscale)
-    print 'Nside', nside
-    print 'Healpixes:', hh
+    print('Nside', nside)
+    print('Healpixes:', hh)
 
     if hpmod:
         hh = [h for h in hh if h % hpmod == hpnum]
-        print 'Cut to healpixes:', hh
+        print('Cut to healpixes:', hh)
 
     if ps:
         plt.clf()
@@ -97,15 +99,15 @@ def addcal(cal, version, hpmod, hpnum, ps):
 
     for hp in hh:
 
-        print 'Healpix', hp
+        print('Healpix', hp)
         # Check for actual overlap before (possibly) creating EnhancedImage
         hpwcs,nil = get_healpix_wcs(nside, hp, topscale)
         try:
             Yo,Xo,Yi,Xi,nil = resample_with_wcs(hpwcs, wcs, [], 3)
         except NoOverlapError:
-            print 'No actual overlap'
+            print('No actual overlap')
             continue
-        print len(Yo), 'resampled pixels'
+        print(len(Yo), 'resampled pixels')
         if len(Yo) == 0:
             continue
 
@@ -126,7 +128,7 @@ def addcal(cal, version, hpmod, hpnum, ps):
             try:
                 #print 'Cals:', en.cals.all()
                 en.cals.get(id=cal.id)
-                print 'This calibration has already been added to this EnhancedImage'
+                print('This calibration has already been added to this EnhancedImage')
                 continue
             except:
                 #print 'Checking whether this cal has been added to this EnhancedImage:'
@@ -152,7 +154,7 @@ def addcal(cal, version, hpmod, hpnum, ps):
         assert(enhI.shape[2] == 3)
         assert(I.shape[2] == 3)
 
-        from enhance import EnhanceImage
+        from .enhance import EnhanceImage
 
         Eimg = EnhanceImage(0,0)
         # Reshape arrays as required by "EnhanceImage".
@@ -318,12 +320,12 @@ if __name__ == '__main__':
         todel = EnhanceVersion.objects.all()
         if opt.version:
             todel = todel.filter(name=opt.version)
-        print 'Deleting', todel
+        print('Deleting', todel)
         todel.delete()
 
     enver,created = EnhanceVersion.objects.get_or_create(name=opt.version,
                                                          topscale=topscale)
-    print 'Version:', enver
+    print('Version:', enver)
 
     if opt.plots:
         ps = PlotSequence('en')
@@ -331,13 +333,13 @@ if __name__ == '__main__':
         ps = None
 
     cals = Calibration.objects.all()
-    print 'Calibrations:', cals.count()
+    print('Calibrations:', cals.count())
     if opt.mincal:
         cals = cals.filter(id__gte=opt.mincal)
-        print 'Cut to', cals.count(), 'with id >=', opt.mincal
+        print('Cut to', cals.count(), 'with id >=', opt.mincal)
     if opt.maxcal:
         cals = cals.filter(id__lte=opt.maxcal)
-        print 'Cut to', cals.count(), 'with id <=', opt.maxcal
+        print('Cut to', cals.count(), 'with id <=', opt.maxcal)
     if opt.reverse:
         # Reverse order
         cals = cals.order_by('-id')
@@ -345,10 +347,10 @@ if __name__ == '__main__':
 
     ncals = cals.count()
     for ical in range(ncals):
-        print
-        print 'Calibration', ical, 'of', ncals
+        print()
+        print('Calibration', ical, 'of', ncals)
         cal = cals[ical]
-        print 'Cal', cal
+        print('Cal', cal)
 
         # pixscale = cal.raw_tan.get_pixscale()
         # if pixscale < slo or pixscale > shi:
@@ -446,7 +448,7 @@ if __name__ == '__main__':
     ver = 'v3'
     enver,created = EnhanceVersion.objects.get_or_create(name=ver,
                                                          topscale=topscale)
-    print 'Version:', enver
+    print('Version:', enver)
 
     uis = UserImage.objects.all()
     uis = uis.filter(id__in=[209355, 94560, 209357])
@@ -461,9 +463,9 @@ if __name__ == '__main__':
         wcsfn = cal.get_wcs_file()
         df = cal.job.user_image.image.disk_file
         fn = df.get_path()
-        print 'Reading', fn
+        print('Reading', fn)
         I = plt.imread(fn)
-        print 'Read', I.shape, I.dtype
+        print('Read', I.shape, I.dtype)
         if len(I.shape) == 2:
             I = I[:,:,np.newaxis].repeat(3, axis=2)
         assert(len(I.shape) == 3)
@@ -473,8 +475,8 @@ if __name__ == '__main__':
 
         nside,hh = get_healpixes_touching_wcs(tan, topscale=topscale)
 
-        print 'Nside', nside
-        print 'Healpixes:', hh
+        print('Nside', nside)
+        print('Healpixes:', hh)
 
         #nside /= 2
         #for hp in hh:
@@ -486,11 +488,11 @@ if __name__ == '__main__':
             try:
                 Yo,Xo,Yi,Xi,nil = resample_with_wcs(hpwcs, wcs, [], 3)
             except NoOverlapError:
-                print 'No actual overlap'
+                print('No actual overlap')
                 continue
 
             if len(Yo) == 0:
-                print 'No pixels overlap'
+                print('No pixels overlap')
                 continue
             hpimg = np.zeros((hpwcs.get_height(), hpwcs.get_width()), np.uint8)
             hpimg[Yo,Xo] = I[Yi,Xi,0]

@@ -21,6 +21,7 @@ were only ever intended to be supported for type ``char``.
 
 .. _specifications: http://www.sdss3.org/dr8/software/par.php
 """
+from __future__ import print_function
 
 __author__ = 'Benjamin Weaver <benjamin.weaver@nyu.edu>'
 
@@ -266,7 +267,7 @@ class yanny(dict):
             var_type = cache[variable]
         except KeyError:
             if self.debug:
-                print variable
+                print(variable)
             typere = re.compile(r'(\S+)\s+%s([[<].*[]>]|);' % variable)
             (typ,array) = typere.search(definition[0]).groups()
             var_type = typ + array.replace('<','[').replace('>',']')
@@ -277,7 +278,7 @@ class yanny(dict):
         information."""
         typ = self.type(structure,variable)
         if self.debug:
-            print variable, typ
+            print(variable, typ)
         try:
             return typ[0:typ.index('[')]
         except ValueError:
@@ -526,7 +527,7 @@ class yanny(dict):
             if len(self._filename) > 0:
                 newfile = self._filename
             else:
-                print "ERROR: No filename specified!"
+                print("ERROR: No filename specified!")
                 return
         basefile = os.path.basename(newfile)
         timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
@@ -566,12 +567,12 @@ class yanny(dict):
         # Actually write the data to file
         #
         if os.access(newfile,os.F_OK):
-            print "%s exists, aborting write!" % newfile
-            print "For reference, here's what would have been written:"
-            print contents
+            print("%s exists, aborting write!" % newfile)
+            print("For reference, here's what would have been written:")
+            print(contents)
         else:
             f = open(newfile,'w')
-            print >> f, contents
+            print(contents, file=f)
             f.close()
             self._contents = contents
             self._filename = newfile
@@ -587,10 +588,10 @@ class yanny(dict):
         exist.  If the append is successful, the data in the object will be updated.
         """
         if len(self._filename) == 0:
-            print "No filename is set for this object. Use the set_filename method to set the filename!"
+            print("No filename is set for this object. Use the set_filename method to set the filename!")
             return
         if type(datatable) != dict:
-            print "Data to append is not of the correct type. Use a dict!"
+            print("Data to append is not of the correct type. Use a dict!")
             return
         timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
         contents = ''
@@ -628,16 +629,16 @@ class yanny(dict):
             contents = ("# Appended by yanny.py at %s.\n" % timestamp) + contents
             if os.access(self._filename,os.W_OK):
                 f = open(self._filename,'a')
-                print >> f, contents
+                print(contents, file=f)
                 f.close()
                 self._contents += contents
                 self._parse()
             else:
-                print "%s does not exist, aborting append!" % self._filename
-                print "For reference, here's what would have been written:"
-                print contents
+                print("%s does not exist, aborting append!" % self._filename)
+                print("For reference, here's what would have been written:")
+                print(contents)
         else:
-            print "Nothing to be appended!"
+            print("Nothing to be appended!")
         return
     def _parse(self):
         """Converts text into tables that users can use.
@@ -719,7 +720,7 @@ class yanny(dict):
         if len(lines) > 0:
             for line in lines.split('\n'):
                 if self.debug:
-                    print line
+                    print(line)
                 if len(line) == 0:
                     continue
                 if comments.search(line) is not None:
@@ -825,23 +826,23 @@ def main():
     """
     par = yanny(os.path.join(os.getenv('YANNYTOOLS_DIR'),'data','test.par'),
         np=True,debug=True)
-    print par.pairs()
+    print(par.pairs())
     for p in par.pairs():
-        print "%s => %s" % (p, par[p])
-    print par.keys()
-    print par['symbols'].keys()
-    print par['symbols']['struct']
-    print par['symbols']['enum']
-    print par.tables()
+        print("%s => %s" % (p, par[p]))
+    print(par.keys())
+    print(par['symbols'].keys())
+    print(par['symbols']['struct'])
+    print(par['symbols']['enum'])
+    print(par.tables())
     for t in par.tables():
-        print par.dtype(t)
-        print "%s: %d entries" % (t,par.size(t))
-        print par.columns(t)
+        print(par.dtype(t))
+        print("%s: %d entries" % (t,par.size(t)))
+        print(par.columns(t))
         for c in par.columns(t):
-            print "%s: type %s" % (c,par.type(t,c))
-            print par[t][c]
+            print("%s: type %s" % (c,par.type(t,c)))
+            print(par[t][c])
     if par.isenum('MYSTRUCT','new_flag'):
-        print par._enum_cache
+        print(par._enum_cache)
     par.write() # This should fail, since test.par already exists.
     datatable = {'status_update': {'state':['SUCCESS', 'SUCCESS'],
         'timestamp':['2008-06-22 01:27:33','2008-06-22 01:27:36']},

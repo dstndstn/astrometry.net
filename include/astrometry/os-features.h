@@ -11,7 +11,11 @@
 
 // Features we use that aren't standard across all supported platforms
 
+#if defined(NEED_CANONICALIZE_FILE_NAME) && (NEED_CANONICALIZE_FILE_NAME == 0)
+// don't redeclare it!
+#else
 char* canonicalize_file_name(const char* fn);
+#endif
 
 // This is actually in POSIX1b but may or may not be available.
 int fdatasync(int fd);

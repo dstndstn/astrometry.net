@@ -1,8 +1,9 @@
 #! /usr/bin/env python
+from __future__ import print_function
 import sys
 import os
 p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-print 'Adding', p
+print('Adding', p)
 sys.path.append(p)
 import shutil
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
@@ -16,10 +17,10 @@ readonlydb = False
 
 subs = Submission.objects.select_related().all()
 keepdfs = set()
-print subs.count(), 'Submissions'
+print(subs.count(), 'Submissions')
 for i,sub in enumerate(subs):
     if i % 1000 == 0:
-        print 'Submission', i, 'of', len(subs), ':', sub
+        print('Submission', i, 'of', len(subs), ':', sub)
     #print 'Submission', i, 'of', len(subs), ':', sub
     df = sub.disk_file
     df.collection = Image.ORIG_COLLECTION
@@ -61,42 +62,42 @@ for i,sub in enumerate(subs):
 
 dropdfs = set()
 cached = CachedFile.objects.all()
-print cached.count(), 'CachedFiles'
+print(cached.count(), 'CachedFiles')
 for c in cached:
     dropdfs.add(c.disk_file)
 
 bothdfs = dropdfs.union(keepdfs)
     
-print len(bothdfs), 'DiskFiles of', DiskFile.objects.all().count(), 'total accounted for'
-print len(keepdfs), 'to keep'
-print len(dropdfs), 'to drop'
+print(len(bothdfs), 'DiskFiles of', DiskFile.objects.all().count(), 'total accounted for')
+print(len(keepdfs), 'to keep')
+print(len(dropdfs), 'to drop')
 
 alldfs = set([df for df in DiskFile.objects.all()])
 orphans = alldfs - bothdfs
-print len(orphans), 'orphans:'
+print(len(orphans), 'orphans:')
 orphans = list(orphans)
 for df in orphans:
-    print '  ', df
-    print '    images', df.image_set.all()
+    print('  ', df)
+    print('    images', df.image_set.all())
     for im in df.image_set.all():
-        print '      ', im
-        print '      .thumbnail', im.thumbnail
-        print '      thumbnail of', im.image_thumbnail_set.all()
-        print '      .display_image', im.display_image
-        print '      display of', im.image_display_set.all()
-        print '      userimages:', im.userimage_set.all()
+        print('      ', im)
+        print('      .thumbnail', im.thumbnail)
+        print('      thumbnail of', im.image_thumbnail_set.all())
+        print('      .display_image', im.display_image)
+        print('      display of', im.image_display_set.all())
+        print('      userimages:', im.userimage_set.all())
         for ui in im.userimage_set.all():
-            print '        ', ui
-            print '        .user', ui.user
-            print '        .sub', ui.submission
-    print '    subs', df.submissions.all()
-    print '    cached', df.cachedfile_set.all()
+            print('        ', ui)
+            print('        .user', ui.user)
+            print('        .sub', ui.submission)
+    print('    subs', df.submissions.all())
+    print('    cached', df.cachedfile_set.all())
 
             
 keepdfs = list(keepdfs)
 keepdfs.sort()
-print len(keepdfs), 'DiskFiles to keep'
-print DiskFile.objects.all().count(), 'total DiskFiles'
+print(len(keepdfs), 'DiskFiles to keep')
+print(DiskFile.objects.all().count(), 'total DiskFiles')
 missing = []
 for df in keepdfs:
     oldpath = df.OLD_get_path()
@@ -106,13 +107,13 @@ for df in keepdfs:
         if not readonly:
             os.makedirs(newdir)
         else:
-            print 'fake makedirs', newdir
-    print 'Moving', oldpath, 'to', newpath
+            print('fake makedirs', newdir)
+    print('Moving', oldpath, 'to', newpath)
     if os.path.exists(newpath) and not os.path.exists(oldpath):
-        print 'Already moved', oldpath, newpath
+        print('Already moved', oldpath, newpath)
         continue
     if readonly:
-        print 'fake move', oldpath, '->', newpath
+        print('fake move', oldpath, '->', newpath)
         if not os.path.exists(oldpath):
             missing.append(oldpath)
         #assert(os.path.exists(oldpath))
@@ -120,15 +121,15 @@ for df in keepdfs:
         try:
             shutil.move(oldpath, newpath)
         except Exception as e:
-            print 'Failed to move', oldpath, 'to', newpath
-            print e
+            print('Failed to move', oldpath, 'to', newpath)
+            print(e)
 
-print len(missing), 'missing:'
+print(len(missing), 'missing:')
 for x in missing:
-    print x
+    print(x)
 
 jobs = Job.objects.select_related().all()
-print jobs.count(), 'jobs'
+print(jobs.count(), 'jobs')
 missing = []
 for job in jobs:
     oldpath = job.OLD_get_dir()
@@ -136,13 +137,13 @@ for job in jobs:
     newdir = os.path.dirname(newpath)
     if not os.path.exists(newdir):
         if readonly:
-            print 'fake makedirs', newdir
+            print('fake makedirs', newdir)
         else:
             os.makedirs(newdir)
     if os.path.exists(newpath) and not os.path.exists(oldpath):
-        print 'Already moved', oldpath, newpath
+        print('Already moved', oldpath, newpath)
         continue
-    print 'Moving', oldpath, 'to', newpath
+    print('Moving', oldpath, 'to', newpath)
     if not readonly:
         shutil.move(oldpath, newpath)
     else:
@@ -150,6 +151,6 @@ for job in jobs:
         if not os.path.exists(oldpath):
             missing.append(oldpath)
 
-print len(missing), 'missing:'
+print(len(missing), 'missing:')
 for x in missing:
-    print x
+    print(x)

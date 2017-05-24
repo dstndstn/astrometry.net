@@ -15,6 +15,7 @@ import simplejson
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
+        fields = '__all__'
 
 class PartialCommentForm(forms.ModelForm):
     class Meta:

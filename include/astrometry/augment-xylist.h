@@ -97,9 +97,7 @@ struct augment_xylist_s {
     anbool tweak;
     int tweakorder;
 
-    anbool no_fits2fits;
 	anbool no_removelines;
-	anbool no_fix_sdss;
 	anbool no_bg_subtraction;
 
 	int uniformize;
@@ -107,6 +105,7 @@ struct augment_xylist_s {
 	anbool invert_image;
 
 	float image_sigma;
+	float image_nsigma;
 
     char* xcol;
     char* ycol;

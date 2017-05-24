@@ -166,11 +166,11 @@ ALL_OBJ += wcs-pv2sip.o
 _util$(PYTHON_SO_EXT): util.i lanczos.i $(ANFILES_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(CFLAGS)" \
-	python setup.py build_ext -v --inplace --build-temp .
+	$(PYTHON) setup.py build_ext -v --inplace --build-temp .
 util.py: util.i lanczos.i
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(CFLAGS)" \
-	python setup.py build_ext -v --inplace --build-temp .
+	$(PYTHON) setup.py build_ext -v --inplace --build-temp .
 
 PYUTIL := _util$(PYTHON_SO_EXT) util.py
 pyutil: $(PYUTIL)
@@ -178,24 +178,22 @@ pyutil: $(PYUTIL)
 py: $(PYUTIL)
 .PHONY: py
 
-PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py \
+PYTHON_INSTALL := image2pnm.py addpath.py \
 	starutil.py starutil_numpy.py \
-	shell.py __init__.py file.py run_command.py w3c_validator.py \
+	shell.py __init__.py file.py run_command.py \
 	filetype.py fits.py fix_sdss_idr.py removelines.py \
-	uniformize.py lsstutils.py casjobs.py \
-	sdss_das.py sdss_filenames.py sdss_get_catalog.py sdss_noise.py \
-	sdss_psf.py sdss_psfield.py sqlcl.py \
+	uniformize.py casjobs.py \
 	usnob_catalog.py usnob_get_image.py usnob_get_region.py \
 	find_data_file.py plotshift.py plotutils.py miscutils.py multiproc.py \
-	yanny.py ttime.py resample.py \
-	EXIF.py degtohms.py hmstodeg.py horizons.py text2fits.py votabletofits.py \
-	imageutils.py merge-columns.py siap.py stages.py timingpool.py
+	ttime.py resample.py EXIF.py horizons.py \
+	imageutils.py siap.py stages.py timingpool.py
 
 # celestial_mechanics.py (needs license)
 
-PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py \
-	degtohms.py hmstodeg.py text2fits.py votabletofits.py \
-	merge-columns.py
+PYTHON_DRIVERS := image2pnm removelines uniformize degtohms hmstodeg \
+	text2fits votabletofits merge-columns
+
+PYTHON_EXECS := $(addprefix ../bin/,$(PYTHON_DRIVERS))
 
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/util
 LINK_DIR := $(PY_BASE_LINK_DIR)/util
@@ -221,8 +219,10 @@ install-core: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
 	mkdir -p '$(BIN_INSTALL_DIR)'
 	@for x in $(PYTHON_EXECS); do \
-		echo ln -f -s '$(PY_INSTALL_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
-		ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
+		echo cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
+		cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
+		echo chmod 755 '$(BIN_INSTALL_DIR)/'$$x; \
+		chmod 755 '$(BIN_INSTALL_DIR)/'$$x; \
 	done
 	@echo Installing executables into '$(BIN_INSTALL_DIR)'...
 	@for x in $(PROGS) $(MAIN_PROGS); do \

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import random
 import os
 import errno
@@ -15,10 +17,10 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
 
 from astrometry.net.settings import *
-from wcs import *
-from log import *
+from .wcs import *
+from .log import *
 
-from enhance_models import *
+from .enhance_models import *
 
 from astrometry.util.starutil_numpy import ra2hmsstring, dec2dmsstring
 from astrometry.util.filetype import filetype_short
@@ -270,7 +272,7 @@ class DiskFile(models.Model):
         return 'DiskFile: %s, size %i, type %s, coll %s' % (self.file_hash, self.size, self.file_type, self.collection)
 
     def is_fits_image(self):
-        return self.file_type == 'FITS image data'
+        return self.file_type.startswith('FITS image data')
 
     def set_size_and_file_type(self):
         fn = self.get_path()
@@ -337,7 +339,7 @@ class DiskFile(models.Model):
         df,created = DiskFile.objects.get_or_create(
             file_hash=hashkey,
             defaults=dict(size=0, file_type='', collection=collection))
-        if created:
+        if created or not os.path.exists(df.get_path()):
             try:
                 # move it into place
                 df.make_dirs()
@@ -1106,8 +1108,10 @@ class Submission(Hideable):
     #  -> QueuedSubmission
 
     def __str__(self):
-        return ('Submission %i: file <%s>, url %s, proc_started=%s' %
-                (self.id, str(self.disk_file), self.url, str(self.processing_started)))
+        #return ('Submission %i: file <%s>, url %s, proc_started=%s' %
+        #        (self.id, str(self.disk_file), str(self.url), str(self.processing_started)))
+        return ('Submission %i: file <%s>, proc_started=%s' %
+                (self.id, str(self.disk_file), str(self.processing_started)))
 
     def set_error_message(self, msg):
         if len(msg) > 255:
@@ -1241,12 +1245,17 @@ class UserProfile(models.Model):
 def get_user_profile(user):
     if user is None:
         return None
+    if not hasattr(user, 'profile'):
+        ##???
+        # AnonymousUsers seem to end up here
+        #print('User:', user, 'dir', dir(user))
+        return None
     profiles = user.profile.all()
     if len(profiles) > 0:
         return profiles[0]
     # Create new profile?
     profile = UserProfile(user=user)
-    print 'Creating new profile for user', user
+    print('Creating new profile for user', user)
     profile.create_api_key()
     profile.create_default_license()
     if user.get_full_name():

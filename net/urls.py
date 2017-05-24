@@ -17,10 +17,10 @@ urlpatterns += patterns('astrometry.net.views.home',
     url(r'^explore/?$', 'explore', name='explore'),
 )
 
-
-urlpatterns += patterns('',
-    url('', include('social.apps.django_app.urls', namespace='social'))
-)
+if settings.ENABLE_SOCIAL:
+    urlpatterns += patterns('',
+                            url('', include('social.apps.django_app.urls', namespace='social'))
+                            )
 
 urlpatterns += patterns('',
                         url(r'^signin/', 'astrometry.net.views.home.signin', name='signin'),
@@ -151,7 +151,7 @@ urlpatterns += patterns('astrometry.net.api',
     (r'^api/galex_image_for_wcs/?$', 'api_galex_image_for_wcs'),
     (r'^api/submission_images/?$', 'api_submission_images'),
     (r'^api/submissions/(?P<sub_id>' + idpattern + r')/?$', 'submission_status'),
-	(r'^api/myjobs/', 'myjobs'),
+    (r'^api/myjobs/', 'myjobs'),
     (r'^api/jobs/(?P<job_id>' + idpattern + r')/?$', 'job_status'),
     (r'^api/jobs/(?P<job_id>' + idpattern + r')/calibration/?$', 'calibration'),
     (r'^api/jobs/(?P<job_id>' + idpattern + r')/tags/?$', 'tags'),

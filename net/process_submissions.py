@@ -1,27 +1,29 @@
 #! /usr/bin/env python
+from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import sys
 
 # add .. to PYTHONPATH
 path = os.path.realpath(__file__)
-print 'My path', path
+print('My path', path)
 basedir = os.path.dirname(os.path.dirname(path))
 
-#print 'PYTHONPATH is', os.environ['PYTHONPATH']
+#print('PYTHONPATH is', os.environ['PYTHONPATH'])
 
-print 'Adding basedir', basedir, 'to PYTHONPATH'
+print('Adding basedir', basedir, 'to PYTHONPATH')
 sys.path.append(basedir)
 
 # add ../blind and ../util to PATH
 os.environ['PATH'] += ':' + os.path.join(basedir, 'blind')
 os.environ['PATH'] += ':' + os.path.join(basedir, 'util')
 
-print 'sys.path is:'
+print('sys.path is:')
 for x in sys.path:
-    print '  ', x
+    print('  ', x)
 
-print 'PATH is:', os.environ['PATH']
+print('PATH is:', os.environ['PATH'])
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
@@ -53,8 +55,8 @@ import zipfile
 import math
 
 import logging
-#logging.basicConfig(format='%(message)s',
-#                    level=logging.DEBUG)
+logging.basicConfig(format='%(message)s',
+                    level=logging.DEBUG)
 
 from astrometry.util import image2pnm
 from astrometry.util.filetype import filetype_short
@@ -101,7 +103,7 @@ def get_tarball_files(fn):
     if rtn:
         #userlog('Failed to un-tar file:\n' + err)
         #bailout(submission, 'failed to extract tar file')
-        print 'failed to extract tar file'
+        print('failed to extract tar file')
         return None
     fns = out.strip('\n').split('\n')
 
@@ -175,11 +177,25 @@ def create_job_logger(job):
     logger.addHandler(fh)
     return MyLogger(logger)
 
-def try_dojob(job, userimage):
+def try_dojob(job, userimage, solve_command, solve_locally):
     try:
-        return dojob(job, userimage)
+        return dojob(job, userimage, solve_command=solve_command,
+                     solve_locally=solve_locally)
+    except OSError as e:
+        import os.errno
+        # Too many open files
+        if e.errno == os.errno.EMFILE:
+            sys.exit(-1)
+    except IOError as e:
+        import errno
+        # Too many open files
+        print('Caught IOError')
+        print('Errno:', e.errno)
+        if e.errno == errno.EMFILE:
+            print('Too many open files!')
+            sys.exit(-1)
     except:
-        print 'Caught exception while processing Job', job
+        print('Caught exception while processing Job', job)
         traceback.print_exc(None, sys.stdout)
         # FIXME -- job.set_status()...
         job.set_end_time()
@@ -189,9 +205,9 @@ def try_dojob(job, userimage):
         log.msg('Caught exception while processing Job', job.id)
         log.msg(traceback.format_exc(None))
 
-def dojob(job, userimage, log=None):
+def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
     jobdir = job.make_dir()
-    #print 'Created job dir', jobdir
+    #print('Created job dir', jobdir)
     #log = create_job_logger(job)
     #jobdir = job.get_dir()
     if log is None:
@@ -296,28 +312,57 @@ def dojob(job, userimage, log=None):
     logfn = job.get_log_file()
     # the "tar" commands both use "-C" to chdir, and the ssh command
     # and redirect uses absolute paths.
-    cmd = ('(echo %(jobid)s; '
-           'tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
-           'ssh -x -T %(sshconfig)s 2>>%(logfile)s | '
-           'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(jobdir)s '
-           '>>%(logfile)s 2>&1' %
-           dict(jobid='job-%s-%i' % (settings.sitename, job.id),
-                axyfile=axyfn, jobdir=jobdir,
-                sshconfig=settings.ssh_solver_config,
-                logfile=logfn))
-    log.msg('command:', cmd)
-    w = os.system(cmd)
-    if not os.WIFEXITED(w):
-        log.msg('Solver failed (sent signal?)')
-        logmsg('Call to solver failed for job', job.id)
-        raise Exception
-    rtn = os.WEXITSTATUS(w)
-    if rtn:
-        log.msg('Solver failed with return value %i' % rtn)
-        logmsg('Call to solver failed for job', job.id, 'with return val', rtn)
-        raise Exception
 
-    log.msg('Solver completed successfully.')
+    if solve_locally is not None:
+
+        cmd = (('cd %(jobdir)s && %(solvecmd)s %(jobid)s %(axyfile)s >> ' +
+               '%(logfile)s') %
+               dict(jobid='job-%s-%i' % (settings.sitename, job.id),
+                    solvecmd=solve_locally,
+                    axyfile=axyfn, jobdir=jobdir,
+                    logfile=logfn))
+        log.msg('command:', cmd)
+        w = os.system(cmd)
+        if not os.WIFEXITED(w):
+            log.msg('Solver failed (sent signal?)')
+            logmsg('Call to solver failed for job', job.id)
+            raise Exception
+        rtn = os.WEXITSTATUS(w)
+        if rtn:
+            log.msg('Solver failed with return value %i' % rtn)
+            logmsg('Call to solver failed for job', job.id, 'with return val',
+                   rtn)
+            raise Exception
+
+        log.msg('Solver completed successfully.')
+
+    else:
+        if solve_command is None:
+            solve_command = 'ssh -x -T %(sshconfig)s'
+    
+        cmd = (('(echo %(jobid)s; '
+                'tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
+                + solve_command + ' 2>>%(logfile)s | '
+                'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(jobdir)s '
+                '>>%(logfile)s 2>&1') %
+               dict(jobid='job-%s-%i' % (settings.sitename, job.id),
+                    axyfile=axyfn, jobdir=jobdir,
+                    sshconfig=settings.ssh_solver_config,
+                    logfile=logfn))
+        log.msg('command:', cmd)
+        w = os.system(cmd)
+        if not os.WIFEXITED(w):
+            log.msg('Solver failed (sent signal?)')
+            logmsg('Call to solver failed for job', job.id)
+            raise Exception
+        rtn = os.WEXITSTATUS(w)
+        if rtn:
+            log.msg('Solver failed with return value %i' % rtn)
+            logmsg('Call to solver failed for job', job.id, 'with return val',
+                   rtn)
+            raise Exception
+    
+        log.msg('Solver completed successfully.')
 
     # Solved?
     wcsfn = os.path.join(jobdir, wcsfile)
@@ -377,7 +422,7 @@ def try_dosub(sub, max_retries):
     try:
         return dosub(sub)
     except DatabaseError as e:
-        print 'Caught DatabaseError while processing Submission', sub
+        print('Caught DatabaseError while processing Submission', sub)
         traceback.print_exc(None, sys.stdout)
 
         # Try...
@@ -385,12 +430,12 @@ def try_dosub(sub, max_retries):
         sub = Submission.objects.get(id=subid)
 
         if (sub.processing_retries < max_retries):
-            print 'Retrying processing Submission %s' % str(sub)
+            print('Retrying processing Submission %s' % str(sub))
             sub.processing_retries += 1
             sub.save()
             return try_dosub(sub, max_retries)
         else:
-            print 'Submission retry limit reached'
+            print('Submission retry limit reached')
             sub.set_error_message(
                 'Caught exception while processing Submission: ' +  str(sub) + '\n'
                 + traceback.format_exc(None))
@@ -398,7 +443,7 @@ def try_dosub(sub, max_retries):
             sub.save()
             return 'exception'
     except:
-        print 'Caught exception while processing Submission', sub
+        print('Caught exception while processing Submission', sub)
         traceback.print_exc(None, sys.stdout)
         sub.set_error_message(
             'Caught exception while processing Submission: ' +  str(sub) + '\n'
@@ -412,11 +457,14 @@ def try_dosub(sub, max_retries):
 def dosub(sub):
     sub.set_processing_started()
     sub.save()
+    print('Submission disk file:', sub.disk_file)
+
     if sub.disk_file is None:
         logmsg('Sub %i: retrieving URL' % (sub.id), sub.url)
         (fn, headers) = urllib.urlretrieve(sub.url)
         logmsg('Sub %i: wrote URL to file' % (sub.id), fn)
         df = DiskFile.from_file(fn, Image.ORIG_COLLECTION)
+        logmsg('Created DiskFile', df)
         # Try to split the URL into a filename component and save it
         p = urlparse(sub.url)
         p = p.path
@@ -427,6 +475,7 @@ def dosub(sub):
         df.save()
         sub.disk_file = df
         sub.save()
+        logmsg('Saved DiskFile', df)
 
     else:
         logmsg('uploaded disk file for this submission is ' + str(sub.disk_file))
@@ -457,7 +506,12 @@ def dosub(sub):
         # not a gzip file
         pass
 
-    if tarfile.is_tarfile(fn):
+    is_tar = False
+    try:
+        is_tar = tarfile.is_tarfile(fn)
+    except:
+        pass
+    if is_tar:
         logmsg('File %s: tarball' % fn)
         tar = tarfile.open(fn)
         dirnm = tempfile.mkdtemp()
@@ -472,7 +526,6 @@ def dosub(sub):
                 # create UserImage object.
                 if img:
                     create_user_image(sub, img, tarinfo.name)
-
         tar.close()
         shutil.rmtree(dirnm, ignore_errors=True)
     else:
@@ -617,31 +670,32 @@ def create_source_list(df):
 
 ## DEBUG
 def sub_callback(result):
-    print 'Submission callback: Result:', result
+    print('Submission callback: Result:', result)
 def job_callback(result):
-    print 'Job callback: Result:', result
+    print('Job callback: Result:', result)
 
 
-def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
+def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
+         solve_command, solve_locally):
     dojob_pool = None
     dosub_pool = None
     if dojob_nthreads > 1:
-        print 'Processing jobs with %d threads' % dojob_nthreads
+        print('Processing jobs with %d threads' % dojob_nthreads)
         dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
     if dosub_nthreads > 1:
-        print 'Processing submissions with %d threads' % dosub_nthreads
+        print('Processing submissions with %d threads' % dosub_nthreads)
         #dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
         dosub_pool = multiprocessing.Pool(processes=dosub_nthreads)
 
-    print 'Refresh rate: %.1f seconds' % refresh_rate
-    print 'Submission processing retry limit: %d' % max_sub_retries
+    print('Refresh rate: %.1f seconds' % refresh_rate)
+    print('Submission processing retry limit: %d' % max_sub_retries)
 
     # Find Submissions that have been started but not finished;
     # reset the start times to null.
     oldsubs = Submission.objects.filter(processing_started__isnull=False,
                                         processing_finished__isnull=True)
     for sub in oldsubs:
-        print 'Resetting the processing status of', sub
+        print('Resetting the processing status of', sub)
         sub.processing_started = None
         sub.save()
 
@@ -649,7 +703,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
                                  Q(start_time__isnull=False) |
                                  Q(queued_time__isnull=False))
     #for job in oldjobs:
-    #    #print 'Resetting the processing status of', job
+    #    #print('Resetting the processing status of', job)
     #    #job.start_time = None
     #    #job.save()
     # FIXME -- really?
@@ -670,28 +724,28 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
         me.set_watchdog()
         me.save()
 
-        print
+        print()
 
-        #print 'Checking for new Submissions'
+        #print('Checking for new Submissions')
         newsubs = Submission.objects.filter(processing_started__isnull=True)
         if newsubs.count():
-            print 'Found', newsubs.count(), 'unstarted Submissions:', [s.id for s in newsubs]
+            print('Found', newsubs.count(), 'unstarted Submissions:', [s.id for s in newsubs])
 
-        #print 'Checking for UserImages without Jobs'
+        #print('Checking for UserImages without Jobs')
         all_user_images = UserImage.objects.annotate(job_count=Count('jobs'))
         newuis = all_user_images.filter(job_count=0)
         if newuis.count():
-            print 'Found', len(newuis), 'UserImages without Jobs:', [u.id for u in newuis]
+            print('Found', len(newuis), 'UserImages without Jobs:', [u.id for u in newuis])
 
         runsubs = me.subs.filter(finished=False)
         if subresults != lastsubs:
-            print 'Submissions running:', len(subresults)
+            print('Submissions running:', len(subresults))
             lastsubs = subresults
         for sid,res in subresults:
-            print '  Submission id', sid, 'ready:', res.ready(),
+            print('  Submission id', sid, 'ready:', res.ready(),)
             if res.ready():
                 subresults.remove((sid,res))
-                print 'success:', res.successful(),
+                print('success:', res.successful(),)
 
                 qs = runsubs.get(submission__id=sid)
                 qs.finished = True
@@ -699,18 +753,18 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
                 qs.save()
 
                 if res.successful():
-                    print 'result:', res.get(),
-            print
+                    print('result:', res.get(),)
+            print()
 
         runjobs = me.jobs.filter(finished=False)
         if jobresults != lastjobs:
-            print 'Jobs running:', len(jobresults)
+            print('Jobs running:', len(jobresults))
             lastjobs = jobresults
         for jid,res in jobresults:
-            print '  Job id', jid, 'ready:', res.ready(),
+            print('  Job id', jid, 'ready:', res.ready(),)
             if res.ready():
                 jobresults.remove((jid,res))
-                print 'success:', res.successful(),
+                print('success:', res.successful(),)
 
                 qj = runjobs.get(job__id=jid)
                 qj.finished = True
@@ -718,10 +772,10 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
                 qj.save()
 
                 if res.successful():
-                    print 'result:', res.get(),
-            print
+                    print('result:', res.get(),)
+            print()
         if len(jobresults):
-            print 'Still waiting for', len(jobresults), 'Jobs'
+            print('Still waiting for', len(jobresults), 'Jobs')
 
         if (len(newsubs) + len(newuis)) == 0:
             time.sleep(refresh_rate)
@@ -729,8 +783,13 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
 
         # FIXME -- order by user, etc
 
+
+        ## HACK -- order 'newuis' to do the newest ones first... helpful when there
+        # is a big backlog.
+        newuis = newuis.order_by('-submission__submitted_on')
+
         for sub in newsubs:
-            print 'Enqueuing submission:', sub
+            print('Enqueuing submission:', str(sub))
             sub.set_processing_started()
             sub.save()
 
@@ -757,11 +816,11 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
             qj.save()
 
             if dojob_pool:
-                res = dojob_pool.apply_async(try_dojob, (job, userimage),
+                res = dojob_pool.apply_async(try_dojob, (job, userimage, solve_command, solve_locally),
                                              callback=job_callback)
                 jobresults.append((job.id, res))
             else:
-                dojob(job, userimage)
+                dojob(job, userimage, solve_command=solve_command, solve_locally=solve_locally)
 
 if __name__ == '__main__':
     import optparse
@@ -774,6 +833,14 @@ if __name__ == '__main__':
                       default=20, help='Set the maximum number of times to retry processing a submission')
     parser.add_option('--refreshrate', '-r', dest='refreshrate', type='float',
                       default=5, help='Set how often to check for new jobs and submissions (in seconds)')
+
+    parser.add_option('--solve-command',
+                      help='Command to run instead of ssh to actually solve image')
+
+    parser.add_option('--solve-locally',
+                      help='Command to run astrometry-engine on this machine, not via ssh')
+    
     opt,args = parser.parse_args()
 
-    main(opt.jobthreads, opt.subthreads, opt.refreshrate, opt.maxsubretries)
+    main(opt.jobthreads, opt.subthreads, opt.refreshrate, opt.maxsubretries,
+         opt.solve_command, opt.solve_locally)

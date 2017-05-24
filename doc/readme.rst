@@ -86,8 +86,8 @@ arcmin fields); these are the same scale is the new 4202 files.
 The medium-sized index files are split into 12 "healpix" tiles; each
 one covers 1/12th of the sky.  The small-sized ones are split into 48
 healpixes.   See the maps here; you might not need all of them.
-http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp.png
-http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp2.png
+https://github.com/dstndstn/astrometry.net/blob/master/util/hp.png
+https://github.com/dstndstn/astrometry.net/blob/master/util/hp2.png
 
 +-----------------------+-----------------------------------------+
 | Index Filename        | Range of skymark diameters (arcminutes) |
@@ -397,14 +397,6 @@ Tricks and Tips
     $ solve-field --downsample 4 ...
 
 
-* When solve-field processes FITS files, it runs them through a
-  "sanitizer" which tries to clean up non-standards-compliant images.
-  If your FITS files are compliant, this is a waste of time, and you can
-  avoid doing it::
-
-    $ solve-field --no-fits2fits ...
-
-
 * When solve-field processes FITS images, it looks for an existing
   WCS header.  If one is found, it tries to verify that header before
   trying to solve the image blindly.  You can prevent this with::
@@ -484,7 +476,7 @@ Tricks and Tips
 
   ::
 
-    $ solve-field input.xy --no-fits2fits --continue ...
+    $ solve-field input.xy --continue ...
 
   To skip previously solved inputs (note that this assumes single-HDU
   inputs)::

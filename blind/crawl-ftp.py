@@ -1,5 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
+from __future__ import print_function
 import os
 import os.path
 import re
@@ -50,10 +51,10 @@ class crawler(object):
         os.rename('dirstack.tmp', 'dirstack')
 
     def add_item(self, s):
-        print 'item', s
+        print('item', s)
         m = self.ire.match(s)
         if not m:
-            print 'no match'
+            print('no match')
             self.fnomatches.write(self.currentdir + ' ' + s + '\n')
             self.fnomatches.flush()
             return
@@ -83,10 +84,10 @@ if __name__ == '__main__':
         #stack = []
         #for ln in f:
         #    stack.append(ln)
-        print 'Dirstack:'
+        print('Dirstack:')
         for d in stack:
-            print d
-        print '(end dirstack)'
+            print(d)
+        print('(end dirstack)')
         crawl.set_dirstack(stack)
 
     nrequests = 0
@@ -95,9 +96,9 @@ if __name__ == '__main__':
     while len(crawl.dirstack):
         if not ftp: # or not (nrequests % 100):
             if ftp:
-                print 'closing connection.'
+                print('closing connection.')
                 ftp.quit()
-            print 'opening connection'
+            print('opening connection')
             sys.stdout.flush()
             ftp = FTP('galex.stsci.edu')
             ftp.login('anonymous', 'dstn@cs.toronto.edu')
@@ -105,14 +106,14 @@ if __name__ == '__main__':
 
         d = crawl.dirstack.pop()
         crawl.currentdir = d
-        print 'listing "%s"' % d
+        print('listing "%s"' % d)
         sys.stdout.flush()
         try:
             ftp.dir(d, crawl.add_item)
             crawl.write_stack()
             nrequests += 1
-        except Exception, e:
-            print 'caught exception:', e
+        except Exception as e:
+            print('caught exception:', e)
             sys.stdout.flush()
             crawl.dirstack.append(d)
             ftp.close()

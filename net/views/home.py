@@ -1,3 +1,4 @@
+from __future__ import print_function
 from django.shortcuts import render_to_response, get_object_or_404, redirect, render
 from django.template import Context, RequestContext
 from django.db.models import Count
@@ -36,7 +37,7 @@ def explore(req):
         'recent_images': recent_images,
         'newest_users': newest_users,
         'popular_tags': popular_tags,
-		'recent_comments': recent_comments,
+        'recent_comments': recent_comments,
     }
     return render(req, 'explore.html', context)
     
@@ -61,7 +62,7 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def signedin(req):
-    print 'signedin.'
+    print('signedin.')
     user = req.user
     if not user.is_authenticated():
         return HttpResponse('not authenticated: ' + user)
@@ -96,33 +97,33 @@ def newuser(req):
 
 
 def about_user(backend, user, response, *args, **kwargs):
-    print 'Backend:', backend
-    print 'backend name:', backend.name
-    print 'user:', user
+    print('Backend:', backend)
+    print('backend name:', backend.name)
+    print('user:', user)
     #print 'User profile:', user.get_profile()
     try:
-        print 'user profile:', user.profile
+        print('user profile:', user.profile)
     except:
         pass
 
-    print 'Existing users:'
+    print('Existing users:')
     from django.contrib.auth.models import User
     U = User.objects.all()
     for u in U:
-        print '  ', u.username, u.email
+        print('  ', u.username, u.email)
 
-    print 'Login response:' #, response
+    print('Login response:') #, response
     keys = response.keys()
     keys.sort()
     for k in keys:
-        print '  ', k, '=', response[k]
+        print('  ', k, '=', response[k])
 
-    print 'args:', args
-    print 'kwargs:', kwargs.keys()
+    print('args:', args)
+    print('kwargs:', kwargs.keys())
 
     for k in ['username', 'is_new', 'uid', 'new_association', 'social', 'details']:
         if k in kwargs:
-            print k, ':', kwargs[k]
+            print(k, ':', kwargs[k])
 
 
     # if backend.name == 'facebook':
@@ -136,10 +137,10 @@ def about_user(backend, user, response, *args, **kwargs):
 
 
 def load_user(*args, **kwargs):
-    print
-    print 'load_user()'
+    print()
+    print('load_user()')
     about_user(*args, **kwargs)
-    print
+    print()
     rtn = {}
     try:
         #print 'kwargs:', kwargs.keys()
@@ -151,7 +152,7 @@ def load_user(*args, **kwargs):
             email = response['emails'][0]['value']
         elif backend.name == 'github':
             email = response['email']
-        print 'Email:', email
+        print('Email:', email)
 
         from django.contrib.auth.models import User
         U = User.objects.all()
@@ -160,37 +161,37 @@ def load_user(*args, **kwargs):
             u = U.filter(email=email)[0]
         except:
             import traceback
-            print 'caught:'
+            print('caught:')
             traceback.print_exc()
-        print 'Found existing user:', u
+        print('Found existing user:', u)
         rtn['user'] = u
     except:
         import traceback
-        print 'caught:'
+        print('caught:')
         traceback.print_exc()
         pass
     return rtn
 
 def pre_get_username(*args, **kwargs):
-    print
-    print 'pre_get_username()'
+    print()
+    print('pre_get_username()')
     about_user(*args, **kwargs)
-    print
+    print()
 
 def post_get_username(*args, **kwargs):
-    print
-    print 'post_get_username()'
+    print()
+    print('post_get_username()')
     about_user(*args, **kwargs)
-    print
+    print()
 
 def post_create_user(*args, **kwargs):
-    print
-    print 'post_create_user()'
+    print()
+    print('post_create_user()')
     about_user(*args, **kwargs)
-    print
+    print()
 
 def post_auth(*args, **kwargs):
-    print
-    print 'post_auth()'
+    print()
+    print('post_auth()')
     about_user(*args, **kwargs)
-    print
+    print()

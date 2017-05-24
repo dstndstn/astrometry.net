@@ -2507,9 +2507,6 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         return 0;
     }
 
-             
-
-
 %}
 
 %pythoncode %{

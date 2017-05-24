@@ -1,3 +1,18 @@
+0.69:
+	Tiny bugfixes over 0.68
+
+0.68:
+	Add extra driver programs for python executables (image2pnm, etc), named X rather than X.py.  Some python3 compatibility fixes.
+
+0.67:
+	Minor; python calls for WCS parsing from fitsio headers.  Tag for legacysurvey.org Data Release 3.
+
+0.66:
+	Minor; bugfix to enable building on Fedora Rawhide
+
+0.65:
+	Minor; add wcs_pv2sip; fixes for Solaris.
+
 0.64:
 	Minor; add sip_scale.  Tag for legacysurvey.org Data Release 2.
 

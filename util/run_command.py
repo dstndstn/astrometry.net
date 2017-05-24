@@ -3,14 +3,22 @@
 import subprocess
 import os
 import select
+import sys
 from subprocess import PIPE
+import sys
+
+py3 = (sys.version_info[0] >= 3)
 
 # Returns (rtn, out, err)
-def run_command(cmd, timeout=None, callback=None, stdindata=None):
+def run_command(cmd, timeout=None, callback=None, stdindata=None,
+                tostring=True):
     """
     Run a command and return the text written to stdout and stderr, plus
     the return value.
 
+    In python3, if *tostring* is True, the output and error streams
+    will be converted to unicode, otherwise will be returned as bytes.
+    
     Returns: (int return value, string out, string err)
     """
     child = subprocess.Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
@@ -19,8 +27,8 @@ def run_command(cmd, timeout=None, callback=None, stdindata=None):
     stdin = fin.fileno()
     stdout = fout.fileno()
     stderr = ferr.fileno()
-    outbl = []
-    errbl = []
+    outdata = []
+    errdata = []
     ineof = outeof = erreof = False
     block = 1024
     while True:
@@ -42,19 +50,27 @@ def run_command(cmd, timeout=None, callback=None, stdindata=None):
             outchunk = os.read(stdout, block)
             if len(outchunk) == 0:
                 outeof = True
-            outbl.append(outchunk)
+            outdata.append(outchunk)
         if stderr in ready_readers:
             errchunk = os.read(stderr, block)
             if len(errchunk) == 0:
                 erreof = True
-            errbl.append(errchunk)
+            errdata.append(errchunk)
         if callback:
             callback()
     fout.close()
     ferr.close()
     w = child.wait()
-    out = ''.join(outbl)
-    err = ''.join(errbl)
+    if py3:
+        out = b''.join(outdata)
+        err = b''.join(errdata)
+        if tostring:
+            out = out.decode()
+            err = err.decode()
+    else:
+        out = ''.join(outdata)
+        err = ''.join(errdata)
+
     if not os.WIFEXITED(w):
         return (-100, out, err)
     rtn = os.WEXITSTATUS(w)

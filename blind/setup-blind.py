@@ -1,3 +1,4 @@
+from __future__ import print_function
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 import os
@@ -27,28 +28,28 @@ objs = strlist(os.environ.get('SLIB', ''))
 inc = strlist(os.environ.get('INC', ''), split='-I')
 cflags = strlist(os.environ.get('CFLAGS', ''))
 
-print 'link:', link
-print 'objs:', objs
-print 'inc:', inc
-print 'cflags:', cflags
+print(('link:', link))
+print(('objs:', objs))
+print(('inc:', inc))
+print(('cflags:', cflags))
 
 c_swig_module = Extension('_blind',
-						  sources = ['blind.i'],
-						  include_dirs = numpy_inc + inc + ['.'],
-						  extra_objects = objs,
+                          sources = ['blind.i'],
+                          include_dirs = numpy_inc + inc + ['.'],
+                          extra_objects = objs,
                           extra_compile_args = cflags,
                           extra_link_args=link,
                           depends=objs,
                           swig_opts=['-I'+d for d in inc] + cflags,
-	)
+    )
 
 setup(#cmdclass={'build_ext': an_build_ext},
-	  name = 'Access to Astrometry.net blind/ in python',
+      name = 'Access to Astrometry.net blind/ in python',
       version = '1.0',
       description = '',
       author = 'Astrometry.net (Dustin Lang)',
       author_email = 'dstndstn@gmail.com',
       url = 'http://astrometry.net',
       py_modules = [ 'blind' ],
-	  ext_modules = [c_swig_module])
+      ext_modules = [c_swig_module])
 
