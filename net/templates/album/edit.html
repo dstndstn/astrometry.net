@@ -6,11 +6,11 @@
 
 {% block title %}
 {{block.super}} &gt;
-<a href="{% url astrometry.net.views.album.edit album_id=album.id %}">Edit</a>
+<a href="{% url 'astrometry.net.views.album.edit' album_id=album.id %}">Edit</a>
 {% endblock %}
 
 {% block content %}
-<form method="post" action="{% url astrometry.net.views.album.edit album_id=album.id %}">
+<form method="post" action="{% url 'astrometry.net.views.album.edit' album_id=album.id %}">
 {% csrf_token %}
 <table class="settings_table">
 <tr>
