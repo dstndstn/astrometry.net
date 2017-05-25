@@ -162,7 +162,7 @@ PIPELINE_MAIN_OBJ := $(addsuffix .o,$(PIPELINE))
 PROSPECTUS_MAIN_OBJ := $(addsuffix .o,$(PROSPECTUS))
 FITS_UTILS_MAIN_OBJ := $(addsuffix .o,$(FITS_UTILS))
 
-INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) $(PROGS)
+INSTALL_EXECS := $(FITS_UTILS) fitsverify $(PIPELINE) $(PROGS)
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
 INSTALL_H := allquads.h augment-xylist.h axyfile.h \
