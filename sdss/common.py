@@ -779,7 +779,13 @@ class FpM(SdssFile):
         if not name in self.maskmap:
             raise RuntimeError('Unknown mask plane \"%s\"' % name)
 
-        return fits_table(self.hdus[1 + self.maskmap[name]].data)
+        data = self.hdus[1 + self.maskmap[name]].data
+        try:
+            if data.get_nrows() == 0:
+                return None
+        except:
+            pass
+        return fits_table(data)
 
     def setMaskedPixels(self, name, img, val, roi=None):
         M = self.getMaskPlane(name)
