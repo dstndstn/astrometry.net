@@ -75,12 +75,16 @@ anwcs_t* anwcs_create_mercator_2(double refra, double refdec,
                                  double zoomfactor,
                                  int W, int H, anbool yflip);
 
+anwcs_t* anwcs_create_mollweide(double refra, double refdec,
+                                double zoomfactor,
+                                int W, int H, anbool yflip);
+
 anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
-									double zoomfactor,
-									int W, int H, anbool yflip);
+                                    double zoomfactor,
+                                    int W, int H, anbool yflip);
 
 anwcs_t* anwcs_create_allsky_hammer_aitoff(double refra, double refdec,
-										   int W, int H);
+                                           int W, int H);
 anwcs_t* anwcs_create_allsky_hammer_aitoff2(double refra, double refdec,
                                             int W, int H);
 

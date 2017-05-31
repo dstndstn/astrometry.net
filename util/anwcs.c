@@ -753,7 +753,6 @@ void anwcs_walk_image_boundary(const anwcs_t* wcs, double stepsize,
     }
 }
 
-
 // FIXME -- this is probably the bass-ackwards way -- xyz is more natural; this probably requires converting back and forth between ra,dec and xyz.
 int anwcs_pixelxy2xyz(const anwcs_t* wcs, double px, double py, double* xyz) {
 	int rtn;
@@ -1558,52 +1557,66 @@ anwcs_t* anwcs_create_allsky_hammer_aitoff2(double refra, double refdec,
 	return anwcs_create_hammer_aitoff(refra, refdec, 1.0, W, H, FALSE);
 }
 
-anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
-									double zoomfactor,
-									int W, int H, anbool yflip) {
-	qfits_header* hdr;
-	double xscale = -360. / (double)W;
-	double yscale =  180. / (double)H;
-	char* str = NULL;
-	int Nstr = 0;
-	anwcs_t* anwcs = NULL;
-
+static anwcs_t* allsky_wcs(double refra, double refdec,
+                           double zoomfactor,
+                           int W, int H, anbool yflip,
+                           char* wcscode, char* wcsname) {
+    qfits_header* hdr;
+    double xscale = -360. / (double)W;
+    double yscale =  180. / (double)H;
+    char* str = NULL;
+    int Nstr = 0;
+    anwcs_t* anwcs = NULL;
+    char code[64];
     if (yflip)
         yscale *= -1.;
+    xscale /= zoomfactor;
+    yscale /= zoomfactor;
 
-	xscale /= zoomfactor;
-	yscale /= zoomfactor;
+    hdr = qfits_header_default();
+    sprintf(code, "RA---%s", wcscode);
+    qfits_header_add(hdr, "CTYPE1", code, wcsname, NULL);
+    sprintf(code, "DEC--%s", wcscode);
+    qfits_header_add(hdr, "CTYPE2", code, wcsname, NULL);
+    fits_header_add_double(hdr, "CRPIX1", W/2. + 0.5, NULL);
+    fits_header_add_double(hdr, "CRPIX2", H/2. + 0.5, NULL);
+    fits_header_add_double(hdr, "CRVAL1", refra,  NULL);
+    fits_header_add_double(hdr, "CRVAL2", refdec, NULL);
+    fits_header_add_double(hdr, "CD1_1", xscale, NULL);
+    fits_header_add_double(hdr, "CD1_2", 0, NULL);
+    fits_header_add_double(hdr, "CD2_1", 0, NULL);
+    fits_header_add_double(hdr, "CD2_2", yscale, NULL);
+    fits_header_add_int(hdr, "IMAGEW", W, NULL);
+    fits_header_add_int(hdr, "IMAGEH", H, NULL);
 
-	hdr = qfits_header_default();
-	qfits_header_add(hdr, "CTYPE1", "RA---AIT", "Hammer-Aitoff", NULL);
-	qfits_header_add(hdr, "CTYPE2", "DEC--AIT", "Hammer-Aitoff", NULL);
-	fits_header_add_double(hdr, "CRPIX1", W/2 + 0.5, NULL);
-	fits_header_add_double(hdr, "CRPIX2", H/2 + 0.5, NULL);
-	fits_header_add_double(hdr, "CRVAL1", refra,  NULL);
-	fits_header_add_double(hdr, "CRVAL2", refdec, NULL);
-	fits_header_add_double(hdr, "CD1_1", xscale, NULL);
-	fits_header_add_double(hdr, "CD1_2", 0, NULL);
-	fits_header_add_double(hdr, "CD2_1", 0, NULL);
-	fits_header_add_double(hdr, "CD2_2", yscale, NULL);
-	fits_header_add_int(hdr, "IMAGEW", W, NULL);
-	fits_header_add_int(hdr, "IMAGEH", H, NULL);
-
-	str = fits_to_string(hdr, &Nstr);
-	qfits_header_destroy(hdr);
-	if (!str) {
-		ERROR("Failed to write Hammer-Aitoff FITS header as string");
-		return NULL;
-	}
-
-	anwcs = anwcs_wcslib_from_string(str, Nstr);
-	free(str);
-	if (!anwcs) {
-		ERROR("Failed to parse Hammer-Aitoff header string with wcslib");
-		return NULL;
-	}
-	return anwcs;
+    str = fits_to_string(hdr, &Nstr);
+    qfits_header_destroy(hdr);
+    if (!str) {
+        ERROR("Failed to write %s FITS header as string", wcsname);
+        return NULL;
+    }
+    anwcs = anwcs_wcslib_from_string(str, Nstr);
+    free(str);
+    if (!anwcs) {
+        ERROR("Failed to parse %s header string with wcslib", wcsname);
+        return NULL;
+    }
+    return anwcs;
 }
 
+anwcs_t* anwcs_create_mollweide(double refra, double refdec,
+                                double zoomfactor,
+                                int W, int H, anbool yflip) {
+    return allsky_wcs(refra, refdec, zoomfactor, W, H, yflip,
+                      "MOL", "Mollweide");
+}
+
+anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
+                                    double zoomfactor,
+                                    int W, int H, anbool yflip) {
+    return allsky_wcs(refra, refdec, zoomfactor, W, H, yflip,
+                      "AIT", "Hammer-Aitoff");
+}
 
 anwcs_t* anwcs_create_mercator_2(double refra, double refdec,
                                  double crpix1, double crpix2,
