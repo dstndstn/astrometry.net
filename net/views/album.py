@@ -18,7 +18,7 @@ from astrometry.net.models import *
 from astrometry.net import settings
 from astrometry.net.log import *
 from astrometry.net.tmpfile import *
-from astrometry.net.util import NoBulletsRenderer, get_page, get_session_form, store_session_form
+from astrometry.net.util import get_page, get_session_form, store_session_form
 
 from astrometry.util.run_command import run_command
 
@@ -54,7 +54,7 @@ class AlbumForm(forms.ModelForm):
         exclude = ('user', 'owner', 'user_images', 'tags', 'created_at', 'comment_receiver')
         widgets = {
             'description': forms.Textarea(attrs={'cols':60,'rows':3}),
-            'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer)
+            'publicly_visible': forms.RadioSelect(template='radio-nobullets.html') #renderer=NoBulletsRenderer),
         }
 
     def clean(self):

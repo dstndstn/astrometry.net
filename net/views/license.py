@@ -6,7 +6,6 @@ from django.contrib.auth.decorators import login_required
 
 from astrometry.net.models import *
 from astrometry.net import settings
-from astrometry.net.util import NoBulletsRenderer
 from astrometry.net.log import *
 from django import forms
 from django.http import HttpResponseRedirect
@@ -16,8 +15,8 @@ class LicenseForm(forms.ModelForm):
         model = License
         exclude = ('license_uri','license_name')
         widgets = {
-            'allow_commercial_use':forms.RadioSelect(renderer=NoBulletsRenderer),
-            'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),
+            'allow_commercial_use':forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
+            'allow_modifications':forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
         }
 
 @login_required

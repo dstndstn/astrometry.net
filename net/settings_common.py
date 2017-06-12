@@ -4,6 +4,11 @@ import astrometry.net.secrets.django_db as secrets
 import astrometry.net.secrets.auth as authsecrets
 from astrometry.net.util import dict_pack
 
+ALLOWED_HOSTS = ['astro.cs.toronto.edu']
+
+ENABLE_SOCIAL=False
+ENABLE_SOCIAL2=False
+
 os.environ['MPLCONFIGDIR'] = '/home/nova/.config/matplotlib'
 
 DATE_FORMAT = 'Y-m-d'
@@ -270,7 +275,8 @@ LOGGING = {
         },
         'null': {
             'level':'DEBUG',
-            'class':'django.utils.log.NullHandler',
+            #'class':'django.utils.log.NullHandler',
+            'class': 'logging.NullHandler',
         },
         'console':{
             'level':'DEBUG',

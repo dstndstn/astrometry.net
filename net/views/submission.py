@@ -14,12 +14,12 @@ from django.contrib.auth.decorators import login_required
 from django.core.validators import URLValidator
 from astrometry.net.models import *
 from astrometry.net import settings
+from astrometry.net.util import NoBulletsRadioSelect, HorizontalRadioSelect
 from log import *
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.http import HttpResponseRedirect
 
-from astrometry.net.util import HorizontalRenderer, NoBulletsRenderer
 from astrometry.util.run_command import run_command
 from urlparse import urlparse
 
@@ -52,13 +52,15 @@ class SubmissionForm(forms.ModelForm):
     )
 
     upload_type = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=HorizontalRenderer),
+        #widget=forms.RadioSelect(template_name='radio-horizontal.html'), #renderer=HorizontalRenderer),
+        widget = HorizontalRadioSelect(),
         choices=(('file','file'),('url','url')),
         initial='file'
     )
 
     scale_preset = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        #widget=forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
+        widget = NoBulletsRadioSelect(),
         choices=(
             ('1','default (0.1 to 180 degrees)'),
             ('2','wide field (1 to 180 degrees)'),
@@ -77,13 +79,15 @@ class SubmissionForm(forms.ModelForm):
     )
 
     allow_commercial_use = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        #widget=forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
+        widget = NoBulletsRadioSelect(),
         choices=License.YES_NO,
         initial='d',
     )
 
     allow_modifications = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        #widget=forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
+        widget = NoBulletsRadioSelect(),
         choices=License.YES_SA_NO,
         initial='d',
     )
@@ -105,7 +109,8 @@ class SubmissionForm(forms.ModelForm):
             #'source_type'
             )
         widgets = {
-            'scale_type': forms.RadioSelect(renderer=HorizontalRenderer),
+            #'scale_type': forms.RadioSelect(template_name='radio-horizontal.html'), #renderer=HorizontalRenderer),
+            'scale_type': HorizontalRadioSelect(),
             'scale_lower': forms.TextInput(attrs={'size':'5'}),
             'scale_upper': forms.TextInput(attrs={'size':'5'}),
             'scale_est': forms.TextInput(attrs={'size':'5'}),
@@ -119,9 +124,12 @@ class SubmissionForm(forms.ModelForm):
             'use_sextractor': forms.CheckboxInput(),
             'crpix_center': forms.CheckboxInput(),
             'invert': forms.CheckboxInput(),
-            'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
+            
+            'parity': NoBulletsRadioSelect(),
+            'publicly_visible': NoBulletsRadioSelect(),
+            #'parity': forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
             #'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
-            'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
+            #'publicly_visible': forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
             #'allow_commercial_use':forms.RadioSelect(renderer=NoBulletsRenderer),
             #'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),
         }

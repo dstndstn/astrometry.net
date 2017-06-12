@@ -1,26 +1,32 @@
 from __future__ import absolute_import
-sitename = 'nova'
+sitename = 'nova2'
 
-# settings_nova.py
 from settings_common import *
 
-from settings_social import *
-ENABLE_SOCIAL = True
-SOUTH_MIGRATION_MODULES.update(SOCIAL_MIGRATION)
+# from settings_social import *
+# ENABLE_SOCIAL = True
+# SOUTH_MIGRATION_MODULES.update(SOCIAL_MIGRATION)
+# TEMPLATE_CONTEXT_PROCESSORS += SOCIAL_TEMPLATE_CONTEXT_PROCESSORS
+# INSTALLED_APPS += SOCIAL_INSTALLED_APPS 
+# AUTHENTICATION_BACKENDS = SOCIAL_AUTH_BACKENDS + AUTHENTICATION_BACKENDS
+
+from settings_social2 import *
+ENABLE_SOCIAL2 = True
+# SOUTH_MIGRATION_MODULES.update(SOCIAL_MIGRATION)
 TEMPLATE_CONTEXT_PROCESSORS += SOCIAL_TEMPLATE_CONTEXT_PROCESSORS
 INSTALLED_APPS += SOCIAL_INSTALLED_APPS 
 AUTHENTICATION_BACKENDS = SOCIAL_AUTH_BACKENDS + AUTHENTICATION_BACKENDS
 
-sitename = 'nova'
+sitename = 'nova2'
 
-TEMPDIR = '/data2/tmp'
-DATABASES['default']['NAME'] = 'an-nova'
+TEMPDIR = '/data1/tmp'
+DATABASES['default']['NAME'] = 'an-nova2'
 
 LOGGING['loggers']['django.request']['level'] = 'WARN'
 
-SESSION_COOKIE_NAME = 'NovaAstrometrySession'
+SESSION_COOKIE_NAME = 'Nova2AstrometrySession'
 
-ssh_solver_config = 'an-nova'
+ssh_solver_config = 'an-nova2'
 
 try:
     SOCIAL_AUTH_GITHUB_KEY    = github_secrets[sitename].key

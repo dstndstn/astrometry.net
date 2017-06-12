@@ -2,13 +2,25 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django import forms
 from django.utils.safestring import mark_safe
 
-class HorizontalRenderer(forms.RadioSelect.renderer):
-    def render(self):
-        return mark_safe(u'\n'.join([u'%s' % w for w in self]))
+from django.forms import widgets
 
-class NoBulletsRenderer(forms.RadioSelect.renderer):
-    def render(self):
-        return mark_safe(u'<br />\n'.join([u'%s' % w for w in self]))
+class HorizontalRadioSelect(widgets.RadioSelect):
+    input_type = 'radio'
+    template_name = 'radio-horizontal.html'
+    option_template_name = 'django/forms/widgets/radio_option.html'
+
+class NoBulletsRadioSelect(widgets.RadioSelect):
+    input_type = 'radio'
+    template_name = 'radio-nobullets.html'
+    option_template_name = 'django/forms/widgets/radio_option.html'
+
+# class HorizontalRenderer(forms.RadioSelect.renderer):
+#     def render(self):
+#         return mark_safe(u'\n'.join([u'%s' % w for w in self]))
+# 
+# class NoBulletsRenderer(forms.RadioSelect.renderer):
+#     def render(self):
+#         return mark_safe(u'<br />\n'.join([u'%s' % w for w in self]))
 
 def store_session_form(session, form_class, data):
     session[form_class.__name__] = data
