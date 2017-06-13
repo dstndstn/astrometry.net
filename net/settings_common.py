@@ -224,31 +224,8 @@ AUTHENTICATION_BACKENDS = (
 
 AUTH_PROFILE_MODULE = 'net.UserProfile'
 
-
 SOUTH_MIGRATION_MODULES = {
 }
-
-# AUTHENTICATION_BACKENDS = (
-#     'django_openid_auth.auth.OpenIDBackend',
-#     'django.contrib.auth.backends.ModelBackend',
-# )
-# 
-# OPENID_CREATE_USERS = True
-# OPENID_UPDATE_DETAILS_FROM_SREG = True
-
-# list of open id providers to allow users to log into the site with;
-# any instance of username will be replaced with a username
-
-#OPENID_PROVIDERS = dict_pack(
-#    ('provider', 'url', 'suggestion'),
-#    ( # provider choice data
-#        ('Google','google.com/accounts/o8/id',''),               # works
-#        ('Yahoo','yahoo.com',''),                                # works
-#        ('AOL','openid.aol.com/username','@aol.com'),            # works
-#      # ('Launchpad','launchpad.net/~username',''),              # untested
-#      # ('WordPress','username.wordpress.com','.wordpress.com'), # didn't work
-#    )
-#)
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 

@@ -36,13 +36,6 @@ urlpatterns.extend([
     url(r'^newuser/',  newuser),
 ])
 
-# urlpatterns += patterns('astrometry.net.openid_views',
-#     url(r'^signin/?$', 'login_begin', name='openid-login'),
-#     url(r'^signout/?$', 'logout', name='openid-logout'),
-#     url(r'^complete/?$', 'login_complete', name='openid-complete'),
-#     url(r'^logo.gif$', 'logo', name='openid-logo'),
-# )
-
 from astrometry.net.views.search import images, users
 urlpatterns.extend([
     (r'^search/images/?$', images),

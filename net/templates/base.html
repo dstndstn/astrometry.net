@@ -61,8 +61,10 @@ $(document).ready(function() {
 		<span style="color:red;">NOTE:</span> signins should be working again... but read about
 		  <a href="https://groups.google.com/forum/#!topic/astrometry/YzNu5AF103s">account migration.</a></span>&nbsp;
                 Not signed in | 
-                <a href="{% url 'signin' %}">Sign In</a>
-            {% endif %}
+
+<a href="{% url 'signin' %}">Sign In</a>
+
+		{% endif %}
             </div>
             <div id="logo">
                 <a class="selected" href="{% url 'astrometry.net.views.home.home' %}">
