@@ -38,8 +38,8 @@ urlpatterns.extend([
 
 from astrometry.net.views.search import images, users
 urlpatterns.extend([
-    (r'^search/images/?$', images),
-    (r'^search/users/?$',  users),
+    url(r'^search/images/?$', images),
+    url(r'^search/users/?$',  users),
 ])
 
 jobpattern = r'[0-9-]+'
@@ -57,33 +57,35 @@ urlpatterns.extend([
         name='job-log-file-1'),
     url(r'^joblog2/(?P<jobid>' + jobpattern + r')/?', job_log_file2,
         name='job-log-file-2'),
-    (r'^submissions/(?P<user_id>' + idpattern + r')/?$', index),
+    url(r'^submissions/(?P<user_id>' + idpattern + r')/?$', index),
 ])
 
-#     from astrometry.net.views.user import (dashboard, dashboard_submissions, dashboard_user_images, dashboard_albums, dashboard_create_album, dashboard_profile,
-#                                            save_profile, users, user_profile, user_images, user_albums, user_submissions, user_autocomplete)
-#     urlpatterns.extend([
-#         url(r'^dashboard/?$', dashboard, name='dashboard'),
-#         #(r'^dashboard/apikey/?$', 'get_api_key'),  # made redundant by inclusion of api key in dashboard profile
-#         (r'^dashboard/submissions/?$', dashboard_submissions),
-#         (r'^dashboard/images/?$', dashboard_user_images),
-#         (r'^dashboard/albums/?$', dashboard_albums),
-#         (r'^dashboard/create_album/?$', dashboard_create_album),
-#         (r'^dashboard/profile/?$', dashboard_profile),
-#         (r'^dashboard/profile/save/?$', save_profile),
-#         url(r'^users/?$', index, name='users'),
-#         url(r'^users/(?P<user_id>' + idpattern + r')/?$', user_profile,
-#             name='user-profile'),
-#         (r'^users/(?P<user_id>' + idpattern + r')/images/?$', user_images),
-#         (r'^users/(?P<user_id>' + idpattern + r')/albums/?$', user_albums),
-#         (r'^users/(?P<user_id>' + idpattern + r')/submissions/?$', user_submissions),
-#         (r'^users/autocomplete/?$', user_autocomplete),
-#     ])
+from astrometry.net.views.user import (
+    index, dashboard, user_profile, dashboard_submissions, dashboard_user_images, dashboard_albums,
+    dashboard_create_album, dashboard_profile, save_profile, user_images, user_albums,
+    user_submissions, user_autocomplete)
+urlpatterns.extend([
+    url(r'^dashboard/?$', dashboard, name='dashboard'),
+    #(r'^dashboard/apikey/?$', 'get_api_key'),  # made redundant by inclusion of api key in dashboard profile
+    url(r'^dashboard/submissions/?$', dashboard_submissions, name='dashboard_submissions'),
+    url(r'^dashboard/images/?$', dashboard_user_images, name='dashboard_user_images'),
+    url(r'^dashboard/albums/?$', dashboard_albums, name='dashboard_albums'),
+    url(r'^dashboard/create_album/?$', dashboard_create_album, name='dashboard_create_album'),
+    url(r'^dashboard/profile/?$', dashboard_profile, name='dashboard_profile'),
+    url(r'^dashboard/profile/save/?$', save_profile, name='save_profile'),
+    url(r'^users/?$', index, name='users'),
+    url(r'^users/(?P<user_id>' + idpattern + r')/?$', user_profile, name='user-profile'),
+    url(r'^users/(?P<user_id>' + idpattern + r')/images/?$', user_images, name='user_images'),
+    url(r'^users/(?P<user_id>' + idpattern + r')/albums/?$', user_albums, name='user_albums'),
+    url(r'^users/(?P<user_id>' + idpattern + r')/submissions/?$', user_submissions, name='user_submissions'),
+    url(r'^users/autocomplete/?$', user_autocomplete, name='user_autocomplete'),
+])
 
-#     urlpatterns += patterns('astrometry.net.views.image',
+from astrometry.net.views.image import index, index_tag
+urlpatterns.extend([
 #         url(r'^annotated_(?P<size>full|display)/(?P<jobid>' + jobpattern + r')/?', 'annotated_image', name='annotated_image'),
-#         url(r'^user_images/?$', 'index', name='images'),
-#         url(r'^user_images/tag/?$', 'index_tag', name='images-tag'),
+    url(r'^user_images/?$', index, name='images'),
+    url(r'^user_images/tag/?$', index_tag, name='images-tag'),
 #         url(r'^user_images/location/?$', 'index_location', name='images-location'),
 #         url(r'^user_images/nearby/(?P<user_image_id>' + idpattern + r')/?$', 'index_nearby',
 #          name='images-nearby'),
@@ -111,6 +113,7 @@ urlpatterns.extend([
 #         url(r'^axy_file/(?P<jobid>' + idpattern + r')/?$', 'axy_file', name='axy-file'),
 #         url(r'^corr_file/(?P<jobid>' + idpattern + r')/?$', 'corr_file', name='corr-file'),
 #     )
+])
 #     
 #     urlpatterns += patterns('astrometry.net.views.enhance',
 #         (r'^enhance_ui/(?P<user_image_id>' + idpattern + r')/?$', 'enhanced_ui'),
@@ -123,12 +126,15 @@ urlpatterns.extend([
 #         (r'^albums/(?P<album_id>' + idpattern + r')/edit/?$', 'edit'),
 #         (r'^albums/new/?$', 'new'),
 #     )
-#     urlpatterns += patterns('astrometry.net.views.tag',
-#         url(r'^tags/?$', 'index', name='tags'),
+
+from astrometry.net.views.tag import index
+urlpatterns.extend([
+    url(r'^tags/?$', index, name='tags'),
 #         (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/(?P<tag_id>' + tagpattern + r')/delete/?$', 'delete'),
 #         (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/new/?$', 'new'),
 #         (r'^tags/autocomplete/?$', 'tag_autocomplete'),
 #     )
+])
 #     urlpatterns += patterns('astrometry.net.views.flag',
 #         (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/flags/update/?$', 'update_flags'),
 #     )
