@@ -8,7 +8,7 @@ import urllib
 import urllib2
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django.core.validators import URLValidator
@@ -31,8 +31,7 @@ def index(req, user_id):
         submitter = get_object_or_404(User, pk=user_id)
     
     context = {'submitter':submitter}
-    return render_to_response('submission/by_user.html', context,
-        context_instance = RequestContext(req))
+    return render(req, 'submission/by_user.html', context)
 
 class SubmissionForm(forms.ModelForm):
     SCALE_PRESET_SETTINGS = {'1':(0.1,180),
@@ -285,13 +284,12 @@ def upload_file(request):
     else:
         form = SubmissionForm(request.user)
 
-    return render_to_response('submission/upload.html',
-        {
-            'form': form,
-            'user': request.user,
-            'default_license': default_license,
-        },
-        context_instance = RequestContext(request))
+    return render(request, 'submission/upload.html',
+                  {
+                      'form': form,
+                      'user': request.user,
+                      'default_license': default_license,
+                  })
 
 def job_log_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
@@ -331,13 +329,12 @@ def status(req, subid=None):
                     finished = False
      
 
-    return render_to_response('submission/status.html',
+    return render(req, 'submission/status.html',
         {
             'sub': sub,
             'anonymous_username':ANONYMOUS_USERNAME,
             'finished': finished,
-        },
-        context_instance = RequestContext(req))
+        })
     
 def handle_upload(file=None,url=None):
     #logmsg('handle_uploaded_file: req=' + str(req))

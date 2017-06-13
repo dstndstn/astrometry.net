@@ -6,6 +6,8 @@ from astrometry.net.util import dict_pack
 
 ALLOWED_HOSTS = ['astro.cs.toronto.edu']
 
+WCS2KML = '/usr/local/wcs2kml/bin/wcs2kml'
+
 ENABLE_SOCIAL=False
 ENABLE_SOCIAL2=False
 
@@ -87,7 +89,6 @@ DEFAULT_LICENSE_ID = 1
 SESSION_COOKIE_NAME = 'AstrometryTestSession'
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 ADMINS = ()
 
 MANAGERS = ADMINS
@@ -181,13 +182,14 @@ TEMPLATES = [
                 # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
                 # list if you haven't customized them:
                 'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.request',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.i18n',
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-
+                
                 'astrometry.net.models.context_user_profile',
             ],
         },

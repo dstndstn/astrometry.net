@@ -3,14 +3,14 @@
 <ul>
     {% for sub in submissions %}
     <li class="submission">
-        <a href="{% url 'sub-status' subid=sub.id %}">Submission {{ sub.id }}</a> 
+        <a href="{% url 'submission_status' subid=sub.id %}">Submission {{ sub.id }}</a> 
         <span class="timestamp">({{sub.submitted_on|date:"Y-m-d H:i"}})</span>
         <table class="submission_job_list">
             {% for user_image in sub.user_images.all %}
             {% for job in user_image.jobs.all %}
             <tr>
                 <td class="image_id">
-                    <a href="{% url 'astrometry.net.views.image.user_image' job.user_image.id %}">image <span class="image_id">{{user_image.id}}</span></a>
+                    <a href="{% url 'user_image' job.user_image.id %}">image <span class="image_id">{{user_image.id}}</span></a>
                 </td>
                 <td class="job_id">job id <span class="job_id">{{ job.id }}</span></td>
                 <td class="job_status">{% include "job/status.html" with job=job %}</td>

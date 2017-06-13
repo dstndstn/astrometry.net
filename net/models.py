@@ -989,7 +989,7 @@ class UserImage(Hideable):
 
     def get_absolute_url(self):
         kwargs = {'user_image_id':self.id}
-        abs_url = reverse('astrometry.net.views.image.user_image', kwargs=kwargs)
+        abs_url = reverse('user_image', kwargs=kwargs)
         return abs_url
     
     def is_calibrated(self):
@@ -1120,7 +1120,7 @@ class Submission(Hideable):
 
     def get_absolute_url(self):
         kwargs = {'subid':self.id}
-        abs_url = reverse('astrometry.net.views.submission.status', kwargs=kwargs)
+        abs_url = reverse('submission_status', kwargs=kwargs)
         return abs_url
 
     def get_user_image(self):
@@ -1191,7 +1191,7 @@ class Album(Hideable):
 
     def get_absolute_url(self):
         kwargs = {'album_id':self.id}
-        abs_url = reverse('astrometry.net.views.album.album', kwargs=kwargs)
+        abs_url = reverse('album', kwargs=kwargs)
         return abs_url
         
 class Comment(models.Model):
@@ -1233,7 +1233,7 @@ class UserProfile(models.Model):
             )
 
     def get_absolute_url(self):
-        return reverse('astrometry.net.views.user.public_profile', user_id=self.user.id)
+        return reverse('public_profile', user_id=self.user.id)
 
     def save(self, *args, **kwargs):
         # for sorting users, enforce capitalization of first letter

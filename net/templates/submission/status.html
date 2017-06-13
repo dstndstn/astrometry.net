@@ -183,12 +183,12 @@ Submission {{ sub.id }}
 {% for image in sub.user_images.all %}
 <tr>
 <td>
-    <a href="{% url 'user-image' image.id %}">
+    <a href="{% url 'user_image' image.id %}">
     <img src="{% url 'serve_image' id=image.image.get_thumbnail.id %}" />
     </a>
 </td>
 <td>
-    <a href="{% url 'user-image' image.id %}">Go to results page</a>
+    <a href="{% url 'user_image' image.id %}">Go to results page</a>
     <br/>
     {% for job in image.jobs.all %}
     Job {{ job.id }}: {% include "job/status.html" with job=job %}<br />
@@ -203,10 +203,10 @@ Submission {{ sub.id }}
 
     <a href="" class="log_tail_link">Log file tail <span>[-]</span><br /></a>
     <div class="log_tail">
-	<a href={% url 'astrometry.net.views.submission.job_log_file' jobid=job.id %}>(full)</a><br />
+	<a href={% url 'job_log_file' jobid=job.id %}>(full)</a><br />
 <pre>{{ job.get_log_tail }}</pre>
     </div>
-	<a href={% url 'astrometry.net.views.submission.job_log_file2' jobid=job.id %}>Log file 2</a>
+	<a href={% url 'job_log_file_2' jobid=job.id %}>Log file 2</a>
 
     {% empty %}
 	Waiting for processing to start...

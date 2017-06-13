@@ -15,7 +15,7 @@
 <li>
     <a href="{% url 'dashboard' %}">Dashboard</a>
     <ul class="dropdown"> 
-        <li><a href="{% url 'user-profile' user_id=user.id %}">My Profile</a></li>
+        <li><a href="{% url 'user_profile' user_id=user.id %}">My Profile</a></li>
         <li><a href="{% url 'dashboard_profile' %}">Edit Profile</a></li>
         <li><a href="{% url 'dashboard_user_images' %}">My Images</a></li>
         <li><a href="{% url 'dashboard_albums' %}">My Albums</a></li>

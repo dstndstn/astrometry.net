@@ -6,10 +6,10 @@
 
 {% block title %}
 {{block.super}} &gt;
-<a href="{% url 'astrometry.net.views.user.dashboard_create_album' %}">Create Album</a>
+<a href="{% url 'dashboard_create_album' %}">Create Album</a>
 {% endblock %}
 {% block dashboard_content %}
-<form method="post" action="{% url 'astrometry.net.views.album.new' %}">
+<form method="post" action="{% url 'album_new' %}">
 {% csrf_token %}
 <table class="settings_table">
 <tr>
@@ -51,7 +51,7 @@
 <br />
 <div style="text-align:center">
     <input type="submit" value="Create Album" class="bigbutton" />
-    <a href="{% url 'astrometry.net.views.user.dashboard_albums' %}" style="margin-left:10px">Cancel</a>
+    <a href="{% url 'dashboard_albums' %}" style="margin-left:10px">Cancel</a>
 </div>
 </form>
 {% endblock %}

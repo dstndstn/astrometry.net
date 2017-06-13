@@ -42,8 +42,7 @@ def new(req, category=None, recipient_id=None):
                     'comment': comment,
                     'next': redirect_url,
                 }
-                comment_html = render_to_string('comment/comment.html', context,
-                                    context_instance=RequestContext(req))
+                comment_html = render_to_string('comment/comment.html', context, req)
                 json['success'] = True
                 json['comment_html'] = comment_html
         else:
@@ -59,8 +58,7 @@ def new(req, category=None, recipient_id=None):
                 'category': category,
                 'next': redirect_url,
             }
-            form_html = render_to_string('comment/form.html', context,
-                                context_instance=RequestContext(req))
+            form_html = render_to_string('comment/form.html', context, req)
             json['form_html'] = form_html
         
             response = simplejson.dumps(json)

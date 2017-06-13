@@ -30,7 +30,6 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 import django
 django.setup()
 
-
 try:
     import pyfits
 except ImportError:
@@ -76,10 +75,11 @@ settings.LOGGING['loggers'][''] = {
 from astrometry.net.models import *
 from log import *
 
-from django.utils.log import dictConfig
 from django.db.models import Count
 from django.db import DatabaseError
 from django.db.models import Q
+
+from logging.config import dictConfig
 
 dictConfig(settings.LOGGING)
 

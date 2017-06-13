@@ -30,15 +30,15 @@
 {% endblock %}
 
 {% block title %}
-<a href="{% url 'astrometry.net.views.image.search' %}">Search</a>
+<a href="{% url 'image_search' %}">Search</a>
 {% endblock %}
 
 {% block content %}
     <div id="search_block">
         <div id="search_menu">
             <ul class="view_menu">
-                <li><a href="{% url 'astrometry.net.views.search.images' %}?query={{ request.GET.query }}">Images</a></li>
-                <li><a href="{% url 'astrometry.net.views.search.users' %}?query={{ request.GET.query }}">Users</a></li>
+                <li><a href="{% url 'search_images' %}?query={{ request.GET.query }}">Images</a></li>
+                <li><a href="{% url 'search_users' %}?query={{ request.GET.query }}">Users</a></li>
             </ul>
         </div>
         <div id="search_settings">
