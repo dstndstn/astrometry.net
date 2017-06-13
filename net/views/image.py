@@ -33,6 +33,7 @@ from astrometry.net.models import License
 from astrometry.net.views.comment import *
 from astrometry.net.views.license import *
 from astrometry.net.util import get_page, get_session_form
+from astrometry.net.util import NoBulletsRadioSelect
 from astrometry.net.views.tag import TagForm, TagSearchForm
 from astrometry.net.views.license import LicenseForm
 
@@ -62,7 +63,7 @@ class UserImageForm(forms.ModelForm):
         )
         widgets = {
             'description': forms.Textarea(attrs={'cols':60,'rows':3}),
-            'publicly_visible': forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
+            'publicly_visible': NoBulletsRadioSelect(),
         }
 
     def __init__(self, user, *args, **kwargs):
