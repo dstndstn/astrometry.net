@@ -44,8 +44,9 @@ def explore(req):
 
 def signin(req):
     from astrometry.net import settings
-    from social.backends.utils import load_backends
-    ctxt = RequestContext(req)
+    from social_core.backends.utils import load_backends
+
+    ctxt = {}
     ctxt.update({
             'available_backends': load_backends(settings.AUTHENTICATION_BACKENDS)
             })
