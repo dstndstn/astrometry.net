@@ -4,7 +4,7 @@ import astrometry.net.secrets.django_db as secrets
 import astrometry.net.secrets.auth as authsecrets
 from astrometry.net.util import dict_pack
 
-ALLOWED_HOSTS = ['astro.cs.toronto.edu']
+ALLOWED_HOSTS = ['astro.cs.toronto.edu', 'nova2.astrometry.net']
 
 WCS2KML = '/usr/local/wcs2kml/bin/wcs2kml'
 
