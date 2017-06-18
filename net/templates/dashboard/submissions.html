@@ -21,7 +21,7 @@ td.job_status {
 
 {% block title %}
 {{block.super}} &gt;
-<a href="{% url 'astrometry.net.views.user.dashboard_submissions' %}">My Submissions</a>
+<a href="{% url 'dashboard_submissions' %}">My Submissions</a>
 {% endblock %}
 {% block dashboard_content %}
 {% include 'submission/paginated_list.html' with submission_page=submission_page %}

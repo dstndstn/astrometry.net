@@ -6,13 +6,14 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(p)
 import settings
+
+import django
+django.setup()
+
 from astrometry.net.models import *
 from astrometry.util.file import *
 from astrometry.util.multiproc import *
 from log import *
-
-import django
-django.setup()
 
 from django.contrib.auth.models import User
 

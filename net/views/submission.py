@@ -8,18 +8,18 @@ import urllib
 import urllib2
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django.core.validators import URLValidator
 from astrometry.net.models import *
 from astrometry.net import settings
+from astrometry.net.util import NoBulletsRadioSelect, HorizontalRadioSelect
 from log import *
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.http import HttpResponseRedirect
 
-from astrometry.net.util import HorizontalRenderer, NoBulletsRenderer
 from astrometry.util.run_command import run_command
 from urlparse import urlparse
 
@@ -31,8 +31,7 @@ def index(req, user_id):
         submitter = get_object_or_404(User, pk=user_id)
     
     context = {'submitter':submitter}
-    return render_to_response('submission/by_user.html', context,
-        context_instance = RequestContext(req))
+    return render(req, 'submission/by_user.html', context)
 
 class SubmissionForm(forms.ModelForm):
     SCALE_PRESET_SETTINGS = {'1':(0.1,180),
@@ -52,13 +51,15 @@ class SubmissionForm(forms.ModelForm):
     )
 
     upload_type = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=HorizontalRenderer),
+        #widget=forms.RadioSelect(template_name='radio-horizontal.html'), #renderer=HorizontalRenderer),
+        widget = HorizontalRadioSelect(),
         choices=(('file','file'),('url','url')),
         initial='file'
     )
 
     scale_preset = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        #widget=forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
+        widget = NoBulletsRadioSelect(),
         choices=(
             ('1','default (0.1 to 180 degrees)'),
             ('2','wide field (1 to 180 degrees)'),
@@ -77,13 +78,15 @@ class SubmissionForm(forms.ModelForm):
     )
 
     allow_commercial_use = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        #widget=forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
+        widget = NoBulletsRadioSelect(),
         choices=License.YES_NO,
         initial='d',
     )
 
     allow_modifications = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        #widget=forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
+        widget = NoBulletsRadioSelect(),
         choices=License.YES_SA_NO,
         initial='d',
     )
@@ -105,7 +108,8 @@ class SubmissionForm(forms.ModelForm):
             #'source_type'
             )
         widgets = {
-            'scale_type': forms.RadioSelect(renderer=HorizontalRenderer),
+            #'scale_type': forms.RadioSelect(template_name='radio-horizontal.html'), #renderer=HorizontalRenderer),
+            'scale_type': HorizontalRadioSelect(),
             'scale_lower': forms.TextInput(attrs={'size':'5'}),
             'scale_upper': forms.TextInput(attrs={'size':'5'}),
             'scale_est': forms.TextInput(attrs={'size':'5'}),
@@ -119,9 +123,12 @@ class SubmissionForm(forms.ModelForm):
             'use_sextractor': forms.CheckboxInput(),
             'crpix_center': forms.CheckboxInput(),
             'invert': forms.CheckboxInput(),
-            'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
+            
+            'parity': NoBulletsRadioSelect(),
+            'publicly_visible': NoBulletsRadioSelect(),
+            #'parity': forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
             #'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
-            'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
+            #'publicly_visible': forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
             #'allow_commercial_use':forms.RadioSelect(renderer=NoBulletsRenderer),
             #'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),
         }
@@ -277,13 +284,12 @@ def upload_file(request):
     else:
         form = SubmissionForm(request.user)
 
-    return render_to_response('submission/upload.html',
-        {
-            'form': form,
-            'user': request.user,
-            'default_license': default_license,
-        },
-        context_instance = RequestContext(request))
+    return render(request, 'submission/upload.html',
+                  {
+                      'form': form,
+                      'user': request.user,
+                      'default_license': default_license,
+                  })
 
 def job_log_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
@@ -323,13 +329,12 @@ def status(req, subid=None):
                     finished = False
      
 
-    return render_to_response('submission/status.html',
+    return render(req, 'submission/status.html',
         {
             'sub': sub,
             'anonymous_username':ANONYMOUS_USERNAME,
             'finished': finished,
-        },
-        context_instance = RequestContext(req))
+        })
     
 def handle_upload(file=None,url=None):
     #logmsg('handle_uploaded_file: req=' + str(req))

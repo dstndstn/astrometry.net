@@ -6,24 +6,29 @@
 
 {% comment %}
 Modified from
-https://github.com/omab/python-social-auth/blob/master/examples/django_example/example/templates/home.html
+
+https://raw.githubusercontent.com/python-social-auth/social-examples/master/example-common/templates/home.html
+
 {% endcomment %}
 
 {% block inline_css %}
-<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
-<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css" rel="stylesheet" />
-<link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" />
-<style type="text/css">
-  .col-md-2 { width: 18.6667%; }
-  .buttons { display: block; table-layout: fixed; border-radius: 7px; border: 1px solid #ccc;
-  margin: 20px; background: #eee; padding: 30px; }
-  .buttons > div a { margin: 5px 10px; }
-  .buttons > div:not(:first-child) { margin-top: 10px; border-top: 1px solid #ccc;
-  padding-top: 10px; text-align: center; }
-  .user-details { text-align: center; font-size: 16px; font-weight: bold; }
-  .disconnect-form { padding: 0; margin: 0px 10px; }
-  .disconnect-form > a { display: block; margin: 5px 0 !important; }
-</style>
+
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+      h1 { padding: 0 30px; }
+      .col-md-2 { width: 18.6667%; }
+      .buttons { display: block; table-layout: fixed; border-radius: 7px; border: 1px solid #ccc;
+                 margin: 20px; background: #eee; padding: 30px; }
+      .buttons > div .btn { margin: 5px 10px; }
+      .buttons > div:not(:first-child) { margin-top: 10px; border-top: 1px solid #ccc;
+                                         padding-top: 10px; text-align: center; }
+      .user-details { text-align: center; font-size: 16px; font-weight: bold; }
+      .disconnect-form { padding: 0; margin: 0px 10px; }
+      .disconnect-form > a { display: block; margin: 5px 0 !important; }
+    </style>
+
 {% endblock %}
 
 {% block content %}
@@ -40,17 +45,24 @@ https://github.com/omab/python-social-auth/blob/master/examples/django_example/e
       {% for name, backend in sublist %}
       {% associated backend %}
       {% if association %}
-      <form class="disconnect-form col-md-2" action="{% url "social:disconnect_individual" backend=association.provider association_id=association.id %}" method="post">{% csrf_token %}
-	<a class="btn btn-danger" name="{{ backend|backend_class }}" href="#">
-	  <i class="fa fa-{{ name|icon_name }}"></i>
-	  Disconnect {{ backend|backend_name }}
-	</a>
-      </form>
+      <form id="{{ name }}-disconnect"
+            class="disconnect-form col-md-2"
+            action="{% url 'social:disconnect_individual' backend=association.provider association_id=association.id %}"
+            method="post">
+                  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                  <a class="btn btn-danger" name="{{ backend|backend_class }}" href="#">
+                    <i class="fa fa-{{ name|icon_name }}"></i>
+                    Disconnect {{ backend|backend_name }}
+                  </a>
+                </form>
       {% else %}
-      <a class="col-md-2 btn btn-default" name="{{ backend|backend_class }}" href="{% url "social:begin" backend=name %}">
-	<i class="fa fa-{{ name|icon_name }}"></i>
-	{{ backend|backend_name }}
-      </a>
+                  <a id="{{ name }}-button"
+                     class="col-md-2 btn btn-default"
+                     name="{{ backend|backend_class }}"
+		     href="{% url 'social:begin' backend=name %}">
+                    <i class="fa fa-{{ name|icon_name }}"></i>
+                    {{ backend|backend_name }}
+                  </a>
       {% endif %}
       {% endfor %}
     </div>

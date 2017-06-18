@@ -69,8 +69,7 @@ def new(req, category=None, recipient_id=None):
                     'recipient_owner': recipient_owner,
                     'next': redirect_url,
                 }
-                tag_html = render_to_string('tag/tag.html', context,
-                                    context_instance=RequestContext(req))
+                tag_html = render_to_string('tag/tag.html', context, req)
 
                 json['success'] = created
                 json['tag_html'] = tag_html
@@ -88,8 +87,7 @@ def new(req, category=None, recipient_id=None):
                 'recipient_owner': recipient_owner,
                 'next': redirect_url,
             }
-            form_html = render_to_string('tag/form.html', context,
-                                context_instance=RequestContext(req))
+            form_html = render_to_string('tag/form.html', context, req)
             json['form_html'] = form_html
             
             response = simplejson.dumps(json)
@@ -139,7 +137,5 @@ def index(req, tags=Tag.objects.all(),
 def tag_autocomplete(req):
     name = req.GET.get('q','')
     tags = Tag.objects.filter(text__icontains=name)[:8]
-    response = HttpResponse(mimetype='text/plain')
-    for tag in tags:
-        response.write(tag.text + '\n')
+    response = HttpResponse(''.join([t.text+'\n' for t in tags]), content_type='text/plain')
     return response

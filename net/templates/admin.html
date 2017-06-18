@@ -11,7 +11,7 @@
 <tr><th>pid</th><th>watchdog</th></tr>
 {% for p in procsubs %}
 <tr>
-<td><a href="{% url astrometry.net.views.admin.procsub psid=p.id %}">{{ p.pid }}</a></td>
+<td><a href="{% url 'procsub' psid=p.id %}">{{ p.pid }}</a></td>
 <td>{{ p.watchdog }}</td>
 </tr>
 {% endfor %}

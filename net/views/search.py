@@ -3,7 +3,7 @@ from django.template import Context, RequestContext
 from django import forms
 from django.db.models import Count
 from astrometry.net.models import *
-from astrometry.net.util import get_page, get_session_form, NoBulletsRenderer
+from astrometry.net.util import get_page, get_session_form
 import urllib
 
 class ImageSearchForm(forms.Form):

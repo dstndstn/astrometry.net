@@ -4,7 +4,7 @@
     {% if user == user_image_tag.tagger or user == tagged_object_owner %}
     <a class="remove_tag confirm" 
        title="Are you sure you would like to delete this tag?"
-       href="{% url 'astrometry.net.views.tag.remove_userimagetag' user_image_id=user_image_id tag_id=user_image_tag.pk %}{% if next %}?next={{next}}{% endif %}">[remove]</a></li>
+       href="{% url 'remove_userimagetag' user_image_id=user_image_id tag_id=user_image_tag.pk %}{% if next %}?next={{next}}{% endif %}">[remove]</a></li>
     {% endif %}
     {% endfor %}
 </ul>

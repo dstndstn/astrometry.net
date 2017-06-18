@@ -9,10 +9,10 @@
 
 {% block title %}
 {{block.super}} &gt;
-<a href="{% url 'astrometry.net.views.user.dashboard_profile' %}">Edit Profile</a>
+<a href="{% url 'dashboard_profile' %}">Edit Profile</a>
 {% endblock %}
 {% block dashboard_content %}
-<form method="post" action="{% url 'astrometry.net.views.user.save_profile' %}">
+<form method="post" action="{% url 'save_profile' %}">
 {% csrf_token %}
 <table class="settings_table">
 <tr>

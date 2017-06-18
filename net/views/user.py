@@ -8,7 +8,7 @@ import urllib2
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
@@ -31,9 +31,7 @@ class ProfileForm(forms.ModelForm):
         exclude = ('apikey', 'default_license')
 
 def dashboard(request):
-    return render_to_response("dashboard/index.html",
-        {},
-        context_instance = RequestContext(request))
+    return render(request, "dashboard/index.html")
 
 @login_required
 def save_profile(req):
@@ -82,48 +80,37 @@ def dashboard_submissions(req):
     context = {
         'submission_page': page
     }
-    return render_to_response("dashboard/submissions.html",
-        context,
-        context_instance = RequestContext(req))
+    return render(req, "dashboard/submissions.html", context)
 
 @login_required
 def dashboard_user_images(req):
     page_number = req.GET.get('page',1)
     page = get_page(req.user.user_images.public_only(req.user),3*10,page_number)
-    
     context = {
         'user':req.user,
         'image_page':page
     }
-    
-    return render_to_response('dashboard/user_images.html',
-        context,
-        context_instance = RequestContext(req))
+    return render(req, 'dashboard/user_images.html', context)
 
 @login_required
 def dashboard_albums(req):
     page_number = req.GET.get('page',1)
     page = get_page(req.user.albums.all(),3*10,page_number)
-    
     context = {
         'user': req.user,
         'album_page': page
     }
-    
-    return render_to_response('dashboard/albums.html',
-        context,
-        context_instance = RequestContext(req))
+    return render(req, 'dashboard/albums.html', context)
 
 @login_required
 def dashboard_create_album(req):
     album = Album(user=req.user)
     form = get_session_form(req.session, AlbumForm, instance=album)
-        
     context = {
         'album_form': form,
     }
     return render(req, "dashboard/create_album.html", context)
-    
+
 def index(req, users=User.objects.all(),
           template_name='user/index.html', context={}):
 
@@ -160,60 +147,43 @@ class UserSearchForm(forms.Form):
 
 def user_profile(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
-
     context = {
         'display_user': user,
         'recent_images': user.user_images.public_only(req.user),    
         'recent_submissions': user.submissions.all().order_by('-submitted_on')[:10],
         'profile': get_user_profile(req.user),
     }
-    return render_to_response('user/profile.html',
-        context,
-        context_instance = RequestContext(req))
+    return render(req, 'user/profile.html', context)
 
 def user_images(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
-
     page_number = req.GET.get('page',1)
     page = get_page(user.user_images.public_only(req.user),3*10,page_number)
-    
     context = {
         'display_user': user,
         'image_page': page,
     }
-    
-    return render_to_response('user/user_images.html',
-        context,
-        context_instance = RequestContext(req))
-
+    return render(req, 'user/user_images.html', context)
+ 
 def user_albums(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
-
     page_number = req.GET.get('page',1)
     page = get_page(user.albums.all(),3*10,page_number)
-    
     context = {
         'display_user': user,
         'album_page': page
     }
-    
-    return render_to_response('user/albums.html',
-        context,
-        context_instance = RequestContext(req))
+    return render(req, 'user/albums.html', context)
 
 def user_submissions(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
-
     page_number = req.GET.get('page',1)
     page = get_page(user.submissions.all().order_by('-submitted_on'),15,page_number)
-    
     context = {
         'display_user': user,
         'submission_page': page
     }
-    return render_to_response("user/submissions.html",
-        context,
-        context_instance = RequestContext(req))
+    return render(req, "user/submissions.html", context)
 
 def user_autocomplete(req):
     name = req.GET.get('q','')

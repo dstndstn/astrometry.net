@@ -4,6 +4,14 @@ import astrometry.net.secrets.django_db as secrets
 import astrometry.net.secrets.auth as authsecrets
 from astrometry.net.util import dict_pack
 
+ALLOWED_HOSTS = ['astro.cs.toronto.edu', 'nova2.astrometry.net', 'localhost',
+                 'supernova.astrometry.net', 'nova.astrometry.net']
+
+WCS2KML = '/usr/local/wcs2kml/bin/wcs2kml'
+
+ENABLE_SOCIAL=False
+ENABLE_SOCIAL2=False
+
 os.environ['MPLCONFIGDIR'] = '/home/nova/.config/matplotlib'
 
 DATE_FORMAT = 'Y-m-d'
@@ -82,7 +90,6 @@ DEFAULT_LICENSE_ID = 1
 SESSION_COOKIE_NAME = 'AstrometryTestSession'
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 ADMINS = ()
 
 MANAGERS = ADMINS
@@ -163,12 +170,32 @@ STATICFILES_FINDERS = (
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'd_&$%*@=ttb$qu047w0_35g=t@9+brymn)_si787g*52x_9e%n'
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    # 'django.template.loaders.eggs.Loader',
-)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            # TEMPLATE_DIRS
+            os.path.join(WEB_DIR, 'templates') ,
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
+                # list if you haven't customized them:
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.request',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+                
+                'astrometry.net.models.context_user_profile',
+            ],
+        },
+    },
+]
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -180,27 +207,8 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'urls'
 
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    os.path.join(WEB_DIR, 'templates') ,
-)
-
 ALLOWED_INCLUDE_ROOTS = (
     os.path.join(WEB_DIR, 'templates'),
-)
-
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.core.context_processors.request',
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-
-    'astrometry.net.models.context_user_profile',
 )
 
 INSTALLED_APPS = (
@@ -219,31 +227,8 @@ AUTHENTICATION_BACKENDS = (
 
 AUTH_PROFILE_MODULE = 'net.UserProfile'
 
-
 SOUTH_MIGRATION_MODULES = {
 }
-
-# AUTHENTICATION_BACKENDS = (
-#     'django_openid_auth.auth.OpenIDBackend',
-#     'django.contrib.auth.backends.ModelBackend',
-# )
-# 
-# OPENID_CREATE_USERS = True
-# OPENID_UPDATE_DETAILS_FROM_SREG = True
-
-# list of open id providers to allow users to log into the site with;
-# any instance of username will be replaced with a username
-
-#OPENID_PROVIDERS = dict_pack(
-#    ('provider', 'url', 'suggestion'),
-#    ( # provider choice data
-#        ('Google','google.com/accounts/o8/id',''),               # works
-#        ('Yahoo','yahoo.com',''),                                # works
-#        ('AOL','openid.aol.com/username','@aol.com'),            # works
-#      # ('Launchpad','launchpad.net/~username',''),              # untested
-#      # ('WordPress','username.wordpress.com','.wordpress.com'), # didn't work
-#    )
-#)
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
@@ -270,7 +255,8 @@ LOGGING = {
         },
         'null': {
             'level':'DEBUG',
-            'class':'django.utils.log.NullHandler',
+            #'class':'django.utils.log.NullHandler',
+            'class': 'logging.NullHandler',
         },
         'console':{
             'level':'DEBUG',
