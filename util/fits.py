@@ -298,7 +298,14 @@ class tabledata(object):
     def set(self, name, val):
         self.__setattr__(name, val)
     def getcolumn(self, name):
-        return self.__dict__[name]
+        try:
+            return self.__dict__[name]
+        except KeyError:
+            # try case-insensitive
+            for k,v in self.__dict__.items():
+                if k.lower() == name.lower():
+                    return v
+            raise
         #except:
         #   return self.__dict__[name.lower()]
     def get(self, name):
