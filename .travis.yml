@@ -19,6 +19,8 @@ env:
 # And netpbm include files are right in /usr/include, not in /usr/include/netpbm
 
 script:
+    - apt-cache search netpbm
+    - jpegtopnm
     - which python
     - python --version
     - which python2
