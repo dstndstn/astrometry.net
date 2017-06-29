@@ -38,13 +38,13 @@ def ra_ranges_overlap(ralo, rahi, ra1, ra2):
 
 #
 def transform(long, lat, poleTo, poleFrom):
-    (alphaGP,deltaGP) = deg2rad(poleFrom[0]), deg2rad(poleFrom[1])
-    lCP = deg2rad(poleTo[0])
-    alpha = deg2rad(long)
-    delta = deg2rad(lat)
-    ra = rad2deg(lCP - arctan2(sin(alpha - alphaGP),
-                               tan(delta) * cos(deltaGP) - cos(alpha - alphaGP) * sin(deltaGP)))
-    dec = rad2deg(arcsin((sin(deltaGP)*sin(delta) + cos(deltaGP)*cos(delta)*cos(alpha - alphaGP))))
+    (alphaGP,deltaGP) = np.deg2rad(poleFrom[0]), np.deg2rad(poleFrom[1])
+    lCP = np.deg2rad(poleTo[0])
+    alpha = np.deg2rad(long)
+    delta = np.deg2rad(lat)
+    ra = np.rad2deg(lCP - np.arctan2(np.sin(alpha - alphaGP),
+                               np.tan(delta) * np.cos(deltaGP) - np.cos(alpha - alphaGP) * np.sin(deltaGP)))
+    dec = np.rad2deg(np.arcsin((np.sin(deltaGP)*np.sin(delta) + np.cos(deltaGP)*np.cos(delta)*np.cos(alpha - alphaGP))))
     ra = ra_normalize(ra)
     return ra,dec
 
@@ -84,11 +84,11 @@ def radectoecliptic(ra, dec, epoch=2000.):
 # arrays (ra,dec) in deg
 # returns array of booleans
 def points_within_radius(racenter, deccenter, radius, ra, dec):
-    return radecdotproducts(racenter, deccenter, ra, dec) >= cos(deg2rad(radius))
+    return radecdotproducts(racenter, deccenter, ra, dec) >= np.cos(np.deg2rad(radius))
 
 def points_within_radius_range(racenter, deccenter, radiuslo, radiushi, ra, dec):
     d = radecdotproducts(racenter, deccenter, ra, dec)
-    return (d <= cos(deg2rad(radiuslo))) * (d >= cos(deg2rad(radiushi)))
+    return (d <= np.cos(np.deg2rad(radiuslo))) * (d >= np.cos(np.deg2rad(radiushi)))
 
 # scalars (racenter, deccenter) in deg
 # arrays (ra,dec) in deg
@@ -96,33 +96,33 @@ def points_within_radius_range(racenter, deccenter, radiuslo, radiushi, ra, dec)
 def radecdotproducts(racenter, deccenter, ra, dec):
     xyzc = radectoxyz(racenter, deccenter).T
     xyz = radectoxyz(ra, dec)
-    return dot(xyz, xyzc)[:,0]
+    return np.dot(xyz, xyzc)[:,0]
 
 # RA, Dec in degrees: scalars or 1-d arrays.
 # returns xyz of shape (N,3)
 def radectoxyz(ra_deg, dec_deg):
-    ra  = deg2rad(ra_deg)
-    dec = deg2rad(dec_deg)
-    cosd = cos(dec)
-    xyz = vstack((cosd * cos(ra),
-                  cosd * sin(ra),
-                  sin(dec))).T
+    ra  = np.deg2rad(ra_deg)
+    dec = np.deg2rad(dec_deg)
+    cosd = np.cos(dec)
+    xyz = np.vstack((cosd * np.cos(ra),
+                     cosd * np.sin(ra),
+                     np.sin(dec))).T
     assert(xyz.shape[1] == 3)
     return xyz
 
 # RA,Dec in degrees
 # returns (dxyz_dra, dxyz_ddec)
 def derivatives_at_radec(ra_deg, dec_deg):
-    ra  = deg2rad(ra_deg)
-    dec = deg2rad(dec_deg)
-    cosd = cos(dec)
-    sind = sin(dec)
-    cosra = cos(ra)
-    sinra = sin(ra)
-    return (180./pi * vstack((cosd * -sinra,
+    ra  = np.deg2rad(ra_deg)
+    dec = np.deg2rad(dec_deg)
+    cosd = np.cos(dec)
+    sind = np.sin(dec)
+    cosra = np.cos(ra)
+    sinra = np.sin(ra)
+    return (180./np.pi * np.vstack((cosd * -sinra,
                               cosd *  cosra,
                               0)).T,
-            180./pi * vstack((-sind * cosra,
+            180./np.pi * np.vstack((-sind * cosra,
                               -sind * sinra,
                                cosd)).T)
 
@@ -157,10 +157,10 @@ def xyztoradec(xyz):
         return (rs[0], ds[0])
     (nil,three) = xyz.shape
     assert(three == 3)
-    ra = arctan2(xyz[:,1], xyz[:,0])
-    ra += 2*pi * (ra < 0)
-    dec = arcsin(xyz[:,2] / norm(xyz)[:,0])
-    return (rad2deg(ra), rad2deg(dec))
+    ra = np.arctan2(xyz[:,1], xyz[:,0])
+    ra += 2*np.pi * (ra < 0)
+    dec = np.arcsin(xyz[:,2] / norm(xyz)[:,0])
+    return (np.rad2deg(ra), np.rad2deg(dec))
 
 
 #####################
@@ -174,7 +174,7 @@ def distsq_between_radecs(ra1, dec1, ra2, dec2):
     s1 = xyz2.shape[0]
     d2 = zeros((s0,s1))
     for s in range(s0):
-        d2[s,:] = sum((xyz1[s,:] - xyz2)**2, axis=1)
+        d2[s,:] = np.sum((xyz1[s,:] - xyz2)**2, axis=1)
     if s0 == 1 and s1 == 1:
         d2 = d2[0,0]
     elif s0 == 1:
@@ -195,7 +195,7 @@ def distsq_between_radecs(ra1, dec1, ra2, dec2):
     s1 = xyz2.shape[0]
     d2 = zeros((s0,s1))
     for s in range(s0):
-        d2[s,:] = sum((xyz1[s,:] - xyz2)**2, axis=1)
+        d2[s,:] = np.sum((xyz1[s,:] - xyz2)**2, axis=1)
     if s0 == 1 and s1 == 1:
         d2 = d2[0,0]
     elif s0 == 1:
@@ -230,34 +230,32 @@ def degrees_between(ra1, dec1, ra2, dec2):
     return arcsec2deg(arcsec_between(ra1, dec1, ra2, dec2))
 
 def deg2distsq(deg):
-    return rad2distsq(deg2rad(deg))
+    return rad2distsq(np.deg2rad(deg))
 
 def deg2dist(deg):
-    return rad2dist(deg2rad(deg))
+    return rad2dist(np.deg2rad(deg))
 
 def rad2dist(r):
-    return sqrt(rad2distsq(r))
+    return np.sqrt(rad2distsq(r))
 
 def rad2distsq(r):
     # inverse of distsq2arc; cosine law.
-    return 2.0 * (1.0 - cos(r));
+    return 2.0 * (1.0 - np.cos(r));
 
 def distsq2rad(dist2):
     return arccos(1. - dist2 / 2.)
 def distsq2arcsec(dist2):
     return rad2arcsec(distsq2rad(dist2))
 def distsq2deg(dist2):
-    return rad2deg(distsq2rad(dist2))
+    return np.rad2deg(distsq2rad(dist2))
 
-def rad2deg(r):
-    return 180.0*r/pi
 def rad2arcsec(r):
-    return 648000.0*r/pi
+    return 648000.0*r/np.pi
 
 def arcsec2rad(a):
-    return a*pi/648000.0
+    return a*np.pi/648000.0
 def arcsec2deg(a):
-    return rad2deg(arcsec2rad(a))
+    return np.rad2deg(arcsec2rad(a))
 
 
 
@@ -265,9 +263,9 @@ def arcsec2deg(a):
 # returns an array of shape (N,1)
 def norm(x):
     if len(x.shape) == 2:
-        return sqrt(sum(x**2, axis=1))[:,newaxis]
+        return np.sqrt(np.sum(x**2, axis=1))[:,newaxis]
     else:
-        return sqrt(sum(x**2))
+        return np.sqrt(np.sum(x**2))
         
 vector_norm = norm
 
@@ -276,7 +274,7 @@ vector_norm = norm
 # returns velocity in km/s
 def pmdisttovelocity(pm, dist):
     # (pm in deg/yr) * (dist in kpc) to (velocity in km/s)
-    pmfactor = 1/3.6e6 * pi/180. * 0.977813952e9
+    pmfactor = 1/3.6e6 * np.pi/180. * 0.977813952e9
     return pm * dist * pmfactor
 
 
@@ -288,16 +286,16 @@ def pm_radectolb(ra, dec, pmra, pmdec):
     (l1, b1) = radectolb(ra, dec)
     # the Jo Bovy method:
     (a,d) = galactic_pole
-    alphangp = deg2rad(a)
-    deltangp = deg2rad(d)
-    delta = deg2rad(dec)
-    alpha = deg2rad(ra)
-    b = deg2rad(b1)
+    alphangp = np.deg2rad(a)
+    deltangp = np.deg2rad(d)
+    delta = np.deg2rad(dec)
+    alpha = np.deg2rad(ra)
+    b = np.deg2rad(b1)
 
-    cosphi = ((sin(deltangp) - sin(delta)*sin(b)) /
-              (cos(delta)*cos(b)))
-    sinphi = ((sin(alpha - alphangp) * cos(deltangp)) /
-              cos(b))
+    cosphi = ((np.sin(deltangp) - np.sin(delta)*np.sin(b)) /
+              (np.cos(delta)*np.cos(b)))
+    sinphi = ((np.sin(alpha - alphangp) * np.cos(deltangp)) /
+              np.cos(b))
 
     dlcosb =  cosphi * pmra + sinphi * pmdec
     db     = -sinphi * pmra + cosphi * pmdec
@@ -314,7 +312,7 @@ def radectolb(ra, dec):
     # danger, will robinson, danger!
     # abuse the xyztoradec routine to convert xyz in the galactic
     # unit sphere to (l,b) in galactic coords.
-    (l,b) = xyztoradec(hstack((xg, yg, zg)))
+    (l,b) = xyztoradec(np.hstack((xg, yg, zg)))
     # galactic system is left-handed so "l" comes out backward.
     l = 360. - l
     return (l,b)
@@ -336,7 +334,7 @@ def remove_solar_motion(ra, dec, dist, pmra, pmdec):
     # numerical difference time span in yr
     dyr = 1.
     # transverse displacements on celestial unit sphere
-    unitxyz2 = radectoxyz(ra  + pmra/cos(deg2rad(dec)) /3.6e6 * dyr,
+    unitxyz2 = radectoxyz(ra  + pmra/np.cos(np.deg2rad(dec)) /3.6e6 * dyr,
                           dec + pmdec/3.6e6 * dyr)
     # heliocentric transverse displacement of the observed star in kpc
     dxyz = (unitxyz2 - unitxyz) * dist[:,newaxis]
@@ -352,7 +350,7 @@ def remove_solar_motion(ra, dec, dist, pmra, pmdec):
     dra += 360. * (dra < -180)
     dra -= 360. * (dra >  180)
     # convert back to proper motions
-    return ((dra * cos(deg2rad(dec3)) / dyr) * 3.6e6,
+    return ((dra * np.cos(np.deg2rad(dec3)) / dyr) * 3.6e6,
             ((dec3 - dec) / dyr) * 3.6e6)
 
 
@@ -445,8 +443,8 @@ def ecliptic_basis(eclipticangle = 23.439281):
     Equinox= array([1,0,0])
     CelestialPole = array([0,0,1])
     YPole = cross(CelestialPole, Equinox)
-    EclipticAngle= deg2rad(eclipticangle)
-    EclipticPole= (CelestialPole * cos(EclipticAngle) - YPole * sin(EclipticAngle))
+    EclipticAngle= np.deg2rad(eclipticangle)
+    EclipticPole= (CelestialPole * np.cos(EclipticAngle) - YPole * np.sin(EclipticAngle))
     Ydir = cross(EclipticPole, Equinox)
     return (Equinox, Ydir, EclipticPole)
 
@@ -612,40 +610,39 @@ def dec2dmsstring(dec, separator=' ', sec_digits=3):
     return separator.join(['%c%0.2i' % (signc, d), '%0.2i' % m, sstr])
 
 def xyzarrtoradec(xyz):
-    return (degrees(xy2ra(xyz[0], xyz[1])), degrees(z2dec(xyz[2])))
+    return (np.rad2deg(xy2ra(xyz[0], xyz[1])), np.rad2deg(z2dec(xyz[2])))
 
-def deg2rad(d):    return d*pi/180.0
 def deg2arcmin(d): return d * 60.
 def deg2arcsec(d): return d * 3600.
-def rad2arcmin(r): return 10800.0*r/pi
-def arcmin2rad(a): return a*pi/10800.0
+def rad2arcmin(r): return 10800.0*r/np.pi
+def arcmin2rad(a): return a*np.pi/10800.0
 def arcmin2deg(a): return a/60.
 def arcmin2rad(a): return deg2rad(arcmin2deg(a))
-def radec2x(r,d):  return cos(d)*cos(r) # r,d in radians
-def radec2y(r,d):  return cos(d)*sin(r) # r,d in radians
-def radec2z(r,d):  return sin(d)        # r,d in radians
-def z2dec(z):      return asin(z)     # result in radians
+def radec2x(r,d):  return np.cos(d)*np.cos(r) # r,d in radians
+def radec2y(r,d):  return np.cos(d)*np.sin(r) # r,d in radians
+def radec2z(r,d):  return np.sin(d)        # r,d in radians
+def z2dec(z):      return np.arcsin(z)     # result in radians
 def xy2ra(x,y):
     "Convert x,y to ra in radians"
-    r = atan2(y,x)
-    r += 2*pi*(r<0.)
+    r = np.arctan2(y,x)
+    r += 2*np.pi*(r<0.)
     return r
 
 
 def rad2distsq(rad):
-    return 2. * (1. - cos(rad))
+    return 2. * (1. - np.cos(rad))
 
 def arcsec2distsq(arcsec):
     return rad2distsq(arcsec2rad(arcsec))
 
 def arcsec2dist(arcsec):
-    return sqrt(arcsec2distsq(arcsec))
+    return np.sqrt(arcsec2distsq(arcsec))
 
 def arcmin2distsq(arcmin):
     return rad2distsq(arcmin2rad(arcmin))
 
 def arcmin2dist(arcmin):
-    return sqrt(arcmin2distsq(arcmin))
+    return np.sqrt(arcmin2distsq(arcmin))
 
 def dist2arcsec(dist):
     return distsq2arcsec(dist**2)
