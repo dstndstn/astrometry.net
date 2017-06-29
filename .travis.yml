@@ -19,8 +19,6 @@ env:
 # And netpbm include files are right in /usr/include, not in /usr/include/netpbm
 
 script:
-    - apt-cache search netpbm
-    - jpegtopnm
     - which python
     - python --version
     - which python2
@@ -66,6 +64,7 @@ addons:
     packages:
     - libnetpbm10
     - libnetpbm10-dev
+    - netpbm
     - wcslib-dev
     - libcfitsio3
     - libcfitsio3-dev
