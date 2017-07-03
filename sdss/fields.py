@@ -102,13 +102,6 @@ class RaDecToRcf(object):
         if self.tab is None:
             raise Exception('Failed to read table of SDSS fields from file: "' + str(tablefn) + '"')
 
-    def __del__(self):
-        if self.kd is not None:
-            from astrometry.libkd import spherematch_c
-            spherematch_c.kdtree_free(self.kd)
-            self.kd = None
-
-
     def __call__(self, ra, dec, spherematch=True, radius=0, contains=False):
         T = self.tab
         # HACK - magic 13x9 +1 arcmin.
@@ -127,18 +120,16 @@ class RaDecToRcf(object):
                                 T[I].field, T[I].ra, T[I].dec))
         else:
             from astrometry.libkd import spherematch
-            from astrometry.libkd import spherematch_c
-
             if self.kd is None:
-                self.kd = spherematch_c.kdtree_build(self.sdssxyz)
+                self.kd = spherematch.tree_build(self.sdssxyz)
             rds = array([x for x in broadcast(ra,dec)])
             xyz = radectoxyz(rds[:,0], rds[:,1]).astype(double)
-            kd2 = spherematch_c.kdtree_build(xyz)
+            kd2 = spherematch.tree_build(xyz)
             notself = False
-            inds,D = spherematch_c.match(self.kd, kd2, np.sqrt(d2), notself,True)
+            inds,D = spherematch.trees_match(self.kd, kd2, np.sqrt(d2),
+                                             notself=notself, permuted=True)
             if len(inds) == 0:
                 return []
-            spherematch_c.kdtree_free(kd2)
             I = np.argsort(D[:,0])
             inds = inds[I]
             rcfs = [[] for i in range(len(rds))]
