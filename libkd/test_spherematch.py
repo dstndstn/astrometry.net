@@ -62,4 +62,16 @@ spherematch.tree_print(kd)
 kd.print()
 R = spherematch.tree_search(kd, x2[0,:], 1.)
 print('tree_search:', len(R), 'results')
+spherematch.tree_close(kd)
 
+kd2 = spherematch.tree_build(x2)
+I,J,d = spherematch.trees_match(kd, kd2, 1.)
+print('trees_match:', len(I), 'matches')
+
+I,J,d = spherematch.trees_match(kd, kd2, 1., nearest=True)
+print('trees_match:', len(I), 'matches (nearest)')
+
+
+# kdtree_bbox
+# kdtree_get_data
+# kdtree_permute

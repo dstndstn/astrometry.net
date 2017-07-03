@@ -698,7 +698,7 @@ static PyObject* spherematch_kdtree_permute(PyObject* self, PyObject* args) {
 
 static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
     int i, j, NY, N;
-    long p1, p2;
+    KdObject *kdobj1 = NULL, *kdobj2 = NULL;
     kdtree_t *kd1, *kd2;
     npy_intp dims[1];
     PyObject* I;
@@ -721,13 +721,14 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
     // So that ParseTuple("b") with a C "anbool" works
     assert(sizeof(anbool) == sizeof(unsigned char));
 
-    if (!PyArg_ParseTuple(args, "lldbb", &p1, &p2, &rad, &notself, &docount)) {
+    if (!PyArg_ParseTuple(args, "O!O!dbb",
+                          &KdType, &kdobj1, &KdType, &kdobj2,
+                          &rad, &notself, &docount)) {
         PyErr_SetString(PyExc_ValueError, "need five args: two kdtree identifiers (ints), search radius, notself (bool) and docount (bool)");
         return NULL;
     }
-    // Nasty!
-    kd1 = (kdtree_t*)p1;
-    kd2 = (kdtree_t*)p2;
+    kd1 = kdobj1->kd;
+    kd2 = kdobj2->kd;
 
     // quick check for no-overlap case
     if (kdtree_node_node_mindist2_exceeds(kd1, 0, kd2, 0, rad*rad)) {
