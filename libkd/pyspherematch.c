@@ -168,13 +168,24 @@ static PyObject* KdTree_write(KdObject* self, PyObject* args) {
     return Py_BuildValue("i", rtn);
 }
 
+static PyObject* KdTree_n(KdObject* self, void* closure) {
+    return PyInt_FromLong(kdtree_n(self->kd));
+}
+
 static PyMethodDef kdtree_methods[] = {
     {"write", (PyCFunction)KdTree_write, METH_VARARGS,
      "Writes the Kd-Tree to the given (string) filename in FITS format."
     },
     {NULL}
 };
-    
+
+static PyGetSetDef kdtree_getseters[] = {
+    {"n",
+     (getter)KdTree_n, NULL, "number of data items in kd-tree",
+     NULL},
+    {NULL}  /* Sentinel */
+};
+
 static PyTypeObject KdType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "spherematch.KdTree",      /* tp_name */
@@ -205,7 +216,7 @@ static PyTypeObject KdType = {
     0,                         /* tp_iternext */
     kdtree_methods,            /* tp_methods */
     0, //Noddy_members,             /* tp_members */
-    0,                         /* tp_getset */
+    kdtree_getseters,          /* tp_getset */
     0,                         /* tp_base */
     0,                         /* tp_dict */
     0,                         /* tp_descr_get */
@@ -960,8 +971,6 @@ PyInit_spherematch_c(void) {
 }
 
 #else
-
-
 
 PyMODINIT_FUNC
 initspherematch_c(void) {
