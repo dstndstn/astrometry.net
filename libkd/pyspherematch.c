@@ -173,12 +173,99 @@ static PyObject* KdTree_print(KdObject* self) {
     Py_RETURN_NONE;
 }
 
+static PyObject* KdTree_search(KdObject* self,
+                               PyObject* args) {
+    double* X;
+    PyObject* rtn;
+    npy_intp dims[1];
+    kdtree_t* kd;
+    int D, N;
+    PyObject* pyO;
+    PyObject* pyI;
+    PyObject* pyInds;
+    PyObject* pyDists = NULL;
+    PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE);
+    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED
+        | NPY_ELEMENTSTRIDES;
+    double radius;
+    kdtree_qres_t* res;
+    int getdists, sortdists;
+    int opts;
+
+    if (!PyArg_ParseTuple(args, "Odii",
+                          &pyO, &radius,
+                          &getdists, &sortdists)) {
+        PyErr_SetString(PyExc_ValueError, "need four args: query point (numpy array of floats), radius (double), get distances (int 0/1), sort distances (int 0/1)");
+        return NULL;
+    }
+    kd = self->kd;
+    D = kd->ndim;
+
+    if (sortdists) {
+        getdists = 1;
+    }
+
+    Py_INCREF(dtype);
+    pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
+    if (!pyI) {
+        PyErr_SetString(PyExc_ValueError, "Failed to convert query point array to np array of float");
+        Py_XDECREF(dtype);
+        return NULL;
+    }
+    N = (int)PyArray_DIM(pyI, 0);
+    if (N != D) {
+        PyErr_SetString(PyExc_ValueError, "Query point must have size == dimension of tree");
+        Py_DECREF(pyI);
+        Py_DECREF(dtype);
+        return NULL;
+    }
+
+    X = PyArray_DATA(pyI);
+
+    opts = 0;
+    if (getdists) {
+        opts |= KD_OPTIONS_COMPUTE_DISTS;
+    }
+    if (sortdists) {
+        opts |= KD_OPTIONS_SORT_DISTS;
+    }
+
+    res = kdtree_rangesearch_options(kd, X, radius*radius, opts);
+    N = res->nres;
+    dims[0] = N;
+    res->inds = realloc(res->inds, N * sizeof(uint32_t));
+    pyInds = PyArray_SimpleNewFromData(1, dims, NPY_UINT32, res->inds);
+    res->inds = NULL;
+
+    if (getdists) {
+        res->sdists = realloc(res->sdists, N * sizeof(double));
+        pyDists = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, res->sdists);
+        res->sdists = NULL;
+    }
+
+    kdtree_free_query(res);
+
+    Py_DECREF(pyI);
+    Py_DECREF(dtype);
+    if (getdists) {
+        rtn = Py_BuildValue("(OO)", pyInds, pyDists);
+        Py_DECREF(pyDists);
+    } else {
+        rtn = Py_BuildValue("O", pyInds);
+    }
+    Py_DECREF(pyInds);
+    return rtn;
+}
+
 static PyMethodDef kdtree_methods[] = {
     {"write", (PyCFunction)KdTree_write, METH_VARARGS,
      "Writes the Kd-Tree to the given (string) filename in FITS format."
     },
     {"print", (PyCFunction)KdTree_print, METH_NOARGS,
      "Prints a representation of the Kd-Tree to stdout."
+    },
+    {"search", (PyCFunction)KdTree_search, METH_VARARGS,
+     "Searches for points within range in the Kd-Tree."
     },
     {NULL}
 };
@@ -508,94 +595,6 @@ static PyObject* spherematch_kdtree_bbox(PyObject* self, PyObject* args) {
     return rtn;
 }
 
-
-static PyObject* spherematch_kdtree_rangesearch(PyObject* self,
-                                                PyObject* args) {
-    double* X;
-    PyObject* rtn;
-    npy_intp dims[1];
-    KdObject *kdobj = NULL;
-    kdtree_t* kd;
-    int D, N;
-    PyObject* pyO;
-    PyObject* pyI;
-    PyObject* pyInds;
-    PyObject* pyDists = NULL;
-    PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE);
-    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED
-        | NPY_ELEMENTSTRIDES;
-    double radius;
-    kdtree_qres_t* res;
-    int getdists, sortdists;
-    int opts;
-
-    if (!PyArg_ParseTuple(args, "O!Odii",
-                          &KdType, &kdobj,
-                          &pyO, &radius,
-                          &getdists, &sortdists)) {
-        PyErr_SetString(PyExc_ValueError, "need five args: KdTree object, query point (numpy array of floats), radius (double), get distances (int 0/1), sort distances (int 0/1)");
-        return NULL;
-    }
-    kd = kdobj->kd;
-    D = kd->ndim;
-
-    if (sortdists) {
-        getdists = 1;
-    }
-
-    Py_INCREF(dtype);
-    pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
-    if (!pyI) {
-        PyErr_SetString(PyExc_ValueError, "Failed to convert query point array to np array of float");
-        Py_XDECREF(dtype);
-        return NULL;
-    }
-    N = (int)PyArray_DIM(pyI, 0);
-    if (N != D) {
-        PyErr_SetString(PyExc_ValueError, "Query point must have size == dimension of tree");
-        Py_DECREF(pyI);
-        Py_DECREF(dtype);
-        return NULL;
-    }
-
-    X = PyArray_DATA(pyI);
-
-    opts = 0;
-    if (getdists) {
-        opts |= KD_OPTIONS_COMPUTE_DISTS;
-    }
-    if (sortdists) {
-        opts |= KD_OPTIONS_SORT_DISTS;
-    }
-
-    res = kdtree_rangesearch_options(kd, X, radius*radius, opts);
-    N = res->nres;
-    dims[0] = N;
-    res->inds = realloc(res->inds, N * sizeof(uint32_t));
-    pyInds = PyArray_SimpleNewFromData(1, dims, NPY_UINT32, res->inds);
-    res->inds = NULL;
-
-    if (getdists) {
-        res->sdists = realloc(res->sdists, N * sizeof(double));
-        pyDists = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, res->sdists);
-        res->sdists = NULL;
-    }
-
-    kdtree_free_query(res);
-
-    Py_DECREF(pyI);
-    Py_DECREF(dtype);
-    if (getdists) {
-        rtn = Py_BuildValue("(OO)", pyInds, pyDists);
-        Py_DECREF(pyDists);
-    } else {
-        rtn = Py_BuildValue("O", pyInds);
-    }
-    Py_DECREF(pyInds);
-    return rtn;
-}
-
-
 static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
     PyArrayObject* pyX;
     double* X;
@@ -830,9 +829,9 @@ static PyMethodDef spherematchMethods[] = {
     /*
      { "kdtree_print", spherematch_kdtree_print, METH_VARARGS,
      "Describe kdtree" },
-     */
     { "kdtree_rangesearch", spherematch_kdtree_rangesearch, METH_VARARGS,
       "Rangesearch in a single kd-tree" },
+     */
 
     {"kdtree_get_positions", spherematch_kdtree_get_data, METH_VARARGS,
      "Retrieve the positions of given indices in this tree (np array of ints)" },

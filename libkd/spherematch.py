@@ -405,8 +405,8 @@ def tree_search(kd, pos, radius, getdists=False, sortdists=False):
     Searches the given kd-tree for points within *radius* of the given
     position *pos*.
     '''
-    return spherematch_c.kdtree_rangesearch(kd, pos, radius,
-                                            int(getdists), int(sortdists))
+    #print('Unnecessary call to tree_search(kd, ...); use kd.search(...)')
+    return kd.search(pos, radius, int(getdists), int(sortdists))
 
 def tree_search_radec(kd, ra, dec, radius, getdists=False, sortdists=False):
     '''
