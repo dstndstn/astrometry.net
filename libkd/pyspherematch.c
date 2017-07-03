@@ -16,6 +16,7 @@
 #include "numpy/arrayobject.h"
 
 #include "os-features.h"
+#include "keywords.h"
 #include "kdtree.h"
 #include "kdtree_fits_io.h"
 #include "dualtree_rangesearch.h"
@@ -56,66 +57,27 @@ static PyObject* KdTree_new(PyTypeObject *type, PyObject *args, PyObject *kwds) 
 }
 
 static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
-    PyObject *open = NULL;
     Py_ssize_t n;
-    PyObject *ignore = NULL;
+    PyObject *x = NULL;
+    char* filename = NULL;
+    char* treename = NULL;
+    VarUnused PyObject *fnbytes = NULL;
 
     n = PyTuple_Size(args);
-    if (!((n == 2) || (n == 3))) {
-        PyErr_SetString(PyExc_ValueError, "need two or three args: (open=False, array x), (open=True, kdtree filename, + optionally tree name)");
+    if (!((n == 1) || (n == 2))) {
+        PyErr_SetString(PyExc_ValueError, "need one or two args: (array x), (kdtree filename, + optionally tree name)");
         return -1;
     }
-    open = PyTuple_GET_ITEM(args, 0);
-    if (!((open == Py_False) || (open == Py_True))) {
-        PyErr_SetString(PyExc_ValueError, "first argument must be boolean");
-        return -1;
-    }
-    self->opened = (open == Py_True);
     
-    if (open == Py_True) {
-        char* filename = NULL;
-        char* treename = NULL;
-
-#if defined(IS_PY3K)
-        PyObject *fnbytes = NULL;
-        if (n == 2) {
-            if (!PyArg_ParseTuple(args, "OO&", &ignore, PyUnicode_FSConverter, &fnbytes)) {
-                return -1;
-            }
-        } else {
-            if (!PyArg_ParseTuple(args, "OO&s", &ignore, PyUnicode_FSConverter, &fnbytes, &treename)) {
-                return -1;
-            }
-        }
-        if (fnbytes == NULL) {
-            return -1;
-        }
-        filename = PyBytes_AsString(fnbytes);
-        self->kd = kdtree_fits_read(filename, treename, NULL);
-        Py_DECREF(fnbytes);
-#else
-        if (n == 2) {
-            if (!PyArg_ParseTuple(args, "Os", &ignore, &filename)) {
-                return -1;
-            }
-        } else {
-            if (!PyArg_ParseTuple(args, "Oss", &ignore, &filename, &treename)) {
-                return -1;
-            }
-        }
-        self->kd = kdtree_fits_read(filename, treename, NULL);
-#endif
-
-    } else {
-        PyObject *x = NULL;
+    // Try parsing as an array.
+    if ((n == 1) && PyArg_ParseTuple(args, "O!", &PyArray_Type, &x)) {
+        // kdtree_build
         int N, D;
         int i,j;
         int Nleaf, treeoptions, treetype;
         double* data;
-        if (n != 2)
-            return -1;
-        if (!PyArg_ParseTuple(args, "OO!", &ignore, &PyArray_Type, &x))
-            return -1;
+
+        self->opened = 0;
         if (PyArray_NDIM(x) != 2) {
             PyErr_SetString(PyExc_ValueError, "array must be two-dimensional");
             return -1;
@@ -138,15 +100,49 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
                 data[i*D + j] = *pd;
             }
         }
-
         Nleaf = 16;
         treetype = KDTT_DOUBLE;
         //treeoptions = KD_BUILD_SPLIT;
         treeoptions = KD_BUILD_BBOX;
         self->kd = kdtree_build(NULL, data, N, D, Nleaf,
                                 treetype, treeoptions);
+        if (!self->kd)
+            return -1;
+        return 0;
     }
+    // clear the exception from PyArg_ParseTuple above
+    PyErr_Clear();
 
+    // kdtree_fits_open
+    self->opened = 1;
+#if defined(IS_PY3K)
+    if (n == 1) {
+        if (!PyArg_ParseTuple(args, "O&", PyUnicode_FSConverter, &fnbytes)) {
+            return -1;
+        }
+    } else {
+        if (!PyArg_ParseTuple(args, "O&s", PyUnicode_FSConverter, &fnbytes, &treename)) {
+            return -1;
+        }
+    }
+    if (fnbytes == NULL) {
+        return -1;
+    }
+    filename = PyBytes_AsString(fnbytes);
+    self->kd = kdtree_fits_read(filename, treename, NULL);
+    Py_DECREF(fnbytes);
+#else
+    if (n == 1) {
+        if (!PyArg_ParseTuple(args, "s", &filename)) {
+            return -1;
+        }
+    } else {
+        if (!PyArg_ParseTuple(args, "ss", &filename, &treename)) {
+            return -1;
+        }
+    }
+    self->kd = kdtree_fits_read(filename, treename, NULL);
+#endif
     if (!self->kd)
         return -1;
     return 0;
