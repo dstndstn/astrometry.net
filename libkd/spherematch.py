@@ -491,7 +491,9 @@ def tree_print(kd):
     print('Unnecessary call to tree_print(kd): use kd.print()')
     kd.print()
     
-tree_data = spherematch_c.kdtree_get_positions
+def tree_data(kd, I):
+    print('Unnecessary call to tree_data(kd, I): use kd.get_data(I)')
+    return kd.get_data(I)
 
 if __name__ == '__main__':
     import doctest

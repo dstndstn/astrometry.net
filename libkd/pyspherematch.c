@@ -173,8 +173,7 @@ static PyObject* KdTree_print(KdObject* self) {
     Py_RETURN_NONE;
 }
 
-static PyObject* KdTree_search(KdObject* self,
-                               PyObject* args) {
+static PyObject* KdTree_search(KdObject* self, PyObject* args) {
     double* X;
     PyObject* rtn;
     npy_intp dims[1];
@@ -257,6 +256,56 @@ static PyObject* KdTree_search(KdObject* self,
     return rtn;
 }
 
+static PyObject* KdTree_get_data(KdObject* self, PyObject* args) {
+    PyArrayObject* pyX;
+    double* X;
+    PyObject* rtn;
+    npy_intp dims[2];
+    kdtree_t* kd;
+    int k, D, N;
+    //npy_int* I;
+    npy_uint32* I;
+    PyObject* pyO;
+    PyObject* pyI;
+    // this is the type returned by kdtree_rangesearch
+    PyArray_Descr* dtype = PyArray_DescrFromType(NPY_UINT32);
+    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED
+        | NPY_ELEMENTSTRIDES;
+
+    if (!PyArg_ParseTuple(args, "O", &pyO)) {
+        PyErr_SetString(PyExc_ValueError, "need one arg: index array (numpy array of ints)");
+        return NULL;
+    }
+    kd = self->kd;
+    D = kd->ndim;
+
+    Py_INCREF(dtype);
+    pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
+    if (!pyI) {
+        PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
+        Py_XDECREF(dtype);
+        return NULL;
+    }
+    N = (int)PyArray_DIM(pyI, 0);
+
+    dims[0] = N;
+    dims[1] = D;
+
+    pyX = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
+    X = PyArray_DATA(pyX);
+    I = PyArray_DATA(pyI);
+
+    for (k=0; k<N; k++) {
+        kdtree_copy_data_double(kd, I[k], 1, X);
+        X += D;
+    }
+    Py_DECREF(pyI);
+    Py_DECREF(dtype);
+    rtn = Py_BuildValue("O", pyX);
+    Py_DECREF(pyX);
+    return rtn;
+}
+
 static PyMethodDef kdtree_methods[] = {
     {"write", (PyCFunction)KdTree_write, METH_VARARGS,
      "Writes the Kd-Tree to the given (string) filename in FITS format."
@@ -266,6 +315,9 @@ static PyMethodDef kdtree_methods[] = {
     },
     {"search", (PyCFunction)KdTree_search, METH_VARARGS,
      "Searches for points within range in the Kd-Tree."
+    },
+    {"get_data", (PyCFunction)KdTree_get_data, METH_VARARGS,
+     "Returns data from this tree, given numpy array of indices (MUST be np.uint32)."
     },
     {NULL}
 };
@@ -583,58 +635,6 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     return rtn;
 }
 
-static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
-    PyArrayObject* pyX;
-    double* X;
-    PyObject* rtn;
-    npy_intp dims[2];
-    long i;
-    kdtree_t* kd;
-    int k, D, N;
-    //npy_int* I;
-    npy_uint32* I;
-    PyObject* pyO;
-    PyObject* pyI;
-    // this is the type returned by kdtree_rangesearch
-    PyArray_Descr* dtype = PyArray_DescrFromType(NPY_UINT32);
-    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
-
-    if (!PyArg_ParseTuple(args, "lO", &i, &pyO)) {
-        PyErr_SetString(PyExc_ValueError, "need two args: kdtree identifier (int), index array (numpy array of ints)");
-        return NULL;
-    }
-    // Nasty!
-    kd = (kdtree_t*)i;
-    D = kd->ndim;
-
-    Py_INCREF(dtype);
-    pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
-    if (!pyI) {
-        PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
-        Py_XDECREF(dtype);
-        return NULL;
-    }
-    N = (int)PyArray_DIM(pyI, 0);
-
-    dims[0] = N;
-    dims[1] = D;
-
-    pyX = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
-    X = PyArray_DATA(pyX);
-    I = PyArray_DATA(pyI);
-
-    for (k=0; k<N; k++) {
-        kdtree_copy_data_double(kd, I[k], 1, X);
-        X += D;
-    }
-    Py_DECREF(pyI);
-    Py_DECREF(dtype);
-    rtn = Py_BuildValue("O", pyX);
-    Py_DECREF(pyX);
-    return rtn;
-}
-
-
 static PyObject* spherematch_kdtree_permute(PyObject* self, PyObject* args) {
     PyArrayObject* pyX;
     npy_int* X;
@@ -798,8 +798,6 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
 
 
 static PyMethodDef spherematchMethods[] = {
-    {"kdtree_get_positions", spherematch_kdtree_get_data, METH_VARARGS,
-     "Retrieve the positions of given indices in this tree (np array of ints)" },
     {"kdtree_permute", spherematch_kdtree_permute, METH_VARARGS,
      "Apply kd-tree permutation array to (get from kd-tree indices back to original)"},
 

@@ -75,5 +75,8 @@ print('Kd bounding-box:', spherematch.tree_bbox(kd))
 
 print('Kd bounding-box:', kd.bbox)
 
-# kdtree_get_data
+print('Kd data:', spherematch.tree_data(kd, np.array([0,3,5]).astype(np.uint32)))
+
+print('Kd data:', kd.get_data(np.array([0,3,5]).astype(np.uint32)))
+
 # kdtree_permute
