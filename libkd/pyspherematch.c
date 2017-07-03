@@ -322,15 +322,6 @@ static PyTypeObject KdType = {
     KdTree_new,                /* tp_new */
 };
 
-static PyObject* spherematch_kdtree_n(PyObject* self, PyObject* args) {
-    KdObject* kdobj;
-    if (!PyArg_ParseTuple(args, "O!", &KdType, &kdobj)) {
-        PyErr_SetString(PyExc_ValueError, "need one arg: KdTree object");
-        return NULL;
-    }
-    return PyInt_FromLong(kdtree_n(kdobj->kd));
-}
-
 struct dualtree_results2 {
     kdtree_t *kd1;
     kdtree_t *kd2;
@@ -812,8 +803,6 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
 static PyMethodDef spherematchMethods[] = {
     { "kdtree_bbox", spherematch_kdtree_bbox, METH_VARARGS,
       "get bounding-box of this tree" },
-    { "kdtree_n", spherematch_kdtree_n, METH_VARARGS,
-      "N pts in tree" },
     {"kdtree_get_positions", spherematch_kdtree_get_data, METH_VARARGS,
      "Retrieve the positions of given indices in this tree (np array of ints)" },
     {"kdtree_permute", spherematch_kdtree_permute, METH_VARARGS,
