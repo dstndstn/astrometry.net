@@ -22,6 +22,36 @@
 #include "dualtree_nearestneighbour.h"
 #include "bl.h"
 
+typedef struct {
+    PyObject_HEAD
+    /* Type-specific fields go here. */
+    kdtree_t* kd;
+} spherematch_KdObject;
+
+static PyTypeObject spherematch_KdType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "spherematch.KdTree",             /* tp_name */
+    sizeof(spherematch_KdObject), /* tp_basicsize */
+    0,                         /* tp_itemsize */
+    0,                         /* tp_dealloc */
+    0,                         /* tp_print */
+    0,                         /* tp_getattr */
+    0,                         /* tp_setattr */
+    0,                         /* tp_reserved */
+    0,                         /* tp_repr */
+    0,                         /* tp_as_number */
+    0,                         /* tp_as_sequence */
+    0,                         /* tp_as_mapping */
+    0,                         /* tp_hash  */
+    0,                         /* tp_call */
+    0,                         /* tp_str */
+    0,                         /* tp_getattro */
+    0,                         /* tp_setattro */
+    0,                         /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT,        /* tp_flags */
+    "KdTree object",           /* tp_doc */
+};
+
 static PyObject* spherematch_kdtree_build(PyObject* self, PyObject* args) {
     int N, D;
     int i,j;
@@ -787,10 +817,21 @@ static struct PyModuleDef spherematch_module = {
 
 PyMODINIT_FUNC
 PyInit_spherematch_c(void) {
-    PyObject *res;
+    PyObject *m;
     import_array();
-    res = PyModule_Create(&spherematch_module);
-    return res;
+
+    spherematch_KdType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&spherematch_KdType) < 0)
+        return NULL;
+
+    m = PyModule_Create(&spherematch_module);
+    if (m == NULL)
+        return NULL;
+
+    Py_INCREF(&spherematch_KdType);
+    PyModule_AddObject(m, "KdTree", (PyObject *)&spherematch_KdType);
+
+    return m;
 }
 
 #else
@@ -799,8 +840,18 @@ PyInit_spherematch_c(void) {
 
 PyMODINIT_FUNC
 initspherematch_c(void) {
-    Py_InitModule("spherematch_c", spherematchMethods);
+    PyObject* m;
     import_array();
+
+    spherematch_KdType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&spherematch_KdType) < 0)
+        return;
+
+    m = Py_InitModule3("spherematch_c", spherematchMethods,
+                       "spherematch_c provides python bindings for the libkd library");
+
+    Py_INCREF(&spherematch_KdType);
+    PyModule_AddObject(m, "KdTree", (PyObject *)&spherematch_KdType);
 }
 
 #endif
