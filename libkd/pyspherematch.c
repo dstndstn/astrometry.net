@@ -25,15 +25,139 @@
 typedef struct {
     PyObject_HEAD
     /* Type-specific fields go here. */
+    int opened;
     kdtree_t* kd;
-} spherematch_KdObject;
+} KdObject;
+
+static void KdTree_dealloc(KdObject* self) {
+    printf("dealloc for KdObject %p, opened %i, kd %p\n",
+           self, self->opened, self->kd);
+    if (self && self->kd) {
+        if (self->opened) {
+            kdtree_fits_close(self->kd);
+        } else {
+            free(self->kd->data.any);
+            kdtree_free(self->kd);
+        }
+        self->kd = NULL;
+    }
+    Py_TYPE(self)->tp_free((PyObject*)self);
+}
+
+static PyObject* KdTree_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    KdObject *self;
+
+    self = (KdObject*)type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->opened = 0;
+        self->kd = NULL;
+    }
+    return (PyObject*)self;
+}
+
+static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
+    PyObject *open = NULL;
+    Py_ssize_t n;
+    PyObject *ignore = NULL;
+
+    n = PyTuple_Size(args);
+    if (!((n == 2) || (n == 3))) {
+        PyErr_SetString(PyExc_ValueError, "need two or three args: (open=False, array x), (open=True, kdtree filename, + optionally tree name)");
+        return -1;
+    }
+    open = PyTuple_GET_ITEM(args, 0);
+    if (!((open == Py_False) || (open == Py_True))) {
+        PyErr_SetString(PyExc_ValueError, "first argument must be boolean");
+        return -1;
+    }
+    self->opened = (open == Py_True);
+    
+    if (open == Py_True) {
+        char* filename = NULL;
+        char* treename = NULL;
+
+#if defined(IS_PY3K)
+        PyObject *fnbytes = NULL;
+        if (n == 2) {
+            if (!PyArg_ParseTuple(args, "OO&", &ignore, PyUnicode_FSConverter, &fnbytes)) {
+                return -1;
+            }
+        } else {
+            if (!PyArg_ParseTuple(args, "OO&s", &ignore, PyUnicode_FSConverter, &fnbytes, &treename)) {
+                return -1;
+            }
+        }
+        if (fnbytes == NULL) {
+            return -1;
+        }
+        filename = PyBytes_AsString(fnbytes);
+        self->kd = kdtree_fits_read(filename, treename, NULL);
+        Py_DECREF(fnbytes);
+#else
+        if (n == 2) {
+            if (!PyArg_ParseTuple(args, "Os", &ignore, &filename)) {
+                return -1;
+            }
+        } else {
+            if (!PyArg_ParseTuple(args, "Oss", &ignore, &filename, &treename)) {
+                return -1;
+            }
+        }
+        self->kd = kdtree_fits_read(filename, treename, NULL);
+#endif
+
+    } else {
+        PyObject *x = NULL;
+        int N, D;
+        int i,j;
+        int Nleaf, treeoptions, treetype;
+        double* data;
+        if (n != 2)
+            return -1;
+        if (!PyArg_ParseTuple(args, "OO!", &ignore, &PyArray_Type, &x))
+            return -1;
+        if (PyArray_NDIM(x) != 2) {
+            PyErr_SetString(PyExc_ValueError, "array must be two-dimensional");
+            return -1;
+        }
+        if (PyArray_TYPE(x) != PyArray_DOUBLE) {
+            PyErr_SetString(PyExc_ValueError, "array must contain doubles");
+            return -1;
+        }
+        N = (int)PyArray_DIM(x, 0);
+        D = (int)PyArray_DIM(x, 1);
+        if (D > 10) {
+            PyErr_SetString(PyExc_ValueError, "maximum dimensionality is 10: maybe you need to transpose your array?");
+            return -1;
+        }
+        // FIXME -- should be able to do this faster...
+        data = malloc(N * D * sizeof(double));
+        for (i=0; i<N; i++) {
+            for (j=0; j<D; j++) {
+                double* pd = PyArray_GETPTR2(x, i, j);
+                data[i*D + j] = *pd;
+            }
+        }
+
+        Nleaf = 16;
+        treetype = KDTT_DOUBLE;
+        //treeoptions = KD_BUILD_SPLIT;
+        treeoptions = KD_BUILD_BBOX;
+        self->kd = kdtree_build(NULL, data, N, D, Nleaf,
+                                treetype, treeoptions);
+    }
+
+    if (!self->kd)
+        return -1;
+    return 0;
+}
 
 static PyTypeObject spherematch_KdType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "spherematch.KdTree",             /* tp_name */
-    sizeof(spherematch_KdObject), /* tp_basicsize */
+    "spherematch.KdTree",      /* tp_name */
+    sizeof(KdObject),          /* tp_basicsize */
     0,                         /* tp_itemsize */
-    0,                         /* tp_dealloc */
+    (destructor)KdTree_dealloc, /* tp_dealloc */
     0,                         /* tp_print */
     0,                         /* tp_getattr */
     0,                         /* tp_setattr */
@@ -50,6 +174,23 @@ static PyTypeObject spherematch_KdType = {
     0,                         /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,        /* tp_flags */
     "KdTree object",           /* tp_doc */
+    0,                         /* tp_traverse */
+    0,                         /* tp_clear */
+    0,                         /* tp_richcompare */
+    0,                         /* tp_weaklistoffset */
+    0,                         /* tp_iter */
+    0,                         /* tp_iternext */
+    0, //Noddy_methods,             /* tp_methods */
+    0, //Noddy_members,             /* tp_members */
+    0,                         /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)KdTree_init,     /* tp_init */
+    0,                         /* tp_alloc */
+    KdTree_new,                /* tp_new */
 };
 
 static PyObject* spherematch_kdtree_build(PyObject* self, PyObject* args) {
