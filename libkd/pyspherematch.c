@@ -31,8 +31,8 @@ typedef struct {
 } KdObject;
 
 static void KdTree_dealloc(KdObject* self) {
-    printf("dealloc for KdObject %p, opened %i, kd %p\n",
-           self, self->opened, self->kd);
+    //printf("dealloc for KdObject %p, opened %i, kd %p\n",
+    //self, self->opened, self->kd);
     if (self && self->kd) {
         if (self->opened) {
             kdtree_fits_close(self->kd);
@@ -343,8 +343,8 @@ static void callback_dualtree2(void* v, int ind1, int ind2, double dist2) {
 
 static PyObject* spherematch_match2(PyObject* self, PyObject* args) {
     int i, N;
-    long p1, p2;
     struct dualtree_results2 dtresults;
+    KdObject *kdobj1 = NULL, *kdobj2 = NULL;
     kdtree_t *kd1, *kd2;
     double rad;
     PyObject* indlist;
@@ -354,13 +354,14 @@ static PyObject* spherematch_match2(PyObject* self, PyObject* args) {
     // So that ParseTuple("b") with a C "anbool" works
     assert(sizeof(anbool) == sizeof(unsigned char));
 
-    if (!PyArg_ParseTuple(args, "lldbb", &p1, &p2, &rad, &notself, &permute)) {
-        PyErr_SetString(PyExc_ValueError, "spherematch_c.match: need five args: two kdtree identifiers (ints), search radius (float), notself (boolean), permuted (boolean)");
+    if (!PyArg_ParseTuple(args, "O!O!dbb",
+                          &KdType, &kdobj1, &KdType, &kdobj2,
+                          &rad, &notself, &permute)) {
+        PyErr_SetString(PyExc_ValueError, "spherematch_c.match: need five args: two KdTree objects, search radius (float), notself (boolean), permuted (boolean)");
         return NULL;
     }
-    // Nasty!
-    kd1 = (kdtree_t*)p1;
-    kd2 = (kdtree_t*)p2;
+    kd1 = kdobj1->kd;
+    kd2 = kdobj2->kd;
     
     N = kdtree_n(kd1);
     indlist = PyList_New(N);
@@ -403,7 +404,7 @@ static void callback_dualtree(void* v, int ind1, int ind2, double dist2) {
 
 static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     size_t i, N;
-    long p1, p2;
+    KdObject *kdobj1 = NULL, *kdobj2 = NULL;
     kdtree_t *kd1, *kd2;
     double rad;
     struct dualtree_results dtresults;
@@ -417,14 +418,14 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     // So that ParseTuple("b") with a C "anbool" works
     assert(sizeof(anbool) == sizeof(unsigned char));
 
-    if (!PyArg_ParseTuple(args, "lldbb", &p1, &p2, &rad, &notself, &permute)) {
-        PyErr_SetString(PyExc_ValueError, "spherematch_c.match: need five args: two kdtree identifiers (ints), search radius (float), notself (boolean), permuted (boolean)");
+    if (!PyArg_ParseTuple(args, "O!O!dbb",
+                          &KdType, &kdobj1, &KdType, &kdobj2,
+                          &rad, &notself, &permute)) {
+        PyErr_SetString(PyExc_ValueError, "spherematch_c.match: need five args: two KdTree objects, search radius (float), notself (boolean), permuted (boolean)");
         return NULL;
     }
-    //printf("Notself = %i\n", (int)notself);
-    // Nasty!
-    kd1 = (kdtree_t*)p1;
-    kd2 = (kdtree_t*)p2;
+    kd1 = kdobj1->kd;
+    kd2 = kdobj2->kd;
 
     dtresults.inds1 = il_new(256);
     dtresults.inds2 = il_new(256);
@@ -470,7 +471,7 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
 
 static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     int i, NY;
-    long p1, p2;
+    KdObject *kdobj1 = NULL, *kdobj2 = NULL;
     kdtree_t *kd1, *kd2;
     npy_intp dims[1];
     PyArrayObject* inds;
@@ -485,13 +486,14 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     // So that ParseTuple("b") with a C "anbool" works
     assert(sizeof(anbool) == sizeof(unsigned char));
 
-    if (!PyArg_ParseTuple(args, "lldb", &p1, &p2, &rad, &notself)) {
-        PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");
+    if (!PyArg_ParseTuple(args, "O!O!db",
+                          &KdType, &kdobj1, &KdType, &kdobj2,
+                          &rad, &notself)) {
+        PyErr_SetString(PyExc_ValueError, "need three args: two KdTree objects, and search radius");
         return NULL;
     }
-    // Nasty!
-    kd1 = (kdtree_t*)p1;
-    kd2 = (kdtree_t*)p2;
+    kd1 = kdobj1->kd;
+    kd2 = kdobj2->kd;
 
     NY = kdtree_n(kd2);
 
