@@ -53,3 +53,13 @@ t0 = time()
 (inds,dists) = spherematch.nearest(x1, x2, r)
 dt = time() - t0
 
+t0 = time()
+inds = spherematch.match(x1, x2, r, indexlist=True)
+dt = time() - t0
+
+kd = spherematch.tree_build(x1)
+spherematch.tree_print(kd)
+kd.print()
+R = spherematch.tree_search(kd, x2[0,:], 1.)
+print('tree_search:', len(R), 'results')
+

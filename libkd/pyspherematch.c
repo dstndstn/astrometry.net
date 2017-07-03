@@ -168,16 +168,24 @@ static PyObject* KdTree_write(KdObject* self, PyObject* args) {
     return Py_BuildValue("i", rtn);
 }
 
-static PyObject* KdTree_n(KdObject* self, void* closure) {
-    return PyInt_FromLong(kdtree_n(self->kd));
+static PyObject* KdTree_print(KdObject* self) {
+    kdtree_print(self->kd);
+    Py_RETURN_NONE;
 }
 
 static PyMethodDef kdtree_methods[] = {
     {"write", (PyCFunction)KdTree_write, METH_VARARGS,
      "Writes the Kd-Tree to the given (string) filename in FITS format."
     },
+    {"print", (PyCFunction)KdTree_print, METH_NOARGS,
+     "Prints a representation of the Kd-Tree to stdout."
+    },
     {NULL}
 };
+
+static PyObject* KdTree_n(KdObject* self, void* closure) {
+    return PyInt_FromLong(kdtree_n(self->kd));
+}
 
 static PyGetSetDef kdtree_getseters[] = {
     {"n",
@@ -226,86 +234,6 @@ static PyTypeObject KdType = {
     0,                         /* tp_alloc */
     KdTree_new,                /* tp_new */
 };
-
-/*
- static PyObject* spherematch_kdtree_build(PyObject* self, PyObject* args) {
- }
-
- static PyObject* spherematch_kdtree_free(PyObject* self, PyObject* args) {
- long i;
- kdtree_t* kd;
-
- if (!PyArg_ParseTuple(args, "l", &i)) {
- PyErr_SetString(PyExc_ValueError, "need one arg: kdtree identifier (int)");
- return NULL;
- }
- // Nasty!
- kd = (kdtree_t*)i;
- free(kd->data.any);
- kdtree_free(kd);
- return Py_BuildValue("");
- }
- */
-
-/*
- static PyObject* spherematch_kdtree_write(PyObject* self, PyObject* args) {
- long i;
- kdtree_t* kd;
- char* fn;
- int rtn;
-
- if (!PyArg_ParseTuple(args, "ls", &i, &fn)) {
- PyErr_SetString(PyExc_ValueError, "need two args: kdtree identifier (int), filename (string)");
- return NULL;
- }
- // Nasty!
- kd = (kdtree_t*)i;
-
- rtn = kdtree_fits_write(kd, fn, NULL);
- return Py_BuildValue("i", rtn);
- }
- */
-/*
- static PyObject* spherematch_kdtree_open(PyObject* self, PyObject* args) {
- kdtree_t* kd;
- char* fn;
- char* treename = NULL;
- int n;
-
- n = PyTuple_Size(args);
- if (!((n == 1) || (n == 2))) {
- PyErr_SetString(PyExc_ValueError, "need one or two args: kdtree filename + optionally tree name");
- return NULL;
- }
- if (n == 1) {
- if (!PyArg_ParseTuple(args, "s", &fn)) {
- return NULL;
- }
- } else {
- if (!PyArg_ParseTuple(args, "ss", &fn, &treename)) {
- return NULL;
- }
- }
- kd = kdtree_fits_read(fn, treename, NULL);
- return Py_BuildValue("k", kd);
- }
- */
-
-/*
- static PyObject* spherematch_kdtree_close(PyObject* self, PyObject* args) {
- long i;
- kdtree_t* kd;
-
- if (!PyArg_ParseTuple(args, "l", &i)) {
- PyErr_SetString(PyExc_ValueError, "need one arg: kdtree identifier (int)");
- return NULL;
- }
- // Nasty!
- kd = (kdtree_t*)i;
- kdtree_fits_close(kd);
- return Py_BuildValue("");
- }
- */
 
 static PyObject* spherematch_kdtree_n(PyObject* self, PyObject* args) {
     KdObject* kdobj;
@@ -386,8 +314,6 @@ static PyObject* spherematch_match2(PyObject* self, PyObject* args) {
 
     return indlist;
 }
-
-
 
 struct dualtree_results {
     il* inds1;
@@ -583,26 +509,12 @@ static PyObject* spherematch_kdtree_bbox(PyObject* self, PyObject* args) {
 }
 
 
-static PyObject* spherematch_kdtree_print(PyObject* self, PyObject* args) {
-    long i;
-    kdtree_t* kd;
-    if (!PyArg_ParseTuple(args, "l", &i)) {
-        PyErr_SetString(PyExc_ValueError, "need one arg: kdtree identifier (int)");
-        return NULL;
-    }
-    // Nasty!
-    kd = (kdtree_t*)i;
-    kdtree_print(kd);
-    Py_RETURN_NONE;
-}
-
-
 static PyObject* spherematch_kdtree_rangesearch(PyObject* self,
                                                 PyObject* args) {
     double* X;
     PyObject* rtn;
     npy_intp dims[1];
-    long i;
+    KdObject *kdobj = NULL;
     kdtree_t* kd;
     int D, N;
     PyObject* pyO;
@@ -617,13 +529,14 @@ static PyObject* spherematch_kdtree_rangesearch(PyObject* self,
     int getdists, sortdists;
     int opts;
 
-    if (!PyArg_ParseTuple(args, "lOdii", &i, &pyO, &radius,
+    if (!PyArg_ParseTuple(args, "O!Odii",
+                          &KdType, &kdobj,
+                          &pyO, &radius,
                           &getdists, &sortdists)) {
-        PyErr_SetString(PyExc_ValueError, "need five args: kdtree identifier (int), query point (numpy array of floats), radius (double), get distances (int 0/1), sort distances (int 0/1)");
+        PyErr_SetString(PyExc_ValueError, "need five args: KdTree object, query point (numpy array of floats), radius (double), get distances (int 0/1), sort distances (int 0/1)");
         return NULL;
     }
-    // Nasty!
-    kd = (kdtree_t*)i;
+    kd = kdobj->kd;
     D = kd->ndim;
 
     if (sortdists) {
@@ -914,9 +827,10 @@ static PyMethodDef spherematchMethods[] = {
     { "kdtree_n", spherematch_kdtree_n, METH_VARARGS,
       "N pts in tree" },
 
-    { "kdtree_print", spherematch_kdtree_print, METH_VARARGS,
-      "Describe kdtree" },
-
+    /*
+     { "kdtree_print", spherematch_kdtree_print, METH_VARARGS,
+     "Describe kdtree" },
+     */
     { "kdtree_rangesearch", spherematch_kdtree_rangesearch, METH_VARARGS,
       "Rangesearch in a single kd-tree" },
 
