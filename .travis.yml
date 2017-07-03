@@ -64,6 +64,7 @@ addons:
     packages:
     - libnetpbm10
     - libnetpbm10-dev
+    - netpbm
     - wcslib-dev
     - libcfitsio3
     - libcfitsio3-dev
