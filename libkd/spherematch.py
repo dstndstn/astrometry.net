@@ -169,17 +169,12 @@ def _cleaninputs(x1, x2):
 
 def _buildtrees(x1, x2):
     (fx1, fx2) = _cleaninputs(x1, x2)
-    kd1 = spherematch_c.kdtree_build(fx1)
+    kd1 = spherematch_c.KdTree(fx1)
     if fx2 is fx1:
         kd2 = kd1
     else:
-        kd2 = spherematch_c.kdtree_build(fx2)
+        kd2 = spherematch_c.KdTree(fx2)
     return (kd1, kd2)
-
-def _freetrees(kd1, kd2):
-    spherematch_c.kdtree_free(kd1)
-    if kd2 != kd1:
-        spherematch_c.kdtree_free(kd2)
 
 def match(x1, x2, radius, notself=False, permuted=True, indexlist=False):
     '''
@@ -301,7 +296,6 @@ def match(x1, x2, radius, notself=False, permuted=True, indexlist=False):
         inds = spherematch_c.match2(kd1, kd2, radius, notself, permuted)
     else:
         (inds,dists) = spherematch_c.match(kd1, kd2, radius, notself, permuted)
-    _freetrees(kd1, kd2)
     if indexlist:
         return inds
     return (inds,dists)
@@ -341,7 +335,6 @@ def nearest(x1, x2, maxradius, notself=False, count=False):
         X = spherematch_c.nearest2(kd1, kd2, maxradius, notself, count)
     else:
         X = spherematch_c.nearest(kd1, kd2, maxradius, notself)
-    _freetrees(kd1, kd2)
     return X
 _nearest_func = nearest
 
@@ -373,35 +366,39 @@ def tree_build(X):
     kd: integer
         kd-tree identifier (address).
     '''
-    return spherematch_c.kdtree_build(X)
+    return spherematch_c.KdTree(X)
 
 def tree_free(kd):
     '''
     Frees a kd-tree previously created with *tree_build*.
     '''
-    spherematch_c.kdtree_free(kd)
+    print('No need for tree_free')
+    pass
 
 def tree_save(kd, fn):
     '''
     Writes a kd-tree to the given filename.
     '''
-    rtn = spherematch_c.kdtree_write(kd, fn)
-    return rtn
+    print('Deprecated tree_save()')
+    return kd.write(fn)
+#rtn = spherematch_c.kdtree_write(kd, fn)
+#return rtn
 
 def tree_open(fn, treename=None):
     '''
     Reads a kd-tree from the given filename.
     '''
     if treename is None:
-        return spherematch_c.kdtree_open(fn)
+        return spherematch_c.KdTree(fn)
     else:
-        return spherematch_c.kdtree_open(fn, treename)
+        return spherematch_c.KdTree(fn, treename)
 
 def tree_close(kd):
     '''
     Closes a kd-tree previously opened with *tree_open*.
     '''
-    return spherematch_c.kdtree_close(kd)
+    print('No need for tree_close')
+    pass
 
 def tree_search(kd, pos, radius, getdists=False, sortdists=False):
     '''

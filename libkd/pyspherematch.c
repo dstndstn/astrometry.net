@@ -148,6 +148,37 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
     return 0;
 }
 
+static PyObject* KdTree_write(KdObject* self, PyObject* args) {
+    char* fn;
+    int rtn;
+    
+#if defined(IS_PY3K)
+    PyObject *fnbytes = NULL;
+    if (!PyArg_ParseTuple(args, "O&", PyUnicode_FSConverter, &fnbytes)) {
+        return NULL;
+    }
+    if (fnbytes == NULL)
+        return NULL;
+    fn = PyBytes_AsString(fnbytes);
+    rtn = kdtree_fits_write(self->kd, fn, NULL);
+    Py_DECREF(fnbytes);
+#else
+    if (!PyArg_ParseTuple(args, "s", &fn)) {
+        PyErr_SetString(PyExc_ValueError, "need one arg: filename (string)");
+        return NULL;
+    }
+    rtn = kdtree_fits_write(self->kd, fn, NULL);
+#endif
+    return Py_BuildValue("i", rtn);
+}
+
+static PyMethodDef kdtree_methods[] = {
+    {"write", (PyCFunction)KdTree_write, METH_VARARGS,
+     "Writes the Kd-Tree to the given (string) filename in FITS format."
+    },
+    {NULL}
+};
+    
 static PyTypeObject spherematch_KdType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "spherematch.KdTree",      /* tp_name */
@@ -176,7 +207,7 @@ static PyTypeObject spherematch_KdType = {
     0,                         /* tp_weaklistoffset */
     0,                         /* tp_iter */
     0,                         /* tp_iternext */
-    0, //Noddy_methods,             /* tp_methods */
+    kdtree_methods,            /* tp_methods */
     0, //Noddy_members,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
@@ -189,49 +220,8 @@ static PyTypeObject spherematch_KdType = {
     KdTree_new,                /* tp_new */
 };
 
+/*
 static PyObject* spherematch_kdtree_build(PyObject* self, PyObject* args) {
-    int N, D;
-    int i,j;
-    int Nleaf, treeoptions, treetype;
-    kdtree_t* kd;
-    double* data;
-    PyObject *x = NULL;
-
-    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &x))
-        return NULL;
-
-    if (PyArray_NDIM(x) != 2) {
-        PyErr_SetString(PyExc_ValueError, "array must be two-dimensional");
-        return NULL;
-    }
-    if (PyArray_TYPE(x) != PyArray_DOUBLE) {
-        PyErr_SetString(PyExc_ValueError, "array must contain doubles");
-        return NULL;
-    }
-
-    N = (int)PyArray_DIM(x, 0);
-    D = (int)PyArray_DIM(x, 1);
-
-    if (D > 10) {
-        PyErr_SetString(PyExc_ValueError, "maximum dimensionality is 10: maybe you need to transpose your array?");
-        return NULL;
-    }
-
-    data = malloc(N * D * sizeof(double));
-    for (i=0; i<N; i++) {
-        for (j=0; j<D; j++) {
-            double* pd = PyArray_GETPTR2(x, i, j);
-            data[i*D + j] = *pd;
-        }
-    }
-
-    Nleaf = 16;
-    treetype = KDTT_DOUBLE;
-    //treeoptions = KD_BUILD_SPLIT;
-    treeoptions = KD_BUILD_BBOX;
-    kd = kdtree_build(NULL, data, N, D, Nleaf,
-                      treetype, treeoptions);
-    return Py_BuildValue("k", kd);
 }
 
 static PyObject* spherematch_kdtree_free(PyObject* self, PyObject* args) {
@@ -248,7 +238,9 @@ static PyObject* spherematch_kdtree_free(PyObject* self, PyObject* args) {
     kdtree_free(kd);
     return Py_BuildValue("");
 }
+ */
 
+/*
 static PyObject* spherematch_kdtree_write(PyObject* self, PyObject* args) {
     long i;
     kdtree_t* kd;
@@ -265,7 +257,8 @@ static PyObject* spherematch_kdtree_write(PyObject* self, PyObject* args) {
     rtn = kdtree_fits_write(kd, fn, NULL);
     return Py_BuildValue("i", rtn);
 }
-
+ */
+    /*
 static PyObject* spherematch_kdtree_open(PyObject* self, PyObject* args) {
     kdtree_t* kd;
     char* fn;
@@ -289,7 +282,9 @@ static PyObject* spherematch_kdtree_open(PyObject* self, PyObject* args) {
     kd = kdtree_fits_read(fn, treename, NULL);
     return Py_BuildValue("k", kd);
 }
+     */
 
+    /*
 static PyObject* spherematch_kdtree_close(PyObject* self, PyObject* args) {
     long i;
     kdtree_t* kd;
@@ -303,6 +298,7 @@ static PyObject* spherematch_kdtree_close(PyObject* self, PyObject* args) {
     kdtree_fits_close(kd);
     return Py_BuildValue("");
 }
+     */
 
 static PyObject* spherematch_kdtree_n(PyObject* self, PyObject* args) {
     long i;
@@ -895,6 +891,7 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
 
 
 static PyMethodDef spherematchMethods[] = {
+/*
     { "kdtree_build", spherematch_kdtree_build, METH_VARARGS,
       "build kdtree" },
     { "kdtree_write", spherematch_kdtree_write, METH_VARARGS,
@@ -905,7 +902,7 @@ static PyMethodDef spherematchMethods[] = {
       "close kdtree opened with kdtree_open" },
     { "kdtree_free", spherematch_kdtree_free, METH_VARARGS,
       "free kdtree" },
-
+ */
     { "kdtree_bbox", spherematch_kdtree_bbox, METH_VARARGS,
       "get bounding-box of this tree" },
     { "kdtree_n", spherematch_kdtree_n, METH_VARARGS,
@@ -935,8 +932,6 @@ static PyMethodDef spherematchMethods[] = {
 
     {NULL, NULL, 0, NULL}
 };
-
-
 
 #if defined(IS_PY3K)
 
