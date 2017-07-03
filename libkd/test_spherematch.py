@@ -79,4 +79,7 @@ print('Kd data:', spherematch.tree_data(kd, np.array([0,3,5]).astype(np.uint32))
 
 print('Kd data:', kd.get_data(np.array([0,3,5]).astype(np.uint32)))
 
-# kdtree_permute
+print('Permute:', spherematch.tree_permute(kd, np.array([3,5,7]).astype(np.int32)))
+
+print('Permute:', kd.permute(np.array([0,99,199]).astype(np.int32)))
+

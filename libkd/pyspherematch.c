@@ -306,6 +306,53 @@ static PyObject* KdTree_get_data(KdObject* self, PyObject* args) {
     return rtn;
 }
 
+static PyObject* KdTree_permute(KdObject* self, PyObject* args) {
+    PyArrayObject* pyX;
+    npy_int* X;
+    PyObject* rtn;
+    npy_intp dims[1];
+    kdtree_t* kd;
+    long k, N;
+    npy_int* I;
+    PyObject* pyO;
+    PyObject* pyI;
+    PyArray_Descr* dtype = PyArray_DescrFromType(NPY_INT);
+    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED
+        | NPY_ELEMENTSTRIDES;
+
+    if (!PyArg_ParseTuple(args, "O", &pyO)) {
+        PyErr_SetString(PyExc_ValueError, "need one arg: index array (numpy array of ints)");
+        return NULL;
+    }
+    kd = self->kd;
+
+    Py_INCREF(dtype);
+    pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
+    if (!pyI) {
+        PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
+        Py_XDECREF(dtype);
+        return NULL;
+    }
+    N = PyArray_DIM(pyI, 0);
+
+    dims[0] = N;
+
+    pyX = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
+    X = PyArray_DATA(pyX);
+    I = PyArray_DATA(pyI);
+
+    for (k=0; k<N; k++) {
+        npy_int ii = I[k];
+        //printf("Permute: ii=%i\n", ii);
+        X[k] = kdtree_permute(kd, ii);
+    }
+    Py_DECREF(pyI);
+    Py_DECREF(dtype);
+    rtn = Py_BuildValue("O", pyX);
+    Py_DECREF(pyX);
+    return rtn;
+}
+
 static PyMethodDef kdtree_methods[] = {
     {"write", (PyCFunction)KdTree_write, METH_VARARGS,
      "Writes the Kd-Tree to the given (string) filename in FITS format."
@@ -318,6 +365,9 @@ static PyMethodDef kdtree_methods[] = {
     },
     {"get_data", (PyCFunction)KdTree_get_data, METH_VARARGS,
      "Returns data from this tree, given numpy array of indices (MUST be np.uint32)."
+    },
+    {"permute", (PyCFunction)KdTree_permute, METH_VARARGS,
+     "Applies this Kd-Tree's permutation to the given numpy array of integers (to get from Kd-Tree indices back to the original indexing."
     },
     {NULL}
 };
@@ -635,55 +685,6 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     return rtn;
 }
 
-static PyObject* spherematch_kdtree_permute(PyObject* self, PyObject* args) {
-    PyArrayObject* pyX;
-    npy_int* X;
-    PyObject* rtn;
-    npy_intp dims[1];
-    long i;
-    kdtree_t* kd;
-    long k, N;
-    npy_int* I;
-    PyObject* pyO;
-    PyObject* pyI;
-    PyArray_Descr* dtype = PyArray_DescrFromType(NPY_INT);
-    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
-
-    if (!PyArg_ParseTuple(args, "lO", &i, &pyO)) {
-        PyErr_SetString(PyExc_ValueError, "need two args: kdtree identifier (int), index array (numpy array of ints)");
-        return NULL;
-    }
-    // Nasty!
-    kd = (kdtree_t*)i;
-
-    Py_INCREF(dtype);
-    pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
-    if (!pyI) {
-        PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
-        Py_XDECREF(dtype);
-        return NULL;
-    }
-    N = PyArray_DIM(pyI, 0);
-
-    dims[0] = N;
-
-    pyX = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
-    X = PyArray_DATA(pyX);
-    I = PyArray_DATA(pyI);
-
-    for (k=0; k<N; k++) {
-        npy_int ii = I[k];
-        //printf("Permute: ii=%i\n", ii);
-        X[k] = kdtree_permute(kd, ii);
-    }
-    Py_DECREF(pyI);
-    Py_DECREF(dtype);
-    rtn = Py_BuildValue("O", pyX);
-    Py_DECREF(pyX);
-    return rtn;
-}
-
-
 static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
     int i, j, NY, N;
     KdObject *kdobj1 = NULL, *kdobj2 = NULL;
@@ -798,9 +799,6 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
 
 
 static PyMethodDef spherematchMethods[] = {
-    {"kdtree_permute", spherematch_kdtree_permute, METH_VARARGS,
-     "Apply kd-tree permutation array to (get from kd-tree indices back to original)"},
-
     { "match", spherematch_match, METH_VARARGS,
       "find matching data points" },
     { "match2", spherematch_match2, METH_VARARGS,
