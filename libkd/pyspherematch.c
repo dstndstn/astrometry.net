@@ -810,33 +810,12 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
 
 
 static PyMethodDef spherematchMethods[] = {
-    /*
-     { "kdtree_build", spherematch_kdtree_build, METH_VARARGS,
-     "build kdtree" },
-     { "kdtree_write", spherematch_kdtree_write, METH_VARARGS,
-     "save kdtree to file" },
-     { "kdtree_open", spherematch_kdtree_open, METH_VARARGS,
-     "open kdtree from file" },
-     { "kdtree_close", spherematch_kdtree_close, METH_VARARGS,
-     "close kdtree opened with kdtree_open" },
-     { "kdtree_free", spherematch_kdtree_free, METH_VARARGS,
-     "free kdtree" },
-     */
     { "kdtree_bbox", spherematch_kdtree_bbox, METH_VARARGS,
       "get bounding-box of this tree" },
     { "kdtree_n", spherematch_kdtree_n, METH_VARARGS,
       "N pts in tree" },
-
-    /*
-     { "kdtree_print", spherematch_kdtree_print, METH_VARARGS,
-     "Describe kdtree" },
-    { "kdtree_rangesearch", spherematch_kdtree_rangesearch, METH_VARARGS,
-      "Rangesearch in a single kd-tree" },
-     */
-
     {"kdtree_get_positions", spherematch_kdtree_get_data, METH_VARARGS,
      "Retrieve the positions of given indices in this tree (np array of ints)" },
-
     {"kdtree_permute", spherematch_kdtree_permute, METH_VARARGS,
      "Apply kd-tree permutation array to (get from kd-tree indices back to original)"},
 
@@ -846,10 +825,8 @@ static PyMethodDef spherematchMethods[] = {
       "find matching data points" },
     { "nearest", spherematch_nn, METH_VARARGS,
       "find nearest neighbours" },
-
     { "nearest2", spherematch_nn2, METH_VARARGS,
       "find nearest neighbours (different return values)" },
-
     {NULL, NULL, 0, NULL}
 };
 
