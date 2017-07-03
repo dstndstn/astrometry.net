@@ -477,7 +477,10 @@ def trees_match(kd1, kd2, radius, nearest=False, notself=False,
     return rtn
 
 tree_permute = spherematch_c.kdtree_permute
-tree_bbox = spherematch_c.kdtree_bbox
+
+def tree_bbox(kd):
+    print('Unnecessary call to tree_bbox(kd): use kd.bbox')
+    return kd.bbox
 
 def tree_n(kd):
     print('Unnecessary call to tree_n(kd): use kd.n')

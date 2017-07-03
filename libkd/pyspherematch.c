@@ -274,10 +274,46 @@ static PyObject* KdTree_n(KdObject* self, void* closure) {
     return PyInt_FromLong(kdtree_n(self->kd));
 }
 
+static PyObject* KdTree_bbox(KdObject* self, void* closure) {
+    PyArrayObject* bbox;
+    PyObject* rtn;
+    npy_intp dims[2];
+    double *bb;
+    anbool ok;
+    kdtree_t* kd;
+    int j, D;
+    kd = self->kd;
+    D = kd->ndim;
+    dims[0] = D;
+    dims[1] = 2;
+    bbox = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
+    {
+        double bblo[D];
+        double bbhi[D];
+        ok = kdtree_get_bboxes(kd, 0, bblo, bbhi);
+        if (!ok) {
+            Py_RETURN_NONE;
+        }
+        assert(ok);
+        bb = PyArray_DATA(bbox);
+        for (j=0; j<D; j++) {
+            bb[j*2 + 0] = bblo[j];
+            bb[j*2 + 1] = bbhi[j];
+        }
+    }
+    rtn = Py_BuildValue("O", bbox);
+    Py_DECREF(bbox);
+    return rtn;
+}
+
 static PyGetSetDef kdtree_getseters[] = {
     {"n",
      (getter)KdTree_n, NULL, "number of data items in kd-tree",
      NULL},
+    {"bbox",
+     (getter)KdTree_bbox, NULL,
+     "Returns a numpy array containing this Kd-Tree's bounding box in data space"
+    },
     {NULL}  /* Sentinel */
 };
 
@@ -547,45 +583,6 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     return rtn;
 }
 
-static PyObject* spherematch_kdtree_bbox(PyObject* self, PyObject* args) {
-    PyArrayObject* bbox;
-    PyObject* rtn;
-    npy_intp dims[2];
-    long i;
-    double *bb;
-    anbool ok;
-    kdtree_t* kd;
-    int j, D;
-
-    if (!PyArg_ParseTuple(args, "l", &i)) {
-        PyErr_SetString(PyExc_ValueError, "need one arg: kdtree identifier (int)");
-        return NULL;
-    }
-    // Nasty!
-    kd = (kdtree_t*)i;
-    D = kd->ndim;
-    dims[0] = D;
-    dims[1] = 2;
-    bbox = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
-    {
-        double bblo[D];
-        double bbhi[D];
-        ok = kdtree_get_bboxes(kd, 0, bblo, bbhi);
-        if (!ok) {
-            Py_RETURN_NONE;
-        }
-        assert(ok);
-        bb = PyArray_DATA(bbox);
-        for (j=0; j<D; j++) {
-            bb[j*2 + 0] = bblo[j];
-            bb[j*2 + 1] = bbhi[j];
-        }
-    }
-    rtn = Py_BuildValue("O", bbox);
-    Py_DECREF(bbox);
-    return rtn;
-}
-
 static PyObject* spherematch_kdtree_get_data(PyObject* self, PyObject* args) {
     PyArrayObject* pyX;
     double* X;
@@ -801,8 +798,6 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
 
 
 static PyMethodDef spherematchMethods[] = {
-    { "kdtree_bbox", spherematch_kdtree_bbox, METH_VARARGS,
-      "get bounding-box of this tree" },
     {"kdtree_get_positions", spherematch_kdtree_get_data, METH_VARARGS,
      "Retrieve the positions of given indices in this tree (np array of ints)" },
     {"kdtree_permute", spherematch_kdtree_permute, METH_VARARGS,

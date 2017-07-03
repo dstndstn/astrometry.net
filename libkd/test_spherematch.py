@@ -71,7 +71,9 @@ print('trees_match:', len(I), 'matches')
 I,J,d = spherematch.trees_match(kd, kd2, 1., nearest=True)
 print('trees_match:', len(I), 'matches (nearest)')
 
+print('Kd bounding-box:', spherematch.tree_bbox(kd))
 
-# kdtree_bbox
+print('Kd bounding-box:', kd.bbox)
+
 # kdtree_get_data
 # kdtree_permute
