@@ -28,7 +28,7 @@ static PyObject* spherematch_kdtree_build(PyObject* self, PyObject* args) {
     int Nleaf, treeoptions, treetype;
     kdtree_t* kd;
     double* data;
-    PyArrayObject* x;
+    PyObject *x = NULL;
 
     if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &x))
         return NULL;
@@ -785,8 +785,11 @@ static struct PyModuleDef spherematch_module = {
     NULL
 };
 
-PyObject* PyInit_spherematch_c() {
-    PyObject *res = PyModule_Create(&spherematch_module);
+PyMODINIT_FUNC
+PyInit_spherematch_c(void) {
+    PyObject *res;
+    import_array();
+    res = PyModule_Create(&spherematch_module);
     return res;
 }
 
