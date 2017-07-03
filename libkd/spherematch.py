@@ -349,7 +349,7 @@ def tree_build_radec(ra=None, dec=None, xyz=None):
         cosd = np.cos(np.deg2rad(dec))
         xyz[:,0] = cosd * np.cos(np.deg2rad(ra))
         xyz[:,1] = cosd * np.sin(np.deg2rad(ra))
-    kd = spherematch_c.kdtree_build(xyz)
+    kd = spherematch_c.KdTree(xyz)
     return kd
 
 def tree_build(X):

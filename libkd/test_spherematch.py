@@ -83,3 +83,25 @@ print('Permute:', spherematch.tree_permute(kd, np.array([3,5,7]).astype(np.int32
 
 print('Permute:', kd.permute(np.array([0,99,199]).astype(np.int32)))
 
+ra,dec = np.meshgrid(np.arange(0, 360), np.arange(-90, 91, 1))
+ra1 = ra.ravel()
+dec1 = dec.ravel()
+rdkd1 = spherematch.tree_build_radec(ra1, dec1)
+print('RdKd:', rdkd1.n, rdkd1.bbox)
+
+ra2  = np.random.uniform(-10, 10, size=1000)
+dec2 = np.random.uniform(-10, 10, size=1000)
+rdkd2 = spherematch.tree_build_radec(ra2, dec2)
+
+I = spherematch.tree_search_radec(rdkd1, ra2[0], dec2[0], 2.)
+print('search_radec:', I)
+
+I,J,d = spherematch.match_radec(ra1, dec1, ra2, dec2, 1.)
+print('Matches:', len(I))
+
+I,J,d = spherematch.match_radec(ra1, dec1, ra2, dec2, 1., nearest=True)
+print('Nearest matches:', len(I))
+
+I = spherematch.match_radec(ra1, dec1, ra2, dec2, 1.,
+                            indexlist=True)
+print('Index lists matches:', len(I))
