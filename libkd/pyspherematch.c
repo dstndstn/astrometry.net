@@ -179,7 +179,7 @@ static PyMethodDef kdtree_methods[] = {
     {NULL}
 };
     
-static PyTypeObject spherematch_KdType = {
+static PyTypeObject KdType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "spherematch.KdTree",      /* tp_name */
     sizeof(KdObject),          /* tp_basicsize */
@@ -301,15 +301,12 @@ static PyObject* spherematch_kdtree_close(PyObject* self, PyObject* args) {
      */
 
 static PyObject* spherematch_kdtree_n(PyObject* self, PyObject* args) {
-    long i;
-    kdtree_t* kd;
-    if (!PyArg_ParseTuple(args, "l", &i)) {
-        PyErr_SetString(PyExc_ValueError, "need one arg: kdtree identifier (int)");
+    KdObject* kdobj;
+    if (!PyArg_ParseTuple(args, "O!", &KdType, &kdobj)) {
+        PyErr_SetString(PyExc_ValueError, "need one arg: KdTree object");
         return NULL;
     }
-    // Nasty!
-    kd = (kdtree_t*)i;
-    return PyInt_FromLong(kdtree_n(kd));
+    return PyInt_FromLong(kdtree_n(kdobj->kd));
 }
 
 struct dualtree_results2 {
@@ -952,16 +949,16 @@ PyInit_spherematch_c(void) {
     PyObject *m;
     import_array();
 
-    spherematch_KdType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&spherematch_KdType) < 0)
+    KdType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&KdType) < 0)
         return NULL;
 
     m = PyModule_Create(&spherematch_module);
     if (m == NULL)
         return NULL;
 
-    Py_INCREF(&spherematch_KdType);
-    PyModule_AddObject(m, "KdTree", (PyObject *)&spherematch_KdType);
+    Py_INCREF(&KdType);
+    PyModule_AddObject(m, "KdTree", (PyObject*)&KdType);
 
     return m;
 }
@@ -975,15 +972,15 @@ initspherematch_c(void) {
     PyObject* m;
     import_array();
 
-    spherematch_KdType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&spherematch_KdType) < 0)
+    KdType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&KdType) < 0)
         return;
 
     m = Py_InitModule3("spherematch_c", spherematchMethods,
                        "spherematch_c provides python bindings for the libkd library");
 
-    Py_INCREF(&spherematch_KdType);
-    PyModule_AddObject(m, "KdTree", (PyObject *)&spherematch_KdType);
+    Py_INCREF(&KdType);
+    PyModule_AddObject(m, "KdTree", (PyObject*)&KdType);
 }
 
 #endif
