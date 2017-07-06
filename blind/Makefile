@@ -97,10 +97,10 @@ OTHER_OBJS := catalog.o codefile.o verify.o \
 	blindutils.o engine-main.o engine.o plotquad.o plotxy.o tweak2.o
 
 NOT_INSTALLED_PIPELINE := blind agreeable certifiable \
-	startree hpquads codetree unpermute-quads unpermute-stars \
+	hpquads codetree unpermute-quads unpermute-stars \
 	solvedserver printsolved mergesolved subwcs \
 	augment-xylist merge-index index-to-table setsolved \
-	startree2 uniformize-catalog \
+	startree uniformize-catalog \
 	local-index index-info control-program
 
 PIPELINE := wcs-grab solve-field
@@ -358,9 +358,13 @@ allquads: allquads-main.o allquads.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
 ALL_OBJ += allquads-main.o allquads.o
 
-startree2: startree2-main.o $(SLIB)
+startree: startree2-main.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
 ALL_OBJ += startree2-main.o
+
+unpermute-stars: unpermute-stars-main.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
+ALL_OBJ += unpermute-stars-main.o
 
 astrometry-engine: engine-main.o $(SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
