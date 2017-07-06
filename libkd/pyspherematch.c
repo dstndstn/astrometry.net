@@ -65,7 +65,7 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
 
     n = PyTuple_Size(args);
     if (!((n == 1) || (n == 2))) {
-        PyErr_SetString(PyExc_ValueError, "need one or two args: (array x), (kdtree filename, + optionally tree name)");
+        PyErr_SetString(PyExc_ValueError, "need one or two args: (array x), or (kdtree filename, + optionally tree name)");
         return -1;
     }
     
@@ -142,6 +142,18 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
     if (!self->kd)
         return -1;
     return 0;
+}
+
+static PyObject* KdTree_set_name(KdObject* self, PyObject* args) {
+    char* name = NULL;
+    if (!PyArg_ParseTuple(args, "s", &name)) {
+        PyErr_SetString(PyExc_ValueError, "need one arg: Kd-Tree name (string)");
+        return NULL;
+    }
+    if (self->kd->name)
+        free(self->kd->name);
+    self->kd->name = strdup(name);
+    Py_RETURN_NONE;
 }
 
 static PyObject* KdTree_write(KdObject* self, PyObject* args) {
@@ -354,6 +366,9 @@ static PyObject* KdTree_permute(KdObject* self, PyObject* args) {
 }
 
 static PyMethodDef kdtree_methods[] = {
+    {"set_name", (PyCFunction)KdTree_set_name, METH_VARARGS,
+     "Sets the Kd-Tree's name to the given string",
+    },
     {"write", (PyCFunction)KdTree_write, METH_VARARGS,
      "Writes the Kd-Tree to the given (string) filename in FITS format."
     },
