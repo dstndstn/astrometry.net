@@ -26,6 +26,8 @@ startree_t* startree_build(fitstable_t* intable,
 anbool startree_has_tagalong_data(const fitstable_t* intab);
 
 int startree_write_tagalong_table(fitstable_t* intable, fitstable_t* outtable,
-								  const char* racol, const char* deccol);
+                                  const char* racol, const char* deccol,
+                                  int* indices,
+                                  anbool remove_radec_columns);
 
 #endif

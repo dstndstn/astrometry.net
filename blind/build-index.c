@@ -543,7 +543,7 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 					return -1;
 				}
 			}
-			if (startree_write_tagalong_table(uniform, startag, p->racol, p->deccol)) {
+			if (startree_write_tagalong_table(uniform, startag, p->racol, p->deccol, NULL, TRUE)) {
 				ERROR("Failed to write tag-along table");
 				return -1;
 			}

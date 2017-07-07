@@ -16,7 +16,7 @@
 #include "log.h"
 #include "fitsioutils.h"
 
-const char* OPTIONS = "hvL:d:t:bsSci:o:R:D:";
+const char* OPTIONS = "hvL:d:t:bsSci:o:R:D:Pkn:";
 
 void printHelp(char* progname) {
     BOILERPLATE_HELP_HEADER(stdout);
@@ -31,6 +31,9 @@ void printHelp(char* progname) {
            "    [-d  <data type>]:  {double,float,u32,u16}, default u32.\n"
            "    [-S]: include separate splitdim array\n"
            "    [-c]: run kdtree_check on the resulting tree\n"
+           "    [-P]: unpermute tree + tag-along data\n"
+           "    [-k]: keep RA,Dec columns in tag-along table\n"
+           "    [-n <name>]: kd-tree name (default \"stars\")\n"
            "    [-v]: +verbose\n"
            "\n", progname);
 }
@@ -48,11 +51,14 @@ int main(int argc, char *argv[]) {
     char* racol = NULL;
     char* deccol = NULL;
     int loglvl = LOG_MSG;
+    char* treename = NULL;
 
     int datatype = 0;
     int treetype = 0;
     int buildopts = 0;
     anbool checktree = FALSE;
+    anbool unpermute = FALSE;
+    anbool remove_radec = TRUE;
 
     if (argc <= 2) {
         printHelp(progname);
@@ -61,6 +67,15 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+        case 'n':
+            treename = optarg;
+            break;
+        case 'k':
+            remove_radec = FALSE;
+            break;
+        case 'P':
+            unpermute = TRUE;
+            break;
         case 'R':
             racol = optarg;
             break;
@@ -144,6 +159,21 @@ int main(int argc, char *argv[]) {
             exit(-1);
         }
     }
+
+    if (treename) {
+        free(starkd->tree->name);
+        starkd->tree->name = strdup(treename);
+    }
+
+    if (unpermute) {
+        startree_compute_inverse_perm(starkd);
+        if (startree_check_inverse_perm(starkd)) {
+            ERROR("check inverse perm failed!");
+            return -1;
+        }
+        starkd->tree->perm = NULL;
+    }
+
     if (startree_write_to_file(starkd, skdtfn)) {
         ERROR("Failed to write star kdtree");
         exit(-1);
@@ -154,7 +184,9 @@ int main(int argc, char *argv[]) {
     logmsg("Writing tag-along data...\n");
     tag = fitstable_open_for_appending(skdtfn);
 
-    if (startree_write_tagalong_table(cat, tag, racol, deccol)) {
+    if (startree_write_tagalong_table(cat, tag, racol, deccol,
+                                      starkd->inverse_perm,
+                                      remove_radec)) {
         ERROR("Failed to write tag-along table");
         exit(-1);
     }

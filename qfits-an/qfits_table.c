@@ -199,11 +199,13 @@ qfits_header * qfits_table_ext_header_default(const qfits_table * t)
             sprintf(str_val2, "%s", curr_col->tlabel);
             qfits_header_append(fh, str_val, str_val2, "Field label", NULL);
 
-            sprintf(str_val, "TUNIT%d", i+1);
-            sprintf(str_val2, "%s", curr_col->tunit);
-			//printf("Setting '%s' = '%s'\n", str_val, str_val2);
-            qfits_header_append(fh, str_val, str_val2, "Physical unit of field",
-                    NULL);    
+            if (strlen(curr_col->tunit)) {
+                sprintf(str_val, "TUNIT%d", i+1);
+                sprintf(str_val2, "%s", curr_col->tunit);
+                //printf("Setting '%s' = '%s'\n", str_val, str_val2);
+                qfits_header_append(fh, str_val, str_val2, "Physical unit of field",
+                                    NULL);
+            }
             if (curr_col->zero_present) {
                 sprintf(str_val, "TZERO%d", i+1);
                 sprintf(str_val2, "%f", curr_col->zero);

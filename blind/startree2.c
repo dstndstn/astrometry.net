@@ -2,7 +2,7 @@
  # This file is part of the Astrometry.net suite.
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
-
+#include <assert.h>
 #include "startree2.h"
 #include "kdtree.h"
 #include "errors.h"
@@ -19,20 +19,24 @@ anbool startree_has_tagalong_data(const fitstable_t* intab) {
 }
 
 int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
-                                  const char* racol, const char* deccol) {
+                                  const char* racol, const char* deccol,
+                                  int* indices,
+                                  anbool remove_radec_columns) {
     int i, R, NB, N;
-    char* buf;
     qfits_header* hdr;
-	
+
     fitstable_clear_table(intab);
     fitstable_add_fits_columns_as_struct(intab);
     fitstable_copy_columns(intab, outtab);
-    if (!racol)
-        racol = "RA";
-    if (!deccol)
-        deccol = "DEC";
-    fitstable_remove_column(outtab, racol);
-    fitstable_remove_column(outtab, deccol);
+
+    if (remove_radec_columns) {
+        if (!racol)
+            racol = "RA";
+        if (!deccol)
+            deccol = "DEC";
+        fitstable_remove_column(outtab, racol);
+        fitstable_remove_column(outtab, deccol);
+    }
     fitstable_read_extension(intab, 1);
     hdr = fitstable_get_header(outtab);
     qfits_header_add(hdr, "AN_FILE", AN_FILETYPE_TAGALONG, "Extra data for stars", NULL);
@@ -40,26 +44,62 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
         ERROR("Failed to write tag-along data header");
         return -1;
     }
-    R = fitstable_row_size(intab);
-    NB = 1000;
-    logverb("Input row size: %i, output row size: %i\n", R, fitstable_row_size(outtab));
-    buf = malloc(NB * R);
     N = fitstable_nrows(intab);
+    R = fitstable_row_size(intab);
+
+    if (indices) {
+        if (!remove_radec_columns) {
+            // row-by-row raw data copy; read whole tag-along array into memory
+            char* data = malloc(N * R);
+            // FIXME -- could read row-by-row if the malloc fails.....
+            if (!data) {
+                ERROR("Failed to allocate enough memory to read full tag-along table");
+                return -1;
+            }
+            printf("Reading tag-along table...\n");
+            if (fitstable_read_nrows_data(intab, 0, N, data)) {
+                ERROR("Failed to read tag-along table");
+                free(data);
+                return -1;
+            }
+            printf("Writing tag-along table...\n");
+            for (i=0; i<N; i++) {
+                if (fitstable_write_row_data(outtab, data + indices[i]*R)) {
+                    ERROR("Failed to write a row of data");
+                    free(data);
+                    return -1;
+                }
+            }
+            free(data);
+            
+        } else {
+            if (fitstable_copy_rows_data(intab, indices, N, outtab)) {
+                ERROR("Failed to copy tag-along table rows from input to output");
+                return -1;
+            }
+        }
+    } else {
+        char* buf;
+        
+        NB = 1000;
+        logverb("Input row size: %i, output row size: %i\n", R, fitstable_row_size(outtab));
+        buf = malloc(NB * R);
 	
-    for (i=0; i<N; i+=NB) {
-        int nr = NB;
-        if (i+NB > N)
-            nr = N - i;
-        if (fitstable_read_structs(intab, buf, R, i, nr)) {
-            ERROR("Failed to read tag-along data from catalog");
-            return -1;
+        for (i=0; i<N; i+=NB) {
+            int nr = NB;
+            if (i+NB > N)
+                nr = N - i;
+            if (fitstable_read_structs(intab, buf, R, i, nr)) {
+                ERROR("Failed to read tag-along data from catalog");
+                return -1;
+            }
+            if (fitstable_write_structs(outtab, buf, R, nr)) {
+                ERROR("Failed to write tag-along data");
+                return -1;
+            }
         }
-        if (fitstable_write_structs(outtab, buf, R, nr)) {
-            ERROR("Failed to write tag-along data");
-            return -1;
-        }
+        free(buf);
     }
-    free(buf);
     if (fitstable_fix_header(outtab)) {
         ERROR("Failed to fix tag-along data header");
         return -1;
