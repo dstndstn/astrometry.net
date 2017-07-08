@@ -59,7 +59,8 @@ int main(int argc, char *argv[]) {
     anbool checktree = FALSE;
     anbool unpermute = FALSE;
     anbool remove_radec = TRUE;
-
+    u32* perm = NULL;
+    
     if (argc <= 2) {
         printHelp(progname);
         return 0;
@@ -166,11 +167,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (unpermute) {
-        startree_compute_inverse_perm(starkd);
-        if (startree_check_inverse_perm(starkd)) {
-            ERROR("check inverse perm failed!");
-            return -1;
-        }
+        perm = starkd->tree->perm;
         starkd->tree->perm = NULL;
     }
 
@@ -185,8 +182,7 @@ int main(int argc, char *argv[]) {
     tag = fitstable_open_for_appending(skdtfn);
 
     if (startree_write_tagalong_table(cat, tag, racol, deccol,
-                                      starkd->inverse_perm,
-                                      remove_radec)) {
+                                      (int*)perm, remove_radec)) {
         ERROR("Failed to write tag-along table");
         exit(-1);
     }
