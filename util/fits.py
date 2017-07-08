@@ -136,22 +136,22 @@ def merge_tables(TT, columns=None):
     
 
 def add_nonstructural_headers(fromhdr, tohdr):
-    for card in fromhdr.ascardlist():
-        if ((card.key in ['SIMPLE','XTENSION', 'BITPIX', 'END', 'PCOUNT', 'GCOUNT',
+    for card in fromhdr.cards:
+        if ((card.keyword in ['SIMPLE','XTENSION', 'BITPIX', 'END', 'PCOUNT', 'GCOUNT',
                           'TFIELDS',]) or
-            card.key.startswith('NAXIS') or
-            card.key.startswith('TTYPE') or
-            card.key.startswith('TFORM')):
+            card.keyword.startswith('NAXIS') or
+            card.keyword.startswith('TTYPE') or
+            card.keyword.startswith('TFORM')):
             #card.key.startswith('TUNIT') or
             #card.key.startswith('TDISP')):
             #print('skipping card', card.key)
             continue
-        cl = tohdr.ascardlist()
+        cl = tohdr
         if 'END' in cl.keys():
             i = cl.index_of('END')
         else:
             i = len(cl)
-        cl.insert(i, pyfits.Card(card.key, card.value, card.comment))
+        cl.insert(i, pyfits.Card(card.keyword, card.value, card.comment))
 
 def cut_array(val, I, name=None, to=None):
     if type(I) is slice:
@@ -522,7 +522,7 @@ class tabledata(object):
             return
 
         fc = self.to_fits_columns(columns)
-        T = pyfits.new_table(fc)
+        T = pyfits.BinTableHDU.from_columns(fc)
         if header == 'default':
             header = self._header
         if header is not None:
