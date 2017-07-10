@@ -873,7 +873,7 @@ initspherematch_c(void) {
     m = Py_InitModule3("spherematch_c", spherematchMethods,
                        "spherematch_c provides python bindings for the libkd library");
 
-    Py_INCREF(&KdType);
+    Py_INCREF((PyObject*)&KdType);
     PyModule_AddObject(m, "KdTree", (PyObject*)&KdType);
 }
 
