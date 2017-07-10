@@ -10,6 +10,7 @@
 
 %{
 // numpy.
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
 #include <stdint.h>
@@ -37,10 +38,10 @@ static PyObject* verify_star_lists_np(PyObject* pyrefxy,
                                    double distractors,
                                    double logodds_bail,
                                    double logodds_accept) {
-    PyObject *np_refxy, *np_testxy, *np_testsig2;
+    PyArrayObject *np_refxy, *np_testxy, *np_testsig2;
     PyArray_Descr* dtype = NULL;
-    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
-        NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+    int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
+        NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
     double* refxy, *testxy, *testsig2;
     int NT, NR;
     int two;
@@ -50,7 +51,7 @@ static PyObject* verify_star_lists_np(PyObject* pyrefxy,
     dtype = PyArray_DescrFromType(NPY_DOUBLE);
 
     Py_INCREF(dtype);
-    np_refxy = PyArray_FromAny(pyrefxy, dtype, 2, 2, req, NULL);
+    np_refxy = (PyArrayObject*)PyArray_FromAny(pyrefxy, dtype, 2, 2, req, NULL);
     if (!np_refxy) {
         PyErr_SetString(PyExc_ValueError,"Expected refxy array to be double");
         Py_DECREF(dtype);
@@ -65,7 +66,7 @@ static PyObject* verify_star_lists_np(PyObject* pyrefxy,
     }
 
     Py_INCREF(dtype);
-    np_testxy = PyArray_FromAny(pytestxy, dtype, 2, 2, req, NULL);
+    np_testxy = (PyArrayObject*)PyArray_FromAny(pytestxy, dtype, 2, 2, req, NULL);
     if (!np_testxy) {
         PyErr_SetString(PyExc_ValueError,"Expected testxy array to be double");
         Py_DECREF(dtype);
@@ -80,7 +81,7 @@ static PyObject* verify_star_lists_np(PyObject* pyrefxy,
     }
 
     Py_INCREF(dtype);
-    np_testsig2 = PyArray_FromAny(pytestsig2, dtype, 1, 1, req, NULL);
+    np_testsig2 = (PyArrayObject*)PyArray_FromAny(pytestsig2, dtype, 1, 1, req, NULL);
     if (!np_testsig2) {
         PyErr_SetString(PyExc_ValueError,"Expected testsig2 array to be double");
         Py_DECREF(dtype);

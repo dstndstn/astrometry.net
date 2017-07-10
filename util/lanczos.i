@@ -2,20 +2,22 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
  */
-static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
-                               PyObject* np_dx, PyObject* np_dy,
+static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
+                               PyObject* py_dx, PyObject* py_dy,
                                PyObject* loutputs, PyObject* linputs) {
     npy_intp W,H, N;
     npy_intp Nimages;
     npy_intp i, j;
     PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
     PyArray_Descr* itype = PyArray_DescrFromType(NPY_INT32);
-    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
-        NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
-    int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+    int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
+        NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
+    int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
 
     const int32_t *ixi, *iyi;
     const float *dx, *dy;
+
+    PyArrayObject *np_ixi, *np_iyi, *np_dx, *np_dy;
 
     /*
      dx,dy are in [-0.5, 0.5].
@@ -96,13 +98,13 @@ static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
 
     // CheckFromAny steals the dtype reference
     Py_INCREF(itype);
-    np_ixi = PyArray_CheckFromAny(np_ixi, itype, 1, 1, req, NULL);
-    np_iyi = PyArray_CheckFromAny(np_iyi, itype, 1, 1, req, NULL);
+    np_ixi = (PyArrayObject*)PyArray_CheckFromAny(py_ixi, itype, 1, 1, req, NULL);
+    np_iyi = (PyArrayObject*)PyArray_CheckFromAny(py_iyi, itype, 1, 1, req, NULL);
     // At this point, itype refcount = 0
     Py_INCREF(dtype);
     Py_INCREF(dtype);
-    np_dx  = PyArray_CheckFromAny(np_dx,  dtype, 1, 1, req, NULL);
-    np_dy  = PyArray_CheckFromAny(np_dy,  dtype, 1, 1, req, NULL);
+    np_dx  = (PyArrayObject*)PyArray_CheckFromAny(py_dx,  dtype, 1, 1, req, NULL);
+    np_dy  = (PyArrayObject*)PyArray_CheckFromAny(py_dy,  dtype, 1, 1, req, NULL);
     // dtype refcount = 1 (we use it more below)
     if (!np_ixi || !np_iyi) {
         ERR("ixi,iyi arrays are wrong type / shape\n");
@@ -132,8 +134,8 @@ static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
     }
 
     for (i=0; i<Nimages; i++) {
-        PyObject* np_inimg;
-        PyObject* np_outimg;
+        PyArrayObject* np_inimg;
+        PyArrayObject* np_outimg;
         const float *inimg;
         float *outimg;
 
@@ -142,12 +144,10 @@ static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
         dx  = PyArray_DATA(np_dx);
         dy  = PyArray_DATA(np_dy);
 
-        np_inimg  = PyList_GetItem(linputs,  i);
-        np_outimg = PyList_GetItem(loutputs, i);
         Py_INCREF(dtype);
         Py_INCREF(dtype);
-        np_inimg  = PyArray_CheckFromAny(np_inimg,   dtype, 2, 2, req, NULL);
-        np_outimg  = PyArray_CheckFromAny(np_outimg, dtype, 1, 1, reqout, NULL);
+        np_inimg  = (PyArrayObject*)PyArray_CheckFromAny(PyList_GetItem(linputs,  i), dtype, 2, 2, req, NULL);
+        np_outimg = (PyArrayObject*)PyArray_CheckFromAny(PyList_GetItem(loutputs, i), dtype, 1, 1, reqout, NULL);
         if (!np_inimg || !np_outimg) {
             ERR("Failed to convert input and output images to right type/shape\n");
             return -1;

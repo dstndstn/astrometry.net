@@ -10,6 +10,7 @@
 
 %{
 // numpy.
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
 #include <stdint.h>
@@ -127,7 +128,7 @@ void log_set_level(int lvl);
 
     static void print_array(PyObject* arr) {
         PyArrayObject *obj;
-        int i;
+        int i, N;
         PyArray_Descr *desc;
         printf("Array: %p\n", arr);
         if (!arr) return;
@@ -137,27 +138,28 @@ void log_set_level(int lvl);
                 printf("  is None\n");
             return;
         }
+        obj = (PyArrayObject*)arr;
+
         printf("  Contiguous: %s\n",
-               PyArray_ISCONTIGUOUS(arr) ? "yes" : "no");
+               PyArray_ISCONTIGUOUS(obj) ? "yes" : "no");
         printf("  Writeable: %s\n",
-               PyArray_ISWRITEABLE(arr) ? "yes" : "no");
+               PyArray_ISWRITEABLE(obj) ? "yes" : "no");
         printf("  Aligned: %s\n",
-               PyArray_ISALIGNED(arr) ? "yes" : "no");
+               PyArray_ISALIGNED(obj) ? "yes" : "no");
         printf("  C array: %s\n",
-               PyArray_ISCARRAY(arr) ? "yes" : "no");
+               PyArray_ISCARRAY(obj) ? "yes" : "no");
 
         //printf("  typeobj: %p (float is %p)\n", arr->typeobj,
         //&PyFloat_Type);
 
-        obj = (PyArrayObject*)arr;
-
-        printf("  data: %p\n", obj->data);
-        printf("  N dims: %i\n", obj->nd);
-        for (i=0; i<obj->nd; i++)
-            printf("  dim %i: %i\n", i, (int)obj->dimensions[i]);
-        for (i=0; i<obj->nd; i++)
-            printf("  stride %i: %i\n", i, (int)obj->strides[i]);
-        desc = obj->descr;
+        printf("  data: %p\n", PyArray_DATA(obj));
+        printf("  N dims: %i\n", PyArray_NDIM(obj));
+        N = PyArray_NDIM(obj);
+        for (i=0; i<N; i++)
+            printf("  dim %i: %i\n", i, (int)PyArray_DIM(obj, i));
+        for (i=0; i<N; i++)
+            printf("  stride %i: %i\n", i, (int)PyArray_STRIDE(obj, i));
+        desc = PyArray_DESCR(obj);
         printf("  descr kind: '%c'\n", desc->kind);
         printf("  descr type: '%c'\n", desc->type);
         printf("  descr byteorder: '%c'\n", desc->byteorder);
@@ -171,12 +173,12 @@ void log_set_level(int lvl);
                                double ylo, double yhi) {
         PyArray_Descr* dtype = NULL;
         PyArray_Descr* itype = NULL;
-        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
-               NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
-        int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
-        PyObject* np_arrx;
-        PyObject* np_arry;
-        PyObject* np_hist;
+        int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
+               NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
+        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
+        PyArrayObject* np_arrx;
+        PyArrayObject* np_arry;
+        PyArrayObject* np_hist;
         double *arrx;
         double *arry;
         int32_t *hist;
@@ -188,7 +190,7 @@ void log_set_level(int lvl);
         itype = PyArray_DescrFromType(NPY_INT32);
 
         Py_INCREF(dtype);
-        np_arrx = PyArray_FromAny(py_arrx, dtype, 1, 1, req, NULL);
+        np_arrx = (PyArrayObject*)PyArray_FromAny(py_arrx, dtype, 1, 1, req, NULL);
         if (!np_arrx) {
             PyErr_SetString(PyExc_ValueError,"Expected x array to be double");
             Py_DECREF(dtype);
@@ -197,7 +199,7 @@ void log_set_level(int lvl);
         N = PyArray_SIZE(np_arrx);
 
         Py_INCREF(dtype);
-        np_arry = PyArray_FromAny(py_arry, dtype, 1, 1, req, NULL);
+        np_arry = (PyArrayObject*)PyArray_FromAny(py_arry, dtype, 1, 1, req, NULL);
         if (!np_arry) {
             PyErr_SetString(PyExc_ValueError,"Expected y array to be double");
             Py_DECREF(dtype);
@@ -212,7 +214,7 @@ void log_set_level(int lvl);
         }
         Py_CLEAR(dtype);
         Py_INCREF(itype);
-        np_hist = PyArray_FromAny(py_hist, itype, 2, 2, reqout, NULL);
+        np_hist = (PyArrayObject*)PyArray_FromAny(py_hist, itype, 2, 2, reqout, NULL);
         if (!np_hist) {
             PyErr_SetString(PyExc_ValueError,"Expected hist array to be int32");
             Py_DECREF(np_arrx);
@@ -264,8 +266,8 @@ void log_set_level(int lvl);
     static double flat_percentile_f(PyObject* np_arr, double pct) {
         PyArray_Descr* dtype;
         npy_intp N;
-        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
-            NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+        int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
+            NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
         float* x;
         float med = 0;
         int L, R;
@@ -280,7 +282,7 @@ void log_set_level(int lvl);
         dtype = NULL;
         N = PyArray_Size(np_arr);
         x = (float*)malloc(sizeof(float) * N);
-        memcpy(x, PyArray_DATA(np_arr), sizeof(float)*N);
+        memcpy(x, PyArray_DATA((PyArrayObject*)np_arr), sizeof(float)*N);
         Py_DECREF(np_arr);
 
         {
@@ -411,10 +413,10 @@ void log_set_level(int lvl);
         return flat_percentile_f(np_arr, 50.0);
     }
 
-    static int median_smooth(PyObject* np_image,
-                             PyObject* np_mask,
+    static int median_smooth(PyObject* py_image,
+                             PyObject* py_mask,
                              int halfbox,
-                             PyObject* np_smooth) {
+                             PyObject* py_smooth) {
         /*
 
          image: np.float32
@@ -422,6 +424,10 @@ void log_set_level(int lvl);
          smooth: np.float32; output array.
 
          */
+        PyArrayObject* np_image  = (PyArrayObject*)py_image;
+        PyArrayObject* np_mask   = (PyArrayObject*)py_mask;
+        PyArrayObject* np_smooth = (PyArrayObject*)py_smooth;
+
         if (!PyArray_Check(np_image) ||
             !PyArray_Check(np_smooth) ||
             !PyArray_ISNOTSWAPPED(np_image) ||
@@ -449,7 +455,7 @@ void log_set_level(int lvl);
                 PyArray_ISWRITEABLE(np_smooth));
             return -1;
         }
-        if (np_mask != Py_None) {
+        if ((PyObject*)np_mask != Py_None) {
             if (!PyArray_Check(np_mask) ||
                 !PyArray_ISNOTSWAPPED(np_mask) ||
                 !PyArray_ISBOOL(np_mask) ||
@@ -475,7 +481,7 @@ void log_set_level(int lvl);
         image = PyArray_DATA(np_image);
         smooth = PyArray_DATA(np_smooth);
 
-        if (np_mask != Py_None) {
+        if ((PyObject*)np_mask != Py_None) {
             if ((PyArray_DIM(np_mask, 0) != NY) ||
                 (PyArray_DIM(np_mask, 1) != NX)) {
                 ERR("median_smooth: 'mask' array is wrong shape\n");
@@ -507,11 +513,14 @@ void log_set_level(int lvl);
     #undef LANCZOS_INTERP_FUNC
     #undef L
 
-    static int lanczos5_filter(PyObject* np_dx, PyObject* np_f) {
+    static int lanczos5_filter(PyObject* py_dx, PyObject* py_f) {
         npy_intp N;
         npy_intp i;
         float* dx;
         float* f;
+
+        PyArrayObject *np_dx = (PyArrayObject*)py_dx;
+        PyArrayObject *np_f  = (PyArrayObject*)py_f;
 
         if (!PyArray_Check(np_dx) ||
             !PyArray_Check(np_f ) ||
@@ -552,12 +561,15 @@ void log_set_level(int lvl);
         }
         return 0;
     }
-        
-    static int lanczos3_filter(PyObject* np_dx, PyObject* np_f) {
+
+    static int lanczos3_filter(PyObject* py_dx, PyObject* py_f) {
         npy_intp N;
         npy_intp i;
         float* dx;
         float* f;
+
+        PyArrayObject *np_dx = (PyArrayObject*)py_dx;
+        PyArrayObject *np_f  = (PyArrayObject*)py_f;
 
         if (!PyArray_Check(np_dx) ||
             !PyArray_Check(np_f ) ||
@@ -599,11 +611,14 @@ void log_set_level(int lvl);
         return 0;
     }
 
-    static int lanczos3_filter_table(PyObject* np_dx, PyObject* np_f, int rangecheck) {
+    static int lanczos3_filter_table(PyObject* py_dx, PyObject* py_f, int rangecheck) {
         npy_intp N;
         npy_intp i;
         float* dx;
         float* f;
+
+        PyArrayObject *np_dx = (PyArrayObject*)py_dx;
+        PyArrayObject *np_f  = (PyArrayObject*)py_f;
 
         // Nlutunit is number of bins per unit x
         static const int Nlutunit = 1024;
@@ -647,10 +662,10 @@ void log_set_level(int lvl);
             ERR("sizeof float\n");
         }
         if ((PyArray_ITEMSIZE(np_dx) != sizeof(float))) {
-            ERR("sizeof dx %i\n", PyArray_ITEMSIZE(np_dx));
+            ERR("sizeof dx %i\n", (int)PyArray_ITEMSIZE(np_dx));
         }
         if ((PyArray_ITEMSIZE(np_f ) != sizeof(float))) {
-            ERR("sizeof f %i\n", PyArray_ITEMSIZE(np_f));
+            ERR("sizeof f %i\n", (int)PyArray_ITEMSIZE(np_f));
         }
         if (!(PyArray_NDIM(np_dx) == 1) ||
             !(PyArray_NDIM(np_f ) == 1)) {
@@ -709,14 +724,10 @@ void log_set_level(int lvl);
         return 0;
     }
 
-
-
-
-
-
-    static int lanczos_shift_image_c(PyObject* np_img, PyObject* np_weight,
-                                     PyObject* np_outimg,
-                                     PyObject* np_outweight,
+    static int lanczos_shift_image_c(PyObject* py_img,
+                                     PyObject* py_weight,
+                                     PyObject* py_outimg,
+                                     PyObject* py_outweight,
                                      int order, double dx, double dy) {
         int W,H;
         int i,j;
@@ -724,11 +735,13 @@ void log_set_level(int lvl);
         lanczos_args_t lanczos;
 
         PyArray_Descr* dtype;
-        // in numpy v2.0 these constants have a NPY_ARRAY_ prefix
-        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
-               NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
-        int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+        int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
+               NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
+        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
         double *img, *weight, *outimg, *outweight;
+
+        PyArrayObject *np_img=NULL, *np_weight=NULL, *np_outimg=NULL, *np_outweight=NULL;
+
         weight = NULL;
         outweight = NULL;
         lanczos.order = order;
@@ -744,25 +757,25 @@ void log_set_level(int lvl);
          print_array(np_outweight);
          */
 
-	dtype = PyArray_DescrFromType(PyArray_DOUBLE);
-	Py_INCREF(dtype);
-        np_img = PyArray_CheckFromAny(np_img, dtype, 2, 2, req, NULL);
-        if (np_weight != Py_None) {
-	    Py_INCREF(dtype);
-            np_weight = PyArray_CheckFromAny(np_weight, dtype, 2, 2, req, NULL);
+        dtype = PyArray_DescrFromType(NPY_DOUBLE);
+        Py_INCREF(dtype);
+        np_img = (PyArrayObject*)PyArray_CheckFromAny(py_img, dtype, 2, 2, req, NULL);
+        if (py_weight != Py_None) {
+            Py_INCREF(dtype);
+            np_weight = (PyArrayObject*)PyArray_CheckFromAny(py_weight, dtype, 2, 2, req, NULL);
             if (!np_weight) {
                 ERR("Failed to run PyArray_FromAny on np_weight\n");
                 return -1;
             }
         }
-	Py_INCREF(dtype);
-        np_outimg = PyArray_CheckFromAny(np_outimg, dtype, 2, 2, reqout, NULL);
-        if (np_outweight != Py_None) {
-	    Py_INCREF(dtype);
-            np_outweight = PyArray_CheckFromAny(np_outweight, dtype, 2, 2, reqout, NULL);
+        Py_INCREF(dtype);
+        np_outimg = (PyArrayObject*)PyArray_CheckFromAny(py_outimg, dtype, 2, 2, reqout, NULL);
+        if (py_outweight != Py_None) {
+            Py_INCREF(dtype);
+            np_outweight = (PyArrayObject*)PyArray_CheckFromAny(py_outweight, dtype, 2, 2, reqout, NULL);
         }
-	Py_DECREF(dtype);
-	dtype = NULL;
+        Py_DECREF(dtype);
+        dtype = NULL;
 
         if (!np_img || !np_outimg || !np_outweight) {
             ERR("Failed to PyArray_FromAny the images (np_img=%p, np_outimg=%p, np_outweight=%p)\n",
@@ -778,15 +791,15 @@ void log_set_level(int lvl);
             ERR("All images must have the same dimensions.\n");
             return -1;
         }
-        if (np_weight != Py_None) {
+        if (np_weight) {
             if ((PyArray_DIM(np_weight, 0) != H) ||
                 (PyArray_DIM(np_weight, 1) != W)) {
                 ERR("All images must have the same dimensions.\n");
                 return -1;
             }
-            weight    = PyArray_DATA(np_weight);
+            weight = PyArray_DATA(np_weight);
         }
-        if (np_outweight != Py_None) {
+        if (np_outweight) {
             if ((PyArray_DIM(np_outweight, 0) != H) ||
                 (PyArray_DIM(np_outweight, 1) != W)) {
                 ERR("All images must have the same dimensions.\n");
@@ -1543,7 +1556,7 @@ def sip_t_radec_bounds(self):
         rx = r[r < 180].max()
         rn = r[r > 180].min()
     return (rn, rx, d.min(), d.max())
-sip_t.radec_bounds = sip_t_radec_bounds    
+sip_t.radec_bounds = sip_t_radec_bounds
 
 #def sip_t_fromstring(s):
 #   sip = sip_from_string(s, len(s),
@@ -1741,15 +1754,16 @@ Sip = sip_t
   // Wrapper on coadd_add_image that accepts numpy arrays.
 
   static int coadd_add_numpy(coadd_t* c, 
-                             PyObject* np_img, PyObject* np_weight,
+                             PyObject* py_img, PyObject* py_weight,
                              float fweight, const anwcs_t* wcs) {
     PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
-    // in numpy v2.0 these constants have a NPY_ARRAY_ prefix
-    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
-    float *img, *weight;
+    int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
+    float *img, *weight=NULL;
+
+    PyArrayObject *np_img=NULL, *np_weight=NULL;
 
     Py_INCREF(dtype);
-    np_img = PyArray_CheckFromAny(np_img, dtype, 2, 2, req, NULL);
+    np_img = (PyArrayObject*)PyArray_CheckFromAny(py_img, dtype, 2, 2, req, NULL);
     img = PyArray_DATA(np_img);
     if (!np_img) {
       ERR("Failed to PyArray_FromAny the image\n");
@@ -1757,11 +1771,9 @@ Sip = sip_t
       Py_DECREF(dtype);
       return -1;
     }
-    if (np_weight == Py_None) {
-      weight = NULL;
-    } else {
+    if (py_weight != Py_None) {
       Py_INCREF(dtype);
-      np_weight = PyArray_CheckFromAny(np_weight, dtype, 2, 2, req, NULL);
+      np_weight = (PyArrayObject*)PyArray_CheckFromAny(py_weight, dtype, 2, 2, req, NULL);
       if (!np_weight) {
         ERR("Failed to PyArray_FromAny the weight\n");
         Py_XDECREF(np_weight);
@@ -1787,35 +1799,35 @@ Sip = sip_t
     dim[0] = co->H;
     dim[1] = co->W;
     npimg = PyArray_EMPTY(2, dim, NPY_FLOAT, 0);
-    coadd_get_snapshot(co, PyArray_DATA(npimg), badpix);
+    coadd_get_snapshot(co, PyArray_DATA((PyArrayObject*)npimg), badpix);
     return npimg;
   }
 
-  static sip_t* fit_sip_wcs_py(PyObject* np_starxyz,
-                              PyObject* np_fieldxy,
-                              PyObject* np_weights,
+  static sip_t* fit_sip_wcs_py(PyObject* py_starxyz,
+                              PyObject* py_fieldxy,
+                              PyObject* py_weights,
                               tan_t* tanin,
                               int sip_order,
                               int inv_order) {
       PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE);
-      // in numpy v2.0 these constants have a NPY_ARRAY_ prefix
-      int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED |
-          NPY_ELEMENTSTRIDES;
+      int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_NOTSWAPPED |
+          NPY_ARRAY_ELEMENTSTRIDES;
+      PyArrayObject *np_starxyz=NULL, *np_fieldxy=NULL, *np_weights=NULL;
 
       Py_INCREF(dtype);
-      np_starxyz = PyArray_CheckFromAny(np_starxyz, dtype, 2, 2, req, NULL);
+      np_starxyz = (PyArrayObject*)PyArray_CheckFromAny(py_starxyz, dtype, 2, 2, req, NULL);
       Py_INCREF(dtype);
-      np_fieldxy = PyArray_CheckFromAny(np_fieldxy, dtype, 2, 2, req, NULL);
-      if ((np_starxyz == Py_None) || (np_fieldxy == Py_None)) {
+      np_fieldxy = (PyArrayObject*)PyArray_CheckFromAny(py_fieldxy, dtype, 2, 2, req, NULL);
+      if (!np_starxyz || !np_fieldxy) {
           Py_DECREF(dtype);
           Py_DECREF(dtype);
           printf("Failed to convert starxyz or fieldxy to numpy double arrays\n");
           return NULL;
       }
-      if (np_weights != Py_None) {
+      if (py_weights != Py_None) {
           Py_INCREF(dtype);
-          np_weights = PyArray_CheckFromAny(np_weights, dtype, 1, 1, req,NULL);
-          if (np_weights == Py_None) {
+          np_weights = (PyArrayObject*)PyArray_CheckFromAny(py_weights, dtype, 1, 1, req,NULL);
+          if (!np_weights) {
               Py_DECREF(dtype);
               printf("Failed to convert weights to numpy double array\n");
               return NULL;
@@ -1829,7 +1841,7 @@ Sip = sip_t
           printf("Expected starxyz and fieldxy to have the same length\n");
           return NULL;
       }
-      if ((np_weights != Py_None) && (PyArray_DIM(np_weights, 0) != M)) {
+      if (np_weights && (PyArray_DIM(np_weights, 0) != M)) {
           printf("Expected starxyz and weights to have the same length\n");
           return NULL;
       }
@@ -1842,7 +1854,7 @@ Sip = sip_t
       sip_t* sipout = calloc(1, sizeof(sip_t));
 
       double* weights = NULL;
-      if (np_weights != Py_None)
+      if (np_weights)
           weights = PyArray_DATA(np_weights);
 
       int doshift = 1;
@@ -1888,8 +1900,7 @@ Sip = sip_t
          f_2to2i func,
          const void* baton,
          PyObject* in1, PyObject* in2);
-         
-         
+
 static PyObject* tan_rd2xy_wrapper(const tan_t* wcs,
                                    PyObject* in1, PyObject* in2) {
     return broadcast_2to2ok((f_2to2ok)tan_radec2pixelxy, wcs, in1, in2);
@@ -1951,10 +1962,6 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                                    PyObject* in1, PyObject* in2) {
     return broadcast_2to2i((f_2to2i)anwcs_pixelxy2radec, wcs, in1, in2);
 }
-
-
-
-         
 
     static PyObject* broadcast_2to2ok
         (
@@ -2071,17 +2078,17 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         } while (iternext(iter));
 
         if (PyArray_IsPythonScalar(in1) && PyArray_IsPythonScalar(in2)) {
-            PyObject* px  = (PyObject*)NpyIter_GetOperandArray(iter)[2];
-            PyObject* py  = (PyObject*)NpyIter_GetOperandArray(iter)[3];
-            PyObject* pok = (PyObject*)NpyIter_GetOperandArray(iter)[4];
+            PyObject* px  = (PyObject*)(NpyIter_GetOperandArray(iter)[2]);
+            PyObject* py  = (PyObject*)(NpyIter_GetOperandArray(iter)[3]);
+            PyObject* pok = (PyObject*)(NpyIter_GetOperandArray(iter)[4]);
             //printf("Both inputs are python scalars\n");
             double d;
             unsigned char c;
-            d = *(double*)PyArray_DATA(px);
+            d = *(double*)PyArray_DATA((PyArrayObject*)px);
             px = PyFloat_FromDouble(d);
-            d = *(double*)PyArray_DATA(py);
+            d = *(double*)PyArray_DATA((PyArrayObject*)py);
             py = PyFloat_FromDouble(d);
-            c = *(unsigned char*)PyArray_DATA(pok);
+            c = *(unsigned char*)PyArray_DATA((PyArrayObject*)pok);
             pok = PyBool_FromLong(c);
             ret = Py_BuildValue("(NNN)", pok, px, py);
             /*
@@ -2136,7 +2143,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         npy_intp* strideptr;
         PyArray_Descr* dtypes[5];
         int j;
-        
+
         // we'll do the inner loop ourselves
         flags = NPY_ITER_EXTERNAL_LOOP;
         // use buffers to satisfy dtype casts
@@ -2232,17 +2239,17 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         } while (iternext(iter));
 
         if (PyArray_IsPythonScalar(in1) && PyArray_IsPythonScalar(in2)) {
-            PyObject* px  = (PyObject*)NpyIter_GetOperandArray(iter)[2];
-            PyObject* py  = (PyObject*)NpyIter_GetOperandArray(iter)[3];
-            PyObject* pok = (PyObject*)NpyIter_GetOperandArray(iter)[4];
+            PyObject* px  = (PyObject*)(NpyIter_GetOperandArray(iter)[2]);
+            PyObject* py  = (PyObject*)(NpyIter_GetOperandArray(iter)[3]);
+            PyObject* pok = (PyObject*)(NpyIter_GetOperandArray(iter)[4]);
             //printf("Both inputs are python scalars\n");
             double d;
             int i;
-            d = *(double*)PyArray_DATA(px);
+            d = *(double*)PyArray_DATA((PyArrayObject*)px);
             px = PyFloat_FromDouble(d);
-            d = *(double*)PyArray_DATA(py);
+            d = *(double*)PyArray_DATA((PyArrayObject*)py);
             py = PyFloat_FromDouble(d);
-            i = *(int*)PyArray_DATA(pok);
+            i = *(int*)PyArray_DATA((PyArrayObject*)pok);
             pok = PyInt_FromLong(i);
             ret = Py_BuildValue("(NNN)", pok, px, py);
         } else {
@@ -2261,8 +2268,6 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         Py_DECREF(op[1]);
         return ret;
     }
-    
-
 
     static PyObject* broadcast_2to2
         (
@@ -2282,7 +2287,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         npy_intp* strideptr;
         PyArray_Descr* dtypes[4];
         npy_intp i;
-        
+
         // we'll do the inner loop ourselves
         flags = NPY_ITER_EXTERNAL_LOOP;
         // use buffers to satisfy dtype casts
@@ -2366,7 +2371,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
 
                 //printf("Non-contiguous inputs; going slow\n");
                 //printf("%i items\n", (int)size);
-                
+
                 for (i=0; i<size; i++) {
                     //printf("Call %i: inputs (%12g,%12g)\n", (int)i, ((double*)src1)[0], ((double*)src2)[0]);
                     func(baton, *((double*)src1), *((double*)src2),
@@ -2380,13 +2385,13 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         } while (iternext(iter));
 
         if (PyArray_IsPythonScalar(in1) && PyArray_IsPythonScalar(in2)) {
-            PyObject* px  = (PyObject*)NpyIter_GetOperandArray(iter)[2];
-            PyObject* py  = (PyObject*)NpyIter_GetOperandArray(iter)[3];
+            PyObject* px  = (PyObject*)(NpyIter_GetOperandArray(iter)[2]);
+            PyObject* py  = (PyObject*)(NpyIter_GetOperandArray(iter)[3]);
             //printf("Both inputs are python scalars\n");
             double d;
-            d = *(double*)PyArray_DATA(px);
+            d = *(double*)PyArray_DATA((PyArrayObject*)px);
             px = PyFloat_FromDouble(d);
-            d = *(double*)PyArray_DATA(py);
+            d = *(double*)PyArray_DATA((PyArrayObject*)py);
             py = PyFloat_FromDouble(d);
             ret = Py_BuildValue("(NN)", px, py);
         } else {
@@ -2406,22 +2411,18 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         return ret;
     }
 
-
-
-
-
     static int tan_wcs_resample(tan_t* inwcs, tan_t* outwcs,
-                                PyObject* np_inimg, PyObject* np_outimg,
+                                PyObject* py_inimg, PyObject* py_outimg,
                                 int weighted, int lorder) {
         PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
-        // in numpy v2.0 these constants have a NPY_ARRAY_ prefix
-        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
-        int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+        int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
+        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
+        PyArrayObject *np_inimg=NULL, *np_outimg=NULL;
 
         Py_INCREF(dtype);
         Py_INCREF(dtype);
-        np_inimg = PyArray_CheckFromAny(np_inimg, dtype, 2, 2, req, NULL);
-        np_outimg = PyArray_CheckFromAny(np_outimg, dtype, 2, 2, reqout, NULL);
+        np_inimg  = (PyArrayObject*)PyArray_CheckFromAny(py_inimg,  dtype, 2, 2, req, NULL);
+        np_outimg = (PyArrayObject*)PyArray_CheckFromAny(py_outimg, dtype, 2, 2, reqout, NULL);
         if (!np_inimg || !np_outimg) {
             ERR("Failed to PyArray_FromAny the images (np_inimg=%p, np_outimg=%p)\n",
                 np_inimg, np_outimg);
@@ -2457,17 +2458,17 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         return res;
     }
 
-    static int tan_numpy_xyz2pixelxy(tan_t* tan, PyObject* npxyz,
-           PyObject* npx, PyObject* npy) {
+    static int tan_numpy_xyz2pixelxy(tan_t* tan, PyArrayObject* npxyz,
+                                     PyArrayObject* npx, PyArrayObject* npy) {
         npy_intp i, N;
         int rtn = 0;
         double *x, *y;
-        
+
         if (PyArray_NDIM(npx) != 1) {
             PyErr_SetString(PyExc_ValueError, "arrays must be one-dimensional");
             return -1;
         }
-        if (PyArray_TYPE(npx) != PyArray_DOUBLE) {
+        if (PyArray_TYPE(npx) != NPY_DOUBLE) {
             PyErr_SetString(PyExc_ValueError, "array must contain doubles");
             return -1;
         }
@@ -2499,10 +2500,10 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
 
     static int an_tally(PyObject* py_counts, PyObject* py_x, PyObject* py_y) {
         PyArray_Descr* itype;
-        PyObject *np_counts=NULL, *np_x=NULL, *np_y=NULL;
-        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED |
-            NPY_ELEMENTSTRIDES;
-        int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+        PyArrayObject *np_counts=NULL, *np_x=NULL, *np_y=NULL;
+        int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_NOTSWAPPED |
+            NPY_ARRAY_ELEMENTSTRIDES;
+        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
         int32_t *counts, *px, *py;
         int W, H, i, N;
 
@@ -2510,9 +2511,9 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         Py_INCREF(itype);
         Py_INCREF(itype);
 
-        np_counts = PyArray_CheckFromAny(py_counts, itype, 2, 2, reqout, NULL);
-        np_x = PyArray_CheckFromAny(py_x, itype, 1, 1, req, NULL);
-        np_y = PyArray_CheckFromAny(py_y, itype, 1, 1, req, NULL);
+        np_counts = (PyArrayObject*)PyArray_CheckFromAny(py_counts, itype, 2, 2, reqout, NULL);
+        np_x = (PyArrayObject*)PyArray_CheckFromAny(py_x, itype, 1, 1, req, NULL);
+        np_y = (PyArrayObject*)PyArray_CheckFromAny(py_y, itype, 1, 1, req, NULL);
 
         if (!np_counts || !np_x || !np_y) {
             ERR("Failed to PyArray_FromAny the counts, x, and y arrays.\n");
@@ -2529,7 +2530,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
             Py_XDECREF(np_y);
             return -1;
         }
-        
+
         H = (int)PyArray_DIM(np_counts, 0);
         W = (int)PyArray_DIM(np_counts, 1);
         //printf("Counts array size %i x %i\n", W, H);
@@ -2581,7 +2582,7 @@ def tan_t_addtoheader(self, hdr):
     hdr.add_record(dict(name='IMAGEW', value=self.imagew, comment='Image width'))
     hdr.add_record(dict(name='IMAGEH', value=self.imageh, comment='Image height'))
 tan_t.add_to_header = tan_t_addtoheader
-    
+
 ## picklable?
 def tan_t_getstate(self):
     return (self.crpix[0], self.crpix[1], self.crval[0], self.crval[1],
@@ -2616,9 +2617,6 @@ def tan_t_get_cd(self):
     cd = self.cd
     return (cd[0], cd[1], cd[2], cd[3])
 tan_t.get_cd = tan_t_get_cd
-
-
-
 
 def tan_t_pixelxy2radec(self, x, y):
     return tan_xy2rd_wrapper(self.this, x, y)
@@ -2693,11 +2691,6 @@ def anwcs_t_radec2pixelxy(self, r, d):
 anwcs_t.radec2pixelxy_single = anwcs_t.radec2pixelxy
 anwcs_t.radec2pixelxy = anwcs_t_radec2pixelxy
 
-
-
-
-
-
 def tan_t_radec_bounds(self):
     W,H = self.imagew, self.imageh
     r,d = self.pixelxy2radec([1, W/2, W, W, W, W/2, 1, 1], [1, 1, 1, H/2, H, H, H, H/2])
@@ -2709,8 +2702,7 @@ def tan_t_radec_bounds(self):
         rx = r[r < 180].max()
         rn = r[r > 180].min()
     return (rn, rx, d.min(), d.max())
-tan_t.radec_bounds = tan_t_radec_bounds    
-
+tan_t.radec_bounds = tan_t_radec_
 
 _real_tan_t_init = tan_t.__init__
 def my_tan_t_init(self, *args, **kwargs):
@@ -2773,8 +2765,7 @@ sip_t.__getstate__ = sip_t_getstate
 sip_t.__setstate__ = sip_t_setstate
 sip_t.__getnewargs__ = sip_t_getnewargs
 
-%} 
-
+%}
 
 %include "fitsioutils.h"
 

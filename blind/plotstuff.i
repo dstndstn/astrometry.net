@@ -45,7 +45,6 @@
 
 #define true 1
 #define false 0
-
     %}
 
 %apply double *OUTPUT { double *pramin, double *pramax, double *pdecmin, double *pdecmax };
@@ -68,40 +67,37 @@
 
 %inline %{
     PyObject* c_image_numpy_view(float* data, int nx, int ny) {
-	npy_intp dims[2];
-	dims[0] = ny;
-	dims[1] = nx;
-	return PyArray_SimpleNewFromData(2, dims, NPY_FLOAT, data);
-        //PyArray_NewFromDescr(PyTypeObject* subtype, PyArray_Descr* descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, PyObject* obj)
+        npy_intp dims[2];
+        dims[0] = ny;
+        dims[1] = nx;
+        return PyArray_SimpleNewFromData(2, dims, NPY_FLOAT, data);
     }
-
-    %}
+%}
 
 %pythoncode %{
     def qfits_load_image(fn, ext=1, plane=0, map=1, ptype=PTYPE_FLOAT):
-    ld = qfitsloader()
-	ld.filename = fn
-	ld.xtnum = ext
-	ld.pnum = plane
-	ld.map = map
-	ld.ptype = ptype
-	if qfitsloader_init(ld):
-    raise RuntimeError('qfitsloader_init(file "%s", ext %i) failed' % (fn, ext))
-	if qfits_loadpix(ld):
-    raise RuntimeError('qfits_loadpix(file "%s", ext %i) failed' % (fn, ext))
+        ld = qfitsloader()
+        ld.filename = fn
+        ld.xtnum = ext
+        ld.pnum = plane
+        ld.map = map
+        ld.ptype = ptype
+        if qfitsloader_init(ld):
+            raise RuntimeError('qfitsloader_init(file "%s", ext %i) failed' % (fn, ext))
+        if qfits_loadpix(ld):
+            raise RuntimeError('qfits_loadpix(file "%s", ext %i) failed' % (fn, ext))
 
-	class qfits_image(object):
-    def __init__(self, pix, nx, ny, ld):
-    self.pix = pix
-        self.nx = nx
-        self.ny = ny
-        self.ld = ld
-        def __del__(self):
-    qfitsloader_free_buffer(self.ld)
-			
-	return qfits_image(ld.fbuf, ld.lx, ld.ly, ld)
-	%}
+        class qfits_image(object):
+            def __init__(self, pix, nx, ny, ld):
+                self.pix = pix
+                self.nx = nx
+                self.ny = ny
+                self.ld = ld
+            def __del__(self):
+                qfitsloader_free_buffer(self.ld)
 
+        return qfits_image(ld.fbuf, ld.lx, ld.ly, ld)
+%}
 
 void free(void* ptr);
 
@@ -115,7 +111,7 @@ void free(void* ptr);
  /* Set the input argument to point to a temporary variable */
 %typemap(in, numinputs=0) unsigned char* rgbout (unsigned char temp[3]) {
     $1 = temp;
- }
+}
 
 %typemap(argout) unsigned char* rgbout {
     // Append output value $1 to $result
@@ -131,12 +127,12 @@ void free(void* ptr);
             PyList_SetItem($result,i,o);
         }
     }
- }
+}
 
 %typemap(in) int rgb[3] (int temp[3]) {
     int i;
     // Convert sequence of ints to int[3]
-    if (!PySequence_Check($input) ||	 
+    if (!PySequence_Check($input) ||
         (PySequence_Length($input) != 3)) {
         PyErr_SetString(PyExc_ValueError,"Expected a sequence of length 3");
         return NULL;
@@ -151,7 +147,7 @@ void free(void* ptr);
         }
     }
     $1 = temp;
- }
+}
 
 %include "plotimage.h"
 %include "plotoutline.h"
@@ -169,7 +165,7 @@ void free(void* ptr);
 
 %init %{
     import_array();
-    %}
+%}
 
 // HACK!
 enum cairo_op {
@@ -205,7 +201,7 @@ typedef enum cairo_op cairo_operator_t;
         tan->cd[1][1] = cd22;
         return sip;
     }
-    %}
+%}
 
 %extend sip_t {
     sip_t(double, double, double, double, double, double, double, double);
@@ -216,14 +212,12 @@ typedef enum cairo_op cairo_operator_t;
     double crval2() {
         return self->wcstan.crval[1];
     }
-
     double crpix1() {
         return self->wcstan.crpix[0];
     }
     double crpix2() {
         return self->wcstan.crpix[1];
     }
-
     double cd11() {
         return self->wcstan.cd[0][0];
     }
@@ -264,10 +258,7 @@ typedef enum cairo_op cairo_operator_t;
         convolve_separable_weighted_f(img, W, H, weight, kernel, K0, NK, img, NULL);
         free(kernel);
     }
-
-
-    %}
-
+%}
 
 %extend plot_args {
     PyObject* view_image_as_numpy() {
@@ -298,39 +289,40 @@ typedef enum cairo_op cairo_operator_t;
             npimg = out;
         }
         if (flip) {
-            cairoutils_argb32_to_rgba_flip(img, PyArray_DATA(npimg), self->W, self->H);
+            cairoutils_argb32_to_rgba_flip(img, PyArray_DATA((PyArrayObject*)npimg), self->W, self->H);
         } else {
-            cairoutils_argb32_to_rgba_2(img, PyArray_DATA(npimg), self->W, self->H);
+            cairoutils_argb32_to_rgba_2(img, PyArray_DATA((PyArrayObject*)npimg), self->W, self->H);
         }
         return npimg;
     }
 
-    int set_image_from_numpy(PyObject* npimg, int flip) {
+    int set_image_from_numpy(PyObject* py_img, int flip) {
         unsigned char* img;
         unsigned char* inimg;
-        PyArray_Descr* dtype = PyArray_DescrFromType(PyArray_UBYTE);
-        int req = NPY_C_CONTIGUOUS | NPY_ALIGNED;
-        if ((PyArray_DIM(npimg, 0) != self->H) ||
-            (PyArray_DIM(npimg, 1) != self->W) ||
-            (PyArray_DIM(npimg, 2) != 4)) {
+        PyArray_Descr* dtype = PyArray_DescrFromType(NPY_UBYTE);
+        int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED;
+        PyArrayObject *np_img=NULL;
+        Py_INCREF(dtype);
+        np_img = (PyArrayObject*)PyArray_FromAny(py_img, dtype, 3, 3, req, NULL);
+        if ((PyArray_DIM(np_img, 0) != self->H) ||
+            (PyArray_DIM(np_img, 1) != self->W) ||
+            (PyArray_DIM(np_img, 2) != 4)) {
             PyErr_SetString(PyExc_ValueError, "Expected image with shape (H, W, 4)");
             return -1;
         }
-        Py_INCREF(dtype);
-        npimg = PyArray_FromAny(npimg, dtype, 3, 3, req, NULL);
-        if (!npimg) {
+        if (!np_img) {
             PyErr_SetString(PyExc_ValueError, "img wasn't the type expected");
             Py_DECREF(dtype);
             return -1;
         }
-        inimg = PyArray_DATA(npimg);
+        inimg = PyArray_DATA(np_img);
         img = cairo_image_surface_get_data(self->target);
         if (flip) {
             cairoutils_rgba_to_argb32_flip(inimg, img, self->W, self->H);
         } else {
             cairoutils_rgba_to_argb32_2(inimg, img, self->W, self->H);
         }
-        Py_DECREF(npimg);
+        Py_DECREF(np_img);
         Py_DECREF(dtype);
         return 0;
     }
@@ -346,7 +338,6 @@ typedef enum cairo_op cairo_operator_t;
     void loginit(int level) {
         log_init(level);
     }
-
 }
 
 %extend annotation_args {
@@ -377,36 +368,31 @@ typedef enum cairo_op cairo_operator_t;
 }
 %pythoncode %{
     def plotoutline_setattr(self, name, val):
-#print 'plotoutline_setattr', name, '=', val
-    if name == 'wcs_file':
-    if type(val) is tuple:
-    (fn,ext) = val
-        else:
-            fn = val
+        if name == 'wcs_file':
+            if type(val) is tuple:
+                (fn,ext) = val
+            else:
+                fn = val
                 ext = 0
-#print 'setting outline wcs file %s, ext %i' % (fn, ext)
-		plot_outline_set_wcs_file(self, fn, ext)
-		return
-                self.__swig__setattr__(name, val)
+            plot_outline_set_wcs_file(self, fn, ext)
+            return
+        self.__swig__setattr__(name, val)
 
-                plotoutline_args.__swig__setattr__ = plotoutline_args.__setattr__
-                plotoutline_args.__setattr__ = plotoutline_setattr
-
-                %}
-
-
+    plotoutline_args.__swig__setattr__ = plotoutline_args.__setattr__
+    plotoutline_args.__setattr__ = plotoutline_setattr
+%}
 
 %extend plotimage_args {
     int _set_image_from_numpy(PyObject* arr) {
         // Pirate array
-        PyObject* yarr;
+        PyArrayObject* yarr;
         int hasalpha = 0;
         int i, N;
         unsigned char* src;
 
         // MAGIC 3: min_depth and max_depth (number of dims)
-        yarr = PyArray_FROMANY(arr, NPY_UBYTE, 3, 3,
-                               NPY_C_CONTIGUOUS | NPY_ALIGNED);
+        yarr = (PyArrayObject*)PyArray_FROMANY(arr, NPY_UBYTE, 3, 3,
+                                               NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED);
         if (!yarr) {
             PyErr_SetString(PyExc_ValueError, "Array must be 3-dimensional ubyte");
             return -1;
@@ -452,13 +438,11 @@ typedef enum cairo_op cairo_operator_t;
     int set_file(const char* fn) {
         return plot_image_set_filename(self, fn);
     }
-
     void set_rgbscale(double r, double g, double b) {
         self->rgbscale[0] = r;
         self->rgbscale[1] = g;
         self->rgbscale[2] = b;
     }
-
     int get_image_width() {
         int W;
         if (plot_image_getsize(self, &W, NULL)) {
@@ -473,18 +457,15 @@ typedef enum cairo_op cairo_operator_t;
         }
         return H;
     }
-
 }
 
 %pythoncode %{
     def plotimage_set_image_from_numpy(self, img):
-    rtn = self._set_image_from_numpy(img)
+        rtn = self._set_image_from_numpy(img)
         if rtn:
-    raise RuntimeError('set_image_from_numpy() failed')
-
-        plotimage_args.set_image_from_numpy = plotimage_set_image_from_numpy
-        %}
-
+            raise RuntimeError('set_image_from_numpy() failed')
+    plotimage_args.set_image_from_numpy = plotimage_set_image_from_numpy
+%}
 
 %extend plotindex_args {
     int add_file(const char* fn) {

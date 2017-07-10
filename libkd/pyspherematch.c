@@ -13,7 +13,8 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "numpy/arrayobject.h"
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 #include "os-features.h"
 #include "keywords.h"
@@ -58,7 +59,7 @@ static PyObject* KdTree_new(PyTypeObject *type, PyObject *args, PyObject *kwds) 
 
 static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
     Py_ssize_t n;
-    PyObject *x = NULL;
+    PyArrayObject *x = NULL;
     char* filename = NULL;
     char* treename = NULL;
     VarUnused PyObject *fnbytes = NULL;
@@ -82,7 +83,7 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
             PyErr_SetString(PyExc_ValueError, "array must be two-dimensional");
             return -1;
         }
-        if (PyArray_TYPE(x) != PyArray_DOUBLE) {
+        if (PyArray_TYPE(x) != NPY_DOUBLE) {
             PyErr_SetString(PyExc_ValueError, "array must contain doubles");
             return -1;
         }
@@ -192,12 +193,12 @@ static PyObject* KdTree_search(KdObject* self, PyObject* args) {
     kdtree_t* kd;
     int D, N;
     PyObject* pyO;
-    PyObject* pyI;
+    PyArrayObject* npI;
     PyObject* pyInds;
     PyObject* pyDists = NULL;
     PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE);
-    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED
-        | NPY_ELEMENTSTRIDES;
+    int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_NOTSWAPPED
+        | NPY_ARRAY_ELEMENTSTRIDES;
     double radius;
     kdtree_qres_t* res;
     int getdists, sortdists;
@@ -217,21 +218,21 @@ static PyObject* KdTree_search(KdObject* self, PyObject* args) {
     }
 
     Py_INCREF(dtype);
-    pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
-    if (!pyI) {
+    npI = (PyArrayObject*)PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
+    if (!npI) {
         PyErr_SetString(PyExc_ValueError, "Failed to convert query point array to np array of float");
         Py_XDECREF(dtype);
         return NULL;
     }
-    N = (int)PyArray_DIM(pyI, 0);
+    N = (int)PyArray_DIM(npI, 0);
     if (N != D) {
         PyErr_SetString(PyExc_ValueError, "Query point must have size == dimension of tree");
-        Py_DECREF(pyI);
+        Py_DECREF(npI);
         Py_DECREF(dtype);
         return NULL;
     }
 
-    X = PyArray_DATA(pyI);
+    X = PyArray_DATA(npI);
 
     opts = 0;
     if (getdists) {
@@ -256,7 +257,7 @@ static PyObject* KdTree_search(KdObject* self, PyObject* args) {
 
     kdtree_free_query(res);
 
-    Py_DECREF(pyI);
+    Py_DECREF(npI);
     Py_DECREF(dtype);
     if (getdists) {
         rtn = Py_BuildValue("(OO)", pyInds, pyDists);
@@ -278,11 +279,11 @@ static PyObject* KdTree_get_data(KdObject* self, PyObject* args) {
     //npy_int* I;
     npy_uint32* I;
     PyObject* pyO;
-    PyObject* pyI;
+    PyArrayObject* npI;
     // this is the type returned by kdtree_rangesearch
     PyArray_Descr* dtype = PyArray_DescrFromType(NPY_UINT32);
-    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED
-        | NPY_ELEMENTSTRIDES;
+    int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_NOTSWAPPED
+        | NPY_ARRAY_ELEMENTSTRIDES;
 
     if (!PyArg_ParseTuple(args, "O", &pyO)) {
         PyErr_SetString(PyExc_ValueError, "need one arg: index array (numpy array of ints)");
@@ -292,26 +293,26 @@ static PyObject* KdTree_get_data(KdObject* self, PyObject* args) {
     D = kd->ndim;
 
     Py_INCREF(dtype);
-    pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
-    if (!pyI) {
+    npI = (PyArrayObject*)PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
+    if (!npI) {
         PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
         Py_XDECREF(dtype);
         return NULL;
     }
-    N = (int)PyArray_DIM(pyI, 0);
+    N = (int)PyArray_DIM(npI, 0);
 
     dims[0] = N;
     dims[1] = D;
 
     pyX = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
     X = PyArray_DATA(pyX);
-    I = PyArray_DATA(pyI);
+    I = PyArray_DATA(npI);
 
     for (k=0; k<N; k++) {
         kdtree_copy_data_double(kd, I[k], 1, X);
         X += D;
     }
-    Py_DECREF(pyI);
+    Py_DECREF(npI);
     Py_DECREF(dtype);
     rtn = Py_BuildValue("O", pyX);
     Py_DECREF(pyX);
@@ -327,10 +328,10 @@ static PyObject* KdTree_permute(KdObject* self, PyObject* args) {
     long k, N;
     npy_int* I;
     PyObject* pyO;
-    PyObject* pyI;
+    PyArrayObject* npI;
     PyArray_Descr* dtype = PyArray_DescrFromType(NPY_INT);
-    int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED
-        | NPY_ELEMENTSTRIDES;
+    int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_NOTSWAPPED
+        | NPY_ARRAY_ELEMENTSTRIDES;
 
     if (!PyArg_ParseTuple(args, "O", &pyO)) {
         PyErr_SetString(PyExc_ValueError, "need one arg: index array (numpy array of ints)");
@@ -339,26 +340,26 @@ static PyObject* KdTree_permute(KdObject* self, PyObject* args) {
     kd = self->kd;
 
     Py_INCREF(dtype);
-    pyI = PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
-    if (!pyI) {
+    npI = (PyArrayObject*)PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
+    if (!npI) {
         PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
         Py_XDECREF(dtype);
         return NULL;
     }
-    N = PyArray_DIM(pyI, 0);
+    N = PyArray_DIM(npI, 0);
 
     dims[0] = N;
 
     pyX = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
     X = PyArray_DATA(pyX);
-    I = PyArray_DATA(pyI);
+    I = PyArray_DATA(npI);
 
     for (k=0; k<N; k++) {
         npy_int ii = I[k];
         //printf("Permute: ii=%i\n", ii);
         X[k] = kdtree_permute(kd, ii);
     }
-    Py_DECREF(pyI);
+    Py_DECREF(npI);
     Py_DECREF(dtype);
     rtn = Py_BuildValue("O", pyX);
     Py_DECREF(pyX);
@@ -595,9 +596,9 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     dims[0] = N;
     dims[1] = 2;
 
-    inds =  (PyArrayObject*)PyArray_SimpleNew(2, dims, PyArray_INT);
+    inds =  (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_INT);
     dims[1] = 1;
-    dists = (PyArrayObject*)PyArray_SimpleNew(2, dims, PyArray_DOUBLE);
+    dists = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
     for (i=0; i<N; i++) {
         int index;
         int* iptr;
@@ -655,8 +656,8 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     NY = kdtree_n(kd2);
 
     dims[0] = NY;
-    inds   = (PyArrayObject*)PyArray_SimpleNew(1, dims, PyArray_INT);
-    dist2s = (PyArrayObject*)PyArray_SimpleNew(1, dims, PyArray_DOUBLE);
+    inds   = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_INT);
+    dist2s = (PyArrayObject*)PyArray_SimpleNew(1, dims, NPY_DOUBLE);
     assert(PyArray_ITEMSIZE(inds) == sizeof(int));
     assert(PyArray_ITEMSIZE(dist2s) == sizeof(double));
 
@@ -776,12 +777,12 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
     I = PyArray_SimpleNew(1, dims, NPY_INT);
     J = PyArray_SimpleNew(1, dims, NPY_INT);
     dist2s = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-    pi = PyArray_DATA(I);
-    pj = PyArray_DATA(J);
-    pd = PyArray_DATA(dist2s);
+    pi = PyArray_DATA((PyArrayObject*)I);
+    pj = PyArray_DATA((PyArrayObject*)J);
+    pd = PyArray_DATA((PyArrayObject*)dist2s);
     if (docount) {
         counts = PyArray_SimpleNew(1, dims, NPY_INT);
-        pc = PyArray_DATA(counts);
+        pc = PyArray_DATA((PyArrayObject*)counts);
     }
 
     j = 0;

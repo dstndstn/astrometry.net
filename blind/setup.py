@@ -58,7 +58,7 @@ c_module = Extension('_plotstuff_c',
                      include_dirs = [numpy_inc] + inc,
                      depends = objs,
                      extra_objects = objs,
-                     extra_compile_args = cflags_swig + cflags,
+                     extra_compile_args = cflags_swig,
                      extra_link_args=link,
                      swig_opts=['-I'+d for d in inc] + cflags_swig,
     )
