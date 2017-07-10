@@ -2702,7 +2702,7 @@ def tan_t_radec_bounds(self):
         rx = r[r < 180].max()
         rn = r[r > 180].min()
     return (rn, rx, d.min(), d.max())
-tan_t.radec_bounds = tan_t_radec_
+tan_t.radec_bounds = tan_t_radec_bounds
 
 _real_tan_t_init = tan_t.__init__
 def my_tan_t_init(self, *args, **kwargs):
