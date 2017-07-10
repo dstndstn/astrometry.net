@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 #include <math.h>
 #include <assert.h>
 
@@ -82,23 +82,23 @@ int fit_sip_wcs(const double* starxyz,
                 int inv_order,
                 int doshift,
                 sip_t* sipout) {
-	int sip_coeffs;
-	double xyzcrval[3];
-	double cdinv[2][2];
-	double sx, sy, sU, sV, su, sv;
-	int N;
-	int i, j, p, q, order;
-	double totalweight;
-	int rtn;
-	gsl_matrix *mA;
-	gsl_vector *b1, *b2, *x1, *x2;
-	gsl_vector *r1=NULL, *r2=NULL;
+    int sip_coeffs;
+    double xyzcrval[3];
+    double cdinv[2][2];
+    double sx, sy, sU, sV, su, sv;
+    int N;
+    int i, j, p, q, order;
+    double totalweight;
+    int rtn;
+    gsl_matrix *mA;
+    gsl_vector *b1, *b2, *x1, *x2;
+    gsl_vector *r1=NULL, *r2=NULL;
     tan_t tanin2;
     int ngood;
     const tan_t* tanin = &tanin2;
-	// We need at least the linear terms to compute CD.
-	if (sip_order < 1)
-		sip_order = 1;
+    // We need at least the linear terms to compute CD.
+    if (sip_order < 1)
+        sip_order = 1;
 
     // convenience: allow the user to call like:
     //    fit_sip_wcs(... &(sipout.wcstan), ..., sipout);
@@ -109,24 +109,24 @@ int fit_sip_wcs(const double* starxyz,
     sipout->a_order  = sipout->b_order  = sip_order;
     sipout->ap_order = sipout->bp_order = inv_order;
 
-	// The SIP coefficients form an (order x order) upper triangular
-	// matrix missing the 0,0 element.
-	sip_coeffs = (sip_order + 1) * (sip_order + 2) / 2;
-	N = sip_coeffs;
+    // The SIP coefficients form an (order x order) upper triangular
+    // matrix missing the 0,0 element.
+    sip_coeffs = (sip_order + 1) * (sip_order + 2) / 2;
+    N = sip_coeffs;
 
     if (M < N) {
         ERROR("Too few correspondences for the SIP order specified (%i < %i)\n", M, N);
         return -1;
     }
 
-	mA = gsl_matrix_alloc(M, N);
-	b1 = gsl_vector_alloc(M);
-	b2 = gsl_vector_alloc(M);
-	assert(mA);
-	assert(b1);
-	assert(b2);
+    mA = gsl_matrix_alloc(M, N);
+    b1 = gsl_vector_alloc(M);
+    b2 = gsl_vector_alloc(M);
+    assert(mA);
+    assert(b1);
+    assert(b2);
 
-	/*
+    /*
      *  We use a clever trick to estimate CD, A, and B terms in two
      *  seperated least squares fits, then finding A and B by multiplying
      *  the found parameters by CD inverse.
@@ -181,7 +181,7 @@ int fit_sip_wcs(const double* starxyz,
      *
      */
 
-	/*
+    /*
      *  Dustin's interpretation of the above:
      *  We want to solve:
      * 
@@ -195,27 +195,27 @@ int fit_sip_wcs(const double* starxyz,
      *           [ 1  u_1   v_1  u_1^2  u_1 v_1  v_1^2  ... ]
      *    mA  =  [ 1  u_2   v_2  u_2^2  u_2 v_2  v_2^2  ... ]
      *           [           ......                         ]
-	 *
-	 * Where (u_i, v_i) are *undistorted* pixel positions minus CRPIX.
-	 *
+     *
+     * Where (u_i, v_i) are *undistorted* pixel positions minus CRPIX.
+     *
      *  The answers we want are:
      *
      *         [ sx                  ]
      *    x1 = [ cd11                ]
      *         [ cd12                ]
-	 *         [      (A)        (B) ]
+     *         [      (A)        (B) ]
      *         [ cd11*(A) + cd12*(B) ]
-	 *         [      (A)        (B) ]
+     *         [      (A)        (B) ]
      *
      *         [ sy                  ]
      *    x2 = [ cd21                ]
      *         [ cd22                ]
-	 *         [      (A)        (B) ]
+     *         [      (A)        (B) ]
      *         [ cd21*(A) + cd22*(B) ]
-	 *         [      (A)        (B) ]
-	 *
-	 * And the target vectors are the intermediate world coords of the
-	 * reference stars, in degrees.
+     *         [      (A)        (B) ]
+     *
+     * And the target vectors are the intermediate world coords of the
+     * reference stars, in degrees.
      *
      *         [ ix_1 ]
      *    b1 = [ ix_2 ]
@@ -231,11 +231,11 @@ int fit_sip_wcs(const double* starxyz,
      *
      */
 
-	// Fill in matrix mA:
-	radecdeg2xyzarr(tanin->crval[0], tanin->crval[1], xyzcrval);
-	totalweight = 0.0;
+    // Fill in matrix mA:
+    radecdeg2xyzarr(tanin->crval[0], tanin->crval[1], xyzcrval);
+    totalweight = 0.0;
     ngood = 0;
-	for (i=0; i<M; i++) {
+    for (i=0; i<M; i++) {
         double x=0, y=0;
         double weight = 1.0;
         double u;
@@ -246,7 +246,7 @@ int fit_sip_wcs(const double* starxyz,
         v = fieldxy[2*i + 1] - tanin->crpix[1];
 
         // B contains Intermediate World Coordinates (in degrees)
-		// tangent-plane projection
+        // tangent-plane projection
         ok = star_coords(starxyz + 3*i, xyzcrval, TRUE, &x, &y);
         if (!ok) {
             logverb("Skipping star that cannot be projected to tangent plane\n");
@@ -305,8 +305,8 @@ int fit_sip_wcs(const double* starxyz,
         return -1;
     }
 
-	if (weights)
-		logverb("Total weight: %g\n", totalweight);
+    if (weights)
+        logverb("Total weight: %g\n", totalweight);
 
     if (ngood < M) {
         _gsl_vector_view sub_b1 = gsl_vector_subvector(b1, 0, ngood);
@@ -321,14 +321,14 @@ int fit_sip_wcs(const double* starxyz,
         // Solve the equation.
         rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
     }
-	if (rtn) {
+    if (rtn) {
         ERROR("Failed to solve SIP matrix equation!");
         return -1;
     }
 
-	// Row 0 of X are the shift (p=0, q=0) terms.
-	// Row 1 of X are the terms that multiply "u".
-	// Row 2 of X are the terms that multiply "v".
+    // Row 0 of X are the shift (p=0, q=0) terms.
+    // Row 1 of X are the terms that multiply "u".
+    // Row 2 of X are the terms that multiply "v".
 
     if (doshift) {
         // Grab CD.
@@ -358,29 +358,29 @@ int fit_sip_wcs(const double* starxyz,
         assert(i == 0);
     }
 
-	// Extract the SIP coefficients.
-	//  (this includes the 0 and 1 order terms, which we later overwrite)
-	j = 0;
-	for (order=0; order<=sip_order; order++) {
-		for (q=0; q<=order; q++) {
-			p = order - q;
-			assert(j >= 0);
-			assert(j < N);
-			assert(p >= 0);
-			assert(q >= 0);
-			assert(p + q <= sip_order);
+    // Extract the SIP coefficients.
+    //  (this includes the 0 and 1 order terms, which we later overwrite)
+    j = 0;
+    for (order=0; order<=sip_order; order++) {
+        for (q=0; q<=order; q++) {
+            p = order - q;
+            assert(j >= 0);
+            assert(j < N);
+            assert(p >= 0);
+            assert(q >= 0);
+            assert(p + q <= sip_order);
 
-			sipout->a[p][q] =
-				cdinv[0][0] * gsl_vector_get(x1, j) +
-				cdinv[0][1] * gsl_vector_get(x2, j);
+            sipout->a[p][q] =
+                cdinv[0][0] * gsl_vector_get(x1, j) +
+                cdinv[0][1] * gsl_vector_get(x2, j);
 
-			sipout->b[p][q] =
-				cdinv[1][0] * gsl_vector_get(x1, j) +
-				cdinv[1][1] * gsl_vector_get(x2, j);
-			j++;
-		}
-	}
-	assert(j == N);
+            sipout->b[p][q] =
+                cdinv[1][0] * gsl_vector_get(x1, j) +
+                cdinv[1][1] * gsl_vector_get(x2, j);
+            j++;
+        }
+    }
+    assert(j == N);
 
     if (doshift) {
         // We have already dealt with the shift and linear terms, so zero them out
@@ -393,7 +393,7 @@ int fit_sip_wcs(const double* starxyz,
         sipout->b[1][0] = 0.0;
     }
 
-	sip_compute_inverse_polynomials(sipout, 0, 0, 0, 0, 0, 0);
+    sip_compute_inverse_polynomials(sipout, 0, 0, 0, 0, 0, 0);
 
     if (doshift) {
         sU =
@@ -414,16 +414,16 @@ int fit_sip_wcs(const double* starxyz,
         wcs_shift(&(sipout->wcstan), -su, -sv);
     }
 
-	if (r1)
-		gsl_vector_free(r1);
-	if (r2)
-		gsl_vector_free(r2);
+    if (r1)
+        gsl_vector_free(r1);
+    if (r2)
+        gsl_vector_free(r2);
 
-	gsl_matrix_free(mA);
-	gsl_vector_free(b1);
-	gsl_vector_free(b2);
-	gsl_vector_free(x1);
-	gsl_vector_free(x2);
+    gsl_matrix_free(mA);
+    gsl_vector_free(b1);
+    gsl_vector_free(b2);
+    gsl_vector_free(x1);
+    gsl_vector_free(x2);
 
     return 0;
 }
@@ -440,20 +440,20 @@ int fit_sip_coefficients(const double* starxyz,
                          int sip_order,
                          int inv_order,
                          sip_t* sipout) {
-	int sip_coeffs;
-	int N;
-	int i, j, p, q, order;
-	double totalweight;
-	int rtn;
-	gsl_matrix *mA;
-	gsl_vector *b1, *b2, *x1, *x2;
-	gsl_vector *r1=NULL, *r2=NULL;
+    int sip_coeffs;
+    int N;
+    int i, j, p, q, order;
+    double totalweight;
+    int rtn;
+    gsl_matrix *mA;
+    gsl_vector *b1, *b2, *x1, *x2;
+    gsl_vector *r1=NULL, *r2=NULL;
     tan_t tanin2;
     int ngood;
     const tan_t* tanin = &tanin2;
-	// We need at least the linear terms to compute CD.
-	if (sip_order < 1)
-		sip_order = 1;
+    // We need at least the linear terms to compute CD.
+    if (sip_order < 1)
+        sip_order = 1;
 
     // convenience: allow the user to call like:
     //    fit_sip_wcs(... &(sipout.wcstan), ..., sipout);
@@ -464,22 +464,22 @@ int fit_sip_coefficients(const double* starxyz,
     sipout->a_order  = sipout->b_order  = sip_order;
     sipout->ap_order = sipout->bp_order = inv_order;
 
-	// The SIP coefficients form an (order x order) upper triangular
-	// matrix
-	sip_coeffs = (sip_order + 1) * (sip_order + 2) / 2;
-	N = sip_coeffs;
+    // The SIP coefficients form an (order x order) upper triangular
+    // matrix
+    sip_coeffs = (sip_order + 1) * (sip_order + 2) / 2;
+    N = sip_coeffs;
 
     if (M < N) {
         ERROR("Too few correspondences for the SIP order specified (%i < %i)\n", M, N);
         return -1;
     }
 
-	mA = gsl_matrix_alloc(M, N);
-	b1 = gsl_vector_alloc(M);
-	b2 = gsl_vector_alloc(M);
-	assert(mA);
-	assert(b1);
-	assert(b2);
+    mA = gsl_matrix_alloc(M, N);
+    b1 = gsl_vector_alloc(M);
+    b2 = gsl_vector_alloc(M);
+    assert(mA);
+    assert(b1);
+    assert(b2);
 
     /**
      * We're going to fit for the "forward" SIP coefficients
@@ -499,8 +499,8 @@ int fit_sip_coefficients(const double* starxyz,
      * since that's what SIP does.
      */
 
-	// Fill in matrix mA:
-	totalweight = 0.0;
+    // Fill in matrix mA:
+    totalweight = 0.0;
     ngood = 0;
     for (i=0; i<M; i++) {
         double xprime, yprime;
@@ -566,8 +566,8 @@ int fit_sip_coefficients(const double* starxyz,
         ERROR("No stars projected within the image\n");
         return -1;
     }
-	if (weights)
-		logverb("Total weight: %g\n", totalweight);
+    if (weights)
+        logverb("Total weight: %g\n", totalweight);
 
     if (ngood < M) {
         _gsl_vector_view sub_b1 = gsl_vector_subvector(b1, 0, ngood);
@@ -582,38 +582,38 @@ int fit_sip_coefficients(const double* starxyz,
         // Solve the equation.
         rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
     }
-	if (rtn) {
+    if (rtn) {
         ERROR("Failed to solve SIP matrix equation!");
         return -1;
     }
 
-	// Extract the SIP coefficients.
-	j = 0;
-	for (order=0; order<=sip_order; order++) {
-		for (q=0; q<=order; q++) {
-			p = order - q;
-			assert(j >= 0);
-			assert(j < N);
-			assert(p >= 0);
-			assert(q >= 0);
-			assert(p + q <= sip_order);
-			sipout->a[p][q] = gsl_vector_get(x1, j);
-			sipout->b[p][q] = gsl_vector_get(x2, j);
-			j++;
-		}
-	}
-	assert(j == N);
+    // Extract the SIP coefficients.
+    j = 0;
+    for (order=0; order<=sip_order; order++) {
+        for (q=0; q<=order; q++) {
+            p = order - q;
+            assert(j >= 0);
+            assert(j < N);
+            assert(p >= 0);
+            assert(q >= 0);
+            assert(p + q <= sip_order);
+            sipout->a[p][q] = gsl_vector_get(x1, j);
+            sipout->b[p][q] = gsl_vector_get(x2, j);
+            j++;
+        }
+    }
+    assert(j == N);
 
-	if (r1)
-		gsl_vector_free(r1);
-	if (r2)
-		gsl_vector_free(r2);
+    if (r1)
+        gsl_vector_free(r1);
+    if (r2)
+        gsl_vector_free(r2);
 
-	gsl_matrix_free(mA);
-	gsl_vector_free(b1);
-	gsl_vector_free(b2);
-	gsl_vector_free(x1);
-	gsl_vector_free(x2);
+    gsl_matrix_free(mA);
+    gsl_vector_free(b1);
+    gsl_vector_free(b2);
+    gsl_vector_free(x1);
+    gsl_vector_free(x2);
 
     return 0;
 }
@@ -626,74 +626,74 @@ int fit_sip_coefficients(const double* starxyz,
 //                   wcs->wcstan.crval+0, wcs->wcstan.crval+1);
 // The answer is that "North" changes when you move the reference point.
 void wcs_shift(tan_t* wcs, double xs, double ys) {
-	// UNITS: xs/ys in pixels
+    // UNITS: xs/ys in pixels
     // crvals in degrees, nx/nyref and theta in degrees
-	double crpix0, crpix1, crval0;
-	double theta, sintheta, costheta;
+    double crpix0, crpix1, crval0;
+    double theta, sintheta, costheta;
     double newcrval0, newcrval1;
     double newcd00,newcd01,newcd10,newcd11;
-	// Save old vals
-	crpix0 = wcs->crpix[0];
-	crpix1 = wcs->crpix[1];
-	crval0 = wcs->crval[0];
+    // Save old vals
+    crpix0 = wcs->crpix[0];
+    crpix1 = wcs->crpix[1];
+    crval0 = wcs->crval[0];
 
     // compute the desired projection of the new tangent point by
     // shifting the projection of the current tangent point
-	wcs->crpix[0] += xs;
-	wcs->crpix[1] += ys;
+    wcs->crpix[0] += xs;
+    wcs->crpix[1] += ys;
 
-	// now reproject the old crpix[xy] into shifted wcs
-	tan_pixelxy2radec(wcs, crpix0, crpix1, &newcrval0, &newcrval1);
+    // now reproject the old crpix[xy] into shifted wcs
+    tan_pixelxy2radec(wcs, crpix0, crpix1, &newcrval0, &newcrval1);
 
-	// Restore crpix
-	wcs->crpix[0] = crpix0;
-	wcs->crpix[1] = crpix1;
+    // Restore crpix
+    wcs->crpix[0] = crpix0;
+    wcs->crpix[1] = crpix1;
 
     // RA,DEC coords of new tangent point
-	wcs->crval[0] = newcrval0;
-	wcs->crval[1] = newcrval1;
-	theta = -deg2rad(newcrval0 - crval0);
+    wcs->crval[0] = newcrval0;
+    wcs->crval[1] = newcrval1;
+    theta = -deg2rad(newcrval0 - crval0);
     // deltaRA = new minus old RA;
-	theta *= sin(deg2rad(newcrval1));
+    theta *= sin(deg2rad(newcrval1));
     // multiply by the sin of the NEW Dec; at equator this correctly
     // evals to zero
-	sintheta = sin(theta);
-	costheta = cos(theta);
+    sintheta = sin(theta);
+    costheta = cos(theta);
 
-	// Fix the CD matrix since "northwards" has changed due to moving RA
+    // Fix the CD matrix since "northwards" has changed due to moving RA
     newcd00 = costheta * wcs->cd[0][0] - sintheta * wcs->cd[0][1];
     newcd01 = sintheta * wcs->cd[0][0] + costheta * wcs->cd[0][1];
     newcd10 = costheta * wcs->cd[1][0] - sintheta * wcs->cd[1][1];
     newcd11 = sintheta * wcs->cd[1][0] + costheta * wcs->cd[1][1];
-	wcs->cd[0][0] = newcd00;
-	wcs->cd[0][1] = newcd01;
-	wcs->cd[1][0] = newcd10;
-	wcs->cd[1][1] = newcd11;
+    wcs->cd[0][0] = newcd00;
+    wcs->cd[0][1] = newcd01;
+    wcs->cd[1][0] = newcd10;
+    wcs->cd[1][1] = newcd11;
 }
 
 
 
 static
 int fit_tan_wcs_solve(const double* starxyz,
-					const double* fieldxy,
-					const double* weights,
-					int N,
-					const double* crpix,
-					const tan_t* tanin,
-					tan_t* tanout,
-					double* p_scale) {
-	int i, j, k;
-	double field_cm[2] = {0, 0};
-	double cov[4] = {0, 0, 0, 0};
-	double R[4] = {0, 0, 0, 0};
-	double scale;
-	// projected star coordinates
-	double* p;
-	// relative field coordinates
-	double* f;
-	double pcm[2] = {0, 0};
-	double w = 0;
-	double totalw;
+                      const double* fieldxy,
+                      const double* weights,
+                      int N,
+                      const double* crpix,
+                      const tan_t* tanin,
+                      tan_t* tanout,
+                      double* p_scale) {
+    int i, j, k;
+    double field_cm[2] = {0, 0};
+    double cov[4] = {0, 0, 0, 0};
+    double R[4] = {0, 0, 0, 0};
+    double scale;
+    // projected star coordinates
+    double* p;
+    // relative field coordinates
+    double* f;
+    double pcm[2] = {0, 0};
+    double w = 0;
+    double totalw;
 
     gsl_matrix* A;
     gsl_matrix* U;
@@ -703,89 +703,89 @@ int fit_tan_wcs_solve(const double* starxyz,
     gsl_matrix_view vcov;
     gsl_matrix_view vR;
 
-	double crxyz[3];
+    double crxyz[3];
 
-	double star_cm[3] = {0, 0, 0};
+    double star_cm[3] = {0, 0, 0};
 
-	assert(((tanin != NULL) && (crpix != NULL)) || ((tanin == NULL) && (crpix == NULL)));
+    assert(((tanin != NULL) && (crpix != NULL)) || ((tanin == NULL) && (crpix == NULL)));
 
-	if (tanin) {
-		// default vals...
-		memcpy(tanout, tanin, sizeof(tan_t));
-	} else {
-		memset(tanout, 0, sizeof(tan_t));
-	}
+    if (tanin) {
+        // default vals...
+        memcpy(tanout, tanin, sizeof(tan_t));
+    } else {
+        memset(tanout, 0, sizeof(tan_t));
+    }
 
-	// -allocate and fill "p" and "f" arrays. ("projected" and "field")
-	p = malloc(N * 2 * sizeof(double));
-	f = malloc(N * 2 * sizeof(double));
+    // -allocate and fill "p" and "f" arrays. ("projected" and "field")
+    p = malloc(N * 2 * sizeof(double));
+    f = malloc(N * 2 * sizeof(double));
 
-	// -get field center-of-mass
-	totalw = 0.0;
-	for (i=0; i<N; i++) {
-		w = (weights ? weights[i] : 1.0);
-		field_cm[0] += w * fieldxy[i*2 + 0];
-		field_cm[1] += w * fieldxy[i*2 + 1];
-		totalw += w;
-	}
-	field_cm[0] /= totalw;
-	field_cm[1] /= totalw;
-	// Subtract it out.
-	for (i=0; i<N; i++) {
-		f[2*i+0] = fieldxy[2*i+0] - field_cm[0];
-		f[2*i+1] = fieldxy[2*i+1] - field_cm[1];
-	}
+    // -get field center-of-mass
+    totalw = 0.0;
+    for (i=0; i<N; i++) {
+        w = (weights ? weights[i] : 1.0);
+        field_cm[0] += w * fieldxy[i*2 + 0];
+        field_cm[1] += w * fieldxy[i*2 + 1];
+        totalw += w;
+    }
+    field_cm[0] /= totalw;
+    field_cm[1] /= totalw;
+    // Subtract it out.
+    for (i=0; i<N; i++) {
+        f[2*i+0] = fieldxy[2*i+0] - field_cm[0];
+        f[2*i+1] = fieldxy[2*i+1] - field_cm[1];
+    }
 
-	if (tanin) {
-		// Use original WCS to set the center of projection to the new crpix.
-		tan_pixelxy2xyzarr(tanin, crpix[0], crpix[1], crxyz);
-		for (i=0; i<N; i++) {
-			Unused anbool ok;
-			// -project the stars around crval
-			ok = star_coords(starxyz + i*3, crxyz, TRUE, p + 2*i, p + 2*i + 1);
-			assert(ok);
-		}
-	} else {
-		// -get the star center-of-mass (this will become the tangent point CRVAL)
-		for (i=0; i<N; i++) {
-			w = (weights ? weights[i] : 1.0);
-			star_cm[0] += w * starxyz[i*3 + 0];
-			star_cm[1] += w * starxyz[i*3 + 1];
-			star_cm[2] += w * starxyz[i*3 + 2];
-		}
-		normalize_3(star_cm);
-		// -project the stars around their center of mass
-		for (i=0; i<N; i++) {
-			Unused anbool ok;
-			ok = star_coords(starxyz + i*3, star_cm, TRUE, p + 2*i, p + 2*i + 1);
-			assert(ok);
-		}
-	}
+    if (tanin) {
+        // Use original WCS to set the center of projection to the new crpix.
+        tan_pixelxy2xyzarr(tanin, crpix[0], crpix[1], crxyz);
+        for (i=0; i<N; i++) {
+            Unused anbool ok;
+            // -project the stars around crval
+            ok = star_coords(starxyz + i*3, crxyz, TRUE, p + 2*i, p + 2*i + 1);
+            assert(ok);
+        }
+    } else {
+        // -get the star center-of-mass (this will become the tangent point CRVAL)
+        for (i=0; i<N; i++) {
+            w = (weights ? weights[i] : 1.0);
+            star_cm[0] += w * starxyz[i*3 + 0];
+            star_cm[1] += w * starxyz[i*3 + 1];
+            star_cm[2] += w * starxyz[i*3 + 2];
+        }
+        normalize_3(star_cm);
+        // -project the stars around their center of mass
+        for (i=0; i<N; i++) {
+            Unused anbool ok;
+            ok = star_coords(starxyz + i*3, star_cm, TRUE, p + 2*i, p + 2*i + 1);
+            assert(ok);
+        }
+    }
 
-	// -compute the center of mass of the projected stars and subtract it out.
-	for (i=0; i<N; i++) {
-		w = (weights ? weights[i] : 1.0);
-		pcm[0] += w * p[2*i + 0];
-		pcm[1] += w * p[2*i + 1];
-	}
-	pcm[0] /= totalw;
-	pcm[1] /= totalw;
-	for (i=0; i<N; i++) {
-		p[2*i + 0] -= pcm[0];
-		p[2*i + 1] -= pcm[1];
-	}
+    // -compute the center of mass of the projected stars and subtract it out.
+    for (i=0; i<N; i++) {
+        w = (weights ? weights[i] : 1.0);
+        pcm[0] += w * p[2*i + 0];
+        pcm[1] += w * p[2*i + 1];
+    }
+    pcm[0] /= totalw;
+    pcm[1] /= totalw;
+    for (i=0; i<N; i++) {
+        p[2*i + 0] -= pcm[0];
+        p[2*i + 1] -= pcm[1];
+    }
 
-	// -compute the covariance between field positions and projected
-	//  positions of the corresponding stars.
-	for (i=0; i<N; i++)
-		for (j=0; j<2; j++)
-			for (k=0; k<2; k++)
-				cov[j*2 + k] += p[i*2 + k] * f[i*2 + j];
+    // -compute the covariance between field positions and projected
+    //  positions of the corresponding stars.
+    for (i=0; i<N; i++)
+        for (j=0; j<2; j++)
+            for (k=0; k<2; k++)
+                cov[j*2 + k] += p[i*2 + k] * f[i*2 + j];
 
-	for (i=0; i<4; i++)
+    for (i=0; i<4; i++)
         assert(isfinite(cov[i]));
 
-	// -run SVD
+    // -run SVD
     V = gsl_matrix_alloc(2, 2);
     S = gsl_vector_alloc(2);
     work = gsl_vector_alloc(2);
@@ -803,69 +803,69 @@ int fit_tan_wcs_solve(const double* starxyz,
     gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, V, U, 0.0, &(vR.matrix));
     gsl_matrix_free(V);
 
-	for (i=0; i<4; i++)
+    for (i=0; i<4; i++)
         assert(isfinite(R[i]));
 
-	// -compute scale: make the variances equal.
-	{
-		double pvar, fvar;
-		pvar = fvar = 0.0;
-		for (i=0; i<N; i++) {
-			w = (weights ? weights[i] : 1.0);
-			for (j=0; j<2; j++) {
-				pvar += w * square(p[i*2 + j]);
-				fvar += w * square(f[i*2 + j]);
-			}
-		}
-		scale = sqrt(pvar / fvar);
-	}
+    // -compute scale: make the variances equal.
+    {
+        double pvar, fvar;
+        pvar = fvar = 0.0;
+        for (i=0; i<N; i++) {
+            w = (weights ? weights[i] : 1.0);
+            for (j=0; j<2; j++) {
+                pvar += w * square(p[i*2 + j]);
+                fvar += w * square(f[i*2 + j]);
+            }
+        }
+        scale = sqrt(pvar / fvar);
+    }
 
-	// -compute WCS parameters.
-	scale = rad2deg(scale);
+    // -compute WCS parameters.
+    scale = rad2deg(scale);
 
-	tanout->cd[0][0] = R[0] * scale; // CD1_1
-	tanout->cd[0][1] = R[1] * scale; // CD1_2
-	tanout->cd[1][0] = R[2] * scale; // CD2_1
-	tanout->cd[1][1] = R[3] * scale; // CD2_2
+    tanout->cd[0][0] = R[0] * scale; // CD1_1
+    tanout->cd[0][1] = R[1] * scale; // CD1_2
+    tanout->cd[1][0] = R[2] * scale; // CD2_1
+    tanout->cd[1][1] = R[3] * scale; // CD2_2
 
     assert(isfinite(tanout->cd[0][0]));
     assert(isfinite(tanout->cd[0][1]));
     assert(isfinite(tanout->cd[1][0]));
     assert(isfinite(tanout->cd[1][1]));
 
-	if (tanin) {
-		// CRPIX is fixed.
-		tanout->crpix[0] = crpix[0];
-		tanout->crpix[1] = crpix[1];
-		// Set CRVAL temporarily...
-		tan_pixelxy2radec(tanin, crpix[0], crpix[1],
-						  tanout->crval+0, tanout->crval+1);
-		// Shift CRVAL so that the center of the quad is in the right place.
-		{
-			double ix,iy;
-			double dx,dy;
-			double dxyz[3];
-			tan_pixelxy2iwc(tanout, field_cm[0], field_cm[1], &ix, &iy);
-			dx = rad2deg(pcm[0]) - ix;
-			dy = rad2deg(pcm[1]) - iy;
-			tan_iwc2xyzarr(tanout, dx, dy, dxyz);
-			xyzarr2radecdeg(dxyz, tanout->crval + 0, tanout->crval + 1);
-		}
-	} else {
-		tanout->crpix[0] = field_cm[0];
-		tanout->crpix[1] = field_cm[1];
+    if (tanin) {
+        // CRPIX is fixed.
+        tanout->crpix[0] = crpix[0];
+        tanout->crpix[1] = crpix[1];
+        // Set CRVAL temporarily...
+        tan_pixelxy2radec(tanin, crpix[0], crpix[1],
+                          tanout->crval+0, tanout->crval+1);
+        // Shift CRVAL so that the center of the quad is in the right place.
+        {
+            double ix,iy;
+            double dx,dy;
+            double dxyz[3];
+            tan_pixelxy2iwc(tanout, field_cm[0], field_cm[1], &ix, &iy);
+            dx = rad2deg(pcm[0]) - ix;
+            dy = rad2deg(pcm[1]) - iy;
+            tan_iwc2xyzarr(tanout, dx, dy, dxyz);
+            xyzarr2radecdeg(dxyz, tanout->crval + 0, tanout->crval + 1);
+        }
+    } else {
+        tanout->crpix[0] = field_cm[0];
+        tanout->crpix[1] = field_cm[1];
 		
-		xyzarr2radecdegarr(star_cm, tanout->crval);
+        xyzarr2radecdegarr(star_cm, tanout->crval);
 
-		// FIXME -- we ignore pcm.  It should get added back in (after
-		// multiplication by CD in the appropriate units) to either crval or
-		// crpix.  It's a very small correction probably of the same size
-		// as the other approximations we're making.
-	}
+        // FIXME -- we ignore pcm.  It should get added back in (after
+        // multiplication by CD in the appropriate units) to either crval or
+        // crpix.  It's a very small correction probably of the same size
+        // as the other approximations we're making.
+    }
 
-	if (p_scale) *p_scale = scale;
-	free(p);
-	free(f);
+    if (p_scale) *p_scale = scale;
+    free(p);
+    free(f);
     return 0;
 }
 
@@ -873,44 +873,44 @@ int fit_tan_wcs_solve(const double* starxyz,
 
 
 int fit_tan_wcs_move_tangent_point_weighted(const double* starxyz,
-										  const double* fieldxy,
-										  const double* weights,
-										  int N,
-										  const double* crpix,
-										  const tan_t* tanin,
-										  tan_t* tanout) {
-	return fit_tan_wcs_solve(starxyz, fieldxy, weights, N, crpix, tanin, tanout,
-						   NULL);
+                                            const double* fieldxy,
+                                            const double* weights,
+                                            int N,
+                                            const double* crpix,
+                                            const tan_t* tanin,
+                                            tan_t* tanout) {
+    return fit_tan_wcs_solve(starxyz, fieldxy, weights, N, crpix, tanin, tanout,
+                             NULL);
 }
 
 int fit_tan_wcs_move_tangent_point(const double* starxyz,
-								 const double* fieldxy,
-								 int N,
-								 const double* crpix,
-								 const tan_t* tanin,
-								 tan_t* tanout) {
-	return fit_tan_wcs_move_tangent_point_weighted(starxyz, fieldxy, NULL,
-												 N, crpix, tanin, tanout);
+                                   const double* fieldxy,
+                                   int N,
+                                   const double* crpix,
+                                   const tan_t* tanin,
+                                   tan_t* tanout) {
+    return fit_tan_wcs_move_tangent_point_weighted(starxyz, fieldxy, NULL,
+                                                   N, crpix, tanin, tanout);
 }
 
 
 int fit_tan_wcs_weighted(const double* starxyz,
-					 const double* fieldxy,
-					 const double* weights,
-					 int N,
-					 // output:
-					 tan_t* tan,
-					 double* p_scale) {
-	return fit_tan_wcs_solve(starxyz, fieldxy, weights, N, NULL, NULL, tan, p_scale);
+                         const double* fieldxy,
+                         const double* weights,
+                         int N,
+                         // output:
+                         tan_t* tan,
+                         double* p_scale) {
+    return fit_tan_wcs_solve(starxyz, fieldxy, weights, N, NULL, NULL, tan, p_scale);
 }
 
 int fit_tan_wcs(const double* starxyz,
-			const double* fieldxy,
-			int N,
-			// output:
-			tan_t* tan,
-			double* p_scale) {
-	return fit_tan_wcs_weighted(starxyz, fieldxy, NULL, N,
-									tan, p_scale);
+                const double* fieldxy,
+                int N,
+                // output:
+                tan_t* tan,
+                double* p_scale) {
+    return fit_tan_wcs_weighted(starxyz, fieldxy, NULL, N,
+                                tan, p_scale);
 }
 

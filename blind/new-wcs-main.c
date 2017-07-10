@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -17,55 +17,55 @@
 static const char* OPTIONS = "hi:w:o:dv";
 
 static void printHelp(char* progname) {
-	printf("%s    -i <input-file>\n"
-		   "      -w <WCS-file>\n"
-		   "      -o <output-file>\n"
+    printf("%s    -i <input-file>\n"
+           "      -w <WCS-file>\n"
+           "      -o <output-file>\n"
            "      [-d]: also copy the data segment\n"
-		   "      [-v]: +verbose\n"
-		   "\n",
-		   progname);
+           "      [-v]: +verbose\n"
+           "\n",
+           progname);
 }
 
 
 int main(int argc, char *argv[]) {
     int argchar;
-	char* infn = NULL;
-	char* outfn = NULL;
-	char* wcsfn = NULL;
-	char* progname = argv[0];
+    char* infn = NULL;
+    char* outfn = NULL;
+    char* wcsfn = NULL;
+    char* progname = argv[0];
     anbool copydata = FALSE;
     int loglvl = LOG_MSG;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
-		case 'v':
-			loglvl++;
-			break;
+        case 'v':
+            loglvl++;
+            break;
         case 'i':
-			infn = optarg;
-			break;
+            infn = optarg;
+            break;
         case 'o':
-			outfn = optarg;
-			break;
+            outfn = optarg;
+            break;
         case 'w':
-			wcsfn = optarg;
-			break;
+            wcsfn = optarg;
+            break;
         case 'd':
             copydata = TRUE;
             break;
         case '?':
         case 'h':
-			printHelp(progname);
+            printHelp(progname);
             return 0;
         default:
             return -1;
         }
 
-	if (!infn || !outfn || !wcsfn) {
-		printHelp(progname);
-		exit(-1);
-	}
-	log_init(loglvl);
+    if (!infn || !outfn || !wcsfn) {
+        printHelp(progname);
+        exit(-1);
+    }
+    log_init(loglvl);
     fits_use_error_system();
 
     if (new_wcs(infn, wcsfn, outfn, copydata)) {

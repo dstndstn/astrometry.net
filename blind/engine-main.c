@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 /**
  * Accepts an augmented xylist that describes a field or set of fields to solve.
@@ -52,51 +52,51 @@
 #include "datalog.h"
 
 static an_option_t myopts[] = {
-	{'h', "help", no_argument, NULL, "print this help"},
-	{'v', "verbose", no_argument, NULL, "+verbose"},
-	{'c', "config",  required_argument, "file",
-	 "Use this config file (default: \"astrometry.cfg\" in the directory ../etc/ relative to the directory containing the \"astrometry-engine\" executable); 'none' for no config file"},
-	{'d', "base-dir",  required_argument, "dir", 
-	 "set base directory of all output filenames."},
-	{'C', "cancel",  required_argument, "file", 
-	 "quit solving if this file appears" },
-	{'s', "solved",  required_argument, "file",
-	 "write to this file when a field is solved"},
-	{'E', "to-stderr", no_argument, NULL,
-	 "send log message to stderr"},
-	{'f', "inputs-from", required_argument, "file",
-	 "read input filenames from the given file, \"-\" for stdin"},
-	{'i', "index", required_argument, "file(s)",
-	 "use the given index files (in addition to any specified in the config file); put in quotes to use wildcards, eg: \" -i 'index-*.fits' \""},
-	{'p', "in-parallel", no_argument, NULL,
-	 "run the index files in parallel"},
-	{'D', "data-log file", required_argument, "file",
-	 "log data to the given filename"},
+    {'h', "help", no_argument, NULL, "print this help"},
+    {'v', "verbose", no_argument, NULL, "+verbose"},
+    {'c', "config",  required_argument, "file",
+     "Use this config file (default: \"astrometry.cfg\" in the directory ../etc/ relative to the directory containing the \"astrometry-engine\" executable); 'none' for no config file"},
+    {'d', "base-dir",  required_argument, "dir", 
+     "set base directory of all output filenames."},
+    {'C', "cancel",  required_argument, "file", 
+     "quit solving if this file appears" },
+    {'s', "solved",  required_argument, "file",
+     "write to this file when a field is solved"},
+    {'E', "to-stderr", no_argument, NULL,
+     "send log message to stderr"},
+    {'f', "inputs-from", required_argument, "file",
+     "read input filenames from the given file, \"-\" for stdin"},
+    {'i', "index", required_argument, "file(s)",
+     "use the given index files (in addition to any specified in the config file); put in quotes to use wildcards, eg: \" -i 'index-*.fits' \""},
+    {'p', "in-parallel", no_argument, NULL,
+     "run the index files in parallel"},
+    {'D', "data-log file", required_argument, "file",
+     "log data to the given filename"},
 };
 
 static void print_help(const char* progname, bl* opts) {
-	printf("Usage:   %s [options] <augmented xylist (axy) file(s)>\n", progname);
-	opts_print_help(opts, stdout, NULL, NULL);
+    printf("Usage:   %s [options] <augmented xylist (axy) file(s)>\n", progname);
+    opts_print_help(opts, stdout, NULL, NULL);
 }
 
 FILE* datalogfid = NULL;
 static void close_datalogfid() {
-	if (datalogfid) {
-		data_log_end();
-		if (fclose(datalogfid)) {
-			SYSERROR("Failed to close data log file");
-		}
-	}
+    if (datalogfid) {
+        data_log_end();
+        if (fclose(datalogfid)) {
+            SYSERROR("Failed to close data log file");
+        }
+    }
 }
 
 int main(int argc, char** args) {
     char* default_configfn = "astrometry.cfg";
     char* default_config_path = "../etc";
 
-	int c;
-	char* configfn = NULL;
-	int i;
-	engine_t* engine;
+    int c;
+    char* configfn = NULL;
+    int i;
+    engine_t* engine;
     char* mydir = NULL;
     char* basedir = NULL;
     char* me;
@@ -110,30 +110,30 @@ int main(int argc, char** args) {
     FILE* fin = NULL;
     anbool fromstdin = FALSE;
 
-	bl* opts = opts_from_array(myopts, sizeof(myopts)/sizeof(an_option_t), NULL);
-	sl* inds = sl_new(4);
+    bl* opts = opts_from_array(myopts, sizeof(myopts)/sizeof(an_option_t), NULL);
+    sl* inds = sl_new(4);
 
-	char* datalog = NULL;
+    char* datalog = NULL;
 
-	engine = engine_new();
+    engine = engine_new();
 
-	while (1) {
-		c = opts_getopt(opts, argc, args);
-		if (c == -1)
-			break;
-		switch (c) {
-		case 'D':
-			datalog = optarg;
-			break;
-		case 'p':
-			engine->inparallel = TRUE;
-			break;
-		case 'i':
-			sl_append(inds, optarg);
-			break;
-		case 'd':
-		  basedir = optarg;
-		  break;
+    while (1) {
+        c = opts_getopt(opts, argc, args);
+        if (c == -1)
+            break;
+        switch (c) {
+        case 'D':
+            datalog = optarg;
+            break;
+        case 'p':
+            engine->inparallel = TRUE;
+            break;
+        case 'i':
+            sl_append(inds, optarg);
+            break;
+        case 'd':
+            basedir = optarg;
+            break;
         case 'f':
             infn = optarg;
             fromstdin = streq(infn, "-");
@@ -141,57 +141,57 @@ int main(int argc, char** args) {
         case 'E':
             tostderr = TRUE;
             break;
-		case 'h':
+        case 'h':
             help = TRUE;
-			break;
+            break;
         case 'v':
             loglvl++;
             break;
-		case 's':
-		  solvedfn = optarg;
+        case 's':
+            solvedfn = optarg;
         case 'C':
             cancelfn = optarg;
             break;
-		case 'c':
-			configfn = strdup(optarg);
-			break;
-		case '?':
-			break;
-		default:
+        case 'c':
+            configfn = strdup(optarg);
+            break;
+        case '?':
+            break;
+        default:
             printf("Unknown flag %c\n", c);
-			exit( -1);
-		}
-	}
+            exit( -1);
+        }
+    }
 
-	if (optind == argc && !infn) {
-		// Need extra args: filename
-		printf("You must specify at least one input file!\n\n");
-		help = TRUE;
-	}
-	if (help) {
-		print_help(args[0], opts);
-		exit(0);
-	}
-	bl_free(opts);
+    if (optind == argc && !infn) {
+        // Need extra args: filename
+        printf("You must specify at least one input file!\n\n");
+        help = TRUE;
+    }
+    if (help) {
+        print_help(args[0], opts);
+        exit(0);
+    }
+    bl_free(opts);
 
-	gslutils_use_error_system();
+    gslutils_use_error_system();
 
     log_init(loglvl);
     if (tostderr)
         log_to(stderr);
 
-	if (datalog) {
-		datalogfid = fopen(datalog, "wb");
-		if (!datalogfid) {
-			SYSERROR("Failed to open data log file \"%s\" for writing", datalog);
-			return -1;
-		}
-		atexit(close_datalogfid);
-		data_log_init(100);
-		data_log_enable_all();
-		data_log_to(datalogfid);
-		data_log_start();
-	}
+    if (datalog) {
+        datalogfid = fopen(datalog, "wb");
+        if (!datalogfid) {
+            SYSERROR("Failed to open data log file \"%s\" for writing", datalog);
+            return -1;
+        }
+        atexit(close_datalogfid);
+        data_log_init(100);
+        data_log_enable_all();
+        data_log_to(datalogfid);
+        data_log_start();
+    }
 
     if (infn) {
         logverb("Reading input filenames from %s\n", (fromstdin ? "stdin" : infn));
@@ -212,7 +212,7 @@ int main(int argc, char** args) {
     mydir = sl_append(strings, dirname(me));
     free(me);
 
-	// Read config file
+    // Read config file
     if (!configfn) {
         int i;
         sl* trycf = sl_new(4);
@@ -242,47 +242,47 @@ int main(int argc, char** args) {
         sl_free2(trycf);
     }
 
-	if (!streq(configfn, "none")) {
-		if (engine_parse_config_file(engine, configfn)) {
-			logerr("Failed to parse (or encountered an error while interpreting) config file \"%s\"\n", configfn);
-			exit( -1);
-		}
-	}
+    if (!streq(configfn, "none")) {
+        if (engine_parse_config_file(engine, configfn)) {
+            logerr("Failed to parse (or encountered an error while interpreting) config file \"%s\"\n", configfn);
+            exit( -1);
+        }
+    }
 
-	if (sl_size(inds)) {
-		// Expand globs.
-		for (i=0; i<sl_size(inds); i++) {
-			char* s = sl_get(inds, i);
-			glob_t myglob;
-			int flags = GLOB_TILDE | GLOB_BRACE;
-			if (glob(s, flags, NULL, &myglob)) {
-				SYSERROR("Failed to expand wildcards in index-file path \"%s\"", s);
-				exit(-1);
-			}
-			for (c=0; c<myglob.gl_pathc; c++) {
-				if (engine_add_index(engine, myglob.gl_pathv[c])) {
-					ERROR("Failed to add index \"%s\"", myglob.gl_pathv[c]);
-					exit(-1);
-				}
-			}
-			globfree(&myglob);
-		}
-	}
+    if (sl_size(inds)) {
+        // Expand globs.
+        for (i=0; i<sl_size(inds); i++) {
+            char* s = sl_get(inds, i);
+            glob_t myglob;
+            int flags = GLOB_TILDE | GLOB_BRACE;
+            if (glob(s, flags, NULL, &myglob)) {
+                SYSERROR("Failed to expand wildcards in index-file path \"%s\"", s);
+                exit(-1);
+            }
+            for (c=0; c<myglob.gl_pathc; c++) {
+                if (engine_add_index(engine, myglob.gl_pathv[c])) {
+                    ERROR("Failed to add index \"%s\"", myglob.gl_pathv[c]);
+                    exit(-1);
+                }
+            }
+            globfree(&myglob);
+        }
+    }
 
-	if (!pl_size(engine->indexes)) {
-		logerr("\n\n"
-			   "---------------------------------------------------------------------\n"
-			   "You must list at least one index in the config file (%s)\n\n"
-			   "See http://astrometry.net/use.html about how to get some index files.\n"
-			   "---------------------------------------------------------------------\n"
-			   "\n", configfn);
-		exit(-1);
-	}
+    if (!pl_size(engine->indexes)) {
+        logerr("\n\n"
+               "---------------------------------------------------------------------\n"
+               "You must list at least one index in the config file (%s)\n\n"
+               "See http://astrometry.net/use.html about how to get some index files.\n"
+               "---------------------------------------------------------------------\n"
+               "\n", configfn);
+        exit(-1);
+    }
 
-	if (engine->minwidth <= 0.0 || engine->maxwidth <= 0.0) {
-		logerr("\"minwidth\" and \"maxwidth\" in the config file %s must be positive!\n", configfn);
-		exit(-1);
-	}
+    if (engine->minwidth <= 0.0 || engine->maxwidth <= 0.0) {
+        logerr("\"minwidth\" and \"maxwidth\" in the config file %s must be positive!\n", configfn);
+        exit(-1);
+    }
 
     free(configfn);
 
@@ -297,9 +297,9 @@ int main(int argc, char** args) {
 
     i = optind;
     while (1) {
-		char* jobfn;
+        char* jobfn;
         job_t* job;
-		struct timeval tv1, tv2;
+        struct timeval tv1, tv2;
 
         if (infn) {
             // Read name of next input file to be read.
@@ -322,21 +322,21 @@ int main(int argc, char** args) {
         }
 
 	if (basedir) {
-	  logverb("Setting job's output base directory to %s\n", basedir);
-	  job_set_output_base_dir(job, basedir);
+            logverb("Setting job's output base directory to %s\n", basedir);
+            job_set_output_base_dir(job, basedir);
 	}
 
-		if (engine_run_job(engine, job))
-			logerr("Failed to run_job()\n");
+        if (engine_run_job(engine, job))
+            logerr("Failed to run_job()\n");
 
-		job_free(job);
+        job_free(job);
         gettimeofday(&tv2, NULL);
-		logverb("Spent %g seconds on this field.\n", millis_between(&tv1, &tv2)/1000.0);
-	}
+        logverb("Spent %g seconds on this field.\n", millis_between(&tv1, &tv2)/1000.0);
+    }
 
-	engine_free(engine);
+    engine_free(engine);
     sl_free2(strings);
-	sl_free2(inds);
+    sl_free2(inds);
 
     if (fin && !fromstdin)
         fclose(fin);
