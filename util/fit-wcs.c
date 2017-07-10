@@ -347,11 +347,6 @@ int fit_sip_wcs(const double* starxyz,
         sy = gsl_vector_get(x2, 0);
 
     } else {
-        double cd[2][2];
-        cd[0][0] = gsl_vector_get(x1, 1);
-        cd[0][1] = gsl_vector_get(x1, 2);
-        cd[1][0] = gsl_vector_get(x2, 1);
-        cd[1][1] = gsl_vector_get(x2, 2);
         // Compute inv(CD)
         i = invert_2by2_arr((const double*)(sipout->wcstan.cd),
                             (double*)cdinv);
