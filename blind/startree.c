@@ -3,7 +3,7 @@
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
 #include <assert.h>
-#include "startree2.h"
+#include "startree.h"
 #include "kdtree.h"
 #include "errors.h"
 #include "log.h"

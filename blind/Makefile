@@ -100,12 +100,11 @@ NOT_INSTALLED_PIPELINE := blind agreeable certifiable \
 	hpquads codetree unpermute-quads unpermute-stars \
 	solvedserver printsolved mergesolved subwcs \
 	augment-xylist merge-index index-to-table setsolved \
-	startree uniformize-catalog \
-	local-index index-info control-program
+	uniformize-catalog local-index index-info control-program
 
 PIPELINE := wcs-grab solve-field
 
-MAIN_PROGS := image2xy new-wcs fits-guess-scale
+MAIN_PROGS := image2xy new-wcs fits-guess-scale startree
 # hpquads
 
 SIMPLE_PROGS := wcs-grab get-wcs
@@ -130,7 +129,7 @@ ENGINE_OBJS := \
 ENGINE_OBJS += new-wcs.o fits-guess-scale.o cut-table.o \
 	resort-xylist.o
 
-BUILD_INDEX_OBJS := build-index.o uniformize-catalog.o startree2.o hpquads.o \
+BUILD_INDEX_OBJS := build-index.o uniformize-catalog.o startree.o hpquads.o \
 	quad-builder.o quad-utils.o codefile.o codetree.o unpermute-stars.o \
 	unpermute-quads.o merge-index.o 
 ENGINE_OBJS += $(BUILD_INDEX_OBJS)
@@ -357,10 +356,6 @@ ALL_OBJ += build-index-main.o
 allquads: allquads-main.o allquads.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
 ALL_OBJ += allquads-main.o allquads.o
-
-startree: startree2-main.o $(SLIB)
-	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
-ALL_OBJ += startree2-main.o
 
 unpermute-stars: unpermute-stars-main.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)

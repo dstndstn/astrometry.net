@@ -28,7 +28,7 @@
 #include "quad-builder.h"
 #include "allquads.h"
 #include "starkd.h"
-#include "startree2.h"
+#include "startree.h"
 #include "kdtree.h"
 #include "codekd.h"
 #include "codetree.h"

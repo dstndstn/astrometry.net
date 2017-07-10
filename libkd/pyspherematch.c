@@ -853,7 +853,7 @@ PyInit_spherematch_c(void) {
     if (m == NULL)
         return NULL;
 
-    Py_INCREF(&KdType);
+    Py_INCREF((PyObject*)&KdType);
     PyModule_AddObject(m, "KdTree", (PyObject*)&KdType);
 
     return m;

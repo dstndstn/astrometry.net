@@ -21,7 +21,7 @@
 #include "log.h"
 #include "quad-utils.h"
 #include "uniformize-catalog.h"
-#include "startree2.h"
+#include "startree.h"
 #include "codetree.h"
 #include "unpermute-quads.h"
 #include "unpermute-stars.h"

@@ -9,7 +9,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "startree2.h"
+#include "startree.h"
 #include "fitstable.h"
 #include "boilerplate.h"
 #include "errors.h"

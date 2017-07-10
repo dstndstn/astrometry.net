@@ -9,7 +9,7 @@
 #include "os-features-config.h" // for HAVE_NETPBM.
 
 #if HAVE_NETPBM
-#include "pam.h"
+#include <pam.h>
 #else
 #include <arpa/inet.h>
 #endif
