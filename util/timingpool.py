@@ -13,17 +13,20 @@ import threading
 import time
 import os
 
-try:
-    # py2
-    import cPickle as pickle
-    import Queue as queue
-    Connection = _multiprocessing.Connection
-except:
+import sys
+py3 = (sys.version_info[0] >= 3)
+
+if py3:
     # py3 loads cPickle if available
     import pickle
     # py3 renames Queue to queue
     import queue
     Connection = multiprocessing.connection.Connection
+else:
+    # py2
+    import cPickle as pickle
+    import Queue as queue
+    Connection = _multiprocessing.Connection
 
 from astrometry.util.ttime import CpuMeas
 
@@ -122,16 +125,18 @@ class TimingConnection():
     def poll(self):
         return self.real.poll()
 
+    # called by py2 (multiprocessing.queues.Queue.get())
     def recv(self):
-        bytes = self.real.recv_bytes()
+        bb = self.real.recv_bytes()
         t0 = time.time()
-        obj = pickle.loads(bytes)
+        obj = pickle.loads(bb)
         dt = time.time() - t0
-        self.upbytes += len(bytes)
+        self.upbytes += len(bb)
         self.uptime += dt
         self.upobjs += 1
         return obj
 
+    # called by py2
     def send(self, obj):
         t0 = time.time()
         s = pickle.dumps(obj, -1)
@@ -141,6 +146,21 @@ class TimingConnection():
         self.pobjs += 1
         return self.real.send_bytes(s)
 
+    # called by py3 (multiprocessing.queues.Queue.get())
+    def recv_bytes(self):
+        bb = self.real.recv_bytes()
+        self.upbytes += len(bb)
+        #self.uptime += ... unpickled by the Queue
+        self.upobjs += 1
+        return bb
+    
+    # called by py3
+    def send_bytes(self, bb):
+        self.pbytes += len(bb)
+        #self.ptime += 
+        self.pobjs += 1
+        return self.real.send_bytes(bb)
+    
     def close(self):
         return self.real.close()
 
@@ -544,7 +564,8 @@ class TimingPool(multiprocessing.pool.Pool):
                 #print('map: timeout waiting for async result.')
                 continue
 
-    def map_async(self, func, iterable, chunksize=None, callback=None):
+    def map_async(self, func, iterable, chunksize=None, callback=None,
+                  error_callback=None):
         '''
         Asynchronous equivalent of `map()` builtin
         '''
@@ -559,7 +580,10 @@ class TimingPool(multiprocessing.pool.Pool):
         if len(iterable) == 0:
             chunksize = 0
 
-        result = multiprocessing.pool.MapResult(self._cache, chunksize, len(iterable), callback)
+        args = [self._cache, chunksize, len(iterable), callback]
+        if py3:
+            args.append(error_callback)
+        result = multiprocessing.pool.MapResult(*args)
         mapstar = multiprocessing.pool.mapstar
         #print 'chunksize', chunksize
         #print 'Submitting job:', result._job
@@ -599,7 +623,8 @@ class TimingPool(multiprocessing.pool.Pool):
             # py3
             import multiprocessing.pool
             if 'get_context' in dir(multiprocessing.pool):
-                self._ctx = multiprocessing.pool.get_context()
+                context = multiprocessing.pool.get_context()
+        self._ctx = context
 
         self._beancounter = BeanCounter()
         self._setup_queues()
@@ -717,7 +742,7 @@ if __name__ == '__main__':
             return next(self.y)
         def __len__(self):
             return self.n
-
+        __next__ = next
     def yielder(n):
         for i in range(n):
             print('Yielding', i)
