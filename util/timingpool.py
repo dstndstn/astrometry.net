@@ -41,7 +41,6 @@ TimingPoolMeas, that records & reports the pool's worker CPU time.
     dpool = TimingPool(4, taskqueuesize=4)
     dmup = multiproc.multiproc(pool=dpool)
     Time.add_measurement(TimingPoolMeas(dpool))
-
 '''
 
 #
@@ -387,7 +386,7 @@ def timing_handle_tasks(taskqueue, put, outqueue, progressqueue, pool,
                         (job,i,pid) = progressqueue.get()
                         # print 'Job', job, 'element', i, 'pid', pid, 'started'
                         nqueued -= 1
-                    except IOError:
+                    except (IOError, EOFError):
                         break
 
         else:
@@ -421,7 +420,7 @@ def timing_handle_tasks(taskqueue, put, outqueue, progressqueue, pool,
             (job,i,pid) = progressqueue.get()
             # print 'Job', job, 'element', i, 'pid', pid, 'started'
             nqueued -= 1
-        except IOError:
+        except (IOError,EOFError):
             pass
     # print 'Task thread done.'
     
@@ -548,60 +547,6 @@ class TimingPool(multiprocessing.pool.Pool):
             w.start()
             debug('added worker')
 
-    def map(self, func, iterable, chunksize=None):
-        '''
-        Equivalent of `map()` builtin
-        '''
-        assert(self._state == multiprocessing.pool.RUN)
-        async = self.map_async(func, iterable, chunksize)
-        while True:
-            try:
-                #print('map: waiting for map_async result...')
-                res = async.get(1)
-                #print('map: got async result')
-                return res
-            except multiprocessing.TimeoutError:
-                #print('map: timeout waiting for async result.')
-                continue
-
-    def map_async(self, func, iterable, chunksize=None, callback=None,
-                  error_callback=None):
-        '''
-        Asynchronous equivalent of `map()` builtin
-        '''
-        assert(self._state == multiprocessing.pool.RUN)
-        if not hasattr(iterable, '__len__'):
-            iterable = list(iterable)
-
-        if chunksize is None:
-            chunksize, extra = divmod(len(iterable), len(self._pool) * 4)
-            if extra:
-                chunksize += 1
-        if len(iterable) == 0:
-            chunksize = 0
-
-        args = [self._cache, chunksize, len(iterable), callback]
-        if py3:
-            args.append(error_callback)
-        result = multiprocessing.pool.MapResult(*args)
-        mapstar = multiprocessing.pool.mapstar
-        #print 'chunksize', chunksize
-        #print 'Submitting job:', result._job
-        #print 'Result:', result
-        
-        if chunksize == 1:
-            self._taskqueue.put((((result._job, i, map, (func,(x,)), {})
-                                  for i, x in enumerate(iterable)), None))
-
-        else:
-            task_batches = multiprocessing.pool.Pool._get_tasks(func, iterable, chunksize)
-            self._taskqueue.put((((result._job, i, mapstar, (x,), {})
-                                  for i, x in enumerate(task_batches)), None))
-        return result
-            
-            
-
-    
     # This is just copied from the superclass; we call our routines:
     #  -handle_results -> timing_handle_results
     # And add _beancounter.
@@ -697,21 +642,6 @@ class TimingPool(multiprocessing.pool.Pool):
             exitpriority=15
             )
 
-
-# class iterwrapper(object):
-#     def __init__(self, y, n):
-#         self.n = n
-#         self.y = y
-#     def __str__(self):
-#         return 'iterwrapper: n=%i; ' % self.n + self.y
-#     def __iter__(self):
-#         return self
-#     def next(self):
-#         return self.y.next()
-#     def __len__(self):
-#         return self.n
-    
-
 if __name__ == '__main__':
 
     import sys
@@ -730,6 +660,16 @@ if __name__ == '__main__':
         print('Done work', i)
         return i
         
+    def realwork(i):
+        print('Doing work', i)
+        import numpy as np
+        X = 0
+        for j in range(100 - 10*i):
+            #print('work', i, j)
+            X = X + np.random.normal(size=(1000,1000))
+        print('Done work', i)
+        return i
+    
     class ywrapper(object):
         def __init__(self, y, n):
             self.n = n
@@ -756,8 +696,29 @@ if __name__ == '__main__':
     dmup = multiproc.multiproc(pool=dpool)
     Time.add_measurement(TimingPoolMeas(dpool))
 
+    # t0 = Time()
+    # res = dmup.map(work, args)
+    # print(Time()-t0)
+    # print('Got result:', res)
+
+    N = 20
+    y = yielder(N)
+    args = ywrapper(y, N)
     t0 = Time()
-    res = dmup.map(work, args)
+    print('Doing real work...')
+    res = dmup.map(realwork, args)
     print(Time()-t0)
     print('Got result:', res)
     
+    # Test taskqueuesize=1
+    dpool = TimingPool(4, taskqueuesize=1)
+    dmup = multiproc.multiproc(pool=dpool)
+    Time.add_measurement(TimingPoolMeas(dpool))
+    N = 20
+    y = yielder(N)
+    args = ywrapper(y, N)
+    t0 = Time()
+    print('Doing real work...')
+    res = dmup.map(realwork, args)
+    print(Time()-t0)
+    print('Got result:', res)
