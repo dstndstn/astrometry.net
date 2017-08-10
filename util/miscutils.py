@@ -366,6 +366,9 @@ def line_segments_intersect(xy1, xy2, xy3, xy4):
     (x3,y3) = xy3
     (x4,y4) = xy4
     x,y = line_intersection((x1,y1),(x2,y2),(x3,y3),(x4,y4))
+    if x is None:
+        # Parallel lines
+        return False
     if x1 == x2:
         p1,p2 = y1,y2
         p = y
