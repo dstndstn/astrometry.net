@@ -94,9 +94,10 @@ int new_wcs(const char* infn, int extension,
         goto bailout;
     }
 
-    inhdr = anqfits_get_header2(infn, 0);
+    inhdr = anqfits_get_header2(infn, extension);
     if (!inhdr) {
-        ERROR("Failed to read FITS header from input file \"%s\"", infn);
+        ERROR("Failed to read FITS header from input file \"%s\" ext %i",
+              infn, extension);
         goto bailout;
     }
     wcshdr = anqfits_get_header2(wcsfn, 0);
@@ -137,6 +138,22 @@ int new_wcs(const char* infn, int extension,
 
     logverb("Reading input file FITS headers...\n");
 
+    if (extension) {
+        // Copy the primary header unchanged
+        qfits_header* phdr = anqfits_get_header2(infn, 0);
+        if (!phdr) {
+            ERROR("Failed to read primary FITS header from input file \"%s\n",
+                  infn);
+            goto bailout;
+        }
+        if (qfits_header_dump(phdr, outfid) ||
+            fits_pad_file(outfid)) {
+            SYSERROR("Failed to write primary header to file %s", outfn);
+            goto bailout;
+        }
+        qfits_header_destroy(phdr);
+    }
+    
     N = qfits_header_n(inhdr);
     for (i=0; i<N; i++) {
         anbool added_newkey = FALSE;
@@ -246,8 +263,8 @@ int new_wcs(const char* infn, int extension,
             ERROR("Failed to open file \"%s\"", infn);
             goto bailout;
         }
-        datstart = anqfits_data_start(anq, 0);
-        datsize  = anqfits_data_size (anq, 0);
+        datstart = anqfits_data_start(anq, extension);
+        datsize  = anqfits_data_size (anq, extension);
         infid = fopen(infn, "rb");
         if (!infid) {
             SYSERROR("Failed to open input file \"%s\"", infn);
