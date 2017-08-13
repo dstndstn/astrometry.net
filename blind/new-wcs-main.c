@@ -14,12 +14,13 @@
 #include "errors.h"
 #include "log.h"
 
-static const char* OPTIONS = "hi:w:o:dv";
+static const char* OPTIONS = "hi:w:o:de:v";
 
 static void printHelp(char* progname) {
     printf("%s    -i <input-file>\n"
            "      -w <WCS-file>\n"
            "      -o <output-file>\n"
+           "      [-e <extension>]: (default: copy data from primary HDU)\n"
            "      [-d]: also copy the data segment\n"
            "      [-v]: +verbose\n"
            "\n",
@@ -35,11 +36,15 @@ int main(int argc, char *argv[]) {
     char* progname = argv[0];
     anbool copydata = FALSE;
     int loglvl = LOG_MSG;
+    int extension = 0;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
         case 'v':
             loglvl++;
+            break;
+        case 'e':
+            extension = atoi(optarg);
             break;
         case 'i':
             infn = optarg;
@@ -68,7 +73,7 @@ int main(int argc, char *argv[]) {
     log_init(loglvl);
     fits_use_error_system();
 
-    if (new_wcs(infn, wcsfn, outfn, copydata)) {
+    if (new_wcs(infn, extension, wcsfn, outfn, copydata)) {
         ERROR("new_wcs() failed");
         exit(-1);
     }

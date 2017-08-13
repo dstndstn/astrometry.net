@@ -7,7 +7,8 @@
 
 #include "astrometry/an-bool.h"
 
-int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
+int new_wcs(const char* infn, int extension,
+            const char* wcsfn, const char* outfn,
             anbool include_data);
 
 #endif

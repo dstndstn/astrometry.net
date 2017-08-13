@@ -70,7 +70,8 @@ static anbool key_matches(char* key, regex_t* res, char** re_strings, int NE, in
 	return FALSE;
 }
 
-int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
+int new_wcs(const char* infn, int extension,
+            const char* wcsfn, const char* outfn,
             anbool copydata) {
 	FILE* outfid = NULL;
 	int i, N;
