@@ -14,12 +14,14 @@ class Plotstuff(object):
                   
 
     def __init__(self, outformat=None, size=None, ra=None, dec=None, width=None,
-                 rdw=None, wcsfn=None, wcsext=0, alpha=1.):
+                 rdw=None, wcsfn=None, wcsext=0, alpha=1., outfn=None):
         p = plotstuff_new()
         self.pargs = p
         if outformat is not None:
             outformat = Plotstuff.format_map.get(outformat, outformat)
             self.outformat = outformat
+        if outfn is not None:
+            self.outfn = outfn
         if size is not None:
             self.size = size
             self.color = 'black'

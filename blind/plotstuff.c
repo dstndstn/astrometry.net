@@ -1172,17 +1172,27 @@ int plotstuff_read_and_run_command(plot_args_t* pargs, FILE* f) {
 int plotstuff_output(plot_args_t* pargs) {
 	switch (pargs->outformat) {
 	case PLOTSTUFF_FORMAT_PDF:
-		cairo_surface_flush(pargs->target);
-		cairo_surface_finish(pargs->target);
-		cairoutils_surface_status_errors(pargs->target);
-		cairoutils_cairo_status_errors(pargs->cairo);
-		if (pargs->outfn) {
-			if (fclose(pargs->fout)) {
-				SYSERROR("Failed to close output file \"%s\"", pargs->outfn);
-				return -1;
-			}
-		}
-		break;
+
+            if (pargs->outfn && !pargs->fout) {
+                // open output file if it hasn't already been opened...
+                pargs->fout = fopen(pargs->outfn, "wb");
+                if (!pargs->fout) {
+                    SYSERROR("Failed to open output file \"%s\"", pargs->outfn);
+                    return -1;
+                }
+            }
+            cairo_surface_flush(pargs->target);
+            cairo_surface_finish(pargs->target);
+            cairoutils_surface_status_errors(pargs->target);
+            cairoutils_cairo_status_errors(pargs->cairo);
+            if (pargs->outfn) {
+                if (fclose(pargs->fout)) {
+                    SYSERROR("Failed to close output file \"%s\"", pargs->outfn);
+                    return -1;
+                }
+                pargs->fout = NULL;
+            }
+            break;
 
 	case PLOTSTUFF_FORMAT_JPG:
 	case PLOTSTUFF_FORMAT_PPM:
