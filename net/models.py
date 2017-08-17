@@ -644,7 +644,12 @@ class Calibration(models.Model):
         return self.raw_tan.get_center_radecradius()
 
     def get_orientation(self):
-        return self.raw_tan.get_orientation()
+        orient = self.raw_tan.get_orientation()
+        # JPEG or PNG image input (not FITS): flip up/down.
+        ft = self.job.user_image.image.disk_file.file_type
+        if 'PNG' in ft or 'JPEG' in ft or 'GIF' in ft:
+            orient = 360 - orient
+        return orient
 
     def get_parity(self):
         return self.raw_tan.get_parity()
