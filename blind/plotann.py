@@ -29,16 +29,12 @@ def match_kdtree_catalog(wcs, catfn):
     kd2 = tree_build_radec(np.array([rc]), np.array([dc]))
     r = deg2dist(rr)
     I,J,nil = trees_match(kd, kd2, r, permuted=False)
-    # HACK
-    #I2,J,d = trees_match(kd, kd2, r)
-    xyz = spherematch_c.kdtree_get_positions(kd, I.astype(np.uint32))
-    #print 'I', I
-    I2 = tree_permute(kd, I)
-    #print 'I2', I2
-    tree_free(kd2)
-    tree_close(kd)
+    del kd2
+    xyz = kd.get_data(I.astype(np.uint32))
+    I = kd.permute(I)
+    del kd
     tra,tdec = xyztoradec(xyz)
-    return tra, tdec, I2
+    return tra, tdec, I
     
 
 def get_annotations(wcs, opt):
