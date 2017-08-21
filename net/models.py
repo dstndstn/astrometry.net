@@ -648,7 +648,7 @@ class Calibration(models.Model):
         # JPEG or PNG image input (not FITS): flip up/down.
         ft = self.job.user_image.image.disk_file.file_type
         if 'PNG' in ft or 'JPEG' in ft or 'GIF' in ft:
-            orient = 360 - orient
+            orient = (((180 - orient) + 360) % 360)
         return orient
 
     def get_parity(self):
