@@ -139,6 +139,14 @@ install-core:
 	$(MAKE) -C blind install
 	$(MAKE) -C sdss install
 
+pyinstall:
+	mkdir -p '$(PY_BASE_INSTALL_DIR)'
+	cp __init__.py '$(PY_BASE_INSTALL_DIR)'
+	$(MAKE) -C util pyinstall
+	$(MAKE) -C libkd install-spherematch
+	$(MAKE) -C sdss install
+	$(MAKE) -C catalogs pyinstall
+
 install-indexes:
 	mkdir -p '$(DATA_INSTALL_DIR)'
 	@for x in `ls index-*.tar.bz2 2>/dev/null`; do \
