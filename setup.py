@@ -19,11 +19,11 @@ from glob import glob
 class MyInstall(install):
     def run(self):
         print('MyInstall.run: calling "make"')
-        subprocess.call('make')
+        subprocess.call(['make', '-k'])
         print('MyInstall.run: calling "make py"')
-        subprocess.call(['make', 'py'])
+        subprocess.call(['make', '-k', 'py'])
 
-        cmd = 'make install'
+        cmd = 'make -k install'
         dirnm = self.install_base
         if dirnm is not None:
             cmd += ' INSTALL_DIR="%s"' % dirnm
