@@ -99,10 +99,10 @@ extra:
 py: thirdparty
 	$(MAKE) -C catalogs
 	$(MAKE) -C util pyutil
-	$(MAKE) -C util cairoutils.o
-	$(MAKE) -C blind pyplotstuff
 	$(MAKE) -C libkd pyspherematch
 	$(MAKE) -C sdss
+	$(MAKE) -C util cairoutils.o
+	$(MAKE) -C blind pyplotstuff
 
 pyutil: thirdparty
 	$(MAKE) -C util pyutil
