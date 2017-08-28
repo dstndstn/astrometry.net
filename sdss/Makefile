@@ -29,14 +29,12 @@ INSTALL_PY := __init__.py common.py cutout.py dr7.py dr8.py runList-dr8.par \
 
 INSTALL_LIB := cutils.py _cutils$(PYTHON_SO_EXT)
 
-
 install-lib:
 	mkdir -p '$(MY_DIR)'
 	@for x in $(INSTALL_LIB); do \
 		echo cp $$x '$(MY_DIR)'; \
 		cp $$x '$(MY_DIR)'; \
 	done
-
 .PHONY: install-lib
 
 #install: _cutils$(PYTHON_SO_EXT) cutils.py

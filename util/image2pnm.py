@@ -46,6 +46,8 @@ compcmds = {'gzip compressed data'    : ('gz',      'gunzip -c %s > %s'),
         'bzip2 compressed data'   : ('bz2', 'bunzip2 -k -c %s > %s')
         }
 
+funpack_cmd = 'funpack -E %i -S %s > %s'
+
 # command to identify a RAW image.
 raw_id_cmd = 'dcraw -i %s >/dev/null 2> /dev/null'
 
@@ -68,7 +70,7 @@ def get_cmd(types, cmds):
             break
     return (ext,cmd)
 
-def uncompress_file(infile, uncompressed, typeinfo=None):
+def uncompress_file(infile, uncompressed, typeinfo=None, extension=None):
     """
     infile: input filename.
     uncompressed: output filename.
@@ -82,8 +84,28 @@ def uncompress_file(infile, uncompressed, typeinfo=None):
         if typeinfo is None:
             logging.debug('Could not determine file type of "%s"' % infile)
             return None
+    # print('uncompress_file: type is', typeinfo)
     (ext,cmd) = get_cmd(typeinfo, compcmds)
+    # print('ext:', ext)
     if ext is None:
+        # Check for fpack compressed FITS file.
+        if fitstype in typeinfo:
+            # FITS file.  Check header for ZIMAGE=T
+            try:
+                import fitsio
+                logging.debug('Checking FITS header of', infile, 'ext',
+                              extension, 'for ZIMAGE card (fpack compression)')
+                hdr = fitsio.read_header(infile, ext=extension)
+                if hdr.get('ZIMAGE', False):
+                    # Compressed
+                    cmd = (funpack_cmd % (
+                        extension or 0,
+                        shell_escape(infile), shell_escape(uncompressed)))
+                    logging.debug('Fpack compressed; uncompressing with', cmd)
+                    if os.system(cmd) == 0:
+                        return 'fz'
+            except:
+                pass
         logging.debug('File is not compressed: "%s"' % '/'.join(typeinfo))
         return None
     assert uncompressed != infile
@@ -198,11 +220,14 @@ def convert_image(infile, outfile, uncompressed=None, force_ppm=False,
         (f, uncompressed) = tempfile.mkstemp('', 'uncomp', outfile_dir)
         os.close(f)
         tempfiles.append(uncompressed)
-    comp = uncompress_file(infile, uncompressed)
+    comp = uncompress_file(infile, uncompressed, extension=extension)
     if comp:
         print('compressed')
         print(comp)
         infile = uncompressed
+        if comp == 'fz':
+            # Funpack writes a single-HDU output file.
+            extension = 0
 
     (imgtype, errstr) = image2pnm(infile, outfile, force_ppm=force_ppm,
                                   extension=extension, mydir=mydir)
