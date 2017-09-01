@@ -206,6 +206,15 @@ install: install-core
 
 .PHONY: install
 
+pyinstall:
+	mkdir -p '$(PY_INSTALL_DIR)'
+	@for x in $(PYTHON_INSTALL); do \
+		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+	done
+	$(MAKE) py && cp _util$(PYTHON_SO_EXT) util.py '$(PY_INSTALL_DIR)'
+
+.PHONY: pyinstall
 
 install-core: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 		$(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANBASE_LIB_FILE)

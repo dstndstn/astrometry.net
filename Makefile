@@ -99,10 +99,10 @@ extra:
 py: thirdparty
 	$(MAKE) -C catalogs
 	$(MAKE) -C util pyutil
-	$(MAKE) -C util cairoutils.o
-	$(MAKE) -C blind pyplotstuff
 	$(MAKE) -C libkd pyspherematch
 	$(MAKE) -C sdss
+	$(MAKE) -C util cairoutils.o
+	$(MAKE) -C blind pyplotstuff
 
 pyutil: thirdparty
 	$(MAKE) -C util pyutil
@@ -138,6 +138,14 @@ install-core:
 	$(MAKE) -C qfits-an install
 	$(MAKE) -C blind install
 	$(MAKE) -C sdss install
+
+pyinstall:
+	mkdir -p '$(PY_BASE_INSTALL_DIR)'
+	cp __init__.py '$(PY_BASE_INSTALL_DIR)'
+	$(MAKE) -C util pyinstall
+	$(MAKE) -C libkd install-spherematch
+	$(MAKE) -C sdss install
+	$(MAKE) -C catalogs pyinstall
 
 install-indexes:
 	mkdir -p '$(DATA_INSTALL_DIR)'

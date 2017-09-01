@@ -739,7 +739,6 @@ int augment_xylist(augment_xylist_t* axy,
             sl_append(cmd, "--mydir");
             append_escape(cmd, me);
             lines = backtick(cmd, verbose);
-
             axy->isfits = FALSE;
             for (i=0; i<sl_size(lines); i++) {
                 logverb("  %s\n", sl_get(lines, i));
@@ -747,6 +746,8 @@ int augment_xylist(augment_xylist_t* axy,
                     axy->isfits = TRUE;
                 if (streq("compressed", sl_get(lines, i)))
                     iscompressed = TRUE;
+                if (streq("fz", sl_get(lines, i)))
+                    axy->extension = 0;
             }
             sl_free2(lines);
 

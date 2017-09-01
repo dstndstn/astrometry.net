@@ -162,6 +162,14 @@ install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS_PATH)
 
 .PHONY: install
 
+pyinstall: $(PYTHON_INSTALL)
+	mkdir -p '$(PY_INSTALL_DIR)'
+	@for x in $(PYTHON_INSTALL); do \
+		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+	done
+.PHONY: pyinstall
+
 ALL_TEST_FILES = test_tycho2 test_usnob test_nomad test_2mass test_hd \
 	test_boundaries
 ALL_TEST_EXTRA_OBJS = 
