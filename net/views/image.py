@@ -143,8 +143,11 @@ def user_image(req, user_image_id=None):
         fits = uimage.image.disk_file.is_fits_image()
         y = wcs.imageh - wcs.crpix2
         orient = wcs.get_orientation()
-        if fits:
-            orient += 180.
+
+        print('Parity', parity, 'FITS', fits, 'Orientation', orient)
+
+        if parity:
+            orient = 360. - orient
         
         wwturl = 'http://www.worldwidetelescope.org/wwtweb/ShowImage.aspx?reverseparity=%s&scale=%.6f&name=%s&imageurl=%s&credits=Astrometry.net+User+(All+Rights+Reserved)&creditsUrl=&ra=%.6f&dec=%.6f&x=%.1f&y=%.1f&rotation=%.2f&thumb=%s' % (parity, wcs.get_pixscale(), uimage.original_file_name, imgurl, wcs.crval1, wcs.crval2, wcs.crpix1, y, orient, thumburl)
     else:
