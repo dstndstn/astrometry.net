@@ -32,10 +32,10 @@ For full functionality, you will need:
   * libjpeg
   * libz
   * bzip2
-  * python (probably >= 2.4)
+  * python (probably >= 2.4; 2.7 or 3.6 preferred)
   * numpy
-  * swig
-  * pyfits: http://www.stsci.edu/resources/software_hardware/pyfits (version >= 3.1)
+  * swig (>= 2.0)
+  * fitsio https://github.com/esheldon/fitsio or astropy http://www.astropy.org/ or pyfits: http://www.stsci.edu/resources/software_hardware/pyfits (version >= 3.1)
   * cfitsio: http://heasarc.gsfc.nasa.gov/fitsio/
  
 
