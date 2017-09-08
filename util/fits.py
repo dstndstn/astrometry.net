@@ -783,7 +783,7 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
             if 'S' in t:
                 X = X.astype(np.str)
                 T.set(c, X)
-                print('Converted', c, 'from', t, 'to', X.dtype)
+                #print('Converted', c, 'from', t, 'to', X.dtype)
 
     return T
 
