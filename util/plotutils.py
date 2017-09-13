@@ -214,7 +214,7 @@ def loghist(x, y, nbins=100,
     if hot:
         plt.hot()
     if docolorbar:
-        r = [np.log10(lo)] + range(int(np.ceil(L.max())))
+        r = [np.log10(lo)] + list(range(int(np.ceil(L.max()))))
         # print 'loghist: L max', L.max(), 'r', r
         plt.colorbar(ticks=r, format=FixedFormatter(
             ['0'] + ['%i'%(10**ri) for ri in r[1:]]))

@@ -672,6 +672,9 @@ int augment_xylist(augment_xylist_t* axy,
     char* sortedxylsfn = NULL;
     char* unixylsfn = NULL;
     char* cutxylsfn = NULL;
+    // as we process the image (uncompress it, eg), keep track of extension
+    // (along with axy->fitsimgfn if keep_fitsimg is set)
+    axy->fitsimgext = axy->extension;
 
     cmd = sl_new(16);
     tempfiles = sl_new(4);
@@ -747,7 +750,7 @@ int augment_xylist(augment_xylist_t* axy,
                 if (streq("compressed", sl_get(lines, i)))
                     iscompressed = TRUE;
                 if (streq("fz", sl_get(lines, i)))
-                    axy->extension = 0;
+                    axy->fitsimgext = 0;
             }
             sl_free2(lines);
 
@@ -790,18 +793,18 @@ int augment_xylist(augment_xylist_t* axy,
                 anbool ok;
                 // Try to read WCS header from FITS image; if successful,
                 // add it to the list of WCS headers to verify.
-                logverb("Looking for a WCS header in FITS input image %s ext %i\n", fitsimgfn, axy->extension);
+                logverb("Looking for a WCS header in FITS input image %s ext %i\n", fitsimgfn, axy->fitsimgext);
 
                 // FIXME - Right now we just try to read SIP/TAN -
                 // obviously this should be more flexible and robust.
                 errors_start_logging_to_string();
                 memset(&sip, 0, sizeof(sip_t));
-                ok = (sip_read_header_file_ext(fitsimgfn, axy->extension, &sip) != NULL);
+                ok = (sip_read_header_file_ext(fitsimgfn, axy->fitsimgext, &sip) != NULL);
                 errstr = errors_stop_logging_to_string(": ");
                 if (ok) {
                     logmsg("Found an existing WCS header, will try to verify it.\n");
                     sl_append(axy->verifywcs, fitsimgfn);
-                    il_append(axy->verifywcs_ext, axy->extension);
+                    il_append(axy->verifywcs_ext, axy->fitsimgext);
                 } else {
                     logverb("Failed to read a SIP or TAN header from FITS image.\n");
                     logverb("  (reason: %s)\n", errstr);
@@ -915,7 +918,7 @@ int augment_xylist(augment_xylist_t* axy,
 
         } else {
             simplexy_t sxyparams;
-            logverb("Running image2xy: input=%s, output=%s, ext=%i\n", fitsimgfn, xylsfn, axy->extension);
+            logverb("Running image2xy: input=%s, output=%s, ext=%i\n", fitsimgfn, xylsfn, axy->fitsimgext);
 
             // we have to delete the temp file because otherwise image2xy is too timid to overwrite it.
             if (unlink(xylsfn)) {
@@ -931,16 +934,13 @@ int augment_xylist(augment_xylist_t* axy,
             sxyparams.plim = axy->image_nsigma;
 
             // MAGIC 3: downsample by a factor of 2, up to 3 times.
-            if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3, axy->extension,
-                               0, &sxyparams)) {
+            if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3,
+                               axy->fitsimgext, 0, &sxyparams)) {
                 ERROR("Source extraction failed");
                 exit(-1);
             }
         }
         dosort = TRUE;
-
-        // now set the extension to 1, for the xylsfn.
-        axy->extension = 1;
 
     } else {
         // xylist.
@@ -1002,7 +1002,6 @@ int augment_xylist(augment_xylist_t* axy,
                 exit(-1);
             }
             xylsfn = extfn;
-            axy->extension = 0;
         }
     }
 
@@ -1057,8 +1056,8 @@ int augment_xylist(augment_xylist_t* axy,
             sl_appendf(cmd, "-X %s", axy->xcol);
         if (axy->ycol)
             sl_appendf(cmd, "-Y %s", axy->ycol);
-        if (axy->extension)
-            sl_appendf(cmd, "-e %i", axy->extension);
+        //if (axy->extension)
+        //    sl_appendf(cmd, "-e %i", axy->extension);
         append_escape(cmd, xylsfn);
         append_escape(cmd, nolinesfn);
         run(cmd, verbose);
@@ -1117,8 +1116,8 @@ int augment_xylist(augment_xylist_t* axy,
             sl_appendf(cmd, "-X %s", axy->xcol);
         if (axy->ycol)
             sl_appendf(cmd, "-Y %s", axy->ycol);
-        if (axy->extension)
-            sl_appendf(cmd, "-e %i", axy->extension);
+        //if (axy->extension)
+        //    sl_appendf(cmd, "-e %i", axy->extension);
         append_escape(cmd, xylsfn);
         append_escape(cmd, unixylsfn);
         run(cmd, verbose);
@@ -1408,11 +1407,8 @@ int augment_xylist(augment_xylist_t* axy,
         off_t offset;
         off_t nbytes;
         anqfits_t* anq;
-        int ext;
+        int ext = 1;
 
-        ext = axy->extension;
-        if (!ext)
-            ext = 1;
         anq = anqfits_open_hdu(xylsfn, ext);
         if (!anq) {
             ERROR("Failed to open xyls file %s up to extension %i", xylsfn, ext);

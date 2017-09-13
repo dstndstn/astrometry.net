@@ -67,7 +67,8 @@ struct augment_xylist_s {
 
     anbool keep_fitsimg;
     char* fitsimgfn;
-
+    int fitsimgext;
+    
     // FITS extension to read image from
     int extension;
 
