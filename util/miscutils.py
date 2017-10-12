@@ -233,7 +233,7 @@ def clip_wcs(wcs1, wcs2, makeConvex=True, pix1=None, pix2=None):
             XX = np.array(list(reversed(XX)))
             YY = np.array(list(reversed(YY)))
 
-    clip = clip_polygon(zip(xx, yy), zip(XX, YY))
+    clip = clip_polygon(list(zip(xx, yy)), list(zip(XX, YY)))
     clip = np.array(clip)
 
     if False:
