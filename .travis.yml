@@ -27,7 +27,7 @@ script:
     - export PATH=~/bin:${PATH}
     - ls -l $(which python$PY)
     #- ln -s $(which python$PY) ~/bin/python
-    - alias "python$PY" python
+    - alias python="python$PY"
     - which python
     - ls -l $(which python)
     #- cat $(which python)
