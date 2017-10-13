@@ -35,7 +35,8 @@ script:
     - which pip2
     - which pip3
     - ls -l $(which pip$PY)
-    - ln -s $(which pip$PY) ~/bin/pip
+    #- ln -s $(which pip$PY) ~/bin/pip
+    - alias pip="pip$PY"
     - which pip
     - pip install numpy --user
     - pip install fitsio --user
