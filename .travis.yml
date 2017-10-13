@@ -29,7 +29,7 @@ script:
     - ln -s $(which python$PY) ~/bin/python
     - which python
     - ls -l $(which python)
-    - head $(which python)
+    - cat $(which python)
     - python --version
     - which pip2
     - which pip3
