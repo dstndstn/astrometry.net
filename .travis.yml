@@ -30,7 +30,7 @@ script:
     - which python
     - ls -l $(which python)
     - cat $(which python)
-    - python --version
+    #- python --version
     - which pip2
     - which pip3
     - ls -l $(which pip$PY)
