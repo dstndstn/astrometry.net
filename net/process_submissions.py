@@ -7,23 +7,23 @@ import sys
 
 # add .. to PYTHONPATH
 path = os.path.realpath(__file__)
-print('My path', path)
+#print('My path', path)
 basedir = os.path.dirname(os.path.dirname(path))
 
 #print('PYTHONPATH is', os.environ['PYTHONPATH'])
 
-print('Adding basedir', basedir, 'to PYTHONPATH')
+#print('Adding basedir', basedir, 'to PYTHONPATH')
 sys.path.append(basedir)
 
 # add ../blind and ../util to PATH
 os.environ['PATH'] += ':' + os.path.join(basedir, 'blind')
 os.environ['PATH'] += ':' + os.path.join(basedir, 'util')
 
-print('sys.path is:')
-for x in sys.path:
-    print('  ', x)
-
-print('PATH is:', os.environ['PATH'])
+# print('sys.path is:')
+# for x in sys.path:
+#     print('  ', x)
+# 
+# print('PATH is:', os.environ['PATH'])
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
@@ -834,8 +834,8 @@ if __name__ == '__main__':
     parser.add_option('--refreshrate', '-r', dest='refreshrate', type='float',
                       default=5, help='Set how often to check for new jobs and submissions (in seconds)')
 
-    parser.add_option('--solve-command',
-                      help='Command to run instead of ssh to actually solve image')
+    parser.add_option('--solve-command', default='solve-field',
+                      help='Command to run instead of ssh to actually solve image, default "%default"')
 
     parser.add_option('--solve-locally',
                       help='Command to run astrometry-engine on this machine, not via ssh')
