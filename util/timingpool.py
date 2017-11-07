@@ -692,14 +692,53 @@ if __name__ == '__main__':
     y = yielder(N)
     args = ywrapper(y, N)
     
-    dpool = TimingPool(4, taskqueuesize=4)
+    cpu0 = CpuMeas()
+    nproc = 4
+    dpool = TimingPool(nproc, taskqueuesize=1)
     dmup = multiproc.multiproc(pool=dpool)
     Time.add_measurement(TimingPoolMeas(dpool))
 
-    # t0 = Time()
     # res = dmup.map(work, args)
     # print(Time()-t0)
     # print('Got result:', res)
+
+    N = 20
+    y = yielder(N)
+    args = ywrapper(y, N)
+    t0 = Time()
+    print('Doing real work...')
+    t0 = Time()
+    riter = dmup.imap_unordered(realwork, args)
+    res = []
+    while True:
+        print('Waiting for result...')
+        try:
+            r = riter.next(1.)
+            print('Got result:', r)
+            res.append(r)
+        except StopIteration:
+            print('StopIteration')
+            break
+        except multiprocessing.TimeoutError:
+            print('Timeout error')
+            continue
+        except:
+            print('Exception waiting for result:')
+            import traceback
+            traceback.print_exc()
+    print(Time()-t0)
+    print('Got result:', res)
+    print('Took', Time()-t0)
+
+    cpu1 = CpuMeas()
+    worker_cpu = dpool.get_worker_cpu()
+    main_cpu = cpu1.cpu_seconds_since(cpu0)
+    main_wall = cpu1.wall_seconds_since(cpu0)
+    use = (main_cpu + worker_cpu) / main_wall
+    print('Average number of cores in use: %.1f %%' % (100. * use))
+    print('Core use (%i cores): %.1f %%' % (nproc, 100.*use/float(nproc)))
+
+    sys.exit(0)
 
     N = 20
     y = yielder(N)
