@@ -50,7 +50,7 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
     if (indices) {
         if (!remove_radec_columns) {
             // row-by-row raw data copy; read whole tag-along array into memory
-            char* data = malloc(N * R);
+            char* data = malloc((size_t)N * (size_t)R);
             // FIXME -- could read row-by-row if the malloc fails.....
             if (!data) {
                 ERROR("Failed to allocate enough memory to read full tag-along table");
@@ -64,7 +64,7 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
             }
             printf("Writing tag-along table...\n");
             for (i=0; i<N; i++) {
-                if (fitstable_write_row_data(outtab, data + indices[i]*R)) {
+                if (fitstable_write_row_data(outtab, data + (size_t)indices[i]*(size_t)R)) {
                     ERROR("Failed to write a row of data");
                     free(data);
                     return -1;
