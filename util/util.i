@@ -1657,6 +1657,11 @@ Sip = sip_t
         tan_scale($self, t, factor);
         return t;
     }
+    tan_t* rotate(double angle_deg) {
+        tan_t* t = (tan_t*)calloc(1, sizeof(tan_t));
+        tan_rotate($self, t, angle_deg);
+        return t;
+    }
     double get_width() {
         return $self->imagew;
     }
