@@ -305,7 +305,7 @@ char* qfits_getvalue_r(const char* line, char* value) {
     }
     /* General case - Get past the keyword */
     i=0;
-    while (line[i]!='=' && i<80) i++;
+    while (i<80 && line[i]!='=') i++;
     if (i>80) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getvalue: no equal sign found on line\n");
@@ -313,7 +313,7 @@ char* qfits_getvalue_r(const char* line, char* value) {
         return NULL;
     }
     i++;
-    while (line[i]==' ' && i<80) i++;
+    while (i<80 && line[i]==' ') i++;
     if (i>80) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getvalue: no value past the equal sign\n");
@@ -335,7 +335,7 @@ char* qfits_getvalue_r(const char* line, char* value) {
     i--;
 
     /* Backtrack on blanks */
-    while (line[i]==' ' && i>=0) i--;
+    while (i>=0 && line[i]==' ') i--;
     if (i<0) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getvalue: error backtracking on blanks\n");
@@ -396,7 +396,7 @@ char* qfits_getcomment_r(const char* line, char* comment) {
     memset(comment, 0, 81);
     /* Get past the keyword */
     i=0;
-    while (line[i]!='=' && i<80) i++;
+    while (i<80 && line[i]!='=') i++;
     if (i>=80) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getcomment: no equal sign on line\n");
