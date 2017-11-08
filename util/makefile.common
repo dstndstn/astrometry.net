@@ -13,7 +13,8 @@ export INSTALL_DIR
 PYTHON_SCRIPT_DEFAULT := /usr/bin/env python
 
 # change this if you want to set exactly which python program gets run to
-# execute the python scripts in bin/ (image2pnm and friends)
+# execute the python scripts in bin/ (image2pnm and friends).
+# Note that this must be a full path (this is a bash requirement).
 PYTHON_SCRIPT ?= $(PYTHON_SCRIPT_DEFAULT)
 # eg,
 #PYTHON_SCRIPT ?= /usr/bin/python3.5
