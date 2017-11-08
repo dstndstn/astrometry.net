@@ -30,10 +30,10 @@ INSTALL_PY := __init__.py common.py cutout.py dr7.py dr8.py runList-dr8.par \
 INSTALL_LIB := cutils.py _cutils$(PYTHON_SO_EXT)
 
 install-lib:
-	mkdir -p '$(MY_DIR)'
+	$(MKDIR) '$(MY_DIR)'
 	@for x in $(INSTALL_LIB); do \
-		echo cp $$x '$(MY_DIR)'; \
-		cp $$x '$(MY_DIR)'; \
+		echo $(CP) $$x '$(MY_DIR)'; \
+		$(CP) $$x '$(MY_DIR)'; \
 	done
 .PHONY: install-lib
 
@@ -41,10 +41,10 @@ install-lib:
 # cutils are supposed to be optional, so try but don't fail to build
 install:
 	@echo Installing in directory '$(MY_DIR)'
-	mkdir -p '$(MY_DIR)'
+	$(MKDIR) '$(MY_DIR)'
 	@for x in $(INSTALL_PY); do \
-		echo cp $$x '$(MY_DIR)'; \
-		cp $$x '$(MY_DIR)'; \
+		echo $(CP) $$x '$(MY_DIR)'; \
+		$(CP) $$x '$(MY_DIR)'; \
 	done
 	@echo "Trying to build (optional) python module..."
 	-$(MAKE) lib && $(MAKE) install-lib

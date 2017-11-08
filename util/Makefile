@@ -201,18 +201,18 @@ LINK_DIR := $(PY_BASE_LINK_DIR)/util
 install: install-core
 	$(MAKE) install-core
 	@echo "The following copy commands may fail; they are optional."
-	-$(MAKE) py && cp _util$(PYTHON_SO_EXT) util.py '$(PY_INSTALL_DIR)'
+	-$(MAKE) py && $(CP) _util$(PYTHON_SO_EXT) util.py '$(PY_INSTALL_DIR)'
 	@echo ok
 
 .PHONY: install
 
 pyinstall:
-	mkdir -p '$(PY_INSTALL_DIR)'
+	$(MKDIR) '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
-		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
-		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		echo $(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
+		$(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
-	$(MAKE) py && cp _util$(PYTHON_SO_EXT) util.py '$(PY_INSTALL_DIR)'
+	$(MAKE) py && $(CP) _util$(PYTHON_SO_EXT) util.py '$(PY_INSTALL_DIR)'
 
 .PHONY: pyinstall
 
@@ -220,35 +220,36 @@ install-core: $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H_PATH) \
 		$(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANBASE_LIB_FILE)
 	@echo Installing in base directory '$(INSTALL_DIR)'
 	@echo Installing python in base directory '$(PY_INSTALL_DIR)'
-	mkdir -p '$(PY_INSTALL_DIR)'
+	$(MKDIR) '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
-		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
-		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		echo $(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
+		$(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
-	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
-	mkdir -p '$(BIN_INSTALL_DIR)'
+	@echo Installing python scripts in directory '$(BIN_INSTALL_DIR)'
+	@echo PYTHON_SCRIPT executable: '$(PYTHON_SCRIPT)'
+	$(MKDIR) '$(BIN_INSTALL_DIR)'
 	@for x in $(PYTHON_EXECS); do \
-		echo cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
-		cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
-		echo chmod 755 '$(BIN_INSTALL_DIR)/'$$x; \
-		chmod 755 '$(BIN_INSTALL_DIR)/'$$x; \
+		echo $(SED) 's+$(PYTHON_SCRIPT_DEFAULT)+$(PYTHON_SCRIPT)+' $$x > '$(BIN_INSTALL_DIR)/'$$x; \
+		$(SED) 's+$(PYTHON_SCRIPT_DEFAULT)+$(PYTHON_SCRIPT)+' $$x > '$(BIN_INSTALL_DIR)/'$$x; \
+		echo $(CHMOD_EXECUTABLE) '$(BIN_INSTALL_DIR)/'$$x; \
+		$(CHMOD_EXECUTABLE) '$(BIN_INSTALL_DIR)/'$$x; \
 	done
 	@echo Installing executables into '$(BIN_INSTALL_DIR)'...
 	@for x in $(PROGS) $(MAIN_PROGS); do \
-		echo cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
-		cp $$x '$(BIN_INSTALL_DIR)/'$$x; \
+		echo $(CP) $$x '$(BIN_INSTALL_DIR)/'$$x; \
+		$(CP) $$x '$(BIN_INSTALL_DIR)/'$$x; \
 	done
 	@echo Installing headers into '$(INCLUDE_INSTALL_DIR)'...
-	mkdir -p '$(INCLUDE_INSTALL_DIR)'
+	$(MKDIR) '$(INCLUDE_INSTALL_DIR)'
 	@for x in $(ANUTILS_H); do \
-		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
-		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		echo $(CP) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		$(CP) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
 	@echo Installing libraries into '$(LIB_INSTALL_DIR)'...
-	mkdir -p '$(LIB_INSTALL_DIR)'
+	$(MKDIR) '$(LIB_INSTALL_DIR)'
 	@for x in $(ANFILES_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANBASE_LIB_FILE); do \
-		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
-		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
+		echo $(CP) $$x '$(LIB_INSTALL_DIR)/'$$x; \
+		$(CP) $$x '$(LIB_INSTALL_DIR)/'$$x; \
 	done
 
 .PHONY: install-core

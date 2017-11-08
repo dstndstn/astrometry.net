@@ -9,6 +9,15 @@ INSTALL_DIR ?= /usr/local/astrometry
 # Put INSTALL_DIR in the environment of commands run by Make.
 export INSTALL_DIR
 
+# don't change this one -- it must match what is in the bin/* scripts.
+PYTHON_SCRIPT_DEFAULT := /usr/bin/env python
+
+# change this if you want to set exactly which python program gets run to
+# execute the python scripts in bin/ (image2pnm and friends)
+PYTHON_SCRIPT ?= $(PYTHON_SCRIPT_DEFAULT)
+# eg,
+#PYTHON_SCRIPT ?= /usr/bin/python3.5
+
 # Installation subdirs
 
 PY_BASE_INSTALL_DIR ?= $(INSTALL_DIR)/lib/python/astrometry
@@ -74,6 +83,12 @@ AWK ?= LC_ALL=C LC_NUMERIC=EN_US awk
 SED ?= sed
 
 MV ?= mv
+
+CP ?= cp
+
+CHMOD_EXECUTABLE ?= chmod 755
+
+MKDIR ?= mkdir -p
 
 FLAGS_DEF := -g -Wall
 

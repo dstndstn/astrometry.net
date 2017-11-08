@@ -120,18 +120,18 @@ install: all report.txt
 	@echo
 
 install-core:
-	mkdir -p '$(DATA_INSTALL_DIR)'
-	mkdir -p '$(BIN_INSTALL_DIR)'
-	mkdir -p '$(DOC_INSTALL_DIR)'
-	mkdir -p '$(INCLUDE_INSTALL_DIR)'
-	mkdir -p '$(LIB_INSTALL_DIR)'
-	mkdir -p '$(EXAMPLE_INSTALL_DIR)'
-	mkdir -p '$(PY_BASE_INSTALL_DIR)'
-	mkdir -p '$(MAN1_INSTALL_DIR)'
-	cp __init__.py '$(PY_BASE_INSTALL_DIR)'
-	cp CREDITS LICENSE README.md report.txt '$(DOC_INSTALL_DIR)'
-	cp demo/* '$(EXAMPLE_INSTALL_DIR)'
-	cp man/*.1 '$(MAN1_INSTALL_DIR)'
+	$(MKDIR) '$(DATA_INSTALL_DIR)'
+	$(MKDIR) '$(BIN_INSTALL_DIR)'
+	$(MKDIR) '$(DOC_INSTALL_DIR)'
+	$(MKDIR) '$(INCLUDE_INSTALL_DIR)'
+	$(MKDIR) '$(LIB_INSTALL_DIR)'
+	$(MKDIR) '$(EXAMPLE_INSTALL_DIR)'
+	$(MKDIR) '$(PY_BASE_INSTALL_DIR)'
+	$(MKDIR) '$(MAN1_INSTALL_DIR)'
+	$(CP) __init__.py '$(PY_BASE_INSTALL_DIR)'
+	$(CP) CREDITS LICENSE README.md report.txt '$(DOC_INSTALL_DIR)'
+	$(CP) demo/* '$(EXAMPLE_INSTALL_DIR)'
+	$(CP) man/*.1 '$(MAN1_INSTALL_DIR)'
 	$(MAKE) -C util  install-core
 	$(MAKE) -C catalogs install
 	$(MAKE) -C libkd install
@@ -140,15 +140,15 @@ install-core:
 	$(MAKE) -C sdss install
 
 pyinstall:
-	mkdir -p '$(PY_BASE_INSTALL_DIR)'
-	cp __init__.py '$(PY_BASE_INSTALL_DIR)'
+	$(MKDIR) '$(PY_BASE_INSTALL_DIR)'
+	$(CP) __init__.py '$(PY_BASE_INSTALL_DIR)'
 	$(MAKE) -C util pyinstall
 	$(MAKE) -C libkd install-spherematch
 	$(MAKE) -C sdss install
 	$(MAKE) -C catalogs pyinstall
 
 install-indexes:
-	mkdir -p '$(DATA_INSTALL_DIR)'
+	$(MKDIR) '$(DATA_INSTALL_DIR)'
 	@for x in `ls index-*.tar.bz2 2>/dev/null`; do \
 		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
 		echo tar xvjf $$x -C '$(DATA_INSTALL_DIR)'; \
@@ -156,8 +156,8 @@ install-indexes:
 	done
 	@for x in `ls index-*.bz2 2>/dev/null | grep -v tar.bz2 2>/dev/null`; do \
 		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
-		echo "cp $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x;"; \
-		cp $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x; \
+		echo "$(CP) $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x;"; \
+		$(CP) $$x '$(DATA_INSTALL_DIR)' && bunzip2 --force '$(DATA_INSTALL_DIR)/'$$x; \
 	done
 	@for x in `ls index-*.tar.gz 2>/dev/null`; do \
 		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
@@ -166,8 +166,8 @@ install-indexes:
 	done
 	@for x in `ls index-*.fits 2>/dev/null`; do \
 		echo Installing $$x in '$(DATA_INSTALL_DIR)'...; \
-		echo "cp $$x '$(DATA_INSTALL_DIR)'"; \
-		cp $$x '$(DATA_INSTALL_DIR)'; \
+		echo "$(CP) $$x '$(DATA_INSTALL_DIR)'"; \
+		$(CP) $$x '$(DATA_INSTALL_DIR)'; \
 	done
 
 reconfig:
@@ -262,7 +262,7 @@ LIBKD_RELEASE_SUBDIRS := qfits-an libkd doc \
 
 release-libkd:
 	-rm -R $(LIBKD_RELEASE_DIR) $(LIBKD_RELEASE_DIR).tar $(LIBKD_RELEASE_DIR).tar.gz $(LIBKD_RELEASE_DIR).tar.bz2 $(LIBKD_RELEASE_TEMP)
-	-mkdir -p $(LIBKD_RELEASE_DIR)
+	-$(MKDIR) $(LIBKD_RELEASE_DIR)
 	git archive --prefix $(LIBKD_RELEASE_TEMP)/ $(RELEASE_VER) | tar x
 	for x in $(LIBKD_RELEASE_SUBDIRS); do \
 		tar c -C '$(LIBKD_RELEASE_TEMP)' $$x | tar x -C $(LIBKD_RELEASE_DIR); \
@@ -277,7 +277,7 @@ LIBKD_SNAPSHOT_SUBDIRS := $(LIBKD_RELEASE_SUBDIRS)
 
 snapshot-libkd:
 	-rm -R $(LIBKD_SNAPSHOT_DIR) $(LIBKD_SNAPSHOT_DIR).tar $(LIBKD_SNAPSHOT_DIR).tar.gz $(LIBKD_SNAPSHOT_DIR).tar.bz2 $(LIBKD_SNAPSHOT_TEMP)
-	-mkdir -p $(LIBKD_SNAPSHOT_DIR)
+	-$(MKDIR) $(LIBKD_SNAPSHOT_DIR)
 	git archive --prefix $(LIBKD_SNAPSHOT_TEMP)/ HEAD | tar x
 	for x in $(LIBKD_SNAPSHOT_SUBDIRS); do \
 		tar c -C '$(LIBKD_SNAPSHOT_TEMP)' $$x | tar x -C $(LIBKD_SNAPSHOT_DIR); \

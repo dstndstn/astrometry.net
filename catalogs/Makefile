@@ -143,30 +143,30 @@ suppl_1.dat:
 
 install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS_PATH)
 	@echo Installing in base directory '$(INSTALL_DIR)'
-	mkdir -p '$(PY_INSTALL_DIR)'
-	mkdir -p '$(INCLUDE_INSTALL_DIR)'
-	mkdir -p '$(LIB_INSTALL_DIR)'
+	$(MKDIR) '$(PY_INSTALL_DIR)'
+	$(MKDIR) '$(INCLUDE_INSTALL_DIR)'
+	$(MKDIR) '$(LIB_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
-		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
-		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		echo $(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
+		$(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(HEADERS); do \
-		echo cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
-		cp '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		echo $(CP) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
+		$(CP) '$(INCLUDE_DIR)/'$$x '$(INCLUDE_INSTALL_DIR)/'$$x; \
 	done
 	@for x in $(LIBCAT); do \
-		echo cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
-		cp $$x '$(LIB_INSTALL_DIR)/'$$x; \
+		echo $(CP) $$x '$(LIB_INSTALL_DIR)/'$$x; \
+		$(CP) $$x '$(LIB_INSTALL_DIR)/'$$x; \
 	done
 	@echo ok
 
 .PHONY: install
 
 pyinstall: $(PYTHON_INSTALL)
-	mkdir -p '$(PY_INSTALL_DIR)'
+	$(MKDIR) '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
-		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
-		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		echo $(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
+		$(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
 	done
 .PHONY: pyinstall
 
