@@ -280,7 +280,8 @@ def main():
         dirs.append(os.path.dirname(sys.argv[0]))
     # util/ -- useful when running from source directory
     dirs.append(os.path.dirname(__file__))
-        
+    print('Dirs:', dirs)
+    
     global verbose
     verbose = options.verbose
 

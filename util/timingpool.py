@@ -465,24 +465,32 @@ class TimingPoolMeas(object):
     '''
     def __init__(self, pool, pickleTraffic=True):
         self.pool = pool
+        self.nproc = pool._processes
         self.pickleTraffic = pickleTraffic
     def __call__(self):
-        return TimingPoolTimestamp(self.pool, self.pickleTraffic)
+        return TimingPoolTimestamp(self.pool, self.pickleTraffic, self.nproc)
 
 class TimingPoolTimestamp(object):
     '''
     The current resources used by a pool of workers, for
     astrometry.util.ttime
     '''
-    def __init__(self, pool, pickleTraffic):
+    def __init__(self, pool, pickleTraffic, nproc):
         self.pool = pool
-        self.t0 = self.now(pickleTraffic)
+        self.nproc = nproc
+        self.t = self.now(pickleTraffic)
+        self.cpu = CpuMeas()
     def format_diff(self, other):
-        t1 = self.t0
-        t0 = other.t0
-        s = ('%.3f s worker CPU, %.3f s worker Wall' %
-             tuple(t1[k] - t0[k] for k in ['worker_cpu', 'worker_wall']))
-        if 'pickle_objs' in self.t0:
+        t1 = self.t
+        t0 = other.t
+        wall = self.cpu.wall_seconds_since(other.cpu)
+        main_cpu = self.cpu.cpu_seconds_since(other.cpu)
+        worker_cpu = t1['worker_cpu'] - t0['worker_cpu']
+        worker_wall = t1['worker_wall'] - t0['worker_wall']
+        use = (main_cpu + worker_cpu) / wall
+        s = ('%.3f s worker CPU, %.3f s worker Wall, Wall: %.3f s, Cores in use: %.2f, Total efficiency (on %i cores): %.1f %%' %
+             (worker_cpu, worker_wall, wall, use, self.nproc, 100.*use / float(self.nproc)))
+        if 'pickle_objs' in self.t:
             s += (', pickled %i/%i objs, %.1f/%.1f MB' %
                   tuple(t1[k] - t0[k] for k in [
                         'pickle_objs', 'unpickle_objs',
@@ -692,53 +700,14 @@ if __name__ == '__main__':
     y = yielder(N)
     args = ywrapper(y, N)
     
-    cpu0 = CpuMeas()
-    nproc = 4
-    dpool = TimingPool(nproc, taskqueuesize=1)
+    dpool = TimingPool(4, taskqueuesize=4)
     dmup = multiproc.multiproc(pool=dpool)
     Time.add_measurement(TimingPoolMeas(dpool))
 
+    # t0 = Time()
     # res = dmup.map(work, args)
     # print(Time()-t0)
     # print('Got result:', res)
-
-    N = 20
-    y = yielder(N)
-    args = ywrapper(y, N)
-    t0 = Time()
-    print('Doing real work...')
-    t0 = Time()
-    riter = dmup.imap_unordered(realwork, args)
-    res = []
-    while True:
-        print('Waiting for result...')
-        try:
-            r = riter.next(1.)
-            print('Got result:', r)
-            res.append(r)
-        except StopIteration:
-            print('StopIteration')
-            break
-        except multiprocessing.TimeoutError:
-            print('Timeout error')
-            continue
-        except:
-            print('Exception waiting for result:')
-            import traceback
-            traceback.print_exc()
-    print(Time()-t0)
-    print('Got result:', res)
-    print('Took', Time()-t0)
-
-    cpu1 = CpuMeas()
-    worker_cpu = dpool.get_worker_cpu()
-    main_cpu = cpu1.cpu_seconds_since(cpu0)
-    main_wall = cpu1.wall_seconds_since(cpu0)
-    use = (main_cpu + worker_cpu) / main_wall
-    print('Average number of cores in use: %.1f %%' % (100. * use))
-    print('Core use (%i cores): %.1f %%' % (nproc, 100.*use/float(nproc)))
-
-    sys.exit(0)
 
     N = 20
     y = yielder(N)
