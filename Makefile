@@ -317,7 +317,7 @@ tags:
 
 report:
 	-uname -m
-	-uname -o
+	-uname -r
 	-uname -p
 	-uname -s
 	@echo "CC is $(CC)"
