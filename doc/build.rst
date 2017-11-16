@@ -49,6 +49,15 @@ Ubuntu or Debian-like systems:
                            python-pyfits python-dev zlib1g-dev \
                            libbz2-dev swig cfitsio-dev
 
+
+For example, in Debian 9 (Stretch):: 
+
+    $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
+                           libpng-dev libjpeg-dev python-numpy \
+                           python-pyfits python-dev zlib1g-dev \
+                           libbz2-dev swig libcfitsio-dev
+
+
 CentOS 6.5 / Fedora / RedHat / RHEL -- Detailed Instructions:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
