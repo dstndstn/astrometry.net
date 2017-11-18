@@ -169,6 +169,15 @@ want to add the INSTALL_DIR/bin directory to your path:
 
      $ setenv PATH "$PATH:/usr/local/astrometry/bin"
 
+Some of the scripts are written in Python and are run using the `python` from the user's environment via `env python`.
+To override this and use a python executable of your choice, you can use the `PYTHON_SCRIPT` variable, eg,::
+
+     $ make install INSTALL_DIR=/your/install/directory PYTHON_SCRIPT="/usr/bin/env python3.6"'
+
+or::
+
+     $ make install INSTALL_DIR=/your/install/directory PYTHON_SCRIPT="/usr/local/bin/python3.6"'
+
 
 Auto-config
 -----------
