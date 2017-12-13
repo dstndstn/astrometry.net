@@ -109,6 +109,7 @@ pyutil: thirdparty
 
 install: all report.txt
 	$(MAKE) install-core
+	$(MAKE) install-gsl
 	@echo
 	@echo The following command may fail if you don\'t have the cairo, netpbm, and
 	@echo png libraries and headers installed.  You will lose out on some eye-candy
@@ -138,6 +139,15 @@ install-core:
 	$(MAKE) -C qfits-an install
 	$(MAKE) -C blind install
 	$(MAKE) -C sdss install
+.PHONY: install-core
+
+ifeq ($(SYSTEM_GSL),yes)
+install-gsl:
+else
+install-gsl:
+	$(MAKE) -C gsl-an install
+endif
+.PHONY: install-core
 
 pyinstall:
 	$(MKDIR) '$(PY_BASE_INSTALL_DIR)'
