@@ -76,7 +76,7 @@ int engine_autoindex_search_paths(engine_t* engine) {
         sl* tryinds;
         int j;
         if (!dir) {
-            logerr("Warning: failed to open index directory: \"%s\"\n", path);
+            SYSERROR("Warning: failed to open index directory: \"%s\"\n", path);
             continue;
         }
         logverb("Auto-indexing directory \"%s\" ...\n", path);
