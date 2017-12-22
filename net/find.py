@@ -171,7 +171,7 @@ if __name__ == '__main__':
         print(sub.disk_file.get_path())
 
         if opt.rerun:
-            from .process_submissions import try_dojob
+            from astrometry.net.process_submissions import try_dojob
             print('Re-trying job', job.id)
             try_dojob(job, ui, opt.solve_command, opt.solve_locally)
 

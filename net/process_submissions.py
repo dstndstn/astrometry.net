@@ -178,6 +178,7 @@ def create_job_logger(job):
     return MyLogger(logger)
 
 def try_dojob(job, userimage, solve_command, solve_locally):
+    print('try_dojob', job)
     try:
         return dojob(job, userimage, solve_command=solve_command,
                      solve_locally=solve_locally)
@@ -834,8 +835,8 @@ if __name__ == '__main__':
     parser.add_option('--refreshrate', '-r', dest='refreshrate', type='float',
                       default=5, help='Set how often to check for new jobs and submissions (in seconds)')
 
-    parser.add_option('--solve-command', default='solve-field',
-                      help='Command to run instead of ssh to actually solve image, default "%default"')
+    parser.add_option('--solve-command', default=None,
+                      help='Command to run instead of ssh to actually solve image, eg "testscript-astro"')
 
     parser.add_option('--solve-locally',
                       help='Command to run astrometry-engine on this machine, not via ssh')

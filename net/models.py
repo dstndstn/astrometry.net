@@ -978,6 +978,8 @@ class UserImage(Hideable):
                 
     def get_best_job(self):
         jobs = self.jobs.all()
+        if len(jobs) == 0:
+            return None
         if jobs.count() == 1:
             return jobs[0]
         # Keep latest solved

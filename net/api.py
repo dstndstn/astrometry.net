@@ -122,7 +122,6 @@ def upload_common(request, url=None, file=None):
         T = fits_table()
         T.x = x
         T.y = y
-
         temp_file_path = tempfile.mktemp()
         T.writeto(temp_file_path)
         df = DiskFile.from_file(temp_file_path,
@@ -181,8 +180,6 @@ def upload_common(request, url=None, file=None):
                              'subid': sub.id,
                              'hash': sub.disk_file.file_hash}) 
 
-
-
 @csrf_exempt
 @requires_json_args
 @requires_json_session
@@ -222,7 +219,7 @@ def api_upload(request):
     logmsg('request.GET has keys:', request.GET.keys())
     logmsg('request.FILES has keys:', request.FILES.keys())
     #logmsg('api_upload: got request: ' + str(request.FILES['file'].size))
-    return upload_common(request, file=request.FILES['file'])
+    return upload_common(request, file=request.FILES.get('file'))
 
 def write_wcs_file(req, wcsfn):
     from astrometry.util import util as anutil
