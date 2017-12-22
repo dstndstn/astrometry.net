@@ -154,7 +154,9 @@ class Client(object):
                                 ('downsample_factor', None, int),
                                 ('tweak_order', None, int),
                                 ('crpix_center', None, bool),
-                                # image_width, image_height
+                                ('x', None, list),
+                                ('y', None, list),
+            # image_width, image_height
                                 ]:
             if key in kwargs:
                 val = kwargs.pop(key)
@@ -369,7 +371,7 @@ if __name__ == '__main__':
         if opt.upload:
             upres = c.upload(opt.upload, **kwargs)
         if opt.upload_xy:
-            from astrometry.util import fits_table
+            from astrometry.util.fits import fits_table
             T = fits_table(opt.upload_xy)
             kwargs.update(x=[float(x) for x in T.x], y=[float(y) for y in T.y])
             upres = c.upload(**kwargs)
