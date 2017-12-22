@@ -104,11 +104,34 @@ def requires_json_login(handler):
 
 
 def upload_common(request, url=None, file=None):
-    df, original_filename = handle_upload(file=file, url=url)
-    submittor = request.user if request.user.is_authenticated() else None
-    pro = get_user_profile(submittor)
     json = request.json
     logmsg('upload: JSON', json)
+    # Handle X,Y coordinate lists
+    if 'x' in json and 'y' in json:
+        import numpy as np
+        from astrometry.util.fits import fits_table
+        # Turns out the easiest way to interface this with the rest of the code
+        # is to just write a FITS table...
+        try:
+            x = np.array([float(v) for v in json['x']])
+            y = np.array([float(v) for v in json['y']])
+        except:
+            return HttpResponseErrorJson('Failed to parse JSON "x" and "y" values -- should be lists of floats')
+        if len(x) != len(y):
+            return HttpResponseErrorJson('"x" and "y" lists must be the same length')
+        T = fits_table()
+        T.x = x
+        T.y = y
+
+        temp_file_path = tempfile.mktemp()
+        T.writeto(temp_file_path)
+        df = DiskFile.from_file(temp_file_path,
+                                collection=Image.ORIG_COLLECTION)
+        original_filename = 'json-xy'
+    else:
+        df, original_filename = handle_upload(file=file, url=url)
+    submittor = request.user if request.user.is_authenticated() else None
+    pro = get_user_profile(submittor)
     allow_commercial_use = json.get('allow_commercial_use', 'd')
     allow_modifications = json.get('allow_modifications', 'd')
     license,created = License.objects.get_or_create(

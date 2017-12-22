@@ -171,15 +171,17 @@ class Client(object):
         result = self.send_request('url_upload', args)
         return result
 
-    def upload(self, fn, **kwargs):
+    def upload(self, fn=None, **kwargs):
         args = self._get_upload_args(**kwargs)
-        try:
-            f = open(fn, 'rb')
-            result = self.send_request('upload', args, (fn, f.read()))
-            return result
-        except IOError:
-            print('File %s does not exist' % fn)
-            raise
+        file_args = None
+        if fn is not None:
+            try:
+                f = open(fn, 'rb')
+                file_args = (fn, f.read())
+            except IOError:
+                print('File %s does not exist' % fn)
+                raise
+        return self.send_request('upload', args, file_args)
 
     def submission_images(self, subid):
         result = self.send_request('submission_images', {'subid':subid})
@@ -264,6 +266,7 @@ if __name__ == '__main__':
     parser.add_option('--apikey', '-k', dest='apikey',
                       help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
     parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
+    parser.add_option('--upload-xy', dest='upload_xy', help='Upload a FITS x,y table as JSON')
     parser.add_option('--wait', '-w', dest='wait', action='store_true', help='After submitting, monitor job status')
     parser.add_option('--wcs', dest='wcs', help='Download resulting wcs.fits file, saving to given filename; implies --wait if --urlupload or --upload')
     parser.add_option('--newfits', dest='newfits', help='Download resulting new-image.fits file, saving to given filename; implies --wait if --urlupload or --upload')
@@ -333,7 +336,7 @@ if __name__ == '__main__':
     c = Client(**args)
     c.login(opt.apikey)
 
-    if opt.upload or opt.upload_url:
+    if opt.upload or opt.upload_url or opt.upload_xy:
         if opt.wcs or opt.kmz or opt.newfits or opt.annotate:
             opt.wait = True
 
@@ -365,6 +368,11 @@ if __name__ == '__main__':
 
         if opt.upload:
             upres = c.upload(opt.upload, **kwargs)
+        if opt.upload_xy:
+            from astrometry.util import fits_table
+            T = fits_table(opt.upload_xy)
+            kwargs.update(x=[float(x) for x in T.x], y=[float(y) for y in T.y])
+            upres = c.upload(**kwargs)
         if opt.upload_url:
             upres = c.url_upload(opt.upload_url, **kwargs)
 
@@ -433,7 +441,7 @@ if __name__ == '__main__':
                 f.write(python2json(result))
 
     if opt.wait:
-        # beahviour as in old implementation
+        # behaviour as in old implementation
         opt.sub_id = None
 
     if opt.sdss_wcs:
