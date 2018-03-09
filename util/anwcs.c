@@ -1618,6 +1618,53 @@ anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
                       "AIT", "Hammer-Aitoff");
 }
 
+anwcs_t* anwcs_create_cea_wcs(double refra, double refdec,
+                              double refx, double refy,
+                              double pixscale,
+                              int W, int H, anbool yflip) {
+    qfits_header* hdr;
+    char* str = NULL;
+    int Nstr = 0;
+    anwcs_t* anwcs = NULL;
+    char code[64];
+    const char* wcsname = "Cylindrical equal-area";
+    const char* wcscode = "CEA";
+    hdr = qfits_header_default();
+    sprintf(code, "RA---%s", wcscode);
+    qfits_header_add(hdr, "CTYPE1", code, wcsname, NULL);
+    sprintf(code, "DEC--%s", wcscode);
+    qfits_header_add(hdr, "CTYPE2", code, wcsname, NULL);
+    //fits_header_add_double(hdr, "CRPIX1", W/2. + 0.5, NULL);
+    //fits_header_add_double(hdr, "CRPIX2", H/2. + 0.5, NULL);
+    fits_header_add_double(hdr, "CRPIX1", refx, NULL);
+    fits_header_add_double(hdr, "CRPIX2", refy, NULL);
+    fits_header_add_double(hdr, "CRVAL1", refra,  NULL);
+    fits_header_add_double(hdr, "CRVAL2", refdec, NULL);
+    fits_header_add_double(hdr, "CD1_1", -pixscale, NULL);
+    fits_header_add_double(hdr, "CD1_2", 0, NULL);
+    fits_header_add_double(hdr, "CD2_1", 0, NULL);
+    fits_header_add_double(hdr, "CD2_2", pixscale * (yflip ? -1 : 1), NULL);
+    fits_header_add_int(hdr, "IMAGEW", W, NULL);
+    fits_header_add_int(hdr, "IMAGEH", H, NULL);
+    //fits_header_add_double(hdr, "LATPOLE", 0., NULL);
+    //fits_header_add_double(hdr, "LONPOLE", 0., NULL);
+
+    str = fits_to_string(hdr, &Nstr);
+    qfits_header_destroy(hdr);
+    if (!str) {
+        ERROR("Failed to write %s FITS header as string", wcsname);
+        return NULL;
+    }
+    anwcs = anwcs_wcslib_from_string(str, Nstr);
+    free(str);
+    if (!anwcs) {
+        ERROR("Failed to parse %s header string with wcslib", wcsname);
+        return NULL;
+    }
+    return anwcs;
+}
+
+
 anwcs_t* anwcs_create_mercator_2(double refra, double refdec,
                                  double crpix1, double crpix2,
                                  double zoomfactor,
