@@ -111,6 +111,7 @@ ucac4tofits: ucac4tofits.o $(SLIB)
 ALL_OBJ += ucac4tofits.o
 
 2masstofits: 2masstofits.o $(SLIB)
+	echo ZLIB_LIB is $(ZLIB_LIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) $(ZLIB_LIB)
 ALL_OBJ += 2masstofits.o
 

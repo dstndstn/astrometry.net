@@ -162,6 +162,9 @@ class Plotstuff(object):
         # Caution: possible memory-handling problem with using "out"
         return self.pargs.get_image_as_numpy(flip, out)
 
+    def get_image_as_numpy_view(self):
+        return self.pargs.get_image_as_numpy_view()
+
     def set_image_from_numpy(self, img, flip=False):
         self.pargs.set_image_from_numpy(img, flip)
 
