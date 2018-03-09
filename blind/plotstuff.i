@@ -325,6 +325,10 @@ typedef enum cairo_op cairo_operator_t;
         dim[1] = self->W;
         dim[2] = 4;
         img = cairo_image_surface_get_data(self->target);
+        if (!img) {
+            PyErr_SetString(PyExc_ValueError, "Cairo image survey data is NULL in plotstuff.get_image_as_numpy_view");
+            return NULL;
+        }
         Py_INCREF(dtype);
         PyObject* npimg = PyArray_NewFromDescr(&PyArray_Type, dtype, 3, dim, NULL,
                                                img, 0, NULL);
