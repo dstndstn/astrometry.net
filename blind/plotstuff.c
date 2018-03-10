@@ -1000,6 +1000,15 @@ int plotstuff_init2(plot_args_t* pargs) {
 	case PLOTSTUFF_FORMAT_PNG:
 	case PLOTSTUFF_FORMAT_MEMIMG:
 		pargs->target = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pargs->W, pargs->H);
+                if (!pargs->target) {
+                    ERROR("Failed to create Cairo image surface of size %i x %i\n", pargs->W, pargs->H);
+                    return -1;
+                }
+                if (cairo_surface_status(pargs->target) != CAIRO_STATUS_SUCCESS) {
+                    ERROR("Failed to create Cairo image surface of size %i x %i: %s\n", pargs->W, pargs->H,
+                          cairo_status_to_string(cairo_surface_status(pargs->target)));
+                    return -1;
+                }
 		break;
 	default:
 		ERROR("Unknown output format %i", pargs->outformat);

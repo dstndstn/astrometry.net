@@ -182,7 +182,23 @@ enum cairo_op {
     CAIRO_OPERATOR_DEST_ATOP,
     CAIRO_OPERATOR_XOR,
     CAIRO_OPERATOR_ADD,
-    CAIRO_OPERATOR_SATURATE
+    CAIRO_OPERATOR_SATURATE,
+    // Since cairo 1.10
+    CAIRO_OPERATOR_MULTIPLY,
+    CAIRO_OPERATOR_SCREEN,
+    CAIRO_OPERATOR_OVERLAY,
+    CAIRO_OPERATOR_DARKEN,
+    CAIRO_OPERATOR_LIGHTEN,
+    CAIRO_OPERATOR_COLOR_DODGE,
+    CAIRO_OPERATOR_COLOR_BURN,
+    CAIRO_OPERATOR_HARD_LIGHT,
+    CAIRO_OPERATOR_SOFT_LIGHT,
+    CAIRO_OPERATOR_DIFFERENCE,
+    CAIRO_OPERATOR_EXCLUSION,
+    CAIRO_OPERATOR_HSL_HUE,
+    CAIRO_OPERATOR_HSL_SATURATION,
+    CAIRO_OPERATOR_HSL_COLOR,
+    CAIRO_OPERATOR_HSL_LUMINOSITY
 };
 typedef enum cairo_op cairo_operator_t;
 
@@ -283,7 +299,12 @@ typedef enum cairo_op cairo_operator_t;
         img = cairo_image_surface_get_data(self->target);
         // Possible memory problems here...
         if (out == Py_None || out == NULL) {
+            // rgba
             npimg = PyArray_EMPTY(3, dim, NPY_UBYTE, 0);
+            if (!npimg) {
+                PyErr_SetString(PyExc_ValueError, "Failed to allocate numpy array in plotstuff.get_image_as_numpy");
+                return NULL;
+            }
             assert(npimg);
         } else {
             npimg = out;
@@ -293,6 +314,24 @@ typedef enum cairo_op cairo_operator_t;
         } else {
             cairoutils_argb32_to_rgba_2(img, PyArray_DATA((PyArrayObject*)npimg), self->W, self->H);
         }
+        return npimg;
+    }
+
+    PyObject* get_image_as_numpy_view() {
+        unsigned char* img;
+        npy_intp dim[3];
+        PyArray_Descr* dtype = PyArray_DescrFromType(NPY_UBYTE);
+        dim[0] = self->H;
+        dim[1] = self->W;
+        dim[2] = 4;
+        img = cairo_image_surface_get_data(self->target);
+        if (!img) {
+            PyErr_SetString(PyExc_ValueError, "Cairo image survey data is NULL in plotstuff.get_image_as_numpy_view");
+            return NULL;
+        }
+        Py_INCREF(dtype);
+        PyObject* npimg = PyArray_NewFromDescr(&PyArray_Type, dtype, 3, dim, NULL,
+                                               img, 0, NULL);
         return npimg;
     }
 

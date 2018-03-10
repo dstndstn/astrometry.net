@@ -16,7 +16,7 @@
 #include "log.h"
 #include "errors.h"
 
-static const char* OPTIONS = "hx:X:Y:R:D:c:r:o:s:W:H:Cv";
+static const char* OPTIONS = "hx:X:Y:R:D:c:r:o:s:W:H:CU:V:v";
 
 void print_help(char* progname) {
     BOILERPLATE_HELP_HEADER(stdout);
@@ -35,6 +35,7 @@ void print_help(char* progname) {
            "   [-W <image-width> ] (default: max X position; used for SIP)\n"
            "   [-H <image-height>] (default: max Y position; used for SIP)\n"
            "   [-C]: set CRPIX to be the center of the field; SIP only\n"
+           "   [-U <CRPIX X> -V <CRPIX Y>]: set CRPIX pixel position; SIP only\n"
            "   [-v]: verbose\n"
            "\n", progname);
 }
@@ -50,7 +51,8 @@ int main(int argc, char** args) {
     char* ycol = NULL;
     char* rcol = NULL;
     char* dcol = NULL;
-
+    anbool crpix_set = FALSE;
+    double crpix[2];
     xylist_t* xyls = NULL;
     rdlist_t* rdls = NULL;
     rd_t rd;
@@ -67,6 +69,8 @@ int main(int argc, char** args) {
     anbool crpix_center = FALSE;
     int i;
     int doshift = 1;
+    crpix[0] = 0.;
+    crpix[1] = 0.;
 
     fits_use_error_system();
 
@@ -83,6 +87,14 @@ int main(int argc, char** args) {
             break;
         case 'C':
             crpix_center = TRUE;
+            break;
+        case 'U':
+            crpix_set = TRUE;
+            crpix[0] = atof(optarg);
+            break;
+        case 'V':
+            crpix_set = TRUE;
+            crpix[1] = atof(optarg);
             break;
         case 's':
             siporder = atoi(optarg);
@@ -214,7 +226,8 @@ int main(int argc, char** args) {
 
         fit_sip_wcs_2(xyz, fieldxy, NULL, N,
                       siporder, siporder+1, W, H,
-                      crpix_center, NULL, doshift, &wcs);
+                      crpix_center, crpix_set ? crpix : NULL,
+                      doshift, &wcs);
     }
 
     if (siporder <= 1) {
