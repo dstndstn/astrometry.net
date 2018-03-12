@@ -60,12 +60,16 @@ def siap_parse_result(fn=None):
                 continue
             assert(c.firstChild)
             c = c.firstChild
-            assert(c.nodeType == Node.TEXT_NODE)
+            # print('Node:', c)
+            # print('Node value:', c.nodeValue)
+            assert(c.nodeType in [Node.TEXT_NODE, Node.CDATA_SECTION_NODE])
             c = c.nodeValue
             datum = None
             if fa and ft in ['int','double']:
-                elements = c.split(',')
-                datum = array([fp(x) for x in elements])
+                #elements = c.split(',')
+                c = c.replace(',', ' ')
+                elements = c.split()
+                datum = np.array([fp(x) for x in elements])
             elif fp:
                 datum = fp(c)
             else:
