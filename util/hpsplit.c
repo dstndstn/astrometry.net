@@ -445,6 +445,9 @@ int main(int argc, char *argv[]) {
             flipped = FALSE;
             j=0;
             while (1) {
+                //anbool resuming = FALSE;
+                off_t seek_to = 0;
+
                 if (hps) {
                     if (j >= il_size(hps))
                         break;
@@ -462,11 +465,12 @@ int main(int argc, char *argv[]) {
                     // MEMLEAK the output filename.  You'll live.
                     if (ringindex) {
                         int ringhp = healpix_xy_to_ring(hp, nside);
-                        printf("Ring-indexed healpix: %i\n", ringhp);
+                        printf("Ring-indexed healpix: %i (xy index: %i)\n", ringhp, hp);
                         asprintf_safe(&outfn, outfnpat, ringhp);
                     } else {
                         asprintf_safe(&outfn, outfnpat, hp);
                     }
+
                     logmsg("Opening output file \"%s\"...\n", outfn);
                     if (closefiles) {
                         off_t offset = resume_offsets[hp];
@@ -476,8 +480,11 @@ int main(int argc, char *argv[]) {
                         else {
                             // else seek to where we left off...
                             out = fitstable_open_for_appending(outfn);
-                            logmsg("Seeking to %lu\n", (long)offset);
-                            fseeko(outtables[hp]->fid, offset, SEEK_SET);
+                            //logmsg("Seeking to %lu\n", (long)offset);
+                            //fseeko(out->fid, offset, SEEK_SET);
+                            fseeko(out->fid, 0, SEEK_SET);
+                            seek_to = offset;
+                            //resuming = TRUE;
                         }
                     } else {
                         out = fitstable_open_for_writing(outfn);
@@ -513,11 +520,18 @@ int main(int argc, char *argv[]) {
                     //printf("Output table:\n");
                     //fitstable_print_columns(out);
 
+                    //if (!resuming) {
                     if (fitstable_write_primary_header(out) ||
                         fitstable_write_header(out)) {
                         ERROR("Failed to write output file headers for \"%s\"", outfn);
                         exit(-1);
                     }
+                    //}
+                    if (seek_to) {
+                        logmsg("Seeking to %lu\n", (long)seek_to);
+                        fseeko(out->fid, seek_to, SEEK_SET);
+                    }
+
                     outtables[hp] = out;
                 }
 
@@ -603,6 +617,7 @@ int main(int argc, char *argv[]) {
                     exit(-1);
                 }
                 logmsg("Closed output file for healpix %i (saved file position %lu)\n", ii, (long)offset);
+                outtables[ii] = NULL;
             } else {
                 // the "fitstable_fix_header" call (via
                 // fitsfile_fix_header) adds padding to the file to bring it up to
