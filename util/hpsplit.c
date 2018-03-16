@@ -34,7 +34,7 @@
  rows that are within (or within range) of the healpix.
  */
 
-const char* OPTIONS = "hvn:r:d:m:o:gc:e:t:b:";
+const char* OPTIONS = "hvn:r:d:m:o:gc:e:t:b:R";
 
 void printHelp(char* progname) {
     BOILERPLATE_HELP_HEADER(stdout);
@@ -43,6 +43,7 @@ void printHelp(char* progname) {
            "    [-r <ra-column-name>]: name of RA in FITS table (default RA)\n"
            "    [-d <dec-column-name>]: name of DEC in FITS table (default DEC)\n"
            "    [-n <healpix Nside>]: default is 1\n"
+           "    [-R]: use ring indexing, rather than xy indexing, for healpixes\n"
            "    [-m <margin in deg>]: add a margin of this many degrees around the healpixes; default 0\n"
            "    [-g]: gzip'd inputs\n"
            "    [-c <name>]: copy given column name to the output files\n"
@@ -85,7 +86,8 @@ int main(int argc, char *argv[]) {
     int NHP;
     double md;
     char* backref = NULL;
-        
+    anbool ringindex = FALSE;
+    
     fitstable_t* intable;
     fitstable_t* intable2;
     fitstable_t** outtables;
@@ -98,6 +100,9 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+        case 'R':
+            ringindex = TRUE;
+            break;
         case 'b':
             backref = optarg;
             break;
@@ -434,9 +439,15 @@ int main(int argc, char *argv[]) {
                 if (!outtables[hp]) {
                     char* outfn;
                     fitstable_t* out;
-
+                    
                     // MEMLEAK the output filename.  You'll live.
-                    asprintf_safe(&outfn, outfnpat, hp);
+                    if (ringindex) {
+                        int ringhp = healpix_xy_to_ring(hp, nside);
+                        printf("Ring-indexed healpix: %i\n", ringhp);
+                        asprintf_safe(&outfn, outfnpat, ringhp);
+                    } else {
+                        asprintf_safe(&outfn, outfnpat, hp);
+                    }
                     logmsg("Opening output file \"%s\"...\n", outfn);
                     out = fitstable_open_for_writing(outfn);
                     if (!out) {
