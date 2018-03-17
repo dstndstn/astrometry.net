@@ -1541,6 +1541,8 @@ int fitstable_fix_header(fitstable_t* t) {
 
     if (in_memory(t)) return 0;
 
+    //printf("fitstable_fix_header: ext %i, table offset was %lu, fn %s\n",
+    //t->extension, (long)t->table_offset, t->fn);
     if (fitsfile_fix_header(t->fid, t->header,
                             &t->table_offset, &t->end_table_offset,
                             t->extension, t->fn)) {
