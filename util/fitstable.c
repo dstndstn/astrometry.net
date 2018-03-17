@@ -1291,9 +1291,11 @@ int fitstable_close(fitstable_t* tab) {
     int rtn = 0;
     if (!tab) return 0;
     if (is_writing(tab)) {
-        if (fclose(tab->fid)) {
-            SYSERROR("Failed to close output file %s", tab->fn);
-            rtn = -1;
+        if (tab->fid) {
+            if (fclose(tab->fid)) {
+                SYSERROR("Failed to close output file %s", tab->fn);
+                rtn = -1;
+            }
         }
     }
     if (tab->anq) {
