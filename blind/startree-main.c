@@ -16,7 +16,7 @@
 #include "log.h"
 #include "fitsioutils.h"
 
-const char* OPTIONS = "hvL:d:t:bsSci:o:R:D:Pkn:";
+const char* OPTIONS = "hvL:d:t:bsSci:o:R:D:PTkn:";
 
 void printHelp(char* progname) {
     BOILERPLATE_HELP_HEADER(stdout);
@@ -32,6 +32,7 @@ void printHelp(char* progname) {
            "    [-S]: include separate splitdim array\n"
            "    [-c]: run kdtree_check on the resulting tree\n"
            "    [-P]: unpermute tree + tag-along data\n"
+           "    [-T]: write tag-along table as first extension HDU\n"
            "    [-k]: keep RA,Dec columns in tag-along table\n"
            "    [-n <name>]: kd-tree name (default \"stars\")\n"
            "    [-v]: +verbose\n"
@@ -60,6 +61,7 @@ int main(int argc, char *argv[]) {
     anbool unpermute = FALSE;
     anbool remove_radec = TRUE;
     u32* perm = NULL;
+    anbool tagalong_first = FALSE;
     
     if (argc <= 2) {
         printHelp(progname);
@@ -68,6 +70,9 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+        case 'T':
+            tagalong_first = TRUE;
+            break;
         case 'n':
             treename = optarg;
             break;
@@ -171,27 +176,65 @@ int main(int argc, char *argv[]) {
         starkd->tree->perm = NULL;
     }
 
-    if (startree_write_to_file(starkd, skdtfn)) {
-        ERROR("Failed to write star kdtree");
-        exit(-1);
-    }
-    startree_close(starkd);
+    if (tagalong_first) {
+        logmsg("Writing tag-along data...\n");
+        tag = fitstable_open_for_writing(skdtfn);
+        if (fitstable_write_primary_header(tag)) {
+            ERROR("Failed to write primary header");
+            exit(-1);
+        }
+        if (startree_write_tagalong_table(cat, tag, racol, deccol,
+                                          (int*)perm, remove_radec)) {
+            ERROR("Failed to write tag-along table");
+            exit(-1);
+        }
+        // Append kd-tree
+        logverb("Appending kd-tree structure...\n");
+        FILE* fid = fopen(skdtfn, "r+b");
+        if (!fid) {
+            SYSERROR("Failed to open startree output file to append kd-tree: %s", skdtfn);
+            exit(-1);
+        }
+        if (fseeko(fid, 0, SEEK_END)) {
+            SYSERROR("Failed to seek to the end of the startree file to append kd-tree: %s", skdtfn);
+            exit(-1);
+        }
+        if (startree_append_to(starkd, fid)) {
+            ERROR("Failed to append star kdtree");
+            exit(-1);
+        }
+        startree_close(starkd);
+        if (fclose(fid)) {
+            SYSERROR("Failed to close star kdtree file after appending tree\n");
+            exit(-1);
+        }
+        if (fitstable_close(tag)) {
+            ERROR("Failed to close tag-along data");
+            exit(-1);
+        }
+        
+    } else {
+        if (startree_write_to_file(starkd, skdtfn)) {
+            ERROR("Failed to write star kdtree");
+            exit(-1);
+        }
+        startree_close(starkd);
 
-    // Append tag-along table.
-    logmsg("Writing tag-along data...\n");
-    tag = fitstable_open_for_appending(skdtfn);
+        // Append tag-along table.
+        logmsg("Writing tag-along data...\n");
+        tag = fitstable_open_for_appending(skdtfn);
 
-    if (startree_write_tagalong_table(cat, tag, racol, deccol,
-                                      (int*)perm, remove_radec)) {
-        ERROR("Failed to write tag-along table");
-        exit(-1);
-    }
+        if (startree_write_tagalong_table(cat, tag, racol, deccol,
+                                          (int*)perm, remove_radec)) {
+            ERROR("Failed to write tag-along table");
+            exit(-1);
+        }
 
-    if (fitstable_close(tag)) {
-        ERROR("Failed to close tag-along data");
-        exit(-1);
+        if (fitstable_close(tag)) {
+            ERROR("Failed to close tag-along data");
+            exit(-1);
+        }
     }
-	
     fitstable_close(cat);
     return 0;
 }
