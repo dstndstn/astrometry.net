@@ -462,26 +462,14 @@ int main(int argc, char *argv[]) {
                     // MEMLEAK the output filename.  You'll live.
                     if (ringindex) {
                         int ringhp = healpix_xy_to_ring(hp, nside);
-                        printf("Ring-indexed healpix: %i\n", ringhp);
+                        logverb("Ring-indexed healpix: %i (xy index: %i)\n", ringhp,hp);
                         asprintf_safe(&outfn, outfnpat, ringhp);
                     } else {
                         asprintf_safe(&outfn, outfnpat, hp);
                     }
+
                     logmsg("Opening output file \"%s\"...\n", outfn);
-                    if (closefiles) {
-                        off_t offset = resume_offsets[hp];
-                        if (offset == 0)
-                            // overwrite if first time
-                            out = fitstable_open_for_writing(outfn);
-                        else {
-                            // else seek to where we left off...
-                            out = fitstable_open_for_appending(outfn);
-                            logmsg("Seeking to %lu\n", (long)offset);
-                            fseeko(outtables[hp]->fid, offset, SEEK_SET);
-                        }
-                    } else {
-                        out = fitstable_open_for_writing(outfn);
-                    }
+                    out = fitstable_open_for_writing(outfn);
                     if (!out) {
                         ERROR("Failed to open output table \"%s\"", outfn);
                         exit(-1);
@@ -510,14 +498,12 @@ int main(int argc, char *argv[]) {
                                                          i32type, "backref_index", TRUE);
                     }
 
-                    //printf("Output table:\n");
-                    //fitstable_print_columns(out);
-
                     if (fitstable_write_primary_header(out) ||
                         fitstable_write_header(out)) {
                         ERROR("Failed to write output file headers for \"%s\"", outfn);
                         exit(-1);
                     }
+
                     outtables[hp] = out;
                 }
 
@@ -540,19 +526,21 @@ int main(int argc, char *argv[]) {
                     rdata = rowdata;
                 }
 
+                if (closefiles && (outtables[hp]->fid == NULL)) {
+                    char* outfn = outtables[hp]->fn;
+                    logverb("Re-opening healpix %i file %s at offset %lu\n",
+                            hp, outfn, (long)resume_offsets[hp]);
+                    outtables[hp]->fid = fopen(outfn, "r+b");
+                    fseeko(outtables[hp]->fid, resume_offsets[hp], SEEK_SET);
+                }
+
                 if (anycols) {
-                    /*
-                     if (fitstable_write_struct_noflip(outtables[hp], rdata)) {
-                     ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
-                     }
-                     */
                     if (!flipped) {
                         // if we're writing to multiple output
                         // healpixes, only flip once!
                         flipped = TRUE;
                         fitstable_endian_flip_row_data(intable2, rdata);
                     }
-                    //fitstable_endian_flip_row_data(outtables[hp], rdata);
                     if (fitstable_write_struct(outtables[hp], rdata)) {
                          ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
                      }
@@ -591,22 +579,27 @@ int main(int argc, char *argv[]) {
         for (ii=0; ii<NHP; ii++) {
             if (!outtables[ii])
                 continue;
+            if (closefiles && (outtables[ii]->fid == NULL))
+                continue;
 
             off_t offset = ftello(outtables[ii]->fid);
-
             if (closefiles) {
                 resume_offsets[ii] = offset;
-                if (fitstable_fix_header(outtables[ii]) ||
-                    fitstable_fix_primary_header(outtables[ii]) ||
-                    fitstable_close(outtables[ii])) {
-                    ERROR("Failed to close output table for healpix %i", ii);
+                logverb("Closing healpix %i (saving offset %lu)\n", ii, (long)offset);
+                if (fitstable_fix_header(outtables[ii])) {
+                    ERROR("Failed to fix header for healpix %i after reading input file \"%s\"", ii, originfn);
                     exit(-1);
                 }
-                logmsg("Closed output file for healpix %i (saved file position %lu)\n", ii, (long)offset);
+                if (fclose(outtables[ii]->fid)) {
+                    SYSERROR("Failed to close file %s\n", outtables[ii]->fn);
+                    exit(-1);
+                }
+                outtables[ii]->fid = NULL;
             } else {
                 // the "fitstable_fix_header" call (via
-                // fitsfile_fix_header) adds padding to the file to bring it up to
-                // a FITS block size, so we ftell and fseek afterward.
+                // fitsfile_fix_header) adds padding to the file to
+                // bring it up to a FITS block size, so we ftell and
+                // fseek afterward.
                 if (fitstable_fix_header(outtables[ii])) {
                     ERROR("Failed to fix header for healpix %i after reading input file \"%s\"", ii, originfn);
                     exit(-1);
@@ -625,6 +618,13 @@ int main(int argc, char *argv[]) {
     for (i=0; i<NHP; i++) {
         if (!outtables[i])
             continue;
+        if (closefiles && (outtables[i]->fid == NULL)) {
+            if (fitstable_close(outtables[i])) {
+                ERROR("Failed to close output table for healpix %i", i);
+                exit(-1);
+            }
+            continue;
+        }
         if (fitstable_fix_header(outtables[i]) ||
             fitstable_fix_primary_header(outtables[i]) ||
             fitstable_close(outtables[i])) {
