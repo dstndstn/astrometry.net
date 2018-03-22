@@ -188,6 +188,10 @@ int main(int argc, char *argv[]) {
             ERROR("Failed to write tag-along table");
             exit(-1);
         }
+        if (fitstable_close(tag)) {
+            ERROR("Failed to close tag-along data");
+            exit(-1);
+        }
         // Append kd-tree
         logverb("Appending kd-tree structure...\n");
         FILE* fid = fopen(skdtfn, "r+b");
@@ -199,6 +203,9 @@ int main(int argc, char *argv[]) {
             SYSERROR("Failed to seek to the end of the startree file to append kd-tree: %s", skdtfn);
             exit(-1);
         }
+        off_t off = ftello(fid);
+        printf("Offset to write starkd: %lu\n", off);
+
         if (startree_append_to(starkd, fid)) {
             ERROR("Failed to append star kdtree");
             exit(-1);
@@ -208,11 +215,6 @@ int main(int argc, char *argv[]) {
             SYSERROR("Failed to close star kdtree file after appending tree\n");
             exit(-1);
         }
-        if (fitstable_close(tag)) {
-            ERROR("Failed to close tag-along data");
-            exit(-1);
-        }
-        
     } else {
         if (startree_write_to_file(starkd, skdtfn)) {
             ERROR("Failed to write star kdtree");
