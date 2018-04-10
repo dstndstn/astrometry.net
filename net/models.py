@@ -330,9 +330,15 @@ class DiskFile(models.Model):
             defaults=dict(size=0, file_type='', collection=collection))
         if created or not os.path.exists(df.get_path()):
             try:
+                import stat
+                import shutil
                 # move it into place
                 df.make_dirs()
+                print('Moving', filename, 'to', df.get_path())
                 shutil.move(filename, df.get_path())
+                # chmod (temp files are usually created with mode 600)
+                os.chmod(df.get_path(), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                print('Chmod', df.get_path(), 'to 0x%x' % (stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH))
                 df.set_size_and_file_type()
                 df.save()
             except:
