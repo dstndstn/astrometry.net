@@ -60,7 +60,7 @@ int fitsfile_fix_header(FILE* fid, qfits_header* hdr,
                   (unsigned long)old_header_end, (unsigned long)new_header_end);
         return -1;
     }
-    fseek(fid, offset, SEEK_SET);
+    fseeko(fid, offset, SEEK_SET);
     // Pad out to FITS boundary.
     fits_pad_file(fid);
     return 0;

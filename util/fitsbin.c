@@ -288,6 +288,9 @@ int fitsbin_write_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 }
 
 int fitsbin_write_chunk_to(fitsbin_t* fb, fitsbin_chunk_t* chunk, FILE* fid) {
+    //logmsg("fitsbin_write_chunk_to: table %s, itemsize %i, nrows %i, header_start %lu, header_end %lu\n", chunk->tablename_copy, chunk->itemsize, chunk->nrows, chunk->header_start, chunk->header_end);
+    //off_t off = ftello(fid);
+    //logmsg("offset: %lu\n", off);
     if (fitsbin_write_chunk_header_to(fb, chunk, fid) ||
         fitsbin_write_items_to(chunk, chunk->data, chunk->nrows, fid))
         return -1;
@@ -352,6 +355,7 @@ int fitsbin_write_items_to(fitsbin_chunk_t* chunk, void* data, int N, FILE* fid)
         SYSERROR("Failed to write %i items", N);
         return -1;
     }
+    fits_pad_file(fid);
     return 0;
 }
 
