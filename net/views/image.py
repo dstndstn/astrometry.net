@@ -6,7 +6,6 @@ import tempfile
 import math
 import urllib
 import urllib2
-import PIL.Image
 import stat
 import time
 from datetime import datetime, timedelta
@@ -873,6 +872,7 @@ def new_fits_file(req, jobid=None):
     return res
 
 def kml_file(req, jobid=None):
+    import PIL.Image
     job = get_object_or_404(Job, pk=jobid)
     wcsfn = job.get_wcs_file()
     img = job.user_image.image
