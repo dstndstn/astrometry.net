@@ -901,7 +901,8 @@ class UserImageManager(models.Manager):
         solved_anonymous_uis = super(UserImageManager, self).filter(user=anonymous, jobs__calibration__isnull=False)
         non_anonymous_uis = super(UserImageManager, self).exclude(user=anonymous)
         valid_uis = non_anonymous_uis | solved_anonymous_uis
-        return valid_uis.order_by('-submission__submitted_on')
+        #return valid_uis.order_by('-submission__submitted_on')
+        return valid_uis.order_by('-submission__id')
 
     def public_only(self, user=None):
         if user is not None and not user.is_authenticated():

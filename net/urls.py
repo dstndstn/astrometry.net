@@ -8,6 +8,9 @@ from astrometry.net import settings
 
 urlpatterns = []
 
+import debug_toolbar
+urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
+
 from astrometry.net.views.home import home, support, api_help, explore
 
 urlpatterns.extend([
