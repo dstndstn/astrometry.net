@@ -4,6 +4,11 @@ sitename = 'nova'
 # settings_nova.py
 from settings_common import *
 
+MULTI_HOSTS = ['nova3.astrometry.net',
+               'nova4.astrometry.net',
+               'nova5.astrometry.net',
+               'nova6.astrometry.net',]
+
 # from settings_social import *
 # ENABLE_SOCIAL = True
 # SOUTH_MIGRATION_MODULES.update(SOCIAL_MIGRATION)
