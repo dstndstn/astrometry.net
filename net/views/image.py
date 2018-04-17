@@ -655,7 +655,8 @@ def index(req, images=None,
     if len(stats) < 3:
         images = images.filter(jobs__status__in=stats)
     #print 'index 1:', images.query
-    images = images.order_by('-submission__submitted_on')
+    # the public_only() view already sorts them
+    #images = images.order_by('-submission__submitted_on')
     #print 'index 2:', images.query
     page_number = req.GET.get('page', 1)
     page = get_page(images, 27, page_number)
