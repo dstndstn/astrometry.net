@@ -4,7 +4,6 @@
 shortnames =  [ "Aql","And","Scl","Ara","Lib","Cet","Ari","Sct","Pyx","Boo","Cae","Cha","Cnc","Cap","Car","Cas","Cen","Cep","Com","Cvn","Aur","Col","Cir","Crt","CrA","CrB","Crv","Cru","Cyg","Del","Dor","Dra","Nor","Eri","Sge","For","Gem","Cam","CMa","UMa","Gru","Her","Hor","Hya","Hyi","Ind","Lac","Mon","Lep","Leo","Lup","Lyn","Lyr","Ant","Mic","Mus","Oct","Aps","Oph","Ori","Pav","Peg","Pic","Per","Equ","CMi","LMi","Vul","UMi","Phe","Psc","PsA","Vol","Pup","Ret","Sgr","Sco","Ser","Sex","Men","Tau","Tel","Tuc","Tri","Tra","Aqr","Vir","Vel" ]
 
 constellation_lines = [
-    [8,5,3,7,5,20,3,5,2,9,2,2,5,9,14,4,16,6,2,1,6,6,2,9,9,6,6,2,9,5,5,14,5,27,4,1,16,5,17,19,9,18,2,18,4,3,6,6,14,10,13,7,5,1,2,4,3,2,7,21,13,13,2,10,4,1,4,1,7,11,19,6,7,7,4,24,12,11,1,1,12,1,3,3,3,14,12,10,],
     [582,579,579,576,579,568,568,580,591,580,568,555,555,551,568,556],
     [0,11,11,24,47,24,24,17,17,15],
     [685,18,18,681,681,685],
