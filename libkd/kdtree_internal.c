@@ -141,6 +141,11 @@
 // Get a pointer to the 'i'-th data point.
 #define KD_DATA(kd, D, i) ((kd)->data.DTYPE + ((size_t)(D)*(size_t)(i)))
 
+// Dereference an array of dimension D at element i, dimension d.
+#define KD_ARRAY_VAL(arr, D, i, d) ((arr)[(((size_t)(D)*(size_t)(i)) + (size_t)(d))])
+
+#define KD_ARRAY_REF(arr, D, i, d) ((arr) + (((size_t)(D)*(size_t)(i)) + (size_t)(d)))
+
 // Get the 'i'-th element of the permutation vector, or 'i' if there is no permutation vector.
 #define KD_PERM(kd, i) ((kd)->perm ? (kd)->perm[i] : i)
 
@@ -1510,9 +1515,9 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
             parr[il] = parr[ir];                        \
             parr[ir] = tmpperm;                         \
             { int d; for (d=0; d<D; d++) {              \
-                    tmpdata[0] = arr[(size_t)(il)*(size_t)D+(size_t)d]; \
-                    arr[(size_t)(il)*(size_t)D+(size_t)d] = arr[(size_t)(ir)*(size_t)D+(size_t)d]; \
-                    arr[(size_t)(il)*(size_t)D+(size_t)d] = tmpdata[0]; }}}}
+                    tmpdata[0] = KD_ARRAY_VAL(arr, D, il, d);           \
+                    *KD_ARRAY_REF(arr, D, il, d) = KD_ARRAY_VAL(arr, D, ir, d); \
+                    *KD_ARRAY_REF(arr, D, ir, d) = tmpdata[0]; }}}}
 #else
 #define ELEM_SWAP(il, ir) {                                     \
         if ((il) != (ir)) {                                     \
@@ -1520,9 +1525,9 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
             assert(tmpperm != -1);                              \
             parr[il] = parr[ir];                                \
             parr[ir] = tmpperm;                                 \
-            memcpy(tmpdata,    arr+(size_t)(il)*(size_t)D, D*sizeof(dtype));    \
-            memcpy(arr+(size_t)(il)*(size_t)D, arr+(size_t)(ir)*(size_t)D, D*sizeof(dtype));    \
-            memcpy(arr+(size_t)(ir)*(size_t)D, tmpdata,    D*sizeof(dtype)); }}
+            memcpy(tmpdata,                     KD_ARRAY_REF(arr, D, il, 0), D*sizeof(dtype)); \
+            memcpy(KD_ARRAY_REF(arr, D, il, 0), KD_ARRAY_REF(arr, D, ir, 0), D*sizeof(dtype)); \
+            memcpy(KD_ARRAY_REF(arr, D, ir, 0), tmpdata,                     D*sizeof(dtype)); }}
 #endif
 #define ELEM_ROT(iA, iB, iC) {                                  \
         tmpperm  = parr[iC];                                    \
@@ -1530,10 +1535,10 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
         parr[iB] = parr[iA];                                    \
         parr[iA] = tmpperm;                                     \
         assert(tmpperm != -1);                                  \
-        memcpy(tmpdata,    arr+(size_t)(iC)*(size_t)D, D*sizeof(dtype)); \
-        memcpy(arr+(size_t)(iC)*(size_t)D, arr+(size_t)(iB)*(size_t)D, D*sizeof(dtype));        \
-        memcpy(arr+(size_t)(iB)*(size_t)D, arr+(size_t)(iA)*(size_t)D, D*sizeof(dtype));        \
-        memcpy(arr+(size_t)(iA)*(size_t)D, tmpdata,    D*sizeof(dtype)); }
+        memcpy(tmpdata,                     KD_ARRAY_REF(arr, D, iC, 0), D*sizeof(dtype)); \
+        memcpy(KD_ARRAY_REF(arr, D, iC, 0), KD_ARRAY_REF(arr, D, iB, 0), D*sizeof(dtype)); \
+        memcpy(KD_ARRAY_REF(arr, D, iB, 0), KD_ARRAY_REF(arr, D, iA, 0), D*sizeof(dtype)); \
+        memcpy(KD_ARRAY_REF(arr, D, iA, 0), tmpdata,                     D*sizeof(dtype)); }
 
 static void kdtree_quickselect_partition(dtype *arr, unsigned int *parr,
                                          int L, int R, int D, int d,
@@ -2356,14 +2361,15 @@ kdtree_t* MANGLE(kdtree_build_2)
             m = (1+left+right)/2;
 
             /* Make sure sort works */
-            for(xx=left; xx<=right-1; xx++) { 
-                assert(data[D*xx+d] <= data[D*(xx+1)+d]);
+            for(xx=left; xx<=right-1; xx++) {
+                assert(KD_ARRAY_VAL(data, D, xx,   d) <=
+                       KD_ARRAY_VAL(data, D, xx+1, d));
             }
 
             /* Encode split dimension and value. */
             /* "s" is the location of the splitting plane in the "tree"
              data type. */
-            s = POINT_DT(kd, d, data[D*m+d], KD_ROUND);
+            s = POINT_DT(kd, d, KD_ARRAY_VAL(data, D, m, d), KD_ROUND);
 
             if (kd->split.any) {
                 /* If we are using the "split" array to store both the
@@ -2379,17 +2385,17 @@ kdtree_t* MANGLE(kdtree_build_2)
             qsplit = POINT_TD(kd, d, s);
 
             /* Play games to make sure we properly partition the data */
-            while (m < right && data[D*m+d] < qsplit) m++;
-            while (left < m  && qsplit < data[D*(m-1)+d]) m--;
+            while (m < right && KD_ARRAY_VAL(data, D, m, d) < qsplit) m++;
+            while (left < m  && qsplit < KD_ARRAY_VAL(data, D, m-1, d)) m--;
 
             /* Even more sanity */
             assert(m >= -1);
             assert(left <= m);
             assert(m <= right);
             for (xx=left; m && xx<=m-1; xx++)
-                assert(data[D*xx+d] <= qsplit);
+                assert(KD_ARRAY_VAL(data, D, xx, d) <= qsplit);
             for (xx=m; xx<=right; xx++)
-                assert(qsplit <= data[D*xx+d]);
+                assert(qsplit <= KD_ARRAY_VAL(data, D, xx, d));
 
         } else {
             /* "m-1" becomes R of the left child;
@@ -2404,19 +2410,21 @@ kdtree_t* MANGLE(kdtree_build_2)
             assert(m <= right);
             kdtree_quickselect_partition(data, kd->perm, left, right, D, dim, m);
 
-            s = POINT_DT(kd, d, data[D*m+d], KD_ROUND);
+            s = POINT_DT(kd, d, KD_ARRAY_VAL(data, D, m, d), KD_ROUND);
 
             assert(m != 0);
             assert(left <= (m-1));
             assert(m <= right);
             for (xx=left; xx<=m-1; xx++)
-                assert(data[D*xx+d] <= data[D*m+d]);
+                assert(KD_ARRAY_VAL(data, D, xx, d) <=
+                       KD_ARRAY_VAL(data, D, m, d));
             for (xx=left; xx<=m-1; xx++)
-                assert(data[D*xx+d] <= s);
+                assert(KD_ARRAY_VAL(data, D, xx, d) <= s);
             for (xx=m; xx<=right; xx++)
-                assert(data[D*m+d] <= data[D*xx+d]);
+                assert(KD_ARRAY_VAL(data, D, m, d) <=
+                       KD_ARRAY_VAL(data, D, xx, d));
             for (xx=m; xx<=right; xx++)
-                assert(s <= data[D*xx+d]);
+                assert(s <= KD_ARRAY_VAL(data, D, xx, d));
         }
 
         if (kd->split.any) {
