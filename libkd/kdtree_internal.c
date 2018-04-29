@@ -2358,8 +2358,11 @@ kdtree_t* MANGLE(kdtree_build_2)
                 // FIXME: memleak mania!
                 return NULL;
             }
-            m = (1+left+right)/2;
-
+            m = (1 + (size_t)left + (size_t)right)/2;
+            assert(m >= 0);
+            assert(m >= left);
+            assert(m <= right);
+            
             /* Make sure sort works */
             for(xx=left; xx<=right-1; xx++) {
                 assert(KD_ARRAY_VAL(data, D, xx,   d) <=
@@ -2404,8 +2407,9 @@ kdtree_t* MANGLE(kdtree_build_2)
                 m = kdtree_left(kd, KD_CHILD_RIGHT(i));
             } else {
                 /* Pivot the data at the median */
-                m = (left + right + 1) / 2;
+                m = (1 + (size_t)left + (size_t)right) / 2;
             }
+            assert(m >= 0);
             assert(m >= left);
             assert(m <= right);
             kdtree_quickselect_partition(data, kd->perm, left, right, D, dim, m);
