@@ -130,16 +130,16 @@
 #define KD_ROUND rint
 
 // Get the low corner of the bounding box
-#define LOW_HR( kd, D, i) ((kd)->bb.TTYPE + (2*(i)*(D)))
+#define LOW_HR( kd, D, i) ((kd)->bb.TTYPE + (2*(size_t)(i)*(size_t)(D)))
 
 // Get the high corner of the bounding box
-#define HIGH_HR(kd, D, i) ((kd)->bb.TTYPE + ((2*(i)+1)*(D)))
+#define HIGH_HR(kd, D, i) ((kd)->bb.TTYPE + ((2*(size_t)(i)+1)*(size_t)(D)))
 
 // Get the splitting-plane position
-#define KD_SPLIT(kd, i) ((kd)->split.TTYPE + (i))
+#define KD_SPLIT(kd, i) ((kd)->split.TTYPE + (size_t)(i))
 
 // Get a pointer to the 'i'-th data point.
-#define KD_DATA(kd, D, i) ((kd)->data.DTYPE + ((D)*(i)))
+#define KD_DATA(kd, D, i) ((kd)->data.DTYPE + ((size_t)(D)*(size_t)(i)))
 
 // Get the 'i'-th element of the permutation vector, or 'i' if there is no permutation vector.
 #define KD_PERM(kd, i) ((kd)->perm ? (kd)->perm[i] : i)
@@ -1441,8 +1441,8 @@ static int kdqsort_compare(const void* v1, const void* v2)
     dtype val1, val2;
     i1 = *((int*)v1);
     i2 = *((int*)v2);
-    val1 = kdqsort_arr[i1 * kdqsort_D];
-    val2 = kdqsort_arr[i2 * kdqsort_D];
+    val1 = kdqsort_arr[(size_t)i1 * (size_t)kdqsort_D];
+    val2 = kdqsort_arr[(size_t)i2 * (size_t)kdqsort_D];
     if (val1 < val2)
         return -1;
     else if (val1 > val2)
@@ -1458,14 +1458,14 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
     int* tmpparr;
 
     N = r - l + 1;
-    permute = MALLOC(N * sizeof(int));
+    permute = MALLOC((size_t)N * sizeof(int));
     if (!permute) {
         SYSERROR("Failed to allocate extra permutation array");
         return -1;
     }
     for (i = 0; i < N; i++)
         permute[i] = i;
-    kdqsort_arr = arr + l * D + d;
+    kdqsort_arr = arr + (size_t)l * (size_t)D + (size_t)d;
     kdqsort_D = D;
 
     qsort(permute, N, sizeof(int), kdqsort_compare);
@@ -1479,10 +1479,10 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
     for (j = 0; j < D; j++) {
         for (i = 0; i < N; i++) {
             int pi = permute[i];
-            tmparr[i] = arr[(l + pi) * D + j];
+            tmparr[i] = arr[(size_t)(l + pi) * (size_t)D + (size_t)j];
         }
         for (i = 0; i < N; i++)
-            arr[(l + i) * D + j] = tmparr[i];
+            arr[(size_t)(l + i) * (size_t)D + (size_t)j] = tmparr[i];
     }
     FREE(tmparr);
     tmpparr = MALLOC(N * sizeof(int));
@@ -1494,14 +1494,14 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
         int pi = permute[i];
         tmpparr[i] = parr[l + pi];
     }
-    memcpy(parr + l, tmpparr, N*sizeof(int));
+    memcpy(parr + l, tmpparr, (size_t)N*(size_t)sizeof(int));
     FREE(tmpparr);
     FREE(permute);
     return 0;
 }
 
 
-#define GET(x) (arr[(x)*D+d])
+#define GET(x) (arr[(size_t)(x)*(size_t)D+(size_t)d])
 #if defined(KD_DIM)
 #define ELEM_SWAP(il, ir) {                             \
         if ((il) != (ir)) {                             \
@@ -1510,9 +1510,9 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
             parr[il] = parr[ir];                        \
             parr[ir] = tmpperm;                         \
             { int d; for (d=0; d<D; d++) {              \
-                    tmpdata[0] = arr[(il)*D+d];         \
-                    arr[(il)*D+d] = arr[(ir)*D+d];      \
-                    arr[(il)*D+d] = tmpdata[0]; }}}}
+                    tmpdata[0] = arr[(size_t)(il)*(size_t)D+(size_t)d]; \
+                    arr[(size_t)(il)*(size_t)D+(size_t)d] = arr[(size_t)(ir)*(size_t)D+(size_t)d]; \
+                    arr[(size_t)(il)*(size_t)D+(size_t)d] = tmpdata[0]; }}}}
 #else
 #define ELEM_SWAP(il, ir) {                                     \
         if ((il) != (ir)) {                                     \
@@ -1520,9 +1520,9 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
             assert(tmpperm != -1);                              \
             parr[il] = parr[ir];                                \
             parr[ir] = tmpperm;                                 \
-            memcpy(tmpdata,    arr+(il)*D, D*sizeof(dtype));    \
-            memcpy(arr+(il)*D, arr+(ir)*D, D*sizeof(dtype));    \
-            memcpy(arr+(ir)*D, tmpdata,    D*sizeof(dtype)); }}
+            memcpy(tmpdata,    arr+(size_t)(il)*(size_t)D, D*sizeof(dtype));    \
+            memcpy(arr+(size_t)(il)*(size_t)D, arr+(size_t)(ir)*(size_t)D, D*sizeof(dtype));    \
+            memcpy(arr+(size_t)(ir)*(size_t)D, tmpdata,    D*sizeof(dtype)); }}
 #endif
 #define ELEM_ROT(iA, iB, iC) {                                  \
         tmpperm  = parr[iC];                                    \
@@ -1530,10 +1530,10 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
         parr[iB] = parr[iA];                                    \
         parr[iA] = tmpperm;                                     \
         assert(tmpperm != -1);                                  \
-        memcpy(tmpdata,    arr+(iC)*D, D*sizeof(dtype));        \
-        memcpy(arr+(iC)*D, arr+(iB)*D, D*sizeof(dtype));        \
-        memcpy(arr+(iB)*D, arr+(iA)*D, D*sizeof(dtype));        \
-        memcpy(arr+(iA)*D, tmpdata,    D*sizeof(dtype)); }
+        memcpy(tmpdata,    arr+(size_t)(iC)*(size_t)D, D*sizeof(dtype)); \
+        memcpy(arr+(size_t)(iC)*(size_t)D, arr+(size_t)(iB)*(size_t)D, D*sizeof(dtype));        \
+        memcpy(arr+(size_t)(iB)*(size_t)D, arr+(size_t)(iA)*(size_t)D, D*sizeof(dtype));        \
+        memcpy(arr+(size_t)(iA)*(size_t)D, tmpdata,    D*sizeof(dtype)); }
 
 static void kdtree_quickselect_partition(dtype *arr, unsigned int *parr,
                                          int L, int R, int D, int d,
@@ -2038,7 +2038,11 @@ static void convert_data(kdtree_t* kd, etype* edata, int N, int D, int Nleaf) {
     }
     kd->invscale = 1.0 / kd->scale;
 
-    ddata = kd->data.any = MALLOC(N * D * sizeof(dtype));
+    ddata = kd->data.any = MALLOC((size_t)N * (size_t)D * (size_t)sizeof(dtype));
+    if (!ddata) {
+        ERROR("Failed to malloc %i x %i x %i\n", N, D, sizeof(dtype));
+        return;
+    }
     kd->free_data = TRUE;
     for (i=0; i<N; i++) {
         for (d=0; d<D; d++) {
