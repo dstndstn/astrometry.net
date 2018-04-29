@@ -379,6 +379,8 @@ def calibration(req, job_id):
         return HttpResponseJson({
             'ra':ra,
             'dec':dec,
+            'width_arcsec': pixscale * cal.raw_tan.imagew,
+            'height_arcsec': pixscale * cal.raw_tan.imageh,
             'radius':radius,
             'pixscale':pixscale,
             'orientation':orient,

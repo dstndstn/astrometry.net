@@ -7,9 +7,25 @@ from django.contrib.auth.decorators import login_required
 from astrometry.net.models import *
 
 def home(req):
+    from astrometry.net import settings
+
+    # home-brewed {% cycle %} replacement
+    class nexthost(object):
+        def __init__(self, hosts):
+            self.hosts = hosts
+            self.i = 0
+        def get(self):
+            rtn = self.hosts[self.i]
+            self.i = (self.i + 1) % len(self.hosts)
+            return rtn
+
     context = {
-        'images':UserImage.objects.public_only(req.user),
+        'images':UserImage.objects.public_only(req.user)[:8],
     }
+    if len(settings.MULTI_HOSTS):
+        context.update({
+            'multi_hosts': nexthost(settings.MULTI_HOSTS),
+        })
     return render(req, 'home.html', context)
 
 def support(req):

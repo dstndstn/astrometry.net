@@ -1,14 +1,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
-import random
 import os
-import errno
-import hashlib
-import shutil
-import tempfile
 from datetime import datetime
-
-import numpy as np
 
 from django.db import models
 from django.db.models import Q
@@ -19,7 +12,6 @@ from django.core.urlresolvers import reverse
 from astrometry.net.settings import *
 from .wcs import *
 from .log import *
-
 from .enhance_models import *
 
 from astrometry.util.starutil_numpy import ra2hmsstring, dec2dmsstring
@@ -29,11 +21,6 @@ from astrometry.util.fits import *
 from astrometry.util.image2pnm import image2pnm
 from astrometry.util import util as anutil
 from astrometry.net.tmpfile import *
-
-import PIL.Image, PIL.ImageDraw
-
-from urllib2 import urlopen
-
 from astrometry.net.abstract_models import *
 
 ### Admin view -- running Submissions and Jobs
@@ -110,6 +97,7 @@ class License(models.Model):
 
     def get_license_xml(self):
         try:
+            from urllib2 import urlopen
             allow_commercial_use = self.allow_commercial_use
             allow_modifications = self.allow_modifications
 
@@ -317,6 +305,7 @@ class DiskFile(models.Model):
             os.makedirs(file_directory)
         except OSError as e:
             # we don't care if the directory already exists
+            import errno
             if e.errno == errno.EEXIST:
                 pass
             else: raise
@@ -341,9 +330,15 @@ class DiskFile(models.Model):
             defaults=dict(size=0, file_type='', collection=collection))
         if created or not os.path.exists(df.get_path()):
             try:
+                import stat
+                import shutil
                 # move it into place
                 df.make_dirs()
+                print('Moving', filename, 'to', df.get_path())
                 shutil.move(filename, df.get_path())
+                # chmod (temp files are usually created with mode 600)
+                os.chmod(df.get_path(), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                print('Chmod', df.get_path(), 'to 0x%x' % (stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH))
                 df.set_size_and_file_type()
                 df.save()
             except:
@@ -353,6 +348,7 @@ class DiskFile(models.Model):
 
     @staticmethod
     def get_hash():
+        import hashlib
         return hashlib.sha1()
 
 class CachedFile(models.Model):
@@ -563,11 +559,14 @@ class SourceList(Image):
         return image
     
     def render(self, f):
+        from math import ceil
+        import PIL.Image, PIL.ImageDraw
+
         fits = self.get_fits_table()
         #w = int(fits.x.max()-fits.x.min())
         #h = int(fits.y.max()-fits.y.min())
-        w = int(np.ceil(fits.x.max()))
-        h = int(np.ceil(fits.y.max()))
+        w = int(ceil(fits.x.max()))
+        h = int(ceil(fits.y.max()))
         scale = float(self.width)/w
         #xmin = int(fits.x.min())
         #ymin = int(fits.y.min())
@@ -816,6 +815,7 @@ class Job(models.Model):
         return ''.join(lines[-nlines:])
 
     def make_dir(self):
+        import shutil
         dirnm = self.get_dir()
         # remove any previous contents
         shutil.rmtree(dirnm, ignore_errors=True)
@@ -901,7 +901,8 @@ class UserImageManager(models.Manager):
         solved_anonymous_uis = super(UserImageManager, self).filter(user=anonymous, jobs__calibration__isnull=False)
         non_anonymous_uis = super(UserImageManager, self).exclude(user=anonymous)
         valid_uis = non_anonymous_uis | solved_anonymous_uis
-        return valid_uis.order_by('-submission__submitted_on')
+        #return valid_uis.order_by('-submission__submitted_on')
+        return valid_uis.order_by('-submission__id')
 
     def public_only(self, user=None):
         if user is not None and not user.is_authenticated():
@@ -1225,6 +1226,7 @@ class UserProfile(models.Model):
 
     def create_api_key(self):
         # called in openid_views.py (where profile is first created)
+        import random
         key = ''.join([chr(random.randint(ord('a'), ord('z')))
                        for i in range(self.__class__.API_KEY_LENGTH)])
         self.apikey = key

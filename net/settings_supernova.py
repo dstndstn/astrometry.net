@@ -4,6 +4,11 @@ sitename = 'supernova'
 
 from settings_common import *
 
+MULTI_HOSTS = ['supernova3.astrometry.net',
+               'supernova4.astrometry.net',
+               'supernova5.astrometry.net',
+               'supernova6.astrometry.net',]
+
 # from settings_social import *
 # ENABLE_SOCIAL = True
 # SOUTH_MIGRATION_MODULES.update(SOCIAL_MIGRATION)

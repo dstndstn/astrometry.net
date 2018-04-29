@@ -6,7 +6,6 @@ import tempfile
 import math
 import urllib
 import urllib2
-import PIL.Image
 import stat
 import time
 from datetime import datetime, timedelta
@@ -655,7 +654,8 @@ def index(req, images=None,
     if len(stats) < 3:
         images = images.filter(jobs__status__in=stats)
     #print 'index 1:', images.query
-    images = images.order_by('-submission__submitted_on')
+    # the public_only() view already sorts them
+    #images = images.order_by('-submission__submitted_on')
     #print 'index 2:', images.query
     page_number = req.GET.get('page', 1)
     page = get_page(images, 27, page_number)
@@ -873,6 +873,7 @@ def new_fits_file(req, jobid=None):
     return res
 
 def kml_file(req, jobid=None):
+    import PIL.Image
     job = get_object_or_404(Job, pk=jobid)
     wcsfn = job.get_wcs_file()
     img = job.user_image.image

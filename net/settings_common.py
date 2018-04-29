@@ -5,7 +5,18 @@ import astrometry.net.secrets.auth as authsecrets
 from astrometry.net.util import dict_pack
 
 ALLOWED_HOSTS = ['astro.cs.toronto.edu', 'nova2.astrometry.net', 'localhost',
-                 'supernova.astrometry.net', 'nova.astrometry.net']
+                 'supernova.astrometry.net', 'nova.astrometry.net',
+                 'supernova3.astrometry.net',
+                 'supernova4.astrometry.net',
+                 'supernova5.astrometry.net',
+                 'supernova6.astrometry.net',
+                 'nova3.astrometry.net',
+                 'nova4.astrometry.net',
+                 'nova5.astrometry.net',
+                 'nova6.astrometry.net',
+]
+
+MULTI_HOSTS = []
 
 WCS2KML = '/usr/local/wcs2kml/bin/wcs2kml'
 
