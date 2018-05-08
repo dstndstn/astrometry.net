@@ -52,7 +52,9 @@ void printHelp(char* progname) {
            "    [-t <temp-dir>]: use the given temp dir; default is /tmp\n"
            "    [-b <backref-file>]: save the filenumber->filename map in this file; enables writing backreferences too\n"
            "    [-v]: +verbose\n"
-           "\n", progname);
+           "\n\n\n"
+           "WARNING: The input FITS files MUST have EXACTLY the same format!!",
+           progname);
 }
 
 
