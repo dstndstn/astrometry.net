@@ -1,7 +1,7 @@
 /*
-  # This file is part of the Astrometry.net suite.
-  # Licensed under a 3-clause BSD style license - see LICENSE
-  */
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 /**
 
@@ -29,6 +29,7 @@
 #include "fileutils.h"
 
 // required for this sample program, maybe not for yours...
+#include <sys/time.h>
 #include "anqfits.h"
 #include "image2xy.h"
 #include "sip_qfits.h"
@@ -51,7 +52,7 @@
 #define DEFAULT_ARCMIN_MIN 15.0
 #define DEFAULT_ARCMIN_MAX 25.0
 
-static const char* OPTIONS = "hvc:a:A:W:H:";
+static const char* OPTIONS = "hvc:a:A:W:H:I";
 
 
 static void print_help(const char* progname) {
@@ -62,6 +63,7 @@ static void print_help(const char* progname) {
            "   [-A <maximum field width>] in arcminutes, default %g\n"
            "   [-W <image width> ] in pixels, default %i\n"
            "   [-H <image height>] in pixels, default %i\n"
+           "   [-I]: ignore existing WCS\n"
            "   [-v]: verbose\n"
            "\n"
            "    <FITS image filename> [<FITS image filename> ...]: "
@@ -94,6 +96,9 @@ static void get_next_field(char* fits_image_fn,
 struct callbackdata {
     solver_t* solver;
     MatchObj match;
+    float max_cpu_time;
+    float max_wall_time;
+    double wall_start;
 };
 
 /* This callback function is only required if you need the list of
@@ -128,11 +133,30 @@ static anbool record_match_callback(MatchObj* mo, void* userdata) {
     return TRUE;
 }
 
+/* This callback will be called every second. */
+static time_t timer_callback(void* userdata) {
+    struct callbackdata* cb = userdata;
+    solver_t* solver = cb->solver;
+    double walltime = timenow() - cb->wall_start;
+    printf("timer_callback.  CPU time used: %f, wall time %f, best logodds %f\n",
+           solver->timeused, walltime, solver->best_logodds);
+    if ((cb->max_wall_time > 0) && (walltime > cb->max_wall_time)) {
+        printf("max wall time exceeded; exiting\n");
+        solver->quit_now = TRUE;
+    }
+    if ((cb->max_cpu_time > 0) && (solver->timeused > cb->max_cpu_time)) {
+        printf("max CPU time exceeded; exiting\n");
+        solver->quit_now = TRUE;
+    }
+    return 1;
+}
+
 int main(int argc, char** args) {
     // Astrometry.net config file name
     char* configfn = NULL;
     // logging level
     int loglvl = LOG_MSG;
+    anbool ignore = FALSE;
 
     // Image size in pixels.
     int imagew = DEFAULT_IMAGEW;
@@ -140,6 +164,10 @@ int main(int argc, char** args) {
     // Image angular width range, in arcminutes.
     double arcmin_width_min = DEFAULT_ARCMIN_MIN;
     double arcmin_width_max = DEFAULT_ARCMIN_MAX;
+
+    // arcsecond-per-pixel min and max
+    double app_min;
+    double app_max;
 
     // sl = string list, list of FITS images to read
     sl* imagefiles;
@@ -158,6 +186,9 @@ int main(int argc, char** args) {
             exit(0);
         case 'v':
             loglvl++;
+            break;
+        case 'I':
+            ignore = TRUE;
             break;
         case 'c':
             configfn = strdup(optarg);
@@ -251,44 +282,41 @@ int main(int argc, char** args) {
     // Here we initialize the core astrometry solver struct, telling
     // it about the possible range of image scales.
     solver = solver_new();
-    {
-        // arcsecond-per-pixel min and max
-        double app_min, app_max;
-        // "quad scale fraction" -- what minimum size of quadrangle
-        // should be look at, as a fraction of the image size.  The
-        // idea is that tiny quadrangles (in pixel space) won't
-        // produce a good solution (because the positions are
-        // relatively noisy).
-        double qsf_min = 0.1;
 
-        // compute scale range in arcseconds per pixel.
-        app_min = arcmin2arcsec(arcmin_width_min / (double)imagew);
-        app_max = arcmin2arcsec(arcmin_width_max / (double)imagew);
-        // set the solver's "funits" = field (image) scale units
-        solver->funits_lower = app_min;
-        solver->funits_upper = app_max;
+    // "quad scale fraction" -- what minimum size of quadrangle
+    // should be look at, as a fraction of the image size.  The
+    // idea is that tiny quadrangles (in pixel space) won't
+    // produce a good solution (because the positions are
+    // relatively noisy).
+    double qsf_min = 0.1;
 
-        // If you want to look at only a limited number of sources:
-        // solver->endobj = 20;
-        // Or you can limit the number of quads the solver tries:
-        // solver->maxquads = 1000000;
-        // solver->maxmatches = 1000000;
+    // compute scale range in arcseconds per pixel.
+    app_min = arcmin2arcsec(arcmin_width_min / (double)imagew);
+    app_max = arcmin2arcsec(arcmin_width_max / (double)imagew);
+    // set the solver's "funits" = field (image) scale units
+    solver->funits_lower = app_min;
+    solver->funits_upper = app_max;
 
-        // don't try teeny-tiny quads.
-        solver->quadsize_min = qsf_min * MIN(imagew, imageh);
+    // If you want to look at only a limited number of sources:
+    // solver->endobj = 20;
+    // Or you can limit the number of quads the solver tries:
+    // solver->maxquads = 1000000;
+    // solver->maxmatches = 1000000;
 
-        // by determining whether your images have "positive" or
-        // "negative" parity (sign of the determinant of WCS CD matrix),
-        // you can set this and save half the compute time.
-        // solver->parity = PARITY_NORMAL;
-        // or
-        // solver->parity = PARITY_FLIP;
+    // don't try teeny-tiny quads.
+    solver->quadsize_min = qsf_min * MIN(imagew, imageh);
 
-        // This determines how good a match has to be before we accept
-        // it.  You can set this to be huge; most matches are
-        // overwhelmingly good, assuming you have ~10 or more matched stars.
-        solver_set_keep_logodds(solver, log(1e12));
-    }
+    // by determining whether your images have "positive" or
+    // "negative" parity (sign of the determinant of WCS CD matrix),
+    // you can set this and save half the compute time.
+    // solver->parity = PARITY_NORMAL;
+    // or
+    // solver->parity = PARITY_FLIP;
+
+    // This determines how good a match has to be before we accept
+    // it.  You can set this to be huge; most matches are
+    // overwhelmingly good, assuming you have ~10 or more matched stars.
+    solver_set_keep_logodds(solver, log(1e12));
 
     for (I=0;; I++) {
         size_t i, N;
@@ -306,6 +334,8 @@ int main(int argc, char** args) {
         double t0, t1;
         struct callbackdata cb;
         cb.solver = solver;
+        cb.max_cpu_time = 0.0;
+        cb.max_wall_time = 0.0;
         MatchObj* match = &(cb.match);
         memset(match, 0, sizeof(MatchObj));
 
@@ -342,7 +372,7 @@ int main(int argc, char** args) {
         // How big of a search radius should we use?  radec_radius
         // plus the maximum image size.
         radec_radius += arcsec2deg(app_max * hypot(imagew, imageh) / 2.0);
-        
+
         // Which indexes should we use?  Use the WCS or RA,Dec
         // estimate to decide.
         N = pl_size(engine->indexes);
@@ -366,7 +396,7 @@ int main(int argc, char** args) {
         solver->record_match_callback = record_match_callback;
         solver->userdata = &cb;
 
-        if (sip) {
+        if (sip && !ignore) {
             logmsg("Trying to verify existing WCS...\n");
             solver_verify_sip_wcs(solver, sip);
             if (solver->best_match_solves) {
@@ -379,6 +409,11 @@ int main(int argc, char** args) {
                 logmsg("Existing WCS failed the verification test...\n");
             }
         }
+
+        solver->timer_callback = timer_callback;
+        cb.max_cpu_time = 10;
+        cb.max_wall_time = 20;
+        cb.wall_start = timenow();
 
         if (!solved) {
             /*
@@ -466,7 +501,7 @@ int main(int argc, char** args) {
 static void get_next_field(char* fits_image_fn,
                            int* nstars, double** starx, double** stary,
                            double** starflux, sip_t** sip,
-                           double* ra, double* dec) {
+                           double* ra, double* dec, double* radec_radius) {
     int i, N;
     simplexy_t simxy;
     // For this sample program I'm just going to read from a FITS image,
