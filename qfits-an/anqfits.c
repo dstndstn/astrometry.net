@@ -1112,6 +1112,9 @@ void* anqfits_readpix(const anqfits_t* qf, int ext,
 
     tfits_type in_ttype, out_ttype;
 
+    if (!img)
+        return NULL;
+
     if (x0) {
         if ((x0 < 0) || (x1 && (x0 >= x1)) || (x0 >= img->width)) {
             qfits_error("Invalid x0=%i not in [0, x1=%i <= W=%i) reading %s ext %i",

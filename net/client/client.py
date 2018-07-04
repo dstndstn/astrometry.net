@@ -150,6 +150,7 @@ class Client(object):
                                 ('scale_err', None, float),
                                 ('center_ra', None, float),
                                 ('center_dec', None, float),
+                                ('parity',None,int),
                                 ('radius', None, float),
                                 ('downsample_factor', None, int),
                                 ('tweak_order', None, int),
