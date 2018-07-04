@@ -565,6 +565,7 @@ int main(int argc, char *argv[]) {
         free(rowbuf);
 
         fitstable_close(intable);
+        fitstable_close(intable2);
         il_free(hps);
 
         if (tempfn) {
