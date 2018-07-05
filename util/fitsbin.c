@@ -351,11 +351,14 @@ int fitsbin_fix_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 }
 
 int fitsbin_write_items_to(fitsbin_chunk_t* chunk, void* data, int N, FILE* fid) {
+    //off_t offset;
     if (fwrite(data, chunk->itemsize, N, fid) != N) {
         SYSERROR("Failed to write %i items", N);
         return -1;
     }
-    fits_pad_file(fid);
+    //offset = ftello(fid);
+    //fits_pad_file(fid);
+    //fseeko(fid, offset, SEEK_SET);
     return 0;
 }
 
