@@ -4,15 +4,21 @@ import os
 import sys
 import time
 import base64
-from urllib2 import urlopen
-from urllib2 import Request
-from urllib2 import HTTPError
-from urllib import urlencode
-from urllib import quote
-from exceptions import Exception
-from email.mime.multipart import MIMEMultipart
 
+try:
+    # py3
+    from urllib.parse import urlparse, urlencode, quote
+    from urllib.request import urlopen, Request
+    from urllib.error import HTTPError
+except ImportError:
+    # py2
+    from urlparse import urlparse
+    from urllib import urlencode, quote
+    from urllib2 import urlopen, Request, HTTPError
+
+#from exceptions import Exception
 from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
 from email.mime.application  import MIMEApplication
 
 from email.encoders import encode_noop
@@ -57,24 +63,30 @@ class Client(object):
 
         # If we're sending a file, format a multipart/form-data
         if file_args is not None:
-            m1 = MIMEBase('text', 'plain')
-            m1.add_header('Content-disposition', 'form-data; name="request-json"')
-            m1.set_payload(json)
+            # Make a custom generator to format it the way we need.
+            from io import BytesIO
+            try:
+                # py3
+                from email.generator import BytesGenerator as TheGenerator
+            except ImportError:
+                # py2
+                from email.generator import Generator as TheGenerator
 
+            m1 = MIMEBase('text', 'plain')
+            m1.add_header('Content-disposition',
+                          'form-data; name="request-json"')
+            m1.set_payload(json)
             m2 = MIMEApplication(file_args[1],'octet-stream',encode_noop)
             m2.add_header('Content-disposition',
-                          'form-data; name="file"; filename="%s"' % file_args[0])
-
+                          'form-data; name="file"; filename="%s"'%file_args[0])
             mp = MIMEMultipart('form-data', None, [m1, m2])
 
-            # Make a custom generator to format it the way we need.
-            from cStringIO import StringIO
-            from email.generator import Generator
-
-            class MyGenerator(Generator):
+            class MyGenerator(TheGenerator):
                 def __init__(self, fp, root=True):
-                    Generator.__init__(self, fp, mangle_from_=False,
-                                       maxheaderlen=0)
+                    # don't try to use super() here; in py2 Generator is not a
+                    # new-style class.  Yuck.
+                    TheGenerator.__init__(self, fp, mangle_from_=False,
+                                          maxheaderlen=0)
                     self.root = root
                 def _write_headers(self, msg):
                     # We don't want to write the top-level headers;
@@ -85,16 +97,16 @@ class Client(object):
                     # doesn't provide the flexibility to override, so we
                     # have to copy-n-paste-n-modify.
                     for h, v in msg.items():
-                        print(('%s: %s\r\n' % (h,v)), end='', file=self._fp)
+                        self._fp.write(('%s: %s\r\n' % (h,v)).encode())
                     # A blank line always separates headers from body
-                    print('\r\n', end='', file=self._fp)
+                    self._fp.write('\r\n'.encode())
 
                 # The _write_multipart method calls "clone" for the
                 # subparts.  We hijack that, setting root=False
                 def clone(self, fp):
                     return MyGenerator(fp, root=False)
 
-            fp = StringIO()
+            fp = BytesIO()
             g = MyGenerator(fp)
             g.flatten(mp)
             data = fp.getvalue()
@@ -105,6 +117,7 @@ class Client(object):
             data = {'request-json': json}
             print('Sending form data:', data)
             data = urlencode(data)
+            data = data.encode('utf-8')
             print('Sending data:', data)
             headers = {}
 
