@@ -20,7 +20,7 @@
 #include "log.h"
 #include "starutil.h"
 
-const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:B:A:D:t:e:";
+const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:B:A:D:t:e:K";
 
 static void print_help(char* progname) {
 	BOILERPLATE_HELP_HEADER(stdout);
@@ -53,6 +53,7 @@ static void print_help(char* progname) {
 		   "      [-f]: sort in descending order (eg, for FLUX); default ascending (eg, for MAG)\n"
 		   "      [-A <column>]: specify the RA  column name in the input FITS table (default \"RA\")\n"
 		   "      [-D <column>]: specify the Dec column name in the input FITS table (default \"Dec\")\n"
+           "      [-K]: keep RA,Dec in tag-along table (default is to drop them)\n"
 		   "      [-B <val>]: cut any object whose sort-column value is less than 'val'; for mags this is a bright limit\n"
 		   "      [-U]: healpix Nside for uniformization (default: same as -n)\n"
 		   "      [-H <big healpix>]; default is all-sky\n"
@@ -104,6 +105,9 @@ int main(int argc, char** argv) {
             break;
         case 'D':
             p->deccol = optarg;
+            break;
+        case 'K':
+            p->drop_radec = FALSE;
             break;
 		case 'B':
 			p->brightcut = atof(optarg);

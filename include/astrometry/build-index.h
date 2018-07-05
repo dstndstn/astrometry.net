@@ -15,6 +15,8 @@ struct index_params {
 	const char* deccol;
 	// in arcsec
 	double jitter;
+    // drop RA,Dec from tag-along table?
+    anbool drop_radec;
 
 	// uniformization:
 	const char* sortcol;
