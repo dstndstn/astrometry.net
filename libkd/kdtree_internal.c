@@ -2045,7 +2045,7 @@ static void convert_data(kdtree_t* kd, etype* edata, int N, int D, int Nleaf) {
 
     ddata = kd->data.any = MALLOC((size_t)N * (size_t)D * (size_t)sizeof(dtype));
     if (!ddata) {
-        ERROR("Failed to malloc %i x %i x %i\n", N, D, sizeof(dtype));
+        ERROR("Failed to malloc %i x %i x %i\n", N, D, (int)sizeof(dtype));
         return;
     }
     kd->free_data = TRUE;
