@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef BT_H
 #define BT_H
@@ -9,51 +9,51 @@
 #include "astrometry/keywords.h"
 #include "astrometry/an-bool.h"
 /*
-  We distinguish between "branch" (ie, internal) nodes and "leaf" nodes
-  because leaf nodes can be much smaller.  Since there are a lot of leaves,
-  the space savings can be considerable.
+ We distinguish between "branch" (ie, internal) nodes and "leaf" nodes
+ because leaf nodes can be much smaller.  Since there are a lot of leaves,
+ the space savings can be considerable.
 
-  The data owned by a leaf node follows right after the leaf struct
-  itself.
+ The data owned by a leaf node follows right after the leaf struct
+ itself.
  */
 
 struct bt_leaf {
-	// always 1; must be the first element in the struct.
-	unsigned char isleaf;
-	// number of data elements.
-	short N;
-	// data follows implicitly.
+    // always 1; must be the first element in the struct.
+    unsigned char isleaf;
+    // number of data elements.
+    short N;
+    // data follows implicitly.
 };
 typedef struct bt_leaf bt_leaf;
 
 struct bt_branch {
-	// always 0; must be the first element in the struct.
-	unsigned char isleaf;
-	// AVL balance
-	signed char balance;
+    // always 0; must be the first element in the struct.
+    unsigned char isleaf;
+    // AVL balance
+    signed char balance;
 
-	//struct bt_node* children[2];
-	union bt_node* children[2];
+    //struct bt_node* children[2];
+    union bt_node* children[2];
 
-	// the leftmost leaf node in this subtree.
-	bt_leaf* firstleaf;
+    // the leftmost leaf node in this subtree.
+    bt_leaf* firstleaf;
 
-	// number of element in this subtree.
-	int N;
+    // number of element in this subtree.
+    int N;
 };
 typedef struct bt_branch bt_branch;
 
 union bt_node {
-	bt_leaf leaf;
-	bt_branch branch;
+    bt_leaf leaf;
+    bt_branch branch;
 };
 typedef union bt_node bt_node;
 
 struct bt {
-	bt_node* root;
-	int datasize;
-	int blocksize;
-	int N;
+    bt_node* root;
+    int datasize;
+    int blocksize;
+    int N;
 };
 typedef struct bt bt;
 

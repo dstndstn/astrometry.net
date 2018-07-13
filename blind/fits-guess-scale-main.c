@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -16,14 +16,14 @@
 static char* OPTIONS = "hv";
 
 static void printHelp(char* progname) {
-	printf("%s  <FITS-file>\n\n", progname);
+    printf("%s  <FITS-file>\n\n", progname);
 }
 
 
 int main(int argc, char *argv[]) {
-	char* progname = argv[0];
+    char* progname = argv[0];
     int argchar;
-	char* infn;
+    char* infn;
 
     sl* methods = NULL;
     dl* scales = NULL;
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
         switch (argchar) {
         case '?':
         case 'h':
-			printHelp(progname);
+            printHelp(progname);
             return 0;
         case 'v':
             loglvl++;
@@ -43,11 +43,11 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-	if (optind != (argc - 1)) {
-		printHelp(progname);
-		exit(-1);
-	}
-	infn = argv[optind];
+    if (optind != (argc - 1)) {
+        printHelp(progname);
+        exit(-1);
+    }
+    infn = argv[optind];
 
     log_init(loglvl);
 

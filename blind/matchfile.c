@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <stdio.h>
 #include <assert.h>
@@ -17,21 +17,21 @@
 
 // This is a naughty preprocessor function because it uses variables
 // declared in the calling scope.
-#define ADDARR(ctype, ftype, col, units, member, arraysize)             \
-    if (write) {                                                        \
-        fitstable_add_column_struct                                     \
-            (tab, ctype, arraysize, offsetof(MatchObj, member),     \
-             ftype, col, units, TRUE);                                  \
-    } else {                                                            \
-        fitstable_add_column_struct                                     \
-            (tab, ctype, arraysize, offsetof(MatchObj, member),			\
-             any, col, units, FALSE); \
+#define ADDARR(ctype, ftype, col, units, member, arraysize)     \
+    if (write) {                                                \
+        fitstable_add_column_struct                             \
+            (tab, ctype, arraysize, offsetof(MatchObj, member), \
+             ftype, col, units, TRUE);                          \
+    } else {                                                    \
+        fitstable_add_column_struct                             \
+            (tab, ctype, arraysize, offsetof(MatchObj, member), \
+             any, col, units, FALSE);                           \
     }
 
 //TRUE);
 
-#define ADDCOL(ctype, ftype, col, units, member) \
-ADDARR(ctype, ftype, col, units, member, 1)
+#define ADDCOL(ctype, ftype, col, units, member)        \
+    ADDARR(ctype, ftype, col, units, member, 1)
 
 static void add_columns(fitstable_t* tab, anbool write) {
     tfits_type any = fitscolumn_any_type();
@@ -93,7 +93,7 @@ static int postprocess_read_structs(fitstable_t* table, void* struc,
     MatchObj* mo = struc;
     int i;
     for (i=0; i<N; i++)
-		matchobj_compute_derived(mo + i);
+        matchobj_compute_derived(mo + i);
     return 0;
 }
 
@@ -115,7 +115,7 @@ int matchfile_write_match(matchfile* mf, MatchObj* entry) {
 }
 
 int matchfile_count(matchfile* mf) {
-	return fitstable_nrows(mf);
+    return fitstable_nrows(mf);
 }
 
 int matchfile_close(matchfile* nomad) {
@@ -123,7 +123,7 @@ int matchfile_close(matchfile* nomad) {
 }
 
 matchfile* matchfile_open(const char* fn) {
-	matchfile* mf = NULL;
+    matchfile* mf = NULL;
     mf = fitstable_open(fn);
     if (!mf)
         return NULL;
@@ -138,11 +138,11 @@ matchfile* matchfile_open(const char* fn) {
         matchfile_close(mf);
         return NULL;
     }
-	return mf;
+    return mf;
 }
 
 matchfile* matchfile_open_for_writing(char* fn) {
-	matchfile* mf;
+    matchfile* mf;
     qfits_header* hdr;
     mf = fitstable_open_for_writing(fn);
     if (!mf)
@@ -166,20 +166,20 @@ int matchfile_fix_headers(matchfile* mf) {
 }
 
 pl* matchfile_get_matches_for_field(matchfile* mf, int field) {
-	pl* list = pl_new(256);
-	for (;;) {
-		MatchObj* mo = matchfile_read_match(mf);
-		MatchObj* copy;
-		if (!mo) break;
-		if (mo->fieldnum != field) {
-			// push back the newly-read entry...
-			matchfile_pushback_match(mf);
-			break;
-		}
-		copy = malloc(sizeof(MatchObj));
-		memcpy(copy, mo, sizeof(MatchObj));
-		pl_append(list, copy);
-	}
-	return list;
+    pl* list = pl_new(256);
+    for (;;) {
+        MatchObj* mo = matchfile_read_match(mf);
+        MatchObj* copy;
+        if (!mo) break;
+        if (mo->fieldnum != field) {
+            // push back the newly-read entry...
+            matchfile_pushback_match(mf);
+            break;
+        }
+        copy = malloc(sizeof(MatchObj));
+        memcpy(copy, mo, sizeof(MatchObj));
+        pl_append(list, copy);
+    }
+    return list;
 }
 

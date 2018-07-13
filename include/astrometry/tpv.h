@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef ANTPV_H
 #define ANTPV_H
@@ -15,8 +15,8 @@
 // TPV (TAN + PV distortion) structure.
 typedef struct {
 
-	// A basic TAN header.
-	tan_t wcstan;
+    // A basic TAN header.
+    tan_t wcstan;
 
     double pv1[N_PV_TERMS];
     double pv2[N_PV_TERMS];
@@ -57,7 +57,7 @@ anbool tpv_xyz2pixelxy(const tpv_t* tpv, double x, double y, double z, double *p
 
 // Pixels to Intermediate World Coordinates in degrees.
 void tpv_pixelxy2iwc(const tpv_t* tpv, double px, double py,
-					 double *iwcx, double* iwcy);
+                     double *iwcx, double* iwcy);
 
 
 double tpv_det_cd(const tpv_t* tpv);
@@ -81,12 +81,12 @@ void tpv_pixel_distortion(const tpv_t* tpv, double x, double y, double* X, doubl
 void tpv_pixel_undistortion(const tpv_t* tpv, double x, double y, double* X, double *Y);
 
 anbool tpv_xyzarr2iwc(const tpv_t* tpv, const double* xyz,
-					double* iwcx, double* iwcy);
+                      double* iwcx, double* iwcy);
 anbool tpv_radec2iwc(const tpv_t* tpv, double ra, double dec,
-				   double* iwcx, double* iwcy);
+                     double* iwcx, double* iwcy);
 
 void tpv_iwc2pixelxy(const tpv_t* tpv, double iwcx, double iwcy,
-					 double *px, double* py);
+                     double *px, double* py);
 
 void tpv_iwc2radec(const tpv_t* tpv, double x, double y, double *p_ra, double *p_dec);
 

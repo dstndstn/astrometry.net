@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef ALLQUADS_H
 #define ALLQUADS_H
@@ -11,24 +11,24 @@
 #include "codefile.h"
 
 struct allquads {
-	int dimquads;
-	int dimcodes;
-	int id;
+    int dimquads;
+    int dimcodes;
+    int id;
 
-	char *quadfn;
-	char *codefn;
-	char *skdtfn;
+    char *quadfn;
+    char *codefn;
+    char *skdtfn;
 
-	startree_t* starkd;
-	quadfile_t* quads;
-	codefile_t* codes;
+    startree_t* starkd;
+    quadfile_t* quads;
+    codefile_t* codes;
 
-	double quad_d2_lower;
-	double quad_d2_upper;
-	anbool use_d2_lower;
-	anbool use_d2_upper;
+    double quad_d2_lower;
+    double quad_d2_upper;
+    anbool use_d2_lower;
+    anbool use_d2_upper;
 
-	int starA;
+    int starA;
 };
 typedef struct allquads allquads_t;
 

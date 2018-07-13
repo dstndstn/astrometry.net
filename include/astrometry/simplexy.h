@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 #ifndef SIMPLEXY2_H
 #define SIMPLEXY2_H
@@ -44,17 +44,17 @@ struct simplexy_t {
     /* size for sliding sky estimation box */
     int halfbox;
 
-	// (boolean) don't do background subtraction.
-	int nobgsub;
+    // (boolean) don't do background subtraction.
+    int nobgsub;
 
-	// global background.
-	float globalbg;
+    // global background.
+    float globalbg;
 
-	// (boolean) invert the image before processing (for black-on-white images)
-	int invert;
+    // (boolean) invert the image before processing (for black-on-white images)
+    int invert;
 
-	// If set to non-zero, the given sigma value will be used;
-	// otherwise a value will be estimated.
+    // If set to non-zero, the given sigma value will be used;
+    // otherwise a value will be estimated.
     float sigma;
 
     /******
@@ -66,21 +66,21 @@ struct simplexy_t {
     float *background;
     int npeaks;
 
-	// Lanczos-interpolated flux and backgrounds;
-	// measured if Lorder > 0.
-	int Lorder;
-	float* fluxL;
-	float* backgroundL;
+    // Lanczos-interpolated flux and backgrounds;
+    // measured if Lorder > 0.
+    int Lorder;
+    float* fluxL;
+    float* backgroundL;
 
-	/***
-	 Debug
-	 ***/
-	// The filename for saving the background-subtracted FITS image.
-	const char* bgimgfn;
-	const char* maskimgfn;
-	const char* blobimgfn;
-	const char* bgsubimgfn;
-	const char* smoothimgfn;
+    /***
+     Debug
+     ***/
+    // The filename for saving the background-subtracted FITS image.
+    const char* bgimgfn;
+    const char* maskimgfn;
+    const char* blobimgfn;
+    const char* bgsubimgfn;
+    const char* smoothimgfn;
 };
 typedef struct simplexy_t simplexy_t;
 

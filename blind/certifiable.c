@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 
                 r2 = square(mo->radius);
                 arc = deg2arcmin(mo->radius_deg);
-				xyzarr2radec(mo->center, &rac, &decc);
+                xyzarr2radec(mo->center, &rac, &decc);
 
                 for (k=0; k<nrd; k++) {
                     double xyz[3];

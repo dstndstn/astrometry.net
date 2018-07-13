@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #ifndef HEALPIX_UTILS_H
@@ -34,10 +34,10 @@ il* healpix_rangesearch_radec(double ra, double dec, double radius, int Nside, i
  neighbours will not be added to the frontier to explore.
  */
 il* healpix_region_search(int seed, il* seeds, int Nside,
-						  il* accepted, il* rejected,
-						  int (*accept)(int hp, void* token),
-						  void* token,
-						  int depth);
+                          il* accepted, il* rejected,
+                          int (*accept)(int hp, void* token),
+                          void* token,
+                          int depth);
 
 
 #endif

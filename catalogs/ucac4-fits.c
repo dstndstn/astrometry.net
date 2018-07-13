@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <assert.h>
 #include <stddef.h>
@@ -15,16 +15,16 @@
 #define ADDARR(ctype, ftype, col, units, member, arraysize)             \
     if (write) {                                                        \
         fitstable_add_column_struct                                     \
-            (tab, ctype, arraysize, offsetof(ucac4_entry, member),     \
+            (tab, ctype, arraysize, offsetof(ucac4_entry, member),      \
              ftype, col, units, TRUE);                                  \
     } else {                                                            \
         fitstable_add_column_struct                                     \
-            (tab, ctype, arraysize, offsetof(ucac4_entry, member),     \
+            (tab, ctype, arraysize, offsetof(ucac4_entry, member),      \
              any, col, units, TRUE);                                    \
     }
 
-#define ADDCOL(ctype, ftype, col, units, member) \
-ADDARR(ctype, ftype, col, units, member, 1)
+#define ADDCOL(ctype, ftype, col, units, member)        \
+    ADDARR(ctype, ftype, col, units, member, 1)
 
 static void add_columns(fitstable_t* tab, anbool write) {
     tfits_type any = fitscolumn_any_type();
@@ -35,16 +35,16 @@ static void add_columns(fitstable_t* tab, anbool write) {
     tfits_type J = TFITS_BIN_TYPE_J;
     char* nil = " ";
 
-	ADDCOL(d,  d,   "RA",                "deg",  ra);
-	ADDCOL(d,  d,   "DEC",               "deg",  dec);
-	ADDCOL(f,  f,   "SIG_RA",            "deg",  sigma_ra);
-	ADDCOL(f,  f,   "SIG_DEC",           "deg",  sigma_dec);
-	ADDCOL(f,  f,   "PM_RA",             "arcsec/yr", pm_rac);
-	ADDCOL(f,  f,   "PM_DEC",            "arcsyc/yr", pm_dec);
-	ADDCOL(f,  f,   "SIG_PM_R",          "arcsec/yr", sigma_pm_ra);
-	ADDCOL(f,  f,   "SIG_PM_D",          "arcsyc/yr", sigma_pm_dec);
-	ADDCOL(f,  f,   "EPOCH_RA",          "yr", epoch_ra);
-	ADDCOL(f,  f,   "EPOCH_DE",          "yr", epoch_dec);
+    ADDCOL(d,  d,   "RA",                "deg",  ra);
+    ADDCOL(d,  d,   "DEC",               "deg",  dec);
+    ADDCOL(f,  f,   "SIG_RA",            "deg",  sigma_ra);
+    ADDCOL(f,  f,   "SIG_DEC",           "deg",  sigma_dec);
+    ADDCOL(f,  f,   "PM_RA",             "arcsec/yr", pm_rac);
+    ADDCOL(f,  f,   "PM_DEC",            "arcsyc/yr", pm_dec);
+    ADDCOL(f,  f,   "SIG_PM_R",          "arcsec/yr", sigma_pm_ra);
+    ADDCOL(f,  f,   "SIG_PM_D",          "arcsyc/yr", sigma_pm_dec);
+    ADDCOL(f,  f,   "EPOCH_RA",          "yr", epoch_ra);
+    ADDCOL(f,  f,   "EPOCH_DE",          "yr", epoch_dec);
     ADDCOL(f,  f,   "MAG",               "mag", mag);
     ADDCOL(f,  f,   "SIGMAG",            "mag", mag_err);
     ADDCOL(f,  f,   "APMAG",             "mag", apmag);
@@ -80,10 +80,10 @@ static void add_columns(fitstable_t* tab, anbool write) {
     ADDCOL(u8, u8,  "TMXS_FLG",           nil, twomass_extsource_flag);
 
     ADDCOL(i32,J,   "ICF",                nil, catalog_flags);
-	ADDCOL(i32,J,   "X_TWO_M",            nil, twomass_id);
-	ADDCOL(i32,J,   "RNM",                nil, mpos);
-	ADDCOL(i32,J,   "ZN_TWO",             nil, ucac2_zone);
-	ADDCOL(i32,J,   "RN_TWO",             nil, ucac2_number);
+    ADDCOL(i32,J,   "X_TWO_M",            nil, twomass_id);
+    ADDCOL(i32,J,   "RNM",                nil, mpos);
+    ADDCOL(i32,J,   "ZN_TWO",             nil, ucac2_zone);
+    ADDCOL(i32,J,   "RN_TWO",             nil, ucac2_number);
 }
 #undef ADDCOL
 #undef ADDARR
@@ -93,35 +93,35 @@ ucac4_entry* ucac4_fits_read_entry(ucac4_fits* cat) {
 }
 
 int ucac4_fits_read_entries(ucac4_fits* cat, int offset,
-							int count, ucac4_entry* entries) {
+                            int count, ucac4_entry* entries) {
     return fitstable_read_structs(cat, entries, sizeof(ucac4_entry), offset, count);
 }
 
 int ucac4_fits_write_entry(ucac4_fits* cat, ucac4_entry* entry) {
-	/*
-	entry->flags[0] =
-		(entry->usnob_fail        ? (1 << 7) : 0) |
-		(entry->twomass_fail      ? (1 << 6) : 0) |
-		(entry->tycho_astrometry  ? (1 << 5) : 0) |
-		(entry->alt_radec         ? (1 << 4) : 0) |
-		(entry->alt_ucac          ? (1 << 3) : 0) |
-		(entry->alt_tycho         ? (1 << 2) : 0) |
-		(entry->blue_o            ? (1 << 1) : 0) |
-		(entry->red_e             ? (1 << 0) : 0);
-    entry->flags[1] = 
-		(entry->twomass_only      ? (1 << 7) : 0) |
-		(entry->hipp_astrometry   ? (1 << 6) : 0) |
-		(entry->diffraction       ? (1 << 5) : 0) |
-		(entry->confusion         ? (1 << 4) : 0) |
-		(entry->bright_confusion  ? (1 << 3) : 0) |
-		(entry->bright_artifact   ? (1 << 2) : 0) |
-		(entry->standard          ? (1 << 1) : 0);
-	 */
+    /*
+     entry->flags[0] =
+     (entry->usnob_fail        ? (1 << 7) : 0) |
+     (entry->twomass_fail      ? (1 << 6) : 0) |
+     (entry->tycho_astrometry  ? (1 << 5) : 0) |
+     (entry->alt_radec         ? (1 << 4) : 0) |
+     (entry->alt_ucac          ? (1 << 3) : 0) |
+     (entry->alt_tycho         ? (1 << 2) : 0) |
+     (entry->blue_o            ? (1 << 1) : 0) |
+     (entry->red_e             ? (1 << 0) : 0);
+     entry->flags[1] = 
+     (entry->twomass_only      ? (1 << 7) : 0) |
+     (entry->hipp_astrometry   ? (1 << 6) : 0) |
+     (entry->diffraction       ? (1 << 5) : 0) |
+     (entry->confusion         ? (1 << 4) : 0) |
+     (entry->bright_confusion  ? (1 << 3) : 0) |
+     (entry->bright_artifact   ? (1 << 2) : 0) |
+     (entry->standard          ? (1 << 1) : 0);
+     */
     return fitstable_write_struct(cat, entry);
 }
 
 int ucac4_fits_count_entries(ucac4_fits* cat) {
-	return fitstable_nrows(cat);
+    return fitstable_nrows(cat);
 }
 
 int ucac4_fits_close(ucac4_fits* ucac4) {
@@ -129,7 +129,7 @@ int ucac4_fits_close(ucac4_fits* ucac4) {
 }
 
 ucac4_fits* ucac4_fits_open(char* fn) {
-	ucac4_fits* cat = NULL;
+    ucac4_fits* cat = NULL;
     cat = fitstable_open(fn);
     if (!cat)
         return NULL;
@@ -143,18 +143,18 @@ ucac4_fits* ucac4_fits_open(char* fn) {
         ucac4_fits_close(cat);
         return NULL;
     }
-	return cat;
+    return cat;
 }
 
 ucac4_fits* ucac4_fits_open_for_writing(char* fn) {
-	ucac4_fits* cat;
+    ucac4_fits* cat;
     qfits_header* hdr;
     cat = fitstable_open_for_writing(fn);
     if (!cat)
         return NULL;
     add_columns(cat, TRUE);
     hdr = fitstable_get_primary_header(cat);
-	qfits_header_add(hdr, "UCAC4", "T", "This is a UCAC4 catalog.", NULL);
+    qfits_header_add(hdr, "UCAC4", "T", "This is a UCAC4 catalog.", NULL);
     qfits_header_add(hdr, "AN_FILE", AN_FILETYPE_UCAC4, "Astrometry.net file type", NULL);
     return cat;
 }

@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef XYLIST_H
 #define XYLIST_H
@@ -18,22 +18,22 @@
  xylist_write_primary_header()
 
  for (each extension) {
-   // optionally:
-   xylist_add_tagalong_column()
+ // optionally:
+ xylist_add_tagalong_column()
 
-   xylist_write_header()
+ xylist_write_header()
  
-   // either:
-   xylist_write_one_row() // repeatedly
-   // or:
-   xylist_write_field()
+ // either:
+ xylist_write_one_row() // repeatedly
+ // or:
+ xylist_write_field()
 
-   // optionally:
-   xylist_write_tagalong_column()
+ // optionally:
+ xylist_write_tagalong_column()
 
-   xylist_fix_header()
+ xylist_fix_header()
 
-   xylist_next_field()
+ xylist_next_field()
  }
 
  xylist_fix_primary_header()
@@ -41,7 +41,7 @@
 
 
 
-Reading:
+ Reading:
 
 
  xylist_t* xyls = xylist_open("my.xyls");
@@ -52,15 +52,15 @@ Reading:
  */
 
 /*
-  One table per field.
-  One row per star.
-*/
+ One table per field.
+ One row per star.
+ */
 struct xylist_t {
-	int parity;
+    int parity;
 
     fitstable_t* table;
 
-	char* antype; // Astrometry.net filetype string.
+    char* antype; // Astrometry.net filetype string.
 
     const char* xname;
     const char* yname;

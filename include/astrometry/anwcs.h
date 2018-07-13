@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef ANWCSLIB_H
 #define ANWCSLIB_H
@@ -19,18 +19,18 @@
 #define ANWCS_TYPE_WCSTOOLS 3
 
 struct anwcs_t {
-	/**
-	 If type == ANWCS_TYPE_WCSLIB:
-	   data is a private struct containing a wcslib  "struct wcsprm*".
+    /**
+     If type == ANWCS_TYPE_WCSLIB:
+     data is a private struct containing a wcslib  "struct wcsprm*".
 
-	 If type == ANWCS_TYPE_SIP:
-	   data is a "sip_t*"
+     If type == ANWCS_TYPE_SIP:
+     data is a "sip_t*"
 
-	 If type == ANWCS_TYPE_WCSTOOLS:
-	   data is a "struct WorldCoor*"
-	 */
-	int type;
-	void* data;
+     If type == ANWCS_TYPE_WCSTOOLS:
+     data is a "struct WorldCoor*"
+     */
+    int type;
+    void* data;
 };
 typedef struct anwcs_t anwcs_t;
 
@@ -114,12 +114,12 @@ void anwcs_get_cd_matrix(const anwcs_t* wcs, double* p_cd);
 /**
  The SIP implementation guarantees:
 
-   ramin <= ramax
-      ramin may be < 0, or ramax > 360, if the image straddles RA=0.
+ ramin <= ramax
+ ramin may be < 0, or ramax > 360, if the image straddles RA=0.
  */
 void anwcs_get_radec_bounds(const anwcs_t* wcs, int stepsize,
-							double* pramin, double* pramax,
-							double* pdecmin, double* pdecmax);
+                            double* pramin, double* pramax,
+                            double* pdecmin, double* pdecmax);
 
 void anwcs_print(const anwcs_t* wcs, FILE* fid);
 
@@ -129,19 +129,19 @@ void anwcs_print_stdout(const anwcs_t* wcs);
 // Center and radius of the field.
 // RA,Dec,radius in degrees.
 int anwcs_get_radec_center_and_radius(const anwcs_t* anwcs,
-									  double* p_ra, double* p_dec, double* p_radius);
+                                      double* p_ra, double* p_dec, double* p_radius);
 
 void anwcs_walk_image_boundary(const anwcs_t* wcs, double stepsize,
-							   void (*callback)(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token),
-							   void* token);
+                               void (*callback)(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token),
+                               void* token);
 
 anbool anwcs_find_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
-							  double ra2, double dec2,
-							  double* pra3, double* pdec3,
-							  double* pra4, double* pdec4);
+                                double ra2, double dec2,
+                                double* pra3, double* pdec3,
+                                double* pra4, double* pdec4);
 
 anbool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
-							double ra2, double dec2);
+                              double ra2, double dec2);
 
 /*
  // Assuming there is a discontinuity between (ra1,dec1) and (ra2,dec2),
@@ -151,10 +151,10 @@ anbool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
  double* dra, double* ddec);
  */
 dl* anwcs_walk_discontinuity(const anwcs_t* wcs,
-							 double ra1, double dec1, double ra2, double dec2,
-							 double ra3, double dec3, double ra4, double dec4,
-							 double stepsize,
-							 dl* radecs);
+                             double ra1, double dec1, double ra2, double dec2,
+                             double ra3, double dec3, double ra4, double dec4,
+                             double stepsize,
+                             dl* radecs);
 
 anbool anwcs_overlaps(const anwcs_t* wcs1, const anwcs_t* wcs2, int stepsize);
 

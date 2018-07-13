@@ -1,6 +1,6 @@
 /*
-# This file is part of libkd.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of libkd.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #include <stdio.h>

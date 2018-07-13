@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <unistd.h>
 #include <stdio.h>
@@ -35,7 +35,7 @@ void print_help(char* progname) {
 
 
 int main(int argc, char** args) {
-	int c;
+    int c;
     char* usnobpath = NULL;
     char* scampref = NULL;
     double ra = 0.0;
@@ -56,8 +56,8 @@ int main(int argc, char** args) {
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
         case 'h':
-			print_help(args[0]);
-			exit(0);
+            print_help(args[0]);
+            exit(0);
         case 'u':
             usnobpath = optarg;
             break;

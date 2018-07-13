@@ -1,32 +1,32 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 /**
  Builds a kdtree from the Henry Draper catalog.
 
  I downloaded the text file from:
-   http://cdsarc.u-strasbg.fr/viz-bin/VizieR?-meta.foot&-source=III/135A
+ http://cdsarc.u-strasbg.fr/viz-bin/VizieR?-meta.foot&-source=III/135A
  with the options:
  - "|-separated values",
  - only the "HD" column selected
 
  The result is a header including this:
-#Column _RAJ2000        (F6.2)  Right ascension (FK5) Equinox=J2000.0 Epoch=J1900. (computed by VizieR, not part of the original data)  [ucd=pos.eq.ra;meta.main]
-#Column _DEJ2000        (F6.2)  Declination (FK5) Equinox=J2000.0 Epoch=J1900. (computed by VizieR, not part of the original data)      [ucd=pos.eq.dec;meta.main]
-#Column HD      (I6)    [1/272150]+ Henry Draper Catalog (HD) number    [ucd=meta.id;meta.main]
-_RAJ2000|_DEJ2000|HD
-deg|deg|
-------|------|------
+ #Column _RAJ2000        (F6.2)  Right ascension (FK5) Equinox=J2000.0 Epoch=J1900. (computed by VizieR, not part of the original data)  [ucd=pos.eq.ra;meta.main]
+ #Column _DEJ2000        (F6.2)  Declination (FK5) Equinox=J2000.0 Epoch=J1900. (computed by VizieR, not part of the original data)      [ucd=pos.eq.dec;meta.main]
+ #Column HD      (I6)    [1/272150]+ Henry Draper Catalog (HD) number    [ucd=meta.id;meta.main]
+ _RAJ2000|_DEJ2000|HD
+ deg|deg|
+ ------|------|------
 
  And then data like this:
 
-001.30|+67.84|     1
-001.29|+57.77|     2
-001.29|+45.22|     3
-001.28|+30.32|     4
-001.28| +2.37|     5
+ 001.30|+67.84|     1
+ 001.29|+57.77|     2
+ 001.29|+45.22|     3
+ 001.28|+30.32|     4
+ 001.28| +2.37|     5
 
  It turns out that the HD numbers are all in sequence and contiguous, so there's no
  point storing them.
@@ -38,9 +38,9 @@ deg|deg|
 
  HOWEVER, the positions aren't very accurate, so this program has the capability of
  reading a Tycho2-to-HD cross-reference catalog:
-     http://cdsarc.u-strasbg.fr/viz-bin/Cat?IV/25        
+ http://cdsarc.u-strasbg.fr/viz-bin/Cat?IV/25        
 
-*/
+ */
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -64,19 +64,19 @@ static const char* OPTIONS = "hR:d:t:bsST:X:";
 #define HD_NENTRIES 272150
 
 void printHelp(char* progname) {
-	BOILERPLATE_HELP_HEADER(stdout);
-	printf("\nUsage: %s\n"
-		   "   (   [-b]: build bounding boxes\n"
-		   "    OR [-s]: build splitting planes   )\n"
-		   "    [-R Nleaf]: number of points in a kdtree leaf node (default 25)\n"
-		   "    [-t  <tree type>]:  {double,float,u32,u16}, default u32.\n"
-		   "    [-d  <data type>]:  {double,float,u32,u16}, default u32.\n"
-		   "    [-S]: include separate splitdim array\n"
+    BOILERPLATE_HELP_HEADER(stdout);
+    printf("\nUsage: %s\n"
+           "   (   [-b]: build bounding boxes\n"
+           "    OR [-s]: build splitting planes   )\n"
+           "    [-R Nleaf]: number of points in a kdtree leaf node (default 25)\n"
+           "    [-t  <tree type>]:  {double,float,u32,u16}, default u32.\n"
+           "    [-d  <data type>]:  {double,float,u32,u16}, default u32.\n"
+           "    [-S]: include separate splitdim array\n"
            "    [-T <Tycho-2 catalog>]: path to Tycho-2 catalog.\n"
            "    [-X <Cross-ref file>]: path to Tycho-2 - to - HD cross-ref file.\n"
            "\n"
            "   <input.tsv>  <output.fits>\n"
-		   "\n", progname);
+           "\n", progname);
 }
 
 
@@ -150,18 +150,18 @@ int main(int argc, char** args) {
     char* outfn = NULL;
     char* tychofn = NULL;
     char* crossfn = NULL;
-	char* progname = args[0];
+    char* progname = args[0];
     FILE* f;
 
     tycstar_t* tycstars = NULL;
     int Ntyc = 0;
 
-	int exttype  = KDT_EXT_DOUBLE;
-	int datatype = KDT_DATA_U32;
-	int treetype = KDT_TREE_U32;
-	int tt;
-	int buildopts = 0;
-	int i, N, D;
+    int exttype  = KDT_EXT_DOUBLE;
+    int datatype = KDT_DATA_U32;
+    int treetype = KDT_TREE_U32;
+    int tt;
+    int buildopts = 0;
+    int i, N, D;
 
     dl* ras;
     dl* decs;
@@ -190,25 +190,25 @@ int main(int argc, char** args) {
         case 'R':
             Nleaf = (int)strtoul(optarg, NULL, 0);
             break;
-		case 't':
-			treetype = kdtree_kdtype_parse_tree_string(optarg);
-			break;
-		case 'd':
-			datatype = kdtree_kdtype_parse_data_string(optarg);
-			break;
-		case 'b':
-			buildopts |= KD_BUILD_BBOX;
-			break;
-		case 's':
-			buildopts |= KD_BUILD_SPLIT;
-			break;
-		case 'S':
-			buildopts |= KD_BUILD_SPLITDIM;
-			break;
+        case 't':
+            treetype = kdtree_kdtype_parse_tree_string(optarg);
+            break;
+        case 'd':
+            datatype = kdtree_kdtype_parse_data_string(optarg);
+            break;
+        case 'b':
+            buildopts |= KD_BUILD_BBOX;
+            break;
+        case 's':
+            buildopts |= KD_BUILD_SPLIT;
+            break;
+        case 'S':
+            buildopts |= KD_BUILD_SPLITDIM;
+            break;
         case '?':
             fprintf(stderr, "Unknown option `-%c'.\n", optopt);
         case 'h':
-			printHelp(progname);
+            printHelp(progname);
             return 0;
         default:
             return -1;
@@ -222,11 +222,11 @@ int main(int argc, char** args) {
     infn = args[optind];
     outfn = args[optind+1];
 
-	if (!(buildopts & (KD_BUILD_BBOX | KD_BUILD_SPLIT))) {
-		printf("You need bounding-boxes or splitting planes!\n");
-		printHelp(progname);
-		exit(-1);
-	}
+    if (!(buildopts & (KD_BUILD_BBOX | KD_BUILD_SPLIT))) {
+        printf("You need bounding-boxes or splitting planes!\n");
+        printHelp(progname);
+        exit(-1);
+    }
 
     if (tychofn || crossfn) {
         if (!(tychofn && crossfn)) {
@@ -240,7 +240,7 @@ int main(int argc, char** args) {
         tycho2_fits* tyc;
         FILE* f;
         int nx, nox;
-		int lastgrass = 0;
+        int lastgrass = 0;
 
         tyc = tycho2_fits_open(tychofn);
         if (!tyc) {
@@ -254,13 +254,13 @@ int main(int argc, char** args) {
 
         for (i=0; i<N; i++) {
             tycho2_entry* te;
-			int grass = (i*80 / N);
-			if (grass != lastgrass) {
-				printf(".");
-				fflush(stdout);
-				lastgrass = grass;
-			}
-			te = tycho2_fits_read_entry(tyc);
+            int grass = (i*80 / N);
+            if (grass != lastgrass) {
+                printf(".");
+                fflush(stdout);
+                lastgrass = grass;
+            }
+            te = tycho2_fits_read_entry(tyc);
             tycstars[i].tyc1 = te->tyc1;
             tycstars[i].tyc2 = te->tyc2;
             tycstars[i].tyc3 = te->tyc3;
@@ -423,17 +423,17 @@ int main(int argc, char** args) {
     dl_free(ras);
     dl_free(decs);
 
-	tt = kdtree_kdtypes_to_treetype(exttype, treetype, datatype);
-	D = 3;
-	{
-		// limits of the kdtree...
+    tt = kdtree_kdtypes_to_treetype(exttype, treetype, datatype);
+    D = 3;
+    {
+        // limits of the kdtree...
         double lo[] = {-1.0, -1.0, -1.0};
         double hi[] = { 1.0,  1.0,  1.0};
         kd = kdtree_new(N, D, Nleaf);
         kdtree_set_limits(kd, lo, hi);
-	}
-	printf("Building tree...\n");
-	kd = kdtree_build(kd, xyz, N, D, Nleaf, tt, buildopts);
+    }
+    printf("Building tree...\n");
+    kd = kdtree_build(kd, xyz, N, D, Nleaf, tt, buildopts);
 
     hdr = qfits_header_default();
     qfits_header_add(hdr, "AN_FILE", "HDTREE", "Henry Draper catalog kdtree", NULL);
@@ -483,7 +483,7 @@ int main(int argc, char** args) {
 
     printf("Done.\n");
 
-	qfits_header_destroy(hdr);
+    qfits_header_destroy(hdr);
     free(xyz);
     kdtree_free(kd);
     free(tycstars);

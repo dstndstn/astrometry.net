@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 #include <stddef.h>
 
@@ -146,7 +146,7 @@ void test_fitsbin_2(CuTest* ct) {
         CuAssertDblEquals(ct, outdata[N-1 - i], indata[i], 1e-10);
     }
 
-   CuAssertIntEquals(ct, 0, fitsbin_close(in));
+    CuAssertIntEquals(ct, 0, fitsbin_close(in));
 }
 
 
@@ -274,7 +274,7 @@ void test_inmemory_fitsbin_2(CuTest* ct) {
         CuAssertDblEquals(ct, outdata[N-1 - i], indata[i], 1e-10);
     }
 
-   CuAssertIntEquals(ct, 0, fitsbin_close(fb));
+    CuAssertIntEquals(ct, 0, fitsbin_close(fb));
 }
 
 

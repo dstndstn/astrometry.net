@@ -1,7 +1,7 @@
 /*
-# This file is part of libkd.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of libkd.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef KDTREE_FITS_IO_H
 #define KDTREE_FITS_IO_H
@@ -89,8 +89,8 @@ int kdtree_fits_append_tree(kdtree_fits_t* io, const kdtree_t* kd,
 
 
 int kdtree_fits_append_tree_to(kdtree_t* kd,
-							   const qfits_header* inhdr,
-							   FILE* fid);
+                               const qfits_header* inhdr,
+                               FILE* fid);
 
 
 int kdtree_fits_write_primary_header(kdtree_fits_t* io,

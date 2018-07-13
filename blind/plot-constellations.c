@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #include <stdio.h>
@@ -56,7 +56,7 @@ void print_help(char* progname) {
            "   [-b <number-of-bright-stars>]: just plot the <N> brightest stars\n"
            "   [-c]: only plot bright stars that have common names.\n"
            "   [-j]: if a bright star has a common name, only print that\n"
-  		   "   [-x]: plot only white text"
+           "   [-x]: plot only white text"
            "   [-v]: be verbose\n"
            "   [-n <width>]: NGC circle width (default 2)\n"
            "   [-f <size>]: font size.\n"
@@ -64,8 +64,8 @@ void print_help(char* progname) {
            "   [-G <grid spacing in arcmin>]: plot RA,Dec grid\n"
            "   [-g <r:g:b>]: grid color (default 0.2:0.2:0.2)\n"
            "   [-J]: print JSON output to stderr\n"
-		   "   [-V]: vertical alignment of text labels, \"C\"enter/\"T\"op/\"B\"ottom: default C\n"
-		   "   [-O]: horizontal alignment of text labels, \"L\"eft/\"C\"enter/\"R\"ight, default L\n"
+           "   [-V]: vertical alignment of text labels, \"C\"enter/\"T\"op/\"B\"ottom: default C\n"
+           "   [-O]: horizontal alignment of text labels, \"L\"eft/\"C\"enter/\"R\"ight, default L\n"
            "\n", progname);
 }
 
@@ -92,13 +92,13 @@ typedef struct cairos_t cairos_t;
 
 static void add_text(cairos_t* cairos,
                      const char* txt, double px, double py,
-					 char halign, char valign) {
+                     char halign, char valign) {
     cairo_text_extents_t textents;
     double l,r,t,b;
     double margin = 2.0;
     int dx, dy;
 
-	float offset = 15.;
+    float offset = 15.;
 
     cairo_text_extents(cairos->fg, txt, &textents);
     l = px + textents.x_bearing;
@@ -110,28 +110,28 @@ static void add_text(cairos_t* cairos,
     r += margin + 1;
     b += margin + 1;
 
-	switch (valign) {
-	case 'T':
-		py -= (0.5 * textents.y_bearing);
-		break;
-	case 'B':
-		py += (0.5 * textents.y_bearing) - offset;
-		break;
-	case 'C':
-		break;
-	}
+    switch (valign) {
+    case 'T':
+        py -= (0.5 * textents.y_bearing);
+        break;
+    case 'B':
+        py += (0.5 * textents.y_bearing) - offset;
+        break;
+    case 'C':
+        break;
+    }
 
-	//logverb("halign=%c, width=%f\n", halign, textents.width);
-	switch (halign) {
-	case 'L':
-		break;
-	case 'C':
-		px -= (0.5 * textents.width);
-		break;
-	case 'R':
-		px -= (1.0 * textents.width);
-		break;
-	}
+    //logverb("halign=%c, width=%f\n", halign, textents.width);
+    switch (halign) {
+    case 'L':
+        break;
+    case 'C':
+        px -= (0.5 * textents.width);
+        break;
+    case 'R':
+        px -= (1.0 * textents.width);
+        break;
+    }
 
 
     // move text away from the edges of the image.
@@ -261,20 +261,20 @@ int main(int argc, char** args) {
 
     int loglvl = LOG_MSG;
 
-	char halign = 'L';
-	char valign = 'C';
+    char halign = 'L';
+    char valign = 'C';
     sl* json = NULL;
 
     anbool whitetext = FALSE;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
-		case 'V':
-			valign = optarg[0];
-			break;
-		case 'O':
-			halign = optarg[0];
-			break;
+        case 'V':
+            valign = optarg[0];
+            break;
+        case 'O':
+            halign = optarg[0];
+            break;
         case 'F':
             ngc_fraction = atof(optarg);
             break;
@@ -289,10 +289,10 @@ int main(int argc, char** args) {
             break;
         case 'g':
             {
-            char *tail = NULL;
-            gridcolor[0] = strtod(optarg,&tail);
-            if (*tail) { tail++; gridcolor[1] = strtod(tail,&tail); }
-            if (*tail) { tail++; gridcolor[2] = strtod(tail,&tail); }
+                char *tail = NULL;
+                gridcolor[0] = strtod(optarg,&tail);
+                if (*tail) { tail++; gridcolor[1] = strtod(tail,&tail); }
+                if (*tail) { tail++; gridcolor[2] = strtod(tail,&tail); }
             }
             break;
         case 'D':
@@ -315,8 +315,8 @@ int main(int argc, char** args) {
             outfn = NULL;
             break;
         case 'x':
-        	whitetext = TRUE;
-        	break;
+            whitetext = TRUE;
+            break;
         case 'v':
             loglvl++;
             break;
@@ -420,7 +420,7 @@ int main(int argc, char** args) {
 
 
     if (infn) {
-		cairoutils_fake_ppm_init();
+        cairoutils_fake_ppm_init();
         img = cairoutils_read_ppm(infn, &W, &H);
         if (!img) {
             ERROR("Failed to read input image %s", infn);
@@ -499,50 +499,50 @@ int main(int argc, char** args) {
         cairos->shapesmask = cairoshapesmask;
         cairos->imgW = (float)W/scale;
         cairos->imgH = (float)H/scale;
-//    }
+        //    }
 
-    if (grid) {
-        double ramin, ramax, decmin, decmax;
-        double ra, dec;
-        double rastep = gridspacing / 60.0;
-        double decstep = gridspacing / 60.0;
-        // how many line segments
-        int N = 10;
-        double px, py;
-        int i;
+        if (grid) {
+            double ramin, ramax, decmin, decmax;
+            double ra, dec;
+            double rastep = gridspacing / 60.0;
+            double decstep = gridspacing / 60.0;
+            // how many line segments
+            int N = 10;
+            double px, py;
+            int i;
 
-        cairo_set_source_rgba(cairo, gridcolor[0], gridcolor[1], gridcolor[2], 1.0);
+            cairo_set_source_rgba(cairo, gridcolor[0], gridcolor[1], gridcolor[2], 1.0);
 
-        sip_get_radec_bounds(&sip, 100, &ramin, &ramax, &decmin, &decmax);
-		logverb("Plotting grid lines from RA=%g to %g in steps of %g; Dec=%g to %g in steps of %g\n",
-				ramin, ramax, rastep, decmin, decmax, decstep);
-        for (dec = decstep * floor(decmin / decstep); dec<=decmax; dec+=decstep) {
-			logverb("  dec=%g\n", dec);
-            for (i=0; i<=N; i++) {
-                ra = ramin + ((double)i / (double)N) * (ramax - ramin);
-                if (!sip_radec2pixelxy(&sip, ra, dec, &px, &py))
-                    continue;
-                // first time, move_to; else line_to
-                ((ra == ramin) ? cairo_move_to : cairo_line_to)(cairo, px, py);
+            sip_get_radec_bounds(&sip, 100, &ramin, &ramax, &decmin, &decmax);
+            logverb("Plotting grid lines from RA=%g to %g in steps of %g; Dec=%g to %g in steps of %g\n",
+                    ramin, ramax, rastep, decmin, decmax, decstep);
+            for (dec = decstep * floor(decmin / decstep); dec<=decmax; dec+=decstep) {
+                logverb("  dec=%g\n", dec);
+                for (i=0; i<=N; i++) {
+                    ra = ramin + ((double)i / (double)N) * (ramax - ramin);
+                    if (!sip_radec2pixelxy(&sip, ra, dec, &px, &py))
+                        continue;
+                    // first time, move_to; else line_to
+                    ((ra == ramin) ? cairo_move_to : cairo_line_to)(cairo, px, py);
+                }
+                cairo_stroke(cairo);
             }
-            cairo_stroke(cairo);
-        }
-        for (ra = rastep * floor(ramin / rastep); ra <= ramax; ra += rastep) {
-            //for (dec=decmin; dec<=decmax; dec += (decmax - decmin)/(double)N) {
-			logverb("  ra=%g\n", ra);
-            for (i=0; i<=N; i++) {
-                dec = decmin + ((double)i / (double)N) * (decmax - decmin);
-                if (!sip_radec2pixelxy(&sip, ra, dec, &px, &py))
-                    continue;
-                // first time, move_to; else line_to
-                ((dec == decmin) ? cairo_move_to : cairo_line_to)(cairo, px, py);
+            for (ra = rastep * floor(ramin / rastep); ra <= ramax; ra += rastep) {
+                //for (dec=decmin; dec<=decmax; dec += (decmax - decmin)/(double)N) {
+                logverb("  ra=%g\n", ra);
+                for (i=0; i<=N; i++) {
+                    dec = decmin + ((double)i / (double)N) * (decmax - decmin);
+                    if (!sip_radec2pixelxy(&sip, ra, dec, &px, &py))
+                        continue;
+                    // first time, move_to; else line_to
+                    ((dec == decmin) ? cairo_move_to : cairo_line_to)(cairo, px, py);
+                }
+                cairo_stroke(cairo);
             }
-            cairo_stroke(cairo);
-        }
 
-        cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 1.0);
+            cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 1.0);
+        }
     }
-  }
 
     if (constell) {
         N = constellations_n();
@@ -599,9 +599,9 @@ int main(int argc, char** args) {
                 int star = il_get(inboundstars, 0);
                 constellations_get_star_radec(star, &ra, &dec);
                 if (whitetext) {
-                	r = g = b = 1;
+                    r = g = b = 1;
                 } else {
-                	color_for_radec(ra, dec, &r, &g, &b);
+                    color_for_radec(ra, dec, &r, &g, &b);
                 }
                 cairo_set_source_rgba(cairoshapes, r,g,b,0.8);
                 cairo_set_line_width(cairoshapes, cw);
@@ -762,7 +762,7 @@ int main(int argc, char** args) {
                 if (bs->common_name && strlen(bs->common_name))
                     sl_append(names, bs->common_name);
                 if (bs->name)
-					sl_append(names, bs->name);
+                    sl_append(names, bs->name);
 				
                 namearr = sl_join(names, "\", \"");
 
@@ -788,9 +788,9 @@ int main(int argc, char** args) {
                 float r,g,b;
                 // set color based on RA,Dec to match constellations above.
                 if (whitetext) {
-                	r = g = b = 1;
+                    r = g = b = 1;
                 } else {
-                	color_for_radec(bs->ra, bs->dec, &r, &g, &b);
+                    color_for_radec(bs->ra, bs->dec, &r, &g, &b);
                 }
                 cairo_set_source_rgba(cairoshapes, r,g,b,0.8);
                 cairo_set_source_rgba(cairo, r,g,b, 0.8);
@@ -798,7 +798,7 @@ int main(int argc, char** args) {
 
             if (!justlist)
                 add_text(cairos, text, px + label_offset, py + dy,
-						 halign, valign);
+                         halign, valign);
 
             free(text);
 
@@ -889,7 +889,7 @@ int main(int argc, char** args) {
                 cairo_stroke(cairoshapes);
 
                 add_text(cairos, text, px + label_offset, py + dy,
-						 halign, valign);
+                         halign, valign);
             }
 
             if (json) {
@@ -919,13 +919,13 @@ int main(int argc, char** args) {
         if (!justlist)
             cairo_set_source_rgb(cairo, 1.0, 1.0, 1.0);
 
-		logverb("Reading HD catalog: %s\n", hdpath);
+        logverb("Reading HD catalog: %s\n", hdpath);
         hdcat = henry_draper_open(hdpath);
         if (!hdcat) {
             ERROR("Failed to open HD catalog");
             exit(-1);
         }
-		logverb("Got %i HD stars\n", henry_draper_n(hdcat));
+        logverb("Got %i HD stars\n", henry_draper_n(hdcat));
 
         sip_pixelxy2radec(&sip, W/(2.0*scale), H/(2.0*scale), &rac, &decc);
         sip_pixelxy2radec(&sip, 0.0, 0.0, &ra2, &dec2);
@@ -933,7 +933,7 @@ int main(int argc, char** args) {
         // Fudge
         arcsec *= 1.1;
         hdlist = henry_draper_get(hdcat, rac, decc, arcsec);
-		logverb("Found %zu HD stars within range (%g arcsec of RA,Dec %g,%g)\n", bl_size(hdlist), arcsec, rac, decc);
+        logverb("Found %zu HD stars within range (%g arcsec of RA,Dec %g,%g)\n", bl_size(hdlist), arcsec, rac, decc);
 
         for (i=0; i<bl_size(hdlist); i++) {
             double px, py;
@@ -941,12 +941,12 @@ int main(int argc, char** args) {
             hd_entry_t* hd = bl_access(hdlist, i);
             if (!sip_radec2pixelxy(&sip, hd->ra, hd->dec, &px, &py)) {
                 continue;
-			}
+            }
             if (px < 0 || py < 0 || px*scale > W || py*scale > H) {
-				logverb("  HD %i at RA,Dec (%g, %g) -> pixel (%.1f, %.1f) is out of bounds\n",
-						hd->hd, hd->ra, hd->dec, px, py);
+                logverb("  HD %i at RA,Dec (%g, %g) -> pixel (%.1f, %.1f) is out of bounds\n",
+                        hd->hd, hd->ra, hd->dec, px, py);
                 continue;
-			}
+            }
             asprintf_safe(&txt, "HD %i", hd->hd);
             if (!justlist) {
                 cairo_text_extents_t textents;

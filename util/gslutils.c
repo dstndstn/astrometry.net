@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <assert.h>
 #include <gsl/gsl_matrix_double.h>
@@ -17,41 +17,41 @@
 #include "errors.h"
 
 static void errhandler(const char * reason,
-					   const char * file,
-					   int line,
-					   int gsl_errno) {
-	ERROR("GSL error: \"%s\" in %s:%i (gsl errno %i = %s)",
-		  reason, file, line,
-		  gsl_errno,
-		  gsl_strerror(gsl_errno));
+                       const char * file,
+                       int line,
+                       int gsl_errno) {
+    ERROR("GSL error: \"%s\" in %s:%i (gsl errno %i = %s)",
+          reason, file, line,
+          gsl_errno,
+          gsl_strerror(gsl_errno));
 }
 
 void gslutils_use_error_system() {
-	gsl_set_error_handler(errhandler);
+    gsl_set_error_handler(errhandler);
 }
 
 int gslutils_invert_3x3(const double* A, double* B) {
-	gsl_matrix* LU;
-	gsl_permutation *p;
-	gsl_matrix_view mB;
-	int rtn = 0;
-	int signum;
+    gsl_matrix* LU;
+    gsl_permutation *p;
+    gsl_matrix_view mB;
+    int rtn = 0;
+    int signum;
 
-	p = gsl_permutation_alloc(3);
-	gsl_matrix_const_view mA = gsl_matrix_const_view_array(A, 3, 3);
-	mB = gsl_matrix_view_array(B, 3, 3);
-	LU = gsl_matrix_alloc(3, 3);
+    p = gsl_permutation_alloc(3);
+    gsl_matrix_const_view mA = gsl_matrix_const_view_array(A, 3, 3);
+    mB = gsl_matrix_view_array(B, 3, 3);
+    LU = gsl_matrix_alloc(3, 3);
 
-	gsl_matrix_memcpy(LU, &mA.matrix);
-	if (gsl_linalg_LU_decomp(LU, p, &signum) ||
-		gsl_linalg_LU_invert(LU, p, &mB.matrix)) {
-		ERROR("gsl_linalg_LU_decomp() or _invert() failed.");
-		rtn = -1;
-	}
+    gsl_matrix_memcpy(LU, &mA.matrix);
+    if (gsl_linalg_LU_decomp(LU, p, &signum) ||
+        gsl_linalg_LU_invert(LU, p, &mB.matrix)) {
+        ERROR("gsl_linalg_LU_decomp() or _invert() failed.");
+        rtn = -1;
+    }
 
-	gsl_permutation_free(p);
-	gsl_matrix_free(LU);
-	return rtn;
+    gsl_permutation_free(p);
+    gsl_matrix_free(LU);
+    return rtn;
 }
 
 void gslutils_matrix_multiply(gsl_matrix* C,
@@ -102,7 +102,7 @@ int gslutils_solve_leastsquares(gsl_matrix* A, gsl_vector** B,
                                 int NB) {
     int i;
     gsl_vector *tau, *resid = NULL;
-	Unused int ret;
+    Unused int ret;
     int M, N;
 
     M = A->size1;
@@ -128,7 +128,7 @@ int gslutils_solve_leastsquares(gsl_matrix* A, gsl_vector** B,
         X[i] = gsl_vector_alloc(N);
         assert(X[i]);
         ret = gsl_linalg_QR_lssolve(A, tau, B[i], X[i], resid);
-		assert(ret == 0);
+        assert(ret == 0);
         if (resids) {
             resids[i] = resid;
             resid = NULL;

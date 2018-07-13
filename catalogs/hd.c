@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <assert.h>
 
@@ -23,9 +23,9 @@ hd_catalog_t* henry_draper_open(const char* fn) {
 }
 
 int henry_draper_n(const hd_catalog_t* hd) {
-	assert(hd);
-	assert(hd->kd);
-	return kdtree_n(hd->kd);
+    assert(hd);
+    assert(hd->kd);
+    return kdtree_n(hd->kd);
 }
 
 void henry_draper_close(hd_catalog_t* hd) {

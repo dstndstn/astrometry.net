@@ -1508,33 +1508,33 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
 
 #define GET(x) (arr[(size_t)(x)*(size_t)D+(size_t)d])
 #if defined(KD_DIM)
-#define ELEM_SWAP(il, ir) {                             \
-        if ((il) != (ir)) {                             \
-            tmpperm  = parr[il];                        \
-            assert(tmpperm != -1);                      \
-            parr[il] = parr[ir];                        \
-            parr[ir] = tmpperm;                         \
-            { int d; for (d=0; d<D; d++) {              \
+#define ELEM_SWAP(il, ir) {                                             \
+        if ((il) != (ir)) {                                             \
+            tmpperm  = parr[il];                                        \
+            assert(tmpperm != -1);                                      \
+            parr[il] = parr[ir];                                        \
+            parr[ir] = tmpperm;                                         \
+            { int d; for (d=0; d<D; d++) {                              \
                     tmpdata[0] = KD_ARRAY_VAL(arr, D, il, d);           \
                     *KD_ARRAY_REF(arr, D, il, d) = KD_ARRAY_VAL(arr, D, ir, d); \
                     *KD_ARRAY_REF(arr, D, ir, d) = tmpdata[0]; }}}}
 #else
-#define ELEM_SWAP(il, ir) {                                     \
-        if ((il) != (ir)) {                                     \
-            tmpperm  = parr[il];                                \
-            assert(tmpperm != -1);                              \
-            parr[il] = parr[ir];                                \
-            parr[ir] = tmpperm;                                 \
+#define ELEM_SWAP(il, ir) {                                             \
+        if ((il) != (ir)) {                                             \
+            tmpperm  = parr[il];                                        \
+            assert(tmpperm != -1);                                      \
+            parr[il] = parr[ir];                                        \
+            parr[ir] = tmpperm;                                         \
             memcpy(tmpdata,                     KD_ARRAY_REF(arr, D, il, 0), D*sizeof(dtype)); \
             memcpy(KD_ARRAY_REF(arr, D, il, 0), KD_ARRAY_REF(arr, D, ir, 0), D*sizeof(dtype)); \
             memcpy(KD_ARRAY_REF(arr, D, ir, 0), tmpdata,                     D*sizeof(dtype)); }}
 #endif
-#define ELEM_ROT(iA, iB, iC) {                                  \
-        tmpperm  = parr[iC];                                    \
-        parr[iC] = parr[iB];                                    \
-        parr[iB] = parr[iA];                                    \
-        parr[iA] = tmpperm;                                     \
-        assert(tmpperm != -1);                                  \
+#define ELEM_ROT(iA, iB, iC) {                                          \
+        tmpperm  = parr[iC];                                            \
+        parr[iC] = parr[iB];                                            \
+        parr[iB] = parr[iA];                                            \
+        parr[iA] = tmpperm;                                             \
+        assert(tmpperm != -1);                                          \
         memcpy(tmpdata,                     KD_ARRAY_REF(arr, D, iC, 0), D*sizeof(dtype)); \
         memcpy(KD_ARRAY_REF(arr, D, iC, 0), KD_ARRAY_REF(arr, D, iB, 0), D*sizeof(dtype)); \
         memcpy(KD_ARRAY_REF(arr, D, iB, 0), KD_ARRAY_REF(arr, D, iA, 0), D*sizeof(dtype)); \

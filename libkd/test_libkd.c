@@ -1,6 +1,6 @@
 /*
-# This file is part of libkd.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of libkd.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #include <stdio.h>
@@ -78,90 +78,90 @@ void tst_1(CuTest* ct) {
         int R3 = linearR(i, kd->nbottom, N);
         double d3 = linearRF(i, kd->nbottom, N);
 
-		printf("%i %i %i %g\n", R1, R2, R3, d3);
-		printf("                               %s   %g\n",
-			   (R1 != R3) ? "***" : "   ",
-			   (double)R3 - d3);
+        printf("%i %i %i %g\n", R1, R2, R3, d3);
+        printf("                               %s   %g\n",
+               (R1 != R3) ? "***" : "   ",
+               (double)R3 - d3);
         /*
          CuAssertIntEquals(ct, R1, R2);
          CuAssertIntEquals(ct, R1, R3);
          */
     }
-	kdtree_free(kd);
+    kdtree_free(kd);
 }
 
 static void compute_splitbits(int ndim, uint32_t* dimmask, uint32_t* dimbits, uint32_t* splitmask) {
-	int D;
-	int bits;
-	uint32_t val;
-	D = ndim;
-	bits = 0;
-	val = 1;
-	while (val < D) {
-		bits++;
-		val *= 2;
-	}
-	*dimmask = val - 1;
-	*dimbits = bits;
-	*splitmask = ~(*dimmask);
+    int D;
+    int bits;
+    uint32_t val;
+    D = ndim;
+    bits = 0;
+    val = 1;
+    while (val < D) {
+        bits++;
+        val *= 2;
+    }
+    *dimmask = val - 1;
+    *dimbits = bits;
+    *splitmask = ~(*dimmask);
 }
 
 void test_splitbits(CuTest* ct) {
-	uint32_t dmask, dbits, smask;
-	int dim;
+    uint32_t dmask, dbits, smask;
+    int dim;
 
-	compute_splitbits(1, &dmask, &dbits, &smask);
-	CuAssertIntEquals(ct, 0x0, dbits);
-	CuAssertIntEquals(ct, 0x0, dmask);
-	CuAssertIntEquals(ct,~0x0, smask);
+    compute_splitbits(1, &dmask, &dbits, &smask);
+    CuAssertIntEquals(ct, 0x0, dbits);
+    CuAssertIntEquals(ct, 0x0, dmask);
+    CuAssertIntEquals(ct,~0x0, smask);
 
-	compute_splitbits(2, &dmask, &dbits, &smask);
-	CuAssertIntEquals(ct, 0x1, dbits);
-	CuAssertIntEquals(ct, 0x1, dmask);
-	CuAssertIntEquals(ct,~0x1, smask);
+    compute_splitbits(2, &dmask, &dbits, &smask);
+    CuAssertIntEquals(ct, 0x1, dbits);
+    CuAssertIntEquals(ct, 0x1, dmask);
+    CuAssertIntEquals(ct,~0x1, smask);
 
-	for (dim=3; dim<=4; dim++) {
-		compute_splitbits(dim, &dmask, &dbits, &smask);
-		CuAssertIntEquals(ct, 0x2, dbits);
-		CuAssertIntEquals(ct, 0x3, dmask);
-		CuAssertIntEquals(ct,~0x3, smask);
-	}
+    for (dim=3; dim<=4; dim++) {
+        compute_splitbits(dim, &dmask, &dbits, &smask);
+        CuAssertIntEquals(ct, 0x2, dbits);
+        CuAssertIntEquals(ct, 0x3, dmask);
+        CuAssertIntEquals(ct,~0x3, smask);
+    }
 
-	for (dim=5; dim<=8; dim++) {
-		compute_splitbits(dim, &dmask, &dbits, &smask);
-		CuAssertIntEquals(ct, 0x3, dbits);
-		CuAssertIntEquals(ct, 0x7, dmask);
-		CuAssertIntEquals(ct,~0x7, smask);
-	}
+    for (dim=5; dim<=8; dim++) {
+        compute_splitbits(dim, &dmask, &dbits, &smask);
+        CuAssertIntEquals(ct, 0x3, dbits);
+        CuAssertIntEquals(ct, 0x7, dmask);
+        CuAssertIntEquals(ct,~0x7, smask);
+    }
 
-	for (dim=9; dim<=16; dim++) {
-		compute_splitbits(dim, &dmask, &dbits, &smask);
-		CuAssertIntEquals(ct, 0x4, dbits);
-		CuAssertIntEquals(ct, 0xF, dmask);
-		CuAssertIntEquals(ct,~0xF, smask);
-	}
+    for (dim=9; dim<=16; dim++) {
+        compute_splitbits(dim, &dmask, &dbits, &smask);
+        CuAssertIntEquals(ct, 0x4, dbits);
+        CuAssertIntEquals(ct, 0xF, dmask);
+        CuAssertIntEquals(ct,~0xF, smask);
+    }
 }
 
 void test_short_partition(CuTest* ct) {
-	kdtree_t* kd;
-	double* data;
+    kdtree_t* kd;
+    double* data;
     int N = 21;
     int Nleaf = 16;
     int D = 2;
-	int i;
-	double minval[D], maxval[D];
-	uint16_t cdata[] = { 12669, 12669, 12669, 12669, 12669, 12669, 
-						 12669, 12669, 12669, 12669, 12669, 12669,
-						 13860, 13913, 14164, 14557, 15283, 17130,
-						 17130, 17130, 17130 };
+    int i;
+    double minval[D], maxval[D];
+    uint16_t cdata[] = { 12669, 12669, 12669, 12669, 12669, 12669, 
+                         12669, 12669, 12669, 12669, 12669, 12669,
+                         13860, 13913, 14164, 14557, 15283, 17130,
+                         17130, 17130, 17130 };
 
 
-	minval[0] = -0.20710678118654757;
-	minval[1] = -0.20710678118654757;
-	maxval[0] =  1.2071067811865475;
-	maxval[1] =  1.2071067811865475;
+    minval[0] = -0.20710678118654757;
+    minval[1] = -0.20710678118654757;
+    maxval[0] =  1.2071067811865475;
+    maxval[1] =  1.2071067811865475;
 
-	data = calloc(N*D, sizeof(double));
+    data = calloc(N*D, sizeof(double));
     // convert from "cdata" to "data" space (I got the test data above
     // from the internal data representation of a problem tree).
     double scale = (maxval[0] - minval[0]) / (double)UINT16_MAX;
@@ -172,7 +172,7 @@ void test_short_partition(CuTest* ct) {
     kd = kdtree_build_2(NULL, data, N, D, Nleaf, KDTT_DSS, KD_BUILD_SPLIT,
                         minval, maxval);
     CuAssertPtrNotNull(ct, kd);
-	free(data);
+    free(data);
 
     /*
      printf("kd:\n");
@@ -184,25 +184,25 @@ void test_short_partition(CuTest* ct) {
         CuAssertIntEquals(ct, kdata[2*i+0], 0);
         CuAssertIntEquals(ct, kdata[2*i+1], cdata[i]);
     }
-	CuAssertIntEquals(ct, 0, kdtree_check(kd));
-	kdtree_free(kd);
+    CuAssertIntEquals(ct, 0, kdtree_check(kd));
+    kdtree_free(kd);
 }
 
 void test_empty_node(CuTest* ct) {
-	kdtree_t* kd;
-	double* data;
+    kdtree_t* kd;
+    double* data;
     int N = 21;
     int Nleaf = 16;
     int D = 2;
-	int i, ok;
-	double minval[D], maxval[D];
+    int i, ok;
+    double minval[D], maxval[D];
 
-	minval[0] = 0;
-	minval[1] = 0;
-	maxval[0] = 1;
-	maxval[1] = 1;
+    minval[0] = 0;
+    minval[1] = 0;
+    maxval[0] = 1;
+    maxval[1] = 1;
 
-	data = calloc(N*D, sizeof(double));
+    data = calloc(N*D, sizeof(double));
     // convert from "cdata" to "data" space
     double scale = (maxval[0] - minval[0]) / (double)UINT16_MAX;
     for (i=0; i<N; i++) {
@@ -210,10 +210,10 @@ void test_empty_node(CuTest* ct) {
         data[2*i+1] = minval[0] + 3 * scale;
     }
 
-	kd = kdtree_build_2(NULL, data, N, D, Nleaf, KDTT_DSS, KD_BUILD_SPLIT,
+    kd = kdtree_build_2(NULL, data, N, D, Nleaf, KDTT_DSS, KD_BUILD_SPLIT,
                         minval, maxval);
     CuAssertPtrNotNull(ct, kd);
-	free(data);
+    free(data);
 
     uint16_t* kdata = kd->data.s;
     for (i=0; i<N; i++) {
@@ -221,19 +221,19 @@ void test_empty_node(CuTest* ct) {
         CuAssertIntEquals(ct, 3, kdata[2*i+1]);
     }
 
-	ok = kdtree_check(kd);
-	CuAssertIntEquals(ct, 0, ok);
-	kdtree_free(kd);
+    ok = kdtree_check(kd);
+    CuAssertIntEquals(ct, 0, ok);
+    kdtree_free(kd);
 }
 
 static inline u8 node_level(int nodeid) {
-	int val = (nodeid + 1) >> 1;
-	u8 level = 0;
-	while (val) {
-		val = val >> 1;
-		level++;
-	}
-	return level;
+    int val = (nodeid + 1) >> 1;
+    u8 level = 0;
+    while (val) {
+        val = val >> 1;
+        level++;
+    }
+    return level;
 }
 
 void test_2(CuTest* ct) {
@@ -320,7 +320,7 @@ static void run_test_nn(CuTest* tc, int treetype, int treeopts,
         CuAssertDblEquals(tc, sqrt(d2), sqrt(trued2), eps);
     }
 
-	kdtree_free(kd);
+    kdtree_free(kd);
     free(treedata);
     free(origdata);
 }
@@ -392,10 +392,10 @@ static void run_test_rs_ND(CuTest* tc, int treetype, int treeopts,
          printf("Kdtree: ind %i, dist %g.\n", kd->perm[ind], sqrt(d2));
          */
 
-		kdtree_free_query(res);
+        kdtree_free_query(res);
     }
 
-	kdtree_free(kd);
+    kdtree_free(kd);
     free(treedata);
     free(origdata);
 }
@@ -534,8 +534,8 @@ void test_no_lr_with_ints(CuTest* tc) {
     data = random_points_d(N, D);
     kd = build_tree(tc, data, N, D, Nleaf, KDTT_DSS, KD_BUILD_SPLIT | KD_BUILD_NO_LR);
     CuAssert(tc, "no kd", kd == NULL);
-	free(data);
+    free(data);
 
-	errors_free();
+    errors_free();
 }
 

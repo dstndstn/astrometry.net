@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -27,131 +27,131 @@
 
 Malloc
 char* fits_to_string(const qfits_header* hdr, int* size) {
-	int N = qfits_header_n(hdr);
-	char* str = NULL;
-	int i;
+    int N = qfits_header_n(hdr);
+    char* str = NULL;
+    int i;
 
-	str = malloc(N * FITS_LINESZ);
-	if (!str) {
-		SYSERROR("Failed to allocate string for %i FITS lines\n", N);
-		return NULL;
-	}
-	for (i=0; i<N; i++) {
-		if (qfits_header_write_line(hdr, i, str + i*FITS_LINESZ)) {
-			ERROR("Failed to write FITS header line %i", i);
-			free(str);
-			return NULL;
-		}
-	}
-	*size = N * FITS_LINESZ;
-	return str;
+    str = malloc(N * FITS_LINESZ);
+    if (!str) {
+        SYSERROR("Failed to allocate string for %i FITS lines\n", N);
+        return NULL;
+    }
+    for (i=0; i<N; i++) {
+        if (qfits_header_write_line(hdr, i, str + i*FITS_LINESZ)) {
+            ERROR("Failed to write FITS header line %i", i);
+            free(str);
+            return NULL;
+        }
+    }
+    *size = N * FITS_LINESZ;
+    return str;
 }
 
 int fits_write_header(const qfits_header* hdr, const char* fn) {
-	FILE* fid;
-	fid = fopen(fn, "wb");
-	if (!fid) {
-		SYSERROR("Failed to open file \"%s\" to write FITS header", fn);
-		return -1;
-	}
-	if (qfits_header_dump(hdr, fid)) {
-		ERROR("Failed to write FITS header to file \"%s\"", fn);
-		return -1;
-	}
-	if (fits_pad_file(fid)) {
-		ERROR("Failed to pad FITS header to file \"%s\"", fn);
-		return -1;
-	}
-	if (fclose(fid)) {
-		SYSERROR("Failed to close file \"%s\" after writing FITS header", fn);
-		return -1;
-	}
-	return 0;
+    FILE* fid;
+    fid = fopen(fn, "wb");
+    if (!fid) {
+        SYSERROR("Failed to open file \"%s\" to write FITS header", fn);
+        return -1;
+    }
+    if (qfits_header_dump(hdr, fid)) {
+        ERROR("Failed to write FITS header to file \"%s\"", fn);
+        return -1;
+    }
+    if (fits_pad_file(fid)) {
+        ERROR("Failed to pad FITS header to file \"%s\"", fn);
+        return -1;
+    }
+    if (fclose(fid)) {
+        SYSERROR("Failed to close file \"%s\" after writing FITS header", fn);
+        return -1;
+    }
+    return 0;
 }
 
 
 qfits_table* fits_copy_table(qfits_table* tbl) {
-	qfits_table* out;
-	out = calloc(1, sizeof(qfits_table));
-	memcpy(out, tbl, sizeof(qfits_table));
-	out->col = malloc(tbl->nc * sizeof(qfits_col));
-	memcpy(out->col, tbl->col, tbl->nc * sizeof(qfits_col));
-	return out;
+    qfits_table* out;
+    out = calloc(1, sizeof(qfits_table));
+    memcpy(out, tbl, sizeof(qfits_table));
+    out->col = malloc(tbl->nc * sizeof(qfits_col));
+    memcpy(out->col, tbl->col, tbl->nc * sizeof(qfits_col));
+    return out;
 }
 
 int fits_pixdump(const qfitsdumper * qd) {
     FILE* f_out;
-	const void* vbuf;
-	anbool tostdout;
-	int i;
-	int isize;
-	int osize;
+    const void* vbuf;
+    anbool tostdout;
+    int i;
+    int isize;
+    int osize;
 
-	if (!qd) return -1;
-	if (!qd->filename) return -1;
-	if (qd->npix < 0) {
-		ERROR("Negative number of pixels specified.");
-		return -1;
-	}
+    if (!qd) return -1;
+    if (!qd->filename) return -1;
+    if (qd->npix < 0) {
+        ERROR("Negative number of pixels specified.");
+        return -1;
+    }
 
-	// accept
-	vbuf = qd->vbuf;
-	switch (qd->ptype) {
-	case PTYPE_FLOAT:
-		if (!vbuf) vbuf = qd->fbuf;
-		break;
-	case PTYPE_INT:
-		if (!vbuf) vbuf = qd->ibuf;
-		break;
-	case PTYPE_DOUBLE:
-		if (!vbuf) vbuf = qd->dbuf;
-		break;
-	case PTYPE_UINT8:
-	case PTYPE_INT16:
-		// ok
-		break;
-	default:
-		ERROR("Invalid input pixel type %i", qd->ptype);
-		return -1;
-	}
+    // accept
+    vbuf = qd->vbuf;
+    switch (qd->ptype) {
+    case PTYPE_FLOAT:
+        if (!vbuf) vbuf = qd->fbuf;
+        break;
+    case PTYPE_INT:
+        if (!vbuf) vbuf = qd->ibuf;
+        break;
+    case PTYPE_DOUBLE:
+        if (!vbuf) vbuf = qd->dbuf;
+        break;
+    case PTYPE_UINT8:
+    case PTYPE_INT16:
+        // ok
+        break;
+    default:
+        ERROR("Invalid input pixel type %i", qd->ptype);
+        return -1;
+    }
 
-	if (!vbuf) {
-		ERROR("No pixel buffer supplied");
-		return -1;
-	}
+    if (!vbuf) {
+        ERROR("No pixel buffer supplied");
+        return -1;
+    }
 
     tostdout = streq(qd->filename, "STDOUT");
-	if (tostdout)
+    if (tostdout)
         f_out = stdout;
-	else
+    else
         f_out = fopen(qd->filename, "a");
 
     if (!f_out) {
-		SYSERROR("Failed to open output file \"%s\" for writing", qd->filename);
-		return -1;
-	}
+        SYSERROR("Failed to open output file \"%s\" for writing", qd->filename);
+        return -1;
+    }
 
-	isize = qfits_pixel_ctype_size(qd->ptype);
-	osize = qfits_pixel_fitstype_size(qd->out_ptype);
+    isize = qfits_pixel_ctype_size(qd->ptype);
+    osize = qfits_pixel_fitstype_size(qd->out_ptype);
 
-	for (i=0; i<qd->npix; i++) {
-		char buf[8];
-		if (qfits_pixel_ctofits(qd->ptype, qd->out_ptype, vbuf, buf)) {
-			ERROR("Failed to convert pixel value to FITS");
-			return -1;
-		}
-		if (fwrite(buf, osize, 1, f_out) != 1) {
-			SYSERROR("Failed to write FITS pixel value to file \"%s\"", qd->filename);
-			return -1;
-		}
-		vbuf += isize;
-	}
+    for (i=0; i<qd->npix; i++) {
+        char buf[8];
+        if (qfits_pixel_ctofits(qd->ptype, qd->out_ptype, vbuf, buf)) {
+            ERROR("Failed to convert pixel value to FITS");
+            return -1;
+        }
+        if (fwrite(buf, osize, 1, f_out) != 1) {
+            SYSERROR("Failed to write FITS pixel value to file \"%s\"", qd->filename);
+            return -1;
+        }
+        vbuf += isize;
+    }
 
-	if (!tostdout)
-		if (fclose(f_out)) {
-			SYSERROR("Failed to close FITS outptu file \"%s\"", qd->filename);
-			return -1;
-		}
+    if (!tostdout)
+        if (fclose(f_out)) {
+            SYSERROR("Failed to close FITS outptu file \"%s\"", qd->filename);
+            return -1;
+        }
     return 0;
 }
 
@@ -160,7 +160,7 @@ int fits_pixdump(const qfitsdumper * qd) {
 
 
 int fits_write_float_image(const float* img, int nx, int ny, const char* fn) {
-	int rtn;
+    int rtn;
     qfitsdumper qoutimg;
     memset(&qoutimg, 0, sizeof(qoutimg));
     qoutimg.filename = fn;
@@ -168,14 +168,14 @@ int fits_write_float_image(const float* img, int nx, int ny, const char* fn) {
     qoutimg.ptype = PTYPE_FLOAT;
     qoutimg.fbuf = img;
     qoutimg.out_ptype = BPP_IEEE_FLOAT;
-	rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
-	if (rtn)
-		ERROR("Failed to write FITS image to file \"%s\"", fn);
-	return rtn;
+    rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
+    if (rtn)
+        ERROR("Failed to write FITS image to file \"%s\"", fn);
+    return rtn;
 }
 
 int fits_write_u8_image(const uint8_t* img, int nx, int ny, const char* fn) {
-	int rtn;
+    int rtn;
     qfitsdumper qoutimg;
     memset(&qoutimg, 0, sizeof(qoutimg));
     qoutimg.filename = fn;
@@ -183,14 +183,14 @@ int fits_write_u8_image(const uint8_t* img, int nx, int ny, const char* fn) {
     qoutimg.ptype = PTYPE_UINT8;
     qoutimg.vbuf = img;
     qoutimg.out_ptype = BPP_8_UNSIGNED;
-	rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
-	if (rtn)
-		ERROR("Failed to write FITS image to file \"%s\"", fn);
-	return rtn;
+    rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
+    if (rtn)
+        ERROR("Failed to write FITS image to file \"%s\"", fn);
+    return rtn;
 }
 
 int fits_write_i16_image(const int16_t* img, int nx, int ny, const char* fn) {
-	int rtn;
+    int rtn;
     qfitsdumper qoutimg;
     memset(&qoutimg, 0, sizeof(qoutimg));
     qoutimg.filename = fn;
@@ -198,10 +198,10 @@ int fits_write_i16_image(const int16_t* img, int nx, int ny, const char* fn) {
     qoutimg.ptype = PTYPE_INT16;
     qoutimg.vbuf = img;
     qoutimg.out_ptype = BPP_16_SIGNED;
-	rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
-	if (rtn)
-		ERROR("Failed to write FITS image to file \"%s\"", fn);
-	return rtn;
+    rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
+    if (rtn)
+        ERROR("Failed to write FITS image to file \"%s\"", fn);
+    return rtn;
 }
 
 static void errfunc(char* errstr) {
@@ -209,25 +209,25 @@ static void errfunc(char* errstr) {
 }
 
 int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd, int W) {
-	FILE* fid;
-	const char* fn = qd->filename;
-	qfits_header* freehdr = NULL;
+    FILE* fid;
+    const char* fn = qd->filename;
+    qfits_header* freehdr = NULL;
 
     fid = fopen(fn, "w");
     if (!fid) {
         SYSERROR("Failed to open file \"%s\" for output", fn);
         return -1;
     }
-	if (!hdr) {
-		freehdr = fits_get_header_for_image(qd, W, NULL);
-		hdr = freehdr;
-	}
+    if (!hdr) {
+        freehdr = fits_get_header_for_image(qd, W, NULL);
+        hdr = freehdr;
+    }
     if (qfits_header_dump(hdr, fid)) {
         ERROR("Failed to write image header to file \"%s\"", fn);
         return -1;
     }
-	if (freehdr)
-		qfits_header_destroy(freehdr);
+    if (freehdr)
+        qfits_header_destroy(freehdr);
     // the qfits pixel dumper appends to the given filename, so close
     // the file here.
     if (fits_pad_file(fid) ||
@@ -251,16 +251,16 @@ int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd, 
         SYSERROR("Failed to pad or close file \"%s\"", fn);
         return -1;
     }
-	return 0;
+    return 0;
 }
 
 qfits_header* fits_get_header_for_image2(int W, int H, int bitpix,
-										 qfits_header* addtoheader) {
-	return fits_get_header_for_image3(W, H, bitpix, 1, addtoheader);
+                                         qfits_header* addtoheader) {
+    return fits_get_header_for_image3(W, H, bitpix, 1, addtoheader);
 }
 
 qfits_header* fits_get_header_for_image3(int W, int H, int bitpix, int planes,
-										 qfits_header* addtoheader) {
+                                         qfits_header* addtoheader) {
     qfits_header* hdr;
     if (addtoheader)
         hdr = addtoheader;
@@ -270,14 +270,14 @@ qfits_header* fits_get_header_for_image3(int W, int H, int bitpix, int planes,
     fits_header_add_int(hdr, "NAXIS", (planes == 1) ? 2 : 3, "number of axes");
     fits_header_add_int(hdr, "NAXIS1", W, "image width");
     fits_header_add_int(hdr, "NAXIS2", H, "image height");
-	if (planes > 1)
-		fits_header_add_int(hdr, "NAXIS3", planes, "image planes");
+    if (planes > 1)
+        fits_header_add_int(hdr, "NAXIS3", planes, "image planes");
     return hdr;
 }
 
 qfits_header* fits_get_header_for_image(const qfitsdumper* qd, int W,
                                         qfits_header* addtoheader) {
-	return fits_get_header_for_image2(W, qd->npix / W, qd->out_ptype, addtoheader);
+    return fits_get_header_for_image2(W, qd->npix / W, qd->out_ptype, addtoheader);
 }
 
 void fits_use_error_system() {
@@ -353,14 +353,14 @@ void fits_copy_non_table_headers(qfits_header* dest, const qfits_header* src) {
 }
 
 char* fits_get_dupstring(const qfits_header* hdr, const char* key) {
-	// qfits_pretty_string() never increases the length of the string
-	char pretty[FITS_LINESZ+1];
-	char* val = NULL;
-	val = qfits_header_getstr(hdr, key);
-	if (!val)
-		return NULL;
-	qfits_pretty_string_r(val, pretty);
-	return strdup_safe(pretty);
+    // qfits_pretty_string() never increases the length of the string
+    char pretty[FITS_LINESZ+1];
+    char* val = NULL;
+    val = qfits_header_getstr(hdr, key);
+    if (!val)
+        return NULL;
+    qfits_pretty_string_r(val, pretty);
+    return strdup_safe(pretty);
 }
 
 void fits_header_addf(qfits_header* hdr, const char* key, const char* comment,
@@ -566,7 +566,7 @@ char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
         char str[FITS_LINESZ+1];
         int len;
         sl* slist;
-		char* cptr = NULL;
+        char* cptr = NULL;
         char key[FITS_LINESZ+1];
         char val[FITS_LINESZ+1];
         qfits_header_getitem(hdr, i, key, val, NULL, NULL);
@@ -640,18 +640,18 @@ void fits_header_modf(qfits_header* hdr, const char* key, const char* comment,
 
 void fits_header_set_double(qfits_header* hdr, const char* key, double val,
                             const char* comment) {
-	if (qfits_header_getstr(hdr, key))
-		fits_header_mod_double(hdr, key, val, comment);
-	else
-		fits_header_add_double(hdr, key, val, comment);
+    if (qfits_header_getstr(hdr, key))
+        fits_header_mod_double(hdr, key, val, comment);
+    else
+        fits_header_add_double(hdr, key, val, comment);
 }
 
 void fits_header_set_int(qfits_header* hdr, const char* key, int val,
-                            const char* comment) {
-	if (qfits_header_getstr(hdr, key))
-		fits_header_mod_int(hdr, key, val, comment);
-	else
-		fits_header_add_int(hdr, key, val, comment);
+                         const char* comment) {
+    if (qfits_header_getstr(hdr, key))
+        fits_header_mod_int(hdr, key, val, comment);
+    else
+        fits_header_add_int(hdr, key, val, comment);
 }
 
 void fits_header_add_double(qfits_header* hdr, const char* key, double val,
@@ -682,84 +682,84 @@ int fits_update_value(qfits_header* hdr, const char* key, const char* newvalue) 
 }
 
 static int add_long_line(qfits_header* hdr, const char* keyword, const char* indent, int append, const char* format, va_list lst) {
-	const int charsperline = 60;
-	char* origstr = NULL;
-	char* str = NULL;
-	int len;
-	int indlen = (indent ? strlen(indent) : 0);
-	len = vasprintf(&origstr, format, lst);
-	if (len == -1) {
-		fprintf(stderr, "vasprintf failed: %s\n", strerror(errno));
-		return -1;
-	}
-	str = origstr;
-	do {
-		char copy[80];
-		int doindent = (indent && (str != origstr));
-		int nchars = charsperline - (doindent ? indlen : 0);
-		int brk;
-		if (nchars > len)
-			nchars = len;
-		else {
-			// look for a space to break the line.
-			for (brk=nchars-1; (brk>=0) && (str[brk] != ' '); brk--);
-			if (brk > 0) {
-				// found a place to break the line.
-				nchars = brk + 1;
-			}
-		}
-		sprintf(copy, "%s%.*s", (doindent ? indent : ""), nchars, str);
+    const int charsperline = 60;
+    char* origstr = NULL;
+    char* str = NULL;
+    int len;
+    int indlen = (indent ? strlen(indent) : 0);
+    len = vasprintf(&origstr, format, lst);
+    if (len == -1) {
+        fprintf(stderr, "vasprintf failed: %s\n", strerror(errno));
+        return -1;
+    }
+    str = origstr;
+    do {
+        char copy[80];
+        int doindent = (indent && (str != origstr));
+        int nchars = charsperline - (doindent ? indlen : 0);
+        int brk;
+        if (nchars > len)
+            nchars = len;
+        else {
+            // look for a space to break the line.
+            for (brk=nchars-1; (brk>=0) && (str[brk] != ' '); brk--);
+            if (brk > 0) {
+                // found a place to break the line.
+                nchars = brk + 1;
+            }
+        }
+        sprintf(copy, "%s%.*s", (doindent ? indent : ""), nchars, str);
         if (append)
             qfits_header_append(hdr, keyword, copy, NULL, NULL);
         else
             qfits_header_add(hdr, keyword, copy, NULL, NULL);
-		len -= nchars;
-		str += nchars;
-	} while (len > 0);
-	free(origstr);
-	return 0;
+        len -= nchars;
+        str += nchars;
+    } while (len > 0);
+    free(origstr);
+    return 0;
 }
 
 static int 
 ATTRIB_FORMAT(printf,4,5)
-add_long_line_b(qfits_header* hdr, const char* keyword,
-                const char* indent, const char* format, ...) {
-	va_list lst;
-	int rtn;
-	va_start(lst, format);
-	rtn = add_long_line(hdr, keyword, indent, 0, format, lst);
-	va_end(lst);
-	return rtn;
+    add_long_line_b(qfits_header* hdr, const char* keyword,
+                    const char* indent, const char* format, ...) {
+    va_list lst;
+    int rtn;
+    va_start(lst, format);
+    rtn = add_long_line(hdr, keyword, indent, 0, format, lst);
+    va_end(lst);
+    return rtn;
 }
 
 int 
 fits_add_long_comment(qfits_header* dst, const char* format, ...) {
-	va_list lst;
-	int rtn;
-	va_start(lst, format);
-	rtn = add_long_line(dst, "COMMENT", "  ", 0, format, lst);
-	va_end(lst);
-	return rtn;
+    va_list lst;
+    int rtn;
+    va_start(lst, format);
+    rtn = add_long_line(dst, "COMMENT", "  ", 0, format, lst);
+    va_end(lst);
+    return rtn;
 }
 
 int 
 fits_append_long_comment(qfits_header* dst, const char* format, ...) {
-	va_list lst;
-	int rtn;
-	va_start(lst, format);
-	rtn = add_long_line(dst, "COMMENT", "  ", 1, format, lst);
-	va_end(lst);
-	return rtn;
+    va_list lst;
+    int rtn;
+    va_start(lst, format);
+    rtn = add_long_line(dst, "COMMENT", "  ", 1, format, lst);
+    va_end(lst);
+    return rtn;
 }
 
 int 
 fits_add_long_history(qfits_header* dst, const char* format, ...) {
-	va_list lst;
-	int rtn;
-	va_start(lst, format);
-	rtn = add_long_line(dst, "HISTORY", "  ", 0, format, lst);
-	va_end(lst);
-	return rtn;
+    va_list lst;
+    int rtn;
+    va_start(lst, format);
+    rtn = add_long_line(dst, "HISTORY", "  ", 0, format, lst);
+    va_end(lst);
+    return rtn;
 }
 
 int fits_add_args(qfits_header* hdr, char** args, int argc) {
@@ -768,48 +768,48 @@ int fits_add_args(qfits_header* hdr, char** args, int argc) {
     char* ss = NULL;
 
     s = sl_new(4);
-	for (i=0; i<argc; i++) {
-		const char* str = args[i];
+    for (i=0; i<argc; i++) {
+        const char* str = args[i];
         sl_append_nocopy(s, str);
-	}
+    }
     ss = sl_join(s, " ");
     sl_free_nonrecursive(s);
     i = add_long_line_b(hdr, "HISTORY", "  ", "%s", ss);
     free(ss);
-	return i;
+    return i;
 }
 
 int an_fits_copy_header(const qfits_header* src, qfits_header* dest, char* key) {
-	char* str = qfits_header_getstr(src, key);
-	if (!str) {
-		// header not found, or other problem.
-		return -1;
-	}
-	qfits_header_add(dest, key, str,
-						qfits_header_getcom(src, key), NULL);
-	return 0;
+    char* str = qfits_header_getstr(src, key);
+    if (!str) {
+        // header not found, or other problem.
+        return -1;
+    }
+    qfits_header_add(dest, key, str,
+                     qfits_header_getcom(src, key), NULL);
+    return 0;
 }
 
 static int copy_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey,
                             anbool append) {
-	int i, N;
-	char key[FITS_LINESZ+1];
-	char val[FITS_LINESZ+1];
-	char com[FITS_LINESZ+1];
-	char lin[FITS_LINESZ+1];
+    int i, N;
+    char key[FITS_LINESZ+1];
+    char val[FITS_LINESZ+1];
+    char com[FITS_LINESZ+1];
+    char lin[FITS_LINESZ+1];
     N = qfits_header_n(src);
 
-	for (i=0; i<N; i++) {
-		if (qfits_header_getitem(src, i, key, val, com, lin) == -1)
+    for (i=0; i<N; i++) {
+        if (qfits_header_getitem(src, i, key, val, com, lin) == -1)
             break;
-		if (targetkey && strcasecmp(key, targetkey))
-			continue;
+        if (targetkey && strcasecmp(key, targetkey))
+            continue;
         if (append)
             qfits_header_append(dest, key, val, com, lin);
         else
             qfits_header_add(dest, key, val, com, lin);
-	}
-	return 0;
+    }
+    return 0;
 }
 
 int fits_copy_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey) {
@@ -821,22 +821,22 @@ int fits_append_all_headers(const qfits_header* src, qfits_header* dest, char* t
 }
 
 int fits_pad_file_with(FILE* fid, char pad) {
-	off_t offset;
-	int npad;
+    off_t offset;
+    int npad;
 	
-	// pad with zeros up to a multiple of 2880 bytes.
-	offset = ftello(fid);
-	npad = (offset % (off_t)FITS_BLOCK_SIZE);
-	if (npad) {
-		int i;
-		npad = FITS_BLOCK_SIZE - npad;
-		for (i=0; i<npad; i++)
-			if (fwrite(&pad, 1, 1, fid) != 1) {
+    // pad with zeros up to a multiple of 2880 bytes.
+    offset = ftello(fid);
+    npad = (offset % (off_t)FITS_BLOCK_SIZE);
+    if (npad) {
+        int i;
+        npad = FITS_BLOCK_SIZE - npad;
+        for (i=0; i<npad; i++)
+            if (fwrite(&pad, 1, 1, fid) != 1) {
                 SYSERROR("Failed to pad FITS file");
-				return -1;
-			}
-	}
-	return 0;
+                return -1;
+            }
+    }
+    return 0;
 }
 
 int fits_pad_file(FILE* fid) {
@@ -844,79 +844,79 @@ int fits_pad_file(FILE* fid) {
 }
 
 int fits_pad_file_name(char* filename) {
-	int rtn;
-	FILE* fid = fopen(filename, "ab");
-	rtn = fits_pad_file(fid);
-	if (!rtn && fclose(fid)) {
-		SYSERROR("Failed to close file after padding it.");
-		return -1;
-	}
-	return rtn;
+    int rtn;
+    FILE* fid = fopen(filename, "ab");
+    rtn = fits_pad_file(fid);
+    if (!rtn && fclose(fid)) {
+        SYSERROR("Failed to close file after padding it.");
+        return -1;
+    }
+    return rtn;
 }
 
 
 int fits_add_column(qfits_table* table, int column, tfits_type type,
-					int ncopies, const char* units, const char* label) {
-	int atomsize;
-	int colsize;
+                    int ncopies, const char* units, const char* label) {
+    int atomsize;
+    int colsize;
 
-	atomsize = fits_get_atom_size(type);
-	if (atomsize == -1) {
-		fprintf(stderr, "Unknown atom size for type %i.\n", type);
-		return -1;
-	}
-	if (type == TFITS_BIN_TYPE_X)
-		// bit field: convert bits to bytes, rounding up.
-		ncopies = (ncopies + 7) / 8;
-	colsize = atomsize * ncopies;
-	qfits_col_fill(table->col + column, ncopies, 0, atomsize, type, label, units,
-				   "", "", 0, 0, 0, 0, table->tab_w);
-	table->tab_w += colsize;
-	return 0;
+    atomsize = fits_get_atom_size(type);
+    if (atomsize == -1) {
+        fprintf(stderr, "Unknown atom size for type %i.\n", type);
+        return -1;
+    }
+    if (type == TFITS_BIN_TYPE_X)
+        // bit field: convert bits to bytes, rounding up.
+        ncopies = (ncopies + 7) / 8;
+    colsize = atomsize * ncopies;
+    qfits_col_fill(table->col + column, ncopies, 0, atomsize, type, label, units,
+                   "", "", 0, 0, 0, 0, table->tab_w);
+    table->tab_w += colsize;
+    return 0;
 }
 
 int fits_offset_of_column(qfits_table* table, int colnum) {
-	int off = 0;
-	int i;
-	// from qfits_table.c : qfits_compute_table_width()
-	for (i=0; i<colnum; i++) {
+    int off = 0;
+    int i;
+    // from qfits_table.c : qfits_compute_table_width()
+    for (i=0; i<colnum; i++) {
         if (table->tab_t == QFITS_ASCIITABLE) {
             off += table->col[i].atom_nb;
         } else if (table->tab_t == QFITS_BINTABLE) {
             off += table->col[i].atom_nb * table->col[i].atom_size;
         }
-	}
-	return off;
+    }
+    return off;
 }
 
 int fits_write_data_D(FILE* fid, double value, anbool flip) {
-	assert(sizeof(double) == 8);
-	if (flip)
-		v64_hton(&value);
-	if (fwrite(&value, 8, 1, fid) != 1) {
-		fprintf(stderr, "Failed to write a double to FITS file: %s\n", strerror(errno));
-		return -1;
-	}
-	return 0;
+    assert(sizeof(double) == 8);
+    if (flip)
+        v64_hton(&value);
+    if (fwrite(&value, 8, 1, fid) != 1) {
+        fprintf(stderr, "Failed to write a double to FITS file: %s\n", strerror(errno));
+        return -1;
+    }
+    return 0;
 }
 
 int fits_write_data_E(FILE* fid, float value, anbool flip) {
-	assert(sizeof(float) == 4);
-	if (flip)
-		v32_hton(&value);
-	if (fwrite(&value, 4, 1, fid) != 1) {
-		fprintf(stderr, "Failed to write a float to FITS file: %s\n", strerror(errno));
-		return -1;
-	}
-	return 0;
+    assert(sizeof(float) == 4);
+    if (flip)
+        v32_hton(&value);
+    if (fwrite(&value, 4, 1, fid) != 1) {
+        fprintf(stderr, "Failed to write a float to FITS file: %s\n", strerror(errno));
+        return -1;
+    }
+    return 0;
 }
 
 int fits_write_data_B(FILE* fid, uint8_t value) {
-	if (fwrite(&value, 1, 1, fid) != 1) {
-		fprintf(stderr, "Failed to write a bit array to FITS file: %s\n", strerror(errno));
-		return -1;
-	}
-	return 0;
+    if (fwrite(&value, 1, 1, fid) != 1) {
+        fprintf(stderr, "Failed to write a bit array to FITS file: %s\n", strerror(errno));
+        return -1;
+    }
+    return 0;
 }
 
 int fits_write_data_L(FILE* fid, char value) {
@@ -924,41 +924,41 @@ int fits_write_data_L(FILE* fid, char value) {
 }
 
 int fits_write_data_A(FILE* fid, char value) {
-	return fits_write_data_B(fid, value);
+    return fits_write_data_B(fid, value);
 }
 
 int fits_write_data_X(FILE* fid, unsigned char value) {
-	return fits_write_data_B(fid, value);
+    return fits_write_data_B(fid, value);
 }
 
 int fits_write_data_I(FILE* fid, int16_t value, anbool flip) {
-	if (flip)
-		v16_hton(&value);
-	if (fwrite(&value, 2, 1, fid) != 1) {
-		fprintf(stderr, "Failed to write a short to FITS file: %s\n", strerror(errno));
-		return -1;
-	}
-	return 0;
+    if (flip)
+        v16_hton(&value);
+    if (fwrite(&value, 2, 1, fid) != 1) {
+        fprintf(stderr, "Failed to write a short to FITS file: %s\n", strerror(errno));
+        return -1;
+    }
+    return 0;
 }
 
 int fits_write_data_J(FILE* fid, int32_t value, anbool flip) {
-	if (flip)
-		v32_hton(&value);
-	if (fwrite(&value, 4, 1, fid) != 1) {
-		fprintf(stderr, "Failed to write an int to FITS file: %s\n", strerror(errno));
-		return -1;
-	}
-	return 0;
+    if (flip)
+        v32_hton(&value);
+    if (fwrite(&value, 4, 1, fid) != 1) {
+        fprintf(stderr, "Failed to write an int to FITS file: %s\n", strerror(errno));
+        return -1;
+    }
+    return 0;
 }
 
 int fits_write_data_K(FILE* fid, int64_t value, anbool flip) {
-	if (flip)
-		v64_hton(&value);
-	if (fwrite(&value, 8, 1, fid) != 1) {
-		fprintf(stderr, "Failed to write an int64 to FITS file: %s\n", strerror(errno));
-		return -1;
-	}
-	return 0;
+    if (flip)
+        v64_hton(&value);
+    if (fwrite(&value, 8, 1, fid) != 1) {
+        fprintf(stderr, "Failed to write an int64 to FITS file: %s\n", strerror(errno));
+        return -1;
+    }
+    return 0;
 }
 
 int fits_write_data_array(FILE* fid, const void* vvalue, tfits_type type,
@@ -1030,12 +1030,12 @@ int fits_write_data(FILE* fid, void* pvalue, tfits_type type, anbool flip) {
 }
 
 size_t fits_bytes_needed(size_t size) {
-	size += (size_t)(FITS_BLOCK_SIZE - 1);
-	return size - (size % (size_t)FITS_BLOCK_SIZE);
+    size += (size_t)(FITS_BLOCK_SIZE - 1);
+    return size - (size % (size_t)FITS_BLOCK_SIZE);
 }
 
 int fits_blocks_needed(int size) {
-	return (size + FITS_BLOCK_SIZE - 1) / FITS_BLOCK_SIZE;
+    return (size + FITS_BLOCK_SIZE - 1) / FITS_BLOCK_SIZE;
 }
 
 static char fits_endian_string[16];
@@ -1061,126 +1061,126 @@ char* fits_get_endian_string() {
 }
 
 void fits_add_endian(qfits_header* header) {
-	qfits_header_add(header, "ENDIAN", fits_get_endian_string(), "Endianness detector: u32 0x01020304 written ", NULL);
-	qfits_header_add(header, "", NULL, " in the order it is stored in memory.", NULL);
-	// (don't make this a COMMENT because that makes it get separated from the ENDIAN header line.)
+    qfits_header_add(header, "ENDIAN", fits_get_endian_string(), "Endianness detector: u32 0x01020304 written ", NULL);
+    qfits_header_add(header, "", NULL, " in the order it is stored in memory.", NULL);
+    // (don't make this a COMMENT because that makes it get separated from the ENDIAN header line.)
 }
 
 void fits_add_reverse_endian(qfits_header* header) {
     uint32_t endian = ENDIAN_DETECTOR;
     unsigned char* cptr = (unsigned char*)&endian;
-	fits_header_addf(header, "ENDIAN", "Endianness detector: u32 0x01020304 written ",
+    fits_header_addf(header, "ENDIAN", "Endianness detector: u32 0x01020304 written ",
                      "%02x:%02x:%02x:%02x", (int)cptr[3], (int)cptr[2], (int)cptr[1], (int)cptr[0]);
-	qfits_header_add(header, "", NULL, " in the order it is stored in memory.", NULL);
+    qfits_header_add(header, "", NULL, " in the order it is stored in memory.", NULL);
     qfits_header_add(header, "", NULL, "Note, this was written by a machine of the reverse endianness.", NULL);
 }
 
 void fits_mod_reverse_endian(qfits_header* header) {
     uint32_t endian = ENDIAN_DETECTOR;
     unsigned char* cptr = (unsigned char*)&endian;
-	fits_header_modf(header, "ENDIAN", "Endianness detector: u32 0x01020304 written ",
+    fits_header_modf(header, "ENDIAN", "Endianness detector: u32 0x01020304 written ",
                      "%02x:%02x:%02x:%02x", (int)cptr[3], (int)cptr[2], (int)cptr[1], (int)cptr[0]);
 }
 
 qfits_table* fits_get_table_column(const char* fn, const char* colname, int* pcol) {
     int i, nextens;
-	off_t start, size;
-	anqfits_t* fits;
-	fits = anqfits_open(fn);
-	if (!fits) {
-		ERROR("Failed to open file \"%s\"", fn);
-		return NULL;
-	}
+    off_t start, size;
+    anqfits_t* fits;
+    fits = anqfits_open(fn);
+    if (!fits) {
+        ERROR("Failed to open file \"%s\"", fn);
+        return NULL;
+    }
 
-	nextens = anqfits_n_ext(fits);
-	for (i=0; i<nextens; i++) {
+    nextens = anqfits_n_ext(fits);
+    for (i=0; i<nextens; i++) {
         qfits_table* table;
         int c;
-		start = anqfits_data_start(fits, i);
-		if (start == -1) {
-			ERROR("Failed to get data start for ext %i", i);
+        start = anqfits_data_start(fits, i);
+        if (start == -1) {
+            ERROR("Failed to get data start for ext %i", i);
             return NULL;
         }
-		size = anqfits_data_size(fits, i);
-		if (size == -1) {
-			ERROR("Failed to get data size for ext %i", i);
+        size = anqfits_data_size(fits, i);
+        if (size == -1) {
+            ERROR("Failed to get data size for ext %i", i);
             return NULL;
         }
-		table = anqfits_get_table(fits, i);
-		if (!table)
-			continue;
-		c = fits_find_column(table, colname);
-		if (c != -1) {
-			*pcol = c;
-			return table;
-		}
+        table = anqfits_get_table(fits, i);
+        if (!table)
+            continue;
+        c = fits_find_column(table, colname);
+        if (c != -1) {
+            *pcol = c;
+            return table;
+        }
     }
-	anqfits_close(fits);
-	return NULL;
+    anqfits_close(fits);
+    return NULL;
 }
 
 int fits_find_table_column(const char* fn, const char* colname, off_t* pstart, off_t* psize, int* pext) {
     int i, nextens;
 
-	anqfits_t* fits;
-	fits = anqfits_open(fn);
-	if (!fits) {
-		ERROR("Failed to open file \"%s\"", fn);
-		return -1;
-	}
+    anqfits_t* fits;
+    fits = anqfits_open(fn);
+    if (!fits) {
+        ERROR("Failed to open file \"%s\"", fn);
+        return -1;
+    }
 
-	nextens = anqfits_n_ext(fits);
-	for (i=1; i<nextens; i++) {
+    nextens = anqfits_n_ext(fits);
+    for (i=1; i<nextens; i++) {
         const qfits_table* table;
         int c;
         table = anqfits_get_table_const(fits, i);
-		if (!table) {
-			ERROR("Couldn't read FITS table from file %s, extension %i.\n", fn, i);
-			continue;
-		}
-		c = fits_find_column(table, colname);
-		if (c == -1) {
-			continue;
-		}
-		if (anqfits_get_data_start_and_size(fits, i, pstart, psize)) {
-			ERROR("error getting start/size for ext %i in file %s.\n", i, fn);
+        if (!table) {
+            ERROR("Couldn't read FITS table from file %s, extension %i.\n", fn, i);
+            continue;
+        }
+        c = fits_find_column(table, colname);
+        if (c == -1) {
+            continue;
+        }
+        if (anqfits_get_data_start_and_size(fits, i, pstart, psize)) {
+            ERROR("error getting start/size for ext %i in file %s.\n", i, fn);
             return -1;
         }
-		if (pext) *pext = i;
-		return 0;
+        if (pext) *pext = i;
+        return 0;
     }
-	debug("searched %i extensions in file %s but didn't find a table with a column \"%s\".\n",
-		  nextens, fn, colname);
+    debug("searched %i extensions in file %s but didn't find a table with a column \"%s\".\n",
+          nextens, fn, colname);
     return -1;
 }
 
 int fits_find_column(const qfits_table* table, const char* colname) {
-	int c;
-	for (c=0; c<table->nc; c++) {
-		const qfits_col* col = table->col + c;
-		//debug("column: \"%s\"\n", col->tlabel);
-		if (strcasecmp(col->tlabel, colname) == 0)
-			return c;
-	}
-	return -1;
+    int c;
+    for (c=0; c<table->nc; c++) {
+        const qfits_col* col = table->col + c;
+        //debug("column: \"%s\"\n", col->tlabel);
+        if (strcasecmp(col->tlabel, colname) == 0)
+            return c;
+    }
+    return -1;
 }
 
 void fits_add_uint_size(qfits_header* header) {
-	fits_header_add_int(header, "UINT_SZ", sizeof(uint), "sizeof(uint)");
+    fits_header_add_int(header, "UINT_SZ", sizeof(uint), "sizeof(uint)");
 }
 
 void fits_add_double_size(qfits_header* header) {
-	fits_header_add_int(header, "DUBL_SZ", sizeof(double), "sizeof(double)");
+    fits_header_add_int(header, "DUBL_SZ", sizeof(double), "sizeof(double)");
 }
 
 int fits_check_uint_size(const qfits_header* header) {
-  int uintsz;
-  uintsz = qfits_header_getint(header, "UINT_SZ", -1);
-  if (sizeof(uint) != uintsz) {
-    fprintf(stderr, "File was written with sizeof(uint)=%i, but currently sizeof(uint)=%u.\n",
-	    uintsz, (uint)sizeof(uint));
+    int uintsz;
+    uintsz = qfits_header_getint(header, "UINT_SZ", -1);
+    if (sizeof(uint) != uintsz) {
+        fprintf(stderr, "File was written with sizeof(uint)=%i, but currently sizeof(uint)=%u.\n",
+                uintsz, (uint)sizeof(uint));
         return -1;
-	}
+    }
     return 0;
 }
 
@@ -1188,30 +1188,30 @@ int fits_check_double_size(const qfits_header* header) {
     int doublesz;
     doublesz = qfits_header_getint(header, "DUBL_SZ", -1);
     if (sizeof(double) != doublesz) {
-      fprintf(stderr, "File was written with sizeof(double)=%i, but currently sizeof(double)=%u.\n",
-	      doublesz, (uint)sizeof(double));
-      return -1;
-	}
+        fprintf(stderr, "File was written with sizeof(double)=%i, but currently sizeof(double)=%u.\n",
+                doublesz, (uint)sizeof(double));
+        return -1;
+    }
     return 0;
 }
 
 int fits_check_endian(const qfits_header* header) {
     char* filestr = NULL;
     char* localstr = NULL;
-	char pretty[FITS_LINESZ+1];
+    char pretty[FITS_LINESZ+1];
 
-	filestr = qfits_header_getstr(header, "ENDIAN");
+    filestr = qfits_header_getstr(header, "ENDIAN");
     if (!filestr) {
         // No ENDIAN header found.
         return 1;
     }
-	qfits_pretty_string_r(filestr, pretty);
-	filestr = pretty;
+    qfits_pretty_string_r(filestr, pretty);
+    filestr = pretty;
 
     localstr = fits_get_endian_string();
-	if (strcmp(filestr, localstr)) {
-		fprintf(stderr, "File was written with endianness %s, this machine has endianness %s.\n", filestr, localstr);
-		return -1;
-	}
+    if (strcmp(filestr, localstr)) {
+        fprintf(stderr, "File was written with endianness %s, this machine has endianness %s.\n", filestr, localstr);
+        return -1;
+    }
     return 0;
 }

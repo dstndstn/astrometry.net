@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <unistd.h>
 #include <errno.h>
@@ -41,37 +41,37 @@ static fitsbin_chunk_t* get_chunk(catalog* cat, int i) {
 
 static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     qfits_header* primheader = fitsbin_get_primary_header(fb);
-	catalog* cat = chunk->userdata;
-	cat->numstars = qfits_header_getint(primheader, "NSTARS", -1);
-	cat->healpix = qfits_header_getint(primheader, "HEALPIX", -1);
-	cat->hpnside = qfits_header_getint(primheader, "HPNSIDE", 1);
-	if (fits_check_endian(primheader)) {
-		ERROR("Catalog file was written with wrong endianness");
+    catalog* cat = chunk->userdata;
+    cat->numstars = qfits_header_getint(primheader, "NSTARS", -1);
+    cat->healpix = qfits_header_getint(primheader, "HEALPIX", -1);
+    cat->hpnside = qfits_header_getint(primheader, "HPNSIDE", 1);
+    if (fits_check_endian(primheader)) {
+        ERROR("Catalog file was written with wrong endianness");
         return -1;
-	}
-	if (cat->numstars == -1) {
-		ERROR("Couldn't find NSTARS header in catalog file.");
+    }
+    if (cat->numstars == -1) {
+        ERROR("Couldn't find NSTARS header in catalog file.");
         return -1;
-	}
+    }
 
     chunk->nrows = cat->numstars;
-	return 0;
+    return 0;
 }
 
 static int callback_read_tagalong(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
-	catalog* cat = chunk->userdata;
+    catalog* cat = chunk->userdata;
     chunk->nrows = cat->numstars;
-	return 0;
+    return 0;
 }
 
 static catalog* new_catalog(const char* fn, anbool writing) {
-	catalog* cat;
-	fitsbin_chunk_t chunk;
+    catalog* cat;
+    fitsbin_chunk_t chunk;
 
     cat = calloc(1, sizeof(catalog));
-	if (!cat) {
-		fprintf(stderr, "catalog_open: malloc failed.\n");
-	}
+    if (!cat) {
+        fprintf(stderr, "catalog_open: malloc failed.\n");
+    }
 
     if (writing)
         cat->fb = fitsbin_open_for_writing(fn);
@@ -93,7 +93,7 @@ static catalog* new_catalog(const char* fn, anbool writing) {
     chunk.required = 1;
     chunk.callback_read_header = callback_read_header;
     chunk.userdata = cat;
-	chunk.itemsize = DIM_STARS * sizeof(double);
+    chunk.itemsize = DIM_STARS * sizeof(double);
     fitsbin_add_chunk(cat->fb, &chunk);
     fitsbin_chunk_reset(&chunk);
 
@@ -166,9 +166,9 @@ catalog* catalog_open(char* fn) {
         goto bailout;
     if (fitsbin_read(cat->fb)) {
         ERROR("catalog: fitsbin_read() failed");
-		goto bailout;
-	}
-	cat->stars   = xyz_chunk(cat)->data;
+        goto bailout;
+    }
+    cat->stars   = xyz_chunk(cat)->data;
     cat->mag     = mag_chunk(cat)->data;
     cat->mag_err = mag_err_chunk(cat)->data;
     cat->sigma_radec   = get_chunk(cat, CHUNK_SIG   )->data;
@@ -184,33 +184,33 @@ catalog* catalog_open(char* fn) {
 }
 
 static void add_default_header_vals(catalog* cat) {
-	qfits_header* hdr;
-	hdr = catalog_get_header(cat);
-	qfits_header_add(hdr, "AN_FILE", "OBJS", "This file has a list of object positions.", NULL);
+    qfits_header* hdr;
+    hdr = catalog_get_header(cat);
+    qfits_header_add(hdr, "AN_FILE", "OBJS", "This file has a list of object positions.", NULL);
     fits_add_endian(hdr);
-	fits_add_double_size(hdr);
-	qfits_header_add(hdr, "NSTARS", "0", "Number of stars in this file.", NULL);
-	qfits_header_add(hdr, "HEALPIX", "-1", "Healpix covered by this catalog, with Nside=HPNSIDE", NULL);
-	qfits_header_add(hdr, "HPNSIDE", "-1", "Nside of HEALPIX.", NULL);
-	qfits_header_add(hdr, "COMMENT", "This is a flat array of XYZ for each catalog star.", NULL, NULL);
-	qfits_header_add(hdr, "COMMENT", "  (ie, star position on the unit sphere)", NULL, NULL);
-	qfits_header_add(hdr, "COMMENT", "  (stored as three native-{endian,size} doubles)", NULL, NULL);
+    fits_add_double_size(hdr);
+    qfits_header_add(hdr, "NSTARS", "0", "Number of stars in this file.", NULL);
+    qfits_header_add(hdr, "HEALPIX", "-1", "Healpix covered by this catalog, with Nside=HPNSIDE", NULL);
+    qfits_header_add(hdr, "HPNSIDE", "-1", "Nside of HEALPIX.", NULL);
+    qfits_header_add(hdr, "COMMENT", "This is a flat array of XYZ for each catalog star.", NULL, NULL);
+    qfits_header_add(hdr, "COMMENT", "  (ie, star position on the unit sphere)", NULL, NULL);
+    qfits_header_add(hdr, "COMMENT", "  (stored as three native-{endian,size} doubles)", NULL, NULL);
 }
 
 catalog* catalog_open_for_writing(char* fn)  {
-	catalog* cat;
+    catalog* cat;
 
-	cat = new_catalog(fn, TRUE);
-	if (!cat)
-		goto bailout;
+    cat = new_catalog(fn, TRUE);
+    if (!cat)
+        goto bailout;
     cat->hpnside = 1;
     add_default_header_vals(cat);
-	return cat;
+    return cat;
 
  bailout:
-	if (cat)
+    if (cat)
         catalog_close(cat);
-	return NULL;
+    return NULL;
 }
 
 qfits_header* catalog_get_header(catalog* cat) {
@@ -218,60 +218,60 @@ qfits_header* catalog_get_header(catalog* cat) {
 }
 
 int catalog_write_header(catalog* cat) {
-	fitsbin_t* fb = cat->fb;
+    fitsbin_t* fb = cat->fb;
 
-	if (fitsbin_write_primary_header(fb) ||
-		fitsbin_write_chunk_header(fb, xyz_chunk(cat))) {
-		ERROR("Failed to write catalog header");
-		return -1;
-	}
-	return 0;
+    if (fitsbin_write_primary_header(fb) ||
+        fitsbin_write_chunk_header(fb, xyz_chunk(cat))) {
+        ERROR("Failed to write catalog header");
+        return -1;
+    }
+    return 0;
 }
 
 int catalog_fix_header(catalog* cat) {
-	qfits_header* hdr;
-	fitsbin_t* fb = cat->fb;
+    qfits_header* hdr;
+    fitsbin_t* fb = cat->fb;
 
-	hdr = catalog_get_header(cat);
-	// fill in the real values...
+    hdr = catalog_get_header(cat);
+    // fill in the real values...
     fits_header_mod_int(hdr, "NSTARS", cat->numstars, "Number of stars.");
     fits_header_mod_int(hdr, "HEALPIX", cat->healpix, "Healpix covered by this catalog, with Nside=HPNSIDE");
     fits_header_mod_int(hdr, "HPNSIDE", cat->hpnside, "Nside of HEALPIX.");
 
-	if (fitsbin_fix_primary_header(fb) ||
-		fitsbin_fix_chunk_header(fb, xyz_chunk(cat))) {
+    if (fitsbin_fix_primary_header(fb) ||
+        fitsbin_fix_chunk_header(fb, xyz_chunk(cat))) {
         ERROR("Failed to fix catalog header");
-		return -1;
-	}
-	return 0;
+        return -1;
+    }
+    return 0;
 }
 
 double* catalog_get_base(catalog* cat) {
-	return cat->stars;
+    return cat->stars;
 }
 
 double* catalog_get_star(catalog* cat, int sid) {
-	if (sid >= cat->numstars) {
-		fflush(stdout);
-		fprintf(stderr, "catalog: asked for star %u, but catalog size is only %u.\n",
-		        sid, cat->numstars);
-		return NULL;
-	}
-	return cat->stars + sid * 3;
+    if (sid >= cat->numstars) {
+        fflush(stdout);
+        fprintf(stderr, "catalog: asked for star %u, but catalog size is only %u.\n",
+                sid, cat->numstars);
+        return NULL;
+    }
+    return cat->stars + sid * 3;
 }
 
 int catalog_write_star(catalog* cat, double* star) {
-	if (fitsbin_write_item(cat->fb, xyz_chunk(cat), star)) {
-		fprintf(stderr, "Failed to write catalog data to file %s: %s\n",
+    if (fitsbin_write_item(cat->fb, xyz_chunk(cat), star)) {
+        fprintf(stderr, "Failed to write catalog data to file %s: %s\n",
                 cat->fb->filename, strerror(errno));
-		return -1;
-	}
-	cat->numstars++;
-	return 0;
+        return -1;
+    }
+    cat->numstars++;
+    return 0;
 }
 
 int write_floats(catalog* cat, int chunknum, 
-                  const char* name, fl* list, int nperstar) {
+                 const char* name, fl* list, int nperstar) {
     int i;
     int B = 1000;
     fitsbin_chunk_t* chunk = get_chunk(cat, chunknum);
@@ -298,7 +298,7 @@ int write_floats(catalog* cat, int chunknum,
         ERROR("Failed to fix %ss header", name);
         return -1;
     }
-	return 0;
+    return 0;
 }
 
 int catalog_write_mags(catalog* cat) {
@@ -345,7 +345,7 @@ int catalog_write_ids(catalog* cat) {
         ERROR("Failed to fix %ss header", name);
         return -1;
     }
-	return 0;
+    return 0;
 }
 
 void addfloat(fl** list, float val) {
@@ -380,15 +380,15 @@ void catalog_add_id(catalog* cat, uint64_t id) {
 
 int catalog_close(catalog* cat) {
     int rtn;
-	if (!cat) return 0;
-	rtn = fitsbin_close(cat->fb);
+    if (!cat) return 0;
+    rtn = fitsbin_close(cat->fb);
     fl_free(cat->maglist);
     fl_free(cat->magerrlist);
     fl_free(cat->siglist);
     fl_free(cat->pmlist);
     fl_free(cat->sigpmlist);
     bl_free(cat->idlist);
-	free(cat);
+    free(cat);
     return rtn;
 }
 

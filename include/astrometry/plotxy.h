@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #ifndef PLOTXY_H
@@ -9,23 +9,23 @@
 #include "astrometry/plotstuff.h"
 
 struct plotxy_args {
-	char* fn;
-	int ext;
-	char* xcol;
-	char* ycol;
-	double xoff, yoff;
-	int firstobj;
-	int nobjs;
-	double scale;
+    char* fn;
+    int ext;
+    char* xcol;
+    char* ycol;
+    double xoff, yoff;
+    int firstobj;
+    int nobjs;
+    double scale;
 
-	// coordinates added with xy_val <x> <y>
-	dl* xyvals;
+    // coordinates added with xy_val <x> <y>
+    dl* xyvals;
 
-	// if WCS is set, x,y are treated as FITS pixel coords;
-	// that is, this are pushed through the WCS unmodified, then the resulting
-	// RA,Dec is pushed through the plot WCS, producing FITS coords, from which
-	// 1,1 is subtracted to yield 0-indexed image coords.
-	anwcs_t* wcs;
+    // if WCS is set, x,y are treated as FITS pixel coords;
+    // that is, this are pushed through the WCS unmodified, then the resulting
+    // RA,Dec is pushed through the plot WCS, producing FITS coords, from which
+    // 1,1 is subtracted to yield 0-indexed image coords.
+    anwcs_t* wcs;
 };
 typedef struct plotxy_args plotxy_t;
 
@@ -47,10 +47,10 @@ int plot_xy_set_wcs_filename(plotxy_t* args, const char* fn, int ext);
 int plot_xy_set_offsets(plotxy_t* args, double xo, double yo);
 
 int plot_xy_command(const char* command, const char* cmdargs,
-					plot_args_t* args, void* baton);
+                    plot_args_t* args, void* baton);
 
 int plot_xy_plot(const char* command, cairo_t* cairo,
-				 plot_args_t* plotargs, void* baton);
+                 plot_args_t* plotargs, void* baton);
 
 void plot_xy_free(plot_args_t* args, void* baton);
 

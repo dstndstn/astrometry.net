@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef FIT_WCS_H
 #define FIT_WCS_H
@@ -61,19 +61,19 @@ int fit_sip_wcs_2(const double* starxyz,
  second iteration are very minor.
  */
 int fit_tan_wcs_move_tangent_point(const double* starxyz,
-								   const double* fieldxy,
-								   int N,
-								   const double* crpix,
-								   const tan_t* tanin,
-								   tan_t* tanout);
+                                   const double* fieldxy,
+                                   int N,
+                                   const double* crpix,
+                                   const tan_t* tanin,
+                                   tan_t* tanout);
 
 int fit_tan_wcs_move_tangent_point_weighted(const double* starxyz,
-											const double* fieldxy,
-											const double* weights,
-											int N,
-											const double* crpix,
-											const tan_t* tanin,
-											tan_t* tanout);
+                                            const double* fieldxy,
+                                            const double* weights,
+                                            int N,
+                                            const double* crpix,
+                                            const tan_t* tanin,
+                                            tan_t* tanout);
 
 /*
  Computes a rigid (conformal) TAN WCS projection, based on the correspondence
@@ -85,20 +85,20 @@ int fit_tan_wcs_move_tangent_point_weighted(const double* starxyz,
 
  If "p_scale" is specified, the scale of the field will be placed in it.
  It is in units of degrees per pixel.
-*/
+ */
 int fit_tan_wcs(const double* starxyz,
-				const double* fieldxy,
-				int nobjs,
-				// output:
-				tan_t* wcstan,
-				double* p_scale);
+                const double* fieldxy,
+                int nobjs,
+                // output:
+                tan_t* wcstan,
+                double* p_scale);
 
 int fit_tan_wcs_weighted(const double* starxyz,
-						 const double* fieldxy,
-						 const double* weights,
-						 int N,
-						 // output:
-						 tan_t* tan,
-						 double* p_scale);
+                         const double* fieldxy,
+                         const double* weights,
+                         int N,
+                         // output:
+                         tan_t* tan,
+                         double* p_scale);
 
 #endif

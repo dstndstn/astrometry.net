@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef CODEFILE_H_
 #define CODEFILE_H_
@@ -25,26 +25,26 @@ void codefile_compute_field_code(const double* xy, double* code, int dimquads);
 
 
 typedef struct {
-	int numcodes;
-	int numstars;
+    int numcodes;
+    int numstars;
 
-	int dimcodes;
+    int dimcodes;
 
-	// upper bound
-	double index_scale_upper;
-	// lower bound
-	double index_scale_lower;
-	// unique ID of this index
-	int indexid;
-	// healpix covered by this index
-	int healpix;
+    // upper bound
+    double index_scale_upper;
+    // lower bound
+    double index_scale_lower;
+    // unique ID of this index
+    int indexid;
+    // healpix covered by this index
+    int healpix;
     // Nside of the healpixelization
     int hpnside;
 
     fitsbin_t* fb;
 
-	// when reading:
-	double* codearray;
+    // when reading:
+    double* codearray;
 } codefile_t;
 
 int codefile_close(codefile_t* cf);
@@ -73,12 +73,12 @@ qfits_header* codefile_get_header(const codefile_t* cf);
 
 
 void quad_write(codefile_t* codes, quadfile_t* quads,
-				unsigned int* quad, startree_t* starkd,
-				int dimquads, int dimcodes);
+                unsigned int* quad, startree_t* starkd,
+                int dimquads, int dimcodes);
 
 void quad_write_const(codefile_t* codes, quadfile_t* quads,
-					  const unsigned int* quad, startree_t* starkd,
-					  int dimquads, int dimcodes);
+                      const unsigned int* quad, startree_t* starkd,
+                      int dimquads, int dimcodes);
 
 
 #endif

@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef DIMAGE_H
 #define DIMAGE_H
@@ -26,10 +26,10 @@ void dsmooth2_u8(uint8_t *image, int nx, int ny, float sigma, float *smooth);
 void dsmooth2_i16(int16_t *image, int nx, int ny, float sigma, float *smooth);
 
 int dobjects(float *image, int nx, int ny, float limit,
-			 float dpsf, int *objects);
+             float dpsf, int *objects);
 
 int dmask(float *image, int nx, int ny, float limit,
-		  float dpsf, uint8_t* mask);
+          float dpsf, uint8_t* mask);
 
 int dpeaks(float *image, int nx, int ny, int *npeaks, int *xcen,
            int *ycen, float sigma, float dlim, float saddle, int maxnpeaks,
@@ -45,15 +45,15 @@ int dmedsmooth(const float *image, const uint8_t *masked,
 
 int dallpeaks(float *image, int nx, int ny, int *objects, float *xcen,
               float *ycen, int *npeaks, float dpsf, float sigma,
-			  float dlim, float saddle,
+              float dlim, float saddle,
               int maxper, int maxnpeaks, float minpeak, int maxsize);
 int dallpeaks_u8(uint8_t *image, int nx, int ny, int *objects, float *xcen,
-				 float *ycen, int *npeaks, float dpsf, float sigma,
-				 float dlim, float saddle,
-				 int maxper, int maxnpeaks, float minpeak, int maxsize);
+                 float *ycen, int *npeaks, float dpsf, float sigma,
+                 float dlim, float saddle,
+                 int maxper, int maxnpeaks, float minpeak, int maxsize);
 int dallpeaks_i16(int16_t *image, int nx, int ny, int *objects, float *xcen,
-				  float *ycen, int *npeaks, float dpsf, float sigma,
-				  float dlim, float saddle,
-				  int maxper, int maxnpeaks, float minpeak, int maxsize);
+                  float *ycen, int *npeaks, float dpsf, float sigma,
+                  float dlim, float saddle,
+                  int maxper, int maxnpeaks, float minpeak, int maxsize);
 
 #endif
