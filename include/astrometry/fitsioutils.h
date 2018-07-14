@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef FITSIO_UTILS_H
 #define FITSIO_UTILS_H
@@ -30,10 +30,10 @@ qfits_header* fits_get_header_for_image(const qfitsdumper* qd, int W,
                                         qfits_header* addtoheader);
 
 qfits_header* fits_get_header_for_image2(int W, int H, int bitpix,
-										 qfits_header* addtoheader);
+                                         qfits_header* addtoheader);
 
 qfits_header* fits_get_header_for_image3(int W, int H, int bitpix, int planes,
-										 qfits_header* addtoheader);
+                                         qfits_header* addtoheader);
 
 /* Writes the FITS header to the given filename, then pads and closes the file.
  */
@@ -80,20 +80,20 @@ char* fits_get_long_string(const qfits_header* hdr, const char* key);
 
 void
 ATTRIB_FORMAT(printf,4,5)
-fits_header_addf(qfits_header* hdr, const char* key, const char* comment,
-                 const char* format, ...);
+    fits_header_addf(qfits_header* hdr, const char* key, const char* comment,
+                     const char* format, ...);
 
 void
 ATTRIB_FORMAT(printf,4,5)
-fits_header_addf_longstring(qfits_header* hdr, const char* key, const char* comment,
-                            const char* format, ...);
+    fits_header_addf_longstring(qfits_header* hdr, const char* key, const char* comment,
+                                const char* format, ...);
 
 void fits_header_add_longstring_boilerplate(qfits_header* hdr);
 
 void
 ATTRIB_FORMAT(printf,4,5)
-fits_header_modf(qfits_header* hdr, const char* key, const char* comment,
-                 const char* format, ...);
+    fits_header_modf(qfits_header* hdr, const char* key, const char* comment,
+                     const char* format, ...);
 
 void fits_header_add_int(qfits_header* hdr, const char* key, int val,
                          const char* comment);
@@ -105,7 +105,7 @@ void fits_header_add_double(qfits_header* hdr, const char* key, double val,
 void fits_header_set_double(qfits_header* hdr, const char* key, double val,
                             const char* comment);
 void fits_header_set_int(qfits_header* hdr, const char* key, int val,
-						 const char* comment);
+                         const char* comment);
 
 
 void fits_header_mod_int(qfits_header* hdr, const char* key, int val,
@@ -128,15 +128,15 @@ int fits_add_args(qfits_header* src, char** args, int argc);
 
 int 
 ATTRIB_FORMAT(printf,2,3)
-fits_add_long_comment(qfits_header* dst, const char* format, ...);
+    fits_add_long_comment(qfits_header* dst, const char* format, ...);
 
 int 
 ATTRIB_FORMAT(printf,2,3)
-fits_append_long_comment(qfits_header* dst, const char* format, ...);
+    fits_append_long_comment(qfits_header* dst, const char* format, ...);
 
 int 
 ATTRIB_FORMAT(printf,2,3)
-fits_add_long_history(qfits_header* dst, const char* format, ...);
+    fits_add_long_history(qfits_header* dst, const char* format, ...);
 
 // how many FITS blocks are required to hold 'size' bytes?
 int fits_blocks_needed(int size);
@@ -171,12 +171,12 @@ void fits_add_double_size(qfits_header* header);
 int fits_find_column(const qfits_table* table, const char* colname);
 
 int fits_find_table_column(const char* fn, const char* colname,
-						   off_t* start, off_t* size, int* extension);
+                           off_t* start, off_t* size, int* extension);
 
 qfits_table* fits_get_table_column(const char* fn, const char* colname, int* pcol);
 
 int fits_add_column(qfits_table* table, int column, tfits_type type,
-					int ncopies, const char* units, const char* label);
+                    int ncopies, const char* units, const char* label);
 
 int fits_offset_of_column(qfits_table* table, int colnum);
 

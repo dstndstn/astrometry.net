@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+  # This file is part of the Astrometry.net suite.
+  # Licensed under a 3-clause BSD style license - see LICENSE
 */
 
 #include <math.h>
@@ -42,397 +42,397 @@ static void add_boilerplate(index_params_t* p, qfits_header* hdr) {
 }
 
 static int step_hpquads(index_params_t* p,
-						codefile_t** p_codes, quadfile_t** p_quads,
-						char** p_codefn, char** p_quadfn, 
-						startree_t* starkd, const char* skdtfn,
-						sl* tempfiles) {
-	codefile_t* codes = NULL;
-	quadfile_t* quads = NULL;
-	char* quadfn = NULL;
-	char* codefn = NULL;
+                        codefile_t** p_codes, quadfile_t** p_quads,
+                        char** p_codefn, char** p_quadfn, 
+                        startree_t* starkd, const char* skdtfn,
+                        sl* tempfiles) {
+    codefile_t* codes = NULL;
+    quadfile_t* quads = NULL;
+    char* quadfn = NULL;
+    char* codefn = NULL;
 
-	if (p->inmemory) {
-		codes = codefile_open_in_memory();
-		quads = quadfile_open_in_memory();
-		if (hpquads(starkd, codes, quads, p->Nside,
-					p->qlo, p->qhi, p->dimquads, p->passes, p->Nreuse, p->Nloosen,
-					p->indexid, p->scanoccupied,
-					p->hpquads_sort_data, p->hpquads_sort_func, p->hpquads_sort_size,
-					p->args, p->argc)) {
-			ERROR("hpquads failed");
-			return -1;
-		}
-		if (!quadfile_nquads(quads)) {
-			logmsg("Did not create any quads.  Perhaps your catalog does not have enough stars?\n");
-			return -1;
-		}
-		if (quadfile_switch_to_reading(quads)) {
-			ERROR("Failed to switch quadfile to read-mode");
-			return -1;
-		}
-		if (codefile_switch_to_reading(codes)) {
-			ERROR("Failed to switch codefile to read-mode");
-			return -1;
-		}
+    if (p->inmemory) {
+        codes = codefile_open_in_memory();
+        quads = quadfile_open_in_memory();
+        if (hpquads(starkd, codes, quads, p->Nside,
+                    p->qlo, p->qhi, p->dimquads, p->passes, p->Nreuse, p->Nloosen,
+                    p->indexid, p->scanoccupied,
+                    p->hpquads_sort_data, p->hpquads_sort_func, p->hpquads_sort_size,
+                    p->args, p->argc)) {
+            ERROR("hpquads failed");
+            return -1;
+        }
+        if (!quadfile_nquads(quads)) {
+            logmsg("Did not create any quads.  Perhaps your catalog does not have enough stars?\n");
+            return -1;
+        }
+        if (quadfile_switch_to_reading(quads)) {
+            ERROR("Failed to switch quadfile to read-mode");
+            return -1;
+        }
+        if (codefile_switch_to_reading(codes)) {
+            ERROR("Failed to switch codefile to read-mode");
+            return -1;
+        }
 
-	} else {
-		quadfn = create_temp_file("quad", p->tempdir);
-		sl_append_nocopy(tempfiles, quadfn);
-		codefn = create_temp_file("code", p->tempdir);
-		sl_append_nocopy(tempfiles, codefn);
+    } else {
+        quadfn = create_temp_file("quad", p->tempdir);
+        sl_append_nocopy(tempfiles, quadfn);
+        codefn = create_temp_file("code", p->tempdir);
+        sl_append_nocopy(tempfiles, codefn);
 
-		if (hpquads_files(skdtfn, codefn, quadfn, p->Nside,
-						  p->qlo, p->qhi, p->dimquads, p->passes, p->Nreuse, p->Nloosen,
-						  p->indexid, p->scanoccupied, 
-						  p->hpquads_sort_data, p->hpquads_sort_func, p->hpquads_sort_size,
-						  p->args, p->argc)) {
-			ERROR("hpquads failed");
-			return -1;
-		}
+        if (hpquads_files(skdtfn, codefn, quadfn, p->Nside,
+                          p->qlo, p->qhi, p->dimquads, p->passes, p->Nreuse, p->Nloosen,
+                          p->indexid, p->scanoccupied, 
+                          p->hpquads_sort_data, p->hpquads_sort_func, p->hpquads_sort_size,
+                          p->args, p->argc)) {
+            ERROR("hpquads failed");
+            return -1;
+        }
 		
-	}
+    }
 
-	if (p_codes) *p_codes = codes;
-	if (p_quads) *p_quads = quads;
-	if (p_codefn) *p_codefn = codefn;
-	if (p_quadfn) *p_quadfn = quadfn;
+    if (p_codes) *p_codes = codes;
+    if (p_quads) *p_quads = quads;
+    if (p_codefn) *p_codefn = codefn;
+    if (p_quadfn) *p_quadfn = quadfn;
 		
-	return 0;
+    return 0;
 }
 
 static int step_codetree(index_params_t* p,
-						 codefile_t* codes, codetree_t** p_codekd,
-						 const char* codefn, char** p_ckdtfn,
-						 sl* tempfiles) {
-	codetree_t* codekd = NULL;
-	char* ckdtfn=NULL;
+                         codefile_t* codes, codetree_t** p_codekd,
+                         const char* codefn, char** p_ckdtfn,
+                         sl* tempfiles) {
+    codetree_t* codekd = NULL;
+    char* ckdtfn=NULL;
 
-	if (p->inmemory) {
-		logmsg("Building code kdtree from %i codes\n", codes->numcodes);
-		logmsg("dim: %i\n", codefile_dimcodes(codes));
-		codekd = codetree_build(codes, 0, 0, 0, 0, p->args, p->argc);
-		if (!codekd) {
-			ERROR("Failed to build code kdtree");
-			return -1;
-		}
-		if (codefile_close(codes)) {
-			ERROR("Failed to close codefile");
-			return -1;
-		}
+    if (p->inmemory) {
+        logmsg("Building code kdtree from %i codes\n", codes->numcodes);
+        logmsg("dim: %i\n", codefile_dimcodes(codes));
+        codekd = codetree_build(codes, 0, 0, 0, 0, p->args, p->argc);
+        if (!codekd) {
+            ERROR("Failed to build code kdtree");
+            return -1;
+        }
+        if (codefile_close(codes)) {
+            ERROR("Failed to close codefile");
+            return -1;
+        }
 
-	} else {
-		ckdtfn = create_temp_file("ckdt", p->tempdir);
-		sl_append_nocopy(tempfiles, ckdtfn);
+    } else {
+        ckdtfn = create_temp_file("ckdt", p->tempdir);
+        sl_append_nocopy(tempfiles, ckdtfn);
 
-		if (codetree_files(codefn, ckdtfn, 0, 0, 0, 0, p->args, p->argc)) {
-			ERROR("codetree failed");
-			return -1;
-		}
-	}
+        if (codetree_files(codefn, ckdtfn, 0, 0, 0, 0, p->args, p->argc)) {
+            ERROR("codetree failed");
+            return -1;
+        }
+    }
 	
-	if (p_codekd) *p_codekd = codekd;
-	if (p_ckdtfn) *p_ckdtfn = ckdtfn;
-	return 0;
+    if (p_codekd) *p_codekd = codekd;
+    if (p_ckdtfn) *p_ckdtfn = ckdtfn;
+    return 0;
 }
 
 static int step_unpermute_quads(index_params_t* p,
-								quadfile_t* quads2, codetree_t* codekd,
-								quadfile_t** p_quads3, codetree_t** p_codekd2,
-								const char* quad2fn, const char* ckdtfn,
-								char** p_quad3fn, char** p_ckdt2fn,
-								sl* tempfiles) {
-	quadfile_t* quads3 = NULL;
-	codetree_t* codekd2 = NULL;
-	char* quad3fn=NULL;
-	char* ckdt2fn=NULL;
+                                quadfile_t* quads2, codetree_t* codekd,
+                                quadfile_t** p_quads3, codetree_t** p_codekd2,
+                                const char* quad2fn, const char* ckdtfn,
+                                char** p_quad3fn, char** p_ckdt2fn,
+                                sl* tempfiles) {
+    quadfile_t* quads3 = NULL;
+    codetree_t* codekd2 = NULL;
+    char* quad3fn=NULL;
+    char* ckdt2fn=NULL;
 
-	logmsg("Unpermute-quads...\n");
-	if (p->inmemory) {
-		quads3 = quadfile_open_in_memory();
-		if (unpermute_quads(quads2, codekd, quads3, &codekd2, p->args, p->argc)) {
-			ERROR("Failed to unpermute-quads");
-			return -1;
-		}
-		// unpermute-quads makes a shallow copy of the tree, so don't just codetree_close(codekd)...
-		free(codekd->tree->perm);
-		free(codekd->tree);
-		codekd->tree = NULL;
-		codetree_close(codekd);
+    logmsg("Unpermute-quads...\n");
+    if (p->inmemory) {
+        quads3 = quadfile_open_in_memory();
+        if (unpermute_quads(quads2, codekd, quads3, &codekd2, p->args, p->argc)) {
+            ERROR("Failed to unpermute-quads");
+            return -1;
+        }
+        // unpermute-quads makes a shallow copy of the tree, so don't just codetree_close(codekd)...
+        free(codekd->tree->perm);
+        free(codekd->tree);
+        codekd->tree = NULL;
+        codetree_close(codekd);
 
-		if (quadfile_switch_to_reading(quads3)) {
-			ERROR("Failed to switch quads3 to read-mode");
-			return -1;
-		}
-		if (quadfile_close(quads2)) {
-			ERROR("Failed to close quadfile quads2");
-			return -1;
-		}
+        if (quadfile_switch_to_reading(quads3)) {
+            ERROR("Failed to switch quads3 to read-mode");
+            return -1;
+        }
+        if (quadfile_close(quads2)) {
+            ERROR("Failed to close quadfile quads2");
+            return -1;
+        }
 
-	} else {
-		ckdt2fn = create_temp_file("ckdt2", p->tempdir);
-		sl_append_nocopy(tempfiles, ckdt2fn);
-		quad3fn = create_temp_file("quad3", p->tempdir);
-		sl_append_nocopy(tempfiles, quad3fn);
-		logmsg("Unpermuting quads from %s and %s to %s and %s\n", quad2fn, ckdtfn, quad3fn, ckdt2fn);
-		if (unpermute_quads_files(quad2fn, ckdtfn,
-								  quad3fn, ckdt2fn, p->args, p->argc)) {
-			ERROR("Failed to unpermute-quads");
-			return -1;
-		}
-	}
+    } else {
+        ckdt2fn = create_temp_file("ckdt2", p->tempdir);
+        sl_append_nocopy(tempfiles, ckdt2fn);
+        quad3fn = create_temp_file("quad3", p->tempdir);
+        sl_append_nocopy(tempfiles, quad3fn);
+        logmsg("Unpermuting quads from %s and %s to %s and %s\n", quad2fn, ckdtfn, quad3fn, ckdt2fn);
+        if (unpermute_quads_files(quad2fn, ckdtfn,
+                                  quad3fn, ckdt2fn, p->args, p->argc)) {
+            ERROR("Failed to unpermute-quads");
+            return -1;
+        }
+    }
 
-	if (p_quads3) *p_quads3 = quads3;
-	if (p_codekd2) *p_codekd2 = codekd2;
-	if (p_quad3fn) *p_quad3fn = quad3fn;
-	if (p_ckdt2fn) *p_ckdt2fn = ckdt2fn;
-	return 0;
+    if (p_quads3) *p_quads3 = quads3;
+    if (p_codekd2) *p_codekd2 = codekd2;
+    if (p_quad3fn) *p_quad3fn = quad3fn;
+    if (p_ckdt2fn) *p_ckdt2fn = ckdt2fn;
+    return 0;
 }
 
 static int step_merge_index(index_params_t* p,
-							codetree_t* codekd2, quadfile_t* quads3,
-							startree_t* starkd2,
-							index_t** p_index,
-							const char* ckdt2fn, const char* quad3fn,
-							const char* skdt2fn, const char* indexfn) {
-	index_t* index = NULL;
+                            codetree_t* codekd2, quadfile_t* quads3,
+                            startree_t* starkd2,
+                            index_t** p_index,
+                            const char* ckdt2fn, const char* quad3fn,
+                            const char* skdt2fn, const char* indexfn) {
+    index_t* index = NULL;
 
-	if (p->inmemory) {
-		qfits_header* hdr;
+    if (p->inmemory) {
+        qfits_header* hdr;
 
-		index = index_build_from(codekd2, quads3, starkd2);
-		if (!index) {
-			ERROR("Failed to create index from constituent parts");
-			return -1;
-		}
-		hdr = quadfile_get_header(index->quads);
-		if (hdr)
-			add_boilerplate(p, hdr);
+        index = index_build_from(codekd2, quads3, starkd2);
+        if (!index) {
+            ERROR("Failed to create index from constituent parts");
+            return -1;
+        }
+        hdr = quadfile_get_header(index->quads);
+        if (hdr)
+            add_boilerplate(p, hdr);
 
-		/* When closing:
-		 kdtree_free(codekd2->tree);
-		 codekd2->tree = NULL;
-		 */
-		*p_index = index;
+        /* When closing:
+           kdtree_free(codekd2->tree);
+           codekd2->tree = NULL;
+        */
+        *p_index = index;
 
-	} else {
-		quadfile_t* quad;
-		codetree_t* code;
-		startree_t* star;
-		qfits_header* hdr;
+    } else {
+        quadfile_t* quad;
+        codetree_t* code;
+        startree_t* star;
+        qfits_header* hdr;
 
-		logmsg("Merging %s and %s and %s to %s\n", quad3fn, ckdt2fn, skdt2fn, indexfn);
-		/*
-		 if (merge_index_files(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
-		 ERROR("Failed to merge-index");
-		 return -1;
-		 }
-		 */
-		if (merge_index_open_files(quad3fn, ckdt2fn, skdt2fn,
-								   &quad, &code, &star)) {
-			ERROR("Failed to open index files for merging");
-			return -1;
-		}
-		hdr = quadfile_get_header(quad);
-		if (hdr)
-			add_boilerplate(p, hdr);
-		if (merge_index(quad, code, star, indexfn)) {
-			ERROR("Failed to write merged index");
-			return -1;
-		}
-		codetree_close(code);
-		startree_close(star);
-		quadfile_close(quad);
-	}
-	return 0;
+        logmsg("Merging %s and %s and %s to %s\n", quad3fn, ckdt2fn, skdt2fn, indexfn);
+        /*
+          if (merge_index_files(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
+          ERROR("Failed to merge-index");
+          return -1;
+          }
+        */
+        if (merge_index_open_files(quad3fn, ckdt2fn, skdt2fn,
+                                   &quad, &code, &star)) {
+            ERROR("Failed to open index files for merging");
+            return -1;
+        }
+        hdr = quadfile_get_header(quad);
+        if (hdr)
+            add_boilerplate(p, hdr);
+        if (merge_index(quad, code, star, indexfn)) {
+            ERROR("Failed to write merged index");
+            return -1;
+        }
+        codetree_close(code);
+        startree_close(star);
+        quadfile_close(quad);
+    }
+    return 0;
 }
 
 static void step_delete_tempfiles(index_params_t* p, sl* tempfiles) {
-	if (p->delete_tempfiles) {
-		int i;
-		for (i=0; i<sl_size(tempfiles); i++) {
-			char* fn = sl_get(tempfiles, i);
-			logverb("Deleting temp file %s\n", fn);
-			if (unlink(fn))
-				SYSERROR("Failed to delete temp file \"%s\"", fn);
-		}
-	}
+    if (p->delete_tempfiles) {
+        int i;
+        for (i=0; i<sl_size(tempfiles); i++) {
+            char* fn = sl_get(tempfiles, i);
+            logverb("Deleting temp file %s\n", fn);
+            if (unlink(fn))
+                SYSERROR("Failed to delete temp file \"%s\"", fn);
+        }
+    }
 }
 
 int build_index_shared_skdt(const char* skdtfn,
-							startree_t* starkd, index_params_t* p,
-							index_t** p_index, const char* indexfn) {
-	// assume we've got a final (ie, post-unpermute-stars) skdt
-	// we use that skdt's stars to uniformize, along with a column pulled
-	// from its tag-along data.  This yields a permutation array, which
-	// we feed to hpquads to alter its idea of how to sort stars that could
-	// be used to build quads.
-	// Then we do unpermute-quads, skip unpermute-stars, and feed
-	// the original skdt in to merge-index.
-	// TODO - tweak the index-reading code to allow multiple indices
-	// sharing an skdt in one FITS file.
-	// --quads_X table
-	// --header card in the .quads HDU saying what the name of its skdt is.
-	double* sortdata = NULL;
-	//int* uniperm = NULL;
-	int rtn = -1;
-	codefile_t* codes = NULL;
-	quadfile_t* quads = NULL;
-	char* quadfn=NULL;
-	char* codefn=NULL;
-	codetree_t* codekd = NULL;
-	char* ckdtfn=NULL;
+                            startree_t* starkd, index_params_t* p,
+                            index_t** p_index, const char* indexfn) {
+    // assume we've got a final (ie, post-unpermute-stars) skdt
+    // we use that skdt's stars to uniformize, along with a column pulled
+    // from its tag-along data.  This yields a permutation array, which
+    // we feed to hpquads to alter its idea of how to sort stars that could
+    // be used to build quads.
+    // Then we do unpermute-quads, skip unpermute-stars, and feed
+    // the original skdt in to merge-index.
+    // TODO - tweak the index-reading code to allow multiple indices
+    // sharing an skdt in one FITS file.
+    // --quads_X table
+    // --header card in the .quads HDU saying what the name of its skdt is.
+    double* sortdata = NULL;
+    //int* uniperm = NULL;
+    int rtn = -1;
+    codefile_t* codes = NULL;
+    quadfile_t* quads = NULL;
+    char* quadfn=NULL;
+    char* codefn=NULL;
+    codetree_t* codekd = NULL;
+    char* ckdtfn=NULL;
 
-	startree_t* starkd2 = NULL;
-	quadfile_t* quads2 = NULL;
-	char* quad2fn=NULL;
+    startree_t* starkd2 = NULL;
+    quadfile_t* quads2 = NULL;
+    char* quad2fn=NULL;
 
-	quadfile_t* quads3 = NULL;
-	codetree_t* codekd2 = NULL;
-	char* quad3fn=NULL;
-	char* ckdt2fn=NULL;
+    quadfile_t* quads3 = NULL;
+    codetree_t* codekd2 = NULL;
+    char* quad3fn=NULL;
+    char* ckdt2fn=NULL;
 
-	sl* tempfiles;
+    sl* tempfiles;
 
-	if (!p->UNside)
-		p->UNside = p->Nside;
+    if (!p->UNside)
+        p->UNside = p->Nside;
 
-	assert(p->Nside);
+    assert(p->Nside);
 
-	if (p->inmemory && !p_index) {
-		ERROR("If you set inmemory, you must set p_index");
-		return -1;
-	}
-	if (!p->inmemory && !indexfn) {
-		ERROR("If you set !inmemory, you must set indexfn");
-		return -1;
-	}
-	assert(starkd->tree);
-	assert(starkd->tree->perm == NULL);
-	assert(p->sortcol);
-	if (!p->sortcol) {
-		ERROR("You must set the sort column\n");
-		return -1;
-	}
+    if (p->inmemory && !p_index) {
+        ERROR("If you set inmemory, you must set p_index");
+        return -1;
+    }
+    if (!p->inmemory && !indexfn) {
+        ERROR("If you set !inmemory, you must set indexfn");
+        return -1;
+    }
+    assert(starkd->tree);
+    assert(starkd->tree->perm == NULL);
+    assert(p->sortcol);
+    if (!p->sortcol) {
+        ERROR("You must set the sort column\n");
+        return -1;
+    }
 
     tempfiles = sl_new(4);
 
-	// OR, should we just strictly sort on the tag-along sortcol in hpquads?
-	// Yes, probably.  Uniformization isn't going to change the ordering much
-	// in deciding which stars to use in a quad -- they're all nearby.
+    // OR, should we just strictly sort on the tag-along sortcol in hpquads?
+    // Yes, probably.  Uniformization isn't going to change the ordering much
+    // in deciding which stars to use in a quad -- they're all nearby.
 
-	logverb("Grabbing tag-along column \"%s\" for sorting...\n", p->sortcol);
-	sortdata = startree_get_data_column(starkd, p->sortcol, NULL, startree_N(starkd));
-	if (!sortdata) {
-		ERROR("Failed to find sort column data for sorting catalog");
-		goto cleanup;
-	}
+    logverb("Grabbing tag-along column \"%s\" for sorting...\n", p->sortcol);
+    sortdata = startree_get_data_column(starkd, p->sortcol, NULL, startree_N(starkd));
+    if (!sortdata) {
+        ERROR("Failed to find sort column data for sorting catalog");
+        goto cleanup;
+    }
 
-	/*
-	 logverb("Uniformizing...\n");
-	 uniperm = uniformize_catalog_get_permutation(skdt, sortdata,
-	 p->bighp, p->bignside, p->margin,
-	 p->UNside, p->dedup, p->sweeps,
-	 p->args, p->argc);
-	 if (!uniperm) {
-	 ERROR("Failed to find uniformization permutation array");
-	 goto cleanup;
-	 }
-	 p->hpquads_sort = uniperm;
-	 p->hpquads_sortfunc = compare_ints_asc;
-	 */
+    /*
+      logverb("Uniformizing...\n");
+      uniperm = uniformize_catalog_get_permutation(skdt, sortdata,
+      p->bighp, p->bignside, p->margin,
+      p->UNside, p->dedup, p->sweeps,
+      p->args, p->argc);
+      if (!uniperm) {
+      ERROR("Failed to find uniformization permutation array");
+      goto cleanup;
+      }
+      p->hpquads_sort = uniperm;
+      p->hpquads_sortfunc = compare_ints_asc;
+    */
 
-	p->hpquads_sort_data = sortdata;
-	p->hpquads_sort_func = (p->sortasc ? compare_doubles_asc : compare_doubles_desc);
-	p->hpquads_sort_size = sizeof(double);
+    p->hpquads_sort_data = sortdata;
+    p->hpquads_sort_func = (p->sortasc ? compare_doubles_asc : compare_doubles_desc);
+    p->hpquads_sort_size = sizeof(double);
 
-	// hpquads
-	if (step_hpquads(p, &codes, &quads, &codefn, &quadfn,
-					 starkd, skdtfn, tempfiles))
-		return -1;
+    // hpquads
+    if (step_hpquads(p, &codes, &quads, &codefn, &quadfn,
+                     starkd, skdtfn, tempfiles))
+        return -1;
 
-	// codetree
-	if (step_codetree(p, codes, &codekd,
-					  codefn, &ckdtfn, tempfiles))
-		return -1;
+    // codetree
+    if (step_codetree(p, codes, &codekd,
+                      codefn, &ckdtfn, tempfiles))
+        return -1;
 
-	// no unpermute-stars...
-	quads2 = quads;
-	quad2fn = quadfn;
-	starkd2 = starkd;
+    // no unpermute-stars...
+    quads2 = quads;
+    quad2fn = quadfn;
+    starkd2 = starkd;
 
-	// unpermute-quads...
-	if (step_unpermute_quads(p, quads2, codekd, &quads3, &codekd2,
-							 quad2fn, ckdtfn, &quad3fn, &ckdt2fn, tempfiles))
-		return -1;
+    // unpermute-quads...
+    if (step_unpermute_quads(p, quads2, codekd, &quads3, &codekd2,
+                             quad2fn, ckdtfn, &quad3fn, &ckdt2fn, tempfiles))
+        return -1;
 
-	// merge-index...
-	if (step_merge_index(p, codekd2, quads3, starkd2, p_index,
-						 ckdt2fn, quad3fn, skdtfn, indexfn))
-		return -1;
+    // merge-index...
+    if (step_merge_index(p, codekd2, quads3, starkd2, p_index,
+                         ckdt2fn, quad3fn, skdtfn, indexfn))
+        return -1;
 
-	step_delete_tempfiles(p, tempfiles);
+    step_delete_tempfiles(p, tempfiles);
 
-	sl_free2(tempfiles);
+    sl_free2(tempfiles);
 
-	rtn = 0;
+    rtn = 0;
 
  cleanup:
-	//free(uniperm);
-	free(sortdata);
-	return rtn;
+    //free(uniperm);
+    free(sortdata);
+    return rtn;
 }
 
 int build_index(fitstable_t* catalog, index_params_t* p,
-				index_t** p_index, const char* indexfn) {
+                index_t** p_index, const char* indexfn) {
 
-	fitstable_t* uniform;
+    fitstable_t* uniform;
 
-	// star kdtree
-	startree_t* starkd = NULL;
-	fitstable_t* startag = NULL;
+    // star kdtree
+    startree_t* starkd = NULL;
+    fitstable_t* startag = NULL;
 
-	// hpquads
-	codefile_t* codes = NULL;
-	quadfile_t* quads = NULL;
+    // hpquads
+    codefile_t* codes = NULL;
+    quadfile_t* quads = NULL;
 
-	// codetree
-	codetree_t* codekd = NULL;
+    // codetree
+    codetree_t* codekd = NULL;
 
-	// unpermute-stars
-	startree_t* starkd2 = NULL;
-	quadfile_t* quads2 = NULL;
-	fitstable_t* startag2 = NULL;
+    // unpermute-stars
+    startree_t* starkd2 = NULL;
+    quadfile_t* quads2 = NULL;
+    fitstable_t* startag2 = NULL;
 
-	// unpermute-quads
-	quadfile_t* quads3 = NULL;
-	codetree_t* codekd2 = NULL;
+    // unpermute-quads
+    quadfile_t* quads3 = NULL;
+    codetree_t* codekd2 = NULL;
 
-	//index_t* index = NULL;
+    //index_t* index = NULL;
 
-	sl* tempfiles;
-	char* unifn=NULL;
-	char* skdtfn=NULL;
-	char* quadfn=NULL;
-	char* codefn=NULL;
-	char* ckdtfn=NULL;
-	char* skdt2fn=NULL;
-	char* quad2fn=NULL;
-	char* quad3fn=NULL;
-	char* ckdt2fn=NULL;
+    sl* tempfiles;
+    char* unifn=NULL;
+    char* skdtfn=NULL;
+    char* quadfn=NULL;
+    char* codefn=NULL;
+    char* ckdtfn=NULL;
+    char* skdt2fn=NULL;
+    char* quad2fn=NULL;
+    char* quad3fn=NULL;
+    char* ckdt2fn=NULL;
 
-	if (!p->UNside)
-		p->UNside = p->Nside;
+    if (!p->UNside)
+        p->UNside = p->Nside;
 
-	assert(p->Nside);
+    assert(p->Nside);
 
-	if (p->inmemory && !p_index) {
-		ERROR("If you set inmemory, you must set p_index");
-		return -1;
-	}
-	if (!p->inmemory && !indexfn) {
-		ERROR("If you set !inmemory, you must set indexfn");
-		return -1;
-	}
+    if (p->inmemory && !p_index) {
+        ERROR("If you set inmemory, you must set p_index");
+        return -1;
+    }
+    if (!p->inmemory && !indexfn) {
+        ERROR("If you set !inmemory, you must set indexfn");
+        return -1;
+    }
 
     tempfiles = sl_new(4);
 
@@ -644,75 +644,75 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 
 
 int build_index_files(const char* infn, int ext, const char* indexfn,
-					  index_params_t* p) {
-	fitstable_t* catalog;
-	logmsg("Reading %s...\n", infn);
+                      index_params_t* p) {
+    fitstable_t* catalog;
+    logmsg("Reading %s...\n", infn);
     if (ext)
         catalog = fitstable_open_extension_2(infn, ext);
     else
         catalog = fitstable_open(infn);
     if (!catalog) {
         ERROR("Couldn't read catalog %s", infn);
-		return -1;
+        return -1;
     }
-	logmsg("Got %i stars\n", fitstable_nrows(catalog));
+    logmsg("Got %i stars\n", fitstable_nrows(catalog));
 
-	if (p->inmemory) {
-		index_t* index;
-		if (build_index(catalog, p, &index, NULL)) {
-			return -1;
-		}
-		logmsg("Writing to file %s\n", indexfn);
-		if (merge_index(index->quads, index->codekd, index->starkd, indexfn)) {
-			ERROR("Failed to write index file");
-			return -1;
-		}
-		kdtree_free(index->codekd->tree);
-		index->codekd->tree = NULL;
-		index_close(index);
+    if (p->inmemory) {
+        index_t* index;
+        if (build_index(catalog, p, &index, NULL)) {
+            return -1;
+        }
+        logmsg("Writing to file %s\n", indexfn);
+        if (merge_index(index->quads, index->codekd, index->starkd, indexfn)) {
+            ERROR("Failed to write index file");
+            return -1;
+        }
+        kdtree_free(index->codekd->tree);
+        index->codekd->tree = NULL;
+        index_close(index);
 
-	} else {
-		if (build_index(catalog, p, NULL, indexfn)) {
-			return -1;
-		}
-	}
+    } else {
+        if (build_index(catalog, p, NULL, indexfn)) {
+            return -1;
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
 int build_index_shared_skdt_files(const char* starkdfn, const char* indexfn,
-								  index_params_t* p) {
-	startree_t* skdt = NULL;
+                                  index_params_t* p) {
+    startree_t* skdt = NULL;
 
-	logmsg("Reading %s...\n", starkdfn);
-	skdt = startree_open(starkdfn);
+    logmsg("Reading %s...\n", starkdfn);
+    skdt = startree_open(starkdfn);
     if (!skdt) {
         ERROR("Couldn't read star kdtree from \"%s\"", starkdfn);
-		return -1;
+        return -1;
     }
-	logmsg("Got %i stars\n", startree_N(skdt));
+    logmsg("Got %i stars\n", startree_N(skdt));
 
-	if (p->inmemory) {
-		index_t* index;
-		if (build_index_shared_skdt(starkdfn, skdt, p, &index, NULL)) {
-			return -1;
-		}
-		logmsg("Writing to file %s\n", indexfn);
-		if (merge_index(index->quads, index->codekd, index->starkd, indexfn)) {
-			ERROR("Failed to write index file \"%s\"", indexfn);
-			return -1;
-		}
-		// FIXME?  Why close codekd independently?
-		kdtree_free(index->codekd->tree);
-		index->codekd->tree = NULL;
-		index_close(index);
+    if (p->inmemory) {
+        index_t* index;
+        if (build_index_shared_skdt(starkdfn, skdt, p, &index, NULL)) {
+            return -1;
+        }
+        logmsg("Writing to file %s\n", indexfn);
+        if (merge_index(index->quads, index->codekd, index->starkd, indexfn)) {
+            ERROR("Failed to write index file \"%s\"", indexfn);
+            return -1;
+        }
+        // FIXME?  Why close codekd independently?
+        kdtree_free(index->codekd->tree);
+        index->codekd->tree = NULL;
+        index_close(index);
 
-	} else {
-		if (build_index_shared_skdt(starkdfn, skdt, p, NULL, indexfn)) {
-			return -1;
-		}
-	}
-	return 0;
+    } else {
+        if (build_index_shared_skdt(starkdfn, skdt, p, NULL, indexfn)) {
+            return -1;
+        }
+    }
+    return 0;
 }
 
 

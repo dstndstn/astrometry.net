@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -23,43 +23,43 @@ static const char* OPTIONS = "hr:";
 
 void print_help(char* progname)
 {
-	BOILERPLATE_HELP_HEADER(stderr);
-	fprintf(stderr, "Usage: %s\n"
-			"   -r <rdls-output-file>\n"
-			"   [-v]: more verbose\n"
-			"   [-h]: help\n"
-			"   <skdt> [<skdt> ...]\n\n"
-			"Reads .skdt files.  Writes an RDLS containing the star locations.\n",
-	        progname);
+    BOILERPLATE_HELP_HEADER(stderr);
+    fprintf(stderr, "Usage: %s\n"
+            "   -r <rdls-output-file>\n"
+            "   [-v]: more verbose\n"
+            "   [-h]: help\n"
+            "   <skdt> [<skdt> ...]\n\n"
+            "Reads .skdt files.  Writes an RDLS containing the star locations.\n",
+            progname);
 }
 
 int main(int argc, char** args) {
     int argchar;
-	char* outfn = NULL;
-	char* fn;
+    char* outfn = NULL;
+    char* fn;
     rdlist_t* rdls;
-	startree_t* skdt = NULL;
-	int i;
-	int loglvl = LOG_MSG;
+    startree_t* skdt = NULL;
+    int i;
+    int loglvl = LOG_MSG;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
-		case 'v':
-			loglvl++;
-			break;
-		case 'r':
-			outfn = optarg;
-			break;
-		case 'h':
-			print_help(args[0]);
-			exit(0);
-		}
+        case 'v':
+            loglvl++;
+            break;
+        case 'r':
+            outfn = optarg;
+            break;
+        case 'h':
+            print_help(args[0]);
+            exit(0);
+        }
 
-	log_init(loglvl);
-	if (!outfn || (optind == argc)) {
-		print_help(args[0]);
-		exit(-1);
-	}
+    log_init(loglvl);
+    if (!outfn || (optind == argc)) {
+        print_help(args[0]);
+        exit(-1);
+    }
 
     rdls = rdlist_open_for_writing(outfn);
     if (!rdls) {
@@ -71,8 +71,8 @@ int main(int argc, char** args) {
         exit(-1);
     }
 
-	for (; optind<argc; optind++) {
-		int Nstars;
+    for (; optind<argc; optind++) {
+        int Nstars;
         fn = args[optind];
         logmsg("Opening star kdtree %s...\n", fn);
         skdt = startree_open(fn);
@@ -87,22 +87,22 @@ int main(int argc, char** args) {
             exit(-1);
         }
 
-		logmsg("Reading stars...\n");
-		for (i=0; i<Nstars; i++) {
+        logmsg("Reading stars...\n");
+        for (i=0; i<Nstars; i++) {
             double xyz[3];
             double radec[2];
-			if (!(i % 200000)) {
-				printf(".");
-				fflush(stdout);
-			}
+            if (!(i % 200000)) {
+                printf(".");
+                fflush(stdout);
+            }
             startree_get(skdt, i, xyz);
             xyzarr2radecdegarr(xyz, radec);
             if (rdlist_write_one_radec(rdls, radec[0], radec[1])) {
                 ERROR("Failed to write a RA,Dec entry");
                 exit(-1);
             }
-		}
-		printf("\n");
+        }
+        printf("\n");
 
         startree_close(skdt);
 
@@ -110,7 +110,7 @@ int main(int argc, char** args) {
             ERROR("Failed to fix RDLS field header");
             exit(-1);
         }
-	}
+    }
 
     if (rdlist_fix_primary_header(rdls) ||
         rdlist_close(rdls)) {
@@ -118,6 +118,6 @@ int main(int argc, char** args) {
         exit(-1);
     }
 
-	return 0;
+    return 0;
 }
 

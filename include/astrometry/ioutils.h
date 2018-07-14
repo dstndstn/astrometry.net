@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef IOUTILS_H
 #define IOUTILS_H
@@ -63,7 +63,7 @@ int write_file(const char* fn, const char* data, int len);
  */
 void
 ATTRIB_FORMAT(printf,2,3)
-asprintf_safe(char** strp, const char* format, ...);
+    asprintf_safe(char** strp, const char* format, ...);
 
 int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines);
 
@@ -119,8 +119,8 @@ sl* split_long_string(const char* str, int firstlinew, int linew, sl* lst);
 int split_string_once(const char* str, const char* splitstr, char** first, char** second);
 
 /**
-   If "cmdline" starts with "keyword", returns 1 and places the address of
-   the start of the next word in "p_next_word".
+ If "cmdline" starts with "keyword", returns 1 and places the address of
+ the start of the next word in "p_next_word".
  */
 int is_word(const char* cmdline, const char* keyword, char** p_next_word);
 
@@ -152,21 +152,21 @@ int read_double(FILE* fin, double* val);
 int read_fixed_length_string(FILE* fin, char* s, int length);
 char* read_string(FILE* fin);
 char* read_string_terminated(FILE* fin, const char* terminators, int nterminators,
-							 anbool include_terminator);
+                             anbool include_terminator);
 
 int read_u32_portable(FILE* fin, unsigned int* val);
 int read_u32s_portable(FILE* fin, unsigned int* val, int n);
 
 struct buffered_read_data {
-	void* buffer;
-	int blocksize;
-	int elementsize;
-	int ntotal;
-	int nbuff;
-	int off;
-	int buffind;
-	int (*refill_buffer)(void* userdata, void* buffer, unsigned int offs, unsigned int nelems);
-	void* userdata;
+    void* buffer;
+    int blocksize;
+    int elementsize;
+    int ntotal;
+    int nbuff;
+    int off;
+    int buffind;
+    int (*refill_buffer)(void* userdata, void* buffer, unsigned int offs, unsigned int nelems);
+    void* userdata;
 };
 typedef struct buffered_read_data bread_t;
 

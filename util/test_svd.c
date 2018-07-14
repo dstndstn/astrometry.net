@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <math.h>
 #include <stdio.h>
@@ -33,7 +33,7 @@
 
 void test_nullspace_gsl(CuTest* tc) {
     int i, j;
-	gsl_matrix* A;
+    gsl_matrix* A;
     gsl_matrix* V;
     gsl_matrix* U;
     gsl_vector* S;

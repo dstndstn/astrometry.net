@@ -3,41 +3,41 @@
  http://vizier.cfa.harvard.edu/viz-bin/VizieR-3?-source=VI/49/bound_20
  */
 /*
-#
-#   VizieR Astronomical Server vizier.cfa.harvard.edu
-#    Date: 2014-07-16T14:54:10 [V1.99+ (14-Oct-2013)]
-#
-#Coosys	J2000:	eq_FK5 J2000
-#INFO	votable-version=1.99+ (14-Oct-2013)	
-#INFO	-ref=VIZ53c69102128c	
-#INFO	-out.max=unlimited	
-#INFO	queryParameters=12	
-#-oc.form=dec
-#-out.max=unlimited
-#-nav=cat:VI/49&tab:{VI/49/bound_20}&key:source=VI/49/bound_20&HTTPPRM:&
-#-c.eq=J2000
-#-c.r=  2
-#-c.u=arcmin
-#-c.geom=r
-#-source=VI/49/bound_20
-#-order=I
-#-out=RAJ2000
-#-out=DEJ2000
-#-out=cst
-#
+ #
+ #   VizieR Astronomical Server vizier.cfa.harvard.edu
+ #    Date: 2014-07-16T14:54:10 [V1.99+ (14-Oct-2013)]
+ #
+ #Coosys	J2000:	eq_FK5 J2000
+ #INFO	votable-version=1.99+ (14-Oct-2013)	
+ #INFO	-ref=VIZ53c69102128c	
+ #INFO	-out.max=unlimited	
+ #INFO	queryParameters=12	
+ #-oc.form=dec
+ #-out.max=unlimited
+ #-nav=cat:VI/49&tab:{VI/49/bound_20}&key:source=VI/49/bound_20&HTTPPRM:&
+ #-c.eq=J2000
+ #-c.r=  2
+ #-c.u=arcmin
+ #-c.geom=r
+ #-source=VI/49/bound_20
+ #-order=I
+ #-out=RAJ2000
+ #-out=DEJ2000
+ #-out=cst
+ #
 
-#RESOURCE=yCat_6049
-#Name: VI/49
-#Title: Constellation Boundary Data (Davenhall+ 1989)
-#Table	VI_49_bound_20:
-#Name: VI/49/bound_20
-#Title: Boundaries for J2000
-#Column	RAJ2000	(F10.6)	Right ascension in decimal hours (J2000)	[ucd=pos.eq.ra;meta.main]
-#Column	DEJ2000	(F11.7)	Declination in degrees (J2000)	[ucd=pos.eq.dec;meta.main]
-#Column	cst	(A4)	Constellation abbreviation	[ucd=meta.id.part]
-RAJ2000	DEJ2000	cst
-deg	deg	
-----------	-----------	----
+ #RESOURCE=yCat_6049
+ #Name: VI/49
+ #Title: Constellation Boundary Data (Davenhall+ 1989)
+ #Table	VI_49_bound_20:
+ #Name: VI/49/bound_20
+ #Title: Boundaries for J2000
+ #Column	RAJ2000	(F10.6)	Right ascension in decimal hours (J2000)	[ucd=pos.eq.ra;meta.main]
+ #Column	DEJ2000	(F11.7)	Declination in degrees (J2000)	[ucd=pos.eq.dec;meta.main]
+ #Column	cst	(A4)	Constellation abbreviation	[ucd=meta.id.part]
+ RAJ2000	DEJ2000	cst
+ deg	deg	
+ ----------	-----------	----
  */
 
 #include "constellation-boundaries.h"

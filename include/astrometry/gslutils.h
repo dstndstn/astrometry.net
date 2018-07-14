@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef AN_GSL_UTILS_H
 #define AN_GSL_UTILS_H
@@ -22,9 +22,9 @@ void gslutils_use_error_system();
  A: MxN matrix
  B: array of NB x length-M vectors
  X: must be an array big enough to hold NB vectors.
-   (they will be length-N).
+ (they will be length-N).
  resids: if non-NULL, must be an array big enough to hold NB vectors
-   (they will be length-M).
+ (they will be length-M).
 
  The result vectors are freshly allocated and should be freed with gsl_vector_free().
  */

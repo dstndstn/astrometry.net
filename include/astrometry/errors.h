@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef AN_ERRORS_H
 #define AN_ERRORS_H
@@ -22,20 +22,20 @@ typedef struct errors err_t;
 typedef void (errfunc_t)(void* baton, err_t* errstate, const char* file, int line, const char* func, const char* format, va_list va);
 
 struct errentry {
-	char* file;
-	int line;
-	char* func;
-	char* str;
+    char* file;
+    int line;
+    char* func;
+    char* str;
 };
 typedef struct errentry errentry_t;
 
 struct errors {
     FILE* print;
     anbool save;
-	bl* errstack;
+    bl* errstack;
 
-	errfunc_t* errfunc;
-	void* baton;
+    errfunc_t* errfunc;
+    void* baton;
 };
 
 /***    Global functions    ***/
@@ -51,7 +51,7 @@ void errors_pop_state();
 
 void
 ATTRIB_FORMAT(printf,4,5)
-report_error(const char* modfile, int modline, const char* modfunc, const char* fmt, ...);
+    report_error(const char* modfile, int modline, const char* modfunc, const char* fmt, ...);
 
 void report_errno();
 
@@ -117,8 +117,8 @@ void error_stack_clear(err_t* e);
 
 void
 ATTRIB_FORMAT(printf,5,6)
-error_report(err_t* e, const char* module, int line, const char* func,
-             const char* fmt, ...);
+    error_report(err_t* e, const char* module, int line, const char* func,
+                 const char* fmt, ...);
 
 void error_reportv(err_t* e, const char* module, int line,
                    const char* func, const char* fmt, va_list va);

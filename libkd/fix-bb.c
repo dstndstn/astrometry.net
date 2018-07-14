@@ -1,6 +1,6 @@
 /*
-# This file is part of libkd.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of libkd.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #include <unistd.h>
@@ -17,8 +17,8 @@
 #include "anqfits.h"
 
 void printHelp(char* progname) {
-	printf("\nUsage: %s <input> <output>\n"
-		   "\n", progname);
+    printf("\nUsage: %s <input> <output>\n"
+           "\n", progname);
 }
 
 
@@ -26,10 +26,10 @@ const char* OPTIONS = "hvq";
 
 int main(int argc, char** args) {
     int argchar;
-	char* progname = args[0];
-	kdtree_t* kd;
-	char* infn;
-	char* outfn;
+    char* progname = args[0];
+    kdtree_t* kd;
+    char* infn;
+    char* outfn;
     qfits_header* hdr;
     qfits_header* outhdr;
     int i, Next;
@@ -48,10 +48,10 @@ int main(int argc, char** args) {
         case 'q':
             force_quad = TRUE;
             break;
-		case 'h':
-			printHelp(progname);
-			exit(-1);
-		}
+        case 'h':
+            printHelp(progname);
+            exit(-1);
+        }
 
     if (optind != argc - 2) {
         printHelp(progname);
@@ -211,5 +211,5 @@ int main(int argc, char** args) {
 
     printf("Fixed file %s was written successfully.\n", outfn);
 
-	return 0;
+    return 0;
 }

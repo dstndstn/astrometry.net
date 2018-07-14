@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <stdint.h>
 #include <assert.h>
@@ -59,14 +59,14 @@ static mycolor mycolors[] = {
 static const int nmycolors = sizeof(mycolors)/sizeof(mycolor);
 
 cairo_status_t cairoutils_file_write_func(void *closure,
-										  const unsigned char *data,
-										  unsigned int length) {
-	FILE* fid = closure;
-	if (fwrite(data, 1, length, fid) != length) {
-		SYSERROR("Failed to write cairo data");
-		return CAIRO_STATUS_WRITE_ERROR;
-	}
-	return CAIRO_STATUS_SUCCESS;
+                                          const unsigned char *data,
+                                          unsigned int length) {
+    FILE* fid = closure;
+    if (fwrite(data, 1, length, fid) != length) {
+        SYSERROR("Failed to write cairo data");
+        return CAIRO_STATUS_WRITE_ERROR;
+    }
+    return CAIRO_STATUS_SUCCESS;
 }
 
 const char* cairoutils_get_color_name(int i) {
@@ -76,51 +76,51 @@ const char* cairoutils_get_color_name(int i) {
 }
 
 int cairoutils_surface_status_errors(cairo_surface_t* surf) {
-	int st = cairo_surface_status(surf);
-	switch (st) {
-	case CAIRO_STATUS_SUCCESS:
-		return 0;
-	case CAIRO_STATUS_NULL_POINTER:
-		ERROR("Cairo null pointer");
-		break;
-	case CAIRO_STATUS_NO_MEMORY:
-		ERROR("Cairo no memory");
-		break;
-	case CAIRO_STATUS_READ_ERROR:
-		ERROR("Cairo read error");
-		break;
-	case CAIRO_STATUS_INVALID_CONTENT:
-		ERROR("Cairo invalid content");
-		break;
-	case CAIRO_STATUS_INVALID_FORMAT:
-		ERROR("Cairo invalid format");
-		break;
-	case CAIRO_STATUS_INVALID_VISUAL:
-		ERROR("Cairo invalid visual");
-		break;
-	}
-	return -1;
+    int st = cairo_surface_status(surf);
+    switch (st) {
+    case CAIRO_STATUS_SUCCESS:
+        return 0;
+    case CAIRO_STATUS_NULL_POINTER:
+        ERROR("Cairo null pointer");
+        break;
+    case CAIRO_STATUS_NO_MEMORY:
+        ERROR("Cairo no memory");
+        break;
+    case CAIRO_STATUS_READ_ERROR:
+        ERROR("Cairo read error");
+        break;
+    case CAIRO_STATUS_INVALID_CONTENT:
+        ERROR("Cairo invalid content");
+        break;
+    case CAIRO_STATUS_INVALID_FORMAT:
+        ERROR("Cairo invalid format");
+        break;
+    case CAIRO_STATUS_INVALID_VISUAL:
+        ERROR("Cairo invalid visual");
+        break;
+    }
+    return -1;
 }
 
 int cairoutils_cairo_status_errors(cairo_t* c) {
-	cairo_status_t st = cairo_status(c);
-	if (st == CAIRO_STATUS_SUCCESS)
-		return 0;
-	ERROR("Cairo: %s", cairo_status_to_string(st));
-	return -1;
+    cairo_status_t st = cairo_status(c);
+    if (st == CAIRO_STATUS_SUCCESS)
+        return 0;
+    ERROR("Cairo: %s", cairo_status_to_string(st));
+    return -1;
 }
 
 void cairoutils_draw_path(cairo_t* c, const double* xy, int N) {
-	int i;
-	for (i=0; i<N; i++) {
-		double px, py;
-		px = xy[2*i+0];
-		py = xy[2*i+1];
-		if (i == 0)
-			cairo_move_to(c, px, py);
-		else
-			cairo_line_to(c, px, py);
-	}
+    int i;
+    for (i=0; i<N; i++) {
+        double px, py;
+        px = xy[2*i+0];
+        py = xy[2*i+1];
+        if (i == 0)
+            cairo_move_to(c, px, py);
+        else
+            cairo_line_to(c, px, py);
+    }
 }
 
 static int hexval(char c) {
@@ -153,37 +153,37 @@ int cairoutils_parse_color(const char* color, float* r, float* g, float* b) {
 }
 
 int cairoutils_parse_rgba(const char* str, float* r, float* g, float* b, float* a) {
-	sl* words = sl_split(NULL, str, " ");
-	char* endp;
-	char* s;
-	if (!((sl_size(words) == 3) || (sl_size(words) == 4))) {
-		sl_free2(words);
-		return -1;
-	}
-	assert(r);
-	assert(g);
-	assert(b);
-	s = sl_get(words, 0);
-	*r = strtof(s, &endp);
-	if (endp == s) goto bailout;
-	s = sl_get(words, 1);
-	*g = strtof(s, &endp);
-	if (endp == s) goto bailout;
-	s = sl_get(words, 2);
-	*b = strtof(s, &endp);
-	if (endp == s) goto bailout;
+    sl* words = sl_split(NULL, str, " ");
+    char* endp;
+    char* s;
+    if (!((sl_size(words) == 3) || (sl_size(words) == 4))) {
+        sl_free2(words);
+        return -1;
+    }
+    assert(r);
+    assert(g);
+    assert(b);
+    s = sl_get(words, 0);
+    *r = strtof(s, &endp);
+    if (endp == s) goto bailout;
+    s = sl_get(words, 1);
+    *g = strtof(s, &endp);
+    if (endp == s) goto bailout;
+    s = sl_get(words, 2);
+    *b = strtof(s, &endp);
+    if (endp == s) goto bailout;
 
-	if ((sl_size(words) == 4) && a) {
-		s = sl_get(words, 3);
-		*a = strtof(s, &endp);
-		if (endp == s) goto bailout;
-	}
-	sl_free2(words);
-	return 0;
+    if ((sl_size(words) == 4) && a) {
+        s = sl_get(words, 3);
+        *a = strtof(s, &endp);
+        if (endp == s) goto bailout;
+    }
+    sl_free2(words);
+    return 0;
 
-	bailout:
-	sl_free2(words);
-	return -1;
+ bailout:
+    sl_free2(words);
+    return -1;
 }
 
 struct mymarker {
@@ -193,7 +193,7 @@ struct mymarker {
 typedef struct mymarker mymarker;
 
 static void drawcircle(cairo_t* cairo, double x, double y, double rad, const char* name) {
-	cairo_move_to(cairo, x+rad, y);
+    cairo_move_to(cairo, x+rad, y);
     cairo_arc(cairo, x, y, rad, 0.0, 2.0*M_PI);
 }
 
@@ -535,7 +535,7 @@ static int writeout(const char* outfn, unsigned char* img, int W, int H, int for
             return -1;
         }
     }
-	return 0;
+    return 0;
 }
 
 #if HAVE_NETPBM
@@ -580,18 +580,18 @@ void cairoutils_premultiply_alpha_rgba(unsigned char* img, int W, int H) {
         g = img[4*i + 1];
         b = img[4*i + 2];
         a = img[4*i + 3];
-		img[4*i + 0] = (a * r) / 255;
-		img[4*i + 1] = (a * g) / 255;
-		img[4*i + 2] = (a * b) / 255;
-	}
+        img[4*i + 0] = (a * r) / 255;
+        img[4*i + 1] = (a * g) / 255;
+        img[4*i + 2] = (a * b) / 255;
+    }
 }
 
 void cairoutils_argb32_to_rgba(unsigned char* img, int W, int H) {
-	cairoutils_argb32_to_rgba_2(img, img, W, H);
+    cairoutils_argb32_to_rgba_2(img, img, W, H);
 }
 
 void cairoutils_argb32_to_rgba_2(const unsigned char* inimg,
-								 unsigned char* outimg, int W, int H) {
+                                 unsigned char* outimg, int W, int H) {
     int i;
     for (i=0; i<(H*W); i++) {
         unsigned char r,g,b,a;
@@ -608,32 +608,32 @@ void cairoutils_argb32_to_rgba_2(const unsigned char* inimg,
 }
 
 void cairoutils_argb32_to_rgba_flip(const unsigned char* inimg,
-									unsigned char* outimg, int W, int H) {
+                                    unsigned char* outimg, int W, int H) {
     int i, j;
-	for (i=0; i<H; i++) {
-		const unsigned char* inrow = inimg + 4 * (i*W);
-		unsigned char* outrow = outimg + 4 * (H-1-i) * W;
-		for (j=0; j<(W); j++) {
-			unsigned char r,g,b,a;
-			uint32_t ipix = *((uint32_t*)(inrow + 4*j));
-			a = (ipix >> 24) & 0xff;
-			r = (ipix >> 16) & 0xff;
-			g = (ipix >>  8) & 0xff;
-			b = (ipix      ) & 0xff;
-			outrow[4*j + 0] = r;
-			outrow[4*j + 1] = g;
-			outrow[4*j + 2] = b;
-			outrow[4*j + 3] = a;
-		}
-	}
+    for (i=0; i<H; i++) {
+        const unsigned char* inrow = inimg + 4 * (i*W);
+        unsigned char* outrow = outimg + 4 * (H-1-i) * W;
+        for (j=0; j<(W); j++) {
+            unsigned char r,g,b,a;
+            uint32_t ipix = *((uint32_t*)(inrow + 4*j));
+            a = (ipix >> 24) & 0xff;
+            r = (ipix >> 16) & 0xff;
+            g = (ipix >>  8) & 0xff;
+            b = (ipix      ) & 0xff;
+            outrow[4*j + 0] = r;
+            outrow[4*j + 1] = g;
+            outrow[4*j + 2] = b;
+            outrow[4*j + 3] = a;
+        }
+    }
 }
 
 void cairoutils_rgba_to_argb32(unsigned char* img, int W, int H) {
-	cairoutils_rgba_to_argb32_2(img, img, W, H);
+    cairoutils_rgba_to_argb32_2(img, img, W, H);
 }
 
 void cairoutils_rgba_to_argb32_2(const unsigned char* inimg,
-								 unsigned char* outimg, int W, int H) {
+                                 unsigned char* outimg, int W, int H) {
     int i;
     for (i=0; i<(H*W); i++) {
         unsigned char r,g,b,a;
@@ -648,22 +648,22 @@ void cairoutils_rgba_to_argb32_2(const unsigned char* inimg,
 }
 
 void cairoutils_rgba_to_argb32_flip(const unsigned char* inimg,
-									unsigned char* outimg, int W, int H) {
+                                    unsigned char* outimg, int W, int H) {
     int i, j;
-	for (i=0; i<H; i++) {
-		const unsigned char* inrow = inimg + 4 * (i*W);
-		unsigned char* outrow = outimg + 4 * (H-1-i) * W;
-		for (j=0; j<(W); j++) {
-			unsigned char r,g,b,a;
-			uint32_t* ipix;
-			r = inrow[4*j + 0];
-			g = inrow[4*j + 1];
-			b = inrow[4*j + 2];
-			a = inrow[4*j + 3];
-			ipix = (uint32_t*)(outrow + 4*j);
-			*ipix = (a << 24) | (r << 16) | (g << 8) | b;
-		}
-	}
+    for (i=0; i<H; i++) {
+        const unsigned char* inrow = inimg + 4 * (i*W);
+        unsigned char* outrow = outimg + 4 * (H-1-i) * W;
+        for (j=0; j<(W); j++) {
+            unsigned char r,g,b,a;
+            uint32_t* ipix;
+            r = inrow[4*j + 0];
+            g = inrow[4*j + 1];
+            b = inrow[4*j + 2];
+            a = inrow[4*j + 3];
+            ipix = (uint32_t*)(outrow + 4*j);
+            *ipix = (a << 24) | (r << 16) | (g << 8) | b;
+        }
+    }
 }
 
 
@@ -712,8 +712,8 @@ unsigned char* cairoutils_read_ppm_stream(FILE* fin, int* pW, int* pH) {
 }
 #else
 unsigned char* cairoutils_read_ppm_stream(FILE* fin, int* pW, int* pH) {
-	ERROR("Netpbm is not available; can't read PPM images");
-	return NULL;
+    ERROR("Netpbm is not available; can't read PPM images");
+    return NULL;
 }
 #endif
 

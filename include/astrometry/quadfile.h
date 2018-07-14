@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef QUADFILE_H
 #define QUADFILE_H
@@ -14,23 +14,23 @@
 #include "astrometry/anqfits.h"
 
 typedef struct {
-	unsigned int numquads;
-	unsigned int numstars;
+    unsigned int numquads;
+    unsigned int numstars;
     int dimquads;
-	// upper bound of AB distance of quads in this index
-	double index_scale_upper;
-	// lower bound
-	double index_scale_lower;
-	// unique ID of this index
-	int indexid;
-	// healpix covered by this index
-	int healpix;
+    // upper bound of AB distance of quads in this index
+    double index_scale_upper;
+    // lower bound
+    double index_scale_lower;
+    // unique ID of this index
+    int indexid;
+    // healpix covered by this index
+    int healpix;
     // Nside of the healpixelization
     int hpnside;
 
-	fitsbin_t* fb;
-	// when reading:
-	uint32_t* quadarray;
+    fitsbin_t* fb;
+    // when reading:
+    uint32_t* quadarray;
 } quadfile_t;
 
 quadfile_t* quadfile_open(const char* fname);

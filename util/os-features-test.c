@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -20,7 +20,7 @@ static int cmp(void* u, const void* a, const void* b) {
 }
 int main() {
     int array;
-	int baton;
+    int baton;
     qsort_r(&array, 1, sizeof(int), &baton, cmp);
     //printf("#define NEED_QSORT_R 0\n");
     return 0;
@@ -74,11 +74,11 @@ int main() {
 #if defined(TEST_NETPBM) || defined(TEST_NETPBM_MAKE)
 #include <pam.h>
 int main(int argc, char** args) {
-	struct pam img;
-	pm_init(args[0], 0);
+    struct pam img;
+    pm_init(args[0], 0);
     //printf("#define HAVE_NETPBM 1\n");
-	img.size = 42;
-	printf("the answer is %i\n", img.size);
+    img.size = 42;
+    printf("the answer is %i\n", img.size);
     return 0;
 }
 #endif

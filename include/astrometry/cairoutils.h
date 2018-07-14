@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef CAIRO_UTILS_H
 #define CAIRO_UTILS_H
@@ -15,8 +15,8 @@
  The "closure" arg must be a FILE*.
  */
 cairo_status_t cairoutils_file_write_func(void *closure,
-										  const unsigned char *data,
-										  unsigned int length);
+                                          const unsigned char *data,
+                                          unsigned int length);
 
 /**
  Reports any cairo error for the given surface.  Returns 0 for ok, -1 on error.
@@ -30,18 +30,18 @@ void cairoutils_draw_path(cairo_t* c, const double* xy, int N);
 void cairoutils_argb32_to_rgba(unsigned char* img, int W, int H);
 
 void cairoutils_argb32_to_rgba_2(const unsigned char* inimg,
-								 unsigned char* outimg, int W, int H);
+                                 unsigned char* outimg, int W, int H);
 
 void cairoutils_argb32_to_rgba_flip(const unsigned char* inimg,
-									unsigned char* outimg, int W, int H);
+                                    unsigned char* outimg, int W, int H);
 
 void cairoutils_rgba_to_argb32(unsigned char* img, int W, int H);
 
 void cairoutils_rgba_to_argb32_2(const unsigned char* inimg,
-								 unsigned char* outimg, int W, int H);
+                                 unsigned char* outimg, int W, int H);
 
 void cairoutils_rgba_to_argb32_flip(const unsigned char* inimg,
-									unsigned char* outimg, int W, int H);
+                                    unsigned char* outimg, int W, int H);
 
 void cairoutils_premultiply_alpha_rgba(unsigned char* img, int W, int H);
 

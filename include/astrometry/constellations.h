@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef CONSTELLATIONS_H
 #define CONSTELLATIONS_H
@@ -26,7 +26,7 @@ il* constellations_get_unique_stars(int constellation_num);
  Returns the star IDs of the line_num'th line.
  */
 void constellations_get_line(int constellation_num, int line_num,
-							 int* ep1, int* ep2);
+                             int* ep1, int* ep2);
 
 /*
  Returns a newly-allocated dl* which is a list of (ra1, dec1), (ra2, dec2) coordinates

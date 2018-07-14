@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include "an-endian.h"
 
@@ -20,10 +20,10 @@ int is_big_endian() {
 uint16_t u16_letoh(uint16_t i) {
 #if IS_BIG_ENDIAN
     return (
-		((i & 0x00ff) <<  8) |
-		((i & 0xff00) >>  8));
+            ((i & 0x00ff) <<  8) |
+            ((i & 0xff00) >>  8));
 #else
-	return i;
+    return i;
 #endif
 }
 uint16_t u16_htole(uint16_t i) {
@@ -39,7 +39,7 @@ inline uint32_t u32_letoh(uint32_t i) {
             ((i & 0x00ff0000) >>  8) |
             ((i & 0xff000000) >> 24));
 #else
-	return i;
+    return i;
 #endif
 }
 
@@ -49,13 +49,13 @@ inline uint32_t u32_htole(uint32_t i) {
 }
 
 static inline void v_swap(void* p, int nbytes) {
-	int i;
-	unsigned char* c = p;
-	for (i=0; i<(nbytes/2); i++) {
-		unsigned char tmp = c[i];
-		c[i] = c[nbytes-(i+1)];
-		c[nbytes-(i+1)] = tmp;
-	}
+    int i;
+    unsigned char* c = p;
+    for (i=0; i<(nbytes/2); i++) {
+        unsigned char tmp = c[i];
+        c[i] = c[nbytes-(i+1)];
+        c[nbytes-(i+1)] = tmp;
+    }
 }
 
 void endian_swap(void* p, int nbytes) {
@@ -80,30 +80,30 @@ static inline void v_ntoh(void* p, int nbytes) {
 
 // convert a 32-bit object from local to little-endian.
 inline void v32_htole(void* p) {
-	return v_htole(p, 4);
+    return v_htole(p, 4);
 }
 
 // convert a 16-bit object from local to little-endian.
 inline void v16_htole(void* p) {
-	return v_htole(p, 2);
+    return v_htole(p, 2);
 }
 
 inline void v32_letoh(void* p) {
-	return v32_htole(p);
+    return v32_htole(p);
 }
 
 
 // convert a 64-bit object from big-endian (network) to local.
 inline void v64_ntoh(void* p) {
-	return v_ntoh(p, 8);
+    return v_ntoh(p, 8);
 }
 // convert a 32-bit object from big-endian (network) to local.
 inline void v32_ntoh(void* p) {
-	return v_ntoh(p, 4);
+    return v_ntoh(p, 4);
 }
 // convert a 16-bit object from big-endian (network) to local.
 inline void v16_ntoh(void* p) {
-	return v_ntoh(p, 2);
+    return v_ntoh(p, 2);
 }
 
 // convert a 64-bit object from local to big-endian (network).

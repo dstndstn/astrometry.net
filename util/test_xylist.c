@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 #include <stdlib.h>
 
@@ -23,8 +23,8 @@ void test_tagalong(CuTest* ct) {
     starxy_t fld;
     starxy_t infld;
 
-	fits_use_error_system();
-	log_init(LOG_VERB);
+    fits_use_error_system();
+    log_init(LOG_VERB);
 
     out = xylist_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);
@@ -105,7 +105,7 @@ void test_simple_xy(CuTest* ct) {
     char* fn = get_tmpfile(1);
     starxy_t fld;
     starxy_t infld;
-	fits_use_error_system();
+    fits_use_error_system();
 
     out = xylist_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);
@@ -167,9 +167,9 @@ void test_read_write_xy(CuTest* ct) {
     starxy_t fld;
     starxy_t infld;
 
-	log_init(LOG_VERB);
-	logverb("using temp file %s\n", fn);
-	fits_use_error_system();
+    log_init(LOG_VERB);
+    logverb("using temp file %s\n", fn);
+    fits_use_error_system();
 
     out = xylist_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);

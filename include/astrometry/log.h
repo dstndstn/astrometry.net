@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 #ifndef _LOG_H
 #define _LOG_H
@@ -10,24 +10,24 @@
 #include "astrometry/an-bool.h"
 
 enum log_level {
-	LOG_NONE,
-	LOG_ERROR,
-	LOG_MSG,
-	LOG_VERB,
-	LOG_ALL
+    LOG_NONE,
+    LOG_ERROR,
+    LOG_MSG,
+    LOG_VERB,
+    LOG_ALL
 };
 
 typedef void (*logfunc_t)(void* baton, enum log_level, const char* file, int line, const char* func, const char* format, va_list va);
 //typedef void (*logfunc2_t)(void* baton, enum log_level, const char* file, int line, const char* string);
 
 struct log_t {
-	enum log_level level;
+    enum log_level level;
     FILE* f;
-	anbool timestamp;
-	double t0;
-	// User-specified logging functions
-	logfunc_t logfunc;
-	void* baton;
+    anbool timestamp;
+    double t0;
+    // User-specified logging functions
+    logfunc_t logfunc;
+    void* baton;
 };
 typedef struct log_t log_t;
 
@@ -83,16 +83,16 @@ log_t* log_create(const enum log_level level);
  */
 void log_free(log_t* logger);
 
-#define LOG_TEMPLATE(name)												\
-	void log_##name(const char* file, int line, const char* func, const char* format, ...) \
-		 __attribute__ ((format (printf, 4, 5)));
+#define LOG_TEMPLATE(name)                                              \
+    void log_##name(const char* file, int line, const char* func, const char* format, ...) \
+         __attribute__ ((format (printf, 4, 5)));
 LOG_TEMPLATE(logmsg);
 LOG_TEMPLATE(logerr);
 LOG_TEMPLATE(logverb);
 LOG_TEMPLATE(logdebug);
 
 void log_loglevel(enum log_level level, const char* file, int line, const char* func, const char* format, ...)
-	__attribute__ ((format (printf, 5, 6)));
+    __attribute__ ((format (printf, 5, 6)));
 
 
 /**

@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #include <assert.h>
@@ -24,8 +24,8 @@
              any, col, units, TRUE);                                    \
     }
 
-#define ADDCOL(ctype, ftype, col, units, member) \
-ADDARR(ctype, ftype, col, units, member, 1)
+#define ADDCOL(ctype, ftype, col, units, member)        \
+    ADDARR(ctype, ftype, col, units, member, 1)
 
 static void add_columns(fitstable_t* tab, anbool write) {
     tfits_type any = fitscolumn_any_type();
@@ -40,50 +40,50 @@ static void add_columns(fitstable_t* tab, anbool write) {
     tfits_type bitfield = fitscolumn_bitfield_type();
     char* nil = " ";
 
-	ADDCOL(i16, I,      "TYC1",              nil,  tyc1);
-	ADDCOL(i16, I,      "TYC2",              nil,  tyc2);
-	ADDCOL(u8, u8,      "TYC3",              nil,  tyc3);
+    ADDCOL(i16, I,      "TYC1",              nil,  tyc1);
+    ADDCOL(i16, I,      "TYC2",              nil,  tyc2);
+    ADDCOL(u8, u8,      "TYC3",              nil,  tyc3);
 
-	ADDCOL(d,  d,       "RA",                "deg",  ra);
-	ADDCOL(d,  d,       "DEC",               "deg",  dec);
-	ADDCOL(d,  d,       "MEAN_RA",           "deg",  mean_ra);
-	ADDCOL(d,  d,       "MEAN_DEC",          "deg",  mean_dec);
+    ADDCOL(d,  d,       "RA",                "deg",  ra);
+    ADDCOL(d,  d,       "DEC",               "deg",  dec);
+    ADDCOL(d,  d,       "MEAN_RA",           "deg",  mean_ra);
+    ADDCOL(d,  d,       "MEAN_DEC",          "deg",  mean_dec);
 
-	ADDCOL(f,  f,       "SIGMA_RA",          "deg",  sigma_ra);
-	ADDCOL(f,  f,       "SIGMA_DEC",         "deg",  sigma_dec);
-	ADDCOL(f,  f,       "SIGMA_MEAN_RA",     "deg",  sigma_mean_ra);
-	ADDCOL(f,  f,       "SIGMA_MEAN_DEC",    "deg",  sigma_mean_dec);
+    ADDCOL(f,  f,       "SIGMA_RA",          "deg",  sigma_ra);
+    ADDCOL(f,  f,       "SIGMA_DEC",         "deg",  sigma_dec);
+    ADDCOL(f,  f,       "SIGMA_MEAN_RA",     "deg",  sigma_mean_ra);
+    ADDCOL(f,  f,       "SIGMA_MEAN_DEC",    "deg",  sigma_mean_dec);
 
-	ADDCOL(f,  f,       "PM_RA",             "arcsec/yr", pm_ra);
-	ADDCOL(f,  f,       "PM_DEC",            "arcsyc/yr", pm_dec);
+    ADDCOL(f,  f,       "PM_RA",             "arcsec/yr", pm_ra);
+    ADDCOL(f,  f,       "PM_DEC",            "arcsyc/yr", pm_dec);
 
-	ADDCOL(f,  f,       "SIGMA_PM_RA",       "arcsec/yr", sigma_pm_ra);
-	ADDCOL(f,  f,       "SIGMA_PM_DEC",      "arcsyc/yr", sigma_pm_dec);
+    ADDCOL(f,  f,       "SIGMA_PM_RA",       "arcsec/yr", sigma_pm_ra);
+    ADDCOL(f,  f,       "SIGMA_PM_DEC",      "arcsyc/yr", sigma_pm_dec);
 
-	ADDCOL(f,  f,       "EPOCH_RA",          "yr", epoch_ra);
-	ADDCOL(f,  f,       "EPOCH_DEC",         "yr", epoch_dec);
-	ADDCOL(f,  f,       "EPOCH_MEAN_RA",     "yr", epoch_mean_ra);
-	ADDCOL(f,  f,       "EPOCH_MEAN_DEC",    "yr", epoch_mean_dec);
+    ADDCOL(f,  f,       "EPOCH_RA",          "yr", epoch_ra);
+    ADDCOL(f,  f,       "EPOCH_DEC",         "yr", epoch_dec);
+    ADDCOL(f,  f,       "EPOCH_MEAN_RA",     "yr", epoch_mean_ra);
+    ADDCOL(f,  f,       "EPOCH_MEAN_DEC",    "yr", epoch_mean_dec);
 
-	ADDCOL(u8, u8,      "NOBSERVATIONS",     nil, nobs);
+    ADDCOL(u8, u8,      "NOBSERVATIONS",     nil, nobs);
 
-	ADDCOL(f,  f,       "GOODNESS_MEAN_RA",  nil, goodness_mean_ra);
-	ADDCOL(f,  f,       "GOODNESS_MEAN_DEC", nil, goodness_mean_dec);
-	ADDCOL(f,  f,       "GOODNESS_PM_RA",    nil, goodness_pm_ra);
-	ADDCOL(f,  f,       "GOODNESS_PM_DEC",   nil, goodness_pm_dec);
+    ADDCOL(f,  f,       "GOODNESS_MEAN_RA",  nil, goodness_mean_ra);
+    ADDCOL(f,  f,       "GOODNESS_MEAN_DEC", nil, goodness_mean_dec);
+    ADDCOL(f,  f,       "GOODNESS_PM_RA",    nil, goodness_pm_ra);
+    ADDCOL(f,  f,       "GOODNESS_PM_DEC",   nil, goodness_pm_dec);
 
-	ADDCOL(f,  f,       "MAG_BT",            "mag", mag_BT);
-	ADDCOL(f,  f,       "SIGMA_MAG_BT",      "mag", sigma_BT);
-	ADDCOL(f,  f,       "MAG_VT",            "mag", mag_VT);
-	ADDCOL(f,  f,       "SIGMA_MAG_VT",      "mag", sigma_VT);
-	ADDCOL(f,  f,       "MAG_HP",            "mag", mag_HP);
-	ADDCOL(f,  f,       "SIGMA_MAG_HP",      "mag", sigma_HP);
+    ADDCOL(f,  f,       "MAG_BT",            "mag", mag_BT);
+    ADDCOL(f,  f,       "SIGMA_MAG_BT",      "mag", sigma_BT);
+    ADDCOL(f,  f,       "MAG_VT",            "mag", mag_VT);
+    ADDCOL(f,  f,       "SIGMA_MAG_VT",      "mag", sigma_VT);
+    ADDCOL(f,  f,       "MAG_HP",            "mag", mag_HP);
+    ADDCOL(f,  f,       "SIGMA_MAG_HP",      "mag", sigma_HP);
 
-	ADDCOL(f,  f,       "PROX",              "deg", prox);
-	ADDCOL(f,  f,       "CORRELATION",       nil, correlation);
-	ADDCOL(i32,J,       "HIPPARCOS_ID",      nil, hipparcos_id);
+    ADDCOL(f,  f,       "PROX",              "deg", prox);
+    ADDCOL(f,  f,       "CORRELATION",       nil, correlation);
+    ADDCOL(i32,J,       "HIPPARCOS_ID",      nil, hipparcos_id);
 
-	ADDARR(c,  c,       "CCDM",              nil, hip_ccdm, 3);
+    ADDARR(c,  c,       "CCDM",              nil, hip_ccdm, 3);
 
     if (write)
         fitstable_add_write_column(tab, bitfield, "FLAGS", nil);
@@ -137,7 +137,7 @@ qfits_header* tycho2_fits_get_header(tycho2_fits* tycho2) {
 }
 
 tycho2_fits* tycho2_fits_open(char* fn) {
-	tycho2_fits* cat = NULL;
+    tycho2_fits* cat = NULL;
     cat = fitstable_open(fn);
     if (!cat)
         return NULL;
@@ -152,18 +152,18 @@ tycho2_fits* tycho2_fits_open(char* fn) {
         tycho2_fits_close(cat);
         return NULL;
     }
-	return cat;
+    return cat;
 }
 
 tycho2_fits* tycho2_fits_open_for_writing(char* fn) {
-	tycho2_fits* cat;
+    tycho2_fits* cat;
     qfits_header* hdr;
     cat = fitstable_open_for_writing(fn);
     if (!cat)
         return NULL;
     add_columns(cat, TRUE);
     hdr = fitstable_get_primary_header(cat);
-	qfits_header_add(hdr, "TYCHO_2", "T", "This is a Tycho-2 catalog.", NULL);
+    qfits_header_add(hdr, "TYCHO_2", "T", "This is a Tycho-2 catalog.", NULL);
     qfits_header_add(hdr, "AN_FILE", AN_FILETYPE_TYCHO2, "Astrometry.net file type", NULL);
     return cat;
 }
@@ -185,12 +185,12 @@ int tycho2_fits_write_entry(tycho2_fits* cat, tycho2_entry* entry) {
         return rtn;
 
     flags =
-		(entry->photo_center           ? (1 << 7) : 0) |
-		(entry->no_motion              ? (1 << 6) : 0) |
-		(entry->tycho1_star            ? (1 << 5) : 0) |
-		(entry->double_star            ? (1 << 4) : 0) |
-		(entry->photo_center_treatment ? (1 << 3) : 0) |
-		(entry->hipparcos_star         ? (1 << 2) : 0);
+        (entry->photo_center           ? (1 << 7) : 0) |
+        (entry->no_motion              ? (1 << 6) : 0) |
+        (entry->tycho1_star            ? (1 << 5) : 0) |
+        (entry->double_star            ? (1 << 4) : 0) |
+        (entry->photo_center_treatment ? (1 << 3) : 0) |
+        (entry->hipparcos_star         ? (1 << 2) : 0);
     // Can't just write_data() because write_struct() skips over
     //return fits_write_data_X(cat->fid, flags);
     return fitstable_write_one_column(cat, bl_size(cat->cols)-1,
@@ -198,7 +198,7 @@ int tycho2_fits_write_entry(tycho2_fits* cat, tycho2_entry* entry) {
 }
 
 int tycho2_fits_count_entries(tycho2_fits* cat) {
-	return fitstable_nrows(cat);
+    return fitstable_nrows(cat);
 }
 
 int tycho2_fits_close(tycho2_fits* cat) {

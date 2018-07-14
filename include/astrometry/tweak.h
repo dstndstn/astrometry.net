@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef _TWEAK_INTERNAL_H
 #define _TWEAK_INTERNAL_H
@@ -15,77 +15,77 @@
 
 // These flags represent the work already done on a tweak problem
 enum tweak_flags {
-	TWEAK_HAS_SIP                   = 0x1,
-	TWEAK_HAS_IMAGE_XY              = 0x2,
-	TWEAK_HAS_IMAGE_XYZ             = 0x4,
-	TWEAK_HAS_IMAGE_AD              = 0x8,
-	TWEAK_HAS_REF_XY                = 0x10, 
-	TWEAK_HAS_REF_XYZ               = 0x20, 
-	TWEAK_HAS_REF_AD                = 0x40, 
-	TWEAK_HAS_CORRESPONDENCES       = 0x100,
-	TWEAK_HAS_COARSLY_SHIFTED       = 0x800,
-	TWEAK_HAS_FINELY_SHIFTED        = 0x1000,
-	TWEAK_HAS_REALLY_FINELY_SHIFTED = 0x2000,
-	TWEAK_HAS_LINEAR_CD             = 0x4000,
+    TWEAK_HAS_SIP                   = 0x1,
+    TWEAK_HAS_IMAGE_XY              = 0x2,
+    TWEAK_HAS_IMAGE_XYZ             = 0x4,
+    TWEAK_HAS_IMAGE_AD              = 0x8,
+    TWEAK_HAS_REF_XY                = 0x10, 
+    TWEAK_HAS_REF_XYZ               = 0x20, 
+    TWEAK_HAS_REF_AD                = 0x40, 
+    TWEAK_HAS_CORRESPONDENCES       = 0x100,
+    TWEAK_HAS_COARSLY_SHIFTED       = 0x800,
+    TWEAK_HAS_FINELY_SHIFTED        = 0x1000,
+    TWEAK_HAS_REALLY_FINELY_SHIFTED = 0x2000,
+    TWEAK_HAS_LINEAR_CD             = 0x4000,
 };
 
 typedef struct tweak_s {
-	sip_t* sip;
+    sip_t* sip;
     // bitfield of tweak_flags
-	unsigned int state; 
+    unsigned int state; 
 
-	// Sources in the image
-	int n;
+    // Sources in the image
+    int n;
     // pixel x,y
-	double *x;
-	double *y;
+    double *x;
+    double *y;
     // CACHED:
     // RA,Dec
-	double *a;
-	double *d;
+    double *a;
+    double *d;
     // vector on the unit sphere
-	double *xyz;
+    double *xyz;
 
-	// Sources in the catalog
-	int n_ref;
+    // Sources in the catalog
+    int n_ref;
     // RA,Dec
-	double *a_ref;
-	double *d_ref;
+    double *a_ref;
+    double *d_ref;
     // unit vector on the sphere
-	double *xyz_ref;
+    double *xyz_ref;
     // CACHED:
     // pixel
-	double *x_ref;
-	double *y_ref;
+    double *x_ref;
+    double *y_ref;
 
-	// Correspondences
-	il* image;
-	il* ref;
-	dl* dist2;
-	dl* weight;
+    // Correspondences
+    il* image;
+    il* ref;
+    dl* dist2;
+    dl* weight;
 
-	// Size of Hough space for shift
-	double mindx, mindy, maxdx, maxdy;
+    // Size of Hough space for shift
+    double mindx, mindy, maxdx, maxdy;
 
-	// Size of last run shift operation
-	double xs, ys;
+    // Size of last run shift operation
+    double xs, ys;
 
-	// Trees used for finding correspondences
-	kdtree_t* kd_image;
-	kdtree_t* kd_ref;
+    // Trees used for finding correspondences
+    kdtree_t* kd_image;
+    kdtree_t* kd_ref;
 
-	// star jitter, in arcseconds.
-	double jitter;
+    // star jitter, in arcseconds.
+    double jitter;
 
-	// (computed from jitter); star jitter in distance-squared on the unit sphere.
-	double jitterd2;
+    // (computed from jitter); star jitter in distance-squared on the unit sphere.
+    double jitterd2;
 
-	// Weighted or unweighted fit?
+    // Weighted or unweighted fit?
     anbool weighted_fit;
 
-	// push SIP shift term onto CRPIX, or CRVAL?
-	// traditional behavior is CRPIX; ie push_crval = FALSE.
-	//anbool push_crval;
+    // push SIP shift term onto CRPIX, or CRVAL?
+    // traditional behavior is CRPIX; ie push_crval = FALSE.
+    //anbool push_crval;
 
 
 } tweak_t;

@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -25,8 +25,8 @@
 int resort_xylist(const char* infn, const char* outfn,
                   const char* fluxcol, const char* backcol,
                   int ascending) {
-	FILE* fin = NULL;
-	FILE* fout = NULL;
+    FILE* fin = NULL;
+    FILE* fout = NULL;
     double *flux = NULL, *back = NULL;
     int *perm1 = NULL, *perm2 = NULL;
     anbool *used = NULL;
@@ -57,7 +57,7 @@ int resort_xylist(const char* infn, const char* outfn,
         goto bailout;
     }
 
-	// copy the main header exactly.
+    // copy the main header exactly.
     anq = anqfits_open(infn);
     if (!anq) {
         ERROR("Failed to open file \"%s\"", infn);
@@ -71,7 +71,7 @@ int resort_xylist(const char* infn, const char* outfn,
         goto bailout;
     }
 
-	nextens = anqfits_n_ext(anq);
+    nextens = anqfits_n_ext(anq);
 
     tab = fitstable_open(infn);
     if (!tab) {
@@ -79,9 +79,9 @@ int resort_xylist(const char* infn, const char* outfn,
         goto bailout;
     }
 
-	for (ext=1; ext<nextens; ext++) {
-		int hdrstart, hdrsize, datstart;
-		int i, N;
+    for (ext=1; ext<nextens; ext++) {
+        int hdrstart, hdrsize, datstart;
+        int i, N;
         int rowsize;
 
         hdrstart = anqfits_header_start(anq, ext);
@@ -90,12 +90,12 @@ int resort_xylist(const char* infn, const char* outfn,
 
         if (!anqfits_is_table(anq, ext)) {
             ERROR("Extension %i isn't a table. Skipping", ext);
-			continue;
-		}
+            continue;
+        }
         // Copy the header as-is.
         if (pipe_file_offset(fin, hdrstart, hdrsize, fout)) {
             ERROR("Failed to copy the header of extension %i", ext);
-			goto bailout;
+            goto bailout;
         }
 
         if (fitstable_read_extension(tab, ext)) {
@@ -118,44 +118,44 @@ int resort_xylist(const char* infn, const char* outfn,
         }
 
         N = fitstable_nrows(tab);
-		debug("First rows of input table:\n");
-		for (i=0; i<MIN(10, N); i++)
-			debug("flux %g, background %g\n", flux[i], back[i]);
+        debug("First rows of input table:\n");
+        for (i=0; i<MIN(10, N); i++)
+            debug("flux %g, background %g\n", flux[i], back[i]);
 
         // set back = flux + back (ie, non-background-subtracted flux)
-		for (i=0; i<N; i++)
+        for (i=0; i<N; i++)
             back[i] += flux[i];
 
         // Sort by flux...
-		perm1 = permuted_sort(flux, sizeof(double), compare, NULL, N);
+        perm1 = permuted_sort(flux, sizeof(double), compare, NULL, N);
 
         // Sort by non-background-subtracted flux...
-		perm2 = permuted_sort(back, sizeof(double), compare, NULL, N);
+        perm2 = permuted_sort(back, sizeof(double), compare, NULL, N);
 
         used = malloc(N * sizeof(anbool));
         memset(used, 0, N * sizeof(anbool));
 
-		// Check sort...
+        // Check sort...
         for (i=0; i<N-1; i++) {
-			if (ascending) {
-				assert(flux[perm1[i]] <= flux[perm1[i+1]]);
-				assert(back[perm2[i]] <= back[perm2[i+1]]);
-			} else {
-				assert(flux[perm1[i]] >= flux[perm1[i+1]]);
-				assert(back[perm2[i]] >= back[perm2[i+1]]);
-			}
-		}
+            if (ascending) {
+                assert(flux[perm1[i]] <= flux[perm1[i+1]]);
+                assert(back[perm2[i]] <= back[perm2[i+1]]);
+            } else {
+                assert(flux[perm1[i]] >= flux[perm1[i+1]]);
+                assert(back[perm2[i]] >= back[perm2[i+1]]);
+            }
+        }
 
         for (i=0; i<N; i++) {
             int j;
             int inds[] = { perm1[i], perm2[i] };
             for (j=0; j<2; j++) {
                 int index = inds[j];
-				assert(index < N);
+                assert(index < N);
                 if (used[index])
                     continue;
                 used[index] = TRUE;
-				debug("adding index %i: %s %g\n", index, j==0 ? "flux" : "bgsub", j==0 ? flux[index] : back[index]);
+                debug("adding index %i: %s %g\n", index, j==0 ? "flux" : "bgsub", j==0 ? flux[index] : back[index]);
                 if (pipe_file_offset(fin, datstart + index * rowsize, rowsize, fout)) {
                     ERROR("Failed to copy row %i", index);
                     goto bailout;
@@ -164,12 +164,12 @@ int resort_xylist(const char* infn, const char* outfn,
         }
 
         for (i=0; i<N; i++)
-			assert(used[i]);
+            assert(used[i]);
 
-		if (fits_pad_file(fout)) {
-			ERROR("Failed to add padding to extension %i", ext);
+        if (fits_pad_file(fout)) {
+            ERROR("Failed to add padding to extension %i", ext);
             goto bailout;
-		}
+        }
 
         free(flux);
         flux = NULL;
@@ -186,11 +186,11 @@ int resort_xylist(const char* infn, const char* outfn,
     fitstable_close(tab);
     tab = NULL;
 
-	if (fclose(fout)) {
-		SYSERROR("Failed to close output file %s", outfn);
+    if (fclose(fout)) {
+        SYSERROR("Failed to close output file %s", outfn);
         return -1;
     }
-	fclose(fin);
+    fclose(fin);
     return 0;
 
  bailout:
@@ -205,7 +205,7 @@ int resort_xylist(const char* infn, const char* outfn,
     free(perm1);
     free(perm2);
     free(used);
-	return -1;
+    return -1;
 }
 
 

@@ -544,8 +544,8 @@ int main(int argc, char *argv[]) {
                         fitstable_endian_flip_row_data(intable2, rdata);
                     }
                     if (fitstable_write_struct(outtables[hp], rdata)) {
-                         ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
-                     }
+                        ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
+                    }
                     
                 } else {
                     if (fitstable_write_row_data(outtables[hp], rdata)) {

@@ -1,13 +1,13 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 /**
-   A linked list of arrays, which allows
-   more rapid traversal of the list, and fairly
-   efficient insertions and deletions.
-*/
+ A linked list of arrays, which allows
+ more rapid traversal of the list, and fairly
+ efficient insertions and deletions.
+ */
 
 #ifndef BL_H
 #define BL_H
@@ -20,26 +20,26 @@
 #include "astrometry/keywords.h"
 
 struct bl_node {
-	// number of elements filled.
-	int N;
+    // number of elements filled.
+    int N;
     struct bl_node* next;
-	// (data block implicitly follows this struct).
+    // (data block implicitly follows this struct).
 };
 typedef struct bl_node bl_node;
 
 // the top-level data structure of a blocklist.
 typedef struct {
-  bl_node* head;
-  bl_node* tail;
-	// the total number of data elements
-  size_t N;
-	// the number of elements per block
-  int blocksize;
-	// the size in bytes of each data element
-  int datasize;
-	// rapid accessors for "jumping in" at the last block accessed
-  bl_node* last_access;
-  size_t last_access_n;
+    bl_node* head;
+    bl_node* tail;
+    // the total number of data elements
+    size_t N;
+    // the number of elements per block
+    int blocksize;
+    // the size in bytes of each data element
+    int datasize;
+    // rapid accessors for "jumping in" at the last block accessed
+    bl_node* last_access;
+    size_t last_access_n;
 } bl;
 
 #define BL_NOT_FOUND (ptrdiff_t)(-1)
@@ -68,8 +68,8 @@ void  bl_pop(bl* list, void* into);
 void* bl_extend(bl* list);
 
 /**
-   Removes elements from \c split
-   to the end of the list from \c src and appends them to \c dest.
+ Removes elements from \c split
+ to the end of the list from \c src and appends them to \c dest.
  */
 void bl_split(bl* src, bl* dest, size_t split);
 
@@ -103,19 +103,19 @@ void  bl_copy(bl* list, size_t start, size_t length, void* vdest);
 size_t bl_insert_sorted(bl* list, const void* data, int (*compare)(const void* v1, const void* v2));
 
 /**
-   If the item already existed in the list (ie, the compare function
-   returned zero), then -1 is returned.  Otherwise, the index at which
-   the item was inserted is returned.
+ If the item already existed in the list (ie, the compare function
+ returned zero), then -1 is returned.  Otherwise, the index at which
+ the item was inserted is returned.
  */
 ptrdiff_t bl_insert_unique_sorted(bl* list, const void* data,
-                            int (*compare)(const void* v1, const void* v2));
+                                  int (*compare)(const void* v1, const void* v2));
 
 /*
-  Removes all the elements, but doesn't free the first block, which makes
-  it slightly faster for the case when you're going to add more elements
-  right away, since you don't have to free() the old block then immediately
-  malloc() a new block.
-*/
+ Removes all the elements, but doesn't free the first block, which makes
+ it slightly faster for the case when you're going to add more elements
+ right away, since you don't have to free() the old block then immediately
+ malloc() a new block.
+ */
 void  bl_remove_all_but_first(bl* list);
 void  bl_remove_index(bl* list, size_t indx);
 void  bl_remove_index_range(bl* list, size_t start, size_t length);
@@ -132,19 +132,19 @@ int   bl_check_sorted(bl* list, int (*compare)(const void* v1, const void* v2), 
 // special-case functions for string lists.  //
 ///////////////////////////////////////////////
 /*
-  sl makes a copy of the string using strdup().
-  It will be freed when the string is removed from the list or the list is
-  freed.
-*/
+ sl makes a copy of the string using strdup().
+ It will be freed when the string is removed from the list or the list is
+ freed.
+ */
 typedef bl sl;
 sl*    sl_new(int blocksize);
 
 /*
  The functions:
-   sl_init()  --->  sl_init2()
-   sl_free()  --->  sl_free2()
-   sl_add()   --->  sl_add2()
-   sl_find()  --->  sl_find2()
+ sl_init()  --->  sl_init2()
+ sl_free()  --->  sl_free2()
+ sl_add()   --->  sl_add2()
+ sl_find()  --->  sl_find2()
  are defined by BSD, where they live in libc.
 
  We therefore avoid these names, which breaks the principle of least surprise, but
@@ -205,7 +205,7 @@ char* sl_insert_sorted(sl* list, const char* string);
 // Inserts the (newly-allocated) formatted string and returns it.
 char*
 ATTRIB_FORMAT(printf,2,3)
-sl_insert_sortedf(sl* list, const char* format, ...);
+    sl_insert_sortedf(sl* list, const char* format, ...);
 
 void sl_remove_index_range(sl* list, size_t start, size_t length);
 
@@ -261,7 +261,7 @@ char*  sl_join_reverse(sl* list, const char* join);
 // Appends the (newly-allocated) formatted string and returns it.
 char*
 ATTRIB_FORMAT(printf,2,3)
-sl_appendf(sl* list, const char* format, ...);
+    sl_appendf(sl* list, const char* format, ...);
 
 // Appends the (newly-allocated) formatted string and returns it.
 char* sl_appendvf(sl* list, const char* format, va_list va);
@@ -269,7 +269,7 @@ char* sl_appendvf(sl* list, const char* format, va_list va);
 // Inserts the (newly-allocated) formatted string and returns it.
 char*
 ATTRIB_FORMAT(printf,3,4)
-sl_insertf(sl* list, size_t index, const char* format, ...);
+    sl_insertf(sl* list, size_t index, const char* format, ...);
 
 
 #define DEFINE_SORT 1

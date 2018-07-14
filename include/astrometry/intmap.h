@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef INTMAP_H
 #define INTMAP_H
@@ -16,20 +16,20 @@
 
 // FIXME -- would this work better with "bt" for the keys?
 struct intmap {
-	// dense only:
-	bl** dense;
-	int ND;
+    // dense only:
+    bl** dense;
+    int ND;
 
-	// sparse only:
-	il* keys;
-	// list of bl*
-	pl* lists;
+    // sparse only:
+    il* keys;
+    // list of bl*
+    pl* lists;
 
-	// common:
-	// list blocksize
-	int blocksize;
-	// data size
-	int datasize;
+    // common:
+    // list blocksize
+    int blocksize;
+    // data size
+    int datasize;
 };
 typedef struct intmap intmap_t;
 
@@ -43,7 +43,7 @@ typedef struct intmap intmap_t;
  If zero, a sparse map is assumed.
  */
 intmap_t* intmap_new(int datasize, int subblocksize, int blocksize,
-					 int Ndense);
+                     int Ndense);
 
 void intmap_free(intmap_t* it);
 

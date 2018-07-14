@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <string.h>
 #include <stdio.h>
@@ -17,11 +17,11 @@ char* OPTIONS = "hs:";
 
 void printHelp(char* progname) {
     BOILERPLATE_HELP_HEADER(stdout);
-	printf("\n\n%s  [options] <input-file-1> <input-file-2> <output-file>\n"
+    printf("\n\n%s  [options] <input-file-1> <input-file-2> <output-file>\n"
            "Options:\n"
            "   [-s]: suffix to add for duplicate column names in table 2\n"
            "\n",
-		   progname);
+           progname);
 }
 
 

@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef CATUTILS_H
 #define CATUTILS_H
@@ -16,16 +16,16 @@
 #define AN_FILETYPE_CATALOG "OBJS"
 
 struct catalog {
-	int numstars;
+    int numstars;
 
-	int healpix;
+    int healpix;
     int hpnside;
 
-	double* stars;
+    double* stars;
 
-	// optional table: star magnitudes and mag errors.
-	float* mag;
-	float* mag_err;
+    // optional table: star magnitudes and mag errors.
+    float* mag;
+    float* mag_err;
 
     // optional tables: positional error ellipses, proper motions
     float* sigma_radec;   // sigma_ra, sigma_dec
@@ -78,8 +78,8 @@ void catalog_add_id(catalog* cat, uint64_t id);
 
 /*
  This should be called after writing all the star positions and
-  calling catalog_fix_header().  It appends the data in "cat->mags"
-  to the file as an extra FITS table.
+ calling catalog_fix_header().  It appends the data in "cat->mags"
+ to the file as an extra FITS table.
  */
 int catalog_write_mags(catalog* cat);
 int catalog_write_mag_errs(catalog* cat);

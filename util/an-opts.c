@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #include <stdio.h>
@@ -19,26 +19,26 @@ void opts_print_help(bl* opts, FILE* fid,
     int i;
     for (i=0; i<bl_size(opts); i++) {
         an_option_t* opt = bl_access(opts, i);
-		int nw = 0;
-		sl* words;
-		int j;
+        int nw = 0;
+        sl* words;
+        int j;
         if (opt->help) {
-			if ((opt->shortopt >= 'a' && opt->shortopt <= 'z') ||
-				(opt->shortopt >= 'A' && opt->shortopt <= 'Z') ||
-				(opt->shortopt >= '0' && opt->shortopt <= '9'))
-				nw += fprintf(fid, "  -%c / --%s", opt->shortopt, opt->name);
-			else
-				nw += fprintf(fid, "  --%s", opt->name);
+            if ((opt->shortopt >= 'a' && opt->shortopt <= 'z') ||
+                (opt->shortopt >= 'A' && opt->shortopt <= 'Z') ||
+                (opt->shortopt >= '0' && opt->shortopt <= '9'))
+                nw += fprintf(fid, "  -%c / --%s", opt->shortopt, opt->name);
+            else
+                nw += fprintf(fid, "  --%s", opt->name);
             if (opt->has_arg == optional_argument)
                 nw += fprintf(fid, " [<%s>]", opt->argname);
             else if (opt->has_arg == required_argument)
                 nw += fprintf(fid, " <%s>", opt->argname);
-			nw += fprintf(fid, ": ");
-			if (!opt->help)
-				continue;
-			words = split_long_string(opt->help, 80-nw, 70, NULL);
-			for (j=0; j<sl_size(words); j++)
-				fprintf(fid, "%s%s\n", (j==0 ? "" : "          "), sl_get(words, j));
+            nw += fprintf(fid, ": ");
+            if (!opt->help)
+                continue;
+            words = split_long_string(opt->help, 80-nw, 70, NULL);
+            for (j=0; j<sl_size(words); j++)
+                fprintf(fid, "%s%s\n", (j==0 ? "" : "          "), sl_get(words, j));
         } else if (special_case)
             special_case(opt, opts, i, fid, extra);
     }
@@ -59,7 +59,7 @@ int opts_getopt(bl* opts, int argc, char** argv) {
         if (!opt->shortopt)
             continue;
         if (iscntrl((unsigned)(opt->shortopt)))
-			continue;
+            continue;
         optstring[j] = opt->shortopt;
         j++;
         if (opt->has_arg == no_argument)
@@ -80,7 +80,7 @@ int opts_getopt(bl* opts, int argc, char** argv) {
         if (!opt->shortopt)
             continue;
         //if (iscntrl(opt->shortopt))
-		//continue;
+        //continue;
         longoptions[j].name = opt->name;
         longoptions[j].has_arg = opt->has_arg;
         longoptions[j].val = opt->shortopt;

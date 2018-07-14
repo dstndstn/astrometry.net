@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #ifndef TWEAK_2_H
@@ -42,22 +42,22 @@
  crpix: if you want to keep the reference point fixed, set this to a (2-element) array of the image reference position.
  */
 sip_t* tweak2(const double* fieldxy, int Nfield,
-			  double fieldjitter,
-			  int W, int H,
-			  const double* indexradec, int Nindex,
-			  double indexjitter,
-			  const double* quadcenter, double quadR2,
-			  double distractors,
-			  double logodds_bail,
-			  int sip_order,
-			  int sip_invorder,
-			  const sip_t* startwcs,
-			  sip_t* destwcs,
-			  int** newtheta, double** newodds,
-			  double* crpix,
-			  double* p_logodds,
-			  int* p_besti,
-			  int* testperm, int startorder);
+              double fieldjitter,
+              int W, int H,
+              const double* indexradec, int Nindex,
+              double indexjitter,
+              const double* quadcenter, double quadR2,
+              double distractors,
+              double logodds_bail,
+              int sip_order,
+              int sip_invorder,
+              const sip_t* startwcs,
+              sip_t* destwcs,
+              int** newtheta, double** newodds,
+              double* crpix,
+              double* p_logodds,
+              int* p_besti,
+              int* testperm, int startorder);
 
 
 #endif

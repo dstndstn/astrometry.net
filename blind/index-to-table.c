@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <unistd.h>
 #include <stdio.h>
@@ -16,8 +16,8 @@
 static const char* OPTIONS = "hi:o:";
 
 void printHelp(char* progname) {
-	fprintf(stderr, "Usage: %s\n"
-			"   -i <index-filename>\n"
+    fprintf(stderr, "Usage: %s\n"
+            "   -i <index-filename>\n"
             "   -o <output-filename>\n"
             "\n"
             "Given an index, writes FITS tables of the star (RA,Dec)s\n"
@@ -28,32 +28,32 @@ void printHelp(char* progname) {
 
 int main(int argc, char *argv[]) {
     int argchar;
-	char* progname = argv[0];
+    char* progname = argv[0];
     index_t* index;
     fitstable_t* table;
-	char* indexfn = NULL;
-	char* outfn = NULL;
-	int i, D, N;
+    char* indexfn = NULL;
+    char* outfn = NULL;
+    int i, D, N;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1) {
-		switch (argchar) {
-		case 'i':
-			indexfn = optarg;
-			break;
-		case 'o':
-			outfn = optarg;
-			break;
-		default:
-		case 'h':
-			printHelp(progname);
-			exit(0);
-		}
-	}
+        switch (argchar) {
+        case 'i':
+            indexfn = optarg;
+            break;
+        case 'o':
+            outfn = optarg;
+            break;
+        default:
+        case 'h':
+            printHelp(progname);
+            exit(0);
+        }
+    }
 
-	if (!(indexfn && outfn)) {
-		printHelp(progname);
-		exit(-1);
-	}
+    if (!(indexfn && outfn)) {
+        printHelp(progname);
+        exit(-1);
+    }
 
     index = index_load(indexfn, 0, NULL);
     if (!index) {
@@ -123,5 +123,5 @@ int main(int argc, char *argv[]) {
 
     index_close(index);
 
-	return 0;
+    return 0;
 }
