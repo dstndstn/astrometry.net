@@ -1,7 +1,7 @@
 /*
-  # This file is part of the Astrometry.net suite.
-  # Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <math.h>
 #include <stdio.h>
@@ -20,7 +20,7 @@
 #include "log.h"
 #include "starutil.h"
 
-const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:B:A:D:t:e:K";
+const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:B:A:D:t:e:";
 
 static void print_help(char* progname) {
     BOILERPLATE_HELP_HEADER(stdout);
@@ -54,7 +54,6 @@ static void print_help(char* progname) {
            "      [-A <column>]: specify the RA  column name in the input FITS table (default \"RA\")\n"
            "      [-D <column>]: specify the Dec column name in the input FITS table (default \"Dec\")\n"
            "      [-B <val>]: cut any object whose sort-column value is less than 'val'; for mags this is a bright limit\n"
-           "      [-K]: keep RA,Dec in tag-along table (default is to drop them)\n"
            "      [-U]: healpix Nside for uniformization (default: same as -n)\n"
            "      [-H <big healpix>]; default is all-sky\n"
            "      [-s <big healpix Nside>]; default is 1\n"
@@ -105,9 +104,6 @@ int main(int argc, char** argv) {
             break;
         case 'D':
             p->deccol = optarg;
-            break;
-        case 'K':
-            p->drop_radec = FALSE;
             break;
         case 'B':
             p->brightcut = atof(optarg);

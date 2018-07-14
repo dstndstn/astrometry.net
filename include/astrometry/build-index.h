@@ -1,7 +1,7 @@
 /*
-  # This file is part of the Astrometry.net suite.
-  # Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 #ifndef BUILD_INDEX_H
 #define BUILD_INDEX_H
 
@@ -10,13 +10,11 @@
 #include "astrometry/an-bool.h"
 
 struct index_params {
-	// catalog:
-	const char* racol;
-	const char* deccol;
-	// in arcsec
-	double jitter;
-    // drop RA,Dec from tag-along table?
-    anbool drop_radec;
+    // catalog:
+    const char* racol;
+    const char* deccol;
+    // in arcsec
+    double jitter;
 
     // uniformization:
     const char* sortcol;

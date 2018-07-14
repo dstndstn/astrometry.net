@@ -1,7 +1,7 @@
 /*
-  # This file is part of the Astrometry.net suite.
-  # Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <math.h>
 #include <stdio.h>
@@ -209,9 +209,9 @@ static int step_merge_index(index_params_t* p,
             add_boilerplate(p, hdr);
 
         /* When closing:
-           kdtree_free(codekd2->tree);
-           codekd2->tree = NULL;
-        */
+         kdtree_free(codekd2->tree);
+         codekd2->tree = NULL;
+         */
         *p_index = index;
 
     } else {
@@ -222,11 +222,11 @@ static int step_merge_index(index_params_t* p,
 
         logmsg("Merging %s and %s and %s to %s\n", quad3fn, ckdt2fn, skdt2fn, indexfn);
         /*
-          if (merge_index_files(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
-          ERROR("Failed to merge-index");
-          return -1;
-          }
-        */
+         if (merge_index_files(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
+         ERROR("Failed to merge-index");
+         return -1;
+         }
+         */
         if (merge_index_open_files(quad3fn, ckdt2fn, skdt2fn,
                                    &quad, &code, &star)) {
             ERROR("Failed to open index files for merging");
@@ -328,18 +328,18 @@ int build_index_shared_skdt(const char* skdtfn,
     }
 
     /*
-      logverb("Uniformizing...\n");
-      uniperm = uniformize_catalog_get_permutation(skdt, sortdata,
-      p->bighp, p->bignside, p->margin,
-      p->UNside, p->dedup, p->sweeps,
-      p->args, p->argc);
-      if (!uniperm) {
-      ERROR("Failed to find uniformization permutation array");
-      goto cleanup;
-      }
-      p->hpquads_sort = uniperm;
-      p->hpquads_sortfunc = compare_ints_asc;
-    */
+     logverb("Uniformizing...\n");
+     uniperm = uniformize_catalog_get_permutation(skdt, sortdata,
+     p->bighp, p->bignside, p->margin,
+     p->UNside, p->dedup, p->sweeps,
+     p->args, p->argc);
+     if (!uniperm) {
+     ERROR("Failed to find uniformization permutation array");
+     goto cleanup;
+     }
+     p->hpquads_sort = uniperm;
+     p->hpquads_sortfunc = compare_ints_asc;
+     */
 
     p->hpquads_sort_data = sortdata;
     p->hpquads_sort_func = (p->sortasc ? compare_doubles_asc : compare_doubles_desc);
@@ -436,210 +436,210 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 
     tempfiles = sl_new(4);
 
-	if (p->inmemory)
-		uniform = fitstable_open_in_memory();
-	else {
-		unifn = create_temp_file("uniform", p->tempdir);
-		sl_append_nocopy(tempfiles, unifn);
-		uniform = fitstable_open_for_writing(unifn);
-	}
-	if (!uniform) {
-		ERROR("Failed to open output table %s", unifn);
-		return -1;
-	}
+    if (p->inmemory)
+        uniform = fitstable_open_in_memory();
+    else {
+        unifn = create_temp_file("uniform", p->tempdir);
+        sl_append_nocopy(tempfiles, unifn);
+        uniform = fitstable_open_for_writing(unifn);
+    }
+    if (!uniform) {
+        ERROR("Failed to open output table %s", unifn);
+        return -1;
+    }
 
-	if (uniformize_catalog(catalog, uniform, p->racol, p->deccol,
-						   p->sortcol, p->sortasc, p->brightcut,
-						   p->bighp, p->bignside, p->margin,
-						   p->UNside, p->dedup, p->sweeps, p->args, p->argc)) {
-		return -1;
-	}
+    if (uniformize_catalog(catalog, uniform, p->racol, p->deccol,
+                           p->sortcol, p->sortasc, p->brightcut,
+                           p->bighp, p->bignside, p->margin,
+                           p->UNside, p->dedup, p->sweeps, p->args, p->argc)) {
+        return -1;
+    }
 
-	if (fitstable_fix_primary_header(uniform)) {
-		ERROR("Failed to fix output table");
-		return -1;
-	}
+    if (fitstable_fix_primary_header(uniform)) {
+        ERROR("Failed to fix output table");
+        return -1;
+    }
 
-	if (p->inmemory) {
-		if (fitstable_switch_to_reading(uniform)) {
-			ERROR("Failed to switch uniformized table to read-mode");
-			return -1;
-		}
-	} else {
-		if (fitstable_close(uniform)) {
-			ERROR("Failed to close output table");
-			return -1;
-		}
-	}
-	fitstable_close(catalog);
+    if (p->inmemory) {
+        if (fitstable_switch_to_reading(uniform)) {
+            ERROR("Failed to switch uniformized table to read-mode");
+            return -1;
+        }
+    } else {
+        if (fitstable_close(uniform)) {
+            ERROR("Failed to close output table");
+            return -1;
+        }
+    }
+    fitstable_close(catalog);
 
-	// startree
-	if (!p->inmemory) {
-		skdtfn = create_temp_file("skdt", p->tempdir);
-		sl_append_nocopy(tempfiles, skdtfn);
+    // startree
+    if (!p->inmemory) {
+        skdtfn = create_temp_file("skdt", p->tempdir);
+        sl_append_nocopy(tempfiles, skdtfn);
 
-		logverb("Reading uniformized catalog %s...\n", unifn);
-		uniform = fitstable_open(unifn);
-		if (!uniform) {
-			ERROR("Failed to open uniformized catalog");
-			return -1;
-		}
-	}
+        logverb("Reading uniformized catalog %s...\n", unifn);
+        uniform = fitstable_open(unifn);
+        if (!uniform) {
+            ERROR("Failed to open uniformized catalog");
+            return -1;
+        }
+    }
 
-	// DEBUG -- print RA,Dec from uniform catalog.
-	if (log_get_level() > LOG_VERB) {
-		tfits_type dubl = fitscolumn_double_type();
-		double* ra;
-		double* dec;
-		int i,N;
-		ra = fitstable_read_column(uniform, p->racol, dubl);
-		dec = fitstable_read_column(uniform, p->deccol, dubl);
-		N = fitstable_nrows(uniform);
-		logdebug("Checking %i columns of 'uniform' catalog\n", N);
-		logdebug("  RA column: \"%s\"; Dec column: \"%s\"\n", p->racol, p->deccol);
-		assert(ra && dec);
-		for (i=0; i<N; i++)
-			logdebug("  %i RA,Dec %g,%g\n", i, ra[i], dec[i]);
-		free(ra);
-		free(dec);
-	}
-
-
-	{
-		int Nleaf = 25;
-		int datatype = KDT_DATA_U32;
-		int treetype = KDT_TREE_U32;
-		int buildopts = KD_BUILD_SPLIT;
-
-		logverb("Building star kdtree from %i stars\n", fitstable_nrows(uniform));
-		starkd = startree_build(uniform, p->racol, p->deccol, datatype, treetype,
-								buildopts, Nleaf, p->args, p->argc);
-		if (!starkd) {
-			ERROR("Failed to create star kdtree");
-			return -1;
-		}
-
-		if (p->jitter > 0.0) {
-			startree_set_jitter(starkd, p->jitter);
-		}
-
-		if (!p->inmemory) {
-			logverb("Writing star kdtree to %s\n", skdtfn);
-			if (startree_write_to_file(starkd, skdtfn)) {
-				ERROR("Failed to write star kdtree");
-				return -1;
-			}
-			startree_close(starkd);
-		}
-
-		if (startree_has_tagalong_data(uniform)) {
-			logverb("Adding star kdtree tag-along data...\n");
-			if (p->inmemory) {
-				startag = fitstable_open_in_memory();
-			} else {
-				startag = fitstable_open_for_appending(skdtfn);
-				if (!startag) {
-					ERROR("Failed to re-open star kdtree file %s for appending", skdtfn);
-					return -1;
-				}
-			}
-			if (startree_write_tagalong_table(uniform, startag, p->racol, p->deccol, NULL, p->drop_radec)) {
-				ERROR("Failed to write tag-along table");
-				return -1;
-			}
-			if (p->inmemory) {
-				if (fitstable_switch_to_reading(startag)) {
-					ERROR("Failed to switch star tag-along data to read-mode");
-					return -1;
-				}
-				starkd->tagalong = startag;
-			} else {
-				if (fitstable_close(startag)) {
-					ERROR("Failed to close star kdtree tag-along data");
-					return -1;
-				}
-			}
-		}
-	}
-	fitstable_close(uniform);
-
-	// hpquads
-	if (step_hpquads(p, &codes, &quads, &codefn, &quadfn, 
-					 starkd, skdtfn,
-					 tempfiles))
-		return -1;
-
-	// codetree
-	if (step_codetree(p, codes, &codekd,
-					  codefn, &ckdtfn, tempfiles))
-		return -1;
-
-	// unpermute-stars
-	logmsg("Unpermute-stars...\n");
-	if (p->inmemory) {
-		quads2 = quadfile_open_in_memory();
-		if (unpermute_stars(starkd, quads, &starkd2, quads2,
-							TRUE, FALSE, p->args, p->argc)) {
-			ERROR("Failed to unpermute-stars");
-			return -1;
-		}
-		if (quadfile_close(quads)) {
-			ERROR("Failed to close in-memory quads");
-			return -1;
-		}
-		if (quadfile_switch_to_reading(quads2)) {
-			ERROR("Failed to switch quads2 to read-mode");
-			return -1;
-		}
-		if (startag) {
-			startag2 = fitstable_open_in_memory();
-			startag2->table = fits_copy_table(startag->table);
-			startag2->table->nr = 0;
-			startag2->header = qfits_header_copy(startag->header);
-			if (unpermute_stars_tagalong(starkd, startag2)) {
-				ERROR("Failed to unpermute-stars tag-along data");
-				return -1;
-			}
-			starkd2->tagalong = startag2;
-		}
-
-		// unpermute-stars makes a shallow copy of the tree, so don't just startree_close(starkd)...
-		free(starkd->tree->perm);
-		free(starkd->tree);
-		starkd->tree = NULL;
-		startree_close(starkd);
-
-	} else {
-		skdt2fn = create_temp_file("skdt2", p->tempdir);
-		sl_append_nocopy(tempfiles, skdt2fn);
-		quad2fn = create_temp_file("quad2", p->tempdir);
-		sl_append_nocopy(tempfiles, quad2fn);
-
-		logmsg("Unpermuting stars from %s and %s to %s and %s\n", skdtfn, quadfn, skdt2fn, quad2fn);
-		if (unpermute_stars_files(skdtfn, quadfn, skdt2fn, quad2fn,
-								  TRUE, FALSE, p->args, p->argc)) {
-			ERROR("Failed to unpermute-stars");
-			return -1;
-		}
-	}
-
-	// unpermute-quads
-	if (step_unpermute_quads(p, quads2, codekd, &quads3, &codekd2,
-							 quad2fn, ckdtfn, &quad3fn, &ckdt2fn, tempfiles))
-		return -1;
+    // DEBUG -- print RA,Dec from uniform catalog.
+    if (log_get_level() > LOG_VERB) {
+        tfits_type dubl = fitscolumn_double_type();
+        double* ra;
+        double* dec;
+        int i,N;
+        ra = fitstable_read_column(uniform, p->racol, dubl);
+        dec = fitstable_read_column(uniform, p->deccol, dubl);
+        N = fitstable_nrows(uniform);
+        logdebug("Checking %i columns of 'uniform' catalog\n", N);
+        logdebug("  RA column: \"%s\"; Dec column: \"%s\"\n", p->racol, p->deccol);
+        assert(ra && dec);
+        for (i=0; i<N; i++)
+            logdebug("  %i RA,Dec %g,%g\n", i, ra[i], dec[i]);
+        free(ra);
+        free(dec);
+    }
 
 
-	// index
-	if (step_merge_index(p, codekd2, quads3, starkd2, p_index,
-						 ckdt2fn, quad3fn, skdt2fn, indexfn))
-		return -1;
+    {
+        int Nleaf = 25;
+        int datatype = KDT_DATA_U32;
+        int treetype = KDT_TREE_U32;
+        int buildopts = KD_BUILD_SPLIT;
 
-	// FIXME -- close codekd2, quads3, starkd2?
+        logverb("Building star kdtree from %i stars\n", fitstable_nrows(uniform));
+        starkd = startree_build(uniform, p->racol, p->deccol, datatype, treetype,
+                                buildopts, Nleaf, p->args, p->argc);
+        if (!starkd) {
+            ERROR("Failed to create star kdtree");
+            return -1;
+        }
 
-	step_delete_tempfiles(p, tempfiles);
+        if (p->jitter > 0.0) {
+            startree_set_jitter(starkd, p->jitter);
+        }
 
-	sl_free2(tempfiles);
-	return 0;
+        if (!p->inmemory) {
+            logverb("Writing star kdtree to %s\n", skdtfn);
+            if (startree_write_to_file(starkd, skdtfn)) {
+                ERROR("Failed to write star kdtree");
+                return -1;
+            }
+            startree_close(starkd);
+        }
+
+        if (startree_has_tagalong_data(uniform)) {
+            logverb("Adding star kdtree tag-along data...\n");
+            if (p->inmemory) {
+                startag = fitstable_open_in_memory();
+            } else {
+                startag = fitstable_open_for_appending(skdtfn);
+                if (!startag) {
+                    ERROR("Failed to re-open star kdtree file %s for appending", skdtfn);
+                    return -1;
+                }
+            }
+            if (startree_write_tagalong_table(uniform, startag, p->racol, p->deccol, NULL, TRUE)) {
+                ERROR("Failed to write tag-along table");
+                return -1;
+            }
+            if (p->inmemory) {
+                if (fitstable_switch_to_reading(startag)) {
+                    ERROR("Failed to switch star tag-along data to read-mode");
+                    return -1;
+                }
+                starkd->tagalong = startag;
+            } else {
+                if (fitstable_close(startag)) {
+                    ERROR("Failed to close star kdtree tag-along data");
+                    return -1;
+                }
+            }
+        }
+    }
+    fitstable_close(uniform);
+
+    // hpquads
+    if (step_hpquads(p, &codes, &quads, &codefn, &quadfn, 
+                     starkd, skdtfn,
+                     tempfiles))
+        return -1;
+
+    // codetree
+    if (step_codetree(p, codes, &codekd,
+                      codefn, &ckdtfn, tempfiles))
+        return -1;
+
+    // unpermute-stars
+    logmsg("Unpermute-stars...\n");
+    if (p->inmemory) {
+        quads2 = quadfile_open_in_memory();
+        if (unpermute_stars(starkd, quads, &starkd2, quads2,
+                            TRUE, FALSE, p->args, p->argc)) {
+            ERROR("Failed to unpermute-stars");
+            return -1;
+        }
+        if (quadfile_close(quads)) {
+            ERROR("Failed to close in-memory quads");
+            return -1;
+        }
+        if (quadfile_switch_to_reading(quads2)) {
+            ERROR("Failed to switch quads2 to read-mode");
+            return -1;
+        }
+        if (startag) {
+            startag2 = fitstable_open_in_memory();
+            startag2->table = fits_copy_table(startag->table);
+            startag2->table->nr = 0;
+            startag2->header = qfits_header_copy(startag->header);
+            if (unpermute_stars_tagalong(starkd, startag2)) {
+                ERROR("Failed to unpermute-stars tag-along data");
+                return -1;
+            }
+            starkd2->tagalong = startag2;
+        }
+
+        // unpermute-stars makes a shallow copy of the tree, so don't just startree_close(starkd)...
+        free(starkd->tree->perm);
+        free(starkd->tree);
+        starkd->tree = NULL;
+        startree_close(starkd);
+
+    } else {
+        skdt2fn = create_temp_file("skdt2", p->tempdir);
+        sl_append_nocopy(tempfiles, skdt2fn);
+        quad2fn = create_temp_file("quad2", p->tempdir);
+        sl_append_nocopy(tempfiles, quad2fn);
+
+        logmsg("Unpermuting stars from %s and %s to %s and %s\n", skdtfn, quadfn, skdt2fn, quad2fn);
+        if (unpermute_stars_files(skdtfn, quadfn, skdt2fn, quad2fn,
+                                  TRUE, FALSE, p->args, p->argc)) {
+            ERROR("Failed to unpermute-stars");
+            return -1;
+        }
+    }
+
+    // unpermute-quads
+    if (step_unpermute_quads(p, quads2, codekd, &quads3, &codekd2,
+                             quad2fn, ckdtfn, &quad3fn, &ckdt2fn, tempfiles))
+        return -1;
+
+
+    // index
+    if (step_merge_index(p, codekd2, quads3, starkd2, p_index,
+                         ckdt2fn, quad3fn, skdt2fn, indexfn))
+        return -1;
+
+    // FIXME -- close codekd2, quads3, starkd2?
+
+    step_delete_tempfiles(p, tempfiles);
+
+    sl_free2(tempfiles);
+    return 0;
 }
 
 
@@ -717,21 +717,20 @@ int build_index_shared_skdt_files(const char* starkdfn, const char* indexfn,
 
 
 void build_index_defaults(index_params_t* p) {
-	memset(p, 0, sizeof(index_params_t));
-	p->sweeps = 10;
-	p->racol = "RA";
-	p->deccol = "DEC";
-    p->drop_radec = TRUE;
-	p->passes = 16;
-	p->Nreuse = 8;
-	p->Nloosen = 20;
-	p->dimquads = 4;
-	p->sortasc = TRUE;
-	p->brightcut = -HUGE_VAL;
-	// default to all-sky
-	p->bighp = -1;
-	//p->inmemory = TRUE;
-	p->delete_tempfiles = TRUE;
-	p->tempdir = "/tmp";
+    memset(p, 0, sizeof(index_params_t));
+    p->sweeps = 10;
+    p->racol = "RA";
+    p->deccol = "DEC";
+    p->passes = 16;
+    p->Nreuse = 8;
+    p->Nloosen = 20;
+    p->dimquads = 4;
+    p->sortasc = TRUE;
+    p->brightcut = -HUGE_VAL;
+    // default to all-sky
+    p->bighp = -1;
+    //p->inmemory = TRUE;
+    p->delete_tempfiles = TRUE;
+    p->tempdir = "/tmp";
 }
 
