@@ -77,6 +77,7 @@ void test_fitsbin_2(CuTest* ct) {
     fitsbin_chunk_t* ch;
 
     fn = get_tmpfile(0);
+    printf("Writing to %s\n", fn);
     out = fitsbin_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);
 
