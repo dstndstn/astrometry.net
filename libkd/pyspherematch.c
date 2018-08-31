@@ -57,13 +57,19 @@ static PyObject* KdTree_new(PyTypeObject *type, PyObject *args, PyObject *kwds) 
     return (PyObject*)self;
 }
 
-static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
+static int KdTree_init(KdObject *self, PyObject *args, PyObject *keywords) {
     Py_ssize_t n;
     PyArrayObject *x = NULL;
     char* filename = NULL;
     char* treename = NULL;
     VarUnused PyObject *fnbytes = NULL;
 
+    static char *kwlist[] = {"data", "nleaf", "bbox", "split", NULL};
+
+    int Nleaf = 16;
+    int do_bbox = 1;
+    int do_split = 0;
+    
     n = PyTuple_Size(args);
     if (!((n == 1) || (n == 2))) {
         PyErr_SetString(PyExc_ValueError, "need one or two args: (array x), or (kdtree filename, + optionally tree name)");
@@ -71,11 +77,14 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
     }
     
     // Try parsing as an array.
-    if ((n == 1) && PyArg_ParseTuple(args, "O!", &PyArray_Type, &x)) {
+    if ((n == 1) &&
+        PyArg_ParseTupleAndKeywords(args, keywords, "O!|ipp", kwlist,
+                                    &PyArray_Type, &x, &Nleaf, &do_bbox,
+                                    &do_split)) {
         // kdtree_build
+        int treeoptions, treetype;
         int N, D;
         int i,j;
-        int Nleaf, treeoptions, treetype;
         double* data;
 
         self->opened = 0;
@@ -93,6 +102,10 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
             PyErr_SetString(PyExc_ValueError, "maximum dimensionality is 10: maybe you need to transpose your array?");
             return -1;
         }
+        if (!do_bbox && !do_split) {
+            PyErr_SetString(PyExc_ValueError, "need to set bbox=True or split=True");
+            return -1;
+        }
         // FIXME -- should be able to do this faster...
         data = malloc(N * D * sizeof(double));
         for (i=0; i<N; i++) {
@@ -101,16 +114,19 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *kwds) {
                 data[i*D + j] = *pd;
             }
         }
-        Nleaf = 16;
         treetype = KDTT_DOUBLE;
-        //treeoptions = KD_BUILD_SPLIT;
-        treeoptions = KD_BUILD_BBOX;
+        treeoptions = 0;
+        if (do_bbox)
+            treeoptions |= KD_BUILD_BBOX;
+        if (do_split)
+            treeoptions |= KD_BUILD_SPLIT;
         self->kd = kdtree_build(NULL, data, N, D, Nleaf,
                                 treetype, treeoptions);
         if (!self->kd)
             return -1;
         return 0;
     }
+
     // clear the exception from PyArg_ParseTuple above
     PyErr_Clear();
 
@@ -812,7 +828,6 @@ static PyObject* spherematch_nn2(PyObject* self, PyObject* args) {
     Py_DECREF(dist2s);
     return rtn;
 }
-
 
 static PyMethodDef spherematchMethods[] = {
     { "match", spherematch_match, METH_VARARGS,
