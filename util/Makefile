@@ -160,11 +160,6 @@ an-pnmtofits: an-pnmtofits.o $(ANUTILS_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
 ALL_OBJ += an-pnmtofits.o
 
-wcs-pv2sip: wcs-pv2sip.o $(ANUTILS_SLIB)
-	echo ANUTILS_SLIB: $(ANUTILS_SLIB)
-	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
-ALL_OBJ += wcs-pv2sip.o
-
 _util$(PYTHON_SO_EXT): util.i lanczos.i $(ANFILES_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
 	INC="$(ANFILES_INC)" CFLAGS="$(CFLAGS)" \
