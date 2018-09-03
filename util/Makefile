@@ -15,6 +15,12 @@ all:
 #   NO_QFITS := 1
 #   export NO_QFITS
 
+# Redefine these (to be in the current directory) before including
+# makefile.anfiles.
+ANBASE_LIB_FILE := libanbase.a
+ANUTILS_LIB_FILE := libanutils.a
+ANFILES_LIB_FILE := libanfiles.a
+
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.anfiles
 
@@ -50,10 +56,6 @@ include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.png
 include $(COMMON)/makefile.netpbm
-
-ANBASE_LIB_FILE := libanbase.a
-ANUTILS_LIB_FILE := libanutils.a
-ANFILES_LIB_FILE := libanfiles.a
 
 # D'oh
 ifneq ($(MAKECMDGOALS),clean)
@@ -149,13 +151,13 @@ $(ANFILES_LIB_FILE): $(ANFILES_OBJ) $(ANFILES_DEPS)
 	$(AR) rc $@ $(ANFILES_OBJ)
 	$(RANLIB) $@
 
-$(MAIN_PROGS): %: %-main.o $(ANFILES_SLIB)
-$(PROGS): %: %.o $(ANFILES_SLIB)
+$(MAIN_PROGS): %: %-main.o $(ANUTILS_SLIB) rdlist.o xylist.o starxy.o
+$(PROGS): %: %.o $(ANUTILS_SLIB)
 
 DEP_OBJ += $(addsuffix -main.o,$(MAIN_PROGS))
 DEP_OBJ += $(addsuffix .o,$(PROGS))
 
-an-pnmtofits: an-pnmtofits.o $(ANFILES_SLIB)
+an-pnmtofits: an-pnmtofits.o $(ANUTILS_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
 ALL_OBJ += an-pnmtofits.o
 

@@ -71,13 +71,13 @@ SUBDIRS_OPT := gsl-an
 
 subdirs: $(SUBDIRS)
 
-catalogs: config
+util: config qfits-an
 
-libkd: config
+libkd: config util
+
+catalogs: config libkd
 
 blind: config util catalogs libkd qfits-an
-
-util: config
 
 $(SUBDIRS):
 	$(MAKE) -C $@

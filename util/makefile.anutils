@@ -2,7 +2,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE
 
 ANUTILS_DIR := $(BASEDIR)/util
-ANUTILS_LIB_FILE := $(ANUTILS_DIR)/libanutils.a
+ANUTILS_LIB_FILE ?= $(ANUTILS_DIR)/libanutils.a
 
 ANUTILS_INC :=
 ANUTILS_LIB := 
