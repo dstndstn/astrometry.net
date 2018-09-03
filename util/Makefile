@@ -41,12 +41,20 @@ ANUTILS_OBJ :=  sip-utils.o fit-wcs.o sip.o \
 ANFILES_DEPS :=
 ANFILES_OBJ := 
 
+# Things that it depends on but that aren't linked in
+ANUTILS_DEPS :=
+
 ifndef NO_QFITS
 ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
 	starxy.o qidxfile.o quadfile.o scamp.o scamp-catalog.o \
 	tabsort.o wcs-xy2rd.o wcs-rd2xy.o
 ANFILES_DEPS += $(QFITS_LIB)
+
+ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
+	tic.o
+ANUTILS_DEPS += $(QFITS_LIB)
 endif
+
 
 SIMPLEXY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o \
 	dpeaks.o dselip.o dsigma.o dsmooth.o image2xy.o simplexy.o ctmf.o
@@ -103,9 +111,6 @@ MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy fit-wcs wcs-pv2sip
 
 all: $(ANBASE_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) $(PROGS) $(MAIN_PROGS)
 
-# Things that it depends on but that aren't linked in
-ANUTILS_DEPS :=
-
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	an-thread.h anwcs.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph \
@@ -122,12 +127,6 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	tabsort.h wcs-rd2xy.h wcs-xy2rd.h wcs-pv2sip.h
 
 ANUTILS_H_PATH := $(addprefix $(INCLUDE_DIR)/,$(ANUTILS_H))
-
-ifndef NO_QFITS
-ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
-	tic.o
-ANUTILS_DEPS += $(QFITS_LIB)
-endif
 
 ## ANFILES_DEPS, ANFILES_OBJ -- in makefile.anfiles
 
@@ -162,6 +161,7 @@ an-pnmtofits: an-pnmtofits.o $(ANUTILS_SLIB)
 ALL_OBJ += an-pnmtofits.o
 
 wcs-pv2sip: wcs-pv2sip.o $(ANUTILS_SLIB)
+	echo ANUTILS_SLIB: $(ANUTILS_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
 ALL_OBJ += wcs-pv2sip.o
 
