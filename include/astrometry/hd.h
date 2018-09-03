@@ -14,11 +14,15 @@
  This code allows easy access to the Henry Draper catalog stored in
  kd-tree format.  Get the required hd.fits file either by the easy way:
 
- wget http://trac.astrometry.net/export/13120/binary/henry-draper/hd.fits
+ wget http://data.astrometry.net/hd.fits
 
- Or the hard way (which involves downloading > 500 MB of Tycho-2 catalog from Denmark!):
+ Or the hard way (which involves downloading > 500 MB of Tycho-2
+ catalog from Denmark!):
 
  make hd.fits   (in the astrometry.net catalog/ directory)
+
+ (note, this way has become considerably more difficult as some URLs
+ have disappeared.)
 
  **/
 
