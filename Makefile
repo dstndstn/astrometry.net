@@ -320,10 +320,12 @@ snapshot-libkd:
 .PHONY: snapshot-libkd
 
 test:
-	$(MAKE) -C blind test
+	$(MAKE) -C util
+	$(MAKE) -C libkd
 	$(MAKE) -C util  test
 	$(MAKE) -C catalogs test
 	$(MAKE) -C libkd test
+	$(MAKE) -C blind test
 .PHONY: test
 
 clean:
