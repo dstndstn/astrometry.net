@@ -94,7 +94,7 @@ SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 QFITS_UTILS := fits-column-merge subtable fitsgetext wcsinfo
 
 PROGS := an-fitstopnm an-pnmtofits downsample-fits \
-	fits-flip-endian hpsplit wcs-to-tan	query-starkd \
+	fits-flip-endian hpsplit wcs-to-tan	\
 	get-healpix $(QFITS_UTILS) pad-file wcs-match wcs-pv2sip
 
 MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy fit-wcs wcs-pv2sip

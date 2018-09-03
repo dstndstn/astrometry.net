@@ -107,7 +107,7 @@ PIPELINE := wcs-grab solve-field
 MAIN_PROGS := image2xy new-wcs fits-guess-scale startree
 # hpquads
 
-SIMPLE_PROGS := wcs-grab get-wcs
+SIMPLE_PROGS := wcs-grab get-wcs query-starkd
 # hpowned
 
 PROGS := astrometry-engine build-astrometry-index \
