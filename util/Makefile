@@ -151,7 +151,7 @@ $(ANFILES_LIB_FILE): $(ANFILES_OBJ) $(ANFILES_DEPS)
 	$(AR) rc $@ $(ANFILES_OBJ)
 	$(RANLIB) $@
 
-$(MAIN_PROGS): %: %-main.o $(ANUTILS_SLIB) rdlist.o xylist.o starxy.o
+$(MAIN_PROGS): %: %-main.o rdlist.o xylist.o starxy.o $(ANUTILS_SLIB)
 $(PROGS): %: %.o $(ANUTILS_SLIB)
 
 DEP_OBJ += $(addsuffix -main.o,$(MAIN_PROGS))
