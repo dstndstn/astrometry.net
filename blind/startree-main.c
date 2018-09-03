@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
             exit(-1);
         }
         off_t off = ftello(fid);
-        printf("Offset to write starkd: %lu\n", off);
+        printf("Offset to write starkd: %lu\n", (unsigned long)off);
 
         if (startree_append_to(starkd, fid)) {
             ERROR("Failed to append star kdtree");
