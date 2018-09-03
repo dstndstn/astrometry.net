@@ -25,7 +25,6 @@ all: $(GSL_LIB)
 # MAKECMDGOALS = $(GSL_LIB); we use that to import the dependency files.
 lib: $(GSL_LIB)
 .PHONY: lib
-#	$(MAKE) $(GSL_LIB)
 
 include $(COMMON)/makefile.common
 
