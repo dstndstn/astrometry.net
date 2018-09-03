@@ -9,11 +9,11 @@ LIBKD_INC :=
 LIBKD_SLIB := $(LIBKD_LIB_FILE)
 LIBKD_LIB :=
 
-$(LIBKD_LIB_FILE):
-	$(MAKE) -C $(LIBKD_DIR) libkd.a
-
-$(LIBKD_NOIO_LIB_FILE):
-	$(MAKE) -C $(LIBKD_DIR) libkd-noio.a
+# $(LIBKD_LIB_FILE):
+# 	$(MAKE) -C $(LIBKD_DIR) libkd.a
+# 
+# $(LIBKD_NOIO_LIB_FILE):
+# 	$(MAKE) -C $(LIBKD_DIR) libkd-noio.a
 
 include $(COMMON)/makefile.anutils
 

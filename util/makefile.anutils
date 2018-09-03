@@ -9,8 +9,8 @@ ANUTILS_LIB :=
 ANUTILS_SLIB := $(ANUTILS_LIB_FILE)
 ANUTILS_CFLAGS :=
 
-$(ANUTILS_LIB_FILE):
-	$(MAKE) -C $(ANUTILS_DIR) libanutils.a
+# $(ANUTILS_LIB_FILE):
+# 	$(MAKE) -C $(ANUTILS_DIR) libanutils.a
 
 # Astrometry.net utils ("anutils") depends on:
 #  anbase

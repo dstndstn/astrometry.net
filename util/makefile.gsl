@@ -24,7 +24,7 @@ GSL_LIB ?=
 # file dependencies for GSL
 GSL_SLIB ?= $(GSL_LIB_FILE)
 
-$(GSL_LIB_FILE):
-	$(MAKE) -C $(GSL_DIR)
+# $(GSL_LIB_FILE):
+# 	$(MAKE) -C $(GSL_DIR)
 
 endif
