@@ -29,12 +29,19 @@ class MyInstall(install):
             subprocess.call(cmd, shell=True)
             install.run(self)
 
+class MyBuildExt(install):
+    def run(self):
+        print('MyBuildExt.run: calling "make -k"')
+        subprocess.call(['make', '-k'])
+        print('MyBuildExt.run: calling "make -k py"')
+        subprocess.call(['make', '-k', 'py'])
+
 setup(name='astrometry',
       version='git',
       author='Astrometry.net team',
       author_email='dstndstn@gmail.com',
       url='http://astrometry.net',
-      cmdclass={'install': MyInstall},
+      cmdclass={'install': MyInstall, 'build_ext': MyBuildExt},
       packages=['astrometry'],
       package_dir={'astrometry':''},
       )
