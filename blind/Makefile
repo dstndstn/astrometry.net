@@ -243,7 +243,7 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
 	$(MKDIR) '$(BIN_INSTALL_DIR)'
 	@for x in $(PYTHON_EXECS); do \
-		echo ln -f -s '$(PY_INSTALL_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
+		echo ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
 		ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
 	done
 
