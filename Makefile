@@ -153,6 +153,13 @@ install-core:
 	$(MAKE) -C qfits-an install
 	$(MAKE) -C blind install
 	$(MAKE) -C sdss install
+	$(MKDIR) -p '$(PY_BASE_INSTALL_DIR)'/net/client
+	@for x in net/client/client.py; do \
+		echo $(SED) 's+$(PYTHON_SCRIPT_DEFAULT)+$(PYTHON_SCRIPT)+' $$x > '$(PY_BASE_INSTALL_DIR)/'$$x; \
+		$(SED) 's+$(PYTHON_SCRIPT_DEFAULT)+$(PYTHON_SCRIPT)+' $$x > '$(PY_BASE_INSTALL_DIR)/'$$x; \
+		echo $(CHMOD_EXECUTABLE) '$(PY_BASE_INSTALL_DIR)/'$$x; \
+		$(CHMOD_EXECUTABLE) '$(PY_BASE_INSTALL_DIR)/'$$x; \
+	done
 .PHONY: install install-core
 
 ifeq ($(SYSTEM_GSL),yes)
