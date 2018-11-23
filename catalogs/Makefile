@@ -123,24 +123,28 @@ all: ngc2000.py $(LIBCAT) $(PROGS)
 hd1.fits: henry-draper.tsv build-hd-tree
 	build-hd-tree -s -R 16 henry-draper.tsv $@
 
-hd.fits: henry-draper.tsv build-hd-tree tycho2.fits tyc2_hd.dat
-	build-hd-tree -s -R 16 -T tycho2.fits -X tyc2_hd.dat henry-draper.tsv $@
-
-tyc2_hd.dat:
-	wget "ftp://cdsarc.u-strasbg.fr/pub/cats/IV/25/tyc2_hd.dat.gz" -O $@.gz
-	gunzip $@.gz
-
-henry-draper.tsv:
-	wget "http://trac.astrometry.net/browser/binary/henry-draper/henry-draper.tsv?format=txt" -O $@
-
-tycho2.fits: catalog.dat suppl_1.dat
-	tycho2tofits -o $@ $^
-
-catalog.dat:
-	wget -c http://www.astro.ku.dk/~cf/CD/data/catalog.dat
-
-suppl_1.dat:
-	wget -c http://www.astro.ku.dk/~cf/CD/data/suppl_1.dat
+# hd.fits: you can grab a pre-built one from:
+#    http://data.astrometry.net/hd.fits
+# The instructions below are commented-out because some of the URLs have disappeared.
+# 
+# hd.fits: henry-draper.tsv build-hd-tree tycho2.fits tyc2_hd.dat
+# 	build-hd-tree -s -R 16 -T tycho2.fits -X tyc2_hd.dat henry-draper.tsv $@
+# 
+# tyc2_hd.dat:
+# 	wget "ftp://cdsarc.u-strasbg.fr/pub/cats/IV/25/tyc2_hd.dat.gz" -O $@.gz
+# 	gunzip $@.gz
+# 
+# henry-draper.tsv:
+# 	wget "http://trac.astrometry.net/browser/binary/henry-draper/henry-draper.tsv?format=txt" -O $@
+# 
+# tycho2.fits: catalog.dat suppl_1.dat
+# 	tycho2tofits -o $@ $^
+# 
+# catalog.dat:
+# 	wget -c http://www.astro.ku.dk/~cf/CD/data/catalog.dat
+# 
+# suppl_1.dat:
+# 	wget -c http://www.astro.ku.dk/~cf/CD/data/suppl_1.dat
 
 install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS_PATH)
 	@echo Installing in base directory '$(INSTALL_DIR)'

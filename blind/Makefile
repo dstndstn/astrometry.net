@@ -107,7 +107,7 @@ PIPELINE := wcs-grab solve-field
 MAIN_PROGS := image2xy new-wcs fits-guess-scale startree
 # hpquads
 
-SIMPLE_PROGS := wcs-grab get-wcs
+SIMPLE_PROGS := wcs-grab get-wcs query-starkd
 # hpowned
 
 PROGS := astrometry-engine build-astrometry-index \
@@ -243,7 +243,7 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
 	$(MKDIR) '$(BIN_INSTALL_DIR)'
 	@for x in $(PYTHON_EXECS); do \
-		echo ln -f -s '$(PY_INSTALL_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
+		echo ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
 		ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
 	done
 

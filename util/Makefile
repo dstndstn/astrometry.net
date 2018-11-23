@@ -15,6 +15,12 @@ all:
 #   NO_QFITS := 1
 #   export NO_QFITS
 
+# Redefine these (to be in the current directory) before including
+# makefile.anfiles.
+ANBASE_LIB_FILE := libanbase.a
+ANUTILS_LIB_FILE := libanutils.a
+ANFILES_LIB_FILE := libanfiles.a
+
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.anfiles
 
@@ -35,12 +41,20 @@ ANUTILS_OBJ :=  sip-utils.o fit-wcs.o sip.o \
 ANFILES_DEPS :=
 ANFILES_OBJ := 
 
+# Things that it depends on but that aren't linked in
+ANUTILS_DEPS :=
+
 ifndef NO_QFITS
 ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
 	starxy.o qidxfile.o quadfile.o scamp.o scamp-catalog.o \
 	tabsort.o wcs-xy2rd.o wcs-rd2xy.o
 ANFILES_DEPS += $(QFITS_LIB)
+
+ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
+	tic.o
+ANUTILS_DEPS += $(QFITS_LIB)
 endif
+
 
 SIMPLEXY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o \
 	dpeaks.o dselip.o dsigma.o dsmooth.o image2xy.o simplexy.o ctmf.o
@@ -50,10 +64,6 @@ include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.png
 include $(COMMON)/makefile.netpbm
-
-ANBASE_LIB_FILE := libanbase.a
-ANUTILS_LIB_FILE := libanutils.a
-ANFILES_LIB_FILE := libanfiles.a
 
 # D'oh
 ifneq ($(MAKECMDGOALS),clean)
@@ -94,15 +104,12 @@ SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 QFITS_UTILS := fits-column-merge subtable fitsgetext wcsinfo
 
 PROGS := an-fitstopnm an-pnmtofits downsample-fits \
-	fits-flip-endian hpsplit wcs-to-tan	query-starkd \
+	fits-flip-endian hpsplit wcs-to-tan	\
 	get-healpix $(QFITS_UTILS) pad-file wcs-match wcs-pv2sip
 
 MAIN_PROGS := wcs-resample tabsort wcs-xy2rd wcs-rd2xy fit-wcs wcs-pv2sip
 
 all: $(ANBASE_LIB_FILE) $(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) $(PROGS) $(MAIN_PROGS)
-
-# Things that it depends on but that aren't linked in
-ANUTILS_DEPS :=
 
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
@@ -120,12 +127,6 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	tabsort.h wcs-rd2xy.h wcs-xy2rd.h wcs-pv2sip.h
 
 ANUTILS_H_PATH := $(addprefix $(INCLUDE_DIR)/,$(ANUTILS_H))
-
-ifndef NO_QFITS
-ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
-	tic.o
-ANUTILS_DEPS += $(QFITS_LIB)
-endif
 
 ## ANFILES_DEPS, ANFILES_OBJ -- in makefile.anfiles
 
@@ -149,19 +150,15 @@ $(ANFILES_LIB_FILE): $(ANFILES_OBJ) $(ANFILES_DEPS)
 	$(AR) rc $@ $(ANFILES_OBJ)
 	$(RANLIB) $@
 
-$(MAIN_PROGS): %: %-main.o $(ANFILES_SLIB)
-$(PROGS): %: %.o $(ANFILES_SLIB)
+$(MAIN_PROGS): %: %-main.o rdlist.o xylist.o starxy.o $(ANUTILS_SLIB)
+$(PROGS): %: %.o $(ANUTILS_SLIB)
 
 DEP_OBJ += $(addsuffix -main.o,$(MAIN_PROGS))
 DEP_OBJ += $(addsuffix .o,$(PROGS))
 
-an-pnmtofits: an-pnmtofits.o $(ANFILES_SLIB)
+an-pnmtofits: an-pnmtofits.o $(ANUTILS_SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
 ALL_OBJ += an-pnmtofits.o
-
-wcs-pv2sip: wcs-pv2sip.o $(ANUTILS_SLIB)
-	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS)
-ALL_OBJ += wcs-pv2sip.o
 
 _util$(PYTHON_SO_EXT): util.i lanczos.i $(ANFILES_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" SLIB="$(ANFILES_SLIB)" \
