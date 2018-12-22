@@ -175,17 +175,28 @@ void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz)
 
     // Take r to be the threespace vector of crval
     radecdeg2xyz(tan->crval[0], tan->crval[1], &rx, &ry, &rz);
-    //	printf("rx=%lf ry=%lf rz=%lf\n",rx,ry,rz);
+    printf("rx=%lf ry=%lf rz=%lf\n",rx,ry,rz);
 
-    // Form i = r cross north pole (0,0,1)
-    ix = ry;
-    iy = -rx;
-    // iz = 0
-    norm = hypot(ix, iy);
-    ix /= norm;
-    iy /= norm;
-    //	printf("ix=%lf iy=%lf iz=0.0\n",ix,iy);
-    //	printf("r.i = %lf\n",ix*rx+iy*ry);
+    // FIXME -- what about *near* the poles?
+    if (rz == 1.0) {
+        // North pole
+        ix = -1.0;
+        iy = 0.0;
+    } else if (rz == -1.0) {
+        // South pole
+        ix = -1.0;
+        iy = 0.0;
+    } else {
+        // Form i = r cross north pole (0,0,1)
+        ix = ry;
+        iy = -rx;
+        // iz = 0
+        norm = hypot(ix, iy);
+        ix /= norm;
+        iy /= norm;
+        //printf("ix=%lf iy=%lf iz=0.0\n",ix,iy);
+        //	printf("r.i = %lf\n",ix*rx+iy*ry);
+    }
 
     // Form j = i cross r;   iz=0 so some terms drop out
     jx = iy * rz;
