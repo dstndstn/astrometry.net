@@ -230,10 +230,14 @@ void test_northpole(CuTest* tc) {
     tan_t  thewcs;
     tan_t   *wcs;
     double x, y, ra, dec;
+
+    //double dec_test = 89.7;
+    double dec_test = -89.7;
     
     wcs = &thewcs;
     thewcs.crval[0] = 180.;
-    thewcs.crval[1] =  90.;
+    //thewcs.crval[1] = +90.;
+    thewcs.crval[1] = -90.;
     thewcs.crpix[0] = 1024.5;
     thewcs.crpix[1] = 1024.5;
     thewcs.cd[0][0] = -0.00152778;
@@ -286,6 +290,20 @@ void test_northpole(CuTest* tc) {
     tan_iwc2radec(wcs, 0., +0.3, &ra, &dec);
     printf("0,+ -> %.1f, %.1f\n", ra, dec);
 
+    printf("\nradec2iwc\n");
+    x = y = 0.0;
+    tan_radec2iwc(wcs, 0., dec_test, &x, &y);
+    printf("0, %.1f -> %.3f, %.3f\n", dec_test, x, y);
+    x = y = 0.0;
+    tan_radec2iwc(wcs, 90., dec_test, &x, &y);
+    printf("90, %.1f -> %.3f, %.3f\n", dec_test, x, y);
+    x = y = 0.0;
+    tan_radec2iwc(wcs, 180., dec_test, &x, &y);
+    printf("180, %.1f -> %.3f, %.3f\n", dec_test, x, y);
+    x = y = 0.0;
+    tan_radec2iwc(wcs, 270., dec_test, &x, &y);
+    printf("270, %.1f -> %.3f, %.3f\n", dec_test, x, y);
+    
     
     printf("\npixelxy2radec\n");
     ra = dec = 0.0;
@@ -303,35 +321,36 @@ void test_northpole(CuTest* tc) {
 
     printf("\nradec2pixelxy\n");
     x = y = 0.0;
-    tan_radec2pixelxy(wcs, 0., 89.7, &x, &y);
-    printf("0, 89.7 -> %.1f, %.1f\n", x, y);
+    tan_radec2pixelxy(wcs, 0., dec_test, &x, &y);
+    printf("0, %.1f -> %.1f, %.1f\n", dec_test, x, y);
     x = y = 0.0;
-    tan_radec2pixelxy(wcs, 90., 89.7, &x, &y);
-    printf("90, 89.7 -> %.1f, %.1f\n", x, y);
+    tan_radec2pixelxy(wcs, 90., dec_test, &x, &y);
+    printf("90, %.1f -> %.1f, %.1f\n", dec_test, x, y);
     x = y = 0.0;
-    tan_radec2pixelxy(wcs, 180., 89.7, &x, &y);
-    printf("180, 89.7 -> %.1f, %.1f\n", x, y);
+    tan_radec2pixelxy(wcs, 180., dec_test, &x, &y);
+    printf("180, %.1f -> %.1f, %.1f\n", dec_test, x, y);
     x = y = 0.0;
-    tan_radec2pixelxy(wcs, 270., 89.7, &x, &y);
-    printf("270, 89.7 -> %.1f, %.1f\n", x, y);
+    tan_radec2pixelxy(wcs, 270., dec_test, &x, &y);
+    printf("270, %.1f -> %.1f, %.1f\n", dec_test, x, y);
 
 
-    printf("\n\n\ncrval[0] = 0.\n");
-    thewcs.crval[0] = 0.;
-    printf("\niwc2radec\n");
-    x = y = 0.0;
-    tan_iwc2radec(wcs, +0.3, 0., &ra, &dec);
-    printf("+,0 -> %.1f, %.1f\n", ra, dec);
-    x = y = 0.0;
-    tan_iwc2radec(wcs, 0., -0.3, &ra, &dec);
-    printf("0,- -> %.1f, %.1f\n", ra, dec);
-    x = y = 0.0;
-    tan_iwc2radec(wcs, -0.3, 0., &ra, &dec);
-    printf("-,0 -> %.1f, %.1f\n", ra, dec);
-    x = y = 0.0;
-    tan_iwc2radec(wcs, 0., +0.3, &ra, &dec);
-    printf("0,+ -> %.1f, %.1f\n", ra, dec);
-
+    /*
+     printf("\n\n\ncrval[0] = 0.\n");
+     thewcs.crval[0] = 0.;
+     printf("\niwc2radec\n");
+     x = y = 0.0;
+     tan_iwc2radec(wcs, +0.3, 0., &ra, &dec);
+     printf("+,0 -> %.1f, %.1f\n", ra, dec);
+     x = y = 0.0;
+     tan_iwc2radec(wcs, 0., -0.3, &ra, &dec);
+     printf("0,- -> %.1f, %.1f\n", ra, dec);
+     x = y = 0.0;
+     tan_iwc2radec(wcs, -0.3, 0., &ra, &dec);
+     printf("-,0 -> %.1f, %.1f\n", ra, dec);
+     x = y = 0.0;
+     tan_iwc2radec(wcs, 0., +0.3, &ra, &dec);
+     printf("0,+ -> %.1f, %.1f\n", ra, dec);
+     */
     
 }
 
