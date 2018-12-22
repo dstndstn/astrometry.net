@@ -175,7 +175,7 @@ void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz)
 
     // Take r to be the threespace vector of crval
     radecdeg2xyz(tan->crval[0], tan->crval[1], &rx, &ry, &rz);
-    printf("rx=%lf ry=%lf rz=%lf\n",rx,ry,rz);
+    //printf("rx=%lf ry=%lf rz=%lf\n",rx,ry,rz);
 
     // FIXME -- what about *near* the poles?
     if (rz == 1.0) {
