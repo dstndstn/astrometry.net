@@ -166,6 +166,7 @@ class Client(object):
                                 ('parity',None,int),
                                 ('radius', None, float),
                                 ('downsample_factor', None, int),
+                                ('positional_error', None, float),
                                 ('tweak_order', None, int),
                                 ('crpix_center', None, bool),
                                 ('x', None, list),
@@ -301,6 +302,7 @@ if __name__ == '__main__':
     parser.add_option('--dec', dest='center_dec', type=float, help='Dec center')
     parser.add_option('--radius', dest='radius', type=float, help='Search radius around RA,Dec center')
     parser.add_option('--downsample', dest='downsample_factor', type=int, help='Downsample image by this factor')
+    parser.add_option('--positional_error', dest='positional_error', type=float, help='How many pixels a star may be from where it should be.')
     parser.add_option('--parity', dest='parity', choices=('0','1'), help='Parity (flip) of image')
     parser.add_option('--tweak-order', dest='tweak_order', type=int, help='SIP distortion order (default: 2)')
     parser.add_option('--crpix-center', dest='crpix_center', action='store_true', default=None, help='Set reference point to center of image?')
@@ -376,7 +378,7 @@ if __name__ == '__main__':
                 kwargs.update(scale_upper=opt.scale_upper)
 
         for key in ['scale_units', 'center_ra', 'center_dec', 'radius',
-                    'downsample_factor', 'tweak_order', 'crpix_center',]:
+                    'downsample_factor', 'positional_error', 'tweak_order', 'crpix_center',]:
             if getattr(opt, key) is not None:
                 kwargs[key] = getattr(opt, key)
         if opt.parity is not None:
