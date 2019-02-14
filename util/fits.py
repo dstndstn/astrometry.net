@@ -460,7 +460,7 @@ class tabledata(object):
             except Exception:
                 print('exception appending element "%s"' % name)
                 raise
-                
+
     def write_to(self, fn, columns=None, header='default', primheader=None,
                  use_fitsio=True, append=False, append_to_hdu=None,
                  fits_object=None,
