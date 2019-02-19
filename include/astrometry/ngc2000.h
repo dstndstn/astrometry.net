@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef NGC2000_H
 #define NGC2000_H
@@ -19,44 +19,44 @@
  
  N = ngc_num_entries();
  for (i=0; i<N; i++) {
-   ngc_entry* ngc = ngc_get_entry_accurate(i);
-   // do stuff ...
-   // (do NOT free(ngc); !)
+ ngc_entry* ngc = ngc_get_entry_accurate(i);
+ // do stuff ...
+ // (do NOT free(ngc); !)
  }
 
 
  */
 
 /*
-  The NGC2000 catalog can be found at:
-    ftp://cdsarc.u-strasbg.fr/cats/VII/118/
+ The NGC2000 catalog can be found at:
+ ftp://cdsarc.u-strasbg.fr/cats/VII/118/
 
-  The "ReadMe" file associated with the catalog is ngc2000-readme.txt
-*/
+ The "ReadMe" file associated with the catalog is ngc2000-readme.txt
+ */
 
 struct ngc_entry {
-	// true: NGC.  false: IC.
-	int is_ngc;
+    // true: NGC.  false: IC.
+    int is_ngc;
 
-	// NGC/IC number
-	int id;
+    // NGC/IC number
+    int id;
 
-	char classification[4];
+    char classification[4];
 
-	// RA,Dec in B2000.0 degrees
-	float ra;
-	float dec;
+    // RA,Dec in B2000.0 degrees
+    float ra;
+    float dec;
 
-	char constellation[4];
+    char constellation[4];
 
-	// Maximum dimension in arcmin.
-	float size;
+    // Maximum dimension in arcmin.
+    float size;
 
-	//char source;
-	// anbool sizelimit;
-	float mag;
-	// anbool photo_mag;
-	// char[51] description;
+    //char source;
+    // anbool sizelimit;
+    float mag;
+    // anbool photo_mag;
+    // char[51] description;
 };
 typedef struct ngc_entry ngc_entry;
 

@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef ENGINE_H
 #define ENGINE_H
@@ -15,26 +15,26 @@
 
 struct engine {
     // search paths (directories)
-	sl* index_paths;
+    sl* index_paths;
 
     // contains "index_t" objects.
-	// if "inparallel" is not set, they will be "metadata-only" until
-	// they need to be loaded.
+    // if "inparallel" is not set, they will be "metadata-only" until
+    // they need to be loaded.
     pl* indexes;
 
-	// indexes that need to be freed
+    // indexes that need to be freed
     pl* free_indexes;
-	// multiindexes that need to be freed
+    // multiindexes that need to be freed
     pl* free_mindexes;
 
-	il* ibiggest;
-	il* ismallest;
+    il* ibiggest;
+    il* ismallest;
     il* default_depths;
-	double sizesmallest;
-	double sizebiggest;
-	anbool inparallel;
-	double minwidth;
-	double maxwidth;
+    double sizesmallest;
+    double sizebiggest;
+    anbool inparallel;
+    double minwidth;
+    double maxwidth;
     float cpulimit;
     char* cancelfn;
     char* solvedfn;
@@ -42,8 +42,8 @@ struct engine {
 typedef struct engine engine_t;
 
 struct job_t {
-	dl* scales;
-	il* depths;
+    dl* scales;
+    il* depths;
     anbool include_default_scales;
     double ra_center;
     double dec_center;

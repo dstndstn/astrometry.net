@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef FITSTABLE_H
 #define FITSTABLE_H
@@ -37,17 +37,17 @@
  fits_header_add_int(hdr, "KEYVAL2", 43, "Comment");
  // Write...
  if (fitstable_write_primary_header(tab) ||
-     fitstable_write_header(tab)) {
-   // error...
+ fitstable_write_header(tab)) {
+ // error...
  }
  // Write data...
  double x[] = { 1,2,3 };
  double y[] = { 3,4, 5,6, 7,8 };
  int i, N = 3;
  for (i=0; i<N; i++)
-   fitstable_write_row(tab, x + i, y + 2*i);
+ fitstable_write_row(tab, x + i, y + 2*i);
  if (fitstable_fix_header(tab)) {
-   // error...
+ // error...
  }
  // Write some data to another extension.
  fitstable_next_extension(tab);
@@ -58,16 +58,16 @@
  hdr = fitstable_get_header(tab);
  fits_header_add_int(hdr, "KEYVAL3", 44, "Comment");
  if (fitstable_write_header(tab)) {
-   // error...
+ // error...
  }
  // Write data...
  double z[] = { 9, 10, 11 };
  N = 3;
  for (i=0; i<N; i++)
-   fitstable_write_row(tab, z + i);
+ fitstable_write_row(tab, z + i);
  if (fitstable_fix_header(tab) ||
-     fitstable_close(tab)) {
-   // error...
+ fitstable_close(tab)) {
+ // error...
  }
 
 
@@ -104,7 +104,7 @@
  */
 
 struct fitstable_t {
-	anqfits_t* anq;
+    anqfits_t* anq;
 
     qfits_table* table;
     // header for this extension's table
@@ -113,23 +113,23 @@ struct fitstable_t {
     // primary header
     qfits_header* primheader;
 
-	// opaque column descriptors
+    // opaque column descriptors
     bl* cols;
 
     int extension;
 
-	// when reading/writing from/to a file:
-	char* fn;
+    // when reading/writing from/to a file:
+    char* fn;
 
-	// Writing or reading?
-	//anbool writing;
+    // Writing or reading?
+    //anbool writing;
 
-	// when working in-memory:
-	anbool inmemory;
-	// rows of the current table, in FITS format but un-endian-flipped
-	bl* rows;
-	// other extensions that are available.
-	bl* extensions;
+    // when working in-memory:
+    anbool inmemory;
+    // rows of the current table, in FITS format but un-endian-flipped
+    bl* rows;
+    // other extensions that are available.
+    bl* extensions;
 
     // When writing:
     FILE* fid;
@@ -138,14 +138,14 @@ struct fitstable_t {
     // beginning of the current table's header
     off_t table_offset;
     // end of the current table's header (including FITS padding)
-	// (also used when reading via 'readfid'):
+    // (also used when reading via 'readfid'):
     off_t end_table_offset;
 
     // Buffered reading.
     bread_t* br;
 
-	// When reading, via fitstable_read_row_data
-	FILE* readfid;
+    // When reading, via fitstable_read_row_data
+    FILE* readfid;
 
     // When reading: an optional postprocessing function to run after
     // fitstable_read_structs().
@@ -211,10 +211,10 @@ int fitstable_n_fits_columns(const fitstable_t* tab);
 void fitstable_add_fits_columns_as_struct(fitstable_t* dest);
 
 void fitstable_add_fits_columns_as_struct2(const fitstable_t* intab,
-										   fitstable_t* outtab);
+                                           fitstable_t* outtab);
 
 int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
-										  fitstable_t* outtab,
+                                          fitstable_t* outtab,
 					  const sl* columns, int c_offset);
 
 int fitstable_add_fits_columns_as_struct4(const fitstable_t* intab,
@@ -224,7 +224,7 @@ int fitstable_add_fits_columns_as_struct4(const fitstable_t* intab,
 
 // reading:
 int fitstable_find_fits_column(fitstable_t* t, const char* colname,
-							   char** units, tfits_type* type, int* arraysize);
+                               char** units, tfits_type* type, int* arraysize);
 
 sl* fitstable_get_fits_column_names(const fitstable_t* t, sl* lst);
 
@@ -328,29 +328,29 @@ void fitstable_add_write_column_array_convert(fitstable_t* tab,
 int fitstable_remove_column(fitstable_t* tab, const char* name);
 
 int fitstable_read_column_into(const fitstable_t* tab,
-							   const char* colname, tfits_type read_as_type,
-							   void* dest, int stride);
+                               const char* colname, tfits_type read_as_type,
+                               void* dest, int stride);
 
 int fitstable_read_column_inds_into(const fitstable_t* tab,
-									const char* colname, tfits_type read_as_type,
-									void* dest, int stride, const int* inds, int N);
+                                    const char* colname, tfits_type read_as_type,
+                                    void* dest, int stride, const int* inds, int N);
 
 void* fitstable_read_column_inds(const fitstable_t* tab,
-								 const char* colname, tfits_type read_as_type,
-								 const int* inds, int N);
+                                 const char* colname, tfits_type read_as_type,
+                                 const int* inds, int N);
 
 int fitstable_read_column_array_inds_into(const fitstable_t* tab,
-										  const char* colname, tfits_type read_as_type,
-										  void* dest, int stride, int arraysize,
-										  const int* inds, int N);
+                                          const char* colname, tfits_type read_as_type,
+                                          void* dest, int stride, int arraysize,
+                                          const int* inds, int N);
 
 void* fitstable_read_column_array_inds(const fitstable_t* tab,
-									   const char* colname, tfits_type read_as_type,
-									   const int* inds, int N, int* arraysize);
+                                       const char* colname, tfits_type read_as_type,
+                                       const int* inds, int N, int* arraysize);
 
 int fitstable_read_column_offset_into(const fitstable_t* tab,
-									  const char* colname, tfits_type read_as_type,
-									  void* dest, int stride, int start, int N);
+                                      const char* colname, tfits_type read_as_type,
+                                      void* dest, int stride, int start, int N);
 
 void* fitstable_read_column(const fitstable_t* tab,
                             const char* colname, tfits_type t);

@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <math.h>
 #include <stdio.h>
@@ -15,9 +15,9 @@
 #include "starutil.h"
 
 void test_jpl_1(CuTest* tc) {
-	bl* lst;
-	orbital_elements_t* orb;
-	char* s = "*******************************************************************************
+    bl* lst;
+    orbital_elements_t* orb;
+    char* s = "*******************************************************************************
 $$SOE
 2451544.500000000 = A.D. 2000-Jan-01 00:00:00.0000 (CT)
  EC= 5.572196627498378E-02 QR= 9.048090920148466E+00 IN= 2.485240160067824E+00
@@ -36,19 +36,19 @@ $$SOE
  A = 9.581954717998279E+00 AD= 1.011622075546834E+01 PR= 1.083222139098727E+04
 ";
 
-	lst = jpl_parse_orbital_elements(s, NULL);
-	CuAssertPtrNotNull(tc, lst);
-	CuAssertIntEquals(tc, 3, bl_size(lst));
-	orb = bl_access(lst, 0);
-	CuAssertDblEquals(tc, 2451544.500000000, mjdtojd(orb->mjd), 1e-6);
-	CuAssertDblEquals(tc, 5.572196627498378E-02, orb->e, fabs(orb->e)*1e-10);
+    lst = jpl_parse_orbital_elements(s, NULL);
+    CuAssertPtrNotNull(tc, lst);
+    CuAssertIntEquals(tc, 3, bl_size(lst));
+    orb = bl_access(lst, 0);
+    CuAssertDblEquals(tc, 2451544.500000000, mjdtojd(orb->mjd), 1e-6);
+    CuAssertDblEquals(tc, 5.572196627498378E-02, orb->e, fabs(orb->e)*1e-10);
 
-	/*
-	 EC= 5.572196627498378E-02 QR= 9.048090920148466E+00 IN= 2.485240160067824E+00
-	 OM= 1.136428218226837E+02 W = 3.360118627136669E+02 Tp=  2452738.076490710024
-	 N = 3.323384124604674E-02 MA= 3.203328683927277E+02 TA= 3.160307045699099E+02
-	 A = 9.582019910444478E+00 AD= 1.011594890074049E+01 PR= 1.083233193944510E+04
-	 */
+    /*
+     EC= 5.572196627498378E-02 QR= 9.048090920148466E+00 IN= 2.485240160067824E+00
+     OM= 1.136428218226837E+02 W = 3.360118627136669E+02 Tp=  2452738.076490710024
+     N = 3.323384124604674E-02 MA= 3.203328683927277E+02 TA= 3.160307045699099E+02
+     A = 9.582019910444478E+00 AD= 1.011594890074049E+01 PR= 1.083233193944510E+04
+     */
 
 }
 

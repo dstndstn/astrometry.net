@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <stddef.h>
 #include <assert.h>
@@ -66,7 +66,7 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr
         return -1;
     }
 
-	// +1 because qfits_header_write_line adds a trailing '\0'.
+    // +1 because qfits_header_write_line adds a trailing '\0'.
     hdrstring = malloc(N * FITS_LINESZ + 1);
     for (i=0; i<N; i++)
         if (qfits_header_write_line(hdr, i, hdrstring + i * FITS_LINESZ)) {

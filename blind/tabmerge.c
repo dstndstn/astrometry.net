@@ -1,16 +1,16 @@
 /*
-  This file was downloaded from the CFITSIO utilities web page:
-    http://heasarc.gsfc.nasa.gov/docs/software/fitsio/cexamples.html
+ This file was downloaded from the CFITSIO utilities web page:
+ http://heasarc.gsfc.nasa.gov/docs/software/fitsio/cexamples.html
 
-  That page contains this text:
-    You may freely modify, reuse, and redistribute these programs as you wish.
+ That page contains this text:
+ You may freely modify, reuse, and redistribute these programs as you wish.
 
-  We assume it was originally written by the CFITSIO authors (primarily William
-  D. Pence).
+ We assume it was originally written by the CFITSIO authors (primarily William
+ D. Pence).
 
-  We (the Astrometry.net team) have modified it slightly.
-  # Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ We (the Astrometry.net team) have modified it slightly.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <string.h>
 #include <stdio.h>
@@ -25,27 +25,27 @@ int main(int argc, char *argv[])
     unsigned char *buffer = 0;
 
     if (argc != 3) { 
-      printf("Usage:  tabmerge infile1[ext][filter] outfile[ext]\n");
-      printf("\n");
-      printf("Merge 2 tables by copying all the rows from the 1st table\n");
-      printf("into the 2nd table.  The  2 tables must have identical\n");
-      printf("structure, with the same number of columns with the same\n");
-      printf("datatypes.  This program modifies the output file in place,\n");
-      printf("rather than creating a whole new output file.\n");
-      printf("\n");
-      printf("Examples: \n");
-      printf("\n");
-      printf("1. tabmerge intab.fit+1 outtab.fit+2\n");
-      printf("\n");
-      printf("    merge the table in the 1st extension of intab.fit with\n");
-      printf("    the table in the 2nd extension of outtab.fit.\n");
-      printf("\n");
-      printf("2. tabmerge 'intab.fit+1[PI > 45]' outab.fits+2\n");
-      printf("\n");
-      printf("    Same as the 1st example, except only rows that have a PI\n");
-      printf("    column value > 45 will be merged into the output table.\n");
-      printf("\n");
-      return(0);
+        printf("Usage:  tabmerge infile1[ext][filter] outfile[ext]\n");
+        printf("\n");
+        printf("Merge 2 tables by copying all the rows from the 1st table\n");
+        printf("into the 2nd table.  The  2 tables must have identical\n");
+        printf("structure, with the same number of columns with the same\n");
+        printf("datatypes.  This program modifies the output file in place,\n");
+        printf("rather than creating a whole new output file.\n");
+        printf("\n");
+        printf("Examples: \n");
+        printf("\n");
+        printf("1. tabmerge intab.fit+1 outtab.fit+2\n");
+        printf("\n");
+        printf("    merge the table in the 1st extension of intab.fit with\n");
+        printf("    the table in the 2nd extension of outtab.fit.\n");
+        printf("\n");
+        printf("2. tabmerge 'intab.fit+1[PI > 45]' outab.fits+2\n");
+        printf("\n");
+        printf("    Same as the 1st example, except only rows that have a PI\n");
+        printf("    column value > 45 will be merged into the output table.\n");
+        printf("\n");
+        return(0);
     }
 
     /* open both input and output files and perform validity checks */
@@ -95,22 +95,22 @@ int main(int argc, char *argv[])
         }
 
         if (check && !status) 
-        {
-            /* insert 'inrows' empty rows at the end of the output table */
-            fits_insert_rows(outfptr, outrows, inrows, &status);
-
-            for (ii = 1, jj = outrows +1; ii <= inrows; ii++, jj++)
             {
-                /* read row from input and write it to the output table */
-                fits_read_tblbytes( infptr,  ii, 1, width, buffer, &status);
-                fits_write_tblbytes(outfptr, jj, 1, width, buffer, &status);
-                if (status)break;  /* jump out of loop if error occurred */
-            }
+                /* insert 'inrows' empty rows at the end of the output table */
+                fits_insert_rows(outfptr, outrows, inrows, &status);
 
-            /* all done; now free memory and close files */
-            fits_close_file(outfptr, &status);
-            fits_close_file(infptr,  &status); 
-        }
+                for (ii = 1, jj = outrows +1; ii <= inrows; ii++, jj++)
+                    {
+                        /* read row from input and write it to the output table */
+                        fits_read_tblbytes( infptr,  ii, 1, width, buffer, &status);
+                        fits_write_tblbytes(outfptr, jj, 1, width, buffer, &status);
+                        if (status)break;  /* jump out of loop if error occurred */
+                    }
+
+                /* all done; now free memory and close files */
+                fits_close_file(outfptr, &status);
+                fits_close_file(infptr,  &status); 
+            }
     }
 
     if (buffer)

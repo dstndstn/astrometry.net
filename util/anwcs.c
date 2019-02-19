@@ -82,23 +82,23 @@ typedef struct anwcslib_t anwcslib_t;
     do {                                                        \
         assert(anwcs);                                          \
         switch (anwcs->type) {                                  \
- case ANWCS_TYPE_WCSLIB:                                        \
- {                                                              \
-  anwcslib_t* anwcslib = anwcs->data;                           \
-  action wcslib_##func(anwcslib, ##__VA_ARGS__);                \
-  break;                                                        \
-  }                                                             \
- case ANWCS_TYPE_SIP:                                           \
- {                                                              \
-  sip_t* sip = anwcs->data;                                     \
-  action ansip_##func(sip, ##__VA_ARGS__);                      \
-  break;                                                        \
-  }                                                             \
- default:                                                       \
- ERROR("Unknown anwcs type %i", anwcs->type);                   \
- defaction;                                                     \
- }                                                              \
-	} while (0)
+        case ANWCS_TYPE_WCSLIB:                                 \
+            {                                                   \
+                anwcslib_t* anwcslib = anwcs->data;             \
+                action wcslib_##func(anwcslib, ##__VA_ARGS__);  \
+                break;                                          \
+            }                                                   \
+        case ANWCS_TYPE_SIP:                                    \
+            {                                                   \
+                sip_t* sip = anwcs->data;                       \
+                action ansip_##func(sip, ##__VA_ARGS__);        \
+                break;                                          \
+            }                                                   \
+        default:                                                \
+            ERROR("Unknown anwcs type %i", anwcs->type);        \
+            defaction;                                          \
+        }                                                       \
+    } while (0)
 
 #elif defined(WCSTOOLS_EXISTS)
 
@@ -131,21 +131,21 @@ typedef struct anwcslib_t anwcslib_t;
     do {                                                        \
         assert(anwcs);                                          \
         switch (anwcs->type) {                                  \
- case ANWCS_TYPE_WCSLIB:                                        \
- ERROR("WCSlib support was not compiled in");                   \
- defaction;                                                     \
- break;                                                         \
- case ANWCS_TYPE_SIP:                                           \
- {                                                              \
-  sip_t* sip = anwcs->data;                                     \
-  action ansip_##func(sip, ##__VA_ARGS__);                      \
-  break;                                                        \
-  }                                                             \
- default:                                                       \
- ERROR("Unknown anwcs type %i", anwcs->type);                   \
- defaction;                                                     \
- }                                                              \
-	} while (0)
+        case ANWCS_TYPE_WCSLIB:                                 \
+            ERROR("WCSlib support was not compiled in");        \
+            defaction;                                          \
+            break;                                              \
+        case ANWCS_TYPE_SIP:                                    \
+            {                                                   \
+                sip_t* sip = anwcs->data;                       \
+                action ansip_##func(sip, ##__VA_ARGS__);        \
+                break;                                          \
+            }                                                   \
+        default:                                                \
+            ERROR("Unknown anwcs type %i", anwcs->type);        \
+            defaction;                                          \
+        }                                                       \
+    } while (0)
 
 #endif
 

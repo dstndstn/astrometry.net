@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,12 +23,12 @@ const char* OPTIONS = "hj:t:f:c:x:y:W:H:o:";
 void print_help(char* progname) {
     int i;
     fprintf(stderr, "\nUsage: %s\n"
-           "  -j <jpeg-filename>\n"
-           "  -o <output-jpeg-filename>\n"
-           "  -t <text>\n"
-           "  -f <font>\n"
-           "  -c <color>:\n"
-           , progname);
+            "  -j <jpeg-filename>\n"
+            "  -o <output-jpeg-filename>\n"
+            "  -t <text>\n"
+            "  -f <font>\n"
+            "  -c <color>:\n"
+            , progname);
     for (i=0;; i++) {
         const char* color = cairoutils_get_color_name(i);
         if (!color) break;

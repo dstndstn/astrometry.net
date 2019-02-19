@@ -460,7 +460,7 @@ class tabledata(object):
             except Exception:
                 print('exception appending element "%s"' % name)
                 raise
-                
+
     def write_to(self, fn, columns=None, header='default', primheader=None,
                  use_fitsio=True, append=False, append_to_hdu=None,
                  fits_object=None,
@@ -845,7 +845,7 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         data = [[None] * Nchunk for t in coltypes]
         j = 0
         lines = []
-        for i,line in zip(xrange(Nchunk), f):
+        for i,line in zip(range(Nchunk), f):
             line = line.strip()
             if line.startswith('#') and skipcomments:
                 print('Skipping comment line:')

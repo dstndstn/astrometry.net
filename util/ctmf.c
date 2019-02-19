@@ -77,6 +77,8 @@ typedef UINT32 uint32_t;
 
 #elif defined(__ALTIVEC__)
 #include <altivec.h>
+#elif defined(USE_ARM64)
+#include <arm_neon.h>
 #endif
 
 /* Compiler peculiarities */
@@ -152,6 +154,14 @@ static inline void histogram_add( const uint16_t x[16], uint16_t y[16] )
     *(vector unsigned short*) &y[0] = vec_add( *(vector unsigned short*) &y[0], *(vector unsigned short*) &x[0] );
     *(vector unsigned short*) &y[8] = vec_add( *(vector unsigned short*) &y[8], *(vector unsigned short*) &x[8] );
 }
+#elif defined(USE_ARM64)
+static inline void histogram_add( const uint16_t x[16], uint16_t y[16] )
+{
+    *(uint16x4_t*) &y[0]  = vadd_u16( *(uint16x4_t*) &y[0],  *(uint16x4_t*) &x[0]  );
+    *(uint16x4_t*) &y[4]  = vadd_u16( *(uint16x4_t*) &y[4],  *(uint16x4_t*) &x[4]  );
+    *(uint16x4_t*) &y[8]  = vadd_u16( *(uint16x4_t*) &y[8],  *(uint16x4_t*) &x[8]  );
+    *(uint16x4_t*) &y[12] = vadd_u16( *(uint16x4_t*) &y[12], *(uint16x4_t*) &x[12] );
+}
 #else
 static inline void histogram_add( const uint16_t x[16], uint16_t y[16] )
 {
@@ -186,6 +196,14 @@ static inline void histogram_sub( const uint16_t x[16], uint16_t y[16] )
     *(vector unsigned short*) &y[0] = vec_sub( *(vector unsigned short*) &y[0], *(vector unsigned short*) &x[0] );
     *(vector unsigned short*) &y[8] = vec_sub( *(vector unsigned short*) &y[8], *(vector unsigned short*) &x[8] );
 }
+#elif defined(USE_ARM64)
+static inline void histogram_sub( const uint16_t x[16], uint16_t y[16] )
+{
+    *(uint16x4_t*) &y[0]  = vsub_u16( *(uint16x4_t*) &y[0],  *(uint16x4_t*) &x[0]  );
+    *(uint16x4_t*) &y[4]  = vsub_u16( *(uint16x4_t*) &y[4],  *(uint16x4_t*) &x[4]  );
+    *(uint16x4_t*) &y[8]  = vsub_u16( *(uint16x4_t*) &y[8],  *(uint16x4_t*) &x[8]  );
+    *(uint16x4_t*) &y[12] = vsub_u16( *(uint16x4_t*) &y[12], *(uint16x4_t*) &x[12] );
+}
 #else
 static inline void histogram_sub( const uint16_t x[16], uint16_t y[16] )
 {
@@ -204,6 +222,7 @@ static inline void histogram_muladd( const uint16_t a, const uint16_t x[16],
         y[i] += a * x[i];
     }
 }
+
 
 static void ctmf_helper(
         const unsigned char* const src, unsigned char* const dst,

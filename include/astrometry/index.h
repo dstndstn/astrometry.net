@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef AN_INDEX_H
 #define AN_INDEX_H
@@ -28,47 +28,47 @@
  "codekd", "quads", and "starkd" fields NULL.
  */
 typedef struct {
-	// The actual components of an index.
-	codetree_t* codekd;
-	quadfile_t* quads;
-	startree_t* starkd;
+    // The actual components of an index.
+    codetree_t* codekd;
+    quadfile_t* quads;
+    startree_t* starkd;
 
-   // FITS file access
-	anqfits_t* fits;
+    // FITS file access
+    anqfits_t* fits;
 
     // filenames
     char* codefn;
     char* quadfn;
     char* starfn;
 
-	// Below here: metadata about the index.
-	char* indexname;
+    // Below here: metadata about the index.
+    char* indexname;
 
-	// Unique id for this index.
-	int indexid;
-	int healpix;
+    // Unique id for this index.
+    int indexid;
+    int healpix;
     int hpnside;
 
-	// Jitter in the index, in arcseconds.
-	double index_jitter;
+    // Jitter in the index, in arcseconds.
+    double index_jitter;
 
-	// cut-an parameters:
-	int cutnside;
-	int cutnsweep;
-	double cutdedup;
-	char* cutband;
-	int cutmargin;
+    // cut-an parameters:
+    int cutnside;
+    int cutnsweep;
+    double cutdedup;
+    char* cutband;
+    int cutmargin;
 
-	// Does the index have the CIRCLE header - (codes live in the circle, not the box)?
-	anbool circle;
-	// Does the index have the CX <= DX property
-	anbool cx_less_than_dx;
-	// Does the index have the CX + DX <= 1/2 property
-	anbool meanx_less_than_half;
+    // Does the index have the CIRCLE header - (codes live in the circle, not the box)?
+    anbool circle;
+    // Does the index have the CX <= DX property
+    anbool cx_less_than_dx;
+    // Does the index have the CX + DX <= 1/2 property
+    anbool meanx_less_than_half;
 
-	// Limits of the size of quads in the index, in arcseconds.
-	double index_scale_upper;
-	double index_scale_lower;
+    // Limits of the size of quads in the index, in arcseconds.
+    double index_scale_upper;
+    double index_scale_lower;
 
     int dimquads;
     int nstars;
@@ -174,6 +174,6 @@ void index_close(index_t* index);
 void index_free(index_t* index);
 
 int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
-								 double* dedup, int* margin, char** band);
+                                 double* dedup, int* margin, char** band);
 
 #endif

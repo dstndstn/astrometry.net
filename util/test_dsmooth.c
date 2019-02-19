@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,12 +22,12 @@ int compare_images(float *i1, float* i2, int nx, int ny, float eps) {
             float v1 = i1[ind];
             float v2 = i2[ind];
             if (fabsf(v1 - v2) > eps) {
-				printf("failure -- %f != %f (delta %f)\n", v1, v2, fabsf(v1-v2));
-				fail++;
-			}
+                printf("failure -- %f != %f (delta %f)\n", v1, v2, fabsf(v1-v2));
+                fail++;
+            }
         }
-	}
-	return fail;
+    }
+    return fail;
 }
 
 float* random_image(int nx, int ny) {
@@ -60,20 +60,20 @@ void test_dsmooth_vs_dsmooth2(CuTest* tc) {
     img_orig = calloc(bites, 1);
     memcpy(img_orig, img, bites);
 
-	CuAssertIntEquals(tc, 0, compare_images(img, img_orig, nx, ny, 0.0));
+    CuAssertIntEquals(tc, 0, compare_images(img, img_orig, nx, ny, 0.0));
 
     smooth1 = calloc(bites, 1);
     smooth2 = calloc(bites, 1);
 
     dsmooth(img, nx, ny, sigma, smooth1);
     // test: don't change the input image
-	CuAssertIntEquals(tc, 0, compare_images(img, img_orig, nx, ny, 0.0));
+    CuAssertIntEquals(tc, 0, compare_images(img, img_orig, nx, ny, 0.0));
     dsmooth2(img, nx, ny, sigma, smooth2);
     // test: don't change the input image
-	CuAssertIntEquals(tc, 0, compare_images(img, img_orig, nx, ny, 0.0));
+    CuAssertIntEquals(tc, 0, compare_images(img, img_orig, nx, ny, 0.0));
 
     // test: dsmooth == dsmooth2
-	CuAssertIntEquals(tc, 0, compare_images(smooth1, smooth2, nx, ny, eps));
+    CuAssertIntEquals(tc, 0, compare_images(smooth1, smooth2, nx, ny, eps));
 
     free(img);
     free(img_orig);
@@ -105,10 +105,10 @@ void test_dsmooth2_inplace(CuTest* tc) {
 
     // test: can we smooth in-place with dsmooth2?
     memcpy(smooth1, img, bites);
-	CuAssertIntEquals(tc, 0, compare_images(img, smooth1, nx, ny, 0.0));
+    CuAssertIntEquals(tc, 0, compare_images(img, smooth1, nx, ny, 0.0));
 
     dsmooth2(smooth1, nx, ny, sigma, smooth1);
-	CuAssertIntEquals(tc, 0, compare_images(smooth1, smooth2, nx, ny, eps));
+    CuAssertIntEquals(tc, 0, compare_images(smooth1, smooth2, nx, ny, eps));
 
     free(img);
     free(smooth1);

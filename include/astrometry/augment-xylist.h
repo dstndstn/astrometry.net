@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #ifndef AUGMENT_XYLIST_H
@@ -29,26 +29,26 @@ struct augment_xylist_s {
     // contains ranges of fields as pairs of ints.
     il* fields;
 
-	int cutobjs;
+    int cutobjs;
 
     sl* verifywcs;
     il* verifywcs_ext;
 
-	sip_t* predistort;
+    sip_t* predistort;
 
-	// FITS columns copied from index to RDLS output
-	sl* tagalong;
-	anbool tagalong_all;
+    // FITS columns copied from index to RDLS output
+    sl* tagalong;
+    anbool tagalong_all;
 
-	// column to sort RDLS output by; prefix with "-" for descending order.
-	char* sort_rdls;
+    // column to sort RDLS output by; prefix with "-" for descending order.
+    char* sort_rdls;
 
     // input files
     char* imagefn;
     char* xylsfn;
     char* solvedinfn;
 
-	anbool assume_fits_image;
+    anbool assume_fits_image;
 
     // output files
     char* axyfn;
@@ -63,7 +63,7 @@ struct augment_xylist_s {
     char* keepxylsfn;
     char* pnmfn;
 
-	time_t wcs_last_mod;
+    time_t wcs_last_mod;
 
     anbool keep_fitsimg;
     char* fitsimgfn;
@@ -79,9 +79,9 @@ struct augment_xylist_s {
     anbool pnm;
     anbool force_ppm;
 
-	anbool use_sextractor;
-	char* sextractor_path;
-	char* sextractor_config;
+    anbool use_sextractor;
+    char* sextractor_path;
+    char* sextractor_config;
 
     int W;
     int H;
@@ -89,7 +89,7 @@ struct augment_xylist_s {
     double scalelo;
     double scalehi;
 
-	int scaleunit;
+    int scaleunit;
 
     int parity;
 
@@ -98,25 +98,25 @@ struct augment_xylist_s {
     anbool tweak;
     int tweakorder;
 
-	anbool no_removelines;
-	anbool no_bg_subtraction;
+    anbool no_removelines;
+    anbool no_bg_subtraction;
 
-	int uniformize;
+    int uniformize;
 
-	anbool invert_image;
+    anbool invert_image;
 
-	float image_sigma;
-	float image_nsigma;
+    float image_sigma;
+    float image_nsigma;
 
     char* xcol;
     char* ycol;
     char* sortcol;
-	char* bgcol;
+    char* bgcol;
 
-	// WCS reference point
-	anbool set_crpix;
-	anbool set_crpix_center;
-	double crpix[2];
+    // WCS reference point
+    anbool set_crpix;
+    anbool set_crpix_center;
+    double crpix[2];
 
     anbool sort_ascending;
     anbool resort;
@@ -124,17 +124,17 @@ struct augment_xylist_s {
     double codetol;
     double pixelerr;
 
-	double odds_to_tune_up;
-	double odds_to_solve;
-	double odds_to_bail;
-	double odds_to_stoplooking;
+    double odds_to_tune_up;
+    double odds_to_solve;
+    double odds_to_bail;
+    double odds_to_stoplooking;
 
     int downsample;
 
     anbool dont_augment;
 
-	anbool verify_uniformize;
-	anbool verify_dedup;
+    anbool verify_uniformize;
+    anbool verify_dedup;
 
     // try to verify FITS input images?
     anbool try_verify;

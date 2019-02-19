@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef FITSBIN_H
 #define FITSBIN_H
@@ -81,22 +81,22 @@
 struct fitsbin_t;
 
 struct fitsbin_chunk_t {
-	char* tablename;
+    char* tablename;
 
     // internal use: pointer to strdup'd name.
     char* tablename_copy;
 
-	// The data (NULL if the table was not found)
-	void* data;
+    // The data (NULL if the table was not found)
+    void* data;
 
-	// The size of a single row in bytes.
-	int itemsize;
+    // The size of a single row in bytes.
+    int itemsize;
 
-	// The number of items (rows)
-	int nrows;
+    // The number of items (rows)
+    int nrows;
 
-	// abort if this table isn't found?
-	int required;
+    // abort if this table isn't found?
+    int required;
 
     // Reading:
     int (*callback_read_header)(struct fitsbin_t* fb, struct fitsbin_chunk_t* chunk);
@@ -108,42 +108,42 @@ struct fitsbin_chunk_t {
     off_t header_start;
     off_t header_end;
 
-	// on output, force a type other than A?
-	tfits_type forced_type;
+    // on output, force a type other than A?
+    tfits_type forced_type;
 
-	// Internal use:
-	// The mmap'ed address
-	char* map;
-	// The mmap'ed size.
-	size_t mapsize;
+    // Internal use:
+    // The mmap'ed address
+    char* map;
+    // The mmap'ed size.
+    size_t mapsize;
 };
 typedef struct fitsbin_chunk_t fitsbin_chunk_t;
 
 
 struct fitsbin_t {
-	char* filename;
+    char* filename;
 
-	anqfits_t* fits;
+    anqfits_t* fits;
 
     bl* chunks;
 
     // Writing:
     FILE* fid;
 
-	// only used for in_memory():
-	anbool inmemory;
-	bl* items;
-	bl* extensions;
+    // only used for in_memory():
+    anbool inmemory;
+    bl* items;
+    bl* extensions;
 
     // The primary FITS header
     qfits_header* primheader;
     off_t primheader_end;
 
-	// for use when reading (not in_memory()): cache the tables in this FITS file.
-	// ideally this would be pushed down to the qfits layer...
-	qfits_table** tables;
-	// number of extensions, include the primary; extensions < Next are valid.
-	int Next;
+    // for use when reading (not in_memory()): cache the tables in this FITS file.
+    // ideally this would be pushed down to the qfits layer...
+    qfits_table** tables;
+    // number of extensions, include the primary; extensions < Next are valid.
+    int Next;
 
     // for use by callback_read_header().
     void* userdata;

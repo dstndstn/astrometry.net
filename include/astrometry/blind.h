@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef BLIND_H
 #define BLIND_H
@@ -17,43 +17,43 @@
 #define DEFAULT_QSF_HI 1.0
 
 struct blind_params {
-	solver_t solver;
+    solver_t solver;
 
-	anbool indexes_inparallel;
+    anbool indexes_inparallel;
 
-	double logratio_tosolve;
+    double logratio_tosolve;
 
     // How many solving quads are required before we stop?
     int nsolves;
     int nsolves_sofar;
 
-	// Filenames
-	char *fieldfname;
-	char *matchfname;
+    // Filenames
+    char *fieldfname;
+    char *matchfname;
     char *indexrdlsfname;
     char *corr_fname;
     char* scamp_fname;
 
-	// WCS filename template (sprintf format with %i for field number)
-	char* wcs_template;
+    // WCS filename template (sprintf format with %i for field number)
+    char* wcs_template;
 
-	// List of WCS filenames to run verification on.
-	sl* verify_wcsfiles;
+    // List of WCS filenames to run verification on.
+    sl* verify_wcsfiles;
 
-	// WCS instances to verify.  (sip_t structs)
-	bl* verify_wcs_list;
+    // WCS instances to verify.  (sip_t structs)
+    bl* verify_wcs_list;
 
-	// Output solved file.
-	char *solved_out;
-	// Input solved file.
-	char* solved_in;
-	// Solvedserver ip:port
-	char *solvedserver;
-	// If using solvedserver, limits of fields to ask for
-	int firstfield, lastfield;
+    // Output solved file.
+    char *solved_out;
+    // Input solved file.
+    char* solved_in;
+    // Solvedserver ip:port
+    char *solvedserver;
+    // If using solvedserver, limits of fields to ask for
+    int firstfield, lastfield;
 
-	// Indexes to use (base filenames)
-	sl* indexnames;
+    // Indexes to use (base filenames)
+    sl* indexnames;
 
     // Indexes to use (index_t objects)
     pl* indexes;
@@ -65,66 +65,66 @@ struct blind_params {
     double quad_size_fraction_lo;
     double quad_size_fraction_hi;
 
-	// Fields to try
-	il* fieldlist;
+    // Fields to try
+    il* fieldlist;
 
-	// Which field in a multi-HDU xyls file is this?
-	int fieldnum;
-	// A unique ID for the whole multi-HDU xyls file.
-	int fieldid;
+    // Which field in a multi-HDU xyls file is this?
+    int fieldnum;
+    // A unique ID for the whole multi-HDU xyls file.
+    int fieldid;
 
-	// xylist column names.
-	char *xcolname, *ycolname;
-	// FITS keyword to copy from xylist to matchfile.
-	char *fieldid_key;
+    // xylist column names.
+    char *xcolname, *ycolname;
+    // FITS keyword to copy from xylist to matchfile.
+    char *fieldid_key;
 
-	// The fields to solve!
-	xylist_t* xyls;
+    // The fields to solve!
+    xylist_t* xyls;
 
-	// Output files
-	matchfile* mf;
-	rdlist_t* indexrdls;
+    // Output files
+    matchfile* mf;
+    rdlist_t* indexrdls;
 
-	// extra fields to add to index rdls file:
-	sl* rdls_tagalong;
-	anbool rdls_tagalong_all;
+    // extra fields to add to index rdls file:
+    sl* rdls_tagalong;
+    anbool rdls_tagalong_all;
 
-	// internal use only: have I grabbed "all" rdls fields already?
-	//anbool done_rdls_tagalong_all;
+    // internal use only: have I grabbed "all" rdls fields already?
+    //anbool done_rdls_tagalong_all;
 
-	// field to sort RDLS file by; prefix by "-" for descending order.
-	char* sort_rdls;
+    // field to sort RDLS file by; prefix by "-" for descending order.
+    char* sort_rdls;
 
-	// extra fields to add from the xyls file:
-	sl* xyls_tagalong;
-	anbool xyls_tagalong_all;
+    // extra fields to add from the xyls file:
+    sl* xyls_tagalong;
+    anbool xyls_tagalong_all;
 
     // List of MatchObjs with logodds >= logodds_tokeep
     bl* solutions;
 
-	float cpulimit;
-	float cpu_start;
-	anbool hit_cpulimit;
+    float cpulimit;
+    float cpu_start;
+    anbool hit_cpulimit;
 
-	int timelimit;
-	time_t time_start;
-	anbool hit_timelimit;
+    int timelimit;
+    time_t time_start;
+    anbool hit_timelimit;
 
-	float total_cpulimit;
-	float cpu_total_start;
-	anbool hit_total_cpulimit;
+    float total_cpulimit;
+    float cpu_total_start;
+    anbool hit_total_cpulimit;
 
-	double total_timelimit;
-	double time_total_start;
-	anbool hit_total_timelimit;
+    double total_timelimit;
+    double time_total_start;
+    anbool hit_total_timelimit;
 
-	anbool single_field_solved;
+    anbool single_field_solved;
 
-	// filename for cancelling
-	char* cancelfname;
-	anbool cancelled;
+    // filename for cancelling
+    char* cancelfname;
+    anbool cancelled;
 
-	anbool best_hit_only;
+    anbool best_hit_only;
 };
 typedef struct blind_params blind_t;
 

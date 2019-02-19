@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -16,8 +16,8 @@ const char* OPTIONS = "h";
 
 
 int main(int argc, char *args[]) {
-	int argchar;
-	//char* progname = args[0];
+    int argchar;
+    //char* progname = args[0];
     char *infn = NULL, *outfn = NULL;
     unsigned char* img;
     int W, H;
@@ -29,7 +29,7 @@ int main(int argc, char *args[]) {
         switch (argchar) {
             //case '?':
             //case 'h':
-			//printHelp(progname);
+            //printHelp(progname);
             //return 0;
         default:
             return -1;

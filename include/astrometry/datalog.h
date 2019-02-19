@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 #ifndef DATA_LOG_H
 #define DATA_LOG_H
 
@@ -18,10 +18,10 @@ typedef uint32_t data_mask_t;
 // FIXME -- duh, datalog should use log!
 
 struct data_log_t {
-	data_mask_t mask;
-	int level;
+    data_mask_t mask;
+    int level;
     FILE* f;
-	int nitems;
+    int nitems;
 };
 typedef struct data_log_t data_log_t;
 
@@ -52,6 +52,6 @@ anbool data_log_passes(data_mask_t mask, int level);
 
 void
 ATTRIB_FORMAT(printf, 3, 4)
-	data_log(data_mask_t mask, int level, const char* format, ...);
+    data_log(data_mask_t mask, int level, const char* format, ...);
 
 #endif

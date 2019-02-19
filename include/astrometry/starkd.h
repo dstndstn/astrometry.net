@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef STAR_KD_H
 #define STAR_KD_H
@@ -27,17 +27,17 @@
 #define STARTREE_NAME "stars"
 
 typedef struct {
-	kdtree_t* tree;
-	qfits_header* header;
-	int* inverse_perm;
-	uint8_t* sweep;
+    kdtree_t* tree;
+    qfits_header* header;
+    int* inverse_perm;
+    uint8_t* sweep;
 
     // reading or writing?
     int writing;
 
-	// reading: tagged-along data (a FITS BINTABLE with one row per star,
-	// in the same order); access this via startree_get_tagalong() ONLY!
-	fitstable_t* tagalong;
+    // reading: tagged-along data (a FITS BINTABLE with one row per star,
+    // in the same order); access this via startree_get_tagalong() ONLY!
+    fitstable_t* tagalong;
 } startree_t;
 
 startree_t* startree_open(const char* fn);
@@ -45,7 +45,7 @@ startree_t* startree_open(const char* fn);
 startree_t* startree_open_fits(anqfits_t* fits);
 
 /**
-   Searches for stars within a radius of a point.
+ Searches for stars within a radius of a point.
 
  xyzcenter: double[3]: unit-sphere coordinates of point; see
  starutil.h : radecdeg2xyzarr() to convert RA,Decs to this form.
@@ -65,15 +65,15 @@ startree_t* startree_open_fits(anqfits_t* fits);
  
  */
 void startree_search_for(const startree_t* s, const double* xyzcenter, double radius2,
-						 double** xyzresults, double** radecresults,
-						 int** starinds, int* nresults);
+                         double** xyzresults, double** radecresults,
+                         int** starinds, int* nresults);
 
 /**
  RA, Dec, and radius in degrees.  Otherwise same as startree_search_for().
  */
 void startree_search_for_radec(const startree_t* s, double ra, double dec, double radius,
-							   double** xyzresults, double** radecresults,
-							   int** starinds, int* nresults);
+                               double** xyzresults, double** radecresults,
+                               int** starinds, int* nresults);
 
 void startree_search(const startree_t* s, const double* xyzcenter, double radius2,
                      double** xyzresults, double** radecresults, int* nresults);

@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef MATHUTIL_H
 #define MATHUTIL_H
@@ -12,9 +12,9 @@
 int point_in_polygon(double x, double y, const dl* polygon);
 
 /*
-  Given a point "pt", computes two unit vectors that are tangent
-  to the point and perpendicular to each other.
-*/
+ Given a point "pt", computes two unit vectors that are tangent
+ to the point and perpendicular to each other.
+ */
 void tan_vectors(const double* pt, double* vec1, double* vec2);
 
 int invert_2by2(const double A[2][2], double Ainv[2][2]);
@@ -49,7 +49,7 @@ double gaussian_sample(double mean, double stddev);
 #define EDGE_AVERAGE  1
 
 int get_output_image_size(int W, int H, int blocksize, int edgehandling,
-						  int* outw, int* outh);
+                          int* outw, int* outh);
 
 #define SIGN(x) (((x) == 0) ? 0.0 : (((x) > 0) ? 1.0 : -1.0))
 
@@ -61,15 +61,15 @@ int get_output_image_size(int W, int H, int blocksize, int edgehandling,
  "image".  The output image is returned.
  */
 float* average_image_f(const float* image, int W, int H,
-					   int blocksize, int edgehandling,
-					   int* newW, int* newH,
-					   float* output);
+                       int blocksize, int edgehandling,
+                       int* newW, int* newH,
+                       float* output);
 
 float* average_weighted_image_f(const float* image, const float* weight,
-								int W, int H,
-								int blocksize, int edgehandling,
-								int* newW, int* newH,
-								float* output, float nilval);
+                                int W, int H,
+                                int blocksize, int edgehandling,
+                                int* newW, int* newH,
+                                float* output, float nilval);
 
 Const InlineDeclare int imax(int a, int b);
 

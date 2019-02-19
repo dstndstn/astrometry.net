@@ -1,6 +1,6 @@
 /*
-# This file is part of libkd.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of libkd.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #include <math.h>
@@ -19,11 +19,11 @@
 void test_nn_1(CuTest* tc) {
     //int NX = 5000;
     //int NY = 6000;
-	//double maxr2 = 0.01;
+    //double maxr2 = 0.01;
 
     int NX = 8;
     int NY = 10;
-	double maxr2 = 0.5;
+    double maxr2 = 0.5;
 
     int D = 3;
     int Nleaf = 5;

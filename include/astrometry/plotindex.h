@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 #ifndef PLOTINDEX_H
 #define PLOTINDEX_H
 
@@ -10,11 +10,11 @@
 #include "astrometry/index.h"
 
 struct plotindex_args {
-	pl* indexes;
-	pl* qidxes;
-	anbool stars;
-	anbool quads;
-	anbool fill;
+    pl* indexes;
+    pl* qidxes;
+    anbool stars;
+    anbool quads;
+    anbool fill;
 };
 typedef struct plotindex_args plotindex_t;
 
@@ -33,10 +33,10 @@ int plot_index_add_qidx_file(plotindex_t* args, const char* fn);
 void* plot_index_init(plot_args_t* args);
 
 int plot_index_command(const char* command, const char* cmdargs,
-					plot_args_t* args, void* baton);
+                       plot_args_t* args, void* baton);
 
 int plot_index_plot(const char* command, cairo_t* cr,
-					plot_args_t* args, void* baton);
+                    plot_args_t* args, void* baton);
 
 void plot_index_free(plot_args_t* args, void* baton);
 

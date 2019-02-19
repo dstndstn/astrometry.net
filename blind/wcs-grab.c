@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <unistd.h>
 
@@ -22,20 +22,20 @@ static void print_help(char* progname) {
 }
 
 int main(int argc, char** args) {
-	char* outfn = NULL;
-	char* infn = NULL;
+    char* outfn = NULL;
+    char* infn = NULL;
     int ext;
-	int c;
+    int c;
     int loglvl = LOG_MSG;
     qfits_header* hdr;
     sip_t sip;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
-		case '?':
+        case '?':
         case 'h':
-			print_help(args[0]);
-			exit(0);
+            print_help(args[0]);
+            exit(0);
         case 'v':
             loglvl++;
             break;

@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef AN_MULTIINDEX_H
 #define AN_MULTIINDEX_H
@@ -44,8 +44,8 @@
  */
 
 typedef struct {
-	pl* inds;
-	startree_t* starkd;
+    pl* inds;
+    startree_t* starkd;
     // for the starkd:
     anqfits_t* fits;
 } multiindex_t;

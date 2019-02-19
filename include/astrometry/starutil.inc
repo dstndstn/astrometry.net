@@ -205,11 +205,11 @@ anbool star_coords(const double *s, const double *r,
         // South pole
         double inv_s2 = 1.0 / s[2];
         if (tangent) {
-            *x =  s[0] * inv_s2;
-            *y = -s[1] * inv_s2;
+            *x = -s[0] * inv_s2;
+            *y =  s[1] * inv_s2;
         } else {
-            *x =  s[0];
-            *y = -s[1];
+            *x = -s[0];
+            *y =  s[1];
         }
     } else {
         double etax, etay, xix, xiy, xiz, eta_norm;

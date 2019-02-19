@@ -352,7 +352,7 @@ def tree_build_radec(ra=None, dec=None, xyz=None):
     kd = spherematch_c.KdTree(xyz)
     return kd
 
-def tree_build(X):
+def tree_build(X, nleaf=16, bbox=True, split=False):
     '''
     Builds a kd-tree given a numpy array of Euclidean points.
     
@@ -366,7 +366,7 @@ def tree_build(X):
     kd: integer
         kd-tree identifier (address).
     '''
-    return spherematch_c.KdTree(X)
+    return spherematch_c.KdTree(X, nleaf=nleaf, bbox=bbox, split=split)
 
 def tree_free(kd):
     '''

@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #ifndef CODE_KD_H
 #define CODE_KD_H
@@ -15,9 +15,9 @@
 #define CODETREE_NAME "codes"
 
 typedef struct {
-	kdtree_t* tree;
-	qfits_header* header;
-	int* inverse_perm;
+    kdtree_t* tree;
+    qfits_header* header;
+    int* inverse_perm;
 } codetree_t;
 
 codetree_t* codetree_open(const char* fn);

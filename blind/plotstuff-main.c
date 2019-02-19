@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 
 /**
@@ -121,81 +121,81 @@
 static const char* OPTIONS = "hvW:H:o:JjP";
 
 static void printHelp(char* progname) {
-	BOILERPLATE_HELP_HEADER(stdout);
-	printf("\nUsage: %s [options] > output.png\n"
+    BOILERPLATE_HELP_HEADER(stdout);
+    printf("\nUsage: %s [options] > output.png\n"
            "  [-o <output-file>] (default: stdout)\n"
            "  [-P]              Write PPM output instead of PNG.\n"
-		   "  [-j]              Write JPEG output.\n"
-		   "  [-J]              Write PDF output.\n"
-		   "  [-W <width>   ]   Width of output image (default: data-dependent).\n"
-		   "  [-H <height>  ]   Height of output image (default: data-dependent).\n"
-		   "  [-v]: +verbose\n"
-		   "\n", progname);
+           "  [-j]              Write JPEG output.\n"
+           "  [-J]              Write PDF output.\n"
+           "  [-W <width>   ]   Width of output image (default: data-dependent).\n"
+           "  [-H <height>  ]   Height of output image (default: data-dependent).\n"
+           "  [-v]: +verbose\n"
+           "\n", progname);
 }
 
 
 int main(int argc, char *args[]) {
-	int loglvl = LOG_MSG;
-	int argchar;
-	char* progname = args[0];
-	plot_args_t pargs;
+    int loglvl = LOG_MSG;
+    int argchar;
+    char* progname = args[0];
+    plot_args_t pargs;
 
-	plotstuff_init(&pargs);
-	pargs.fout = stdout;
-	pargs.outformat = PLOTSTUFF_FORMAT_PNG;
+    plotstuff_init(&pargs);
+    pargs.fout = stdout;
+    pargs.outformat = PLOTSTUFF_FORMAT_PNG;
 
-	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
-		switch (argchar) {
-		case 'v':
-			loglvl++;
-			break;
+    while ((argchar = getopt(argc, args, OPTIONS)) != -1)
+        switch (argchar) {
+        case 'v':
+            loglvl++;
+            break;
         case 'o':
             pargs.outfn = optarg;
             break;
         case 'P':
             pargs.outformat = PLOTSTUFF_FORMAT_PPM;
             break;
-		case 'j':
+        case 'j':
             pargs.outformat = PLOTSTUFF_FORMAT_JPG;
-			break;
-		case 'J':
+            break;
+        case 'J':
             pargs.outformat = PLOTSTUFF_FORMAT_PDF;
-			break;
-		case 'W':
-			pargs.W = atoi(optarg);
-			break;
-		case 'H':
-			pargs.H = atoi(optarg);
-			break;
-		case 'h':
-			printHelp(progname);
+            break;
+        case 'W':
+            pargs.W = atoi(optarg);
+            break;
+        case 'H':
+            pargs.H = atoi(optarg);
+            break;
+        case 'h':
+            printHelp(progname);
             exit(0);
-		case '?':
-		default:
-			printHelp(progname);
+        case '?':
+        default:
+            printHelp(progname);
             exit(-1);
-		}
+        }
 
-	if (optind != argc) {
-		printHelp(progname);
-		exit(-1);
-	}
-	log_init(loglvl);
+    if (optind != argc) {
+        printHelp(progname);
+        exit(-1);
+    }
+    log_init(loglvl);
 
     // log errors to stderr, not stdout.
     errors_log_to(stderr);
 
-	fits_use_error_system();
+    fits_use_error_system();
 
-	for (;;) {
-		if (plotstuff_read_and_run_command(&pargs, stdin))
-			break;
-	}
+    for (;;) {
+        if (plotstuff_read_and_run_command(&pargs, stdin))
+            break;
+    }
 
-	if (plotstuff_output(&pargs))
-		exit(-1);
+    if (plotstuff_output(&pargs))
+        exit(-1);
 
-	plotstuff_free(&pargs);
+    plotstuff_free(&pargs);
 
-	return 0;
+    return 0;
 }

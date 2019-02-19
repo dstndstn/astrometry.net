@@ -1,6 +1,6 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
 #include <assert.h>
@@ -9,8 +9,8 @@
 
 void rd_getradec(const rd_t* f, int i, double* ra, double* dec) {
     assert(i < f->N);
-	*ra  = f->ra [i];
-	*dec = f->dec[i];
+    *ra  = f->ra [i];
+    *dec = f->dec[i];
 }
 
 double rd_getra (rd_t* f, int i) {
@@ -123,13 +123,13 @@ void rdlist_set_decunits(rdlist_t* ls, const char* units) {
  */
 
 rdlist_t* rdlist_open(const char* fn) {
-	rdlist_t* rtn = xylist_open(fn);
-	if (!rtn) return NULL;
+    rdlist_t* rtn = xylist_open(fn);
+    if (!rtn) return NULL;
     rdlist_set_raname(rtn, "RA");
     rdlist_set_decname(rtn, "DEC");
     xylist_set_include_flux(rtn, FALSE);
     xylist_set_include_background(rtn, FALSE);
-	return rtn;
+    return rtn;
 }
 
 rd_t* rdlist_read_field(rdlist_t* ls, rd_t* fld) {
@@ -180,7 +180,7 @@ int rdlist_write_one_radec(rdlist_t* ls, double ra, double dec) {
 }
 
 rdlist_t* rdlist_open_for_writing(const char* fn) {
-	rdlist_t* rtn = xylist_open_for_writing(fn);
+    rdlist_t* rtn = xylist_open_for_writing(fn);
     xylist_set_antype(rtn, AN_FILETYPE_RDLS);
     rdlist_set_raname (rtn, "RA");
     rdlist_set_decname(rtn, "DEC");
@@ -190,6 +190,6 @@ rdlist_t* rdlist_open_for_writing(const char* fn) {
     rdlist_set_dectype(rtn, TFITS_BIN_TYPE_D);
     xylist_set_include_flux(rtn, FALSE);
     xylist_set_include_background(rtn, FALSE);
-	return rtn;
+    return rtn;
 }
 

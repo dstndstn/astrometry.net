@@ -1,7 +1,7 @@
 /*
-# This file is part of the Astrometry.net suite.
-# Licensed under a 3-clause BSD style license - see LICENSE
-*/
+ # This file is part of the Astrometry.net suite.
+ # Licensed under a 3-clause BSD style license - see LICENSE
+ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -16,15 +16,15 @@ static pl* estack = NULL;
 static anbool atexit_registered = FALSE;
 
 static err_t* error_copy(err_t* e) {
-	int i, N;
+    int i, N;
     err_t* copy = error_new();
     copy->print = e->print;
     copy->save = e->save;
-	N = error_stack_N_entries(e);
-	for (i=0; i<N; i++) {
-		errentry_t* ee = error_stack_get_entry(e, i);
-		error_stack_add_entry(copy, ee->file, ee->line, ee->func, ee->str);
-	}
+    N = error_stack_N_entries(e);
+    for (i=0; i<N; i++) {
+        errentry_t* ee = error_stack_get_entry(e, i);
+        error_stack_add_entry(copy, ee->file, ee->line, ee->func, ee->str);
+    }
     return copy;
 }
 
@@ -72,9 +72,9 @@ void errors_use_function(errfunc_t* func, void* baton) {
     err_t* e;
     e = errors_get_state();
     e->errfunc = func;
-	e->baton = baton;
-	e->print = NULL;
-	e->save = FALSE;
+    e->baton = baton;
+    e->print = NULL;
+    e->save = FALSE;
 }
 
 void errors_clear_stack() {
@@ -150,8 +150,8 @@ err_t* error_new() {
 
 void error_free(err_t* e) {
     if (!e) return;
-	error_stack_clear(e);
-	bl_free(e->errstack);
+    error_stack_clear(e);
+    bl_free(e->errstack);
     free(e);
 }
 
@@ -160,8 +160,8 @@ int error_nerrs(const err_t* e) {
 }
 
 char* error_get_errstr(const err_t* e, int i) {
-	errentry_t* ee = error_stack_get_entry(e, i);
-	return ee->str;
+    errentry_t* ee = error_stack_get_entry(e, i);
+    return ee->str;
 }
 
 void error_report(err_t* e, const char* module, int line, const char* func, 
@@ -183,41 +183,41 @@ void error_reportv(err_t* e, const char* module, int line,
         fprintf(e->print, "\n");
     }
     if (e->save) {
-		error_stack_add_entryv(e, module, line, func, fmt, va);
+        error_stack_add_entryv(e, module, line, func, fmt, va);
     }
-	if (e->errfunc) {
-		e->errfunc(e->baton, e, module, line, func, fmt, va);
-	}
+    if (e->errfunc) {
+        e->errfunc(e->baton, e, module, line, func, fmt, va);
+    }
 }
 
 void error_print_stack(err_t* e, FILE* f) {
     int i;
-	anbool first=TRUE;
+    anbool first=TRUE;
     for (i=error_stack_N_entries(e)-1; i>=0; i--) {
-		errentry_t* ee = error_stack_get_entry(e, i);
-		if (!first)
-			fprintf(f, " ");
+        errentry_t* ee = error_stack_get_entry(e, i);
+        if (!first)
+            fprintf(f, " ");
         if (ee->line >= 0) {
-			fprintf(f, "%s:%i:%s %s\n", ee->file, ee->line, ee->func, ee->str);
+            fprintf(f, "%s:%i:%s %s\n", ee->file, ee->line, ee->func, ee->str);
         } else {
-			fprintf(f, "%s:%s %s\n", ee->file, ee->func, ee->str);
+            fprintf(f, "%s:%s %s\n", ee->file, ee->func, ee->str);
         }
-		first = FALSE;
+        first = FALSE;
     }
 }
 
 char* error_get_errs(err_t* e, const char* separator) {
-	sl* errs = sl_new(4);
-	int i,N;
-	char* rtn;
-	N = error_stack_N_entries(e);
-	for (i=0; i<N; i++) {
-		errentry_t* ee = error_stack_get_entry(e, i);
-		sl_append(errs, ee->str);
-	}
-	rtn = sl_join_reverse(errs, separator);
-	sl_free2(errs);
-	return rtn;
+    sl* errs = sl_new(4);
+    int i,N;
+    char* rtn;
+    N = error_stack_N_entries(e);
+    for (i=0; i<N; i++) {
+        errentry_t* ee = error_stack_get_entry(e, i);
+        sl_append(errs, ee->str);
+    }
+    rtn = sl_join_reverse(errs, separator);
+    sl_free2(errs);
+    return rtn;
 }
 
 void errors_regex_error(int errcode, const regex_t* re) {
@@ -227,41 +227,41 @@ void errors_regex_error(int errcode, const regex_t* re) {
 }
 
 void error_stack_add_entryv(err_t* e, const char* file, int line, const char* func, const char* format, va_list va) {
-	char* str;
-	if (vasprintf(&str, format, va) == -1) {
-		fprintf(stderr, "vasprintf failed with format string: \"%s\"\n", format);
-		return;
-	}
-	error_stack_add_entry(e, file, line, func, str);
-	free(str);
+    char* str;
+    if (vasprintf(&str, format, va) == -1) {
+        fprintf(stderr, "vasprintf failed with format string: \"%s\"\n", format);
+        return;
+    }
+    error_stack_add_entry(e, file, line, func, str);
+    free(str);
 }
 
- void error_stack_add_entry(err_t* e, const char* file, int line, const char* func, const char* str) {
-	errentry_t ee;
-	ee.file = strdup_safe(file);
-	ee.line = line;
-	ee.func = strdup_safe(func);
-	ee.str = strdup_safe(str);
-	bl_append(e->errstack, &ee);
+void error_stack_add_entry(err_t* e, const char* file, int line, const char* func, const char* str) {
+    errentry_t ee;
+    ee.file = strdup_safe(file);
+    ee.line = line;
+    ee.func = strdup_safe(func);
+    ee.str = strdup_safe(str);
+    bl_append(e->errstack, &ee);
 }
 
 errentry_t* error_stack_get_entry(const err_t* e, int i) {
-	return bl_access(e->errstack, i);
+    return bl_access(e->errstack, i);
 }
 
 int error_stack_N_entries(const err_t* e) {
-	return bl_size(e->errstack);
+    return bl_size(e->errstack);
 }
 
 void error_stack_clear(err_t* e) {
-	int i;
-	int N = bl_size(e->errstack);
-	for (i=0; i<N; i++) {
-		errentry_t* ee = bl_access(e->errstack, i);
-		free(ee->file);
-		free(ee->func);
-		free(ee->str);
-	}
-	bl_remove_all(e->errstack);
+    int i;
+    int N = bl_size(e->errstack);
+    for (i=0; i<N; i++) {
+        errentry_t* ee = bl_access(e->errstack, i);
+        free(ee->file);
+        free(ee->func);
+        free(ee->str);
+    }
+    bl_remove_all(e->errstack);
 }
 

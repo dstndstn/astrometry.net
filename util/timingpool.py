@@ -555,6 +555,11 @@ class TimingPool(multiprocessing.pool.Pool):
             w.start()
             debug('added worker')
 
+    def py3Process(self, *args, **kwargs):
+        from multiprocessing import Process
+        #return Process(self._ctx, *args, **kwargs)
+        return Process(*args, **kwargs)
+
     # This is just copied from the superclass; we call our routines:
     #  -handle_results -> timing_handle_results
     # And add _beancounter.
@@ -579,6 +584,9 @@ class TimingPool(multiprocessing.pool.Pool):
                 context = multiprocessing.pool.get_context()
         self._ctx = context
 
+        if py3:
+            self.Process = self.py3Process
+        
         self._beancounter = BeanCounter()
         self._setup_queues()
         self._taskqueue = queue.Queue()

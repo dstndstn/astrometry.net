@@ -18,6 +18,8 @@ def hist_remove_lines(x, binwidth, binoffset, logcut):
     # We're ignoring empty bins.
     occupied = np.nonzero(counts > 0)[0]
     noccupied = len(occupied)
+    if noccupied == 0:
+        return np.array([True] * len(x))
     k = (counts[occupied] - 1) 
     mean = sum(k) / float(noccupied)
     logpoisson = k*np.log(mean) - mean - np.array([sum(np.arange(kk)) for kk in k])
