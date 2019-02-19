@@ -28,7 +28,7 @@ USE_X_FORWARDED_HOST = True
 
 sitename = 'nova'
 
-TEMPDIR = '/data2/tmp'
+TEMPDIR = '/data1/tmp'
 DATABASES['default']['NAME'] = 'an-nova'
 
 LOGGING['loggers']['django.request']['level'] = 'WARN'
