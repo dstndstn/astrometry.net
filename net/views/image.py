@@ -442,7 +442,8 @@ def sdss_image(req, calid=None, size='full'):
                                         cd22='%.6g' % wcs.cd[3],
                                         imagew='%i' % int(wcs.imagew),
                                         imageh='%i' % int(wcs.imageh)))
-        url = 'http://legacysurvey.org/viewer-dev/sdss-wcs/?' + urlargs
+
+        url = 'http://legacysurvey.org/viewer/cutout-wcs/?layer=sdssco&' + urlargs
         return HttpResponseRedirect(url)
         #print('Retrieving:', url)
         #f = urllib.urlopen(url)
