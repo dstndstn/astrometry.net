@@ -103,6 +103,9 @@ blind-cairo: cairoutils
 .PHONY: extra
 
 # Targets that create python bindings (requiring swig)
+ifneq ($(SYSTEM_GSL),yes)
+py: gsl-an
+endif
 py: catalogs pyutil libkd-spherematch sdss cairoutils pyplotstuff
 
 libkd-spherematch:
