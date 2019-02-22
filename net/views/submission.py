@@ -15,7 +15,7 @@ from django.core.validators import URLValidator
 from astrometry.net.models import *
 from astrometry.net import settings
 from astrometry.net.util import NoBulletsRadioSelect, HorizontalRadioSelect
-from log import *
+from astrometry.net.log import *
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.http import HttpResponseRedirect

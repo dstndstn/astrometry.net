@@ -178,6 +178,11 @@ if __name__ == '__main__':
     if opt.uimage:
         ui = UserImage.objects.all().get(id=opt.uimage)
         print('UserImage', ui)
+        im = ui.image
+        print('Image', im)
+        sub = ui.submission
+        print('Submission', sub)
+        print(sub.disk_file.get_path())
 
         if opt.chown:
             user = User.objects.all().get(id=opt.chown)

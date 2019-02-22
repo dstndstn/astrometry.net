@@ -25,7 +25,7 @@ from astrometry.net.views.submission import handle_upload
 from .api_util import *
 from .log import *
 from .tmpfile import *
-import settings
+import astrometry.net.settings
 
 # Content-type to return for JSON outputs.
 json_type = 'text/plain' # 'application/json'

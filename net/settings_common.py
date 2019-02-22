@@ -14,6 +14,7 @@ ALLOWED_HOSTS = ['astro.cs.toronto.edu', 'nova2.astrometry.net', 'localhost',
                  'nova4.astrometry.net',
                  'nova5.astrometry.net',
                  'nova6.astrometry.net',
+                 'testserver',
 ]
 
 MULTI_HOSTS = []
@@ -216,7 +217,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'astrometry.net.urls'
 
 ALLOWED_INCLUDE_ROOTS = (
     os.path.join(WEB_DIR, 'templates'),

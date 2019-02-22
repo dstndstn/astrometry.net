@@ -1046,8 +1046,16 @@ def search(req):
 
 
 if __name__ == '__main__':
-    class Duck(object):
-        pass
-    req = Duck()
-    onthesky_image(req, zoom=0, calid=1)
+    # class Duck(object):
+    #     pass
+    # req = Duck()
+    # onthesky_image(req, zoom=0, calid=1)
     
+    from django.test import Client
+    c = Client()
+    r = c.get('/user_images/2676353')
+    #print(r)
+    f = open('out.html', 'wb')
+    for x in r:
+        f.write(x)
+    f.close()

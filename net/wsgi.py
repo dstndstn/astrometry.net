@@ -17,7 +17,7 @@ path = os.path.dirname(path)
 os.environ['PATH'] += ':/usr/local/netpbm/bin:%s/blind:%s/util' % (path,path)
 
 import logging
-logfn = os.path.join(path, 'nova.log')
+logfn = os.path.join(path, 'net', 'nova.log')
 print('Logging to', logfn, file=sys.stderr)
 logging.basicConfig(filename=logfn, level=logging.DEBUG)
 

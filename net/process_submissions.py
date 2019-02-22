@@ -385,6 +385,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
         ra, dec, radius = tan.get_center_radecradius()
         nside = anutil.healpix_nside_for_side_length_arcmin(radius*60)
         nside = int(2**round(math.log(nside, 2)))
+        nside = max(1, nside)
         healpix = anutil.radecdegtohealpix(ra, dec, nside)
         sky_location, created = SkyLocation.objects.get_or_create(nside=nside, healpix=healpix)
         log.msg('SkyLocation:', sky_location)
@@ -685,7 +686,6 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
         dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
     if dosub_nthreads > 1:
         print('Processing submissions with %d threads' % dosub_nthreads)
-        #dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
         dosub_pool = multiprocessing.Pool(processes=dosub_nthreads)
 
     print('Refresh rate: %.1f seconds' % refresh_rate)
