@@ -777,7 +777,8 @@ void log_set_level(int lvl);
         Py_DECREF(dtype);
         dtype = NULL;
 
-        if (!np_img || !np_outimg || !np_outweight) {
+        if (!np_img || !np_outimg ||
+            ((py_outweight != Py_None) && !np_outweight)) {
             ERR("Failed to PyArray_FromAny the images (np_img=%p, np_outimg=%p, np_outweight=%p)\n",
                 np_img, np_outimg, np_outweight);
             return -1;
