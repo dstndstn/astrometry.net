@@ -940,6 +940,8 @@ class UserImage(Hideable):
         #self.license.save(self.user.get_profile().default_license)
         return super(UserImage, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return 'UserImage %i' % self.id
 
     def add_sky_objects(self, job):
         logmsg('adding sky objects for %s' % self)
@@ -976,7 +978,7 @@ class UserImage(Hideable):
             logmsg('tagged user image saved')
         logmsg('done adding machine tags')
         #self.save()
-                
+
     def get_best_job(self):
         jobs = self.jobs.all()
         if len(jobs) == 0:

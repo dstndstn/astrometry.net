@@ -546,6 +546,10 @@ def jobs_by_tag(req):
 
 if __name__ == '__main__':
     #job = Job.objects.get(id=12)
-    job = Job.objects.get(id=1649169)
-    cal = job.calibration
-    print(get_anns(cal))
+    # job = Job.objects.get(id=1649169)
+    # cal = job.calibration
+    # print(get_anns(cal))
+    class Duck(object):
+        pass
+    r = Duck()
+    print(submission_status(r, 2561176))
