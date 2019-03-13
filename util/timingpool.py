@@ -232,8 +232,7 @@ def timing_worker(inqueue, outqueue, progressqueue,
             # print 'Worker pid', os.getpid(), 'getting task'
             task = get()
         except (EOFError, IOError):
-            debug('worker pid ' + os.getpid() +
-                  ' got EOFError or IOError -- exiting')
+            debug('worker pid %i got EOFError or IOError -- exiting' % os.getpid())
             break
         except KeyboardInterrupt as e:
             print('timing_worker caught KeyboardInterrupt during get()')
