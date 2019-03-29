@@ -51,7 +51,7 @@ def estimate_mode(img, lo=None, hi=None, plo=1, phi=70, bins1=30,
     A[:,0] = 1.
     A[:,1] = x
     A[:,2] = x**2
-    res = np.linalg.lstsq(A, b)
+    res = np.linalg.lstsq(A, b, rcond=None)
     X = res[0]
     mx = -X[1] / (2. * X[2])
     mx = (mx * xscale) + x0
