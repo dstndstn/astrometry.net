@@ -162,6 +162,7 @@ int new_wcs(const char* infn, int extension,
             ERROR("Failed to read FITS header card %i from input file", i);
             goto bailout;
         }
+        logverb("Read input header line: \"%s\"\n", line);
 
         if (key_matches(key, re1, exclude_input, NE1, &imatch)) {
             logverb("Regular expression matched: \"%s\", key \"%s\".\n", exclude_input[imatch], key);

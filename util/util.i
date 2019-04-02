@@ -1153,6 +1153,8 @@ def fitsio_to_qfits_header(hdr):
     for rec in hdr.records():
         cardstr = rec.get('card', None)
         if cardstr is None:
+            cardstr = rec.get('card_string', None)
+        if cardstr is None:
             cardstr = hdr._record2card(rec)
         # pad
         cardstr = cardstr + ' '*(80 - len(cardstr))
