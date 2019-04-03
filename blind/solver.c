@@ -874,7 +874,8 @@ void solver_run(solver_t* solver) {
          */
         for (newpoint = solver->startobj; newpoint < numxy; newpoint++) {
 
-            debug("Trying newpoint=%i\n", newpoint);
+            debug("Trying newpoint=%i (%.1f,%.1f)\n", newpoint,
+                  field_getx(solver,newpoint), field_gety(solver,newpoint));
 
             // Give our caller a chance to cancel us midway. The callback
             // returns how long to wait before calling again.

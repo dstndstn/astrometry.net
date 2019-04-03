@@ -38,6 +38,7 @@ void test_predistort(CuTest* ct) {
     int loglvl = LOG_MSG;
 
     loglvl++;
+    loglvl++;
     log_init(loglvl);
     
     imagew = 719;
@@ -157,8 +158,9 @@ void test_predistort(CuTest* ct) {
 
     CuAssert(ct, "Should fail on distorted field", !solver->best_match_solves);
 
-
     solver->predistort = &distortion;
+    solver_set_field(solver, xy_dist);
+    solver_set_field_bounds(solver, 0, imagew, 0, imageh);
 
     solver_reset_best_match(solver);
     solver_reset_counters(solver);
