@@ -416,8 +416,7 @@ static void set_diag(solver_t* s) {
 }
 
 void solver_set_field(solver_t* s, starxy_t* field) {
-    if (s->fieldxy)
-        starxy_free(s->fieldxy);
+    solver_free_field(s);
     s->fieldxy = field;
     // Preprocessing happens in "solver_preprocess_field()".
 }

@@ -113,9 +113,9 @@ void test_predistort(CuTest* ct) {
 
     // Compute distorted star positions
     starxy_t* xy_dist;
-    xy_dist = starxy_new(solver->fieldxy->N, FALSE, FALSE);
     int i,N;
     N = xy->N;
+    xy_dist = starxy_new(N, FALSE, FALSE);
     for (i=0; i<N; i++) {
         double dx,dy;
         sip_pixel_distortion(&distortion, xy->x[i], xy->y[i], &dx, &dy);
@@ -125,9 +125,12 @@ void test_predistort(CuTest* ct) {
                xy->x[i], xy->y[i], dx, dy, dx - xy->x[i], dy - xy->y[i]);
     }
 
+    // avoid solver freeing "xy".
+    //solver->fieldxy = NULL;
+    
     solver_set_field(solver, xy_dist);
     solver_set_field_bounds(solver, 0, imagew, 0, imageh);
-    
+
     solver_run(solver);
     assert(solver->best_match_solves);
 
