@@ -94,8 +94,11 @@ def runstage(stage, picklepat, stagefunc, force=[], forceall=False, prereqs={},
             print('Ignoring pickle', pfn, 'and forcing stage', stage)
         else:
             print('Reading pickle', pfn)
-            R = unpickle_from_file(pfn)
-            return R
+            try:
+                R = unpickle_from_file(pfn)
+                return R
+            except Exception as e:
+                print('Failed to read pickle file', pfn, ':', e, '; re-running stage')
 
     try:
         prereq = prereqs[stage]
