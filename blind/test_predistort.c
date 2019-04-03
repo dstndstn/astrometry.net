@@ -7,9 +7,10 @@
 
 #include "cutest.h"
 #include "index.h"
-#include "engine.h"
 #include "solver.h"
 #include "xylist.h"
+#include "sip.h"
+#include "sip-utils.h"
 #include "bl.h"
 #include "log.h"
 #include "errors.h"
@@ -89,7 +90,6 @@ void test_predistort(CuTest* ct) {
     logmsg("Image center is RA,Dec = (%g,%g) degrees, size is %.2g x %.2g arcmin.\n",
            ra, dec, arcsec2arcmin(pscale * imagew), arcsec2arcmin(pscale * imageh));
 
-
     solver_reset_best_match(solver);
     solver_reset_counters(solver);
 
@@ -102,7 +102,11 @@ void test_predistort(CuTest* ct) {
     distortion.a_order = 2;
     distortion.b_order = 2;
     distortion.a[2][0] = 2e-4;
-
+    // inverse
+    distortion.ap_order = 4;
+    distortion.bp_order = 4;
+    sip_compute_inverse_polynomials(&distortion, 0, 0, 0, 0, 0, 0);
+    
     // Compute distorted star positions
     starxy_t* xy_dist;
     int i,N;
@@ -123,10 +127,29 @@ void test_predistort(CuTest* ct) {
     total_dx /= N;
     total_dy /= N;
     printf("Average distortion in x,y: %.1f, %.1f\n", total_dx, total_dy);
-    
+
+    // TEST undoing the distortion.
+    {
+        starxy_t* xy_undist;
+        xy_undist = starxy_subset(xy_dist, starxy_n(xy_dist));
+        total_dx = 0;
+        total_dy = 0;
+        for (i=0; i<N; i++) {
+            double dx,dy;
+            sip_pixel_undistortion(&distortion, xy_undist->x[i], xy_undist->y[i], &dx, &dy);
+            xy_undist->x[i] = dx;
+            xy_undist->y[i] = dy;
+    	total_dx += fabs(dx - xy->x[i]);
+    	total_dy += fabs(dy - xy->y[i]);
+        }
+        total_dx /= N;
+        total_dy /= N;
+        printf("After undistorting: avg error in x,y: %.1f, %.1f\n", total_dx, total_dy);
+    }
+
     // avoid solver freeing "xy".
     solver->fieldxy = NULL;
-    
+
     solver_set_field(solver, xy_dist);
     solver_set_field_bounds(solver, 0, imagew, 0, imageh);
 

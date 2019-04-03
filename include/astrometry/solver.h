@@ -49,7 +49,8 @@ struct solver_t {
 
     // Distortion pattern to apply before solving.
     sip_t* predistort;
-
+    starxy_t* fieldxy_orig;
+    
     // Limits on the image pixel scale in [arcsec per pixel].
     double funits_lower;
     double funits_upper;

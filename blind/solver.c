@@ -729,6 +729,22 @@ void solver_run(solver_t* solver) {
 
     get_resource_stats(&usertime, &systime, NULL);
 
+    if (solver->predistort) {
+        // Make a copy of the original x,y list.
+        solver->fieldxy_orig = solver->fieldxy;
+        solver->fieldxy = starxy_subset(solver->fieldxy_orig, starxy_n(solver->fieldxy_orig));
+        printf("Applying undistortion to %i stars\n", starxy_n(solver->fieldxy_orig));
+        // Apply the *un*distortion
+        for (i=0; i<starxy_n(solver->fieldxy); i++) {
+            double dx, dy;
+            sip_pixel_undistortion(solver->predistort,
+                                   solver->fieldxy->x[i], solver->fieldxy->y[i],
+                                   &dx, &dy);
+            solver->fieldxy->x[i] = dx;
+            solver->fieldxy->y[i] = dy;
+        }
+    }
+    
     if (!solver->vf)
         solver_preprocess_field(solver);
 
@@ -1425,7 +1441,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
                 continue;
             x = starxy_get_x(sp->fieldxy, i);
             y = starxy_get_y(sp->fieldxy, i);
-            sip_pixel_undistortion(sp->predistort, x, y, &dx, &dy);
+            sip_pixel_distortion(sp->predistort, x, y, &dx, &dy);
             matchxy[2*Ngood + 0] = dx;
             matchxy[2*Ngood + 1] = dy;
             memcpy(matchxyz + 3*Ngood, mo->refxyz + 3*mo->theta[i],
@@ -1455,17 +1471,17 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
                 sip.wcstan.crpix[0] = sp->crpix[0];
                 sip.wcstan.crpix[1] = sp->crpix[1];
                 // find matching crval...
-                sip_pixel_distortion(sp->predistort,
-                                     sp->crpix[0], sp->crpix[1], &dx, &dy);
+                sip_pixel_undistortion(sp->predistort,
+                                       sp->crpix[0], sp->crpix[1], &dx, &dy);
                 tan_pixelxy2radecarr(&mo->wcstan, dx, dy, sip.wcstan.crval);
 
             } else {
                 // keep TAN WCS's crval but distort the crpix.
                 sip.wcstan.crval[0] = mo->wcstan.crval[0];
                 sip.wcstan.crval[1] = mo->wcstan.crval[1];
-                sip_pixel_undistortion(sp->predistort,
-                                       mo->wcstan.crpix[0], mo->wcstan.crpix[1],
-                                       sip.wcstan.crpix+0, sip.wcstan.crpix+1);
+                sip_pixel_distortion(sp->predistort,
+                                     mo->wcstan.crpix[0], mo->wcstan.crpix[1],
+                                     sip.wcstan.crpix+0, sip.wcstan.crpix+1);
             }
 
             int doshift = 1;
