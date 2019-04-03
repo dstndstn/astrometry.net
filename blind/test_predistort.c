@@ -3,6 +3,7 @@
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
 #include <stdio.h>
+#include <assert.h>
 
 #include "cutest.h"
 #include "index.h"
@@ -71,20 +72,75 @@ void test_predistort(CuTest* ct) {
     solver->distance_from_quad_bonus = TRUE;
     solver_run(solver);
 
-    if (solver->best_match_solves) {
-        double ra, dec;
-        double pscale;
-        tan_t* wcs;
-        logmsg("Solved using index %s with odds ratio %g\n",
-               solver->best_index->indexname,
-               solver->best_match.logodds);
-        // WCS is solver->best_match.wcstan
-        wcs = &(solver->best_match.wcstan);
-        // center
-        tan_pixelxy2radec(wcs, imagecx, imagecy, &ra, &dec);
-        pscale = tan_pixel_scale(wcs);
-        logmsg("Image center is RA,Dec = (%g,%g) degrees, size is %.2g x %.2g arcmin.\n",
-               ra, dec, arcsec2arcmin(pscale * imagew), arcsec2arcmin(pscale * imageh));
+    assert(solver->best_match_solves);
+    double ra, dec;
+    double pscale;
+    tan_t* wcs;
+    logmsg("Solved using index %s with odds ratio %g\n",
+           solver->best_index->indexname,
+           solver->best_match.logodds);
+    // WCS is solver->best_match.wcstan
+    wcs = &(solver->best_match.wcstan);
+    // center
+    tan_pixelxy2radec(wcs, imagecx, imagecy, &ra, &dec);
+    pscale = tan_pixel_scale(wcs);
+    logmsg("Image center is RA,Dec = (%g,%g) degrees, size is %.2g x %.2g arcmin.\n",
+           ra, dec, arcsec2arcmin(pscale * imagew), arcsec2arcmin(pscale * imageh));
+
+
+    //solver_cleanup_field(solver);
+    solver_reset_best_match(solver);
+    solver_reset_counters(solver);
+
+    // solver->fieldxy->{N,x,y};
+
+    /*
+     double coeff = 1e-3;
+     N = solver->fieldxy->N;
+     for (i=0; i<N; i++) {
+     }
+     */
+
+    sip_t distortion;
+    memset(&distortion, 0, sizeof(sip_t));
+    distortion.wcstan.imagew = imagew;
+    distortion.wcstan.imageh = imageh;
+    distortion.wcstan.crpix[0] = imagecx;
+    distortion.wcstan.crpix[1] = imagecy;
+    distortion.a_order = 2;
+    distortion.b_order = 2;
+    distortion.a[2][0] = 1e-4;
+
+    // Compute distorted star positions
+    starxy_t* xy_dist;
+    xy_dist = starxy_new(solver->fieldxy->N, FALSE, FALSE);
+    int i,N;
+    N = xy->N;
+    for (i=0; i<N; i++) {
+        double dx,dy;
+        sip_pixel_distortion(&distortion, xy->x[i], xy->y[i], &dx, &dy);
+        xy_dist->x[i] = dx;
+        xy_dist->y[i] = dy;
+        printf("x,y %.1f, %.1f -> %.1f, %.1f (delta %.1f, %.1f)\n",
+               xy->x[i], xy->y[i], dx, dy, dx - xy->x[i], dy - xy->y[i]);
     }
+
+    solver_set_field(solver, xy_dist);
+    solver_set_field_bounds(solver, 0, imagew, 0, imageh);
+    
+    solver_run(solver);
+    assert(solver->best_match_solves);
+
+    logmsg("Solved using index %s with odds ratio %g\n",
+           solver->best_index->indexname,
+           solver->best_match.logodds);
+    // WCS is solver->best_match.wcstan
+    wcs = &(solver->best_match.wcstan);
+    // center
+    tan_pixelxy2radec(wcs, imagecx, imagecy, &ra, &dec);
+    pscale = tan_pixel_scale(wcs);
+    logmsg("Image center is RA,Dec = (%g,%g) degrees, size is %.2g x %.2g arcmin.\n",
+           ra, dec, arcsec2arcmin(pscale * imagew), arcsec2arcmin(pscale * imageh));
+    
 }
 
