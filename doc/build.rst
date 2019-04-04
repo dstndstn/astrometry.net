@@ -59,7 +59,7 @@ For example, in Debian 9 (Stretch)::
                            libbz2-dev swig libcfitsio-dev
 
 
-As of April 2019, the script doc/install_astrometry_on_linux.sh will install all dependencies along with astrometry.net on Linux
+As of April 2019, the script doc/install_astrometry_on_linux.sh will install all dependencies along with astrometry.net on Linux, and download 4200/ index files.
 
 
 CentOS 6.5 / Fedora / RedHat / RHEL -- Detailed Instructions:
