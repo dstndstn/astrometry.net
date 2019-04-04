@@ -23,8 +23,6 @@ cd cfitsio && \
 make && \
 make install && \
 
-#apt-get install libcairo2-dev libjpeg-dev  && \
-
 # astrometry
 cd $WORKSPACE_DIR && \
 rm -f astrometry.net-latest.tar.gz* && \
