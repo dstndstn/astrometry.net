@@ -36,5 +36,4 @@ make CFITS_INC="-I$WORKSPACE_DIR/cfitsio/include" CFITS_LIB="-L$WORKSPACE_DIR/cf
 
 # download and install index files
 rm -rf /usr/local/astrometry/data/* && \
-wget -r -nd -P /usr/local/astrometry/data/ "data.astrometry.net/4200/"
-
+wget -r -nd -np -P /usr/local/astrometry/data/ "data.astrometry.net/4200/"
