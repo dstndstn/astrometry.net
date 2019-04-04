@@ -423,7 +423,7 @@ static int plot_index_overlay(augment_xylist_t* axy, const char* me,
             sl_appendf(cmdline, "%f", plotscale);
         }
         for (i=0; i<(2 * mo->dimquads); i++)
-            sl_appendf(cmdline, " %g", mo->quadpix[i]);
+            sl_appendf(cmdline, " %g", mo->quadpix_orig[i]);
     }
 
     matchfile_close(mf);
@@ -911,15 +911,15 @@ int main(int argc, char** args) {
         }
     }
 
+    if ((optind == argc) && !fromstdin) {
+        printf("ERROR: You didn't specify any files to process.\n");
+        help = TRUE;
+    }
+    
     if (help) {
     dohelp:
         print_help(args[0], opts);
         exit(rtn);
-    }
-
-    if ((optind == argc) && !fromstdin) {
-        printf("ERROR: You didn't specify any files to process.\n");
-        help = TRUE;
     }
 
     bl_free(opts);

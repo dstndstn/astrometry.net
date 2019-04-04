@@ -12,6 +12,12 @@ CATS_LIB :=
 .PHONY: all
 all:
 
+# Detect GSL -- this minimum version was chosen to match the version in gsl-an.
+# Earlier versions would probably work fine.
+SYSTEM_GSL ?= $(shell (pkg-config --atleast-version=1.14 gsl && echo "yes") || echo "no")
+# Make this variable visible to recursive "make" calls
+export SYSTEM_GSL
+
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.anfiles
 include $(COMMON)/makefile.cfitsio
@@ -292,7 +298,9 @@ solver_test_2.o: solver.c
 
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_matchfile test_blindutils \
-	test_resort-xylist test_tweak test_multiindex2
+	test_resort-xylist test_tweak test_multiindex2 test_predistort
+
+#test_xscale -- requires a large index file...
 
 #test_codefile -- takes a long time
 

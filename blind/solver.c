@@ -239,6 +239,7 @@ void solver_log_params(const solver_t* sp) {
     } else {
         logverb("  Use_radec? no\n");
     }
+    logverb("  Pixel xscale: %g\n", sp->pixel_xscale);
     logverb("  Verify_pix: %g\n", sp->verify_pix);
     logverb("  Code tol: %g\n", sp->codetol);
     logverb("  Dist from quad bonus: %s\n", sp->distance_from_quad_bonus ? "yes" : "no");
@@ -265,11 +266,21 @@ void solver_log_params(const solver_t* sp) {
         index_t* ind = pl_get(sp->indexes, i);
         logverb("    %s\n", ind->indexname);
     }
-    logverb("  Field: %i stars\n", starxy_n(sp->fieldxy));
-    for (i=0; i<starxy_n(sp->fieldxy); i++) {
+    if (sp->fieldxy) {
+      logverb("  Field (processed): %i stars\n", starxy_n(sp->fieldxy));
+      for (i=0; i<starxy_n(sp->fieldxy); i++) {
         debug("    xy (%.1f, %.1f), flux %.1f\n",
               starxy_getx(sp->fieldxy, i), starxy_gety(sp->fieldxy, i),
               sp->fieldxy->flux ? starxy_get_flux(sp->fieldxy, i) : 0.0);
+      }
+    }
+    if (sp->fieldxy_orig) {
+      logverb("  Field (orig): %i stars\n", starxy_n(sp->fieldxy_orig));
+      for (i=0; i<starxy_n(sp->fieldxy_orig); i++) {
+        debug("    xy (%.1f, %.1f), flux %.1f\n",
+              starxy_getx(sp->fieldxy_orig, i), starxy_gety(sp->fieldxy_orig, i),
+              sp->fieldxy_orig->flux ? starxy_get_flux(sp->fieldxy_orig, i) : 0.0);
+      }
     }
 }
 
@@ -416,9 +427,8 @@ static void set_diag(solver_t* s) {
 }
 
 void solver_set_field(solver_t* s, starxy_t* field) {
-    if (s->fieldxy)
-        starxy_free(s->fieldxy);
-    s->fieldxy = field;
+    solver_free_field(s);
+    s->fieldxy_orig = field;
     // Preprocessing happens in "solver_preprocess_field()".
 }
 
@@ -456,7 +466,7 @@ void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) { //, MatchObj* pmo) {
     set_center_and_radius(solver, pmo, NULL, sip);
     olddqb = solver->distance_from_quad_bonus;
     solver->distance_from_quad_bonus = FALSE;
-		
+
     nindexes = pl_size(solver->indexes);
     for (i=0; i<nindexes; i++) {
         index_t* index = pl_get(solver->indexes, i);
@@ -634,6 +644,32 @@ static void find_field_boundaries(solver_t* solver) {
 }
 
 void solver_preprocess_field(solver_t* solver) {
+    int i;
+
+    // Make a copy of the original x,y list.
+    solver->fieldxy = starxy_copy(solver->fieldxy_orig);
+
+    if ((solver->pixel_xscale > 0) && solver->predistort) {
+        logerr("Error, can't do both pixel_xscale and predistortion at the same time!");
+    }
+    if (solver->pixel_xscale > 0) {
+        logverb("Applying x-factor of %f to %i stars\n",
+                solver->pixel_xscale, starxy_n(solver->fieldxy_orig));
+        for (i=0; i<starxy_n(solver->fieldxy); i++)
+            solver->fieldxy->x[i] *= solver->pixel_xscale;
+    } else if (solver->predistort) {
+        logverb("Applying undistortion to %i stars\n", starxy_n(solver->fieldxy_orig));
+        // Apply the *un*distortion
+        for (i=0; i<starxy_n(solver->fieldxy); i++) {
+            double dx, dy;
+            sip_pixel_undistortion(solver->predistort,
+                                   solver->fieldxy->x[i], solver->fieldxy->y[i],
+                                   &dx, &dy);
+            solver->fieldxy->x[i] = dx;
+            solver->fieldxy->y[i] = dy;
+        }
+    }
+
     find_field_boundaries(solver);
     // precompute a kdtree over the field
     solver->vf = verify_field_preprocess(solver->fieldxy);
@@ -646,6 +682,9 @@ void solver_free_field(solver_t* solver) {
     if (solver->fieldxy)
         starxy_free(solver->fieldxy);
     solver->fieldxy = NULL;
+    if (solver->fieldxy_orig)
+        starxy_free(solver->fieldxy_orig);
+    solver->fieldxy_orig = NULL;
     if (solver->vf)
         verify_field_free(solver->vf);
     solver->vf = NULL;
@@ -859,7 +898,8 @@ void solver_run(solver_t* solver) {
          */
         for (newpoint = solver->startobj; newpoint < numxy; newpoint++) {
 
-            debug("Trying newpoint=%i\n", newpoint);
+            debug("Trying newpoint=%i (%.1f,%.1f)\n", newpoint,
+                  field_getx(solver,newpoint), field_gety(solver,newpoint));
 
             // Give our caller a chance to cancel us midway. The callback
             // returns how long to wait before calling again.
@@ -1223,10 +1263,11 @@ static void try_permutations(const int* origstars, int dimquad,
     }
 }
 
-// "field" contains the xy pixel coordinates of stars A,B,C,D.
-static void resolve_matches(kdtree_qres_t* krez, const double *field,
+static void resolve_matches(kdtree_qres_t* krez, const double *field_xy,
                             const int* fieldstars, int dimquads,
                             solver_t* solver, anbool current_parity) {
+    // "field_xy" contains the xy pixel coordinates of stars A,B,C,D forming the quad
+    //    [x_A,y_A, x_B,y_B, x_C,y_C, ...]
     int jj, thisquadno;
     MatchObj mo;
     unsigned int star[dimquads];
@@ -1265,10 +1306,9 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
         debug("]\n");
 
         // Quick-n-dirty scale estimate based on two stars.
-        //abscale = distsq(starxyz, starxyz+3, 3) / distsq(field, field+2, 2);
         // in (rad per pix)**2
         abscale = square(distsq2rad(distsq(starxyz, starxyz+3, 3))) / 
-            distsq(field, field+2, 2);
+            distsq(field_xy, field_xy+2, 2);
         if (abscale > solver->abscale_high ||
             abscale < solver->abscale_low) {
             solver->num_abscale_skipped++;
@@ -1276,7 +1316,7 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
         }
 
         // compute TAN projection from the matching quad alone.
-        if (fit_tan_wcs(starxyz, field, dimquads, &wcs, &scale)) {
+        if (fit_tan_wcs(starxyz, field_xy, dimquads, &wcs, &scale)) {
             // bad quad.
             logverb("bad quad at %s:%i\n", __FILE__, __LINE__);
             continue;
@@ -1311,7 +1351,7 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
             mo.ids[i] = 0;
         }
 
-        memcpy(mo.quadpix, field, 2 * dimquads * sizeof(double));
+        memcpy(mo.quadpix, field_xy, 2 * dimquads * sizeof(double));
         memcpy(mo.quadxyz, starxyz, 3 * dimquads * sizeof(double));
 
         set_center_and_radius(solver, &mo, &(mo.wcstan), NULL);
@@ -1328,7 +1368,7 @@ void solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip) {
     solver_handle_hit(solver, mo, sip, TRUE);
 }
 
-static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
+static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
                              anbool fake_match) {
     double match_distance_in_pixels2;
     anbool solved;
@@ -1347,7 +1387,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
     logaccept = MIN(sp->logratio_tokeep, sp->logratio_totune);
 
     verify_hit(sp->index->starkd, sp->index->cutnside,
-               mo, sip, sp->vf, match_distance_in_pixels2,
+               mo, verifysip, sp->vf, match_distance_in_pixels2,
                sp->distractor_ratio, sp->field_maxx, sp->field_maxy,
                sp->logratio_bail_threshold, logaccept,
                sp->logratio_stoplooking,
@@ -1387,6 +1427,19 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
     if (mo->logodds < sp->logratio_toprint)
         return FALSE;
 
+    // Also copy original field star coordinates
+    //mo.quadpix_orig
+    printf("mo field stars:\n");
+    int i;
+    for (i=0; i<mo->dimquads; i++) {
+        printf("  star %i; field_xy %.1f,%.1f, field_orig %.1f,%.1f\n",
+               mo->field[i], mo->quadpix[2*i+0], mo->quadpix[2*i+1],
+               starxy_getx(sp->fieldxy_orig, mo->field[i]),
+               starxy_gety(sp->fieldxy_orig, mo->field[i]));
+        mo->quadpix_orig[2*i+0] = starxy_getx(sp->fieldxy_orig, mo->field[i]);
+        mo->quadpix_orig[2*i+1] = starxy_gety(sp->fieldxy_orig, mo->field[i]);
+    }
+    
     update_timeused(sp);
     mo->timeused = sp->timeused;
 
@@ -1401,7 +1454,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
     mo->index = sp->index;
     mo->index_jitter = sp->index->index_jitter;
 
-    if (sp->predistort) {
+    if (sp->predistort || (sp->pixel_xscale > 0)) {
         int i;
         double* matchxy;
         double* matchxyz;
@@ -1411,7 +1464,15 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
         double dx,dy;
 
         // Apply the distortion.
-        logverb("Applying the distortion pattern and recomputing WCS...\n");
+        if (sp->predistort)
+            logverb("Applying the distortion pattern and recomputing WCS...\n");
+        else
+            logverb("Applying pixel scaling and recomputing WCS...\n");
+
+        if (log_get_level() >= LOG_VERB) {
+            printf("Initial WCS:\n");
+            tan_print(&(mo->wcstan));
+        }
 
         // this includes conflicts and distractors; we won't fill these arrays.
         N = mo->nbest;
@@ -1421,12 +1482,11 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
 
         Ngood = 0;
         for (i=0; i<N; i++) {
-            double x,y;
             if (mo->theta[i] < 0)
                 continue;
-            x = starxy_get_x(sp->fieldxy, i);
-            y = starxy_get_y(sp->fieldxy, i);
-            sip_pixel_undistortion(sp->predistort, x, y, &dx, &dy);
+            // Plug in the original (distorted) coordinates
+            dx = starxy_get_x(sp->fieldxy_orig, i);
+            dy = starxy_get_y(sp->fieldxy_orig, i);
             matchxy[2*Ngood + 0] = dx;
             matchxy[2*Ngood + 1] = dy;
             memcpy(matchxyz + 3*Ngood, mo->refxyz + 3*mo->theta[i],
@@ -1437,52 +1497,70 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
             Unused anbool ok;
             ok = tan_xyzarr2pixelxy(&mo->wcstan, matchxyz+3*Ngood, &xx, &yy);
             assert(ok);
-            logverb("match: ref(%.1f, %.1f) -- img(%.1f, %.1f) --> dist(%.1f, %.1f)\n",
-                    xx, yy, x, y, dx, dy);
-
+            logverb("match: ref(%.1f, %.1f) -- undist(%.1f, %.1f) --> dist(%.1f, %.1f)\n",
+                    xx, yy, starxy_get_x(sp->fieldxy, i), starxy_get_y(sp->fieldxy, i), dx, dy);
             Ngood++;
         }
 
         if (sp->do_tweak) {
             // Compute the SIP solution using the correspondences
-            // found during verify(), but with the re-distorted positions.
-            sip_t sip;
-            memset(&sip, 0, sizeof(sip_t));
-            sip.a_order = sip.b_order = sp->tweak_aborder;
-            sip.ap_order = sip.bp_order = sp->tweak_abporder;
-            sip.wcstan.imagew = solver_field_width(sp);
-            sip.wcstan.imageh = solver_field_height(sp);
+            // found during verify(), but with the original (distorted) positions.
+            sip_t* sip = sip_create();
+            memset(sip, 0, sizeof(sip_t));
+            memcpy(&(sip->wcstan), &(mo->wcstan), sizeof(tan_t));
+            sip->a_order = sip->b_order = sp->tweak_aborder;
+            sip->ap_order = sip->bp_order = sp->tweak_abporder;
+            sip->wcstan.imagew = solver_field_width(sp);
+            sip->wcstan.imageh = solver_field_height(sp);
             if (sp->set_crpix) {
-                sip.wcstan.crpix[0] = sp->crpix[0];
-                sip.wcstan.crpix[1] = sp->crpix[1];
-                // find matching crval...
-                sip_pixel_distortion(sp->predistort,
-                                     sp->crpix[0], sp->crpix[1], &dx, &dy);
-                tan_pixelxy2radecarr(&mo->wcstan, dx, dy, sip.wcstan.crval);
+                sip->wcstan.crpix[0] = sp->crpix[0];
+                sip->wcstan.crpix[1] = sp->crpix[1];
+                if (sp->predistort) {
+                    // find matching crval...
+                    sip_pixel_undistortion(sp->predistort,
+                                           sp->crpix[0], sp->crpix[1], &dx, &dy);
+                } else {
+                    dx = sp->crpix[0] / sp->pixel_xscale;
+                }
+                tan_pixelxy2radecarr(&mo->wcstan, dx, dy, sip->wcstan.crval);
 
             } else {
                 // keep TAN WCS's crval but distort the crpix.
-                sip.wcstan.crval[0] = mo->wcstan.crval[0];
-                sip.wcstan.crval[1] = mo->wcstan.crval[1];
-                sip_pixel_undistortion(sp->predistort,
-                                       mo->wcstan.crpix[0], mo->wcstan.crpix[1],
-                                       sip.wcstan.crpix+0, sip.wcstan.crpix+1);
+                if (sp->predistort) {
+                    sip_pixel_distortion(sp->predistort,
+                                         mo->wcstan.crpix[0], mo->wcstan.crpix[1],
+                                         sip->wcstan.crpix+0, sip->wcstan.crpix+1);
+                } else {
+                    sip->wcstan.crpix[0] = mo->wcstan.crpix[0] / sp->pixel_xscale;
+                    sip->wcstan.crpix[1] = mo->wcstan.crpix[1];
+                }
             }
 
+            if (log_get_level() >= LOG_VERB) {
+                printf("Initial SIP on distorted positions:\n");
+                sip_print(sip);
+            }
+            
             int doshift = 1;
-            fit_sip_wcs(matchxyz, matchxy, weights, N, &(sip.wcstan),
+            fit_sip_wcs(matchxyz, matchxy, weights, Ngood, &(sip->wcstan),
                         sp->tweak_aborder, sp->tweak_abporder, doshift,
-                        &sip);
+                        sip);
+
+            if (log_get_level() >= LOG_VERB) {
+                printf("Final SIP on distorted positions:\n");
+                sip_print(sip);
+            }
 
             for (i=0; i<Ngood; i++) {
                 double xx,yy;
                 Unused anbool ok;
-                ok = sip_xyzarr2pixelxy(&sip, matchxyz+3*i, &xx, &yy);
+                ok = sip_xyzarr2pixelxy(sip, matchxyz+3*i, &xx, &yy);
                 assert(ok);
                 logverb("match: ref(%.1f, %.1f) -- dist(%.1f, %.1f)\n",
                         xx, yy, matchxy[2*i+0], matchxy[2*i+1]);
             }
-
+            mo->sip = sip;
+            
         } else {
             // Compute new TAN WCS...?
             fit_tan_wcs_weighted(matchxyz, matchxy, weights, Ngood,
@@ -1501,9 +1579,9 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
         free(weights);
 
     } else if (sp->do_tweak) {
-        solver_tweak2(sp, mo, sp->tweak_aborder, sip);
+        solver_tweak2(sp, mo, sp->tweak_aborder, verifysip);
 
-    } else if (!sip && sp->set_crpix) {
+    } else if (!verifysip && sp->set_crpix) {
         tan_t wcs2;
         tan_t wcs3;
         fit_tan_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads,
