@@ -231,10 +231,8 @@ static an_option_t options[] = {
      "don't fine-tune WCS by computing a SIP polynomial"},
     {'t', "tweak-order",    required_argument, "int",
      "polynomial order of SIP WCS corrections"},
-    /*
-     {'\x86', "predistort",  required_argument, "filename",
-     "apply the distortion in this SIP WCS header before and after solving"},
-     */
+    {'\x86', "predistort",  required_argument, "filename",
+     "apply the inverse distortion in this SIP WCS header before solving"},
     {'m', "temp-dir",       required_argument, "dir",
      "where to put temp files, default /tmp"},
     // placeholder for printing "The following are for xylist inputs only"
@@ -287,15 +285,13 @@ int augment_xylist_parse_option(char argchar, char* optarg,
     case '\x83':
         axy->verify_dedup = FALSE;
         break;
-        /*
-         case '\x86':
-         axy->predistort = sip_read_header_file(optarg, NULL);
-         if (!axy->predistort) {
-         ERROR("Failed to read SIP header file \"%s\" for pre-distortion values", optarg);
-         return -1;
-         }
-         break;
-         */
+    case '\x86':
+        axy->predistort = sip_read_header_file(optarg, NULL);
+        if (!axy->predistort) {
+            ERROR("Failed to read SIP header file \"%s\" for pre-distortion values", optarg);
+            return -1;
+        }
+        break;
     case ';':
         axy->invert_image = TRUE;
         break;
