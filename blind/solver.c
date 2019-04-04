@@ -1476,49 +1476,51 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
         if (sp->do_tweak) {
             // Compute the SIP solution using the correspondences
             // found during verify(), but with the original (distorted) positions.
-            sip_t sip;
-            memset(&sip, 0, sizeof(sip_t));
+            memset(sip, 0, sizeof(sip_t));
 
-            memcpy(&(sip.wcstan), &(mo->wcstan), sizeof(tan_t));
+            memcpy(&(sip->wcstan), &(mo->wcstan), sizeof(tan_t));
             // ?
             //fit_tan_wcs_weighted(matchxyz, matchxy, weights, Ngood,
             //&(sip.wcstan), NULL);
             //            printf("Initial TAN WCS on distorted positions:\n");
             //tan_print(&(sip.wcstan));
 
-            sip.a_order = sip.b_order = sp->tweak_aborder;
-            sip.ap_order = sip.bp_order = sp->tweak_abporder;
-            sip.wcstan.imagew = solver_field_width(sp);
-            sip.wcstan.imageh = solver_field_height(sp);
+            sip->a_order = sip->b_order = sp->tweak_aborder;
+            sip->ap_order = sip->bp_order = sp->tweak_abporder;
+            sip->wcstan.imagew = solver_field_width(sp);
+            sip->wcstan.imageh = solver_field_height(sp);
             if (sp->set_crpix) {
-                sip.wcstan.crpix[0] = sp->crpix[0];
-                sip.wcstan.crpix[1] = sp->crpix[1];
+                sip->wcstan.crpix[0] = sp->crpix[0];
+                sip->wcstan.crpix[1] = sp->crpix[1];
                 // find matching crval...
                 sip_pixel_undistortion(sp->predistort,
                                        sp->crpix[0], sp->crpix[1], &dx, &dy);
-                tan_pixelxy2radecarr(&mo->wcstan, dx, dy, sip.wcstan.crval);
+                tan_pixelxy2radecarr(&mo->wcstan, dx, dy, sip->wcstan.crval);
 
             } else {
                 // keep TAN WCS's crval but distort the crpix.
-                //sip.wcstan.crval[0] = mo->wcstan.crval[0];
-                //sip.wcstan.crval[1] = mo->wcstan.crval[1];
+                //sip->wcstan.crval[0] = mo->wcstan.crval[0];
+                //sip->wcstan.crval[1] = mo->wcstan.crval[1];
                 sip_pixel_distortion(sp->predistort,
                                      mo->wcstan.crpix[0], mo->wcstan.crpix[1],
-                                     sip.wcstan.crpix+0, sip.wcstan.crpix+1);
+                                     sip->wcstan.crpix+0, sip->wcstan.crpix+1);
             }
 
             printf("Initial SIP on distorted positions:\n");
-            sip_print(&sip);
+            sip_print(sip);
             
             int doshift = 1;
-            fit_sip_wcs(matchxyz, matchxy, weights, Ngood, &(sip.wcstan),
+            fit_sip_wcs(matchxyz, matchxy, weights, Ngood, &(sip->wcstan),
                         sp->tweak_aborder, sp->tweak_abporder, doshift,
-                        &sip);
+                        sip);
 
+            printf("Final SIP on distorted positions:\n");
+            sip_print(sip);
+            
             for (i=0; i<Ngood; i++) {
                 double xx,yy;
                 Unused anbool ok;
-                ok = sip_xyzarr2pixelxy(&sip, matchxyz+3*i, &xx, &yy);
+                ok = sip_xyzarr2pixelxy(sip, matchxyz+3*i, &xx, &yy);
                 assert(ok);
                 logverb("match: ref(%.1f, %.1f) -- dist(%.1f, %.1f)\n",
                         xx, yy, matchxy[2*i+0], matchxy[2*i+1]);

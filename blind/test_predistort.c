@@ -185,6 +185,7 @@ void test_predistort(CuTest* ct) {
 
     CuAssert(ct, "Should solve given correct predistortion", solver->best_match_solves);
 
+    printf("Writing SIP solution...\n");
     //solver->best_match.wcstan;
     sip_write_to_file(solver->best_match.sip, "distorted-sip.wcs");
     
