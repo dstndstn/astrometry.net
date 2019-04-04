@@ -1351,7 +1351,7 @@ void solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip) {
     solver_handle_hit(solver, mo, sip, TRUE);
 }
 
-static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
+static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
                              anbool fake_match) {
     double match_distance_in_pixels2;
     anbool solved;
@@ -1370,7 +1370,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
     logaccept = MIN(sp->logratio_tokeep, sp->logratio_totune);
 
     verify_hit(sp->index->starkd, sp->index->cutnside,
-               mo, sip, sp->vf, match_distance_in_pixels2,
+               mo, verifysip, sp->vf, match_distance_in_pixels2,
                sp->distractor_ratio, sp->field_maxx, sp->field_maxy,
                sp->logratio_bail_threshold, logaccept,
                sp->logratio_stoplooking,
@@ -1476,15 +1476,9 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
         if (sp->do_tweak) {
             // Compute the SIP solution using the correspondences
             // found during verify(), but with the original (distorted) positions.
+            sip_t* sip = sip_create();
             memset(sip, 0, sizeof(sip_t));
-
             memcpy(&(sip->wcstan), &(mo->wcstan), sizeof(tan_t));
-            // ?
-            //fit_tan_wcs_weighted(matchxyz, matchxy, weights, Ngood,
-            //&(sip.wcstan), NULL);
-            //            printf("Initial TAN WCS on distorted positions:\n");
-            //tan_print(&(sip.wcstan));
-
             sip->a_order = sip->b_order = sp->tweak_aborder;
             sip->ap_order = sip->bp_order = sp->tweak_abporder;
             sip->wcstan.imagew = solver_field_width(sp);
@@ -1499,8 +1493,6 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
 
             } else {
                 // keep TAN WCS's crval but distort the crpix.
-                //sip->wcstan.crval[0] = mo->wcstan.crval[0];
-                //sip->wcstan.crval[1] = mo->wcstan.crval[1];
                 sip_pixel_distortion(sp->predistort,
                                      mo->wcstan.crpix[0], mo->wcstan.crpix[1],
                                      sip->wcstan.crpix+0, sip->wcstan.crpix+1);
@@ -1525,7 +1517,8 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
                 logverb("match: ref(%.1f, %.1f) -- dist(%.1f, %.1f)\n",
                         xx, yy, matchxy[2*i+0], matchxy[2*i+1]);
             }
-
+            mo->sip = sip;
+            
         } else {
             // Compute new TAN WCS...?
             fit_tan_wcs_weighted(matchxyz, matchxy, weights, Ngood,
@@ -1544,9 +1537,9 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
         free(weights);
 
     } else if (sp->do_tweak) {
-        solver_tweak2(sp, mo, sp->tweak_aborder, sip);
+        solver_tweak2(sp, mo, sp->tweak_aborder, verifysip);
 
-    } else if (!sip && sp->set_crpix) {
+    } else if (!verifysip && sp->set_crpix) {
         tan_t wcs2;
         tan_t wcs3;
         fit_tan_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads,
