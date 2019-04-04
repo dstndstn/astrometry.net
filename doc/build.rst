@@ -5,8 +5,8 @@ Building/installing the Astrometry.net code
 
 Grab the code::
 
-   wget http://astrometry.net/downloads/astrometry.net-latest.tar.bz2
-   tar xjf astrometry.net-latest.tar.bz2
+   wget http://astrometry.net/downloads/astrometry.net-latest.tar.gz
+   tar xvzf astrometry.net-latest.tar.gz
    cd astrometry.net-*
 
 Build it.  The short version::
@@ -44,8 +44,9 @@ Ubuntu or Debian-like systems:
 
 ::
 
+
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
-                           libpng12-dev libjpeg-dev python-numpy \
+                           libpng2-dev libjpeg-dev python-numpy \
                            python-pyfits python-dev zlib1g-dev \
                            libbz2-dev swig cfitsio-dev
 
@@ -56,6 +57,9 @@ For example, in Debian 9 (Stretch)::
                            libpng-dev libjpeg-dev python-numpy \
                            python-pyfits python-dev zlib1g-dev \
                            libbz2-dev swig libcfitsio-dev
+
+
+As of April 2019, the script doc/install_astrometry_on_linux.sh will install all dependencies along with astrometry.net on Linux
 
 
 CentOS 6.5 / Fedora / RedHat / RHEL -- Detailed Instructions:
