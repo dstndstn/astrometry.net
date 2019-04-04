@@ -54,7 +54,8 @@ static void add_columns(fitstable_t* tab, anbool write) {
     ADDARR(i,  i32, "FIELDOBJS",       nil, field, DQMAX);
     ADDARR(i64,i64, "IDS",             nil, ids, DQMAX);
     ADDCOL(f,  f,   "CODEERR",         nil, code_err);
-    ADDARR(d,  d,   "QUADPIX",         nil, quadpix, 2*DQMAX);
+    ADDARR(d,  d,   "QUADPDI",         nil, quadpix, 2*DQMAX);
+    ADDARR(d,  d,   "QUADPIX",          nil, quadpix_orig, 2*DQMAX);
     ADDARR(d,  d,   "QUADXYZ",         nil, quadxyz, 3*DQMAX);
     ADDARR(d,  d,   "CENTERXYZ",       nil, center, 3);
     ADDCOL(d,  d,   "RADIUS",          "DEG", radius_deg);
