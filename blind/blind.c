@@ -960,7 +960,7 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 
         // Get the field.
         solver_set_field(sp, xylist_read_field(bp->xyls, NULL));
-        if (!sp->fieldxy) {
+        if (!sp->fieldxy_orig) {
             logerr("Failed to read xylist field.\n");
             goto cleanup;
         }

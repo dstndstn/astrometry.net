@@ -74,8 +74,8 @@ void test_xscale(CuTest* ct) {
 
     CuAssert(ct, "Should not solve on undistorted field", !solver->best_match_solves);
 
-    // avoid solver freeing field, but re-run set_field to regenerate "vf"
-    solver->fieldxy = NULL;
+    // "solver" will free the original "xy", so make a copy.
+    xy = starxy_copy(xy);
     solver_set_field(solver, xy);
 
     solver_reset_best_match(solver);

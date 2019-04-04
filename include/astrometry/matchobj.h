@@ -24,6 +24,10 @@ struct match_struct {
 
     // Pixel positions of the quad stars.
     double quadpix[2 * DQMAX];
+
+    // Un-distorted pixel positions of quad stars.
+    double quadpix_orig[2 * DQMAX];
+
     // Star positions of the quad stars.
     double quadxyz[3 * DQMAX];
 
@@ -94,6 +98,8 @@ struct match_struct {
     double* refradec;
     // for correspondence file we need a copy of the field! (star x,y positions)
     double* fieldxy;
+    // + original (un-distorted) x,y coords
+    double* fieldxy_orig;
 
     bl* tagalong;
     bl* field_tagalong;

@@ -33,6 +33,10 @@ starxy_t* starxy_subset(starxy_t* full, int N) {
     return sub;
 }
 
+starxy_t* starxy_copy(starxy_t* s) {
+    return starxy_subset(s, starxy_n(s));
+}
+
 void starxy_compute_range(starxy_t* xy) {
     int i, N;
     xy->xlo = xy->ylo =  HUGE_VAL;

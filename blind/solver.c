@@ -418,7 +418,7 @@ static void set_diag(solver_t* s) {
 
 void solver_set_field(solver_t* s, starxy_t* field) {
     solver_free_field(s);
-    s->fieldxy = field;
+    s->fieldxy_orig = field;
     // Preprocessing happens in "solver_preprocess_field()".
 }
 
@@ -456,7 +456,7 @@ void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) { //, MatchObj* pmo) {
     set_center_and_radius(solver, pmo, NULL, sip);
     olddqb = solver->distance_from_quad_bonus;
     solver->distance_from_quad_bonus = FALSE;
-		
+
     nindexes = pl_size(solver->indexes);
     for (i=0; i<nindexes; i++) {
         index_t* index = pl_get(solver->indexes, i);
@@ -635,25 +635,19 @@ static void find_field_boundaries(solver_t* solver) {
 
 void solver_preprocess_field(solver_t* solver) {
     int i;
-    
+
+    // Make a copy of the original x,y list.
+    solver->fieldxy = starxy_copy(solver->fieldxy_orig);
+
     if ((solver->pixel_xscale > 0) && solver->predistort) {
         logerr("Error, can't do both pixel_xscale and predistortion at the same time!");
     }
-
     if (solver->pixel_xscale > 0) {
-        // Make a copy of the original x,y list.
-        solver->fieldxy_orig = solver->fieldxy;
-        solver->fieldxy = starxy_subset(solver->fieldxy_orig,
-                                        starxy_n(solver->fieldxy_orig));
         logverb("Applying x-factor of %f to %i stars\n",
                 solver->pixel_xscale, starxy_n(solver->fieldxy_orig));
         for (i=0; i<starxy_n(solver->fieldxy); i++)
             solver->fieldxy->x[i] *= solver->pixel_xscale;
     } else if (solver->predistort) {
-        // Make a copy of the original x,y list.
-        solver->fieldxy_orig = solver->fieldxy;
-        solver->fieldxy = starxy_subset(solver->fieldxy_orig,
-                                        starxy_n(solver->fieldxy_orig));
         logverb("Applying undistortion to %i stars\n", starxy_n(solver->fieldxy_orig));
         // Apply the *un*distortion
         for (i=0; i<starxy_n(solver->fieldxy); i++) {
@@ -678,6 +672,9 @@ void solver_free_field(solver_t* solver) {
     if (solver->fieldxy)
         starxy_free(solver->fieldxy);
     solver->fieldxy = NULL;
+    if (solver->fieldxy_orig)
+        starxy_free(solver->fieldxy_orig);
+    solver->fieldxy_orig = NULL;
     if (solver->vf)
         verify_field_free(solver->vf);
     solver->vf = NULL;
@@ -1035,14 +1032,6 @@ void solver_run(solver_t* solver) {
         }
         free(pquads);
     }
-
-    if (solver->predistort || (solver->pixel_xscale > 0))  {
-        logverb("Reverting distortion/pixel scaling\n");
-        // Revert to the original x,y list.
-        starxy_free(solver->fieldxy);
-        solver->fieldxy = solver->fieldxy_orig;
-    }
-
 }
 
 /**
@@ -1264,10 +1253,11 @@ static void try_permutations(const int* origstars, int dimquad,
     }
 }
 
-// "field" contains the xy pixel coordinates of stars A,B,C,D.
-static void resolve_matches(kdtree_qres_t* krez, const double *field,
+static void resolve_matches(kdtree_qres_t* krez, const double *field_xy,
                             const int* fieldstars, int dimquads,
                             solver_t* solver, anbool current_parity) {
+    // "field_xy" contains the xy pixel coordinates of stars A,B,C,D forming the quad
+    //    [x_A,y_A, x_B,y_B, x_C,y_C, ...]
     int jj, thisquadno;
     MatchObj mo;
     unsigned int star[dimquads];
@@ -1306,10 +1296,9 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
         debug("]\n");
 
         // Quick-n-dirty scale estimate based on two stars.
-        //abscale = distsq(starxyz, starxyz+3, 3) / distsq(field, field+2, 2);
         // in (rad per pix)**2
         abscale = square(distsq2rad(distsq(starxyz, starxyz+3, 3))) / 
-            distsq(field, field+2, 2);
+            distsq(field_xy, field_xy+2, 2);
         if (abscale > solver->abscale_high ||
             abscale < solver->abscale_low) {
             solver->num_abscale_skipped++;
@@ -1317,7 +1306,7 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
         }
 
         // compute TAN projection from the matching quad alone.
-        if (fit_tan_wcs(starxyz, field, dimquads, &wcs, &scale)) {
+        if (fit_tan_wcs(starxyz, field_xy, dimquads, &wcs, &scale)) {
             // bad quad.
             logverb("bad quad at %s:%i\n", __FILE__, __LINE__);
             continue;
@@ -1352,7 +1341,7 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
             mo.ids[i] = 0;
         }
 
-        memcpy(mo.quadpix, field, 2 * dimquads * sizeof(double));
+        memcpy(mo.quadpix, field_xy, 2 * dimquads * sizeof(double));
         memcpy(mo.quadxyz, starxyz, 3 * dimquads * sizeof(double));
 
         set_center_and_radius(solver, &mo, &(mo.wcstan), NULL);
@@ -1428,6 +1417,17 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
     if (mo->logodds < sp->logratio_toprint)
         return FALSE;
 
+    // Also copy original field star coordinates
+    //mo.quadpix_orig
+    printf("mo field stars:\n");
+    int i;
+    for (i=0; i<mo->dimquads; i++) {
+        printf("  star %i; field_xy %.1f,%.1f, field_orig %.1f,%.1f\n",
+               mo->field[i], mo->quadpix[2*i+0], mo->quadpix[2*i+1],
+               starxy_getx(sp->fieldxy_orig, mo->field[i]),
+               starxy_gety(sp->fieldxy_orig, mo->field[i]));
+    }
+    
     update_timeused(sp);
     mo->timeused = sp->timeused;
 
