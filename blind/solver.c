@@ -1426,6 +1426,8 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
                mo->field[i], mo->quadpix[2*i+0], mo->quadpix[2*i+1],
                starxy_getx(sp->fieldxy_orig, mo->field[i]),
                starxy_gety(sp->fieldxy_orig, mo->field[i]));
+        mo->quadpix_orig[2*i+0] = starxy_getx(sp->fieldxy_orig, mo->field[i]);
+        mo->quadpix_orig[2*i+1] = starxy_gety(sp->fieldxy_orig, mo->field[i]);
     }
     
     update_timeused(sp);
