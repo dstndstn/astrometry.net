@@ -14,6 +14,7 @@
 #include "bl.h"
 #include "log.h"
 #include "errors.h"
+#include "sip_qfits.h"
 
 /*
 
@@ -37,7 +38,7 @@ void test_predistort(CuTest* ct) {
 
     int loglvl = LOG_MSG;
 
-    loglvl++;
+    //loglvl++;
     loglvl++;
     log_init(loglvl);
     
@@ -74,9 +75,13 @@ void test_predistort(CuTest* ct) {
     index_t* index = index_load(indexfn, 0, NULL);
     solver_add_index(solver, index);
     solver->distance_from_quad_bonus = TRUE;
+    solver->do_tweak = TRUE;
+    solver->tweak_aborder = 2;
+    solver->tweak_abporder = 4;
     solver_run(solver);
 
     CuAssert(ct, "Should solve on undistorted field", solver->best_match_solves);
+
     double ra, dec;
     double pscale;
     tan_t* wcs;
@@ -91,6 +96,11 @@ void test_predistort(CuTest* ct) {
     logmsg("Image center is RA,Dec = (%g,%g) degrees, size is %.2g x %.2g arcmin.\n",
            ra, dec, arcsec2arcmin(pscale * imagew), arcsec2arcmin(pscale * imageh));
 
+    sip_write_to_file(solver->best_match.sip, "undistorted-sip.wcs");
+
+
+    //////////////////////////////////////////////////////////
+    
     solver_reset_best_match(solver);
     solver_reset_counters(solver);
 
@@ -159,14 +169,24 @@ void test_predistort(CuTest* ct) {
     CuAssert(ct, "Should fail on distorted field", !solver->best_match_solves);
 
     solver->predistort = &distortion;
+
+    // avoid solver freeing "xy_dist", but we still want to reset the preprocessing.
+    solver->fieldxy = NULL;
     solver_set_field(solver, xy_dist);
     solver_set_field_bounds(solver, 0, imagew, 0, imageh);
 
+    solver->do_tweak = TRUE;
+    solver->tweak_aborder = 2;
+    solver->tweak_abporder = 4;
+    
     solver_reset_best_match(solver);
     solver_reset_counters(solver);
     solver_run(solver);
 
     CuAssert(ct, "Should solve given correct predistortion", solver->best_match_solves);
+
+    //solver->best_match.wcstan;
+    sip_write_to_file(solver->best_match.sip, "distorted-sip.wcs");
     
 }
 

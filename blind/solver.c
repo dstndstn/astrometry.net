@@ -733,7 +733,7 @@ void solver_run(solver_t* solver) {
         // Make a copy of the original x,y list.
         solver->fieldxy_orig = solver->fieldxy;
         solver->fieldxy = starxy_subset(solver->fieldxy_orig, starxy_n(solver->fieldxy_orig));
-        printf("Applying undistortion to %i stars\n", starxy_n(solver->fieldxy_orig));
+        logverb("Applying undistortion to %i stars\n", starxy_n(solver->fieldxy_orig));
         // Apply the *un*distortion
         for (i=0; i<starxy_n(solver->fieldxy); i++) {
             double dx, dy;
@@ -1018,6 +1018,13 @@ void solver_run(solver_t* solver) {
         }
         free(pquads);
     }
+
+    if (solver->predistort) {
+        // Revert to the original x,y list.
+        starxy_free(solver->fieldxy);
+        solver->fieldxy = solver->fieldxy_orig;
+    }
+
 }
 
 /**
@@ -1429,6 +1436,9 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
         // Apply the distortion.
         logverb("Applying the distortion pattern and recomputing WCS...\n");
 
+        printf("Initial WCS:\n");
+        tan_print(&(mo->wcstan));
+        
         // this includes conflicts and distractors; we won't fill these arrays.
         N = mo->nbest;
         matchxy = malloc(N * 2 * sizeof(double));
@@ -1437,12 +1447,17 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
 
         Ngood = 0;
         for (i=0; i<N; i++) {
-            double x,y;
             if (mo->theta[i] < 0)
                 continue;
-            x = starxy_get_x(sp->fieldxy, i);
-            y = starxy_get_y(sp->fieldxy, i);
-            sip_pixel_distortion(sp->predistort, x, y, &dx, &dy);
+            /*
+             double x,y;
+             x = starxy_get_x(sp->fieldxy, i);
+             y = starxy_get_y(sp->fieldxy, i);
+             sip_pixel_distortion(sp->predistort, x, y, &dx, &dy);
+             */
+            // Plug in the original (distorted) coordinates
+            dx = starxy_get_x(sp->fieldxy_orig, i);
+            dy = starxy_get_y(sp->fieldxy_orig, i);
             matchxy[2*Ngood + 0] = dx;
             matchxy[2*Ngood + 1] = dy;
             memcpy(matchxyz + 3*Ngood, mo->refxyz + 3*mo->theta[i],
@@ -1453,17 +1468,24 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
             Unused anbool ok;
             ok = tan_xyzarr2pixelxy(&mo->wcstan, matchxyz+3*Ngood, &xx, &yy);
             assert(ok);
-            logverb("match: ref(%.1f, %.1f) -- img(%.1f, %.1f) --> dist(%.1f, %.1f)\n",
-                    xx, yy, x, y, dx, dy);
-
+            logverb("match: ref(%.1f, %.1f) -- undist(%.1f, %.1f) --> dist(%.1f, %.1f)\n",
+                    xx, yy, starxy_get_x(sp->fieldxy, i), starxy_get_y(sp->fieldxy, i), dx, dy);
             Ngood++;
         }
 
         if (sp->do_tweak) {
             // Compute the SIP solution using the correspondences
-            // found during verify(), but with the re-distorted positions.
+            // found during verify(), but with the original (distorted) positions.
             sip_t sip;
             memset(&sip, 0, sizeof(sip_t));
+
+            memcpy(&(sip.wcstan), &(mo->wcstan), sizeof(tan_t));
+            // ?
+            //fit_tan_wcs_weighted(matchxyz, matchxy, weights, Ngood,
+            //&(sip.wcstan), NULL);
+            //            printf("Initial TAN WCS on distorted positions:\n");
+            //tan_print(&(sip.wcstan));
+
             sip.a_order = sip.b_order = sp->tweak_aborder;
             sip.ap_order = sip.bp_order = sp->tweak_abporder;
             sip.wcstan.imagew = solver_field_width(sp);
@@ -1478,15 +1500,18 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip,
 
             } else {
                 // keep TAN WCS's crval but distort the crpix.
-                sip.wcstan.crval[0] = mo->wcstan.crval[0];
-                sip.wcstan.crval[1] = mo->wcstan.crval[1];
+                //sip.wcstan.crval[0] = mo->wcstan.crval[0];
+                //sip.wcstan.crval[1] = mo->wcstan.crval[1];
                 sip_pixel_distortion(sp->predistort,
                                      mo->wcstan.crpix[0], mo->wcstan.crpix[1],
                                      sip.wcstan.crpix+0, sip.wcstan.crpix+1);
             }
 
+            printf("Initial SIP on distorted positions:\n");
+            sip_print(&sip);
+            
             int doshift = 1;
-            fit_sip_wcs(matchxyz, matchxy, weights, N, &(sip.wcstan),
+            fit_sip_wcs(matchxyz, matchxy, weights, Ngood, &(sip.wcstan),
                         sp->tweak_aborder, sp->tweak_abporder, doshift,
                         &sip);
 
