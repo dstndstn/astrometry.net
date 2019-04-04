@@ -266,11 +266,21 @@ void solver_log_params(const solver_t* sp) {
         index_t* ind = pl_get(sp->indexes, i);
         logverb("    %s\n", ind->indexname);
     }
-    logverb("  Field: %i stars\n", starxy_n(sp->fieldxy));
-    for (i=0; i<starxy_n(sp->fieldxy); i++) {
+    if (sp->fieldxy) {
+      logverb("  Field (processed): %i stars\n", starxy_n(sp->fieldxy));
+      for (i=0; i<starxy_n(sp->fieldxy); i++) {
         debug("    xy (%.1f, %.1f), flux %.1f\n",
               starxy_getx(sp->fieldxy, i), starxy_gety(sp->fieldxy, i),
               sp->fieldxy->flux ? starxy_get_flux(sp->fieldxy, i) : 0.0);
+      }
+    }
+    if (sp->fieldxy_orig) {
+      logverb("  Field (orig): %i stars\n", starxy_n(sp->fieldxy_orig));
+      for (i=0; i<starxy_n(sp->fieldxy_orig); i++) {
+        debug("    xy (%.1f, %.1f), flux %.1f\n",
+              starxy_getx(sp->fieldxy_orig, i), starxy_gety(sp->fieldxy_orig, i),
+              sp->fieldxy_orig->flux ? starxy_get_flux(sp->fieldxy_orig, i) : 0.0);
+      }
     }
 }
 
