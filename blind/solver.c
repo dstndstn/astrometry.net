@@ -729,10 +729,24 @@ void solver_run(solver_t* solver) {
 
     get_resource_stats(&usertime, &systime, NULL);
 
-    if (solver->predistort) {
+    if ((solver->pixel_xscale > 0) && solver->predistort) {
+        logerr("Error, can't do both pixel_xscale and predistortion at the same time!");
+    }
+    
+    if (solver->pixel_xscale > 0) {
         // Make a copy of the original x,y list.
         solver->fieldxy_orig = solver->fieldxy;
-        solver->fieldxy = starxy_subset(solver->fieldxy_orig, starxy_n(solver->fieldxy_orig));
+        solver->fieldxy = starxy_subset(solver->fieldxy_orig,
+                                        starxy_n(solver->fieldxy_orig));
+        logverb("Applying x-factor of %f to %i stars\n",
+                solver->pixel_xscale, starxy_n(solver->fieldxy_orig));
+        for (i=0; i<starxy_n(solver->fieldxy); i++)
+            solver->fieldxy->x[i] *= solver->pixel_xscale;
+    } else if (solver->predistort) {
+        // Make a copy of the original x,y list.
+        solver->fieldxy_orig = solver->fieldxy;
+        solver->fieldxy = starxy_subset(solver->fieldxy_orig,
+                                        starxy_n(solver->fieldxy_orig));
         logverb("Applying undistortion to %i stars\n", starxy_n(solver->fieldxy_orig));
         // Apply the *un*distortion
         for (i=0; i<starxy_n(solver->fieldxy); i++) {
@@ -1019,7 +1033,7 @@ void solver_run(solver_t* solver) {
         free(pquads);
     }
 
-    if (solver->predistort) {
+    if (solver->predistort || (solver->pixel_xscale > 0))  {
         // Revert to the original x,y list.
         starxy_free(solver->fieldxy);
         solver->fieldxy = solver->fieldxy_orig;
@@ -1424,7 +1438,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
     mo->index = sp->index;
     mo->index_jitter = sp->index->index_jitter;
 
-    if (sp->predistort) {
+    if (sp->predistort || (sp->pixel_xscale > 0)) {
         int i;
         double* matchxy;
         double* matchxyz;
@@ -1434,7 +1448,10 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
         double dx,dy;
 
         // Apply the distortion.
-        logverb("Applying the distortion pattern and recomputing WCS...\n");
+        if (sp->predistort)
+            logverb("Applying the distortion pattern and recomputing WCS...\n");
+        else
+            logverb("Applying pixel scaling and recomputing WCS...\n");
 
         printf("Initial WCS:\n");
         tan_print(&(mo->wcstan));
@@ -1449,12 +1466,6 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
         for (i=0; i<N; i++) {
             if (mo->theta[i] < 0)
                 continue;
-            /*
-             double x,y;
-             x = starxy_get_x(sp->fieldxy, i);
-             y = starxy_get_y(sp->fieldxy, i);
-             sip_pixel_distortion(sp->predistort, x, y, &dx, &dy);
-             */
             // Plug in the original (distorted) coordinates
             dx = starxy_get_x(sp->fieldxy_orig, i);
             dy = starxy_get_y(sp->fieldxy_orig, i);
@@ -1486,16 +1497,25 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
             if (sp->set_crpix) {
                 sip->wcstan.crpix[0] = sp->crpix[0];
                 sip->wcstan.crpix[1] = sp->crpix[1];
-                // find matching crval...
-                sip_pixel_undistortion(sp->predistort,
-                                       sp->crpix[0], sp->crpix[1], &dx, &dy);
+                if (sp->predistort) {
+                    // find matching crval...
+                    sip_pixel_undistortion(sp->predistort,
+                                           sp->crpix[0], sp->crpix[1], &dx, &dy);
+                } else {
+                    dx = sp->crpix[0] / sp->pixel_xscale;
+                }
                 tan_pixelxy2radecarr(&mo->wcstan, dx, dy, sip->wcstan.crval);
 
             } else {
                 // keep TAN WCS's crval but distort the crpix.
-                sip_pixel_distortion(sp->predistort,
-                                     mo->wcstan.crpix[0], mo->wcstan.crpix[1],
-                                     sip->wcstan.crpix+0, sip->wcstan.crpix+1);
+                if (sp->predistort) {
+                    sip_pixel_distortion(sp->predistort,
+                                         mo->wcstan.crpix[0], mo->wcstan.crpix[1],
+                                         sip->wcstan.crpix+0, sip->wcstan.crpix+1);
+                } else {
+                    sip->wcstan.crpix[0] = mo->wcstan.crpix[0] / sp->pixel_xscale;
+                    sip->wcstan.crpix[1] = mo->wcstan.crpix[1];
+                }
             }
 
             printf("Initial SIP on distorted positions:\n");
