@@ -965,17 +965,13 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
             goto cleanup;
         }
 
-        sp->numtries = 0;
-        sp->nummatches = 0;
-        sp->numscaleok = 0;
-        sp->num_cxdx_skipped = 0;
-        sp->num_verified = 0;
-        sp->quit_now = FALSE;
-        sp->mo_template = &template ;
+        solver_reset_counters(sp);
+        solver_reset_best_match(sp);
+
+        sp->mo_template = &template;
         sp->record_match_callback = record_match_callback;
         sp->timer_callback = timer_callback;
         sp->userdata = bp;
-        solver_reset_best_match(sp);
 
         bp->fieldnum = fieldnum;
         bp->nsolves_sofar = 0;

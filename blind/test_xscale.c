@@ -28,7 +28,7 @@ void test_xscale(CuTest* ct) {
     double arcmin_width_min = 5;
     double arcmin_width_max = 8;
 
-    char* xyfn = "3367-W.axy";
+    char* xyfn = "3367-W.xy";
     //char* xyfn = "3367-W-110.axy";
     char* indexfn = "/data1/INDEXES/5000/index-5001-31.fits";
 
@@ -86,6 +86,8 @@ void test_xscale(CuTest* ct) {
     // *1.1?
     solver_set_field_bounds(solver, 0, imagew, 0, imageh);
 
+    solver_print_to(solver, stdout);
+    
     solver_run(solver);
 
     CuAssert(ct, "Should succeeded on scaled field", solver->best_match_solves);

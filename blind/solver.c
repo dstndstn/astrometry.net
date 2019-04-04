@@ -239,6 +239,7 @@ void solver_log_params(const solver_t* sp) {
     } else {
         logverb("  Use_radec? no\n");
     }
+    logverb("  Pixel xscale: %g\n", sp->pixel_xscale);
     logverb("  Verify_pix: %g\n", sp->verify_pix);
     logverb("  Code tol: %g\n", sp->codetol);
     logverb("  Dist from quad bonus: %s\n", sp->distance_from_quad_bonus ? "yes" : "no");
@@ -633,6 +634,38 @@ static void find_field_boundaries(solver_t* solver) {
 }
 
 void solver_preprocess_field(solver_t* solver) {
+    int i;
+    
+    if ((solver->pixel_xscale > 0) && solver->predistort) {
+        logerr("Error, can't do both pixel_xscale and predistortion at the same time!");
+    }
+
+    if (solver->pixel_xscale > 0) {
+        // Make a copy of the original x,y list.
+        solver->fieldxy_orig = solver->fieldxy;
+        solver->fieldxy = starxy_subset(solver->fieldxy_orig,
+                                        starxy_n(solver->fieldxy_orig));
+        logverb("Applying x-factor of %f to %i stars\n",
+                solver->pixel_xscale, starxy_n(solver->fieldxy_orig));
+        for (i=0; i<starxy_n(solver->fieldxy); i++)
+            solver->fieldxy->x[i] *= solver->pixel_xscale;
+    } else if (solver->predistort) {
+        // Make a copy of the original x,y list.
+        solver->fieldxy_orig = solver->fieldxy;
+        solver->fieldxy = starxy_subset(solver->fieldxy_orig,
+                                        starxy_n(solver->fieldxy_orig));
+        logverb("Applying undistortion to %i stars\n", starxy_n(solver->fieldxy_orig));
+        // Apply the *un*distortion
+        for (i=0; i<starxy_n(solver->fieldxy); i++) {
+            double dx, dy;
+            sip_pixel_undistortion(solver->predistort,
+                                   solver->fieldxy->x[i], solver->fieldxy->y[i],
+                                   &dx, &dy);
+            solver->fieldxy->x[i] = dx;
+            solver->fieldxy->y[i] = dy;
+        }
+    }
+
     find_field_boundaries(solver);
     // precompute a kdtree over the field
     solver->vf = verify_field_preprocess(solver->fieldxy);
@@ -729,36 +762,6 @@ void solver_run(solver_t* solver) {
 
     get_resource_stats(&usertime, &systime, NULL);
 
-    if ((solver->pixel_xscale > 0) && solver->predistort) {
-        logerr("Error, can't do both pixel_xscale and predistortion at the same time!");
-    }
-    
-    if (solver->pixel_xscale > 0) {
-        // Make a copy of the original x,y list.
-        solver->fieldxy_orig = solver->fieldxy;
-        solver->fieldxy = starxy_subset(solver->fieldxy_orig,
-                                        starxy_n(solver->fieldxy_orig));
-        logverb("Applying x-factor of %f to %i stars\n",
-                solver->pixel_xscale, starxy_n(solver->fieldxy_orig));
-        for (i=0; i<starxy_n(solver->fieldxy); i++)
-            solver->fieldxy->x[i] *= solver->pixel_xscale;
-    } else if (solver->predistort) {
-        // Make a copy of the original x,y list.
-        solver->fieldxy_orig = solver->fieldxy;
-        solver->fieldxy = starxy_subset(solver->fieldxy_orig,
-                                        starxy_n(solver->fieldxy_orig));
-        logverb("Applying undistortion to %i stars\n", starxy_n(solver->fieldxy_orig));
-        // Apply the *un*distortion
-        for (i=0; i<starxy_n(solver->fieldxy); i++) {
-            double dx, dy;
-            sip_pixel_undistortion(solver->predistort,
-                                   solver->fieldxy->x[i], solver->fieldxy->y[i],
-                                   &dx, &dy);
-            solver->fieldxy->x[i] = dx;
-            solver->fieldxy->y[i] = dy;
-        }
-    }
-    
     if (!solver->vf)
         solver_preprocess_field(solver);
 
@@ -1034,6 +1037,7 @@ void solver_run(solver_t* solver) {
     }
 
     if (solver->predistort || (solver->pixel_xscale > 0))  {
+        logverb("Reverting distortion/pixel scaling\n");
         // Revert to the original x,y list.
         starxy_free(solver->fieldxy);
         solver->fieldxy = solver->fieldxy_orig;
@@ -1453,9 +1457,11 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
         else
             logverb("Applying pixel scaling and recomputing WCS...\n");
 
-        printf("Initial WCS:\n");
-        tan_print(&(mo->wcstan));
-        
+        if (log_get_level() >= LOG_VERB) {
+            printf("Initial WCS:\n");
+            tan_print(&(mo->wcstan));
+        }
+
         // this includes conflicts and distractors; we won't fill these arrays.
         N = mo->nbest;
         matchxy = malloc(N * 2 * sizeof(double));
@@ -1518,17 +1524,21 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
                 }
             }
 
-            printf("Initial SIP on distorted positions:\n");
-            sip_print(sip);
+            if (log_get_level() >= LOG_VERB) {
+                printf("Initial SIP on distorted positions:\n");
+                sip_print(sip);
+            }
             
             int doshift = 1;
             fit_sip_wcs(matchxyz, matchxy, weights, Ngood, &(sip->wcstan),
                         sp->tweak_aborder, sp->tweak_abporder, doshift,
                         sip);
 
-            printf("Final SIP on distorted positions:\n");
-            sip_print(sip);
-            
+            if (log_get_level() >= LOG_VERB) {
+                printf("Final SIP on distorted positions:\n");
+                sip_print(sip);
+            }
+
             for (i=0; i<Ngood; i++) {
                 double xx,yy;
                 Unused anbool ok;
