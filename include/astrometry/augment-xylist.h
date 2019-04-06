@@ -36,6 +36,8 @@ struct augment_xylist_s {
 
     sip_t* predistort;
 
+    double pixel_xscale;
+    
     // FITS columns copied from index to RDLS output
     sl* tagalong;
     anbool tagalong_all;

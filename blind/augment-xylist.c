@@ -231,10 +231,10 @@ static an_option_t options[] = {
      "don't fine-tune WCS by computing a SIP polynomial"},
     {'t', "tweak-order",    required_argument, "int",
      "polynomial order of SIP WCS corrections"},
-    /*
-     {'\x86', "predistort",  required_argument, "filename",
-     "apply the distortion in this SIP WCS header before and after solving"},
-     */
+    {'\x86', "predistort",  required_argument, "filename",
+     "apply the inverse distortion in this SIP WCS header before solving"},
+    {'\x94', "xscale", required_argument, "factor",
+     "for rectangular pixels: factor to apply to measured X positions to make pixels square"},
     {'m', "temp-dir",       required_argument, "dir",
      "where to put temp files, default /tmp"},
     // placeholder for printing "The following are for xylist inputs only"
@@ -287,15 +287,16 @@ int augment_xylist_parse_option(char argchar, char* optarg,
     case '\x83':
         axy->verify_dedup = FALSE;
         break;
-        /*
-         case '\x86':
-         axy->predistort = sip_read_header_file(optarg, NULL);
-         if (!axy->predistort) {
-         ERROR("Failed to read SIP header file \"%s\" for pre-distortion values", optarg);
-         return -1;
-         }
-         break;
-         */
+    case '\x86':
+        axy->predistort = sip_read_header_file(optarg, NULL);
+        if (!axy->predistort) {
+            ERROR("Failed to read SIP header file \"%s\" for pre-distortion values", optarg);
+            return -1;
+        }
+        break;
+    case '\x94':
+        axy->pixel_xscale = atof(optarg);
+        break;
     case ';':
         axy->invert_image = TRUE;
         break;
@@ -1385,6 +1386,10 @@ int augment_xylist(augment_xylist_t* axy,
         fits_header_add_double(hdr, "ANDPIX0", axy->predistort->wcstan.crpix[0], "Pre-distortion ref pix x");
         fits_header_add_double(hdr, "ANDPIX1", axy->predistort->wcstan.crpix[1], "Pre-distortion ref pix y");
         add_sip_coeffs(hdr, "AND", axy->predistort);
+    }
+
+    if (axy->pixel_xscale) {
+        fits_header_add_double(hdr, "ANPXSCAL", axy->pixel_xscale, "x scaling to make square pixels");
     }
 
     fout = fopen(axy->axyfn, "wb");

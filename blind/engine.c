@@ -889,6 +889,8 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
         }
     } while (0);
 
+    sp->pixel_xscale = qfits_header_getdouble(hdr, "ANPXSCAL", 0.);
+    
     run = qfits_header_getboolean(hdr, "ANRUN", FALSE);
 
     // Default: solve first field.

@@ -43,6 +43,9 @@ void starxy_set_flux(starxy_t* f, int i, double y);
 // Copies just the first N entries into a new starxy_t object.
 starxy_t* starxy_subset(starxy_t*, int N);
 
+// Creates a full copy
+starxy_t* starxy_copy(starxy_t*);
+
 // Copies from the given arrays into the starxy_t.
 void starxy_set_x_array(starxy_t* s, const double* x);
 void starxy_set_y_array(starxy_t* s, const double* y);

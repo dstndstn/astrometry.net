@@ -47,8 +47,13 @@ struct solver_t {
     // The field to solve
     starxy_t* fieldxy;
 
+    // X axis scaling to apply to pixels before solving -- for pixels
+    // that view a rectangular chunk of sky
+    double pixel_xscale;
+
     // Distortion pattern to apply before solving.
     sip_t* predistort;
+    starxy_t* fieldxy_orig;
 
     // Limits on the image pixel scale in [arcsec per pixel].
     double funits_lower;
