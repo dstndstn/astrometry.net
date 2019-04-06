@@ -42,8 +42,12 @@ COMMON := $(BASEDIR)/util
 
 include $(COMMON)/makefile.common
 
-all: subdirs
+all: subdirs version
 .PHONY: all
+
+version:
+	echo "__version__ = '$(AN_GIT_REVISION)'" > __init__.py
+.PHONY: version
 
 check: pkgconfig
 .PHONY: check
