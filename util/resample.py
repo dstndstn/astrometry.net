@@ -14,11 +14,12 @@ class SmallOverlapError(OverlapError):
     pass
 
 def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
-                      splineFallback = True,
-                      splineStep = 25,
-                      splineMargin = 12,
+                      splineFallback=True,
+                      splineStep=25,
+                      splineMargin=12,
                       table=True,
-                      cinterp = True):
+                      cinterp=True,
+                      intType=np.int32):
     '''
     Returns (Yo,Xo, Yi,Xi, ims)
 
@@ -60,6 +61,7 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
 
     table: use Lanczos3 look-up table?
 
+    intType: type to return for integer pixel coordinates.
     '''
     ### DEBUG
     #ps = PlotSequence('resample')
@@ -70,9 +72,6 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
 
     for im in Limages:
         assert(im.shape == (h,w))
-
-    #print 'Target size', W, H
-    #print 'Input size', w, h
     
     # First find the approximate bbox of the input image in
     # the target image so that we don't ask for way too
@@ -85,12 +84,11 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         XY.append((xw - 1, yw - 1))
     XY = np.array(XY)
 
-    x0,y0 = np.round(XY.min(axis=0)).astype(int)
-    x1,y1 = np.round(XY.max(axis=0)).astype(int)
+    x0,y0 = np.rint(XY.min(axis=0))
+    x1,y1 = np.rint(XY.max(axis=0))
 
     if spline:
         # Now we build a spline that maps "target" pixels to "input" pixels
-        # spline inputs: pixel coords in the 'target' image
         margin = splineMargin
         step = splineStep
         xlo = max(0, x0-margin)
@@ -99,9 +97,9 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         yhi = min(H-1, y1+margin)
         if xlo > xhi or ylo > yhi:
             raise NoOverlapError()
-        nx = np.ceil(float(xhi - xlo) / step) + 1
+        nx = int(np.ceil(float(xhi - xlo) / step)) + 1
         xx = np.linspace(xlo, xhi, nx)
-        ny = np.ceil(float(yhi - ylo) / step) + 1
+        ny = int(np.ceil(float(yhi - ylo) / step)) + 1
         yy = np.linspace(ylo, yhi, ny)
 
         if ps:
@@ -110,7 +108,6 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
                 ax = plt.axis()
                 plt.axis([ax[0]-M, ax[1]+M, ax[2]-M, ax[3]+M])
                 plt.axis('scaled')
-
             plt.clf()
             plt.plot(XY[:,0], XY[:,1], 'ro')
             plt.plot(xx, np.zeros_like(xx), 'b.')
@@ -123,7 +120,6 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
             ps.savefig()
 
         if (len(xx) == 0) or (len(yy) == 0):
-            #print 'No overlap between input and target WCSes'
             raise NoOverlapError()
 
         if (len(xx) <= 3) or (len(yy) <= 3):
@@ -152,21 +148,6 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         assert(np.all(ok))
         del ok
         
-        # ok,XX,YY = wcs.radec2pixelxy(
-        #     *(targetwcs.pixelxy2radec(
-        #         xx[np.newaxis,:] + 1,
-        #         yy[:,np.newaxis] + 1)[-2:]))
-        # XX -= 1.
-        # YY -= 1.
-        # del ok
-
-        # print 'Spline inputs:'
-        # print xx
-        # print yy
-        # print 'Spline outputs:'
-        # print XX
-        # print YY
-        
         if ps:
             plt.clf()
             plt.plot(Xo, Yo, 'b.')
@@ -186,8 +167,8 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
 
     # Now, build the full pixel grid (in the ouput image) we want to
     # interpolate...
-    ixo = np.arange(max(0, x0-margin), min(W, x1+margin+1), dtype=int)
-    iyo = np.arange(max(0, y0-margin), min(H, y1+margin+1), dtype=int)
+    ixo = np.arange(max(0, x0-margin), min(W, x1+margin+1), dtype=intType)
+    iyo = np.arange(max(0, y0-margin), min(H, y1+margin+1), dtype=intType)
 
     if len(ixo) == 0 or len(iyo) == 0:
         raise NoOverlapError()
@@ -211,7 +192,6 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
             plt.title('C: Target image; i*o')
             expand_axes()
             ps.savefig()
-    
             plt.clf()
             plt.plot(fxi, fyi, 'r,')
             plt.plot([0,w,w,0,0], [0,0,h,h,0], 'k-')
@@ -230,33 +210,31 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
             R = R[1:]
         ok,fxi,fyi = wcs.radec2pixelxy(*R)
         assert(np.all(ok))
-        # ok,fxi,fyi = wcs.radec2pixelxy(
-        #     *targetwcs.pixelxy2radec(ixo[np.newaxis,:] + 1.,
-        #                              iyo[:,np.newaxis] + 1.))
         del ok
         fxi -= 1.
         fyi -= 1.
-        
-    # print 'ixo', ixo.shape
-    # print 'iyo', iyo.shape
-    # print 'fxi', fxi.shape
-    # print 'fyi', fyi.shape
 
-    # Keep only in-bounds pixels.
-    ## HACK -- 0.51
-    I = np.flatnonzero((fxi >= -0.5) * (fyi >= -0.5) *
-                       (fxi < w-0.51) * (fyi < h-0.51))
-    fxi = fxi.flat[I]
-    fyi = fyi.flat[I]
-    # i[xy]i: int coords in the input image
-    ixi = np.round(fxi).astype(np.int32)
-    iyi = np.round(fyi).astype(np.int32)
+    # i[xy]i: int coords in the input image.
+    itype = intType
+    if len(Limages) and cinterp:
+        # the lanczos3_interpolate function below requires int32!
+        itype = np.int32
 
-    #print 'dims', (len(iyo),len(ixo))
-    iy,ix = np.unravel_index(I, (len(iyo),len(ixo)))
-    iyo = iyo[0] + iy
-    ixo = ixo[0] + ix
-    # i[xy]o: int coords in the target image
+    ixi = np.round(fxi).astype(itype)
+    iyi = np.round(fyi).astype(itype)
+
+    # Cut to in-bounds pixels.
+    I,J = np.nonzero((ixi >= 0) * (ixi < w) * (iyi >= 0) * (iyi < h))
+    ixi = ixi[I,J]
+    iyi = iyi[I,J]
+    fxi = fxi[I,J]
+    fyi = fyi[I,J]
+
+    # i[xy]o: int coords in the target image.
+    # These were 1-d arrays that got broadcasted
+    iyo = iyo[0] + I.astype(intType)
+    ixo = ixo[0] + J.astype(intType)
+    del I,J
 
     if spline and ps:
         plt.clf()
@@ -265,7 +243,6 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         plt.title('E: Target image; i*o')
         expand_axes()
         ps.savefig()
-
         plt.clf()
         plt.plot(fxi, fyi, 'r,')
         plt.plot([0,w,w,0,0], [0,0,h,h,0], 'k-')
@@ -288,8 +265,6 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         dy = (fyi - iyi).astype(np.float32)
         del fxi
         del fyi
-        # print 'dx', dx.min(), dx.max()
-        # print 'dy', dy.min(), dy.max()
 
         # Lanczos interpolation.
         # number of pixels
@@ -299,18 +274,11 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         laccs = [np.zeros(nn, np.float32) for im in Limages]
 
         if cinterp:
-            from .util import lanczos3_interpolate
-            # ixi = ixi.astype(np.int)
-            # iyi = iyi.astype(np.int)
-            # print 'ixi/iyi', ixi.shape, ixi.dtype, iyi.shape, iyi.dtype
-            # print 'dx/dy', dx.shape, dx.dtype, dy.shape, dy.dtype
+            from astrometry.util.util import lanczos3_interpolate
             rtn = lanczos3_interpolate(ixi, iyi, dx, dy, laccs,
-                                       [lim.astype(np.float32)
-                                        for lim in Limages])
-            # print 'rtn:', rtn
+                                       [lim.astype(np.float32) for lim in Limages])
         else:
-            _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, Limages,
-                                 table=table)
+            _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, Limages, table=table)
         rims = laccs
     else:
         rims = []
@@ -329,14 +297,13 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
     laccs: list of [float, 1-d numpy array, len n]: outputs
     limages list of [float, 2-d numpy array, shape h,w]: inputs
     '''
-    from .miscutils import lanczos_filter
+    from astrometry.util.miscutils import lanczos_filter
     lfunc = lanczos_filter
     if L == 3:
         try:
-            from .util import lanczos3_filter, lanczos3_filter_table
+            from astrometry.util import lanczos3_filter, lanczos3_filter_table
             # 0: no rangecheck
             if table:
-                #lfunc = lambda nil,x,y: lanczos3_filter_table(x,y, 0)
                 lfunc = lambda nil,x,y: lanczos3_filter_table(x,y, 1)
             else:
                 lfunc = lambda nil,x,y: lanczos3_filter(x,y)
@@ -348,16 +315,12 @@ def _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, limages,
     # sum of lanczos terms
     fsum = np.zeros(n)
     off = np.arange(-L, L+1)
-    #fx = np.zeros(n)
-    #fy = np.zeros(n)
     fx = np.zeros(n, np.float32)
     fy = np.zeros(n, np.float32)
     for oy in off:
-        #print 'dy range:', min(-oy + dy), max(-oy + dy)
         lfunc(L, -oy + dy, fy)
         for ox in off:
             lfunc(L, -ox + dx, fx)
-            #print 'dx range:', min(-ox + dx), max(-ox + dx)
             for lacc,im in zip(laccs, limages):
                 lacc += fx * fy * im[np.clip(iyi + oy, 0, h-1),
                                      np.clip(ixi + ox, 0, w-1)]
@@ -404,7 +367,7 @@ if __name__ == '__main__':
                   -pixscale, 0., 0., pixscale, W, H)
 
         pix = np.zeros((H,W), np.float32)
-        pix[0,W/2] = 1.
+        pix[0,W//2] = 1.
         
         Yo,Xo,Yi,Xi,(cpix,) = resample_with_wcs(cowcs, wcs, [pix], 3)
         print('C', cpix)
