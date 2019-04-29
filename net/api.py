@@ -164,6 +164,7 @@ def upload_common(request, url=None, file=None):
                     ('downsample_factor', int),
                     ('use_sextractor', bool),
                     ('crpix_center', bool),
+                    ('invert', bool),
                     ('parity', int),
                     ('image_width', int),
                     ('image_height', int),
