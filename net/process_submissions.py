@@ -578,6 +578,7 @@ def get_or_create_image(df):
         img = imgs[0]
     except Image.DoesNotExist:
         # try to create image assume disk file is an image file (png, jpg, etc)
+        logmsg('Image database object does not exist; creating')
         img = create_image(df)
         logmsg('img = ' + str(img))
         if img is None:
@@ -586,8 +587,11 @@ def get_or_create_image(df):
 
         if img:
             # cache
+            print('Creating thumbnail')
             img.get_thumbnail()
+            print('Creating display-sized image')
             img.get_display_image()
+            print('Saving image')
             img.save()
         else:
             raise Exception('This file\'s type is not supported.')

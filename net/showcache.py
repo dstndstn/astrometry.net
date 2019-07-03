@@ -7,6 +7,8 @@ if __name__ == '__main__':
     sys.path.append(os.path.dirname(os.path.dirname(path)))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 import settings
+import django
+django.setup()
 from astrometry.net.models import *
 from astrometry.util.file import *
 

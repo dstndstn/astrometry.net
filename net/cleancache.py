@@ -7,12 +7,10 @@ if __name__ == '__main__':
     sys.path.append(os.path.dirname(os.path.dirname(path)))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 import settings
-from astrometry.net.models import *
-from astrometry.util.file import *
-
 import django
 django.setup()
-
+from astrometry.net.models import *
+from astrometry.util.file import *
 
 def clean_dfs():
     for df in DiskFile.objects.all().order_by('file_hash'):
@@ -79,29 +77,28 @@ def delete_orphaned_diskfiles():
 
 def clean_cache():
     cfs = CachedFile.objects.all()
-    print cfs.count(), 'CachedFiles'
-    #cfs = cfs.filter(key__contains='galex')
-    #print cfs.count(), 'GALEX cached files'
-    cfs = cfs.filter(key__contains='sdss_size')
-    print cfs.count(), 'SDSS cached files'
+    print(cfs.count(), 'CachedFiles')
+    cfs = cfs.filter(key__contains='galex')
+    print(cfs.count(), 'GALEX cached files')
+    #cfs = cfs.filter(key__contains='sdss_size')
+    #print(cfs.count(), 'SDSS cached files')
 
     def do_delete(delcfs, deldfs, delfiles):
         delcfs = list(delcfs)
         deldfs = list(deldfs)
         delfiles = list(delfiles)
-        print 'Total of', len(delcfs), 'CachedFiles to delete'
-        print 'Total of', len(delfiles), 'files to delete'
-        print 'Total of', len(deldfs), 'DiskFiles to delete'
-        print 'Deleting CachedFiles...'
+        print('Total of', len(delcfs), 'CachedFiles to delete')
+        print('Total of', len(delfiles), 'files to delete')
+        print('Total of', len(deldfs), 'DiskFiles to delete')
+        print('Deleting CachedFiles...')
         for cf in delcfs:
             cf.delete()
-        print 'Deleting DiskFiles...'
+        print('Deleting DiskFiles...')
         for df in deldfs:
             df.delete()
-        print 'Deleting Files...'
+        print('Deleting Files...')
         for fn in delfiles:
             os.unlink(fn)
-
 
     delfiles = set()
     delcfs = set()
@@ -115,8 +112,8 @@ def clean_cache():
             delcfs = set()
             deldfs = set()
 
-        print
-        print cf.key
+        print()
+        print(cf.key)
         try:
             df = cf.disk_file
         except:
@@ -124,10 +121,10 @@ def clean_cache():
             delcfs.add(cf)
             continue
         path = df.get_path()
-        print '->', path
-        print 'Other CachedFiles sharing this DiskFile:'
+        print('->', path)
+        print('Other CachedFiles sharing this DiskFile:')
         for ocf in df.cachedfile_set.all():
-            print '  ', ocf.key
+            print('  ', ocf.key)
             delcfs.add(ocf)
         delcfs.add(cf)
         deldfs.add(df)
