@@ -78,10 +78,14 @@ def delete_orphaned_diskfiles():
 def clean_cache():
     cfs = CachedFile.objects.all()
     print(cfs.count(), 'CachedFiles')
-    cfs = cfs.filter(key__contains='galex')
-    print(cfs.count(), 'GALEX cached files')
+    #cfs = cfs.filter(key__contains='galex')
+    #print(cfs.count(), 'GALEX cached files')
     #cfs = cfs.filter(key__contains='sdss_size')
     #print(cfs.count(), 'SDSS cached files')
+    cfs = cfs.filter(key__contains='jpg_image')
+    print(cfs.count(), 'FITS->jpeg images')
+    #cfs = cfs.filter(key__contains='fits_table_')
+    #print(cfs.count(), 'FITS tables')
 
     def do_delete(delcfs, deldfs, delfiles):
         delcfs = list(delcfs)

@@ -33,6 +33,7 @@ if __name__ == '__main__':
     parser.add_option('-s', '--sub', type=int, dest='sub', help='Submission ID')
     parser.add_option('-j', '--job', type=int, dest='job', help='Job ID')
     parser.add_option('-u', '--userimage', type=int, dest='uimage', help='UserImage ID')
+    parser.add_option('-i', '--image', type=int, dest='image', help='Image ID')
     parser.add_option('-r', '--rerun', dest='rerun', action='store_true',
                       help='Re-run this submission/job?')
 
@@ -56,9 +57,12 @@ if __name__ == '__main__':
     parser.add_option('--delete', action='store_true', default=False,
               help='Delete everything associated with the given image')
 
+    parser.add_option('--hide', action='store_true', default=False,
+                      help='For a UserImage, set publicly_visible=False')
+    
     opt,args = parser.parse_args()
-    if not (opt.sub or opt.job or opt.uimage or opt.ssh or opt.empty):
-        print('Must specify one of --sub, --job, or --userimage (or --ssh or --empty)')
+    if not (opt.sub or opt.job or opt.uimage or opt.image or opt.ssh or opt.empty):
+        print('Must specify one of --sub, --job, or --userimage or --image (or --ssh or --empty)')
 
         parser.print_help()
         sys.exit(-1)
@@ -186,6 +190,7 @@ if __name__ == '__main__':
         im = ui.image
         print('Image', im)
         sub = ui.submission
+        print('User', ui.user)
         print('Submission', sub)
         print(sub.disk_file.get_path())
 
@@ -199,3 +204,31 @@ if __name__ == '__main__':
         if opt.delete:
             print('Deleting ui', ui)
             ui.delete()
+
+        if opt.hide:
+            print('Hiding ui', ui)
+            ui.hide()
+
+
+    if opt.image:
+        im = Image.objects.all().get(id=opt.image)
+        # thumbnail
+        # display_image
+        print('Image:', im, im.id)
+
+        #uis = im.userimage_set()
+
+        uis = UserImage.objects.all().filter(image=im.id)
+        print('UserImages:', uis)
+
+        print('Thumbnail:', im.thumbnail)
+        print('Display:', im.display_image)
+        
+        if opt.delete:
+            print('Deleting...')
+            im.delete()
+            if im.thumbnail:
+                im.thumbnail.delete()
+            if im.display_image:
+                im.display_image.delete()
+                
