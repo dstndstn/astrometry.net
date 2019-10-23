@@ -135,12 +135,16 @@ def get_annotations_for_wcs(wcs, opt):
         for r,d,n1,n2,vmag in zip(T.ra, T.dec, T.name1, T.name2, T.vmag):
             if not wcs.is_inside(r, d):
                 continue
-            #print('Bright-star catalog:', n1, n2)
+            # print('Bright-star catalog:', n1, n2, type(n1))
             names = []
             n1 = n1.strip()
             if len(n1):
                 if '\\u' in n1:
-                    n1 = unicode(n1)
+                    try:
+                        # py2 only
+                        n1 = unicode(n1)
+                    except:
+                        pass
                     import json
                     x = json.dumps(n1)
                     x = x.replace('\\\\','\\')

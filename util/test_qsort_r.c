@@ -3,6 +3,7 @@
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 
