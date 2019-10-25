@@ -4,12 +4,21 @@ import os
 import sys
 import time
 import base64
-from urllib2 import urlopen
-from urllib2 import Request
-from urllib2 import HTTPError
-from urllib import urlencode
-from urllib import quote
-from exceptions import Exception
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+    from urllib.request import Request
+    from urllib.error import HTTPError
+    from urllib.parse import urlencode
+    from urllib.parse import quote
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
+    from urllib2 import Request
+    from urllib2 import HTTPError
+    from urllib import urlencode
+    from urllib import quote
+    from exceptions import Exception
 from email.mime.multipart import MIMEMultipart
 
 from email.mime.base import MIMEBase
@@ -68,7 +77,10 @@ class Client(object):
             mp = MIMEMultipart('form-data', None, [m1, m2])
 
             # Make a custom generator to format it the way we need.
-            from cStringIO import StringIO
+            try:
+                from io import StringIO
+            except ImportError:
+                from cStringIO import StringIO
             from email.generator import Generator
 
             class MyGenerator(Generator):
@@ -84,7 +96,7 @@ class Client(object):
                     # We need to use \r\n line-terminator, but Generator
                     # doesn't provide the flexibility to override, so we
                     # have to copy-n-paste-n-modify.
-                    for h, v in msg.items():
+                    for h, v in list(msg.items()):
                         print(('%s: %s\r\n' % (h,v)), end='', file=self._fp)
                     # A blank line always separates headers from body
                     print('\r\n', end='', file=self._fp)
@@ -97,14 +109,14 @@ class Client(object):
             fp = StringIO()
             g = MyGenerator(fp)
             g.flatten(mp)
-            data = fp.getvalue()
+            data = fp.getvalue().encode('utf-8')
             headers = {'Content-type': mp.get('Content-type')}
 
         else:
             # Else send x-www-form-encoded
             data = {'request-json': json}
             print('Sending form data:', data)
-            data = urlencode(data)
+            data = urlencode(data).encode("utf-8")
             print('Sending data:', data)
             headers = {}
 
