@@ -4,9 +4,6 @@
 */deps
 */lib*.a
 */test_*-main.c
-gsl-an/*/*.o
-gsl-an/*.dSYM
-util/os-features-test-*
 */*.pyc
 blind/astrometry-engine
 blind/augment-xylist
@@ -30,10 +27,14 @@ blind/plotstuff_c.py
 blind/plotstuff_wrap.c
 blind/plotxy
 blind/solve-field
+blind/query-starkd
 blind/tablist
 blind/tabmerge
 blind/test.c
 blind/wcs-grab
+blind/job.axy
+blind/startree
+blind/fitsverify.dSYM
 catalogs/2masstofits
 catalogs/build-hd-tree
 catalogs/ngc2000.py
@@ -47,6 +48,8 @@ catalogs/tycho2tofits
 catalogs/ucac3tofits
 catalogs/ucac4tofits
 catalogs/usnobtofits
+gsl-an/*/*.o
+gsl-an/*.dSYM
 gsl-an/cc-out.tmp
 gsl-an/config.h
 gsl-an/config.log
@@ -62,6 +65,7 @@ libkd/deps
 libkd/fix-bb
 sdss/cutils.py
 sdss/cutils_wrap.c
+util/os-features-test-*
 util/an-fitstopnm
 util/an-pnmtofits
 util/an_build_ext.pyc
@@ -87,3 +91,7 @@ util/wcs-resample
 util/wcs-to-tan
 util/wcs-xy2rd
 util/wcsinfo
+util/wcs-match
+util/wcs-pv2sip
+report.txt
+.DS_Store
