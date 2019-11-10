@@ -37,13 +37,11 @@ blind/startree
 blind/fitsverify.dSYM
 catalogs/2masstofits
 catalogs/build-hd-tree
-catalogs/ngc2000.py
-catalogs/ngc2000accurate.py
-catalogs/ngc2000entries.c
-catalogs/ngc2000entries.py
-catalogs/ngc2000names.c
-catalogs/ngcic-accurate-entries.c
 catalogs/nomadtofits
+catalogs/openngc-entries.c
+catalogs/openngc-entries.csv
+catalogs/openngc-names.c
+catalogs/openngc-names.csv
 catalogs/tycho2tofits
 catalogs/ucac3tofits
 catalogs/ucac4tofits

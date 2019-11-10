@@ -18,27 +18,21 @@ include $(COMMON)/makefile.zlib
 #include $(COMMON)/makefile.anutils
 
 $(DATA)/%.txt: ;
-$(DATA)/%.dat: ;
+$(DATA)/NGC.csv: ;
 
-ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
+openngc-entries.csv: openngc-entries-csv.awk $(DATA)/NGC.csv
+	$(AWK) -F\; -f openngc-entries-csv.awk < $(DATA)/NGC.csv > $@
 
-ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
-	$(AWK) -f parse-ngc2000names.awk < $(DATA)/ngc2000names.dat  > $@
+openngc-names.csv: openngc-names-csv.awk $(DATA)/NGC.csv
+	$(AWK) -F\; -f openngc-names-csv.awk < $(DATA)/NGC.csv > $@
 
-ngc2000entries.py: parse-ngc2000-py.awk $(DATA)/ngc2000.dat
-	$(AWK) -f parse-ngc2000-py.awk < $(DATA)/ngc2000.dat  > $@
+openngc.o: openngc.c openngc-names.c openngc-entries.c
 
-ngc2000accurate.py: parse-ngcic-accurate-py.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
-	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate-py.awk > $@
+openngc-names.c: openngc-names-c.awk openngc-names.csv
+	$(AWK) -F\; -f openngc-names-c.awk < openngc-names.csv > $@
 
-ngc2000.py: ngc2000-pre.py ngc2000entries.py ngc2000-mid.py ngc2000accurate.py ngc2000-post.py
-	cat $^ > $@
-
-ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
-	$(AWK) -f parse-ngc2000.awk < $(DATA)/ngc2000.dat  > $@
-
-ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
-	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
+openngc-entries.c: openngc-entries-c.awk openngc-entries.csv
+	$(AWK) -F\; -f openngc-entries-c.awk < openngc-entries.csv > $@
 
 stellarium-constellations.c:
 	-$(MAKE) grab-stellarium-constellations
@@ -49,27 +43,27 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
 
-OBJS := ngc2000.o ngcic-accurate.o brightstars.o constellations.o \
+OBJS := openngc.o brightstars.o constellations.o \
 	tycho2-fits.o tycho2.o usnob-fits.o usnob.o nomad.o nomad-fits.o \
 	ucac3-fits.o ucac3.o ucac4-fits.o ucac4.o 2mass-fits.o 2mass.o hd.o \
 	constellation-boundaries.o
 
-HEADERS := brightstars.h constellations.h ngc2000.h ngcic-accurate.h \
+HEADERS := brightstars.h constellations.h openngc.h \
 	tycho2.h tycho2-fits.h usnob-fits.h usnob.h nomad-fits.h nomad.h \
 	2mass-fits.h 2mass.h hd.h ucac3.h ucac4.h constellation-boundaries.h
 
 HEADERS_PATH := $(addprefix $(INCLUDE_DIR)/,$(HEADERS))
 
-PYTHON_INSTALL := __init__.py ngc2000.py 
+PYTHON_INSTALL := __init__.py
 
 PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/catalogs
 LINK_DIR := $(PY_BASE_LINK_DIR)/catalogs
 
-# MISC_OBJ := grab-stellarium-constellations.o 
+# MISC_OBJ := grab-stellarium-constellations.o
 
 DEP_OBJ := $(OBJS)
 DEP_PREREQS :=
-DEP_PREREQS += ngc2000names.c ngc2000entries.c ngcic-accurate-entries.c
+DEP_PREREQS += openngc-names.c openngc-entries.c
 
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(LIBKD_INC)
@@ -118,7 +112,7 @@ ALL_OBJ += 2masstofits.o
 $(PROGS): %: %.o $(SLIB)
 ALL_OBJ += $(addsuffix .o,$(PROGS))
 
-all: ngc2000.py $(LIBCAT) $(PROGS)
+all: $(LIBCAT) $(PROGS)
 
 hd1.fits: henry-draper.tsv build-hd-tree
 	build-hd-tree -s -R 16 henry-draper.tsv $@
@@ -190,8 +184,8 @@ tests: $(ALL_TEST_FILES)
 clean:
 	rm -f $(LIBCAT) $(OBJS) $(ALL_OBJ) $(DEPS) *.dep deps \
 		grab-stellarium-constellations \
-		ngc2000names.c ngc2000entries.py ngc2000.py ngc2000entries.c \
-		ngcic-accurate-entries.c
+		openngc-entries.csv openngc-names.csv \
+		openngc-entries.c openngc-names.c \
 
 ifneq ($(MAKECMDGOALS),clean)
           include $(COMMON)/makefile.deps
