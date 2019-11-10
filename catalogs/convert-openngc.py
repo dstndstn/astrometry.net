@@ -6,9 +6,9 @@
 from __future__ import print_function
 
 import csv
-import re
 
-from astrometry.util.fits import *
+from astrometry.util.fits import fits_table
+import numpy as np
 
 
 def convert_openngc_entries():
