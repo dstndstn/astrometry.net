@@ -7,8 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ngc2000.h"
-#include "ngcic-accurate.h"
+#include "openngc.h"
 #include "bl.h"
 #include "ioutils.h"
 
@@ -20,25 +19,15 @@ struct ngc_name {
 typedef struct ngc_name ngc_name;
 
 ngc_name ngc_names[] = {
-#include "ngc2000names.c"
+#include "openngc-names.c"
 };
 
 ngc_entry ngc_entries[] = {
-#include "ngc2000entries.c"
+#include "openngc-entries.c"
 };
 
 static int n_names() {
     return sizeof(ngc_names) / sizeof(ngc_name);
-}
-
-ngc_entry* ngc_get_entry_accurate(int i) {
-    float ra, dec;
-    ngc_entry* ngc = ngc_get_entry(i);
-    if (ngcic_accurate_get_radec(ngc->is_ngc, ngc->id, &ra, &dec) == 0) {
-        ngc->ra  = ra;
-        ngc->dec = dec;
-    }
-    return ngc;
 }
 
 int ngc_num_entries() {

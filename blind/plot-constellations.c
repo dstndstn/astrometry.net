@@ -24,8 +24,7 @@
 #include "boilerplate.h"
 #include "mathutil.h"
 #include "cairoutils.h"
-#include "ngc2000.h"
-#include "ngcic-accurate.h"
+#include "openngc.h"
 #include "constellations.h"
 #include "constellation-boundaries.h"
 #include "brightstars.h"
@@ -841,18 +840,12 @@ int main(int argc, char** args) {
             sl* str;
             sl* names;
             double pixsize;
-            float ara, adec;
             char* text;
 
             if (!ngc)
                 break;
             if (ngc->size < imsize * ngc_fraction)
                 continue;
-
-            if (ngcic_accurate_get_radec(ngc->is_ngc, ngc->id, &ara, &adec) == 0) {
-                ngc->ra = ara;
-                ngc->dec = adec;
-            }
 
             if (!sip_radec2pixelxy(&sip, ngc->ra, ngc->dec, &px, &py))
                 continue;
