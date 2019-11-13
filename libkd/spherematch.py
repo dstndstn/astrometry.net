@@ -1,9 +1,9 @@
 # This file is part of libkd.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
-from . import spherematch_c
+from astrometry.libkd import spherematch_c
 
-from ..util.starutil_numpy import radectoxyz, deg2dist, dist2deg, distsq2deg
+from astrometry.util.starutil_numpy import radectoxyz, deg2dist, dist2deg, distsq2deg
 
 import numpy as np
 
