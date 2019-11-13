@@ -31,6 +31,7 @@ script:
     - $PIP --version
     - $PIP install numpy --user
     - $PIP install fitsio --user
+    - $PYTHON -c "import numpy as np"
     - export WCSLIB_INC="-I/usr/include/wcslib-4.20"
     - export WCSLIB_LIB="-lwcs"
     - make
