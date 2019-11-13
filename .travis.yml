@@ -40,7 +40,8 @@ script:
     - (cd util; ./test)
     - (cd blind; ./test)
     - (cd libkd; ./test)
-    - make install INSTALL_DIR=~/an
+    - make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env $PYTHON"
+    - ls ~/an/lib/python
     - export PATH=${PATH}:~/an/bin
     - build-astrometry-index -d 3 -o index-9918.fits -P 18 -S mag -B 0.1 -s 0 -r 1 -I 9918 -M -i demo/tycho2-mag6.fits
     - echo -e 'add_path .\ninparallel\nindex index-9918.fits' > 99.cfg
@@ -48,7 +49,7 @@ script:
     - tablist demo/apod4.match
     - listhead demo/apod4.wcs
     - export PYTHONPATH=${PYTHONPATH}:~/an/lib/python
-    - python -c "import astrometry.libkd.spherematch"
+    - $PYTHON -c "import astrometry.libkd.spherematch"
 
 addons:
   apt:
