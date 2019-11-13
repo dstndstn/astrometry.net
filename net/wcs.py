@@ -164,7 +164,7 @@ class TanWCS(models.Model):
         '''
 
 class  SipWCS(models.Model):
-    tan = models.OneToOneField(TanWCS)
+    tan = models.OneToOneField(TanWCS, on_delete=models.CASCADE)
     order = models.PositiveSmallIntegerField(default=2)
     aterms = models.TextField(default='')
     bterms = models.TextField(default='')

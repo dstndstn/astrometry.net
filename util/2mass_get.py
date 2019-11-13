@@ -1,15 +1,15 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
-from __future__ import print_function
+
 import re
 import sys
 import socket
 import time
-
-from urllib2 import urlopen, URLError
-from urllib import urlencode
-from urlparse import urlparse, urljoin
+from urllib.request import urlopen
+from urllib.error import URLError
+from urllib.parse import urlencode
+from urllib.parse import urlparse, urljoin
 from os.path import basename
 from optparse import OptionParser
 from xml.dom import minidom
@@ -38,7 +38,7 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 
     queryurl = 'http://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_inv'
     print('submitting form values:')
-    for k,v in formvals.items():
+    for k,v in list(formvals.items()):
         print('  ',k,'=',v)
     print('encoded as:')
     print('  ' + urlencode(formvals))

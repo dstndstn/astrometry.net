@@ -1,6 +1,6 @@
-#! /usr/bin/env python
-from __future__ import print_function
-from __future__ import absolute_import
+#! /usr/bin/env python3
+
+
 
 import os
 import sys
@@ -41,9 +41,9 @@ except ImportError:
 
 import tempfile
 import traceback
-from urlparse import urlparse
+from urllib.parse import urlparse
 import logging
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import shutil
 import multiprocessing
 import time
@@ -294,7 +294,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
         axyflags.append('--invert')
         
     cmd = 'augment-xylist '
-    for (k,v) in axyargs.items():
+    for (k,v) in list(axyargs.items()):
         if v:
             cmd += k + ' ' + str(v) + ' '
     for k in axyflags:
@@ -463,7 +463,7 @@ def dosub(sub):
 
     if sub.disk_file is None:
         logmsg('Sub %i: retrieving URL' % (sub.id), sub.url)
-        (fn, headers) = urllib.urlretrieve(sub.url)
+        (fn, headers) = urllib.request.urlretrieve(sub.url)
         logmsg('Sub %i: wrote URL to file' % (sub.id), fn)
         df = DiskFile.from_file(fn, Image.ORIG_COLLECTION)
         logmsg('Created DiskFile', df)

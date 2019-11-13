@@ -1,8 +1,8 @@
-from __future__ import absolute_import
+
 from .log import *
 
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 
 import xml.dom.minidom
 from xml.dom.minidom import Node

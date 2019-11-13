@@ -7,12 +7,12 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from astrometry.net.settings import *
-from .wcs import *
-from .log import *
-from .enhance_models import *
+from astrometry.net.wcs import *
+from astrometry.net.log import *
+from astrometry.net.enhance_models import *
 
 from astrometry.util.starutil_numpy import ra2hmsstring, dec2dmsstring
 from astrometry.util.filetype import filetype_short
@@ -153,7 +153,7 @@ class License(models.Model):
 
 
 class CommentReceiver(models.Model):
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, models.SET_NULL, null=True)
 
     # Reverse mappings:
     #   comments -> Comment
@@ -223,8 +223,8 @@ class QueuedThing(models.Model):
         return t.isoformat() + ' (%i sec ago)' % dtsec(datetime.now() - t)
 
 class QueuedSubmission(QueuedThing):
-    procsub = models.ForeignKey('ProcessSubmissions', related_name='subs')
-    submission = models.ForeignKey('Submission')
+    procsub = models.ForeignKey('ProcessSubmissions', models.CASCADE, related_name='subs')
+    submission = models.ForeignKey('Submission', models.CASCADE)
     def get_start_time_string(self):
         return self.get_time_string(self.submission.processing_started)
     def get_end_time_string(self):
@@ -232,8 +232,8 @@ class QueuedSubmission(QueuedThing):
         
 
 class QueuedJob(QueuedThing):
-    procsub = models.ForeignKey('ProcessSubmissions', related_name='jobs')
-    job = models.ForeignKey('Job')
+    procsub = models.ForeignKey('ProcessSubmissions', models.CASCADE, related_name='jobs')
+    job = models.ForeignKey('Job', models.CASCADE)
     def get_start_time_string(self):
         return self.get_time_string(self.job.start_time)
     def get_end_time_string(self):
@@ -354,7 +354,7 @@ class DiskFile(models.Model):
 class CachedFile(models.Model):
     DEFAULT_COLLECTION = 'cached'
 
-    disk_file = models.ForeignKey(DiskFile)
+    disk_file = models.ForeignKey(DiskFile, models.CASCADE)
     key = models.CharField(max_length=64, unique=True, primary_key=True)
 
     @staticmethod
@@ -390,11 +390,11 @@ class Image(models.Model):
         'FITS image data': 'image/jpeg', # fits images are converted to jpg for the browser
     }
 
-    disk_file = models.ForeignKey(DiskFile)
+    disk_file = models.ForeignKey(DiskFile, models.CASCADE)
     width = models.PositiveIntegerField(null=True)
     height = models.PositiveIntegerField(null=True)
-    thumbnail = models.ForeignKey('Image', related_name='image_thumbnail_set', null=True)
-    display_image = models.ForeignKey('Image', related_name='image_display_set', null=True)
+    thumbnail = models.ForeignKey('Image', models.SET_NULL, related_name='image_thumbnail_set', null=True)
+    display_image = models.ForeignKey('Image', models.SET_NULL, related_name='image_display_set', null=True)
 
     # Reverse mappings:
     #  userimage_set -> UserImage
@@ -601,11 +601,11 @@ class Tag(models.Model):
 
 class Calibration(models.Model):
     # TAN WCS, straight from the quad match
-    raw_tan = models.ForeignKey('TanWCS', related_name='calibrations_raw', null=True)
+    raw_tan = models.ForeignKey('TanWCS', models.SET_NULL, related_name='calibrations_raw', null=True)
     # TAN WCS, after tweaking
-    tweaked_tan = models.ForeignKey('TanWCS', related_name='calibrations_tweaked', null=True)
+    tweaked_tan = models.ForeignKey('TanWCS', models.SET_NULL, related_name='calibrations_tweaked', null=True)
     # SIP
-    sip = models.ForeignKey('SipWCS', null=True)
+    sip = models.ForeignKey('SipWCS', models.SET_NULL, null=True)
 
     # Reverse mappings:
     #   job  -> Job
@@ -622,7 +622,7 @@ class Calibration(models.Model):
     z = models.FloatField()
     r = models.FloatField()
     
-    sky_location = models.ForeignKey('SkyLocation', related_name='calibrations', null=True)
+    sky_location = models.ForeignKey('SkyLocation', models.SET_NULL, related_name='calibrations', null=True)
 
     def __str__(self):
         s = 'Calibration %i' % self.id
@@ -730,8 +730,10 @@ class Calibration(models.Model):
 
 
 class Job(models.Model):
-    calibration = models.OneToOneField('Calibration', null=True,
-        related_name="job")
+    calibration = models.OneToOneField('Calibration',
+                                       models.CASCADE,
+                                       null=True,
+                                       related_name="job")
     
     STATUS_CHOICES = (
         ('S', 'Success'), 
@@ -740,7 +742,7 @@ class Job(models.Model):
     
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
     error_message = models.CharField(max_length=256)
-    user_image = models.ForeignKey('UserImage', related_name='jobs')
+    user_image = models.ForeignKey('UserImage', models.CASCADE, related_name='jobs')
 
     queued_time = models.DateTimeField(null=True)
     start_time = models.DateTimeField(null=True)
@@ -882,15 +884,15 @@ class SkyLocation(models.Model):
         return user_images.filter(q1 | q2 | q3)
 
 class FlaggedUserImage(models.Model):
-    user_image = models.ForeignKey('UserImage')
-    flag = models.ForeignKey('Flag')
-    user = models.ForeignKey(User)
+    user_image = models.ForeignKey('UserImage', models.CASCADE)
+    flag = models.ForeignKey('Flag', models.CASCADE)
+    user = models.ForeignKey(User, models.CASCADE)
     flagged_time = models.DateTimeField(auto_now=True)
 
 class TaggedUserImage(models.Model):
-    user_image = models.ForeignKey('UserImage')
-    tag = models.ForeignKey('Tag')
-    tagger = models.ForeignKey(User, null=True)
+    user_image = models.ForeignKey('UserImage', models.CASCADE)
+    tag = models.ForeignKey('Tag', models.CASCADE)
+    tagger = models.ForeignKey(User, models.SET_NULL, null=True)
     added_time = models.DateTimeField(auto_now=True) 
 
 
@@ -915,8 +917,8 @@ class UserImageManager(models.Manager):
 class UserImage(Hideable):
     objects = UserImageManager()
 
-    image = models.ForeignKey('Image')
-    user = models.ForeignKey(User, related_name='user_images', null=True)
+    image = models.ForeignKey('Image', models.CASCADE)
+    user = models.ForeignKey(User, models.SET_NULL, related_name='user_images', null=True)
     
     tags = models.ManyToManyField('Tag',related_name='user_images',
         through='TaggedUserImage')
@@ -928,10 +930,10 @@ class UserImage(Hideable):
 
     description = models.CharField(max_length=1024, blank=True)
     original_file_name = models.CharField(max_length=256)
-    submission = models.ForeignKey('Submission', related_name='user_images')
+    submission = models.ForeignKey('Submission', models.CASCADE, related_name='user_images')
 
-    license = models.ForeignKey('License')
-    comment_receiver = models.OneToOneField('CommentReceiver')
+    license = models.ForeignKey('License', models.SET_NULL, null=True)
+    comment_receiver = models.OneToOneField('CommentReceiver', models.CASCADE)
 
     # Reverse mappings:
     #  jobs -> Job
@@ -1065,8 +1067,8 @@ class Submission(Hideable):
         ('text', 'text list'),
     )'''
     ###
-    user = models.ForeignKey(User, related_name='submissions', null=True)
-    disk_file = models.ForeignKey(DiskFile, related_name='submissions', null=True)
+    user = models.ForeignKey(User, models.SET_NULL, related_name='submissions', null=True)
+    disk_file = models.ForeignKey(DiskFile, models.SET_NULL, related_name='submissions', null=True)
     url = models.URLField(blank=True, null=True)
     parity = models.PositiveSmallIntegerField(choices=PARITY_CHOICES, default=2)
     scale_units = models.CharField(max_length=20, choices=SCALEUNITS_CHOICES, default='degwidth')
@@ -1099,7 +1101,7 @@ class Submission(Hideable):
 
     #source_type = models.CharField(max_length=5, choices=SOURCE_TYPE_CHOICES, default='image')
     original_filename = models.CharField(max_length=256)
-    album = models.ForeignKey('Album', blank=True, null=True)
+    album = models.ForeignKey('Album', models.SET_NULL, blank=True, null=True)
 
     submitted_on = models.DateTimeField(auto_now_add=True)
     # This field is used as a marker that the job has been submitted to the
@@ -1112,8 +1114,9 @@ class Submission(Hideable):
 
     error_message = models.CharField(max_length=2048, null=True)
 
-    license = models.ForeignKey('License')
-    comment_receiver = models.OneToOneField('CommentReceiver')
+    license = models.ForeignKey('License', models.SET_NULL, null=True)
+    comment_receiver = models.OneToOneField('CommentReceiver',
+                                            models.CASCADE)
 
     # Reverse mappings:
     #  user_images -> UserImage
@@ -1188,14 +1191,15 @@ class Submission(Hideable):
 
 
 class Album(Hideable):
-    user = models.ForeignKey(User, related_name='albums', null=True)
+    user = models.ForeignKey(User, models.SET_NULL, related_name='albums', null=True)
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=1024, blank=True)
     user_images = models.ManyToManyField('UserImage', related_name='albums') 
     tags = models.ManyToManyField('Tag', related_name='albums')
     created_at = models.DateTimeField(auto_now_add=True)
 
-    comment_receiver = models.OneToOneField('CommentReceiver')
+    comment_receiver = models.OneToOneField('CommentReceiver',
+                                            models.CASCADE)
 
     def save(self, *args, **kwargs):
         self.owner = self.user
@@ -1208,8 +1212,8 @@ class Album(Hideable):
         
 class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    recipient = models.ForeignKey('CommentReceiver', related_name='comments')
-    author = models.ForeignKey(User, related_name='comments_left')
+    recipient = models.ForeignKey('CommentReceiver', models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, models.CASCADE, related_name='comments_left')
     text = models.CharField(max_length=1024)
 
     class Meta:
@@ -1219,10 +1223,10 @@ class Comment(models.Model):
 class UserProfile(models.Model):
     API_KEY_LENGTH = 16
     display_name = models.CharField(max_length=32)
-    user = models.ForeignKey(User, unique=True, related_name='profile',
+    user = models.ForeignKey(User, models.CASCADE, unique=True, related_name='profile',
                              editable=False)
     apikey = models.CharField(max_length = API_KEY_LENGTH)
-    default_license = models.ForeignKey('License', default=DEFAULT_LICENSE_ID)
+    default_license = models.ForeignKey('License', models.SET_DEFAULT, default=DEFAULT_LICENSE_ID)
 
     def __str__(self):
         s = ('UserProfile: user %s, API key %s' % (self.user.get_full_name().encode('ascii','replace'), self.apikey))

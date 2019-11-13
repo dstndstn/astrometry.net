@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
@@ -12,7 +12,7 @@ import logging
 from pylab import *
 from optparse import OptionParser
 
-from .removelines import hist_remove_lines
+from astrometry.util.removelines import hist_remove_lines
 from astrometry.util.fits import pyfits_writeto
 
 if __name__ == '__main__':

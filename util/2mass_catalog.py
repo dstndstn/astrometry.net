@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # Licensed under a 3-clause BSD style license - see LICENSE
 from __future__ import print_function
 import sys

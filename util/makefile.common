@@ -4,13 +4,13 @@
 INCLUDE_BASE_DIR := $(BASEDIR)/include
 INCLUDE_DIR := $(INCLUDE_BASE_DIR)/astrometry
 
-PYTHON ?= python
+PYTHON ?= python3
 INSTALL_DIR ?= /usr/local/astrometry
 # Put INSTALL_DIR in the environment of commands run by Make.
 export INSTALL_DIR
 
 # don't change this one -- it must match what is in the bin/* scripts.
-PYTHON_SCRIPT_DEFAULT := /usr/bin/env python
+PYTHON_SCRIPT_DEFAULT := /usr/bin/env python3
 
 # change this if you want to set exactly which python program gets run to
 # execute the python scripts in bin/ (image2pnm and friends).

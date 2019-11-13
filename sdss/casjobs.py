@@ -1,14 +1,14 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
-from __future__ import print_function
+
 import sys
 
-import httplib
-httplib.HTTPConnection.debuglevel = 1 
+import http.client
+http.client.HTTPConnection.debuglevel = 1 
 
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 #from xml.parsers import expat
 import xml.dom
 from xml.dom import minidom
@@ -20,7 +20,7 @@ import time
 
 from numpy import *
 
-from astrometry.util.sqlcl import query as casquery
+from astrometry.sdss.sqlcl import query as casquery
 from astrometry.util.file import *
 
 class Cas(object):
@@ -62,7 +62,7 @@ class Cas(object):
             dbcontext = self.params['defaultdb']
 
         # MAGIC
-        data = urllib.urlencode({
+        data = urllib.parse.urlencode({
             'targest': dbcontext,
             'sql': sql,
             'queue': 500,
@@ -70,7 +70,7 @@ class Cas(object):
             'table': table,
             'taskname': taskname,
             })
-        f = urllib2.urlopen(self.submit_url(), data)
+        f = urllib.request.urlopen(self.submit_url(), data)
         doc = f.read()
         redirurl = f.geturl()
         # older CasJobs version redirects to the job details page:
@@ -125,8 +125,8 @@ class Cas(object):
     
     def login(self, username, password):
         print('Logging in.')
-        data = urllib.urlencode({'userid': username, 'password': password})
-        f = urllib2.urlopen(self.login_url(), data)
+        data = urllib.parse.urlencode({'userid': username, 'password': password})
+        f = urllib.request.urlopen(self.login_url(), data)
         d = f.read()
         # headers = f.info()
         # print 'headers:', headers
@@ -135,8 +135,8 @@ class Cas(object):
         return None
 
     def cancel_job(self, jobid):
-        data = urllib.urlencode({'id': jobid, 'CancelJob': 'Cancel Job'})
-        f = urllib2.urlopen(self.cancel_url(), data)
+        data = urllib.parse.urlencode({'id': jobid, 'CancelJob': 'Cancel Job'})
+        f = urllib.request.urlopen(self.cancel_url(), data)
         f.read()
 
     # Returns 'Finished', 'Ready', 'Started', 'Failed', 'Cancelled'
@@ -144,7 +144,7 @@ class Cas(object):
         # print 'Getting job status for', jobid
         url = self.job_details_url() % jobid
         print('Job details URL:', url)
-        doc = urllib2.urlopen(url).read()
+        doc = urllib.request.urlopen(url).read()
         for line in doc.split('\n'):
             for stat in ['Finished', 'Ready', 'Started', 'Failed', 'Cancelled']:
                 if ('<td > <p class = "%s">%s</p></td>' %(stat,stat) in line or
@@ -158,19 +158,19 @@ class Cas(object):
     def drop_table(self, dbname):
         url = self.drop_url() % dbname
         try:
-            f = urllib2.urlopen(url)
+            f = urllib.request.urlopen(url)
         except Exception as e:
             print('Failed to drop table', dbname)
             print(e)
             return False
         doc = f.read()
         (vs,ev) = get_viewstate_and_eventvalidation(doc)
-        data = urllib.urlencode({'yesButton':'Yes',
+        data = urllib.parse.urlencode({'yesButton':'Yes',
                                  '__EVENTVALIDATION':ev,
                                  '__VIEWSTATE':vs})
         print('Dropping table', dbname)
         try:
-            f = urllib2.urlopen(url, data)
+            f = urllib.request.urlopen(url, data)
         except Exception as e:
             print('Failed to drop table', dbname)
             print(e)
@@ -185,16 +185,16 @@ class Cas(object):
         url = self.mydb_action_url() % mydbname
         try:
             # Need to prime the VIEWSTATE by "clicking" through...
-            f = urllib2.urlopen(self.mydb_url())
+            f = urllib.request.urlopen(self.mydb_url())
             f.read()
-            f = urllib2.urlopen(self.mydb_index_url())
+            f = urllib.request.urlopen(self.mydb_index_url())
             f.read()
             # request = urllib2.Request(url)
             # request.add_header('User-Agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.11) Gecko/2009060214 Firefox/3.0.11')
             # f = urllib2.urlopen(request)
             # Referer: http://galex.stsci.edu/casjobs/mydbindex.aspx
-            f = urllib2.urlopen(url)
-        except urllib2.HTTPError as e:
+            f = urllib.request.urlopen(url)
+        except urllib.error.HTTPError as e:
             print('HTTPError:', e)
             print('  code', e.code)
             print('  msg', e.msg)
@@ -213,10 +213,10 @@ class Cas(object):
             data.update(extra)
             print('requesting FITS output of MyDB table', mydbname)
         print('url', url)
-        print('data', urllib.urlencode(data))
+        print('data', urllib.parse.urlencode(data))
         try:
-            f = urllib2.urlopen(url, urllib.urlencode(data))
-        except urllib2.HTTPError as e:
+            f = urllib.request.urlopen(url, urllib.parse.urlencode(data))
+        except urllib.error.HTTPError as e:
             print('HTTPError:', e)
             print('  code', e.code)
             # print '  reason', e.reason
@@ -230,7 +230,7 @@ class Cas(object):
     def get_ready_outputs(self):
         url = self.output_url()
         print('Hitting output URL', url)
-        f = urllib2.urlopen(url)
+        f = urllib.request.urlopen(url)
         doc = f.read()
         write_file(doc, 'ready.html')
         print('Wrote ready downloads to ready.html')
@@ -407,10 +407,10 @@ def query(sql):
     return (cols, results)
 
 def setup_cookies():
-    cookie_handler = urllib2.HTTPCookieProcessor()
-    opener = urllib2.build_opener(cookie_handler)
+    cookie_handler = urllib.request.HTTPCookieProcessor()
+    opener = urllib.request.build_opener(cookie_handler)
     # ...and install it globally so it can be used with urlopen.
-    urllib2.install_opener(opener)
+    urllib.request.install_opener(opener)
 
 def find_new_outputs(durls, dfns, preurls):
     newurls = [u for u in durls if not u in preurls]
@@ -465,7 +465,7 @@ if __name__ == '__main__':
     parser = OptionParser(usage=('%prog <options> <args>'))
     parser.add_option('-s', '--survey', dest='survey', default='dr7',
                       help=('Set the CasJobs instance to use: one of: ' +
-                            ', '.join(surveys.keys())))
+                            ', '.join(list(surveys.keys()))))
     parser.add_option('-c', '--context', '--db', dest='dbcontext',
                       help='Database context ("DR7", "Stripe82", etc)')
     opt,args = parser.parse_args()

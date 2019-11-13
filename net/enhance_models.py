@@ -28,12 +28,12 @@ class EnhanceVersion(models.Model):
                 (self.name, self.topscale, self.id))
 
 class EnhancedImage(models.Model):
-    version = models.ForeignKey('EnhanceVersion')
+    version = models.ForeignKey('EnhanceVersion', on_delete=models.CASCADE)
 
     nside = models.IntegerField()
     healpix = models.IntegerField()
 
-    wcs = models.ForeignKey('TanWCS', null=True, default=None)
+    wcs = models.ForeignKey('TanWCS', on_delete=models.CASCADE, null=True, default=None)
 
     cals = models.ManyToManyField('Calibration',
                                   related_name='enhanced_images',
