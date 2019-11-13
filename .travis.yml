@@ -34,10 +34,11 @@ script:
     - python --version
     - which pip2
     - which pip3
-    - ls -l $(which pip$PY)
+    #- ls -l $(which pip$PY)
     #- ln -s $(which pip$PY) ~/bin/pip
-    - alias pip="pip$PY"
+    #- alias pip="pip$PY"
     - which pip
+    - pip --version
     - pip install numpy --user
     - pip install fitsio --user
     - export WCSLIB_INC="-I/usr/include/wcslib-4.20"
