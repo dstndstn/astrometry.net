@@ -12,7 +12,7 @@
 #include "os-features.h"
 #include "plotannotations.h"
 #include "hd.h"
-#include "ngc2000.h"
+#include "openngc.h"
 #include "brightstars.h"
 #include "cairoutils.h"
 #include "sip-utils.h"
@@ -413,7 +413,7 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
         double px, py;
         double r;
 
-        ngc = ngc_get_entry_accurate(i);
+        ngc = ngc_get_entry(i);
         if (!ngc)
             break;
 

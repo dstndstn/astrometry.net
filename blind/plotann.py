@@ -84,7 +84,6 @@ def get_annotations(wcs, opt):
 
 def get_annotations_for_wcs(wcs, opt):
     anns = get_annotations(wcs, opt)
-    # NGC/IC 2000
     circs = []
     if opt.ngcnames:
         T = fits_table(opt.ngcnames)
@@ -223,11 +222,11 @@ if __name__ == '__main__':
                       help='Label Hipparcos stars')
     
     parser.add_option('--ngccat', dest='ngccat',
-                      help='Path to NGC2000 catalog ngc2000.fits -- ONLY USED FOR JSON OUTPUT!')
+                      help='Path to NGC catalog openngc-ngc.fits -- ONLY USED FOR JSON OUTPUT!')
     parser.add_option('--ngcnames', dest='ngcnames',
-                      help='Path to ngc2000names.fits for aliases')
+                      help='Path to openngc-names.fits for aliases')
     parser.add_option('--iccat', dest='iccat',
-                      help='Path to IC2000 catalog ic2000.fits -- ONLY USED FOR JSON OUTPUT!')
+                      help='Path to IC catalog openngc-ic.fits -- ONLY USED FOR JSON OUTPUT!')
 
     parser.add_option('--ngcfrac', dest='ngcfrac', type=float, default=0.,
                       help='Minimum fraction of image size to plot NGC/IC objs; default %default')
