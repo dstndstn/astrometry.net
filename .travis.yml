@@ -45,8 +45,8 @@ script:
     - $PIP install numpy --user
     - $PIP install fitsio --user
     - $PYTHON -c "import numpy as np"
-    - export WCSLIB_INC="-I/usr/include/wcslib-4.20"
-    - export WCSLIB_LIB="-lwcs"
+    #- export WCSLIB_INC="-I/usr/include/wcslib-4.20"
+    #- export WCSLIB_LIB="-lwcs"
     - make
     - make py
     - make extra
@@ -72,8 +72,12 @@ addons:
     - libnetpbm10-dev
     - netpbm
     - wcslib-dev
-    - libcfitsio3
-    - libcfitsio3-dev
+    - libcfitsio-dev
     - swig
     - gsl-bin
-    - libgsl0-dev
+    - libgsl-dev
+
+# trusty:
+#- libcfitsio3
+#- libcfitsio3-dev
+#    - libgsl0-dev
