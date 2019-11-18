@@ -1521,6 +1521,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
                                            sp->crpix[0], sp->crpix[1], &dx, &dy);
                 } else {
                     dx = sp->crpix[0] / sp->pixel_xscale;
+                    dy = sp->crpix[1];
                 }
                 tan_pixelxy2radecarr(&mo->wcstan, dx, dy, sip->wcstan.crval);
 
