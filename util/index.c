@@ -48,123 +48,59 @@ int index_nstars(const index_t* index) {
     return startree_N(index->starkd);
 }
 
-// Ugh!
-static void get_filenames(const char* indexname,
-                          char** quadfn,
-                          char** ckdtfn,
-                          char** skdtfn,
-                          anbool* singlefile) {
-    char* basename;
-    if (ends_with(indexname, ".quad.fits")) {
-        basename = strdup(indexname);
-        basename[strlen(indexname)-10] = '\0';
-        logverb("Index name \"%s\" ends with .quad.fits: using basename \"%s\"\n",
-                indexname, basename);
-    } else {
-        char* fits;
-        if (file_readable(indexname)) {
-            // assume single-file index.
-            if (ckdtfn) *ckdtfn = strdup(indexname);
-            if (skdtfn) *skdtfn = strdup(indexname);
-            if (quadfn) *quadfn = strdup(indexname);
-            *singlefile = TRUE;
-            logverb("Index name \"%s\" is readable; assuming singe file.\n", indexname);
-            return;
-        }
-        asprintf_safe(&fits, "%s.fits", indexname);
-        if (file_readable(fits)) {
-            // assume single-file index.
-            indexname = fits;
-            if (ckdtfn) *ckdtfn = strdup(indexname);
-            if (skdtfn) *skdtfn = strdup(indexname);
-            if (quadfn) *quadfn = strdup(indexname);
-            *singlefile = TRUE;
-            logverb("Index name \"%s\" with .fits suffix, \"%s\", is readable; assuming singe file.\n", indexname, fits);
-            free(fits);
-            return;
-        }
-        free(fits);
-        basename = strdup(indexname);
-	logverb("Index name \"%s\": neither filename nor filename.fits exist, so using index name as base filename\n", basename);
+// Returns a newly-allocated string containing the filename, or NULL if not found.
+// Tries the index name, or name + ".fits" as a filename.
+static char* get_filename(const char* indexname) {
+    char* fits;
+    if (file_readable(indexname)) {
+        logverb("Index name \"%s\" is readable, using as index filename\n", indexname);
+        return strdup(indexname);
     }
-    if (ckdtfn) asprintf_safe(ckdtfn, "%s.ckdt.fits", basename);
-    if (skdtfn) asprintf_safe(skdtfn, "%s.skdt.fits", basename);
-    if (quadfn) asprintf_safe(quadfn, "%s.quad.fits", basename);
-    *singlefile = FALSE;
-    logverb("Index name \"%s\": looking for file \"%s\", \"%s\", \"%s\"\n", indexname,
-            (ckdtfn ? *ckdtfn : "none"), (skdtfn ? *skdtfn : "none"), (quadfn ? *quadfn : "none"));
-    free(basename);
-    return;
+    asprintf_safe(&fits, "%s.fits", indexname);
+    if (file_readable(fits)) {
+        // assume single-file index.
+        logverb("Index name \"%s\" with .fits suffix, \"%s\", is readable, using as index filename.\n", indexname, fits);
+        return fits;
+    }
+    free(fits);
+    return NULL;
 }
 
 char* index_get_quad_filename(const char* indexname) {
-    char* quadfn;
-    anbool singlefile;
     if (!index_is_file_index(indexname))
         return NULL;
-    get_filenames(indexname, &quadfn, NULL, NULL, &singlefile);
-    return quadfn;
+    return get_filename(indexname);
 }
 
 char* index_get_qidx_filename(const char* indexname) {
-    char* quadfn;
+    char* indexfn;
     char* qidxfn = NULL;
-    anbool singlefile;
     if (!index_is_file_index(indexname))
         return NULL;
-    get_filenames(indexname, &quadfn, NULL, NULL, &singlefile);
-    if (singlefile) {
-        if (ends_with(quadfn, ".fits")) {
-            asprintf_safe(&qidxfn, "%.*s.qidx.fits", (int)(strlen(quadfn)-5), quadfn);
-        } else {
-            asprintf_safe(&qidxfn, "%s.qidx.fits", quadfn);
-        }
+    indexfn = get_filename(indexname);
+    if (ends_with(indexfn, ".fits")) {
+        asprintf_safe(&qidxfn, "%.*s.qidx.fits", (int)(strlen(indexfn)-5), indexfn);
     } else {
-        if (ends_with(quadfn, ".quad.fits")) {
-            asprintf_safe(&qidxfn, "%.*s.qidx.fits", (int)(strlen(quadfn)-10), quadfn);
-        } else {
-            asprintf_safe(&qidxfn, "%s.qidx.fits", quadfn);
-        }
+        asprintf_safe(&qidxfn, "%s.qidx.fits", indexfn);
     }
-    free(quadfn);
+    free(indexfn);
     return qidxfn;
 }
 
 anbool index_is_file_index(const char* filename) {
-    char* ckdtfn, *skdtfn, *quadfn;
-    anbool singlefile;
-    //index_t meta;
+    char* indexfn;
     anbool rtn = TRUE;
-
-    get_filenames(filename, &quadfn, &ckdtfn, &skdtfn, &singlefile);
-    if (!file_readable(quadfn)) {
-        ERROR("Index file %s is not readable.", quadfn);
+    indexfn = get_filename(filename);
+    if (!file_readable(indexfn)) {
+        ERROR("Index file %s is not readable.", indexfn);
         goto finish;
     }
-    if (!singlefile) {
-        if (!file_readable(ckdtfn)) {
-            ERROR("Index file %s is not readable.", ckdtfn);
-            goto finish;
-        }
-        if (!file_readable(skdtfn)) {
-            ERROR("Index file %s is not readable.", skdtfn);
-            goto finish;
-        }
-    }
-
-    if (!(qfits_is_fits(quadfn) &&
-          (singlefile || (qfits_is_fits(ckdtfn) && qfits_is_fits(skdtfn))))) {
-        if (singlefile)
-            ERROR("Index file %s is not FITS.\n", quadfn);
-        else
-            ERROR("Index files %s , %s , and %s are not FITS.\n",
-                  quadfn, skdtfn, ckdtfn);
+    if (!qfits_is_fits(indexfn)) {
+        ERROR("Index file %s is not FITS.\n", indexfn);
         rtn = FALSE;
         goto finish;
     }
-
     /* This is a bit expensive...
-
      if (index_get_meta(filename, &meta)) {
      if (singlefile)
      ERROR("File %s does not contain an index.\n", quadfn);
@@ -176,9 +112,7 @@ anbool index_is_file_index(const char* filename) {
      */
 
  finish:
-    free(ckdtfn);
-    free(skdtfn);
-    free(quadfn);
+    free(indexfn);
     return rtn;
 }
 
@@ -334,7 +268,6 @@ index_t* index_build_from(codetree_t* codekd, quadfile_t* quads, startree_t* sta
 
 index_t* index_load(const char* indexname, int flags, index_t* dest) {
     index_t* allocd = NULL;
-    anbool singlefile;
 
     if (flags & INDEX_ONLY_LOAD_METADATA)
         logverb("Loading metadata for %s...\n", indexname);
@@ -346,19 +279,19 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 
     dest->indexname = strdup(indexname);
 
-    get_filenames(indexname, &(dest->quadfn), &(dest->codefn), &(dest->starfn),
-                  &singlefile);
-    if (singlefile) {
-        dest->fits = anqfits_open(dest->quadfn);
-        if (!dest->fits) {
-            ERROR("Failed to open FITS file %s", dest->quadfn);
-            goto bailout;
-        }
-    }
-
-    if (index_reload(dest)) {
+    dest->indexfn = get_filename(indexname);
+    if (!dest->indexfn) {
+        ERROR("Did not find file for index named %s", dest->indexname);
         goto bailout;
     }
+    dest->fits = anqfits_open(dest->indexfn);
+    if (!dest->fits) {
+        ERROR("Failed to open FITS file %s", dest->indexfn);
+        goto bailout;
+    }
+    if (index_reload(dest))
+        goto bailout;
+
     free(dest->indexname);
     dest->indexname = strdup(quadfile_get_filename(dest->quads));
     set_meta(dest);
@@ -379,7 +312,6 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
         // fast reopening.  anqfits_t doesn't keep a FILE* or anything
         // open, so that's fine.
     }
-
     return dest;
 
  bailout:
@@ -391,43 +323,28 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 int index_reload(index_t* index) {
     // Read .skdt file...
     if (!index->starkd) {
-        if (index->fits)
-            index->starkd = startree_open_fits(index->fits);
-        else {
-            logverb("Reading star KD tree from %s...\n", index->starfn);
-            index->starkd = startree_open(index->starfn);
-        }
+        index->starkd = startree_open_fits(index->fits);
         if (!index->starkd) {
-            ERROR("Failed to read star kdtree from file %s", index->starfn);
+            ERROR("Failed to read star kdtree from file %s", index->indexfn);
             goto bailout;
         }
     }
 
     // Read .quad file...
     if (!index->quads) {
-        if (index->fits)
-            index->quads = quadfile_open_fits(index->fits);
-        else {
-            logverb("Reading quads file %s...\n", index->quadfn);
-            index->quads = quadfile_open(index->quadfn);
-        }
+        index->quads = quadfile_open_fits(index->fits);
         if (!index->quads) {
-            ERROR("Failed to read quads from %s", index->quadfn);
+            ERROR("Failed to read quads from %s", index->indexfn);
             goto bailout;
         }
     }
 
     // Read .ckdt file...
     if (!index->codekd) {
-        if (index->fits)
-            index->codekd = codetree_open_fits(index->fits);
-        else {
-            logverb("Reading code KD tree from %s...\n", index->codefn);
-            index->codekd = codetree_open(index->codefn);
-            if (!index->codekd) {
-                ERROR("Failed to read code kdtree from file %s", index->codefn);
-                goto bailout;
-            }
+        index->codekd = codetree_open_fits(index->fits);
+        if (!index->codekd) {
+            ERROR("Failed to read code kdtree from file %s", index->indexfn);
+            goto bailout;
         }
     }
     return 0;
@@ -482,11 +399,9 @@ int index_close_fds(index_t* ind) {
 void index_close(index_t* index) {
     if (!index) return;
     free(index->indexname);
-    free(index->quadfn);
-    free(index->codefn);
-    free(index->starfn);
+    free(index->indexfn);
     free(index->cutband);
-    index->indexname = index->quadfn = index->codefn = index->starfn = NULL;
+    index->indexname = index->indexfn = NULL;
     index_unload(index);
     if (index->fits)
         anqfits_close(index->fits);

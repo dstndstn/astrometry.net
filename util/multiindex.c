@@ -123,8 +123,7 @@ int multiindex_add_index(multiindex_t* mi, const char* fn, int flags) {
     if (!ind->indexname)
         ind->indexname = strdup(fn);
     // shouldn't be needed, but set anyway
-    ind->quadfn = strdup(fn);
-    ind->codefn = strdup(fn);
+    ind->indexfn = strdup(fn);
 
     pl_append(mi->inds, ind);
 
@@ -137,15 +136,12 @@ int multiindex_add_index(multiindex_t* mi, const char* fn, int flags) {
 
     return 0;
  bailout:
-    if (quads) {
+    if (quads)
         quadfile_close(quads);
-    }
-    if (codes) {
+    if (codes)
         codetree_close(codes);
-    }
-    if (fits) {
+    if (fits)
         anqfits_close(fits);
-    }
     return -1;
 }
 

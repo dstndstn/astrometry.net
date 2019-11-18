@@ -36,10 +36,8 @@ typedef struct {
     // FITS file access
     anqfits_t* fits;
 
-    // filenames
-    char* codefn;
-    char* quadfn;
-    char* starfn;
+    // filename
+    char* indexfn;
 
     // Below here: metadata about the index.
     char* indexname;
