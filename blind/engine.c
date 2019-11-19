@@ -215,7 +215,7 @@ static void add_index_to_blind(engine_t* engine, blind_t* bp,
         if (!index->codekd) {
             char* ifn = index->indexfn;
             char* iname = index->indexname;
-            logmsg("Loading index %s\n", ifn);
+            logverb("Loading index %s\n", ifn);
             if (!index_load(ifn, 0, index)) {
                 ERROR("Failed to load index %s\n", index->indexname);
                 return;
