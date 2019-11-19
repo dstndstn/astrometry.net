@@ -36,7 +36,6 @@ void printHelp(char* progname) {
             "     or   [-a]: write out all matches passing the solve threshold.\n"
             "          (default is to write out the single best match (largest ratio))\n"
             "   )\n"
-            "   [-s <solved-server-address>]\n"
             "   [-S <solved-file-template>]\n"
             "   <input-match-file> ...\n"
             "\n", progname);
@@ -53,7 +52,6 @@ char* agreefname = NULL;
 matchfile* agreemf = NULL;
 il* solved;
 il* unsolved;
-char* solvedserver = NULL;
 char* solvedfile = NULL;
 double ratio_tosolve = 0.0;
 int ninfield_tosolve = 0;
@@ -93,9 +91,6 @@ int main(int argc, char *argv[]) {
         switch (argchar) {
         case 'S':
             solvedfile = optarg;
-            break;
-        case 's':
-            solvedserver = optarg;
             break;
         case 'F':
             mode = MODE_FIRST;
@@ -146,12 +141,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Last field (-B) must be at least as big as first field (-A)\n");
         exit(-1);
     }
-
-    if (solvedserver)
-        if (solvedclient_set_server(solvedserver)) {
-            fprintf(stderr, "Failed to set solved server.\n");
-            exit(-1);
-        }
 
     if (leftoverfname) {
         leftovermf = matchfile_open_for_writing(leftoverfname);
@@ -387,8 +376,6 @@ static void write_field(bl* agreeing,
         il_append(unsolved, fieldnum);
     else {
         il_append(solved, fieldnum);
-        if (solvedserver)
-            solvedclient_set(fieldfile, fieldnum);
         if (solvedfile) {
             char fn[256];
             sprintf(fn, solvedfile, fieldfile);

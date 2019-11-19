@@ -18,7 +18,6 @@
 #include "solver.h"
 #include "verify.h"
 #include "tic.h"
-#include "solvedclient.h"
 #include "solvedfile.h"
 #include "fit-wcs.h"
 #include "sip-utils.h"
