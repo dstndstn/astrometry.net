@@ -11,6 +11,6 @@
 #include "astrometry/anqfits.h"
 #include "astrometry/bl.h"
 
-void indexset_get(const char* name, bl* indexlist);
+void indexset_get(const char* name, pl* indexlist);
 
 #endif
