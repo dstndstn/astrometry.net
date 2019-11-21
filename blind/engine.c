@@ -39,6 +39,7 @@
 #include "healpix.h"
 #include "sip-utils.h"
 #include "multiindex.h"
+#include "indexset.h"
 
 void engine_add_search_path(engine_t* engine, const char* path) {
     sl_append(engine->index_paths, path);
@@ -209,6 +210,19 @@ static void add_index_to_blind(engine_t* engine, blind_t* bp,
     index_t* index;
     index = pl_get(engine->indexes, i);
     if (engine->inparallel) {
+        // The "indexset" feature means that we can get here without having
+        // actually loaded the index yet.
+        if (!index->codekd) {
+            char* ifn = index->indexfn;
+            char* iname = index->indexname;
+            logverb("Loading index %s\n", ifn);
+            if (!index_load(ifn, 0, index)) {
+                ERROR("Failed to load index %s\n", index->indexname);
+                return;
+            }
+            free(iname);
+            free(ifn);
+        }
         blind_add_loaded_index(bp, index);
     } else {
         blind_add_index(bp, index->indexname);
@@ -230,6 +244,7 @@ int engine_parse_config_file(engine_t* engine, const char* fn) {
 
 int engine_parse_config_file_stream(engine_t* engine, FILE* fconf) {
     sl* indices = sl_new(16);
+    sl* indexsets = sl_new(16);
     sl* mindices = sl_new(16);
     anbool auto_index = FALSE;
     int i;
@@ -264,6 +279,10 @@ int engine_parse_config_file_stream(engine_t* engine, FILE* fconf) {
             // don't try to find the index yet - because search paths may be
             // added later.
             sl_append(indices, nextword);
+        } else if (is_word(line, "indexset ", &nextword)) {
+            // don't try to find the index yet - because search paths may be
+            // added later.
+            sl_append(indexsets, nextword);
         } else if (is_word(line, "multiindex ", &nextword)) {
             // don't try to find the index yet - because search paths may be
             // added later.
@@ -307,6 +326,52 @@ int engine_parse_config_file_stream(engine_t* engine, FILE* fconf) {
         if (engine_add_index(engine, path))
             logmsg("Failed to add index \"%s\".\n", path);
         free(path);
+    }
+
+    for (i=0; i<sl_size(indexsets); i++) {
+        char* ind = sl_get(indexsets, i);
+        pl* indexes = pl_new(16);
+        int i, j;
+
+        logverb("Trying index-set %s...\n", ind);
+        indexset_get(ind, indexes);
+        if (bl_size(indexes) == 0) {
+            ERROR("Unknown index-set \"%s\"", ind);
+            rtn = -1;
+            goto done;
+        }
+        // See which index files in the set exist
+        // NOTE, no i++ here -- we only advance conditionally
+        for (i=0; i<bl_size(indexes);) {
+            index_t* indx = pl_get(indexes, i);
+            for (j=0; j<(int)sl_size(engine->index_paths); j++) {
+                char* path;
+                asprintf_safe(&path, "%s/%s", sl_get(engine->index_paths, j), indx->indexname);
+                if (file_readable(path)) {
+                    indx->indexfn = path;
+                    break;
+                }
+                free(path);
+            }
+            if (!indx->indexfn) {
+                logverb("Did not find file for index name \"%s\"\n", indx->indexname);
+                index_free(indx);
+                bl_remove_index(indexes, i);
+                continue;
+            }
+            // Found an index where the file exists!
+            // bypass engine_add_index(), which opens the file...
+            if (add_index(engine, indx)) {
+                ERROR("Failed to add index \"%s\"", indx->indexfn);
+                rtn = -1;
+                goto done;
+            }
+            pl_append(engine->free_indexes, indx);
+            logverb("Added index %s from indexset %s\n", indx->indexfn, ind);
+            
+            i++;
+        }
+        pl_free(indexes);
     }
 
     for (i=0; i<sl_size(mindices); i++) {
@@ -377,6 +442,7 @@ int engine_parse_config_file_stream(engine_t* engine, FILE* fconf) {
  done:
     sl_free2(indices);
     sl_free2(mindices);
+    sl_free2(indexsets);
     return rtn;
 }
 

@@ -29,7 +29,6 @@
 #include "starutil.h"
 #include "mathutil.h"
 #include "quadfile.h"
-#include "solvedclient.h"
 #include "solvedfile.h"
 #include "starkd.h"
 #include "codekd.h"
@@ -48,7 +47,6 @@
 static anbool record_match_callback(MatchObj* mo, void* userdata);
 static time_t timer_callback(void* user_data);
 static void add_blind_params(blind_t* bp, qfits_header* hdr);
-static void get_fields_from_solvedserver(blind_t* bp, solver_t* sp);
 static void load_and_parse_wcsfiles(blind_t* bp);
 static void solve_fields(blind_t* bp, sip_t* verify_wcs);
 static void remove_invalid_fields(il* fieldlist, int maxfield);
@@ -337,8 +335,6 @@ void blind_run(blind_t* bp) {
     // Record current CPU usage for total cpu-usage limit.
     bp->cpu_total_start = get_cpu_usage();
 
-    get_fields_from_solvedserver(bp, sp);
-
     // Parse WCS files submitted for verification.
     load_and_parse_wcsfiles(bp);
 
@@ -492,9 +488,6 @@ void blind_run(blind_t* bp) {
     // Clean up.
     xylist_close(bp->xyls);
 
-    if (bp->solvedserver)
-        solvedclient_set_server(NULL);
-
     if (write_solutions(bp))
         exit(-1);
 
@@ -519,8 +512,6 @@ void blind_init(blind_t* bp) {
     bp->fieldid_key = strdup("FIELDID");
     blind_set_xcol(bp, NULL);
     blind_set_ycol(bp, NULL);
-    bp->firstfield = -1;
-    bp->lastfield = -1;
     bp->quad_size_fraction_lo = DEFAULT_QSF_LO;
     bp->quad_size_fraction_hi = DEFAULT_QSF_HI;
     bp->nsolves = 1;
@@ -579,31 +570,6 @@ int blind_is_run_obsolete(blind_t* bp, solver_t* sp) {
     return 0;
 }
 
-static void get_fields_from_solvedserver(blind_t* bp, solver_t* sp) {
-    if (!bp->solvedserver)
-        return;
-    if (solvedclient_set_server(bp->solvedserver)) {
-        logerr("Error setting solvedserver.\n");
-        exit( -1);
-    }
-
-    if ((il_size(bp->fieldlist) == 0) && (bp->firstfield != -1) && (bp->lastfield != -1)) {
-        int j;
-        il_free(bp->fieldlist);
-        logmsg("Contacting solvedserver to get field list...\n");
-        bp->fieldlist = solvedclient_get_fields(bp->fieldid, bp->firstfield, bp->lastfield, 0);
-        if (!bp->fieldlist) {
-            logerr("Failed to get field list from solvedserver.\n");
-            exit( -1);
-        }
-        logmsg("Got %zu fields from solvedserver: ", il_size(bp->fieldlist));
-        for (j = 0; j < il_size(bp->fieldlist); j++) {
-            logmsg("%i ", il_get(bp->fieldlist, j));
-        }
-        logmsg("\n");
-    }
-}
-
 static void load_and_parse_wcsfiles(blind_t* bp) {
     int i;
     for (i = 0; i < sl_size(bp->verify_wcsfiles); i++) {
@@ -643,8 +609,6 @@ void blind_log_run_parameters(blind_t* bp) {
         logverb("solved_in %s\n", bp->solved_in);
     if (bp->solved_out)
         logverb("solved_out %s\n", bp->solved_out);
-    if (bp->solvedserver)
-        logverb("solvedserver %s\n", bp->solvedserver);
     if (bp->cancelfname)
         logverb("cancel %s\n", bp->cancelfname);
     if (bp->wcs_template)
@@ -688,7 +652,6 @@ void blind_cleanup(blind_t* bp) {
     free(bp->scamp_fname);
     free(bp->corr_fname);
     free(bp->matchfname);
-    free(bp->solvedserver);
     free(bp->solved_in);
     free(bp->solved_out);
     free(bp->wcs_template);
@@ -876,12 +839,11 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
     fits_add_long_comment(hdr, "Start obj: %i", sp->startobj);
     fits_add_long_comment(hdr, "End obj: %i", sp->endobj);
 	
-    // 'Solved_in' and 'Solvedserver' are often NULL pointers.
+    // 'Solved_in' is often a NULL pointer.
     // If %s is a NULL pointer, vasprintf() causes a segmentation fault (due to strlen()) on Solaris -> added treatment of this case for portability. 
     // GNU/Linux implementation of vasprintf() catches NULL pointer and prints "(null)" in header. Seems to be an issue on Solaris only.
     fits_add_long_comment(hdr, "Solved_in: %s", bp->solved_in?bp->solved_in:"(null)");
     fits_add_long_comment(hdr, "Solved_out: %s", bp->solved_out?bp->solved_out:"(null)");
-    fits_add_long_comment(hdr, "Solvedserver: %s", bp->solvedserver?bp->solvedserver:"(null)");
 
     fits_add_long_comment(hdr, "Parity: %i", sp->parity);
     fits_add_long_comment(hdr, "Codetol: %g", sp->codetol);
@@ -1062,12 +1024,6 @@ static anbool is_field_solved(blind_t* bp, int fieldnum) {
         logmsg("Field %i: solvedfile %s: field has been solved.\n", fieldnum, bp->solved_in);
         return TRUE;
     }
-    if (bp->solvedserver &&
-        (solvedclient_get(bp->fieldid, fieldnum) == 1)) {
-        // field has already been solved.
-        logmsg("Field %i: field has already been solved.\n", fieldnum);
-        return TRUE;
-    }
     return FALSE;
 }
 
@@ -1078,9 +1034,6 @@ static void solved_field(blind_t* bp, int fieldnum) {
         if (solvedfile_set(bp->solved_out, fieldnum)) {
             logerr("Failed to write solvedfile %s.\n", bp->solved_out);
         }
-    }
-    if (bp->solvedserver) {
-        solvedclient_set(bp->fieldid, fieldnum);
     }
     // If we're just solving a single field, and we solved it...
     if (il_size(bp->fieldlist) == 1)

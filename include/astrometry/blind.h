@@ -47,10 +47,6 @@ struct blind_params {
     char *solved_out;
     // Input solved file.
     char* solved_in;
-    // Solvedserver ip:port
-    char *solvedserver;
-    // If using solvedserver, limits of fields to ask for
-    int firstfield, lastfield;
 
     // Indexes to use (base filenames)
     sl* indexnames;

@@ -45,7 +45,8 @@ ANFILES_OBJ :=
 ANUTILS_DEPS :=
 
 ifndef NO_QFITS
-ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
+ANFILES_OBJ += multiindex.o index.o indexset.o \
+	codekd.o starkd.o rdlist.o xylist.o \
 	starxy.o qidxfile.o quadfile.o scamp.o scamp-catalog.o \
 	tabsort.o wcs-xy2rd.o wcs-rd2xy.o
 ANFILES_DEPS += $(QFITS_LIB)

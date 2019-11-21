@@ -97,14 +97,13 @@ resort-xylist: resort-xylist-main.o resort-xylist.o $(SLIB)
 UTIL_OBJS := 
 
 OTHER_OBJS := catalog.o codefile.o verify.o \
-	solver.o matchfile.o matchobj.o solvedclient.o solvedfile.o pnpoly.o \
-	tweak.o blind-main.o \
+	solver.o matchfile.o matchobj.o solvedfile.o pnpoly.o tweak.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	blindutils.o engine-main.o engine.o plotquad.o plotxy.o tweak2.o
 
-NOT_INSTALLED_PIPELINE := blind agreeable certifiable \
+NOT_INSTALLED_PIPELINE := agreeable certifiable \
 	hpquads codetree unpermute-quads unpermute-stars \
-	solvedserver printsolved mergesolved subwcs \
+	printsolved mergesolved subwcs \
 	augment-xylist merge-index index-to-table setsolved \
 	uniformize-catalog local-index index-info control-program
 
@@ -128,7 +127,7 @@ INSTALL_LIB := $(ENGINE_LIB) $(ENGINE_SO)
 
 ENGINE_OBJS := \
 		engine.o blindutils.o blind.o solver.o quad-utils.o \
-		matchfile.o matchobj.o solvedclient.o solvedfile.o tweak2.o \
+		matchfile.o matchobj.o solvedfile.o tweak2.o \
 		verify.o tweak.o
 
 # These are required by solve-field and friends
@@ -174,8 +173,7 @@ INSTALL_H := allquads.h augment-xylist.h axyfile.h \
 	engine.h blind.h blindutils.h build-index.h catalog.h \
 	codefile.h codetree.h fits-guess-scale.h hpquads.h \
 	image2xy-files.h matchfile.h matchobj.h merge-index.h \
-	new-wcs.h quad-builder.h quad-utils.h \
-	resort-xylist.h solvedclient.h \
+	new-wcs.h quad-builder.h quad-utils.h resort-xylist.h \
 	solvedfile.h solver.h tweak.h uniformize-catalog.h \
 	unpermute-quads.h unpermute-stars.h verify.h \
 	tweak2.h
