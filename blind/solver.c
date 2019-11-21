@@ -1429,10 +1429,10 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
 
     // Also copy original field star coordinates
     //mo.quadpix_orig
-    printf("mo field stars:\n");
+    logverb("mo field stars:\n");
     int i;
     for (i=0; i<mo->dimquads; i++) {
-        printf("  star %i; field_xy %.1f,%.1f, field_orig %.1f,%.1f\n",
+        logverb("  star %i; field_xy %.1f,%.1f, field_orig %.1f,%.1f\n",
                mo->field[i], mo->quadpix[2*i+0], mo->quadpix[2*i+1],
                starxy_getx(sp->fieldxy_orig, mo->field[i]),
                starxy_gety(sp->fieldxy_orig, mo->field[i]));
