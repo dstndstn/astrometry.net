@@ -28,6 +28,7 @@ static char* exclude_input[] = {
     "^CUNIT[12]$",
     "^CD[12]_[12]$",
     "^CDELT[12]$",
+    "^PC[12]_[12]$",
     // SIP
     "^[AB]P?_ORDER$",
     "^[AB]P?_[[:digit:]]_[[:digit:]]$",
