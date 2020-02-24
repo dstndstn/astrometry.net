@@ -66,7 +66,7 @@ def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
         ann.HD = False
         ann.HD_labels = False
 
-    if tycho2:
+    if tycho2 and settings.TYCHO2_KD:
         from astrometry.libkd.spherematch import tree_open, tree_close, tree_build_radec, tree_free, trees_match
         from astrometry.libkd import spherematch_c
         from astrometry.util.starutil_numpy import deg2dist, xyztoradec
