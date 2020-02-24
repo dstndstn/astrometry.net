@@ -1061,7 +1061,6 @@ if __name__ == '__main__':
     c = Client()
     r = c.get('/user_images/2676353')
     #print(r)
-    f = open('out.html', 'wb')
-    for x in r:
-        f.write(x)
-    f.close()
+    with open('out.html', 'wb') as f:
+        for x in r:
+            f.write(x)

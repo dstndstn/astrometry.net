@@ -489,14 +489,12 @@ def dosub(sub):
     original_filename = sub.original_filename
     # check if file is a gzipped file
     try:
-        gzip_file = gzip.open(fn)
-        f,tempfn = tempfile.mkstemp()
-        os.close(f)
-        f = open(tempfn,'wb')
-        # should fail on the following line if not a gzip file
-        f.write(gzip_file.read())
-        f.close()
-        gzip_file.close()
+        with gzip.open(fn) as gzip_file:
+            f,tempfn = tempfile.mkstemp()
+            os.close(f)
+            with open(tempfn,'wb') as f:
+                # should fail on the following line if not a gzip file
+                f.write(gzip_file.read())
         df = DiskFile.from_file(tempfn, 'uploaded-gunzip')
         i = original_filename.find('.gz')
         if i != -1:

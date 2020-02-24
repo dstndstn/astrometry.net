@@ -114,9 +114,8 @@ class License(models.Model):
                 allow_modifications,)
             )
             logmsg("getting license via url: %s" % url)
-            f = urlopen(url)
-            xml = f.read()
-            f.close()
+            with urlopen(url) as f:
+                xml = f.read()
             return xml
         except Exception as e:
             logmsg('error getting license xml: %s' % str(e))
@@ -521,9 +520,8 @@ class SourceList(Image):
             if df is None:
                 fitsfn = get_temp_file()
 
-                text_file = open(str(self.disk_file.get_path()))
-                text = text_file.read()
-                text_file.close()
+                with open(str(self.disk_file.get_path())) as text_file:
+                    text = text_file.read()
 
                 # add x y header
                 # potential hack, assumes it doesn't exist...
@@ -548,9 +546,8 @@ class SourceList(Image):
 
     def get_image_path(self):
         imgfn = get_temp_file()
-        f = open(imgfn,'wb')
-        self.render(f)
-        f.close()
+        with open(imgfn,'wb') as f:
+            self.render(f)
         return imgfn
 
     def get_mime_type(self):
@@ -724,9 +721,8 @@ class Calibration(models.Model):
         cmd = annotate_command(self.job)
         cmd += '-L > %s' % self.job.get_obj_file()
         run_convert_command(cmd)
-        objfile = open(self.job.get_obj_file(), 'r')
-        objtxt = objfile.read()
-        objfile.close()
+        with open(self.job.get_obj_file(), 'r') as objfile:
+            objtxt = objfile.read()
         for objline in objtxt.split('\n'):
             for obj in objline.split('/'):
                 obj = obj.strip()

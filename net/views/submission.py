@@ -352,33 +352,32 @@ def handle_upload(file=None,url=None):
     # get file/url onto disk
     file_hash = DiskFile.get_hash()
     temp_file_path = tempfile.mktemp()
-    uploaded_file = open(temp_file_path, 'wb+')
-    original_filename = ''
+    with open(temp_file_path, 'wb+') as uploaded_file:
+        original_filename = ''
 
-    if file:
-        for chunk in file.chunks():
-            uploaded_file.write(chunk)
-            file_hash.update(chunk)
-        original_filename = file.name
-    elif url:
-        logmsg('handling url upload')
-        f = urlopen(url)
-        CHUNK_SIZE = 4096
-        while True:
-            chunk = f.read(CHUNK_SIZE)
-            if not chunk:
-                break
-            uploaded_file.write(chunk)
-            file_hash.update(chunk)
+        if file:
+            for chunk in file.chunks():
+                uploaded_file.write(chunk)
+                file_hash.update(chunk)
+            original_filename = file.name
+        elif url:
+            logmsg('handling url upload')
+            f = urlopen(url)
+            CHUNK_SIZE = 4096
+            while True:
+                chunk = f.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                uploaded_file.write(chunk)
+                file_hash.update(chunk)
 
-        p = urlparse(url)
-        p = p.path
-        if p:
-            s = p.split('/')
-            original_filename = s[-1]
-    else:
-        return None
-    uploaded_file.close()
+            p = urlparse(url)
+            p = p.path
+            if p:
+                s = p.split('/')
+                original_filename = s[-1]
+        else:
+            return None
 
     df = DiskFile.from_file(temp_file_path, collection=Image.ORIG_COLLECTION,
                             hashkey=file_hash.hexdigest())
