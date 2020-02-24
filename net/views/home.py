@@ -22,7 +22,7 @@ def home(req):
     context = {
         'images':UserImage.objects.public_only(req.user)[:8],
     }
-    if len(settings.MULTI_HOSTS):
+    if hasattr(settings,"MULTI_HOSTS") and len(settings.MULTI_HOSTS):
         context.update({
             'multi_hosts': nexthost(settings.MULTI_HOSTS),
         })
