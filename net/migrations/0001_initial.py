@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='Album',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('publicly_visible', models.CharField(default=b'y', max_length=1, choices=[(b'y', b'yes'), (b'n', b'no')])),
+                ('publicly_visible', models.CharField(default='y', max_length=1, choices=[('y', 'yes'), ('n', 'no')])),
                 ('title', models.CharField(max_length=64)),
                 ('description', models.CharField(max_length=1024, blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DiskFile',
             fields=[
-                ('collection', models.CharField(default=b'misc', max_length=40)),
+                ('collection', models.CharField(default='misc', max_length=40)),
                 ('file_hash', models.CharField(max_length=40, unique=True, serialize=False, primary_key=True)),
                 ('size', models.PositiveIntegerField()),
                 ('file_type', models.CharField(max_length=256, null=True)),
@@ -94,7 +94,7 @@ class Migration(migrations.Migration):
                 ('nside', models.IntegerField()),
                 ('healpix', models.IntegerField()),
                 ('maxweight', models.FloatField(default=0.0)),
-                ('cals', models.ManyToManyField(related_name='enhanced_images', db_table=b'enhancedimage_calibration', to='net.Calibration')),
+                ('cals', models.ManyToManyField(related_name='enhanced_images', db_table='enhancedimage_calibration', to='net.Calibration')),
             ],
             options={
             },
@@ -149,7 +149,7 @@ class Migration(migrations.Migration):
             name='Job',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('status', models.CharField(max_length=1, choices=[(b'S', b'Success'), (b'F', b'Failure')])),
+                ('status', models.CharField(max_length=1, choices=[('S', 'Success'), ('F', 'Failure')])),
                 ('error_message', models.CharField(max_length=256)),
                 ('queued_time', models.DateTimeField(null=True)),
                 ('start_time', models.DateTimeField(null=True)),
@@ -164,8 +164,8 @@ class Migration(migrations.Migration):
             name='License',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('allow_commercial_use', models.CharField(default=b'd', max_length=1, choices=[(b'y', b'yes'), (b'n', b'no'), (b'd', b'use default')])),
-                ('allow_modifications', models.CharField(default=b'd', max_length=2, choices=[(b'y', b'yes'), (b'sa', b'yes, but share alike'), (b'n', b'no'), (b'd', b'use default')])),
+                ('allow_commercial_use', models.CharField(default='d', max_length=1, choices=[('y', 'yes'), ('n', 'no'), ('d', 'use default')])),
+                ('allow_modifications', models.CharField(default='d', max_length=2, choices=[('y', 'yes'), ('sa', 'yes, but share alike'), ('n', 'no'), ('d', 'use default')])),
                 ('license_name', models.CharField(max_length=1024)),
                 ('license_uri', models.CharField(max_length=1024)),
             ],
@@ -216,10 +216,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('order', models.PositiveSmallIntegerField(default=2)),
-                ('aterms', models.TextField(default=b'')),
-                ('bterms', models.TextField(default=b'')),
-                ('apterms', models.TextField(default=b'')),
-                ('bpterms', models.TextField(default=b'')),
+                ('aterms', models.TextField(default='')),
+                ('bterms', models.TextField(default='')),
+                ('apterms', models.TextField(default='')),
+                ('bpterms', models.TextField(default='')),
             ],
             options={
             },
@@ -249,7 +249,7 @@ class Migration(migrations.Migration):
             name='SourceList',
             fields=[
                 ('image_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='net.Image')),
-                ('source_type', models.CharField(max_length=4, choices=[(b'fits', b'FITS binary table'), (b'text', b'Text list')])),
+                ('source_type', models.CharField(max_length=4, choices=[('fits', 'FITS binary table'), ('text', 'Text list')])),
             ],
             options={
             },
@@ -259,11 +259,11 @@ class Migration(migrations.Migration):
             name='Submission',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('publicly_visible', models.CharField(default=b'y', max_length=1, choices=[(b'y', b'yes'), (b'n', b'no')])),
+                ('publicly_visible', models.CharField(default='y', max_length=1, choices=[('y', 'yes'), ('n', 'no')])),
                 ('url', models.URLField(null=True, blank=True)),
-                ('parity', models.PositiveSmallIntegerField(default=2, choices=[(2, b'try both simultaneously'), (0, b'positive'), (1, b'negative')])),
-                ('scale_units', models.CharField(default=b'degwidth', max_length=20, choices=[(b'arcsecperpix', b'arcseconds per pixel'), (b'arcminwidth', b'width of the field (in arcminutes)'), (b'degwidth', b'width of the field (in degrees)'), (b'focalmm', b'focal length of the lens (for 35mm film equivalent sensor)')])),
-                ('scale_type', models.CharField(default=b'ul', max_length=2, choices=[(b'ul', b'bounds'), (b'ev', b'estimate +/- error')])),
+                ('parity', models.PositiveSmallIntegerField(default=2, choices=[(2, 'try both simultaneously'), (0, 'positive'), (1, 'negative')])),
+                ('scale_units', models.CharField(default='degwidth', max_length=20, choices=[('arcsecperpix', 'arcseconds per pixel'), ('arcminwidth', 'width of the field (in arcminutes)'), ('degwidth', 'width of the field (in degrees)'), ('focalmm', 'focal length of the lens (for 35mm film equivalent sensor)')])),
+                ('scale_type', models.CharField(default='ul', max_length=2, choices=[('ul', 'bounds'), ('ev', 'estimate +/- error')])),
                 ('scale_lower', models.FloatField(default=0.1, null=True, blank=True)),
                 ('scale_upper', models.FloatField(default=180, null=True, blank=True)),
                 ('scale_est', models.FloatField(null=True, blank=True)),
@@ -341,7 +341,7 @@ class Migration(migrations.Migration):
             name='UserImage',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('publicly_visible', models.CharField(default=b'y', max_length=1, choices=[(b'y', b'yes'), (b'n', b'no')])),
+                ('publicly_visible', models.CharField(default='y', max_length=1, choices=[('y', 'yes'), ('n', 'no')])),
                 ('description', models.CharField(max_length=1024, blank=True)),
                 ('original_file_name', models.CharField(max_length=256)),
                 ('comment_receiver', models.OneToOneField(to='net.CommentReceiver')),
@@ -365,7 +365,7 @@ class Migration(migrations.Migration):
                 ('display_name', models.CharField(max_length=32)),
                 ('apikey', models.CharField(max_length=16)),
                 ('default_license', models.ForeignKey(default=1, to='net.License')),
-                ('user', models.ForeignKey(related_name='profile', editable=False, to=settings.AUTH_USER_MODEL, unique=True)),
+                ('user', models.OneToOneField(related_name='profile', editable=False, to=settings.AUTH_USER_MODEL)),
             ],
             options={
             },
