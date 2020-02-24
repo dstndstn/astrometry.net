@@ -51,7 +51,6 @@ from astrometry.net.views.license import LicenseForm
 
 from astrometry.net.views.enhance import *
 
-from string import strip
 import simplejson
 
 # repeat this import to override somebody else's import of the datetime module
