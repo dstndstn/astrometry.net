@@ -496,10 +496,9 @@ class Image(models.Model):
                     logmsg('Cache hit for key "%s"' % key)
             else:
                 df = self.disk_file
-
-            dfile = open(df.get_path())
-            f.write(dfile.read())
-            dfile.close()
+            
+            with open(df.get_path(), 'rb') as dfile:
+                f.write(dfile.read())
 
     def get_thumbnail_offset_x(self):
         return (235-self.width)/2
