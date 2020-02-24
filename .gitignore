@@ -4,7 +4,8 @@
 */deps
 */lib*.a
 */test_*-main.c
-*/*.pyc
+**/*.pyc
+__pycache__
 blind/astrometry-engine
 blind/augment-xylist
 blind/build-astrometry-index
