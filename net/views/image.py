@@ -340,7 +340,7 @@ def annotated_image(req, jobid=None, size='full'):
         logmsg('out: ' + out)
         logmsg('err: ' + err)
         return HttpResponse('plot failed: ' + err + "<br><pre>" + out + "</pre><br><pre>" + err + "</pre>")
-    f = open(annfn)
+    f = open(annfn, 'rb')
     res = HttpResponse(f)
     #res['Content-Type'] = 'image/png'
     # plotann.py produces jpeg by default
@@ -379,7 +379,7 @@ def onthesky_image(req, zoom=None, calid=None):
                          hd=True, hd_labels=True, tycho2=True)
     else:
         return HttpResponse('invalid zoom')
-    f = open(plotfn)
+    f = open(plotfn, 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'image/png'
     return res
@@ -413,7 +413,7 @@ def galex_image(req, calid=None, size='full'):
         df = CachedFile.add(key, plotfn)
     else:
         logmsg('Cache hit for key "%s"' % key)
-    f = open(df.get_path())
+    f = open(df.get_path(), 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'image/png'
     return res
@@ -463,7 +463,7 @@ def sdss_image(req, calid=None, size='full'):
         df = CachedFile.add(key, plotfn)
     else:
         logmsg('Cache hit for key "%s" -> %s' % (key, df.get_path()))
-    f = open(df.get_path())
+    f = open(df.get_path() , 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'image/jpeg'
     return res
@@ -606,7 +606,7 @@ def extraction_image(req, job_id=None, size='full'):
     except:
         return HttpResponse("plot failed") 
 
-    f = open(exfn)
+    f = open(exfn, 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'image/png'
     return res
@@ -816,7 +816,7 @@ def image_set(req, category, id):
 
 def wcs_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
-    f = open(job.get_wcs_file())
+    f = open(job.get_wcs_file(), 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'application/fits' 
     res['Content-Disposition'] = 'attachment; filename=wcs.fits'
@@ -824,7 +824,7 @@ def wcs_file(req, jobid=None):
 
 def rdls_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
-    f = open(job.get_rdls_file())
+    f = open(job.get_rdls_file(), 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'application/fits' 
     res['Content-Disposition'] = 'attachment; filename=rdls.fits'
@@ -832,7 +832,7 @@ def rdls_file(req, jobid=None):
 
 def axy_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
-    f = open(job.get_axy_file())
+    f = open(job.get_axy_file(), 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'application/fits' 
     res['Content-Disposition'] = 'attachment; filename=axy.fits'
@@ -840,7 +840,7 @@ def axy_file(req, jobid=None):
 
 def corr_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
-    f = open(job.get_corr_file())
+    f = open(job.get_corr_file(), 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'application/fits' 
     res['Content-Disposition'] = 'attachment; filename=corr.fits'
@@ -873,7 +873,7 @@ def new_fits_file(req, jobid=None):
         logmsg('out: ' + out)
         logmsg('err: ' + err)
         return HttpResponse('plot failed: out ' + out + ', err ' + err)
-    res = HttpResponse(open(outfn))
+    res = HttpResponse(open(outfn, 'rb'))
     res['Content-Type'] = 'application/fits' 
     res['Content-Length'] = file_size(outfn)
     res['Content-Disposition'] = 'attachment; filename=new-image.fits'
@@ -913,7 +913,7 @@ def kml_file(req, jobid=None):
         logmsg('err: ' + err)
         return HttpResponse('kml generation failed: ' + err)
 
-    res = HttpResponse(open(outfn))
+    res = HttpResponse(open(outfn, 'rb'))
     res['Content-Type'] = 'application/x-zip-compressed'
     res['Content-Length'] = file_size(outfn)
     res['Content-Disposition'] = 'attachment; filename=image.kmz'
