@@ -322,7 +322,7 @@ class DiskFile(models.Model):
                   hashkey=None):
         if hashkey is None:
             file_hash = DiskFile.get_hash()
-            f = open(filename)
+            f = open(filename, 'rb')
             while True:
                 s = f.read(8096)
                 if not len(s):
