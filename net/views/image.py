@@ -4,12 +4,19 @@ import os, errno
 import hashlib
 import tempfile
 import math
-import urllib
-import urllib2
 import stat
 import time
 from datetime import datetime, timedelta
 
+
+try:
+    # py3
+    from urllib.parse import urlencode
+    from urllib.request import urlretrieve
+except ImportError:
+    # py2
+    from urllib import urlencode, urlretrieve
+    
 if __name__ == '__main__':
     os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
     import django
@@ -986,7 +993,7 @@ def search(req):
             if tags.strip():
                 images = UserImage.objects.none()
                 tag_objs = []
-                tags = map(strip,tags.split(','))
+                tags = [t.strip() for t in tags.split(',')]
                 tags = list(set(tags)) # remove duplicate tags
                 
                 images = UserImage.objects.all_visible().filter(tags__text__in=tags).distinct()

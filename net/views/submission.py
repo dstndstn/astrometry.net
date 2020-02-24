@@ -4,8 +4,15 @@ import os, errno
 import hashlib
 import tempfile
 import math
-import urllib
-import urllib2
+
+try:
+    # py3
+    from urllib.parse import urlparse
+    from urllib.request import urlopen
+except ImportError:
+    # py2
+    from urllib2 import urlopen
+    from urlparse import urlparse
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render, get_object_or_404, redirect
@@ -21,7 +28,7 @@ from django.forms.models import inlineformset_factory
 from django.http import HttpResponseRedirect
 
 from astrometry.util.run_command import run_command
-from urlparse import urlparse
+
 
 def index(req, user_id):
     submitter = None
@@ -355,7 +362,7 @@ def handle_upload(file=None,url=None):
         original_filename = file.name
     elif url:
         logmsg('handling url upload')
-        f = urllib2.urlopen(url)
+        f = urlopen(url)
         CHUNK_SIZE = 4096
         while True:
             chunk = f.read(CHUNK_SIZE)

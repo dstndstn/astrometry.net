@@ -3,8 +3,6 @@ import os, errno
 import hashlib
 import tempfile
 import math
-import urllib
-import urllib2
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response, get_object_or_404, redirect, render

@@ -29,8 +29,11 @@ from __future__ import absolute_import
 # POSSIBILITY OF SUCH DAMAGE.
 
 import re
-import urllib
-from urlparse import urlsplit
+try:
+    # py3
+    from urllib.parse import urlsplit, urlencode
+except ImportError:
+    from urlparse import urlsplit, urlencode
 
 from django.conf import settings
 from django.contrib.auth import (
@@ -250,7 +253,7 @@ def login_begin(request, template_name='openid/login.html',
             return_to += '&'
         else:
             return_to += '?'
-        return_to += urllib.urlencode({redirect_field_name: redirect_to})
+        return_to += urlencode({redirect_field_name: redirect_to})
     logmsg('login_begin done')    
     return render_openid_request(request, openid_request, return_to)
 

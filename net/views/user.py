@@ -3,8 +3,6 @@ import os, errno
 import hashlib
 import tempfile
 import math
-import urllib
-import urllib2
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict

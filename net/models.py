@@ -3,6 +3,14 @@ from __future__ import absolute_import
 import os
 from datetime import datetime
 
+try:
+    # py3
+    from urllib.request import urlopen
+except ImportError:
+    # py2
+    from urllib2 import urlopen
+
+
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -97,7 +105,6 @@ class License(models.Model):
 
     def get_license_xml(self):
         try:
-            from urllib2 import urlopen
             allow_commercial_use = self.allow_commercial_use
             allow_modifications = self.allow_modifications
 
@@ -107,7 +114,7 @@ class License(models.Model):
                 allow_modifications,)
             )
             logmsg("getting license via url: %s" % url)
-            f = urllib2.urlopen(url)
+            f = urlopen(url)
             xml = f.read()
             f.close()
             return xml
