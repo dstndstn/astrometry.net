@@ -438,7 +438,7 @@ def sdss_image(req, calid=None, size='full'):
         else:
             scale = 1.0
         
-        urlargs = urllib.urlencode(dict(crval1='%.6f' % wcs.crval[0],
+        urlargs = urlencode(dict(crval1='%.6f' % wcs.crval[0],
                                         crval2='%.6f' % wcs.crval[1],
                                         crpix1='%.2f' % wcs.crpix[0],
                                         crpix2='%.2f' % wcs.crpix[1],
@@ -452,8 +452,8 @@ def sdss_image(req, calid=None, size='full'):
         url = 'http://legacysurvey.org/viewer/cutout-wcs/?layer=sdssco&' + urlargs
         return HttpResponseRedirect(url)
         #print('Retrieving:', url)
-        #f = urllib.urlopen(url)
-        plotfn,headers = urllib.urlretrieve(url, plotfn)
+        #f = urlopen(url)
+        plotfn,headers = urlretrieve(url, plotfn)
         #print('Headers:', headers)
 
         #plot_sdss_image(wcsfn, plotfn, scale)
@@ -534,7 +534,7 @@ def red_green_image(req, job_id=None, size='full'):
     except:
         return HttpResponse("plot failed") 
 
-    f = open(exfn)
+    f = open(exfn, 'rb')
     res = StreamingHttpResponse(f)
     res['Content-Type'] = 'image/png'
     return res
