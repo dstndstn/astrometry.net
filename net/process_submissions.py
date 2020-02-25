@@ -4,6 +4,7 @@
 
 import os
 import sys
+from subprocess import check_output
 
 # add .. to PYTHONPATH
 path = os.path.realpath(__file__)
@@ -22,7 +23,7 @@ os.environ['PATH'] += ':' + os.path.join(basedir, 'util')
 # print('sys.path is:')
 # for x in sys.path:
 #     print('  ', x)
-# 
+#
 # print('PATH is:', os.environ['PATH'])
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
@@ -133,10 +134,7 @@ def get_tarball_files(fn):
     return validpaths
 
 def run_pnmfile(fn):
-    cmd = 'pnmfile %s' % fn
-    (filein, fileout) = os.popen2(cmd)
-    filein.close()
-    out = fileout.read().strip()
+    out = check_output(['pnmfile',fn]).decode().strip()
     logmsg('pnmfile output: ' + out)
     pat = re.compile(r'P(?P<pnmtype>[BGP])M .*, (?P<width>\d*) by (?P<height>\d*)( *maxval (?P<maxval>\d*))?')
     match = pat.search(out)
@@ -292,7 +290,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
 
     if sub.invert:
         axyflags.append('--invert')
-        
+
     cmd = 'augment-xylist '
     for (k,v) in list(axyargs.items()):
         if v:
@@ -340,7 +338,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
     else:
         if solve_command is None:
             solve_command = 'ssh -x -T %(sshconfig)s'
-    
+
         cmd = (('(echo %(jobid)s; '
                 'tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
                 + solve_command + ' 2>>%(logfile)s | '
@@ -362,7 +360,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
             logmsg('Call to solver failed for job', job.id, 'with return val',
                    rtn)
             raise Exception
-    
+
         log.msg('Solver completed successfully.')
 
     # Solved?
@@ -842,7 +840,7 @@ if __name__ == '__main__':
 
     parser.add_option('--solve-locally',
                       help='Command to run astrometry-engine on this machine, not via ssh')
-    
+
     opt,args = parser.parse_args()
 
     main(opt.jobthreads, opt.subthreads, opt.refreshrate, opt.maxsubretries,
