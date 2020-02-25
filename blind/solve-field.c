@@ -576,6 +576,34 @@ static void after_solved(augment_xylist_t* axy,
         double det = sip_det_cd(&wcs);
         logmsg("Field parity: %s\n", (det < 0 ? "pos" : "neg"));
 
+
+        const char* wwturlpat = "http://www.worldwidetelescope.org/wwtweb/ShowImage.aspx?reverseparity=%s&scale=%.6f&name=%s&imageurl=%s&credits=AllRightsReserved&creditsUrl=&ra=%.6f&dec=%.6f&x=%.1f&y=%.1f&rotation=%.2f&thumb=%s";
+        char* wwturl;
+        //?
+        anbool parity = (det < 0);
+        char* filename = basename_safe(axy->wcsfn);
+        char* imgurl;
+        asprintf_safe(&imgurl, "URL/%s", axy->imagefn ? axy->imagefn : axy->xylsfn);
+        tan_t tan = wcs.wcstan;
+        double y = tan.crpix[1];
+        y = tan.imageh - y;
+        if (!axy->isfits)
+            orient = fmod(540 - orient, 360.);
+        
+        asprintf_safe(&wwturl, wwturlpat,
+                      (parity ? "True" : "False"),
+                      sip_pixel_scale(&wcs), filename, imgurl,
+                      tan.crval[0], tan.crval[1],
+                      tan.crpix[0], y,
+                      orient, imgurl);
+        //% (parity, wcs.get_pixscale(), uimage.original_file_name, imgurl, wcs.crval1, wcs.crval2, wcs.crpix1, y, orient, thumburl)
+
+        logmsg("Worldwide Telescope URL: %s\n", wwturl);
+        free(filename);
+        free(wwturl);
+               free(imgurl);
+        
+
     } else {
         logmsg("Did not solve (or no WCS file was written).\n");
     }

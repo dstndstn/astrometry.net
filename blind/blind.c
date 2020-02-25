@@ -484,6 +484,94 @@ void blind_run(blind_t* bp) {
         }
     }
 
+    anbool reverify = TRUE;
+    // Run the verification process using the WCS we found in each index.
+    if (reverify) {
+        int i;
+        int w;
+
+        // We want to get the best logodds out of all the indices, so we set the
+        // logodds-to-solve impossibly high so that a "good enough" solution doesn't
+        // stop us from continuing to search...
+        double oldodds = bp->logratio_tosolve;
+
+        bl* old_solutions = bp->solutions;
+
+        double xscale = sp->pixel_xscale;
+        sip_t* predist = sp->predistort;
+        sp->predistort = NULL;
+        sp->pixel_xscale = 0.;
+        
+        bl* re_solutions = bl_new(16, sizeof(MatchObj));
+        bp->solutions = re_solutions;
+
+        bp->logratio_tosolve = HUGE_VAL;
+
+        for (w = 0; w < bl_size(old_solutions); w++) {
+            double pixscale;
+            double quadlo, quadhi;
+            MatchObj* mo = bl_access(old_solutions, w);
+            sip_t* wcs = mo->sip;
+
+            // We don't want to try to verify a wide-field image using a narrow-
+            // field index, because it will contain a TON of index stars in the
+            // field.  We therefore only try to verify using indices that contain
+            // quads that could have been found in the image.
+            if (wcs->wcstan.imagew == 0.0 && sp->field_maxx > 0.0)
+                wcs->wcstan.imagew = sp->field_maxx;
+            if (wcs->wcstan.imageh == 0.0 && sp->field_maxy > 0.0)
+                wcs->wcstan.imageh = sp->field_maxy;
+
+            if ((wcs->wcstan.imagew == 0) ||
+                (wcs->wcstan.imageh == 0)) {
+                logmsg("Re-Verifying WCS: image width or height is zero / unknown.\n");
+                continue;
+            }
+            pixscale = sip_pixel_scale(wcs);
+            quadlo = bp->quad_size_fraction_lo
+                * MIN(wcs->wcstan.imagew, wcs->wcstan.imageh)
+                * pixscale;
+            quadhi = bp->quad_size_fraction_hi
+                * MAX(wcs->wcstan.imagew, wcs->wcstan.imageh)
+                * pixscale;
+            logmsg("Re-Verifying WCS using indices with quads of size [%g, %g] arcmin\n",
+                   arcsec2arcmin(quadlo), arcsec2arcmin(quadhi));
+
+            for (I=0; I<Nindexes; I++) {
+                index_t* index = get_index(bp, I);
+                if (!index_overlaps_scale_range(index, quadlo, quadhi)) {
+                    done_with_index(bp, I, index);
+                    continue;
+                }
+                solver_add_index(sp, index);
+                sp->index = index;
+                logmsg("Re-Verifying WCS with index %zu of %zu (%s)\n",  I + 1, Nindexes, index->indexname);
+                // Do it!
+                solve_fields(bp, wcs);
+                // Clean up this index...
+                done_with_index(bp, I, index);
+                solver_clear_indexes(sp);
+            }
+        }
+
+        bp->logratio_tosolve = oldodds;
+
+        logmsg("Got %zu re-solutions.\n", bl_size(bp->solutions));
+
+        /// FIXME -- merge in old and new solutions??
+        
+        if (bp->best_hit_only)
+            remove_duplicate_solutions(bp);
+
+        for (i=0; i<bl_size(bp->solutions); i++) {
+            MatchObj* mo = bl_access(bp->solutions, i);
+            if (mo->logodds >= bp->logratio_tosolve)
+                solved_field(bp, mo->fieldnum);
+        }
+    }
+
+
+    
  cleanup:
     // Clean up.
     xylist_close(bp->xyls);
