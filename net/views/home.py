@@ -1,5 +1,5 @@
 from __future__ import print_function
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
@@ -34,11 +34,11 @@ def support(req):
 def api_help(req):
     context = dict(user_profile=get_user_profile(req.user))
     return render(req, 'api_help.html', context)
-    
+
 # @login_required
 # def new_api_key(req):
 #     pro = get_user_profile(req.user)
-#     
+#
 #     return HttpResponse('you are ' + str(req.user) + 'with profile' + str(pro)
 #                         + 'or', str(req.user.get_profile()))
 
@@ -55,7 +55,7 @@ def explore(req):
         'recent_comments': recent_comments,
     }
     return render(req, 'explore.html', context)
-    
+
 
 def signin(req):
     from astrometry.net import settings
