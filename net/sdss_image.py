@@ -65,7 +65,7 @@ def plot_sdss_image(wcsfn, plotfn, image_scale=1.0, debug_ps=None):
             url = ('http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?' +
                    'ra=%f&dec=%f&scale=%f&opt=&width=%i&height=%i' %
                    (ra, dec, scale, sdsssize, sdsssize))
-            urlretrieve(url, fn)
+            urlretrieve(url, fn) #nosec
             logmsg('Wrote', fn)
         swcsfn = os.path.join(dirnm, '%i.wcs'%hp)
         logmsg('Checking for WCS', swcsfn)

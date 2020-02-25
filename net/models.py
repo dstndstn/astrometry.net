@@ -114,7 +114,7 @@ class License(models.Model):
                 allow_modifications,)
             )
             logmsg("getting license via url: %s" % url)
-            with urlopen(url) as f:
+            with urlopen(url) as f: #nosec
                 xml = f.read()
             return xml
         except Exception as e:
