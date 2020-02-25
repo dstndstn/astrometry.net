@@ -42,9 +42,8 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.views import logout as django_logout
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render as djrender
 from django.template import RequestContext
-from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 
 from openid.consumer.consumer import (
@@ -141,8 +140,7 @@ def default_render_failure(request, message, status=403,
     #    context_instance=RequestContext(request))
     #return HttpResponse(data, status=status)
     context = {'openid_error': message}
-    return render_to_response(template_name, context,
-        context_instance = RequestContext(request))
+    return djrender(request,template_name, context)
 
 
 
@@ -190,12 +188,12 @@ def login_begin(request, template_name='openid/login.html',
 
         # Invalid or no form data:
         if openid_url is None:
-            return render_to_response(template_name, {
+            return djrender(request, template_name, {
                     #'form': login_form,
                     #'openid_suggestions': choicify(OPENID_PROVIDERS,
                     #                               'url','suggestion'),
                     redirect_field_name: redirect_to
-                    }, context_instance=RequestContext(request))
+                    })
 
     error = None
     consumer = make_consumer(request)

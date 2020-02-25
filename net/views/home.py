@@ -1,6 +1,5 @@
 from __future__ import print_function
-from django.shortcuts import render_to_response, get_object_or_404, redirect, render
-from django.template import Context, RequestContext
+from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
@@ -66,7 +65,7 @@ def signin(req):
     ctxt.update({
             'available_backends': load_backends(settings.AUTHENTICATION_BACKENDS)
             })
-    return render_to_response('signin.html', ctxt)
+    return render(req, 'signin.html', ctxt)
 
 def signout(request):
     """Logs out user"""

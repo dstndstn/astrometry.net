@@ -1,11 +1,9 @@
 import shutil
 import os, errno
-import hashlib
 import tempfile
-import math
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
-from django.shortcuts import render_to_response, get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django import forms
@@ -121,5 +119,5 @@ def delete(req, album_id):
         messages.success(req, "Album '%s' successfully deleted." % album.title)
         return HttpResponseRedirect(redirect_url)
     else:
-        # render_to_response a "you don't have permission" view
+        # render a "you don't have permission" view
         pass

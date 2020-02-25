@@ -133,7 +133,7 @@ def upload_common(request, url=None, file=None):
     pro = get_user_profile(submittor)
     allow_commercial_use = json.get('allow_commercial_use', 'd')
     allow_modifications = json.get('allow_modifications', 'd')
-    license,created = License.objects.get_or_create(
+    mylicense, created = License.objects.get_or_create(
         default_license=pro.default_license,
         allow_commercial_use=allow_commercial_use,
         allow_modifications=allow_modifications,
@@ -144,7 +144,7 @@ def upload_common(request, url=None, file=None):
         user=submittor,
         disk_file=df,
         original_filename=original_filename,
-        license=license,
+        license=mylicense,
         publicly_visible=publicly_visible,
         via_api = True,
         )
@@ -179,7 +179,7 @@ def upload_common(request, url=None, file=None):
     sub.save()
     return HttpResponseJson({'status': 'success',
                              'subid': sub.id,
-                             'hash': sub.disk_file.file_hash}) 
+                             'hash': sub.disk_file.file_hash})
 
 @csrf_exempt
 @requires_json_args
@@ -529,7 +529,7 @@ def jobs_by_tag(req):
             images = images.filter(tags=tag)
             job_ids = [[job.id for job in image.jobs.all()] for image in images]
         except Tag.DoesNotExist:
-            images = UserImage.objects.none() 
+            images = UserImage.objects.none()
     else:
         images = images.filter(tags__text__icontains=query)
         job_ids = [[job.id for job in image.jobs.all()] for image in images]

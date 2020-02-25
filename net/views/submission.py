@@ -3,7 +3,6 @@ import shutil
 import os, errno
 import hashlib
 import tempfile
-import math
 
 try:
     # py3
