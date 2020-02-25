@@ -490,9 +490,9 @@ def dosub(sub):
     # check if file is a gzipped file
     try:
         with gzip.open(fn) as gzip_file:
-            f,tempfn = tempfile.mkstemp()
+            f, tempfn = tempfile.mkstemp()
             os.close(f)
-            with open(tempfn,'wb') as f:
+            with open(tempfn, 'wb') as f:
                 # should fail on the following line if not a gzip file
                 f.write(gzip_file.read())
         df = DiskFile.from_file(tempfn, 'uploaded-gunzip')

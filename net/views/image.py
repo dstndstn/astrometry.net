@@ -439,28 +439,29 @@ def sdss_image(req, calid=None, size='full'):
             scale = 1.0
         
         urlargs = urlencode(dict(crval1='%.6f' % wcs.crval[0],
-                                        crval2='%.6f' % wcs.crval[1],
-                                        crpix1='%.2f' % wcs.crpix[0],
-                                        crpix2='%.2f' % wcs.crpix[1],
-                                        cd11='%.6g' % wcs.cd[0],
-                                        cd12='%.6g' % wcs.cd[1],
-                                        cd21='%.6g' % wcs.cd[2],
-                                        cd22='%.6g' % wcs.cd[3],
-                                        imagew='%i' % int(wcs.imagew),
-                                        imageh='%i' % int(wcs.imageh)))
+                                 crval2='%.6f' % wcs.crval[1],
+                                 crpix1='%.2f' % wcs.crpix[0],
+                                 crpix2='%.2f' % wcs.crpix[1],
+                                 cd11='%.6g' % wcs.cd[0],
+                                 cd12='%.6g' % wcs.cd[1],
+                                 cd21='%.6g' % wcs.cd[2],
+                                 cd22='%.6g' % wcs.cd[3],
+                                 imagew='%i' % int(wcs.imagew),
+                                 imageh='%i' % int(wcs.imageh)))
 
         url = 'http://legacysurvey.org/viewer/cutout-wcs/?layer=sdssco&' + urlargs
         return HttpResponseRedirect(url)
+
         #print('Retrieving:', url)
         #f = urlopen(url)
-        plotfn,headers = urlretrieve(url, plotfn)
+        #plotfn, headers = urlretrieve(url, plotfn)
         #print('Headers:', headers)
 
         #plot_sdss_image(wcsfn, plotfn, scale)
 
         # cache
-        logmsg('Caching key "%s"' % key)
-        df = CachedFile.add(key, plotfn)
+        # logmsg('Caching key "%s"' % key)
+        # df = CachedFile.add(key, plotfn)
     else:
         logmsg('Cache hit for key "%s" -> %s' % (key, df.get_path()))
     f = open(df.get_path() , 'rb')

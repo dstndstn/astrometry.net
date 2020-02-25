@@ -546,7 +546,7 @@ class SourceList(Image):
 
     def get_image_path(self):
         imgfn = get_temp_file()
-        with open(imgfn,'wb') as f:
+        with open(imgfn, 'wb') as f:
             self.render(f)
         return imgfn
 
