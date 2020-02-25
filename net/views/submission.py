@@ -361,7 +361,7 @@ def handle_upload(file=None,url=None):
             original_filename = file.name
         elif url:
             logmsg('handling url upload')
-            f = urlopen(url)
+            f = urlopen(url) # nosec
             CHUNK_SIZE = 4096
             while True:
                 chunk = f.read(CHUNK_SIZE)
