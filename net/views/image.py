@@ -300,12 +300,13 @@ def annotated_image(req, jobid=None, size='full'):
             '--scale %s' % (str(scale)),]
     #if rad < 10.:
     if rad < 1.:
-        args.extend([#'--uzccat %s' % uzcfn,
-                     '--abellcat %s' % abellfn,
-                     '--hdcat %s' % hdfn
-                     ])
+        #args.append('--uzccat %s' % uzcfn)
+        args.append('--abellcat %s' % abellfn)
+        if hdfn:
+            args.append('--hdcat %s' % hdfn)
 
-    if rad < 0.25:
+
+    if rad < 0.25 and tycho2fn:
         args.append('--tycho2cat %s' % tycho2fn)
 
     #if rad > 20:
