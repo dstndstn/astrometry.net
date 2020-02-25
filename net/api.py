@@ -133,7 +133,7 @@ def upload_common(request, url=None, file=None):
     pro = get_user_profile(submittor)
     allow_commercial_use = json.get('allow_commercial_use', 'd')
     allow_modifications = json.get('allow_modifications', 'd')
-    mylicense, created = License.objects.get_or_create(
+    mylicense, _ = License.objects.get_or_create(
         default_license=pro.default_license,
         allow_commercial_use=allow_commercial_use,
         allow_modifications=allow_modifications,
@@ -197,7 +197,7 @@ def url_upload(req):
     backend_path = req.session['_auth_user_backend']
     logmsg('backend_path:', backend_path)
     from django.contrib.auth import load_backend
-    
+
     backend = load_backend(backend_path)
     logmsg('backend:', backend)
     user = backend.get_user(user_id)
@@ -293,7 +293,7 @@ def api_login(request):
         import traceback
         loginfo('Error matching API key: ' + traceback.format_exc())
         raise
-        
+
 
     # Successful API login.  Register on the django side.
 
@@ -437,7 +437,7 @@ def get_anns(cal, nbright=0):
     hdfn = settings.HENRY_DRAPER_CAT
     hipfn = settings.HIPPARCOS_CAT
     tycho2fn = settings.TYCHO2_KD
-    
+
     import astrometry.blind.plotann as plotann
     opt = plotann.get_empty_opts()
     if nbright:
@@ -456,7 +456,7 @@ def get_anns(cal, nbright=0):
         opt.ngcname = ngcnamesfn
         opt.iccat = icfn
     opt.brightcat = brightfn
-    
+
     jobjs = plotann.get_annotations_for_wcs(wcs, opt)
     return jobjs
 
@@ -474,8 +474,8 @@ def annotations_in_field(req, job_id):
     jobjs = get_anns(cal, **kwa)
     return HttpResponseJson({
         'annotations': jobjs})
-    
-    
+
+
 @csrf_exempt
 def job_info(req, job_id):
     job = get_object_or_404(Job, pk=job_id)

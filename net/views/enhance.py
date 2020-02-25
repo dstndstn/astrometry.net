@@ -2,9 +2,8 @@ from __future__ import print_function
 import pylab as plt
 import numpy as np
 
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
-from django.shortcuts import get_object_or_404, redirect, render
-from django.template import Context, RequestContext, loader
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 
 from astrometry.net.models import *
 from astrometry.util.resample import *
@@ -130,7 +129,7 @@ def enhanced_image(req, job_id=None, size=None):
         I = I[::-1,:,:]
         imgdata = I
         mapped = np.zeros_like(imgdata)
-        
+
     for en in ens:
         logmsg('Resampling %s' % en)
         wcs = en.wcs.to_tanwcs()
@@ -184,7 +183,7 @@ def enhanced_image(req, job_id=None, size=None):
     plt.savefig(tempfn)
 
     print('Wrote', tempfn)
-    f = open(tempfn)
+    f = open(tempfn, 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'image/png'
     return res

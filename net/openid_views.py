@@ -43,7 +43,6 @@ from django.contrib.auth.views import logout as django_logout
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render as djrender
-from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 
 from openid.consumer.consumer import (
@@ -77,7 +76,7 @@ class AstrometryLoginForm(OpenIDLoginForm):
 def is_valid_next_url(next):
     # When we allow this:
     #   /openid/?next=/welcome/
-    # For security reasons we want to restrict the next= bit to being a local 
+    # For security reasons we want to restrict the next= bit to being a local
     # path, not a complete URL.
     return bool(next_url_re.match(next))
 
@@ -90,7 +89,7 @@ def sanitise_redirect_url(redirect_to):
         is_valid = False
     elif '//' in redirect_to:
         # Allow the redirect URL to be external if it's a permitted domain
-        allowed_domains = getattr(settings, 
+        allowed_domains = getattr(settings,
             "ALLOWED_EXTERNAL_OPENID_REDIRECT_DOMAINS", [])
         s, netloc, p, q, f = urlsplit(redirect_to)
         # allow it if netloc is blank or if the domain is allowed
@@ -179,8 +178,8 @@ def login_begin(request, template_name='openid/login.html',
             #    openid_url = login_form.cleaned_data['openid_identifier']
             #    username = login_form.cleaned_data['username']
             #    openid_url = openid_url.replace("username", username)
-            
-            openid_url = request.POST['openid_identifier'] 
+
+            openid_url = request.POST['openid_identifier']
             logmsg( "OpenID url: " + openid_url)
         else:
             pass
@@ -252,7 +251,7 @@ def login_begin(request, template_name='openid/login.html',
         else:
             return_to += '?'
         return_to += urlencode({redirect_field_name: redirect_to})
-    logmsg('login_begin done')    
+    logmsg('login_begin done')
     return render_openid_request(request, openid_request, return_to)
 
 
