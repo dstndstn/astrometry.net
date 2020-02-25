@@ -12,10 +12,11 @@ from datetime import datetime, timedelta
 try:
     # py3
     from urllib.parse import urlencode
-    from urllib.request import urlretrieve
+    # from urllib.request import urlretrieve
 except ImportError:
     # py2
-    from urllib import urlencode, urlretrieve
+    from urllib import urlencode
+    # from urllib import urlencode urlretrieve
     
 if __name__ == '__main__':
     os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
@@ -425,7 +426,6 @@ def sdss_image(req, calid=None, size='full'):
     df = CachedFile.get(key)
     if df is None:
         wcsfn = cal.get_wcs_file()
-        plotfn = get_temp_file()
 
         from astrometry.util.util import Tan
         wcs = Tan(wcsfn)
@@ -454,6 +454,7 @@ def sdss_image(req, calid=None, size='full'):
 
         #print('Retrieving:', url)
         #f = urlopen(url)
+        #plotfn = get_temp_file()
         #plotfn, headers = urlretrieve(url, plotfn)
         #print('Headers:', headers)
 
