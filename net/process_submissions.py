@@ -4,7 +4,7 @@
 
 import os
 import sys
-from subprocess import check_output
+from subprocess import check_output #nosec
 
 # add .. to PYTHONPATH
 path = os.path.realpath(__file__)
@@ -134,7 +134,12 @@ def get_tarball_files(fn):
     return validpaths
 
 def run_pnmfile(fn):
-    out = check_output(['pnmfile',fn]).decode().strip()
+    """ run the pnmfile command to get image dimenensions"""
+
+    # bandit warns about security implications. We provide our own filename
+    # and the sysadmin has to make sure the correct pnmfile is found in the PATH
+    # TODO: document this for sysadmins
+    out = check_output(['pnmfile', fn]).decode().strip() #nosec
     logmsg('pnmfile output: ' + out)
     pat = re.compile(r'P(?P<pnmtype>[BGP])M .*, (?P<width>\d*) by (?P<height>\d*)( *maxval (?P<maxval>\d*))?')
     match = pat.search(out)
