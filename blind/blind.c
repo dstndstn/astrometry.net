@@ -511,28 +511,38 @@ void blind_run(blind_t* bp) {
             double pixscale;
             double quadlo, quadhi;
             MatchObj* mo = bl_access(old_solutions, w);
-            sip_t* wcs = mo->sip;
+            sip_t* sipwcs = mo->sip;
+            sip_t wrapsipwcs;
+            tan_t* tanwcs;
+
+            if (sipwcs)
+                tanwcs = &(sipwcs->wcstan);
+            else {
+                sip_wrap_tan(&(mo->wcstan), &wrapsipwcs);
+                sipwcs = &wrapsipwcs;
+                tanwcs = &(mo->wcstan);
+            }
 
             // We don't want to try to verify a wide-field image using a narrow-
             // field index, because it will contain a TON of index stars in the
             // field.  We therefore only try to verify using indices that contain
             // quads that could have been found in the image.
-            if (wcs->wcstan.imagew == 0.0 && sp->field_maxx > 0.0)
-                wcs->wcstan.imagew = sp->field_maxx;
-            if (wcs->wcstan.imageh == 0.0 && sp->field_maxy > 0.0)
-                wcs->wcstan.imageh = sp->field_maxy;
+            if (tanwcs->imagew == 0.0 && sp->field_maxx > 0.0)
+                tanwcs->imagew = sp->field_maxx;
+            if (tanwcs->imageh == 0.0 && sp->field_maxy > 0.0)
+                tanwcs->imageh = sp->field_maxy;
 
-            if ((wcs->wcstan.imagew == 0) ||
-                (wcs->wcstan.imageh == 0)) {
+            if ((tanwcs->imagew == 0) ||
+                (tanwcs->imageh == 0)) {
                 logmsg("Re-Verifying WCS: image width or height is zero / unknown.\n");
                 continue;
             }
-            pixscale = sip_pixel_scale(wcs);
+            pixscale = tan_pixel_scale(tanwcs);
             quadlo = bp->quad_size_fraction_lo
-                * MIN(wcs->wcstan.imagew, wcs->wcstan.imageh)
+                * MIN(tanwcs->imagew, tanwcs->imageh)
                 * pixscale;
             quadhi = bp->quad_size_fraction_hi
-                * MAX(wcs->wcstan.imagew, wcs->wcstan.imageh)
+                * MAX(tanwcs->imagew, tanwcs->imageh)
                 * pixscale;
             logmsg("Re-Verifying WCS using indices with quads of size [%g, %g] arcmin\n",
                    arcsec2arcmin(quadlo), arcsec2arcmin(quadhi));
@@ -547,7 +557,7 @@ void blind_run(blind_t* bp) {
                 sp->index = index;
                 logmsg("Re-Verifying WCS with index %zu of %zu (%s)\n",  I + 1, Nindexes, index->indexname);
                 // Do it!
-                solve_fields(bp, wcs);
+                solve_fields(bp, sipwcs);
                 // Clean up this index...
                 done_with_index(bp, I, index);
                 solver_clear_indexes(sp);
