@@ -43,7 +43,8 @@ script:
     - which $PIP
     - $PIP --version
     - $PIP install numpy #--user
-    - $PIP install fitsio #--user
+    #- $PIP install fitsio #--user
+    - $PIP install -v git+https://github.com/esheldon/fitsio.git@urlname-format
     - $PYTHON -c "import numpy as np"
     #- export WCSLIB_INC="-I/usr/include/wcslib-4.20"
     #- export WCSLIB_LIB="-lwcs"
