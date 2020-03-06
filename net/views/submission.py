@@ -3,9 +3,15 @@ import shutil
 import os, errno
 import hashlib
 import tempfile
-import math
-import urllib
-import urllib2
+
+try:
+    # py3
+    from urllib.parse import urlparse
+    from urllib.request import urlopen
+except ImportError:
+    # py2
+    from urllib2 import urlopen
+    from urlparse import urlparse
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render, get_object_or_404, redirect
@@ -21,7 +27,7 @@ from django.forms.models import inlineformset_factory
 from django.http import HttpResponseRedirect
 
 from astrometry.util.run_command import run_command
-from urlparse import urlparse
+
 
 def index(req, user_id):
     submitter = None
@@ -29,7 +35,7 @@ def index(req, user_id):
         submissions = Submission.objects.all()
     else:
         submitter = get_object_or_404(User, pk=user_id)
-    
+
     context = {'submitter':submitter}
     return render(req, 'submission/by_user.html', context)
 
@@ -90,8 +96,8 @@ class SubmissionForm(forms.ModelForm):
         choices=License.YES_SA_NO,
         initial='d',
     )
-    
-    advanced_settings = forms.BooleanField(widget=forms.HiddenInput(), 
+
+    advanced_settings = forms.BooleanField(widget=forms.HiddenInput(),
                                            initial=False, required=False)
 
 
@@ -123,7 +129,7 @@ class SubmissionForm(forms.ModelForm):
             'use_sextractor': forms.CheckboxInput(),
             'crpix_center': forms.CheckboxInput(),
             'invert': forms.CheckboxInput(),
-            
+
             'parity': NoBulletsRadioSelect(),
             'publicly_visible': NoBulletsRadioSelect(),
             #'parity': forms.RadioSelect(template='radio-nobullets.html'), #renderer=NoBulletsRenderer),
@@ -179,7 +185,7 @@ class SubmissionForm(forms.ModelForm):
         upload_type = self.cleaned_data.get('upload_type','')
         if upload_type == 'file':
             if not self.cleaned_data.get('file'):
-                raise forms.ValidationError("You must select a file to upload.") 
+                raise forms.ValidationError("You must select a file to upload.")
         elif upload_type == 'url':
             url = self.cleaned_data.get('url','')
             if not (url.startswith('http://') or url.startswith('ftp://') or url.startswith('https://')):
@@ -197,7 +203,7 @@ class SubmissionForm(forms.ModelForm):
             self.cleaned_data['url'] = url
 
         return self.cleaned_data
-        
+
     def __init__(self, user, *args, **kwargs):
         super(SubmissionForm, self).__init__(*args, **kwargs)
         #if user.is_authenticated():
@@ -214,13 +220,13 @@ def upload_file(request):
     default_license = License.get_default()
     if request.user.is_authenticated():
         pro = get_user_profile(request.user)
-        default_license = pro.default_license 
+        default_license = pro.default_license
 
     if request.method == 'POST':
         form = SubmissionForm(request.user, request.POST, request.FILES)
         if form.is_valid():
             sub = form.save(commit=False)
-            
+
             if request.user.is_authenticated():
                 if form.cleaned_data['album'] == '':
                     # don't create an album
@@ -271,7 +277,7 @@ def upload_file(request):
                     sub.original_filename = s[-1]
                 # Don't download the URL now!  Let process_submissions do that!
                 # sub.disk_file, sub.original_filename = handle_upload(url=sub.url)
-            
+
             try:
                 sub.save()
             except DuplicateSubmissionException:
@@ -327,7 +333,7 @@ def status(req, subid=None):
                 logmsg("    job " + str(j))
                 if j.end_time is None:
                     finished = False
-     
+
 
     return render(req, 'submission/status.html',
         {
@@ -335,7 +341,7 @@ def status(req, subid=None):
             'anonymous_username':ANONYMOUS_USERNAME,
             'finished': finished,
         })
-    
+
 def handle_upload(file=None,url=None):
     #logmsg('handle_uploaded_file: req=' + str(req))
     #logmsg('handle_uploaded_file: req.session=' + str(req.session))
@@ -345,33 +351,32 @@ def handle_upload(file=None,url=None):
     # get file/url onto disk
     file_hash = DiskFile.get_hash()
     temp_file_path = tempfile.mktemp()
-    uploaded_file = open(temp_file_path, 'wb+')
-    original_filename = ''
+    with open(temp_file_path, 'wb+') as uploaded_file:
+        original_filename = ''
 
-    if file:
-        for chunk in file.chunks():
-            uploaded_file.write(chunk)
-            file_hash.update(chunk)
-        original_filename = file.name
-    elif url:
-        logmsg('handling url upload')
-        f = urllib2.urlopen(url)
-        CHUNK_SIZE = 4096
-        while True:
-            chunk = f.read(CHUNK_SIZE)
-            if not chunk:
-                break
-            uploaded_file.write(chunk)
-            file_hash.update(chunk)
+        if file:
+            for chunk in file.chunks():
+                uploaded_file.write(chunk)
+                file_hash.update(chunk)
+            original_filename = file.name
+        elif url:
+            logmsg('handling url upload')
+            f = urlopen(url) # nosec
+            CHUNK_SIZE = 4096
+            while True:
+                chunk = f.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                uploaded_file.write(chunk)
+                file_hash.update(chunk)
 
-        p = urlparse(url)
-        p = p.path
-        if p:
-            s = p.split('/')
-            original_filename = s[-1]
-    else:
-        return None
-    uploaded_file.close()
+            p = urlparse(url)
+            p = p.path
+            if p:
+                s = p.split('/')
+                original_filename = s[-1]
+        else:
+            return None
 
     df = DiskFile.from_file(temp_file_path, collection=Image.ORIG_COLLECTION,
                             hashkey=file_hash.hexdigest())

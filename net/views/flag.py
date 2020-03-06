@@ -1,4 +1,4 @@
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from astrometry.net.models import *
 

@@ -1,5 +1,5 @@
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
@@ -84,5 +84,5 @@ def delete(req, comment_id):
         else:
             return HttpResponseRedirect(redirect_url)
     else:
-        # render_to_response a "you don't have permission" view
+        # render a "you don't have permission" view
         pass

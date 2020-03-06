@@ -3,13 +3,10 @@ import os, errno
 import hashlib
 import tempfile
 import math
-import urllib
-import urllib2
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render, get_object_or_404, redirect
-from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 
@@ -164,7 +161,7 @@ def user_images(req, user_id=None):
         'image_page': page,
     }
     return render(req, 'user/user_images.html', context)
- 
+
 def user_albums(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
     page_number = req.GET.get('page',1)

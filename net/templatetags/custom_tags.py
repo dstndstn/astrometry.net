@@ -2,7 +2,6 @@ from django import template
 from django.utils.http import urlquote
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-import urllib
 import types
 
 register = template.Library()

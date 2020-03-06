@@ -1,6 +1,5 @@
 from __future__ import print_function
-from django.shortcuts import render_to_response, get_object_or_404, redirect, render
-from django.template import Context, RequestContext
+from django.shortcuts import redirect, render
 from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
@@ -22,7 +21,7 @@ def home(req):
     context = {
         'images':UserImage.objects.public_only(req.user)[:8],
     }
-    if len(settings.MULTI_HOSTS):
+    if hasattr(settings,"MULTI_HOSTS") and len(settings.MULTI_HOSTS):
         context.update({
             'multi_hosts': nexthost(settings.MULTI_HOSTS),
         })
@@ -35,11 +34,11 @@ def support(req):
 def api_help(req):
     context = dict(user_profile=get_user_profile(req.user))
     return render(req, 'api_help.html', context)
-    
+
 # @login_required
 # def new_api_key(req):
 #     pro = get_user_profile(req.user)
-#     
+#
 #     return HttpResponse('you are ' + str(req.user) + 'with profile' + str(pro)
 #                         + 'or', str(req.user.get_profile()))
 
@@ -56,7 +55,7 @@ def explore(req):
         'recent_comments': recent_comments,
     }
     return render(req, 'explore.html', context)
-    
+
 
 def signin(req):
     from astrometry.net import settings
@@ -66,7 +65,7 @@ def signin(req):
     ctxt.update({
             'available_backends': load_backends(settings.AUTHENTICATION_BACKENDS)
             })
-    return render_to_response('signin.html', ctxt)
+    return render(req, 'signin.html', ctxt)
 
 def signout(request):
     """Logs out user"""
