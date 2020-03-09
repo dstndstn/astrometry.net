@@ -186,9 +186,9 @@ class CpuMeas(object):
     '''    
     def __init__(self):
         import datetime
-        from time import clock
+        from time import process_time
         self.wall = datetime.datetime.now()
-        self.cpu = clock()
+        self.cpu = process_time()
 
     def cpu_seconds_since(self, other):
         '''
