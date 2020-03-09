@@ -3,6 +3,14 @@ from __future__ import absolute_import
 import os
 from datetime import datetime
 
+try:
+    # py3
+    from urllib.request import urlopen
+except ImportError:
+    # py2
+    from urllib2 import urlopen
+
+
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -48,7 +56,7 @@ class LicenseManager(models.Manager):
             return_value = (license, False)
 
         return return_value
-            
+
 
 class License(models.Model):
     YES_NO = (
@@ -97,7 +105,6 @@ class License(models.Model):
 
     def get_license_xml(self):
         try:
-            from urllib2 import urlopen
             allow_commercial_use = self.allow_commercial_use
             allow_modifications = self.allow_modifications
 
@@ -107,9 +114,8 @@ class License(models.Model):
                 allow_modifications,)
             )
             logmsg("getting license via url: %s" % url)
-            f = urllib2.urlopen(url)
-            xml = f.read()
-            f.close()
+            with urlopen(url) as f: #nosec
+                xml = f.read()
             return xml
         except Exception as e:
             logmsg('error getting license xml: %s' % str(e))
@@ -129,7 +135,7 @@ class License(models.Model):
             self.license_name = get_text(license_doc.getElementsByTagName('license-name')[0].childNodes)
             self.license_uri = get_text(license_doc.getElementsByTagName('license-uri')[0].childNodes)
             # can add rdf stuff here if we want..
-            
+
         except Exception as e:
             logmsg('error getting issued license data: %s' % str(e))
 
@@ -229,7 +235,7 @@ class QueuedSubmission(QueuedThing):
         return self.get_time_string(self.submission.processing_started)
     def get_end_time_string(self):
         return self.get_time_string(self.submission.processing_finished)
-        
+
 
 class QueuedJob(QueuedThing):
     procsub = models.ForeignKey('ProcessSubmissions', models.CASCADE, related_name='jobs')
@@ -316,7 +322,7 @@ class DiskFile(models.Model):
                   hashkey=None):
         if hashkey is None:
             file_hash = DiskFile.get_hash()
-            f = open(filename)
+            f = open(filename, 'rb')
             while True:
                 s = f.read(8096)
                 if not len(s):
@@ -490,9 +496,8 @@ class Image(models.Model):
             else:
                 df = self.disk_file
 
-            dfile = open(df.get_path())
-            f.write(dfile.read())
-            dfile.close()
+            with open(df.get_path(), 'rb') as dfile:
+                f.write(dfile.read())
 
     def get_thumbnail_offset_x(self):
         return (235-self.width)/2
@@ -505,7 +510,7 @@ class SourceList(Image):
                            ('text','Text list'))
 
     source_type = models.CharField(max_length=4, choices=SOURCE_TYPE_CHOICES)
-    
+
     def get_fits_path(self):
         if self.source_type == 'fits':
             return self.disk_file.get_path()
@@ -515,9 +520,8 @@ class SourceList(Image):
             if df is None:
                 fitsfn = get_temp_file()
 
-                text_file = open(str(self.disk_file.get_path()))
-                text = text_file.read()
-                text_file.close()
+                with open(str(self.disk_file.get_path())) as text_file:
+                    text = text_file.read()
 
                 # add x y header
                 # potential hack, assumes it doesn't exist...
@@ -542,9 +546,8 @@ class SourceList(Image):
 
     def get_image_path(self):
         imgfn = get_temp_file()
-        f = open(imgfn,'wb')
-        self.render(f)
-        f.close()
+        with open(imgfn, 'wb') as f:
+            self.render(f)
         return imgfn
 
     def get_mime_type(self):
@@ -559,7 +562,7 @@ class SourceList(Image):
         image = SourceList(disk_file=self.disk_file, source_type=self.source_type, width=W, height=H)
         image.save()
         return image
-    
+
     def render(self, f):
         from math import ceil
         import PIL.Image, PIL.ImageDraw
@@ -573,7 +576,7 @@ class SourceList(Image):
         #xmin = int(fits.x.min())
         #ymin = int(fits.y.min())
         xmin = ymin = 1.
-        
+
         img = PIL.Image.new('RGB',(self.width,self.height))
         draw = PIL.ImageDraw.Draw(img)
 
@@ -584,7 +587,7 @@ class SourceList(Image):
             draw.ellipse((x-r,y-r,x+r+1,y+r+1),fill="rgb(255,255,255)")
         del draw
         img.save(f, 'PNG')
-        
+
 
 
 class SkyObject(models.Model):
@@ -594,7 +597,7 @@ class SkyObject(models.Model):
 class Tag(models.Model):
     # user = models.ForeignKey(User) # do we need to keep track of who tags what?
     text = models.CharField(max_length=4096, primary_key=True)
-    
+
     # Reverse mappings:
     #  user_images -> UserImage
     #  albums -> Album
@@ -615,13 +618,13 @@ class Calibration(models.Model):
     ramax  = models.FloatField()
     decmin = models.FloatField()
     decmax = models.FloatField()
-    
+
     # cartesian coordinates on unit sphere (for cone search)
     x = models.FloatField()
     y = models.FloatField()
     z = models.FloatField()
     r = models.FloatField()
-    
+
     sky_location = models.ForeignKey('SkyLocation', models.SET_NULL, related_name='calibrations', null=True)
 
     def __str__(self):
@@ -685,7 +688,7 @@ class Calibration(models.Model):
     def format_orientation(self):
         o = self.get_orientation()
         return 'Up is %.3g degrees E of N' % o
-    
+
     def get_objs_in_field(self):
         def run_convert_command(cmd, deleteonfail=None):
             logmsg('Command: ' + cmd)
@@ -708,19 +711,18 @@ class Calibration(models.Model):
             wcsfn = job.get_wcs_file()
 
             #cmd = 'plotann.py %s' % wcsfn
-            
+
             cmd = 'plot-constellations -w %s -N -C -B -b 10 -j' % wcsfn
             if hd:
                 cmd += ' -D -d %s' % settings.HENRY_DRAPER_CAT
             return cmd
-        
+
         objs = []
         cmd = annotate_command(self.job)
         cmd += '-L > %s' % self.job.get_obj_file()
         run_convert_command(cmd)
-        objfile = open(self.job.get_obj_file(), 'r')
-        objtxt = objfile.read()
-        objfile.close()
+        with open(self.job.get_obj_file(), 'r') as objfile:
+            objtxt = objfile.read()
         for objline in objtxt.split('\n'):
             for obj in objline.split('/'):
                 obj = obj.strip()
@@ -734,12 +736,12 @@ class Job(models.Model):
                                        models.CASCADE,
                                        null=True,
                                        related_name="job")
-    
+
     STATUS_CHOICES = (
-        ('S', 'Success'), 
+        ('S', 'Success'),
         ('F', 'Failure'),
-    )    
-    
+    )
+
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
     error_message = models.CharField(max_length=256)
     user_image = models.ForeignKey('UserImage', models.CASCADE, related_name='jobs')
@@ -779,7 +781,7 @@ class Job(models.Model):
 
     def get_axy_file(self):
         return os.path.join(self.get_dir(), 'job.axy')
-        
+
     def get_corr_file(self):
         return os.path.join(self.get_dir(), 'corr.fits')
 
@@ -852,7 +854,7 @@ class SkyLocation(models.Model):
     def __str__(self):
         s = '<SkyLocation: nside(%i) healpix(%i)>' % (self.nside, self.healpix)
         return s
-    
+
     def get_user_images(self, nside=None, healpix=None):
         # NOTE: this returns a queryset
         if nside is None or healpix is None:
@@ -862,7 +864,7 @@ class SkyLocation(models.Model):
         user_images = user_images.filter(jobs__calibration__sky_location__nside=nside)
         user_images = user_images.filter(jobs__calibration__sky_location__healpix=healpix)
         return user_images
-        
+
     def get_neighbouring_user_images(self):
         user_images = UserImage.objects.all_visible()
 
@@ -893,7 +895,7 @@ class TaggedUserImage(models.Model):
     user_image = models.ForeignKey('UserImage', models.CASCADE)
     tag = models.ForeignKey('Tag', models.CASCADE)
     tagger = models.ForeignKey(User, models.SET_NULL, null=True)
-    added_time = models.DateTimeField(auto_now=True) 
+    added_time = models.DateTimeField(auto_now=True)
 
 
 class UserImageManager(models.Manager):
@@ -912,14 +914,14 @@ class UserImageManager(models.Manager):
         if user is not None and not user.is_authenticated():
             user = None
         return self.all_visible().filter(Q(publicly_visible='y') | Q(user=user))
-    
+
 
 class UserImage(Hideable):
     objects = UserImageManager()
 
     image = models.ForeignKey('Image', models.CASCADE)
     user = models.ForeignKey(User, models.SET_NULL, related_name='user_images', null=True)
-    
+
     tags = models.ManyToManyField('Tag',related_name='user_images',
         through='TaggedUserImage')
 
@@ -951,8 +953,8 @@ class UserImage(Hideable):
         logmsg('adding sky objects for %s' % self)
         sky_objects = job.calibration.get_objs_in_field()
         for sky_object in sky_objects:
-            log_tag = unicode(sky_object,errors='ignore')
-            logmsg(u'getting or creating sky object %s' % log_tag)
+            log_tag = str(sky_object)
+            logmsg('getting or creating sky object %s' % log_tag)
             sky_obj,created = SkyObject.objects.get_or_create(name=sky_object)
             if created:
                 logmsg('created sky objects')
@@ -965,14 +967,14 @@ class UserImage(Hideable):
         logmsg('adding machine tags for %s' % self)
         sky_objects = job.calibration.get_objs_in_field()
         for sky_object in sky_objects:
-            log_tag = unicode(sky_object,errors='ignore')
-            logmsg(u'getting or creating machine tag %s' % log_tag)
+            log_tag = str(sky_object)
+            logmsg('getting or creating machine tag %s' % log_tag)
             machine_tag,created = Tag.objects.get_or_create(text=sky_object)
             if created:
                 logmsg('created machine tag')
 
             # associate this UserImage with the machine tag
-            logmsg(u'adding machine tag: %s' % log_tag)
+            logmsg('adding machine tag: %s' % log_tag)
             machine_user = User.objects.get(username=MACHINE_USERNAME)
             tagged_user_image = TaggedUserImage.objects.get_or_create(
                 user_image=self,
@@ -1005,7 +1007,7 @@ class UserImage(Hideable):
         kwargs = {'user_image_id':self.id}
         abs_url = reverse('user_image', kwargs=kwargs)
         return abs_url
-    
+
     def is_calibrated(self):
         job = self.get_best_job()
         return (job and job.calibration)
@@ -1044,7 +1046,7 @@ class UserImage(Hideable):
 class Submission(Hideable):
     SCALEUNITS_CHOICES = (
         ('arcsecperpix', 'arcseconds per pixel'),
-        ('arcminwidth' , 'width of the field (in arcminutes)'), 
+        ('arcminwidth' , 'width of the field (in arcminutes)'),
         ('degwidth' , 'width of the field (in degrees)'),
         ('focalmm'     , 'focal length of the lens (for 35mm film equivalent sensor)'),
     )
@@ -1077,7 +1079,7 @@ class Submission(Hideable):
     scale_upper = models.FloatField(default=180, blank=True, null=True)
     scale_est   = models.FloatField(blank=True, null=True)
     scale_err   = models.FloatField(blank=True, null=True)
-    
+
     positional_error = models.FloatField(blank=True, null=True)
     center_ra = models.FloatField(blank=True, null=True)
     center_dec = models.FloatField(blank=True, null=True)
@@ -1091,7 +1093,7 @@ class Submission(Hideable):
     crpix_center = models.BooleanField(default=False)
 
     invert = models.BooleanField(default=False)
-    
+
     # NOTE, these are ONLY to hold user-set (via API) image width/height;
     # they OVERRIDE the actual size of the image.  ONLY valid for xylists.
     image_width  = models.IntegerField(blank=True, null=True, default=0)
@@ -1182,7 +1184,7 @@ class Submission(Hideable):
 
         self.comment_receiver.save()
         #self.license.save(default_license=default_license)
-            
+
         logmsg('saving submission: license id = %d' % self.license.id)
         logmsg('saving submission: commentreceiver id = %d' % self.comment_receiver.id)
 
@@ -1194,7 +1196,7 @@ class Album(Hideable):
     user = models.ForeignKey(User, models.SET_NULL, related_name='albums', null=True)
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=1024, blank=True)
-    user_images = models.ManyToManyField('UserImage', related_name='albums') 
+    user_images = models.ManyToManyField('UserImage', related_name='albums')
     tags = models.ManyToManyField('Tag', related_name='albums')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -1209,7 +1211,7 @@ class Album(Hideable):
         kwargs = {'album_id':self.id}
         abs_url = reverse('album', kwargs=kwargs)
         return abs_url
-        
+
 class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     recipient = models.ForeignKey('CommentReceiver', models.CASCADE, related_name='comments')
@@ -1238,7 +1240,7 @@ class UserProfile(models.Model):
         key = ''.join([chr(random.randint(ord('a'), ord('z')))
                        for i in range(self.__class__.API_KEY_LENGTH)])
         self.apikey = key
-     
+
     def create_default_license(self):
         # make a user their own copy of the sitewide default license
         # called in openid_views.py (where profile is first created)
@@ -1291,4 +1293,4 @@ def context_user_profile(req):
         req.user.get_profile = get_user_profile(req.user)
     return dict(user=req.user)
 
-    
+

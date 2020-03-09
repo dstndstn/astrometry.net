@@ -69,15 +69,21 @@ if False:
 # application = django.core.handlers.wsgi.WSGIHandler()
 
 if False:
-    import cStringIO
     import os
-    
+    try:
+        #py3
+        from io import StringIO
+    except ImportError:
+        #py2
+        from cStringIO import StringIO
+
+
     def application(environ, start_response):
         headers = []
         headers.append(('Content-Type', 'text/plain'))
         write = start_response('200 OK', headers)
         input = environ['wsgi.input']
-        output = cStringIO.StringIO()
+        output = StringIO()
         print("PID: %s" % os.getpid(), file=output)
         print("UID: %s" % os.getuid(), file=output)
         print("GID: %s" % os.getgid(), file=output)

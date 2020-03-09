@@ -4,11 +4,19 @@ import os, errno
 import hashlib
 import tempfile
 import math
-import urllib
-import urllib2
 import stat
 import time
 from datetime import datetime, timedelta
+
+
+try:
+    # py3
+    from urllib.parse import urlencode
+    # from urllib.request import urlretrieve
+except ImportError:
+    # py2
+    from urllib import urlencode
+    # from urllib import urlencode urlretrieve
 
 if __name__ == '__main__':
     os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
@@ -44,7 +52,6 @@ from astrometry.net.views.license import LicenseForm
 
 from astrometry.net.views.enhance import *
 
-from string import strip
 import simplejson
 
 # repeat this import to override somebody else's import of the datetime module
@@ -85,7 +92,7 @@ class UserImageForm(forms.ModelForm):
 def user_image(req, user_image_id=None):
     uimage = get_object_or_404(UserImage, pk=user_image_id)
 
-    job = uimage.get_best_job() 
+    job = uimage.get_best_job()
     calib = None
     if job:
         calib = job.calibration
@@ -143,15 +150,15 @@ def user_image(req, user_image_id=None):
         y = wcs.imageh - wcs.crpix2
         orient = wcs.get_orientation()
 
-        print('Parity', parity, 'FITS', fits, 'Orientation', orient)
+        logmsg('Parity', parity, 'FITS', fits, 'Orientation', orient)
 
         if parity:
             orient = 360. - orient
-        
+
         wwturl = 'http://www.worldwidetelescope.org/wwtweb/ShowImage.aspx?reverseparity=%s&scale=%.6f&name=%s&imageurl=%s&credits=Astrometry.net+User+(All+Rights+Reserved)&creditsUrl=&ra=%.6f&dec=%.6f&x=%.1f&y=%.1f&rotation=%.2f&thumb=%s' % (parity, wcs.get_pixscale(), uimage.original_file_name, imgurl, wcs.crval1, wcs.crval2, wcs.crpix1, y, orient, thumburl)
     else:
         wwturl = None
-    
+
     logmsg(uimage.get_absolute_url())
     context = {
         'request': req,
@@ -182,7 +189,7 @@ def user_image(req, user_image_id=None):
 
 @login_required
 def edit(req, user_image_id=None):
-    user_image = get_object_or_404(UserImage, pk=user_image_id) 
+    user_image = get_object_or_404(UserImage, pk=user_image_id)
     if user_image.user != req.user:
         messages.error(req, "Sorry, you don't have permission to edit this content.")
         return render(req, 'user_image/permission_denied.html')
@@ -200,7 +207,7 @@ def edit(req, user_image_id=None):
                 allow_modifications=license_form.cleaned_data['allow_modifications'],
             )
             user_image.license = license
-            
+
             album_id = image_form.cleaned_data['album']
             albums = Album.objects.filter(user=req.user).filter(user_images__in=[user_image])
             if album_id == '':
@@ -236,7 +243,7 @@ def edit(req, user_image_id=None):
                 user=req.user,
             )
         ]
-        
+
     context = {
         'image_form': image_form,
         'license_form': license_form,
@@ -268,7 +275,7 @@ def annotated_image(req, jobid=None, size='full'):
         img = img.get_display_image()
     else:
         scale = 1.0
-        
+
     wcsfn = job.get_wcs_file()
     pnmfn = img.get_pnm_path()
     annfn = get_temp_file()
@@ -293,12 +300,13 @@ def annotated_image(req, jobid=None, size='full'):
             '--scale %s' % (str(scale)),]
     #if rad < 10.:
     if rad < 1.:
-        args.extend([#'--uzccat %s' % uzcfn,
-                     '--abellcat %s' % abellfn,
-                     '--hdcat %s' % hdfn
-                     ])
+        #args.append('--uzccat %s' % uzcfn)
+        args.append('--abellcat %s' % abellfn)
+        if hdfn:
+            args.append('--hdcat %s' % hdfn)
 
-    if rad < 0.25:
+
+    if rad < 0.25 and tycho2fn:
         args.append('--tycho2cat %s' % tycho2fn)
 
     #if rad > 20:
@@ -307,7 +315,7 @@ def annotated_image(req, jobid=None, size='full'):
 
     if rad > 30:
         args.append('--no-bright')
-            
+
     cmd = ' '.join(args + ['%s %s %s' % (wcsfn, pnmfn, annfn)])
 
     #cmd = 'plot-constellations -w %s -i %s -o %s -s %s -N -C -B -c' % (wcsfn, pnmfn, annfn, str(scale))
@@ -334,7 +342,7 @@ def annotated_image(req, jobid=None, size='full'):
         logmsg('out: ' + out)
         logmsg('err: ' + err)
         return HttpResponse('plot failed: ' + err + "<br><pre>" + out + "</pre><br><pre>" + err + "</pre>")
-    f = open(annfn)
+    f = open(annfn, 'rb')
     res = HttpResponse(f)
     #res['Content-Type'] = 'image/png'
     # plotann.py produces jpeg by default
@@ -350,7 +358,7 @@ def onthesky_image(req, zoom=None, calid=None):
     wcsfn = cal.get_wcs_file()
     plotfn = get_temp_file()
 
-    print('onthesky_image: cal', cal, 'wcs', wcsfn, 'plot', plotfn)
+    logmsg('onthesky_image: cal', cal, 'wcs', wcsfn, 'plot', plotfn)
 
     #
     wcs = anutil.Tan(wcsfn, 0)
@@ -373,7 +381,7 @@ def onthesky_image(req, zoom=None, calid=None):
                          hd=True, hd_labels=True, tycho2=True)
     else:
         return HttpResponse('invalid zoom')
-    f = open(plotfn)
+    f = open(plotfn, 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'image/png'
     return res
@@ -407,7 +415,7 @@ def galex_image(req, calid=None, size='full'):
         df = CachedFile.add(key, plotfn)
     else:
         logmsg('Cache hit for key "%s"' % key)
-    f = open(df.get_path())
+    f = open(df.get_path(), 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'image/png'
     return res
@@ -419,11 +427,10 @@ def sdss_image(req, calid=None, size='full'):
     df = CachedFile.get(key)
     if df is None:
         wcsfn = cal.get_wcs_file()
-        plotfn = get_temp_file()
 
         from astrometry.util.util import Tan
         wcs = Tan(wcsfn)
-        
+
         if size == 'display':
             image = cal.job.user_image
             scale = float(image.image.get_display_image().width)/image.image.width
@@ -431,33 +438,35 @@ def sdss_image(req, calid=None, size='full'):
 
         else:
             scale = 1.0
-        
-        urlargs = urllib.urlencode(dict(crval1='%.6f' % wcs.crval[0],
-                                        crval2='%.6f' % wcs.crval[1],
-                                        crpix1='%.2f' % wcs.crpix[0],
-                                        crpix2='%.2f' % wcs.crpix[1],
-                                        cd11='%.6g' % wcs.cd[0],
-                                        cd12='%.6g' % wcs.cd[1],
-                                        cd21='%.6g' % wcs.cd[2],
-                                        cd22='%.6g' % wcs.cd[3],
-                                        imagew='%i' % int(wcs.imagew),
-                                        imageh='%i' % int(wcs.imageh)))
+
+        urlargs = urlencode(dict(crval1='%.6f' % wcs.crval[0],
+                                 crval2='%.6f' % wcs.crval[1],
+                                 crpix1='%.2f' % wcs.crpix[0],
+                                 crpix2='%.2f' % wcs.crpix[1],
+                                 cd11='%.6g' % wcs.cd[0],
+                                 cd12='%.6g' % wcs.cd[1],
+                                 cd21='%.6g' % wcs.cd[2],
+                                 cd22='%.6g' % wcs.cd[3],
+                                 imagew='%i' % int(wcs.imagew),
+                                 imageh='%i' % int(wcs.imageh)))
 
         url = 'http://legacysurvey.org/viewer/cutout-wcs/?layer=sdssco&' + urlargs
         return HttpResponseRedirect(url)
+
         #print('Retrieving:', url)
-        #f = urllib.urlopen(url)
-        plotfn,headers = urllib.urlretrieve(url, plotfn)
+        #f = urlopen(url)
+        #plotfn = get_temp_file()
+        #plotfn, headers = urlretrieve(url, plotfn)
         #print('Headers:', headers)
 
         #plot_sdss_image(wcsfn, plotfn, scale)
 
         # cache
-        logmsg('Caching key "%s"' % key)
-        df = CachedFile.add(key, plotfn)
+        # logmsg('Caching key "%s"' % key)
+        # df = CachedFile.add(key, plotfn)
     else:
         logmsg('Cache hit for key "%s" -> %s' % (key, df.get_path()))
-    f = open(df.get_path())
+    f = open(df.get_path() , 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'image/jpeg'
     return res
@@ -472,7 +481,7 @@ def red_green_image(req, job_id=None, size='full'):
         img = img.get_display_image()
     else:
         scale = 1.0
-        
+
     axyfn = job.get_axy_file()
     wcsfn = job.get_wcs_file()
     rdlsfn = job.get_rdls_file()
@@ -508,7 +517,7 @@ def red_green_image(req, job_id=None, size='full'):
             #xy.yoff = int(fits.y.min())
             xy.xoff = 0.
             xy.yoff = 0.
-            
+
         plot_xy_set_filename(xy, str(axyfn))
         xy.scale = scale
         plot.color = 'red'
@@ -516,8 +525,8 @@ def red_green_image(req, job_id=None, size='full'):
         plot.lw = 2.
         plot.markersize = 6
         plot.plot('xy')
-        
-        # plot green 
+
+        # plot green
         rd = plot.radec
         plot_radec_set_filename(rd, str(rdlsfn))
         plot.color = 'green'
@@ -526,9 +535,9 @@ def red_green_image(req, job_id=None, size='full'):
 
         plot.write()
     except:
-        return HttpResponse("plot failed") 
+        return HttpResponse("plot failed")
 
-    f = open(exfn)
+    f = open(exfn, 'rb')
     res = StreamingHttpResponse(f)
     res['Content-Type'] = 'image/png'
     return res
@@ -543,7 +552,7 @@ def extraction_image(req, job_id=None, size='full'):
         img = img.get_display_image()
     else:
         scale = 1.0
-        
+
     axyfn = job.get_axy_file()
     pnmfn = img.get_pnm_path()
     exfn = get_temp_file()
@@ -598,9 +607,9 @@ def extraction_image(req, job_id=None, size='full'):
         plot.plot('xy')
         plot.write()
     except:
-        return HttpResponse("plot failed") 
+        return HttpResponse("plot failed")
 
-    f = open(exfn)
+    f = open(exfn, 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'image/png'
     return res
@@ -627,7 +636,7 @@ class ShowImagesForm(forms.Form):
                                         attrs={'onClick':'this.form.submit();'}),
                                     initial=False, required=False)
 
-def index(req, images=None, 
+def index(req, images=None,
           template_name='user_image/index.html', context={}):
     if images is None:
         images = UserImage.objects.public_only(req.user)
@@ -692,7 +701,7 @@ def index_tag(req):
                         tag = tags[0]
                     images = images.filter(tags=tag)
                 except Tag.DoesNotExist:
-                    images = UserImage.objects.none() 
+                    images = UserImage.objects.none()
             else:
                 images = images.filter(tags__text__icontains=query)
 
@@ -704,7 +713,7 @@ def index_tag(req):
         'tag': tag,
     }
     return index(req, images, 'user_image/index_tag.html', context)
-   
+
 class LocationSearchForm(forms.Form):
     ra = forms.FloatField(widget=forms.TextInput(attrs={'size':'5'}))
     dec = forms.FloatField(widget=forms.TextInput(attrs={'size':'5'}))
@@ -718,7 +727,7 @@ def index_location(req):
         dec = form.cleaned_data.get('dec', 0)
         radius = form.cleaned_data.get('radius', 0)
 
-        if ra and dec and radius: 
+        if ra and dec and radius:
             ra *= math.pi/180
             dec *= math.pi/180
             tempr = math.cos(dec)
@@ -726,7 +735,7 @@ def index_location(req):
             y = tempr*math.sin(ra)
             z = math.sin(dec)
             r = radius/180*math.pi
-           
+
             # HACK - there's probably a better way to do this..?
             where = ('(x-(%(x)f))*(x-(%(x)f))+(y-(%(y)f))*(y-(%(y)f))+(z-(%(z)f))*(z-(%(z)f)) < (%(r)f)*(%(r)f)'
                     % dict(x=x,y=y,z=z,r=r))
@@ -748,9 +757,9 @@ def index_nearby(req, user_image_id=None):
         'image': image,
     }
     return index(req, images, 'user_image/index_nearby.html', context)
-    
+
 def index_recent(req):
-    return index(req, 
+    return index(req,
                  UserImage.objects.all_visible()[:9], #.order_by('-submission__submitted_on')[:9],
                  template_name='user_image/index_recent.html')
 
@@ -772,7 +781,7 @@ def index_by_user(req):
         'users':User.objects.all_visible().order_by('profile__display_name', 'id')
     }
     return render(req, 'user_image/index_by_user.html', context)
-        
+
 def index_album(req, album_id=None):
     album = get_object_or_404(Album, pk=album_id)
     return index(req,
@@ -793,50 +802,50 @@ def image_set(req, category, id):
 
     cat_class = cat_classes[category]
     cat_obj = get_object_or_404(cat_class, pk=id)
-    
+
     set_names = {
         'user':'Submitted by User %s' % cat_obj.pk,
         'album':'Album: %s' % cat_obj.pk,
         'tag':'Tag: %s' % cat_obj.pk,
-    } 
+    }
     image_set_title = set_names[category]
 
     context = {
         'images': cat_obj.user_images.all,
         'image_set_title':image_set_title,
     }
-   
+
     return render(req, 'user_image/image_set.html', context)
 
 def wcs_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
-    f = open(job.get_wcs_file())
+    f = open(job.get_wcs_file(), 'rb')
     res = HttpResponse(f)
-    res['Content-Type'] = 'application/fits' 
+    res['Content-Type'] = 'application/fits'
     res['Content-Disposition'] = 'attachment; filename=wcs.fits'
     return res
 
 def rdls_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
-    f = open(job.get_rdls_file())
+    f = open(job.get_rdls_file(), 'rb')
     res = HttpResponse(f)
-    res['Content-Type'] = 'application/fits' 
+    res['Content-Type'] = 'application/fits'
     res['Content-Disposition'] = 'attachment; filename=rdls.fits'
     return res
 
 def axy_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
-    f = open(job.get_axy_file())
+    f = open(job.get_axy_file(), 'rb')
     res = HttpResponse(f)
-    res['Content-Type'] = 'application/fits' 
+    res['Content-Type'] = 'application/fits'
     res['Content-Disposition'] = 'attachment; filename=axy.fits'
     return res
 
 def corr_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
-    f = open(job.get_corr_file())
+    f = open(job.get_corr_file(), 'rb')
     res = HttpResponse(f)
-    res['Content-Type'] = 'application/fits' 
+    res['Content-Type'] = 'application/fits'
     res['Content-Disposition'] = 'attachment; filename=corr.fits'
     return res
 
@@ -867,8 +876,8 @@ def new_fits_file(req, jobid=None):
         logmsg('out: ' + out)
         logmsg('err: ' + err)
         return HttpResponse('plot failed: out ' + out + ', err ' + err)
-    res = HttpResponse(open(outfn))
-    res['Content-Type'] = 'application/fits' 
+    res = HttpResponse(open(outfn, 'rb'))
+    res['Content-Type'] = 'application/fits'
     res['Content-Length'] = file_size(outfn)
     res['Content-Disposition'] = 'attachment; filename=new-image.fits'
     return res
@@ -879,18 +888,18 @@ def kml_file(req, jobid=None):
     wcsfn = job.get_wcs_file()
     img = job.user_image.image
     df = img.disk_file
-   
+
     pnmfn = img.get_pnm_path()
     imgfn = get_temp_file()
     image = PIL.Image.open(pnmfn)
-    image.save(imgfn, 'PNG') 
+    image.save(imgfn, 'PNG')
 
     dirnm = tempfile.mkdtemp()
     warpedimgfn = 'image.png'
     kmlfn = 'doc.kml'
     outfn = get_temp_file()
     cmd = ('cd %(dirnm)s'
-           '; %(wcs2kml)s ' 
+           '; %(wcs2kml)s '
            '--input_image_origin_is_upper_left '
            '--fitsfile=%(wcsfn)s '
            '--imagefile=%(imgfn)s '
@@ -907,7 +916,7 @@ def kml_file(req, jobid=None):
         logmsg('err: ' + err)
         return HttpResponse('kml generation failed: ' + err)
 
-    res = HttpResponse(open(outfn))
+    res = HttpResponse(open(outfn, 'rb'))
     res['Content-Type'] = 'application/x-zip-compressed'
     res['Content-Length'] = file_size(outfn)
     res['Content-Disposition'] = 'attachment; filename=image.kmz'
@@ -936,26 +945,26 @@ class ImageSearchForm(forms.Form):
     calibrated = forms.BooleanField(initial=True, required=False)
     processing = forms.BooleanField(initial=False, required=False)
     failed = forms.BooleanField(initial=False, required=False)
-    
+
     def clean(self):
         category = self.cleaned_data.get('search_category');
         if not category:
             self.cleaned_data['search_category'] = 'tag'
 
         return self.cleaned_data
-    
+
 def unhide(req, user_image_id):
     image = get_object_or_404(UserImage, pk=user_image_id)
     if req.user.is_authenticated and req.user == image.user:
         image.unhide()
     return redirect('user_image', user_image_id)
-    
+
 def hide(req, user_image_id):
     image = get_object_or_404(UserImage, pk=user_image_id)
     if req.user.is_authenticated and req.user == image.user:
         image.hide()
     return redirect('user_image', user_image_id)
-    
+
 def search(req):
     if req.GET:
         form_data = req.GET.copy()
@@ -975,7 +984,7 @@ def search(req):
     processing = False
     failed = False
 
-    if form.is_valid(): 
+    if form.is_valid():
         calibrated = form.cleaned_data.get('calibrated')
         processing = form.cleaned_data.get('processing')
         failed = form.cleaned_data.get('failed')
@@ -986,9 +995,9 @@ def search(req):
             if tags.strip():
                 images = UserImage.objects.none()
                 tag_objs = []
-                tags = map(strip,tags.split(','))
+                tags = [t.strip() for t in tags.split(',')]
                 tags = list(set(tags)) # remove duplicate tags
-                
+
                 images = UserImage.objects.all_visible().filter(tags__text__in=tags).distinct()
                 tag_objs = Tag.objects.filter(text__in=tags)
                 context['tags'] = tag_objs
@@ -1001,7 +1010,7 @@ def search(req):
                 images = UserImage.objects.none()
                 if len(user) > 0:
                     images = UserImage.objects.all_visible().filter(user=user)
-                    context['display_user'] = user[0] 
+                    context['display_user'] = user[0]
                 else:
                     context['display_users'] = User.objects.filter(profile__display_name__startswith=username)[:5]
         elif category == 'location':
@@ -1009,7 +1018,7 @@ def search(req):
             dec = form.cleaned_data.get('dec', 0)
             radius = form.cleaned_data.get('radius', 0)
 
-            if ra and dec and radius: 
+            if ra and dec and radius:
                 ra *= math.pi/180
                 dec *= math.pi/180
                 tempr = math.cos(dec)
@@ -1017,7 +1026,7 @@ def search(req):
                 y = tempr*math.sin(ra)
                 z = math.sin(dec)
                 r = radius/180*math.pi
-               
+
                 # HACK - there's probably a better way to do this..?
                 where = ('(x-(%(x)f))*(x-(%(x)f))+(y-(%(y)f))*(y-(%(y)f))+(z-(%(z)f))*(z-(%(z)f)) < (%(r)f)*(%(r)f)'
                         % dict(x=x,y=y,z=z,r=r))
@@ -1050,12 +1059,11 @@ if __name__ == '__main__':
     #     pass
     # req = Duck()
     # onthesky_image(req, zoom=0, calid=1)
-    
+
     from django.test import Client
     c = Client()
     r = c.get('/user_images/2676353')
     #print(r)
-    f = open('out.html', 'wb')
-    for x in r:
-        f.write(x)
-    f.close()
+    with open('out.html', 'wb') as f:
+        for x in r:
+            f.write(x)

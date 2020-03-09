@@ -7,12 +7,11 @@ import base64
 
 try:
     # py3
-    from urllib.parse import urlparse, urlencode, quote
+    from urllib.parse import urlencode, quote
     from urllib.request import urlopen, Request
     from urllib.error import HTTPError
 except ImportError:
     # py2
-    from urlparse import urlparse
     from urllib import urlencode, quote
     from urllib2 import urlopen, Request, HTTPError
 
