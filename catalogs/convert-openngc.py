@@ -16,11 +16,8 @@ def convert_openngc_entries():
 
     with open('openngc-entries.csv') as f:
         for is_ngc, num, ra, dec, size in csv.reader(f, delimiter=';'):
-
-            is_ngc = bool(is_ngc)
-
+            is_ngc = (is_ngc == '1')
             num = int(num)
-
             ra = float(ra) if ra else 0.0
             dec = float(dec) if dec else 0.0
 
