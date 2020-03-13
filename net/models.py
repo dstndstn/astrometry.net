@@ -500,10 +500,10 @@ class Image(models.Model):
                 f.write(dfile.read())
 
     def get_thumbnail_offset_x(self):
-        return (235-self.width)/2
+        return (235-self.width)//2
 
     def get_thumbnail_offset_y(self):
-        return (235-self.height)/2
+        return (235-self.height)//2
 
 class SourceList(Image):
     SOURCE_TYPE_CHOICES = (('fits','FITS binary table'),
@@ -874,8 +874,8 @@ class SkyLocation(models.Model):
         q1 = Q(jobs__calibration__sky_location__nside = self.nside,
                jobs__calibration__sky_location__healpix__in = neighbours + [self.healpix])
         # next bigger scale
-        q2 = Q(jobs__calibration__sky_location__nside = self.nside/2,
-               jobs__calibration__sky_location__healpix = self.healpix / 4)
+        q2 = Q(jobs__calibration__sky_location__nside = self.nside//2,
+               jobs__calibration__sky_location__healpix = self.healpix//4)
         # next smaller scale
         neighbours = set()
         for i in range(4):
