@@ -25,8 +25,8 @@ register.filter('list', create_list)
 def paginator(context, page, text="", total_pages=9):
     number = page.number
     num_pages = page.paginator.num_pages
-    start = number - (total_pages-1)/2
-    end   = number + (total_pages-1)/2
+    start = number - (total_pages-1)//2
+    end   = number + (total_pages-1)//2
     if start <= 0:
         end += 1-start
     if end > num_pages:
