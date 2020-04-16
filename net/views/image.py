@@ -1062,7 +1062,8 @@ if __name__ == '__main__':
 
     from django.test import Client
     c = Client()
-    r = c.get('/user_images/2676353')
+    #r = c.get('/user_images/2676353')
+    r = c.get('/extraction_image_full/4005556')
     #print(r)
     with open('out.html', 'wb') as f:
         for x in r:

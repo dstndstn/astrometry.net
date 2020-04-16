@@ -1,49 +1,26 @@
 #! /usr/bin/env python3
 
-
-
 import os
 import sys
 from subprocess import check_output #nosec
 
 # add .. to PYTHONPATH
 path = os.path.realpath(__file__)
-#print('My path', path)
 basedir = os.path.dirname(os.path.dirname(path))
-
-#print('PYTHONPATH is', os.environ['PYTHONPATH'])
-
-#print('Adding basedir', basedir, 'to PYTHONPATH')
 sys.path.append(basedir)
 
 # add ../blind and ../util to PATH
 os.environ['PATH'] += ':' + os.path.join(basedir, 'blind')
 os.environ['PATH'] += ':' + os.path.join(basedir, 'util')
 
-# print('sys.path is:')
-# for x in sys.path:
-#     print('  ', x)
-#
-# print('PATH is:', os.environ['PATH'])
-
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
 import django
 django.setup()
 
-try:
-    import pyfits
-except ImportError:
-    try:
-        from astropy.io import fits as pyfits
-    except ImportError:
-        raise ImportError("Cannot import either pyfits or astropy.io.fits")
-
-
 import tempfile
 import traceback
 from urllib.parse import urlparse
-import logging
 import urllib.request, urllib.parse, urllib.error
 import shutil
 import multiprocessing
@@ -54,10 +31,6 @@ import gzip
 import zipfile
 import math
 
-import logging
-logging.basicConfig(format='%(message)s',
-                    level=logging.DEBUG)
-
 from astrometry.util import image2pnm
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
@@ -66,7 +39,6 @@ from astrometry.util.util import Tan
 from astrometry.util import util as anutil
 from astrometry.util.fits import *
 
-#import astrometry.net.settings as settings
 import settings
 settings.LOGGING['loggers'][''] = {
     'handlers': ['console'],
@@ -81,10 +53,10 @@ from django.db import DatabaseError
 from django.db.models import Q
 
 from logging.config import dictConfig
-
 dictConfig(settings.LOGGING)
 
-
+import logging
+logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
 def is_tarball(fn):
     logmsg('is_tarball: %s' % fn)
@@ -181,18 +153,24 @@ def create_job_logger(job):
     return MyLogger(logger)
 
 def try_dojob(job, userimage, solve_command, solve_locally):
-    print('try_dojob', job)
+    print('try_dojob', job, '(sub', job.user_image.submission.id, ')')
     try:
-        return dojob(job, userimage, solve_command=solve_command,
+        r = dojob(job, userimage, solve_command=solve_command,
                      solve_locally=solve_locally)
+        print('try_dojob', job, 'completed:', r)
+        return r
     except OSError as e:
-        import os.errno
+        print('OSError processing job', job)
+        print(e)
+        import errno
         # Too many open files
-        if e.errno == os.errno.EMFILE:
+        print('e.errno:', e.errno)
+        print('errno.EMFILE:', errno.EMFILE)
+        if e.errno == errno.EMFILE:
+            print('Too many open files -- exiting!')
             sys.exit(-1)
     except IOError as e:
         import errno
-        # Too many open files
         print('Caught IOError')
         print('Errno:', e.errno)
         if e.errno == errno.EMFILE:
@@ -623,6 +601,10 @@ def create_source_list(df):
     img = None
     fits = None
     source_type = None
+
+    path = df.get_path()
+    print('path:', path, type(path))
+    
     try:
         # see if disk file is a fits list
         fits = fits_table(str(df.get_path()))
@@ -648,7 +630,7 @@ def create_source_list(df):
             fits = fits_table(fitsfn)
             source_type = 'text'
         except Exception as e:
-            logmsg('Traceback:\n' + traceback.format_exc())
+            #logmsg('Traceback:\n' + traceback.format_exc())
             logmsg('fitsfn: %s' % fitsfn)
             logmsg(e)
             logmsg('file is not a text list')
@@ -741,7 +723,9 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
         all_user_images = UserImage.objects.annotate(job_count=Count('jobs'))
         newuis = all_user_images.filter(job_count=0)
         if newuis.count():
-            print('Found', len(newuis), 'UserImages without Jobs:', [u.id for u in newuis])
+            #print('Found', len(newuis), 'UserImages without Jobs:', [u.id for u in newuis])
+            #print('Found', len(newuis), 'UserImages without Jobs.')
+            print('Jobs queued:', len(newuis))
 
         runsubs = me.subs.filter(finished=False)
         if subresults != lastsubs:
@@ -777,6 +761,18 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                 qj.success = res.successful()
                 qj.save()
 
+                try:
+                    job = Job.objects.get(id=jid)
+                    print('Job:', job)
+                    print('  status:', job.status)
+                    print('  error message:', job.error_message)
+                    #logfn = job.get_log_file()
+                    print('  log file tail:')
+                    print(job.get_log_tail(nlines=10))
+                    
+                except:
+                    print('exception getting job')
+                
                 if res.successful():
                     print('result:', res.get(),)
             print()
@@ -788,7 +784,6 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             continue
 
         # FIXME -- order by user, etc
-
 
         ## HACK -- order 'newuis' to do the newest ones first... helpful when there
         # is a big backlog.
@@ -812,6 +807,41 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             else:
                 try_dosub(sub, max_sub_retries)
 
+
+        if dojob_pool:
+            n_add = dojob_nthreads - len(jobresults)
+            if n_add <= 0:
+                # Already full!
+                continue
+            # Queue some new ones -- randomly select from waiting users
+            newuis = list(newuis)
+            start_newuis = []
+            import numpy as np
+            from collections import Counter
+            print('Need to start', n_add, 'jobs;', len(newuis), 'eligible uis')
+            while n_add > 0:
+                cusers = Counter([u.user for u in newuis])
+                print('Jobs queued:', len(newuis), 'by', len(cusers), 'users; top:')
+                for k,user in cusers.most_common(5):
+                    try:
+                        print('  ', k, user, user.get_profile().display_name)
+                    except:
+                        print('  ', k, user)
+                users = list(cusers.keys())
+                print(len(users), 'eligible users')
+                if len(users) == 0:
+                    break
+                iu = np.random.randint(len(users))
+                user = users[iu]
+                print('Selected user', user)
+                for ui in newuis:
+                    if ui.user == user:
+                        print('Selected ui', ui)
+                        newuis.remove(ui)
+                        start_newuis.append(ui)
+                        n_add -= 1
+                        break
+            newuis = start_newuis
 
         for userimage in newuis:
             job = Job(user_image=userimage)

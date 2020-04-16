@@ -21,13 +21,21 @@ import logging
 logging.basicConfig(format='%(message)s',
                     level=logging.DEBUG)
 
-def bounce_try_dojob(jobid):
-    print('Trying Job ID', jobid)
-    job = Job.objects.filter(id=jobid)[0]
-    print('Found Job', job)
-    return try_dojob(job, job.user_image)
+def bounce_try_dojob(X):
+    jobid, solve_command, solve_locally = X
+    try:
+        from process_submissions import try_dojob
+        print('Trying Job ID', jobid)
+        job = Job.objects.filter(id=jobid)[0]
+        print('Found Job', job)
+        r = try_dojob(job, job.user_image, solve_command, solve_locally)
+        print('Job result for', job, ':', r)
+        return r
+    except:
+        import traceback
+        traceback.print_exc()
 
-if __name__ == '__main__':
+def main():
     import optparse
     parser = optparse.OptionParser('%(prog)')
     parser.add_option('-s', '--sub', type=int, dest='sub', help='Submission ID')
@@ -57,6 +65,9 @@ if __name__ == '__main__':
     parser.add_option('--delete', action='store_true', default=False,
               help='Delete everything associated with the given image')
 
+    parser.add_option('--delextra', action='store_true', default=False,
+                      help='Delete extraneous duplicate jobs?')
+    
     parser.add_option('--hide', action='store_true', default=False,
                       help='For a UserImage, set publicly_visible=False')
     
@@ -67,7 +78,12 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(-1)
 
-    if opt.ssh or opt.empty:
+    if opt.threads is not None:
+        mp = multiproc(opt.threads)
+    else:
+        mp = None
+        
+    if opt.ssh or opt.empty or opt.delextra:
         subs = Submission.objects.all()
         if opt.minsub:
             subs = subs.filter(id__gt=opt.minsub)
@@ -109,28 +125,41 @@ if __name__ == '__main__':
                         allfailed = False
                         break
 
+                if opt.delextra:
+                    print('Delextra:', len(jobs), 'jobs', len(uis), 'uis; failedjob:', failedjob)
+                    if len(jobs) > 1 and failedjob is not None:
+                        print('Delextra: delete', failedjob)
+
             if not allfailed:
                 continue
             print('All jobs failed for sub', sub.id) #, 'via ssh failure')
-            failedsubs.append(sub)
+            #failedsubs.append(sub)
             failedjobs.append(failedjob)
 
-        print('Found total of', len(failedsubs), 'failed Submissions')
+        print('Found total of', len(failedsubs), 'failed Submissions and', len(failedjobs), 'failed Jobs')
         if opt.rerun:
             from process_submissions import try_dosub, try_dojob
+
             if opt.threads is not None:
-                mp = multiproc(opt.threads)
                 args = []
                 for j in failedjobs:
                     if j is None:
                         continue
-                    args.append(j.id) #, j.user_image))
+                    args.append((j.id, opt.solve_command, opt.solve_locally))
                 mp.map(bounce_try_dojob, args)
-
             else:
-                for sub in failedsubs:
-                    print('Re-trying sub', sub.id)
-                    try_dosub(sub, 1)
+                for job in failedjobs:
+                    if job is None:
+                        continue
+                    print('Re-trying job', job.id)
+                    try_dojob(job, job.user_image, opt.solve_command, opt.solve_locally)
+
+            # FIXME -- failed subs??
+            # 
+            # else:
+            #     for sub in failedsubs:
+            #         print('Re-trying sub', sub.id)
+            #         try_dosub(sub, 1)
             
 
     if opt.sub:
@@ -232,3 +261,6 @@ if __name__ == '__main__':
             if im.display_image:
                 im.display_image.delete()
                 
+if __name__ == '__main__':
+    main()
+    

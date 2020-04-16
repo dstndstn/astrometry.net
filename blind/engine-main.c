@@ -72,6 +72,8 @@ static an_option_t myopts[] = {
      "run the index files in parallel"},
     {'D', "data-log file", required_argument, "file",
      "log data to the given filename"},
+    {'j', "job-id", required_argument, "jobid",
+     "IGNORED; purely to allow process to contain the job id!"},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -122,6 +124,8 @@ int main(int argc, char** args) {
         if (c == -1)
             break;
         switch (c) {
+	case 'j':
+	    break;
         case 'D':
             datalog = optarg;
             break;
