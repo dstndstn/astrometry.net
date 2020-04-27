@@ -72,17 +72,11 @@ def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
         # this is a bit silly: build a tree with a single point, then do match()
         kd2 = tree_build_radec(np.array([ra]), np.array([dec]))
         r = deg2dist(width * np.sqrt(2.) / 2.)
-        #r = deg2dist(wcs.radius())
         I,nil,nil = trees_match(kd, kd2, r, permuted=False)
         del nil
-        #print 'Matched', len(I)
-        xyz = spherematch_c.kdtree_get_positions(kd, I)
+        xyz = kd.get_data(I.astype(np.uint32))
         del I
-        tree_free(kd2)
-        tree_close(kd)
-        #print >>sys.stderr, 'Got', xyz.shape, xyz
         tra,tdec = xyztoradec(xyz)
-        #print >>sys.stderr, 'RA,Dec', ra,dec
         plot.apply_settings()
         for r,d in zip(tra,tdec):
             plot.marker_radec(r,d)
