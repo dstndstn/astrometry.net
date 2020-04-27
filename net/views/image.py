@@ -374,11 +374,14 @@ def onthesky_image(req, zoom=None, calid=None):
         zoom = wcs.radius() < 0.15
         plot_wcs_outline(wcsfn, plotfn, width=3.6, grid=1, zoom=zoom,
                          zoomwidth=0.36, hd=True, hd_labels=False,
-                         tycho2=False)
+                         tycho2=False,
+                         hd_cat=settings.HENRY_DRAPER_CAT)
         # hd=True is too cluttered at this level
     elif zoom == 3:
         plot_wcs_outline(wcsfn, plotfn, width=0.36, grid=0.1, zoom=False,
-                         hd=True, hd_labels=True, tycho2=True)
+                         hd=True, hd_labels=True, tycho2=True,
+                         hd_cat=settings.HENRY_DRAPER_CAT,
+                         tycho2_cat=settings.TYCHO2_KD)
     else:
         return HttpResponse('invalid zoom')
     f = open(plotfn, 'rb')

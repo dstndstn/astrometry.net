@@ -1,18 +1,14 @@
 import os
 
-from astrometry.net.log import *
-from astrometry.net.tmpfile import *
-from astrometry.net import settings
-
 from astrometry.util import util as anutil
 from astrometry.blind import plotstuff as ps
 
 def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
                      zoomwidth=3.6, grid=10, hd=False, hd_labels=False,
-                     tycho2=False):
-    anutil.log_init(3)
-    #anutil.log_set_level(3)
-
+                     tycho2=False,
+                     hd_cat=None,
+                     tycho2_cat=None,
+                     ):
     wcs = anutil.Tan(wcsfn, 0)
     ra,dec = wcs.radec_center()
 
@@ -57,22 +53,22 @@ def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
     ann.bright_labels = False
     plot.fill()
 
-    if hd:
+    if hd and hd_cat:
         ann.HD = True
         ann.HD_labels = hd_labels
-        ps.plot_annotations_set_hd_catalog(ann, settings.HENRY_DRAPER_CAT)
+        ps.plot_annotations_set_hd_catalog(ann, hd_cat)
         plot.plot('annotations')
         plot.stroke()
         ann.HD = False
         ann.HD_labels = False
 
-    if tycho2 and settings.TYCHO2_KD:
+    if tycho2 and tycho2_cat:
         from astrometry.libkd.spherematch import tree_open, tree_close, tree_build_radec, tree_free, trees_match
         from astrometry.libkd import spherematch_c
         from astrometry.util.starutil_numpy import deg2dist, xyztoradec
         import numpy as np
         import sys
-        kd = tree_open(settings.TYCHO2_KD)
+        kd = tree_open(tycho2_cat)
         # this is a bit silly: build a tree with a single point, then do match()
         kd2 = tree_build_radec(np.array([ra]), np.array([dec]))
         r = deg2dist(width * np.sqrt(2.) / 2.)
