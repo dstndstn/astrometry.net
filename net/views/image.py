@@ -366,18 +366,18 @@ def onthesky_image(req, zoom=None, calid=None):
 
     if zoom == 0:
         zoom = wcs.radius() < 15.
-        plot_aitoff_wcs_outline(wcsfn, plotfn, zoom=zoom)
+        plot_aitoff_wcs_outline(wcs, plotfn, zoom=zoom)
     elif zoom == 1:
         zoom = wcs.radius() < 1.5
-        plot_wcs_outline(wcsfn, plotfn, zoom=zoom)
+        plot_wcs_outline(wcs, plotfn, zoom=zoom)
     elif zoom == 2:
         zoom = wcs.radius() < 0.15
-        plot_wcs_outline(wcsfn, plotfn, width=3.6, grid=1, zoom=zoom,
+        plot_wcs_outline(wcs, plotfn, width=3.6, grid=1, zoom=zoom,
                          zoomwidth=0.36, hd=True, hd_labels=False,
                          tycho2=False)
         # hd=True is too cluttered at this level
     elif zoom == 3:
-        plot_wcs_outline(wcsfn, plotfn, width=0.36, grid=0.1, zoom=False,
+        plot_wcs_outline(wcs, plotfn, width=0.36, grid=0.1, zoom=False,
                          hd=True, hd_labels=True, tycho2=True)
     else:
         return HttpResponse('invalid zoom')

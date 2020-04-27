@@ -7,14 +7,13 @@ from astrometry.net import settings
 from astrometry.util import util as anutil
 from astrometry.blind import plotstuff as ps
 
-def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
+def plot_wcs_outline(tanwcs, plotfn, W=256, H=256, width=36, zoom=True,
                      zoomwidth=3.6, grid=10, hd=False, hd_labels=False,
                      tycho2=False):
     anutil.log_init(3)
     #anutil.log_set_level(3)
 
-    wcs = anutil.Tan(wcsfn, 0)
-    ra,dec = wcs.radec_center()
+    ra,dec = tanwcs.radec_center()
 
     plot = ps.Plotstuff(outformat='png', size=(W, H), rdw=(ra,dec,width))
     plot.linestep = 1.
@@ -99,7 +98,7 @@ def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
     plot.color = 'white'
     plot.lw = 3
     out = plot.outline
-    out.wcs_file = wcsfn
+    out.set_wcs(tanwcs)
     plot.plot('outline')
 
     if zoom:
@@ -112,7 +111,7 @@ def plot_wcs_outline(wcsfn, plotfn, W=256, H=256, width=36, zoom=True,
 
     plot.write(plotfn)
 
-def plot_aitoff_wcs_outline(wcsfn, plotfn, W=256, zoom=True):
+def plot_aitoff_wcs_outline(tanwcs, plotfn, W=256, zoom=True):
     #anutil.log_init(3)
     H = int(W//2)
     # Create Hammer-Aitoff WCS of the appropriate size.
@@ -157,8 +156,8 @@ def plot_aitoff_wcs_outline(wcsfn, plotfn, W=256, zoom=True):
     plot.lw = 3
     out = plot.outline
     #out.fill = 1
-    out.wcs_file = wcsfn
-    anutil.anwcs_print_stdout(out.wcs)
+    out.set_wcs(tanwcs)
+    #anutil.anwcs_print_stdout(out.wcs)
     plot.plot('outline')
 
     # Not helpful to add constellations in this view
@@ -168,11 +167,10 @@ def plot_aitoff_wcs_outline(wcsfn, plotfn, W=256, zoom=True):
     #plot.plot('annotations')
 
     if zoom:
-        owcs = anutil.Tan(wcsfn, 0)
         # MAGIC 15 degrees radius
         #if owcs.radius() < 15.:
         if True:
-            ra,dec = owcs.radec_center()
+            ra,dec = tanwcs.radec_center()
             # MAGIC 36-degree width zoom-in
             # MAGIC width, height are arbitrary
             zoomwcs = anutil.anwcs_create_box(ra, dec, 36, 1000,1000)

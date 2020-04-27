@@ -404,6 +404,9 @@ typedef enum cairo_op cairo_operator_t;
     int set_wcs_size(int W, int H) {
         return plot_outline_set_wcs_size(self, W, H);
     }
+    int set_wcs(const tan_t* wcs) {
+        return plot_outline_set_tan_wcs(self, wcs);
+    }
 }
 %pythoncode %{
     def plotoutline_setattr(self, name, val):

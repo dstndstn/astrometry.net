@@ -115,10 +115,17 @@ int plot_outline_set_wcs_file(plotoutline_t* args, const char* filename, int ext
     return 0;
 }
 
-int plot_outline_set_wcs(plotoutline_t* args, sip_t* wcs) {
+int plot_outline_set_wcs(plotoutline_t* args, const sip_t* wcs) {
     if (args->wcs)
         anwcs_free(args->wcs);
     args->wcs = anwcs_new_sip(wcs);
+    return 0;
+}
+
+int plot_outline_set_tan_wcs(plotoutline_t* args, const tan_t* wcs) {
+    if (args->wcs)
+        anwcs_free(args->wcs);
+    args->wcs = anwcs_new_tan(wcs);
     return 0;
 }
 

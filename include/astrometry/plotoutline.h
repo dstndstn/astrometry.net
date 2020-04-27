@@ -31,7 +31,9 @@ int plot_outline_set_wcs_file(plotoutline_t* args, const char* filename, int ext
 
 int plot_outline_set_wcs_size(plotoutline_t* args, int W, int H);
 
-int plot_outline_set_wcs(plotoutline_t* args, sip_t* wcs);
+int plot_outline_set_wcs(plotoutline_t* args, const sip_t* wcs);
+
+int plot_outline_set_tan_wcs(plotoutline_t* args, const tan_t* wcs);
 
 int plot_outline_set_fill(plotoutline_t* args, anbool fill);
 
