@@ -260,6 +260,7 @@ if __name__ == '__main__':
     parser.add_option('--wait', '-w', dest='wait', action='store_true', help='After submitting, monitor job status')
     parser.add_option('--wcs', dest='wcs', help='Download resulting wcs.fits file, saving to given filename; implies --wait if --urlupload or --upload')
     parser.add_option('--newfits', dest='newfits', help='Download resulting new-image.fits file, saving to given filename; implies --wait if --urlupload or --upload')
+    parser.add_option('--corr', dest='corr', help='Download resulting corr.fits file, saving to given filename; implies --wait if --urlupload or --upload')
     parser.add_option('--kmz', dest='kmz', help='Download resulting kmz file, saving to given filename; implies --wait if --urlupload or --upload')
     parser.add_option('--annotate','-a',dest='annotate',help='store information about annotations in give file, JSON format; implies --wait if --urlupload or --upload')
     parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
@@ -331,7 +332,7 @@ if __name__ == '__main__':
     c.login(opt.apikey)
 
     if opt.upload or opt.upload_url or opt.upload_xy:
-        if opt.wcs or opt.kmz or opt.newfits or opt.annotate:
+        if opt.wcs or opt.kmz or opt.newfits or opt.corr or opt.annotate:
             opt.wait = True
 
         kwargs = dict(
@@ -419,6 +420,9 @@ if __name__ == '__main__':
         if opt.newfits:
             url = opt.server.replace('/api/', '/new_fits_file/%i/' % opt.solved_id)
             retrieveurls.append((url, opt.newfits))
+        if opt.corr:
+            url = opt.server.replace('/api/', '/corr_file/%i' % opt.solved_id)
+            retrieveurls.append((url, opt.corr))
 
         for url,fn in retrieveurls:
             print('Retrieving file from', url, 'to', fn)
