@@ -183,3 +183,17 @@ def plot_aitoff_wcs_outline(tanwcs, plotfn, W=256, zoom=True):
     plot.write(plotfn)
     
     
+if __name__ == '__main__':
+    import os
+    import sys
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+    p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.append(p)
+    import settings
+    import django
+    django.setup()
+    from django.test import Client
+    c = Client()
+    r = c.get('/sky_plot/zoom0/2859868')
+    print(r)
+    

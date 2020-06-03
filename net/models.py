@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 import os
 from datetime import datetime
+import itertools
 
 try:
     # py3
@@ -669,7 +670,9 @@ class Calibration(models.Model):
         xx = [1, w, w, 1, 1]
         yy = [1, 1, h, h, 1]
         rr,dd = wcsobj.pixelxy2radec(xx, yy)
-        return 'http://legacysurvey.org/viewer/?ra=%.4f&dec=%.4f&poly=%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f' % ((r, d) + list(zip(rr,dd)))
+        layer = 'unwise-neo6'
+        return ('http://legacysurvey.org/viewer/?ra=%.4f&dec=%.4f&layer=%s&poly=%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f' %
+                ((r, d, layer) + tuple(itertools.chain.from_iterable(zip(rr,dd)))))
 
     def format_ra_hms(self):
         r,d = self.get_center_radec()

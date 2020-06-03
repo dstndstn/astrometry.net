@@ -41,6 +41,7 @@ def main():
     parser.add_option('-s', '--sub', type=int, dest='sub', help='Submission ID')
     parser.add_option('-j', '--job', type=int, dest='job', help='Job ID')
     parser.add_option('-u', '--userimage', type=int, dest='uimage', help='UserImage ID')
+    parser.add_option('-e', '--email', help='Find user id with given email address')
     parser.add_option('-i', '--image', type=int, dest='image', help='Image ID')
     parser.add_option('-r', '--rerun', dest='rerun', action='store_true',
                       help='Re-run this submission/job?')
@@ -72,6 +73,14 @@ def main():
                       help='For a UserImage, set publicly_visible=False')
     
     opt,args = parser.parse_args()
+
+    if opt.email:
+        users = User.objects.filter(email__contains=opt.email)
+        print('Users with email containing "%s":' % opt.email)
+        for u in users:
+            print(u.id, u, u.email)
+        sys.exit(0)
+
     if not (opt.sub or opt.job or opt.uimage or opt.image or opt.ssh or opt.empty):
         print('Must specify one of --sub, --job, or --userimage or --image (or --ssh or --empty)')
 
