@@ -202,6 +202,10 @@ $(document).ready(function() {
           <td><a href="{% url 'corr-file' jobid=job.id %}">corr.fits</a></td>
         </tr>
         <tr>
+          <td>Legacy Surveys sky browser:</td>
+          <td><a href="{{ calib.legacysurvey_viewer_url }}">browse the sky</a></td>
+        </tr>
+        <tr>
             <td>KMZ (<a href="http://www.google.com/sky/">Google Sky</a>):</td>
             <td><a href="{% url 'kml-file' jobid=job.id %}?ignore=.kmz">image.kmz</a></td>
         </tr>

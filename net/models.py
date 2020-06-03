@@ -662,6 +662,15 @@ class Calibration(models.Model):
         r,d = self.get_center_radec()
         return '%.3f, %.3f' % (r, d)
 
+    def legacysurvey_viewer_url(self):
+        r,d = self.get_center_radec()
+        wcsobj = self.raw_tan.to_tanwcs()
+        h,w = wcsobj.shape
+        xx = [1, w, w, 1, 1]
+        yy = [1, 1, h, h, 1]
+        rr,dd = wcsobj.pixelxy2radec(xx, yy)
+        return 'http://legacysurvey.org/viewer/?ra=%.4f&dec=%.4f&poly=%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f' % ((r, d) + list(zip(rr,dd)))
+
     def format_ra_hms(self):
         r,d = self.get_center_radec()
         h,m,s  = ra2hmsstring(r).split()
