@@ -352,7 +352,8 @@ def submission_status(req, sub_id):
         'user':sub.user.id,
         'processing_started':str(sub.processing_started),
         'processing_finished':str(sub.processing_finished),
-        'user_images':[image.id for image in sub.user_images.all()],
+        'user_images':[uimage.id for uimage in sub.user_images.all()],
+        'images':[uimage.image.id for uimage in sub.user_images.all()],
         'jobs':jobs,
         'job_calibrations':jobcals,
     }
