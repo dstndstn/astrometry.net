@@ -675,6 +675,14 @@ void solver_preprocess_field(solver_t* solver) {
 
     solver->vf->do_uniformize = solver->verify_uniformize;
     solver->vf->do_dedup = solver->verify_dedup;
+
+    if (solver->set_crpix && solver->set_crpix_center) {
+        solver->crpix[0] = wcs_pixel_center_for_size(solver_field_width(solver));
+        solver->crpix[1] = wcs_pixel_center_for_size(solver_field_height(solver));
+        logverb("Setting CRPIX to center (%.1f, %.1f) based on image size %i x %i\n",
+                solver->crpix[0], solver->crpix[1],
+                (int)solver_field_width(solver), (int)solver_field_height(solver));
+    }
 }
 
 void solver_free_field(solver_t* solver) {
@@ -783,14 +791,6 @@ void solver_run(solver_t* solver) {
     if (numxy >= 1000) {
         logverb("Limiting search to first 1000 objects\n");
         numxy = 1000;
-    }
-
-    if (solver->set_crpix && solver->set_crpix_center) {
-        solver->crpix[0] = wcs_pixel_center_for_size(solver_field_width(solver));
-        solver->crpix[1] = wcs_pixel_center_for_size(solver_field_height(solver));
-        logverb("Setting CRPIX to center (%.1f, %.1f) based on image size %i x %i\n",
-                solver->crpix[0], solver->crpix[1],
-                (int)solver_field_width(solver), (int)solver_field_height(solver));
     }
 
     num_indexes = pl_size(solver->indexes);

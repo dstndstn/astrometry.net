@@ -11,7 +11,7 @@ class Plotstuff(object):
                   'pdf': PLOTSTUFF_FORMAT_PDF,
                   'fits': PLOTSTUFF_FORMAT_FITS,
                   }
-                  
+
 
     def __init__(self, outformat=None, size=None, ra=None, dec=None, width=None,
                  rdw=None, wcsfn=None, wcsext=0, alpha=1., outfn=None):
@@ -59,7 +59,7 @@ class Plotstuff(object):
             return plot_annotations_get(self.pargs)
         elif name == 'healpix':
             return plot_healpix_get(self.pargs)
-        return self.pargs.__getattr__(name)
+        return getattr(self.pargs, name)
 
     def __setattr__(self, name, val):
         if name == 'pargs':
@@ -157,7 +157,7 @@ class Plotstuff(object):
                 self.move_to_xy(x, y)
             else:
                 self.line_to_xy(x, y)
-        
+
     def get_image_as_numpy(self, flip=False, out=None):
         # Caution: possible memory-handling problem with using "out"
         return self.pargs.get_image_as_numpy(flip, out)
@@ -170,7 +170,7 @@ class Plotstuff(object):
 
     def view_image_as_numpy(self):
         return self.pargs.view_image_as_numpy()
-        
+
     def apply_settings(self):
         plotstuff_builtin_apply(self.pargs.cairo, self.pargs)
 
@@ -216,11 +216,11 @@ class Plotstuff(object):
             rformat = rformat or '%.2f'
             dformat = dformat or '%.2f'
             grid.set_formats(rformat, dformat)
-            
+
         grid.ralabelstep = ralabelstep
         grid.declabelstep = declabelstep
         self.plot('grid')
-        
+
     def clear(self):
         plotstuff_clear(self.pargs)
 
@@ -250,4 +250,3 @@ class Plotstuff(object):
 
     def plot_stack(self):
         plotstuff_plot_stack(self.pargs, self.pargs.cairo)
-
