@@ -52,7 +52,7 @@ from astrometry.net.views.license import LicenseForm
 
 from astrometry.net.views.enhance import *
 
-import simplejson
+import json
 
 # repeat this import to override somebody else's import of the datetime module
 from datetime import datetime, timedelta
@@ -169,7 +169,7 @@ def user_image(req, user_image_id=None):
         'comment_form': comment_form,
         #'license_form': license_form,
         'tag_form': tag_form,
-        'images': simplejson.dumps(images),
+        'images': json.dumps(images),
         'display_url': display_url,
         'fullsize_url': fullsize_url,
         'image_type': image_type,

@@ -12,7 +12,7 @@ from astrometry.net.util import get_page, store_session_form
 from astrometry.net.log import *
 from django import forms
 from django.http import HttpResponseRedirect
-import simplejson
+import json
 
 class TagForm(forms.ModelForm):
     # so the primary key restriction isn't enforced
@@ -33,9 +33,9 @@ def delete(req, category=None, recipient_id=None, tag_id=None):
         pass
 
     redirect_url = req.GET.get('next', '/')
-    json = {'success': True}
+    J = {'success': True}
     if req.is_ajax():
-        response = simplejson.dumps(json)
+        response = json.dumps(J)
         return HttpResponse(response, content_type='application/javascript')
     else:
         return HttpResponseRedirect(redirect_url)
@@ -50,7 +50,7 @@ def new(req, category=None, recipient_id=None):
             recipient_owner = recipient.user
         form = TagForm(req.POST)
         redirect_url = req.POST.get('next','/')
-        json = {}
+        J = {}
         if form.is_valid():
             tag,created = Tag.objects.get_or_create(**form.cleaned_data)
             if category == 'user_image':
@@ -71,11 +71,11 @@ def new(req, category=None, recipient_id=None):
                 }
                 tag_html = render_to_string('tag/tag.html', context, req)
 
-                json['success'] = created
-                json['tag_html'] = tag_html
+                J['success'] = created
+                J['tag_html'] = tag_html
         else:
             if req.is_ajax():
-                json['success'] = False
+                J['success'] = False
             else:
                 store_session_form(req.session, TagForm, req.POST)
 
@@ -88,9 +88,9 @@ def new(req, category=None, recipient_id=None):
                 'next': redirect_url,
             }
             form_html = render_to_string('tag/form.html', context, req)
-            json['form_html'] = form_html
+            J['form_html'] = form_html
             
-            response = simplejson.dumps(json)
+            response = json.dumps(J)
             return HttpResponse(response, content_type='application/javascript')
         else:
             return redirect(redirect_url)
