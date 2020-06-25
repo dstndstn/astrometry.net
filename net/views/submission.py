@@ -206,10 +206,10 @@ class SubmissionForm(forms.ModelForm):
 
     def __init__(self, user, *args, **kwargs):
         super(SubmissionForm, self).__init__(*args, **kwargs)
-        #if user.is_authenticated():
+        #if user.is_authenticated:
         #    self.fields['album'].queryset = user.albums
         self.fields['album'].choices = [('', 'none')]
-        if user.is_authenticated():
+        if user.is_authenticated:
             for album in Album.objects.filter(user=user).all():
                 self.fields['album'].choices += [(album.id, album.title)]
             self.fields['album'].choices += [('new', 'create new album...')]
@@ -218,7 +218,7 @@ class SubmissionForm(forms.ModelForm):
 
 def upload_file(request):
     default_license = License.get_default()
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         pro = get_user_profile(request.user)
         default_license = pro.default_license
 
@@ -227,7 +227,7 @@ def upload_file(request):
         if form.is_valid():
             sub = form.save(commit=False)
 
-            if request.user.is_authenticated():
+            if request.user.is_authenticated:
                 if form.cleaned_data['album'] == '':
                     # don't create an album
                     pass
@@ -250,7 +250,7 @@ def upload_file(request):
                         print(e)
 
             default_license = None
-            if not request.user.is_authenticated():
+            if not request.user.is_authenticated:
                 sub.publicly_visible = 'y'
                 default_license = License.get_default()
             else:
@@ -265,7 +265,7 @@ def upload_file(request):
 
             sub.license = new_license
 
-            sub.user = request.user if request.user.is_authenticated() else User.objects.get(username=ANONYMOUS_USERNAME)
+            sub.user = request.user if request.user.is_authenticated else User.objects.get(username=ANONYMOUS_USERNAME)
             if form.cleaned_data['upload_type'] == 'file':
                 sub.disk_file, sub.original_filename = handle_upload(file=request.FILES['file'])
             elif form.cleaned_data['upload_type'] == 'url':
