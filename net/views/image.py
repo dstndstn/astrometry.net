@@ -83,7 +83,7 @@ class UserImageForm(forms.ModelForm):
         self.fields['album'].choices = [('', 'none')]
         self.fields['album'].initial = ''
         user_image = kwargs.get('instance')
-        if user.is_authenticated():
+        if user.is_authenticated:
             for album in Album.objects.filter(user=user).all():
                 self.fields['album'].choices += [(album.id, album.title)]
                 if user_image and user_image in album.user_images.all():
@@ -128,7 +128,7 @@ def user_image(req, user_image_id=None):
         fullsize_url = images[image_type]
 
     flags = Flag.objects.all()
-    if req.user.is_authenticated():
+    if req.user.is_authenticated:
         selected_flags = [flagged_ui.flag for flagged_ui in
             FlaggedUserImage.objects.filter(
                 user_image=uimage,
@@ -178,7 +178,7 @@ def user_image(req, user_image_id=None):
         'wwt_url': wwturl,
     }
 
-    if uimage.is_public() or (req.user.is_authenticated() and uimage.user == req.user):
+    if uimage.is_public() or (req.user.is_authenticated and uimage.user == req.user):
         template = 'user_image/view.html'
     #elif SharedHideable.objects.filter(shared_with=req.user.id, hideable=image).count():
     #    template = 'user_image/view.html'
