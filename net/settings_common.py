@@ -1,6 +1,6 @@
 import os
 import astrometry.net
-import astrometry.net.secrets.django_db as secrets
+import astrometry.net.secrets.django_db as dbsecrets
 import astrometry.net.secrets.auth as authsecrets
 from astrometry.net.util import dict_pack
 
@@ -111,10 +111,10 @@ DATABASES = {
         # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': '',
-        'USER': secrets.DATABASE_USER,
-        'PASSWORD': secrets.DATABASE_PASSWORD,
-        'HOST': secrets.DATABASE_HOST,
-        'PORT': secrets.DATABASE_PORT,
+        'USER': dbsecrets.DATABASE_USER,
+        'PASSWORD': dbsecrets.DATABASE_PASSWORD,
+        'HOST': dbsecrets.DATABASE_HOST,
+        'PORT': dbsecrets.DATABASE_PORT,
         }
 }
 
