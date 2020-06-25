@@ -80,7 +80,7 @@ from django.contrib.auth.decorators import login_required
 def signedin(req):
     print('signedin.')
     user = req.user
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         return HttpResponse('not authenticated: ' + user)
 
     if user is not None:

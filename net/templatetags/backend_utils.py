@@ -73,7 +73,7 @@ def oauth_backends(backends):
 def associated(context, backend):
     user = context.get('user')
     context['association'] = None
-    if user and user.is_authenticated():
+    if user and user.is_authenticated:
         context['association'] = Storage.user.get_social_auth_for_user(
             user,
             backend.name
