@@ -31,26 +31,19 @@ RUN apt -y update && apt install -y apt-utils && \
     python3-tk \
     python3-setuptools \
     python3-wheel \
+    python3-numpy \
+    python3-scipy \
+    python3-matplotlib \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Pip installs
 RUN for x in \
-    cython \
-    intel-numpy \
-    intel-scipy \
     fitsio \
-    matplotlib \
     astropy \
-    photutils \
-    zmq \
     ; do pip3 install --no-cache-dir $x; done
-# psycopg2 \
 
 RUN mkdir /src
 WORKDIR /src
-
-# Python related stuff
-RUN echo "../site-packages" > /usr/local/lib/python3.6/dist-packages/site-packages.pth
 
 # Astrometry.net
 RUN git clone http://github.com/dstndstn/astrometry.net.git astrometry \
