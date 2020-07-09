@@ -36,7 +36,7 @@ def album(req, album_id=None):
         'request': req,
     }
 
-    if album.is_public() or (album.user == req.user and req.user.is_authenticated()):
+    if album.is_public() or (album.user == req.user and req.user.is_authenticated):
         template = 'album/view.html'
     #elif SharedHideable.objects.filter(shared_with=req.user.id, hideable=album).count():
     #    template = 'album/view.html'

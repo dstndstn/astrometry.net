@@ -40,7 +40,7 @@ from django.contrib.auth import (
     REDIRECT_FIELD_NAME, authenticate, login as auth_login)
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import logout as django_logout
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render as djrender
 from django.views.decorators.csrf import csrf_exempt

@@ -10,7 +10,7 @@ from astrometry.net.util import store_session_form
 from astrometry.net.log import *
 from django import forms
 from django.http import HttpResponseRedirect
-import simplejson
+import json
 
 class CommentForm(forms.ModelForm):
     class Meta:
@@ -61,7 +61,7 @@ def new(req, category=None, recipient_id=None):
             form_html = render_to_string('comment/form.html', context, req)
             json['form_html'] = form_html
         
-            response = simplejson.dumps(json)
+            response = json.dumps(json)
             return HttpResponse(response, content_type='application/javascript')
         else:
             return redirect(redirect_url)
@@ -77,9 +77,9 @@ def delete(req, comment_id):
     if comment.recipient.owner == req.user or comment.author == req.user:
         comment.delete()
         
-        json = {'success': True}
+        J = {'success': True}
         if req.is_ajax():
-            response = simplejson.dumps(json)
+            response = json.dumps(J)
             return HttpResponse(response, content_type='application/javascript')
         else:
             return HttpResponseRedirect(redirect_url)

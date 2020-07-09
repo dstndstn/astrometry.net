@@ -97,7 +97,7 @@ def requires_json_login(handler):
         #print 'requires_json_login decorator running.'
         user = auth.get_user(request)
         #print 'user:', request.session
-        if not user.is_authenticated():
+        if not user.is_authenticated:
             return HttpResponseErrorJson('user is not authenticated.')
         return handler(request, *args, **kwargs)
     return handle_request
@@ -129,7 +129,7 @@ def upload_common(request, url=None, file=None):
         original_filename = 'json-xy'
     else:
         df, original_filename = handle_upload(file=file, url=url)
-    submittor = request.user if request.user.is_authenticated() else None
+    submittor = request.user if request.user.is_authenticated else None
     pro = get_user_profile(submittor)
     allow_commercial_use = json.get('allow_commercial_use', 'd')
     allow_modifications = json.get('allow_modifications', 'd')
@@ -202,7 +202,7 @@ def url_upload(req):
     logmsg('backend:', backend)
     user = backend.get_user(user_id)
     logmsg('user:', user)
-    logmsg('is_auth:', user.is_authenticated())
+    logmsg('is_auth:', user.is_authenticated)
 
     logmsg('request.user:', req.user)
 

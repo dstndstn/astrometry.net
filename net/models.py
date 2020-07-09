@@ -923,7 +923,7 @@ class UserImageManager(models.Manager):
         return valid_uis.order_by('-submission__id')
 
     def public_only(self, user=None):
-        if user is not None and not user.is_authenticated():
+        if user is not None and not user.is_authenticated:
             user = None
         return self.all_visible().filter(Q(publicly_visible='y') | Q(user=user))
 
@@ -1301,7 +1301,7 @@ def get_user_profile(user):
 ## can't tell the difference between an attribute and a function, so
 ## this works.
 def context_user_profile(req):
-    if req.user.is_authenticated():
+    if req.user.is_authenticated:
         req.user.get_profile = get_user_profile(req.user)
     return dict(user=req.user)
 
