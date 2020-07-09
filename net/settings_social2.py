@@ -1,4 +1,4 @@
-import astrometry.net.secrets.auth as authsecrets
+import astrometry.net.appsecrets.auth as authsecrets
 
 # The namespace for social authentication is horrible.
 

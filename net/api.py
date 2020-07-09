@@ -22,9 +22,9 @@ from django.views.decorators.csrf import csrf_exempt
 # astrometry.net imports
 from astrometry.net.models import *
 from astrometry.net.views.submission import handle_upload
-from .api_util import *
-from .log import *
-from .tmpfile import *
+from astrometry.net.api_util import *
+from astrometry.net.log import *
+from astrometry.net.tmpfile import *
 import astrometry.net.settings
 
 # Content-type to return for JSON outputs.
@@ -551,7 +551,22 @@ if __name__ == '__main__':
     # job = Job.objects.get(id=1649169)
     # cal = job.calibration
     # print(get_anns(cal))
-    class Duck(object):
-        pass
-    r = Duck()
-    print(submission_status(r, 2561176))
+    # class Duck(object):
+    #     pass
+    # r = Duck()
+    # print(submission_status(r, 2561176))
+
+    import logging
+    lvl = logging.DEBUG
+    logging.basicConfig(level=lvl, format='%(message)s', stream=sys.stdout)
+
+    from django.test import Client
+    c = Client()
+    r = c.post('/api/login', data={'request-json': '{"apikey": ""}'})
+    print('Got response:', r)
+
+    f = open('out', 'wb')
+    for x in r:
+        f.write(x)
+    f.close()
+    
