@@ -837,6 +837,7 @@ static void plot_builtin_free(plot_args_t* pargs, void* baton) {
 DECLARE_PLOTTER(builtin) {
     DEFINE_PLOTTER_BODY(builtin)
         p->init2 = plot_builtin_init2;
+    p->name = "plot";
 }
 
 int parse_image_format(const char* fmt) {
