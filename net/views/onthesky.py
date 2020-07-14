@@ -79,7 +79,7 @@ def plot_wcs_outline(tanwcs, plotfn, W=256, H=256, width=36, zoom=True,
         I,nil,nil = trees_match(kd, kd2, r, permuted=False)
         del nil
         #print 'Matched', len(I)
-        xyz = spherematch_c.kdtree_get_positions(kd, I)
+        xyz = kd.get_data(I.astype(np.uint32))
         del I
         tree_free(kd2)
         tree_close(kd)

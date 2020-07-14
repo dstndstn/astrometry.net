@@ -1,8 +1,8 @@
 import json
 
-def json2python(json):
+def json2python(j):
     try:
-        return json.loads(json)
+        return json.loads(j)
     except:
         pass
     return None

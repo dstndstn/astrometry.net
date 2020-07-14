@@ -1,7 +1,7 @@
 import os
 import astrometry.net
-import astrometry.net.secrets.django_db as dbsecrets
-import astrometry.net.secrets.auth as authsecrets
+import astrometry.net.appsecrets.django_db as dbsecrets
+import astrometry.net.appsecrets.auth as authsecrets
 from astrometry.net.util import dict_pack
 
 ALLOWED_HOSTS = ['astro.cs.toronto.edu', 'nova2.astrometry.net', 'localhost',

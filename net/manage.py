@@ -9,9 +9,7 @@ path = os.path.abspath(__file__)
 #print 'dirname:', os.path.dirname(path)
 #print 'dirnamex2:', os.path.dirname(os.path.dirname(path))
 sys.path.append(os.path.dirname(os.path.dirname(path)))
-#print 'sys.path:', '\n  '.join(sys.path)
 
-#!/usr/bin/env python
 import os
 import sys
 

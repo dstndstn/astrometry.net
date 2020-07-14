@@ -10,6 +10,9 @@ RUN apt -y update && \
     less \
     emacs-nox
 
+RUN pip3 install --no-cache-dir \
+    social-auth-core django-social-auth3 social-auth-app-django
+
 WORKDIR /src/astrometry/net
 
 RUN ln -s settings_test.py settings.py
@@ -18,11 +21,10 @@ RUN ln -s settings_test.py settings.py
 RUN rm -R /usr/local/lib/python/astrometry/net && \
     ln -s /src/astrometry/net /usr/local/lib/python/astrometry/net
 
-RUN mkdir secrets && \
-    touch secrets/__init__.py && \
-    touch secrets/auth.py
-    #    echo -e "DATABASE_USER=''\nDATABASE_PASSWORD=''\nDATABASE_HOST=''\nDATABASE_PORT=12345\n" >  secrets/django_db.py
-COPY django_db.py /src/astrometry/net/secrets/
+RUN mkdir appsecrets && \
+    touch appsecrets/__init__.py && \
+    touch appsecrets/auth.py
+COPY django_db.py /src/astrometry/net/appsecrets/
 
 RUN git stash && git pull
 
