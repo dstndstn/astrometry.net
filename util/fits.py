@@ -36,7 +36,11 @@ def pyfits_writeto(p, filename, **kwargs):
     p.writeto(filename, **kwargs)
 
 def merge_tables(TT, columns=None):
-    assert(len(TT) > 0)
+    TT = [T for T in TT if T is not None]
+    if len(TT) == 0:
+        # return empty table??
+        return fits_table()
+
     if columns in [None, 'minimal', 'fillzero']:
         cols = set(TT[0].get_columns())
         types = {}
@@ -1089,3 +1093,15 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
     fields._columns = [c.lower() for c in colnames]
 
     return fields
+
+
+if __name__ == '__main__':
+    T1 = fits_table()
+    T1.a = np.array([1,2,3])
+    T1.cut(np.array([], dtype=int))
+    #print(len(T1), T1.get_columns())
+    T2 = fits_table()
+    T2.b = np.array([1,2,3])
+    T2.cut(np.array([], dtype=int))
+    T = merge_tables([T1,T2,None], columns='fillzero')
+    T.about()
