@@ -39,7 +39,7 @@ ANBASE_OBJ := starutil.o mathutil.o bl-sort.o bl.o bt.o healpix-utils.o \
 ANBASE_DEPS :=
 
 ANUTILS_OBJ :=  sip-utils.o fit-wcs.o sip.o \
-	anwcs.o wcs-resample.o gslutils.o wcs-pv2sip.o
+	anwcs.o wcs-resample.o gslutils.o wcs-pv2sip.o matchobj.o
 
 # Things that it depends on but that aren't linked in
 ANFILES_DEPS :=
@@ -52,7 +52,7 @@ ifndef NO_QFITS
 ANFILES_OBJ += multiindex.o index.o indexset.o \
 	codekd.o starkd.o rdlist.o xylist.o \
 	starxy.o qidxfile.o quadfile.o scamp.o scamp-catalog.o \
-	tabsort.o wcs-xy2rd.o wcs-rd2xy.o
+	tabsort.o wcs-xy2rd.o wcs-rd2xy.o matchfile.o
 ANFILES_DEPS += $(QFITS_LIB)
 
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
@@ -129,7 +129,7 @@ ANUTILS_H := an-bool.h an-endian.h an-opts.h an-thread-pthreads.h \
 	starxy.h tic.h \
 	xylist.h coadd.h convolve-image.h resample.h multiindex.h scamp.h \
 	ctmf.h dimage.h image2xy.h simplexy-common.h simplexy.h \
-	tabsort.h wcs-rd2xy.h wcs-xy2rd.h wcs-pv2sip.h
+	tabsort.h wcs-rd2xy.h wcs-xy2rd.h wcs-pv2sip.h matchobj.h matchfile.h
 
 ANUTILS_H_PATH := $(addprefix $(INCLUDE_DIR)/,$(ANUTILS_H))
 
@@ -384,7 +384,7 @@ ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_anwcs test_sip-utils test_errors test_multiindex \
 	test_convolve_image test_qsort_r test_wcs test_big_tables \
 	test_dfind test_ctmf test_dsmooth test_dcen3x3 test_simplexy \
-	test_fit_wcs
+	test_fit_wcs test_matchfile
 
 # test_quadfile -- takes a long time!
 

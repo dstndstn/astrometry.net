@@ -21,12 +21,6 @@ solver/listhead
 solver/liststruc
 solver/modhead
 solver/new-wcs
-solver/plot-constellations
-solver/plotquad
-solver/plotstuff
-solver/plotstuff_c.py
-solver/plotstuff_wrap.c
-solver/plotxy
 solver/solve-field
 solver/query-starkd
 solver/tablist
@@ -36,6 +30,11 @@ solver/wcs-grab
 solver/job.axy
 solver/startree
 solver/fitsverify.dSYM
+plot/plot-constellations
+plot/plotquad
+plot/plotstuff_c.py
+plot/plotstuff_wrap.c
+plot/plotxy
 catalogs/2masstofits
 catalogs/build-hd-tree
 catalogs/nomadtofits

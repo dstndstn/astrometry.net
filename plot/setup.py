@@ -43,7 +43,6 @@ objs = [
     'plotimage.o', 'plotannotations.o',
     'plotgrid.o', 'plotoutline.o', 'plotindex.o',
     'plotradec.o', 'plothealpix.o', 'plotmatch.o',
-    'matchfile.o', 'matchobj.o',
     'plotstuff.o', ] + objs
 
 c_module = Extension('_plotstuff_c',

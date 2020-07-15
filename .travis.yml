@@ -55,8 +55,9 @@ script:
     - make extra
     - make test
     - (cd util; ./test)
-    - (cd solver; ./test)
     - (cd libkd; ./test)
+    - (cd solver; ./test)
+    - (cd plot; ./test)
     - make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env $PYTHON"
     - ls ~/an/lib/python
     - export PATH=${PATH}:~/an/bin

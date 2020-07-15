@@ -2,7 +2,7 @@ import os
 
 from astrometry.util.fits import fits_table
 from astrometry.util.util import Tan
-from astrometry.solver import plotstuff as ps
+from astrometry.plot import plotstuff as ps
 from astrometry.util.starutil_numpy import *
 
 from astrometry.net.log import *
