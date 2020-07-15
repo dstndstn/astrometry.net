@@ -682,25 +682,25 @@ solve-field to use this config file::
    $ solve-field --config myastrometry.cfg ...
 
 
-SExtractor
-----------
+Source Extractor
+----------------
 http://www.astromatic.net/software/sextractor
 
-The "Source Extractor" aka "SExtractor" program by Emmanuel Bertin can
+The "Source Extractor" program by Emmanuel Bertin can
 be used to do source extraction if you don't want to use our own
 bundled "image2xy" program.
 
-NOTE: users have reported that SExtractor 2.4.4 (available in some
+NOTE: users have reported that Source Extractor 2.4.4 (available in some
 Ubuntu distributions) DOES NOT WORK -- it prints out correct source
 positions as it runs, but the "xyls" output file it produces contains
 all (0,0).  We haven't looked into why this is or how to work around
-it.  Later versions of SExtractor such as 2.8.6 work fine.
+it.  Later versions of Source Extractor such as 2.8.6 work fine.
 
-You can tell solve-field to use SExtractor like this::
+You can tell solve-field to use Source Extractor like this::
 
-  $ solve-field --use-sextractor ...
+  $ solve-field --use-source-extractor ...
 
-By default we use almost all SExtractor's default settings.  The
+By default we use almost all Source Extractor's default settings.  The
 exceptions are:
 
   1) We write a PARAMETERS_NAME file containing:
@@ -719,7 +719,7 @@ exceptions are:
 
 If you want to override any of the settings we use, you can use::
 
-  $ solve-field --use-sextractor --sextractor-config <sex.conf>
+  $ solve-field --use-source-extractor --source-extractor-config <se.conf>
 
 In order to reproduce the default behavior, you must::
 
@@ -735,9 +735,9 @@ In order to reproduce the default behavior, you must::
      its filename
 
 
-Note that you can tell solve-field where to find SExtractor with::
+Note that you can tell solve-field where to find Source Extractor with::
 
-  $ solve-field --use-sextractor --sextractor-path <path-to-sex-executable>
+  $ solve-field --use-source-extractor --source-extractor-path <path-to-se-executable>
 
 
 
@@ -760,7 +760,7 @@ Workarounds
 
   If you don't have these programs installed, you must do source
   extraction yourself and use "xylists" rather than images as the input
-  to solve-field.  See SEXTRACTOR and XYLIST sections above.
+  to solve-field.  See SOURCE EXTRACTOR and XYLIST sections above.
 
 ERROR MESSAGES during compiling
 -------------------------------
