@@ -81,9 +81,9 @@ struct augment_xylist_s {
     anbool pnm;
     anbool force_ppm;
 
-    anbool use_sextractor;
-    char* sextractor_path;
-    char* sextractor_config;
+    anbool use_source_extractor;
+    char* source_extractor_path;
+    char* source_extractor_config;
 
     int W;
     int H;

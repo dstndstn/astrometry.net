@@ -5,8 +5,7 @@ from __future__ import print_function
 import os
 import sys
 import fnmatch
-from astrometry.blind.plotstuff_c import *
-#from astrometry.util.sip import *
+from astrometry.solver.plotstuff_c import *
 from numpy import *
 from optparse import OptionParser
 

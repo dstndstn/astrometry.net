@@ -5,7 +5,7 @@ from astrometry.net.tmpfile import *
 from astrometry.net import settings
 
 from astrometry.util import util as anutil
-from astrometry.blind import plotstuff as ps
+from astrometry.solver import plotstuff as ps
 
 def plot_wcs_outline(tanwcs, plotfn, W=256, H=256, width=36, zoom=True,
                      zoomwidth=3.6, grid=10, hd=False, hd_labels=False,

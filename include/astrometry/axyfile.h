@@ -95,7 +95,7 @@ struct axyfile {
 	 double dec_center;
 	 double search_radius;
 	 bool use_radec_center;
-	 blind_t bp;
+	 onefield_t bp;
 	 */
 };
 typedef struct axyfile axyfile_t;

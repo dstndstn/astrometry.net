@@ -2,7 +2,7 @@
  # This file is part of the Astrometry.net suite.
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
-%module(package="astrometry.blind") plotstuff_c
+%module(package="astrometry.solver") plotstuff_c
 
 %include <typemaps.i>
 
@@ -42,6 +42,7 @@
 #include "resample.h"
 #include "cairoutils.h"
 #include "an-bool.h"
+
 
 #define true 1
 #define false 0

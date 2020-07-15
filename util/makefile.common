@@ -39,7 +39,7 @@ EXAMPLE_INSTALL_DIR ?= $(INSTALL_DIR)/examples
 
 # This should rarely be used, since hardly anything should care that
 # it's going to be moved after being staged.
-# (ie, the only place it's used at the moment is in blind/Makefile when
+# (ie, the only place it's used at the moment is in solver/Makefile when
 #  putting the final data directory in the config file etc/astrometry.cfg)
 
 FINAL_DIR ?= $(INSTALL_DIR)

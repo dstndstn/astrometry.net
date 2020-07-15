@@ -15,6 +15,10 @@ all:
 #   NO_QFITS := 1
 #   export NO_QFITS
 
+SYSTEM_GSL ?= $(shell (pkg-config --atleast-version=1.14 gsl && echo "yes") || echo "no")
+# Make this variable visible to recursive "make" calls
+export SYSTEM_GSL
+
 # Redefine these (to be in the current directory) before including
 # makefile.anfiles.
 ANBASE_LIB_FILE := libanbase.a

@@ -7,11 +7,8 @@ import sys
 path = os.path.abspath(__file__)
 sys.path.append(os.path.dirname(os.path.dirname(path)))
 
-#from an_build_ext import *
-
 from distutils.core import setup, Extension
 from numpy.distutils.misc_util import get_numpy_include_dirs
-#from setuputils import *
 
 numpy_inc = get_numpy_include_dirs()
 
@@ -33,8 +30,8 @@ print(('objs:', objs))
 print(('inc:', inc))
 print(('cflags:', cflags))
 
-c_swig_module = Extension('_blind',
-                          sources = ['blind.i'],
+c_swig_module = Extension('_solver',
+                          sources = ['solver.i'],
                           include_dirs = numpy_inc + inc + ['.'],
                           extra_objects = objs,
                           extra_compile_args = cflags,
@@ -44,12 +41,12 @@ c_swig_module = Extension('_blind',
     )
 
 setup(#cmdclass={'build_ext': an_build_ext},
-      name = 'Access to Astrometry.net blind/ in python',
+      name = 'Access to Astrometry.net solver/ in python',
       version = '1.0',
       description = '',
       author = 'Astrometry.net (Dustin Lang)',
       author_email = 'dstndstn@gmail.com',
       url = 'http://astrometry.net',
-      py_modules = [ 'blind' ],
+      py_modules = [ 'solver' ],
       ext_modules = [c_swig_module])
 

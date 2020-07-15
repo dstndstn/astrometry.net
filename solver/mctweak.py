@@ -12,7 +12,7 @@ import triangle
 from astrometry.util.util import *
 from astrometry.util.plotutils import *
 from astrometry.util.fits import *
-from astrometry.blind.blind import *
+from astrometry.solver.solver import *
 
 
 class McTweak(object):

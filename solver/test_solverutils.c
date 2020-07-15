@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #include "cutest.h"
-#include "blindutils.h"
+#include "solverutils.h"
 #include "bl.h"
 
 static void assertListEquals(CuTest* tc, int* expect, int N, il* lst) {

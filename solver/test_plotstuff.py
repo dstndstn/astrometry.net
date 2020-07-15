@@ -17,7 +17,7 @@ import numpy as np
 import pylab as plt
 from math import pi,sqrt
 
-from astrometry.blind.plotstuff import *
+from astrometry.solver.plotstuff import *
 
 class TestPlotstuff(unittest.TestCase):
 

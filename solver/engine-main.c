@@ -6,7 +6,7 @@
 /**
  * Accepts an augmented xylist that describes a field or set of fields to solve.
  * Reads a config file to find local indices, and merges information about the
- * indices with the job description to create an input file for 'blind'.  Runs blind
+ * indices with the job description to create an input file for 'onefield'.  Runs
  * and merges the results.
  */
 
@@ -41,8 +41,8 @@
 #include "solver.h"
 #include "math.h"
 #include "fitsioutils.h"
-#include "blindutils.h"
-#include "blind.h"
+#include "solverutils.h"
+#include "onefield.h"
 #include "log.h"
 #include "errors.h"
 #include "engine.h"

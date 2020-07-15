@@ -13,7 +13,7 @@ if __name__ == '__main__':
     rootdir = os.path.dirname(andir)
     sys.path.insert(1, rootdir)
 
-from astrometry.blind.plotstuff import *
+from astrometry.solver.plotstuff import *
 from astrometry.util.fits import *
 
 def match_kdtree_catalog(wcs, catfn):

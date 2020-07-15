@@ -153,8 +153,8 @@ int main(int argc, char** args) {
     }
 
     /*
-     blind_wcs_move_tangent_point(xyz, xy, N, crpix, &tan, &tan2);
-     blind_wcs_move_tangent_point(xyz, xy, N, crpix, &tan2, &tan3);
+     fit_tan_wcs_move_tangent_point(xyz, xy, N, crpix, &tan, &tan2);
+     fit_tan_wcs_move_tangent_point(xyz, xy, N, crpix, &tan2, &tan3);
      logmsg("Moved tangent point to (%g,%g):\n", crpix[0], crpix[1]);
      tan_print_to(&tan3, logstream);
      tan_write_to_file(&tan, "kt1.wcs");

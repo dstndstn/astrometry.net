@@ -1,3 +1,9 @@
+0.81:
+	All 'sextractor' command-line args renamed to 'source-extractor'.
+
+	The word "blind" (in the ableist sense in which we were using it)
+	has almost entirely been removed.
+
 0.69:
 	Tiny bugfixes over 0.68
 

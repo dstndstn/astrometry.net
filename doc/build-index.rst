@@ -106,7 +106,7 @@ example, doing an initial photometric calibration by tagging-along one
 or more bands of photometric data for each astrometric star.
 
 As an example, the file
-`2mass-cut.py <http://trac.astrometry.net/browser/trunk/src/astrometry/blind/2mass-cut.py>`_
+`2mass-cut.py <https://github.com/dstndstn/astrometry.net/blob/master/solver/2mass-cut.py>`_
 implements the cut we used to build our 2MASS-based index files.  It
 removes any stars that are flagged in the 2MASS catalog (low quality,
 contaminated, etc), and writes out just the RA,Dec, and J-magnitude
@@ -157,7 +157,7 @@ The number of healpix tiles is determined by the *Nside* (-n) option.
 into 48 pieces.  You probably don't want to go any finer than that.
 
 For reference, maps of the healpix tiles are here:
-`Nside=1 healpixes <http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp.png>`_;
+`Nside=1 healpixes <https://github.com/dstndstn/astrometry.net/blob/master/util/hp.png>`_;
 `Nside=2 healpixes <http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp2.png>`_.
 
 You probably want to set ``-m`` for the *margin* -- extra overlapping
@@ -316,7 +316,7 @@ Presets in the range -5 to 19 are available.  The scales for the presets are lis
 Rather than use the ``-P`` option it is possible to specify separately
 the different scales using ``-N``, ``-l``, ``-u``, ``-U``, but I wouldn't
 recommend it.  The presets are listed in 
-`<build-index-main.c healpixes http://trac.astrometry.net/browser/trunk/src/astrometry/blind/build-index-main.c>`_.
+`<build-index-main.c healpixes https://github.com/dstndstn/astrometry.net/blob/master/solver/build-index-main.c>`_.
 
 **Sort column**::
 

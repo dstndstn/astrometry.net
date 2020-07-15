@@ -99,7 +99,7 @@ UTIL_OBJS :=
 OTHER_OBJS := catalog.o codefile.o verify.o \
 	solver.o matchfile.o matchobj.o solvedfile.o pnpoly.o tweak.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
-	blindutils.o engine-main.o engine.o plotquad.o plotxy.o tweak2.o
+	solverutils.o engine-main.o engine.o plotquad.o plotxy.o tweak2.o
 
 NOT_INSTALLED_PIPELINE := agreeable certifiable \
 	hpquads codetree unpermute-quads unpermute-stars \
@@ -126,7 +126,7 @@ ANLIBS := $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 INSTALL_LIB := $(ENGINE_LIB) $(ENGINE_SO)
 
 ENGINE_OBJS := \
-		engine.o blindutils.o blind.o solver.o quad-utils.o \
+		engine.o solverutils.o onefield.o solver.o quad-utils.o \
 		matchfile.o matchobj.o solvedfile.o tweak2.o \
 		verify.o tweak.o
 
@@ -155,7 +155,7 @@ $(ENGINE_SO): $(ENGINE_OBJS) $(SLIB)
 	$(CC) $(LDFLAGS) $(SHAREDLIBFLAGS) -o $@ $^ $(LDLIBS)
 
 # old and miscellaneous executables that aren't part of the pipeline.
-OLDEXECS := plotquads rawstartree checkquads
+OLDEXECS := checkquads
 
 CAIROEXECS := plotquad plotxy plot-constellations
 
@@ -170,7 +170,7 @@ INSTALL_EXECS := $(FITS_UTILS) fitsverify $(PIPELINE) $(PROGS)
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
 INSTALL_H := allquads.h augment-xylist.h axyfile.h \
-	engine.h blind.h blindutils.h build-index.h catalog.h \
+	engine.h onefield.h solverutils.h build-index.h catalog.h \
 	codefile.h codetree.h fits-guess-scale.h hpquads.h \
 	image2xy-files.h matchfile.h matchobj.h merge-index.h \
 	new-wcs.h quad-builder.h quad-utils.h resort-xylist.h \
@@ -214,8 +214,8 @@ fitsutils: $(FITS_UTILS)
 simplexy: image2xy
 .PHONY: simplexy
 
-PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/blind
-LINK_DIR := $(PY_BASE_LINK_DIR)/blind
+PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/solver
+LINK_DIR := $(PY_BASE_LINK_DIR)/solver
 
 PYTHON_EXECS := plotann.py
 PYTHON_INSTALL := $(PYTHON_EXECS) __init__.py
@@ -295,7 +295,7 @@ solver_test_2.o: solver.c
 #######################################
 
 # Add the basename of your test sources here...
-ALL_TEST_FILES = test_matchfile test_blindutils \
+ALL_TEST_FILES = test_matchfile test_solverutils \
 	test_resort-xylist test_tweak test_multiindex2 test_predistort
 
 #test_xscale -- requires a large index file...
@@ -409,14 +409,14 @@ ALL_OBJ += plotxy-main.o
 PLOTSTUFF_SRCS = $(subst .o,.c,$(PLOTSTUFF))
 PLOTSTUFF_HDRS = $(addprefix $(INCLUDE_DIR)/,$(subst .o,.h,$(PLOTSTUFF)))
 
-py: pyplotstuff pyblind
+py: pyplotstuff pysolver
 .PHONY: py
 
 pyplotstuff: _plotstuff_c$(PYTHON_SO_EXT)
 .PHONY: pyplotstuff
 
-pyblind: _blind$(PYTHON_SO_EXT)
-.PHONY: pyblind
+pysolver: _solver$(PYTHON_SO_EXT)
+.PHONY: pysolver
 
 _plotstuff_c$(PYTHON_SO_EXT): plotstuff.i $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS) $(CAIRO_LIBS)" \
@@ -426,12 +426,12 @@ _plotstuff_c$(PYTHON_SO_EXT): plotstuff.i $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	CFLAGS="$(CFLAGS)" \
 	$(PYTHON) setup.py build_ext -v --inplace --build-temp .
 
-_blind$(PYTHON_SO_EXT): blind.i $(ENGINE_OBJS)
+_solver$(PYTHON_SO_EXT): solver.i $(ENGINE_OBJS)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" \
 	SLIB="$(SLIB)" \
 	INC="$(ANFILES_INC)" \
 	CFLAGS="$(ANFILES_CFLAGS)" \
-	$(PYTHON) setup-blind.py build_ext -v --inplace --build-temp .
+	$(PYTHON) setup-solver.py build_ext -v --inplace --build-temp .
 
 test_plotstuff-main.c: test_plotstuff.c
 	$(AN_SHELL) $(MAKE_TESTS) $^ > $@

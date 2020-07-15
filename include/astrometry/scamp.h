@@ -3,8 +3,8 @@
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
-#ifndef BLIND_SCAMP_H
-#define BLIND_SCAMP_H
+#ifndef AN_SCAMP_H
+#define AN_SCAMP_H
 
 #include "astrometry/qfits_header.h"
 #include "astrometry/sip.h"

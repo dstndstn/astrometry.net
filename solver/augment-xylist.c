@@ -29,7 +29,7 @@
 #include "an-bool.h"
 #include "solver.h"
 #include "fitsioutils.h"
-#include "blindutils.h"
+#include "solverutils.h"
 #include "sip_qfits.h"
 #include "tabsort.h"
 #include "cut-table.h"
@@ -138,16 +138,16 @@ static an_option_t options[] = {
      "odds ratio at which to reject a hypothesis (default: 1e-100)"},
     {'%', "odds-to-stop-looking", required_argument, "odds",
      "odds ratio at which to stop adding stars when evaluating a hypothesis (default: HUGE_VAL)"},
-    {'^', "use-sextractor", no_argument, NULL,
-     "use SExtractor rather than built-in image2xy to find sources"},
-    {'&', "sextractor-config", required_argument, "filename",
-     "use the given SExtractor config file.  "
+    {'^', "use-source-extractor", no_argument, NULL,
+     "use SourceExtractor rather than built-in image2xy to find sources"},
+    {'&', "source-extractor-config", required_argument, "filename",
+     "use the given SourceExtractor config file.  "
      "Note that CATALOG_NAME and CATALOG_TYPE values will be over-ridden by command-line values.  "
-     "This option implies --use-sextractor."},
-    {'*', "sextractor-path", required_argument, "filename",
-     "use the given path to the SExtractor executable.  Default: just 'sex', assumed to be in your PATH."
-     "  Note that you can give command-line args here too (but put them in quotes), eg: --sextractor-path 'sex -DETECT_TYPE CCD'.  "
-     "This option implies --use-sextractor."},
+     "This option implies --use-source-extractor."},
+    {'*', "source-extractor-path", required_argument, "filename",
+     "use the given path to the SourceExtractor executable.  Default: just 'source-extractor', assumed to be in your PATH."
+     "  Note that you can give command-line args here too (but put them in quotes), eg: --source-extractor-path 'source-extractor -DETECT_TYPE CCD'.  "
+     "This option implies --use-source-extractor."},
     {'3', "ra",             required_argument, "degrees or hh:mm:ss",
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'4', "dec",            required_argument, "degrees or [+-]dd:mm:ss",
@@ -325,15 +325,15 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         axy->image_nsigma = atof(optarg);
         break;
     case '^':
-        axy->use_sextractor = TRUE;
+        axy->use_source_extractor = TRUE;
         break;
     case '&':
-        axy->sextractor_config = optarg;
-        axy->use_sextractor = TRUE;
+        axy->source_extractor_config = optarg;
+        axy->use_source_extractor = TRUE;
         break;
     case '*':
-        axy->sextractor_path = optarg;
-        axy->use_sextractor = TRUE;
+        axy->source_extractor_path = optarg;
+        axy->use_source_extractor = TRUE;
         break;
     case '9':
         axy->no_removelines = TRUE;
@@ -560,7 +560,7 @@ int parse_scale_units(const char* units) {
     return -1;
 }
 
-// run(): ppmtopgm, pnmtofits, sextractor
+// run(): ppmtopgm, pnmtofits, source_extractor
 // backtick(): pnmfile, image2pnm
 
 static void append_escape(sl* list, const char* fn) {
@@ -864,14 +864,14 @@ int augment_xylist(augment_xylist_t* axy,
         xylsfn = create_temp_file("xyls", axy->tempdir);
         sl_append_nocopy(tempfiles, xylsfn);
 
-        if (axy->use_sextractor) {
-            if (axy->sextractor_path)
-                sl_append(cmd, axy->sextractor_path);
+        if (axy->use_source_extractor) {
+            if (axy->source_extractor_path)
+                sl_append(cmd, axy->source_extractor_path);
             else
-                sl_append(cmd, "sex");
+                sl_append(cmd, "source-extractor");
 
-            if (axy->sextractor_config)
-                sl_appendf(cmd, "-c %s", axy->sextractor_config);
+            if (axy->source_extractor_config)
+                sl_appendf(cmd, "-c %s", axy->source_extractor_config);
             else {
                 char* paramfn;
                 char* paramstr;
@@ -882,7 +882,7 @@ int augment_xylist(augment_xylist_t* axy,
                 sl_append_nocopy(tempfiles, paramfn);
                 paramstr = "X_IMAGE\nY_IMAGE\nMAG_AUTO\nFLUX_AUTO";
                 if (write_file(paramfn, paramstr, strlen(paramstr))) {
-                    ERROR("Failed to write SExtractor parameters to temp file \"%s\"", paramfn);
+                    ERROR("Failed to write Source Extractor parameters to temp file \"%s\"", paramfn);
                     exit(-1);
                 }
                 sl_appendf(cmd, "-PARAMETERS_NAME %s", paramfn);
@@ -904,7 +904,7 @@ int augment_xylist(augment_xylist_t* axy,
                     "0.040599 0.260856 0.483068 0.260856 0.040599\n"
                     "0.006319 0.040599 0.075183 0.040599 0.006319\n";
                 if (write_file(filterfn, filterstr, strlen(filterstr))) {
-                    ERROR("Failed to write SExtractor convolution filter to temp file \"%s\"", filterfn);
+                    ERROR("Failed to write Source Extractor convolution filter to temp file \"%s\"", filterfn);
                     exit(-1);
                 }
                 sl_appendf(cmd, "-FILTER_NAME %s", filterfn);
@@ -914,7 +914,7 @@ int augment_xylist(augment_xylist_t* axy,
             sl_appendf(cmd, "-CATALOG_NAME %s", xylsfn);
             append_escape(cmd, fitsimgfn);
 
-            logverb("Running SExtractor: output file is %s\n", xylsfn);
+            logverb("Running Source Extractor: output file is %s\n", xylsfn);
             run(cmd, verbose);
 
         } else {

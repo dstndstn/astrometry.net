@@ -55,7 +55,7 @@ script:
     - make extra
     - make test
     - (cd util; ./test)
-    - (cd blind; ./test)
+    - (cd solver; ./test)
     - (cd libkd; ./test)
     - make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env $PYTHON"
     - ls ~/an/lib/python

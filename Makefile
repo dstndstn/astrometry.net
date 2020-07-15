@@ -30,7 +30,7 @@ COMMON := $(BASEDIR)/util
 
 # The internal Astrometry.net dependency stack, top to bottom, is:
 #
-#  blind/libastrometry.a  -- astrometry.net core
+#  solver/libastrometry.a  -- astrometry.net core
 #    catalogs/libcatalogs.a
 #    util/libanfiles.a  -- astrometry.net index files, etc
 #      libkd/libkd.a -- kd-trees
@@ -67,10 +67,10 @@ export SYSTEM_GSL
 
 ifneq ($(SYSTEM_GSL),yes)
 subdirs: gsl-an
-blind: gsl-an
+solver: gsl-an
 endif
 
-SUBDIRS := util catalogs libkd blind sdss qfits-an
+SUBDIRS := util catalogs libkd solver sdss qfits-an
 SUBDIRS_OPT := gsl-an
 
 subdirs: $(SUBDIRS)
@@ -81,7 +81,7 @@ libkd: config util
 
 catalogs: config libkd
 
-blind: config util catalogs libkd qfits-an
+solver: config util catalogs libkd qfits-an
 
 $(SUBDIRS):
 	$(MAKE) -C $@
@@ -98,12 +98,12 @@ html:
 	$(MAKE) -C doc html
 
 # Targets that require extra libraries
-extra: qfits-an util catalogs blind-cairo
+extra: qfits-an util catalogs solver-cairo
 
-blind-cairo: cairoutils
-	$(MAKE) -C blind cairo
+solver-cairo: cairoutils
+	$(MAKE) -C solver cairo
 
-.PHONY: blind-cairo
+.PHONY: solver-cairo
 .PHONY: extra
 
 # Targets that create python bindings (requiring swig)
@@ -119,7 +119,7 @@ cairoutils:
 	$(MAKE) -C util cairoutils.o
 
 pyplotstuff: cairoutils
-	$(MAKE) -C blind pyplotstuff
+	$(MAKE) -C solver pyplotstuff
 
 .PHONY: py libkd-spherematch cairoutils pyplotstuff
 
@@ -138,7 +138,7 @@ install: all report.txt
 	@echo
 	-$(MAKE) extra
 	-($(MAKE) -C util install || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n")
-	-($(MAKE) -C blind install-extra || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n")
+	-($(MAKE) -C solver install-extra || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n")
 	@echo
 
 install-core:
@@ -158,7 +158,7 @@ install-core:
 	$(MAKE) -C catalogs install
 	$(MAKE) -C libkd install
 	$(MAKE) -C qfits-an install
-	$(MAKE) -C blind install
+	$(MAKE) -C solver install
 	$(MAKE) -C sdss install
 	$(MKDIR) -p '$(PY_BASE_INSTALL_DIR)'/net/client
 	@for x in net/client/client.py; do \
@@ -229,7 +229,7 @@ release:
 		rm -R $(RELEASE_DIR)/$$x; \
 	done
 	(cd $(RELEASE_DIR)/util  && swig -python -I. -I../include/astrometry util.i)
-	(cd $(RELEASE_DIR)/blind && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
+	(cd $(RELEASE_DIR)/solver && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
 	(cd $(RELEASE_DIR)/sdss  && swig -python -I. cutils.i)
 	cat $(RELEASE_DIR)/util/makefile.common | sed "s/AN_GIT_REVISION .=.*/AN_GIT_REVISION := $$(git describe)/" | sed "s/AN_GIT_DATE .=.*/AN_GIT_DATE := $$(git log -n 1 --format=%cd | sed 's/ /_/g')/" > $(RELEASE_DIR)/util/makefile.common.x && mv $(RELEASE_DIR)/util/makefile.common.x $(RELEASE_DIR)/util/makefile.common
 	cat $(RELEASE_DIR)/Makefile | sed "s/RELEASE_VER .=.*/RELEASE_VER := $(RELEASE_VER)/" > $(RELEASE_DIR)/Makefile.x && mv $(RELEASE_DIR)/Makefile.x $(RELEASE_DIR)/Makefile
@@ -257,7 +257,7 @@ snapshot:
 		rm -R snapshot/$$x; \
 	done
 	(cd snapshot/util  && swig -python -I. -I../include/astrometry util.i)
-	(cd snapshot/blind && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
+	(cd snapshot/solver && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
 	(cd snapshot/sdss  && swig -python -I. cutils.i)
 	SSD=astrometry.net-$(shell date -u "+%Y-%m-%d-%H:%M:%S")-$(shell git describe); \
 	mv snapshot $$SSD; \
@@ -339,7 +339,7 @@ test:
 	$(MAKE) -C util  test
 	$(MAKE) -C catalogs test
 	$(MAKE) -C libkd test
-	$(MAKE) -C blind test
+	$(MAKE) -C solver test
 .PHONY: test
 
 clean:
@@ -350,7 +350,7 @@ clean:
 	$(MAKE) -C gsl-an clean
 	-rm gsl-an/config.h
 	$(MAKE) -C libkd clean
-	$(MAKE) -C blind clean
+	$(MAKE) -C solver clean
 	$(MAKE) -C sdss clean
 
 realclean: clean

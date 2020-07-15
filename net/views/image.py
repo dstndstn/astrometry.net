@@ -36,7 +36,7 @@ from astrometry.net.log import *
 from astrometry.net.tmpfile import *
 from astrometry.net.sdss_image import plot_sdss_image
 
-from astrometry.blind.plotstuff import *
+from astrometry.solver.plotstuff import *
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 from astrometry.util.file import *
@@ -389,7 +389,7 @@ def onthesky_image(req, zoom=None, calid=None):
 
 def galex_image(req, calid=None, size='full'):
     from astrometry.util import util as anutil
-    from astrometry.blind import plotstuff as ps
+    from astrometry.solver import plotstuff as ps
     from astrometry.net.galex_jpegs import plot_into_wcs
     cal = get_object_or_404(Calibration, pk=calid)
     key = 'galex_size%s_cal%i' % (size, cal.id)

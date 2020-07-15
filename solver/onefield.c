@@ -4,7 +4,7 @@
  */
 
 /**
- *   Solve fields blindly
+ * Solve a single field
  *
  * Inputs: .ckdt .quad .skdt
  * Output: .match .rdls .wcs, ...
@@ -22,7 +22,7 @@
 #include <assert.h>
 
 #include "os-features.h"
-#include "blind.h"
+#include "onefield.h"
 #include "tweak.h"
 #include "tweak2.h"
 #include "sip_qfits.h"
@@ -46,15 +46,15 @@
 
 static anbool record_match_callback(MatchObj* mo, void* userdata);
 static time_t timer_callback(void* user_data);
-static void add_blind_params(blind_t* bp, qfits_header* hdr);
-static void load_and_parse_wcsfiles(blind_t* bp);
-static void solve_fields(blind_t* bp, sip_t* verify_wcs);
+static void add_onefield_params(onefield_t* bp, qfits_header* hdr);
+static void load_and_parse_wcsfiles(onefield_t* bp);
+static void solve_fields(onefield_t* bp, sip_t* verify_wcs);
 static void remove_invalid_fields(il* fieldlist, int maxfield);
-static anbool is_field_solved(blind_t* bp, int fieldnum);
-static int write_solutions(blind_t* bp);
-static void solved_field(blind_t* bp, int fieldnum);
+static anbool is_field_solved(onefield_t* bp, int fieldnum);
+static int write_solutions(onefield_t* bp);
+static void solved_field(onefield_t* bp, int fieldnum);
 static int compare_matchobjs(const void* v1, const void* v2);
-static void remove_duplicate_solutions(blind_t* bp);
+static void remove_duplicate_solutions(onefield_t* bp);
 
 // A tag-along column for index rdls / correspondence file.
 struct tagalong {
@@ -71,7 +71,7 @@ struct tagalong {
 };
 typedef struct tagalong tagalong_t;
 
-static anbool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
+static anbool grab_tagalong_data(startree_t* starkd, MatchObj* mo, onefield_t* bp,
                                  const int* starinds, int N) {
     fitstable_t* tagalong;
     int i;
@@ -158,7 +158,7 @@ static anbool grab_field_tagalong_data(MatchObj* mo, xylist_t* xy, int N) {
  Currently it supposedly could handle both "indexnames" and "indexes",
  but we should probably just assert that only one of these can be used.
  **/
-static index_t* get_index(blind_t* bp, size_t i) {
+static index_t* get_index(onefield_t* bp, size_t i) {
     if (i < sl_size(bp->indexnames)) {
         char* fn = sl_get(bp->indexnames, i);
         index_t* ind = index_load(fn, bp->index_options, NULL);
@@ -171,7 +171,7 @@ static index_t* get_index(blind_t* bp, size_t i) {
     i -= sl_size(bp->indexnames);
     return pl_get(bp->indexes, i);
 }
-static char* get_index_name(blind_t* bp, size_t i) {
+static char* get_index_name(onefield_t* bp, size_t i) {
     index_t* index;
     if (i < sl_size(bp->indexnames)) {
         char* fn = sl_get(bp->indexnames, i);
@@ -181,118 +181,118 @@ static char* get_index_name(blind_t* bp, size_t i) {
     index = pl_get(bp->indexes, i);
     return index->indexname;
 }
-static void done_with_index(blind_t* bp, size_t i, index_t* ind) {
+static void done_with_index(onefield_t* bp, size_t i, index_t* ind) {
     if (i < sl_size(bp->indexnames)) {
         index_close(ind);
     }
 }
-static size_t n_indexes(blind_t* bp) {
+static size_t n_indexes(onefield_t* bp) {
     return sl_size(bp->indexnames) + pl_size(bp->indexes);
 }
 
 
 
-void blind_clear_verify_wcses(blind_t* bp) {
+void onefield_clear_verify_wcses(onefield_t* bp) {
     bl_remove_all(bp->verify_wcs_list);
 }
 
-void blind_clear_solutions(blind_t* bp) {
+void onefield_clear_solutions(onefield_t* bp) {
     bl_remove_all(bp->solutions);
 }
 
-void blind_clear_indexes(blind_t* bp) {
+void onefield_clear_indexes(onefield_t* bp) {
     sl_remove_all(bp->indexnames);
     pl_remove_all(bp->indexes);
 }
 
-void blind_set_field_file(blind_t* bp, const char* fn) {
+void onefield_set_field_file(onefield_t* bp, const char* fn) {
     free(bp->fieldfname);
     bp->fieldfname = strdup_safe(fn);
 }
 
-void blind_set_solved_file(blind_t* bp, const char* fn) {
-    blind_set_solvedin_file (bp, fn);
-    blind_set_solvedout_file(bp, fn);
+void onefield_set_solved_file(onefield_t* bp, const char* fn) {
+    onefield_set_solvedin_file (bp, fn);
+    onefield_set_solvedout_file(bp, fn);
 }
 
-void blind_set_solvedin_file(blind_t* bp, const char* fn) {
+void onefield_set_solvedin_file(onefield_t* bp, const char* fn) {
     free(bp->solved_in);
     bp->solved_in = strdup_safe(fn);
 }
 
-void blind_set_solvedout_file(blind_t* bp, const char* fn) {
+void onefield_set_solvedout_file(onefield_t* bp, const char* fn) {
     free(bp->solved_out);
     bp->solved_out = strdup_safe(fn);
 }
 
-void blind_set_cancel_file(blind_t* bp, const char* fn) {
+void onefield_set_cancel_file(onefield_t* bp, const char* fn) {
     free(bp->cancelfname);
     bp->cancelfname = strdup_safe(fn);
 }
 
-void blind_set_match_file(blind_t* bp, const char* fn) {
+void onefield_set_match_file(onefield_t* bp, const char* fn) {
     free(bp->matchfname);
     bp->matchfname = strdup_safe(fn);
 }
 
-void blind_set_rdls_file(blind_t* bp, const char* fn) {
+void onefield_set_rdls_file(onefield_t* bp, const char* fn) {
     free(bp->indexrdlsfname);
     bp->indexrdlsfname = strdup_safe(fn);
 }
 
-void blind_set_scamp_file(blind_t* bp, const char* fn) {
+void onefield_set_scamp_file(onefield_t* bp, const char* fn) {
     free(bp->scamp_fname);
     bp->scamp_fname = strdup_safe(fn);
 }
 
-void blind_set_corr_file(blind_t* bp, const char* fn) {
+void onefield_set_corr_file(onefield_t* bp, const char* fn) {
     free(bp->corr_fname);
     bp->corr_fname = strdup_safe(fn);
 }
 
-void blind_set_wcs_file(blind_t* bp, const char* fn) {
+void onefield_set_wcs_file(onefield_t* bp, const char* fn) {
     free(bp->wcs_template);
     bp->wcs_template = strdup_safe(fn);
 }
 
-void blind_set_xcol(blind_t* bp, const char* x) {
+void onefield_set_xcol(onefield_t* bp, const char* x) {
     free(bp->xcolname);
     if (!x)
         x = "X";
     bp->xcolname = strdup(x);
 }
 
-void blind_set_ycol(blind_t* bp, const char* y) {
+void onefield_set_ycol(onefield_t* bp, const char* y) {
     free(bp->ycolname);
     if (!y)
         y = "Y";
     bp->ycolname = strdup_safe(y);
 }
 
-void blind_add_index(blind_t* bp, const char* index) {
+void onefield_add_index(onefield_t* bp, const char* index) {
     sl_append(bp->indexnames, index);
 }
 
-void blind_add_loaded_index(blind_t* bp, index_t* ind) {
+void onefield_add_loaded_index(onefield_t* bp, index_t* ind) {
     pl_append(bp->indexes, ind);
 }
 
-void blind_add_verify_wcs(blind_t* bp, sip_t* wcs) {
+void onefield_add_verify_wcs(onefield_t* bp, sip_t* wcs) {
     bl_append(bp->verify_wcs_list, wcs);
 }
 
-void blind_add_field(blind_t* bp, int field) {
+void onefield_add_field(onefield_t* bp, int field) {
     il_insert_unique_ascending(bp->fieldlist, field);
 }
 
-void blind_add_field_range(blind_t* bp, int lo, int hi) {
+void onefield_add_field_range(onefield_t* bp, int lo, int hi) {
     int i;
     for (i=lo; i<=hi; i++) {
         il_insert_unique_ascending(bp->fieldlist, i);
     }
 }
 
-static void check_time_limits(blind_t* bp) {
+static void check_time_limits(onefield_t* bp) {
     if (bp->total_timelimit || bp->timelimit) {
         double now = timenow();
         if (bp->total_timelimit && (now - bp->time_total_start > bp->total_timelimit)) {
@@ -324,7 +324,7 @@ static void check_time_limits(blind_t* bp) {
         bp->solver.quit_now = TRUE;
 }
 
-void blind_run(blind_t* bp) {
+void onefield_run(onefield_t* bp) {
     solver_t* sp = &(bp->solver);
     size_t i, I;
     size_t Nindexes;
@@ -494,14 +494,14 @@ void blind_run(blind_t* bp) {
     for (i=0; i<bl_size(bp->solutions); i++) {
         MatchObj* mo = bl_access(bp->solutions, i);
         verify_free_matchobj(mo);
-        blind_free_matchobj(mo);
+        onefield_free_matchobj(mo);
     }
     bl_remove_all(bp->solutions);
 }
 
-void blind_init(blind_t* bp) {
+void onefield_init(onefield_t* bp) {
     // Reset params.
-    memset(bp, 0, sizeof(blind_t));
+    memset(bp, 0, sizeof(onefield_t));
 
     bp->fieldlist = il_new(256);
     bp->solutions = bl_new(16, sizeof(MatchObj));
@@ -510,8 +510,8 @@ void blind_init(blind_t* bp) {
     bp->verify_wcs_list = bl_new(1, sizeof(sip_t));
     bp->verify_wcsfiles = sl_new(1);
     bp->fieldid_key = strdup("FIELDID");
-    blind_set_xcol(bp, NULL);
-    blind_set_ycol(bp, NULL);
+    onefield_set_xcol(bp, NULL);
+    onefield_set_ycol(bp, NULL);
     bp->quad_size_fraction_lo = DEFAULT_QSF_LO;
     bp->quad_size_fraction_hi = DEFAULT_QSF_HI;
     bp->nsolves = 1;
@@ -521,7 +521,7 @@ void blind_init(blind_t* bp) {
     // will get called next and wipe it out...
 }
 
-int blind_parameters_are_sane(blind_t* bp, solver_t* sp) {
+int onefield_parameters_are_okay(onefield_t* bp, solver_t* sp) {
     if (sp->distractor_ratio == 0) {
         logerr("You must set a \"distractors\" proportion.\n");
         return 0;
@@ -552,7 +552,7 @@ int blind_parameters_are_sane(blind_t* bp, solver_t* sp) {
     return 1;
 }
 
-int blind_is_run_obsolete(blind_t* bp, solver_t* sp) {
+int onefield_is_run_obsolete(onefield_t* bp, solver_t* sp) {
     // If we're just solving one field, check to see if it's already
     // solved before doing a bunch of work and spewing tons of output.
     if ((il_size(bp->fieldlist) == 1) && bp->solved_in) {
@@ -570,7 +570,7 @@ int blind_is_run_obsolete(blind_t* bp, solver_t* sp) {
     return 0;
 }
 
-static void load_and_parse_wcsfiles(blind_t* bp) {
+static void load_and_parse_wcsfiles(onefield_t* bp) {
     int i;
     for (i = 0; i < sl_size(bp->verify_wcsfiles); i++) {
         sip_t wcs;
@@ -585,11 +585,11 @@ static void load_and_parse_wcsfiles(blind_t* bp) {
     }
 }
 
-void blind_log_run_parameters(blind_t* bp) {
+void onefield_log_run_parameters(onefield_t* bp) {
     solver_t* sp = &(bp->solver);
     int i, N;
 
-    logverb("blind solver run parameters:\n");
+    logverb("solver run parameters:\n");
     logverb("indexes:\n");
     N = n_indexes(bp);
     for (i=0; i<N; i++)
@@ -636,7 +636,7 @@ void blind_log_run_parameters(blind_t* bp) {
     logverb("total_cpulimit %f\n", bp->total_cpulimit);
 }
 
-void blind_cleanup(blind_t* bp) {
+void onefield_cleanup(onefield_t* bp) {
     il_free(bp->fieldlist);
     bl_free(bp->solutions);
     sl_free2(bp->indexnames);
@@ -660,7 +660,7 @@ void blind_cleanup(blind_t* bp) {
     free(bp->sort_rdls);
 }
 
-static int sort_rdls(MatchObj* mymo, blind_t* bp) {
+static int sort_rdls(MatchObj* mymo, onefield_t* bp) {
     const solver_t* sp = &(bp->solver);
     anbool asc = TRUE;
     char* colname = bp->sort_rdls;
@@ -709,7 +709,7 @@ static int sort_rdls(MatchObj* mymo, blind_t* bp) {
 }
 
 static anbool record_match_callback(MatchObj* mo, void* userdata) {
-    blind_t* bp = userdata;
+    onefield_t* bp = userdata;
     solver_t* sp = &(bp->solver);
     MatchObj* mymo;
     int ind;
@@ -796,7 +796,7 @@ static anbool record_match_callback(MatchObj* mo, void* userdata) {
 }
 
 static time_t timer_callback(void* user_data) {
-    blind_t* bp = user_data;
+    onefield_t* bp = user_data;
 
     check_time_limits(bp);
 
@@ -811,11 +811,11 @@ static time_t timer_callback(void* user_data) {
     return 1; // wait 1 second... FIXME config?
 }
 
-static void add_blind_params(blind_t* bp, qfits_header* hdr) {
+static void add_onefield_params(onefield_t* bp, qfits_header* hdr) {
     solver_t* sp = &(bp->solver);
     int i;
     int Nindexes;
-    fits_add_long_comment(hdr, "-- blind solver parameters: --");
+    fits_add_long_comment(hdr, "-- onefield solver parameters: --");
     if (sp->index) {
         fits_add_long_comment(hdr, "Index name: %s", sp->index->indexname?sp->index->indexname:"(null)");
         fits_add_long_comment(hdr, "Index id: %i", sp->index->indexid);
@@ -882,7 +882,7 @@ static void remove_invalid_fields(il* fieldlist, int maxfield) {
     }
 }
 
-static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
+static void solve_fields(onefield_t* bp, sip_t* verify_wcs) {
     solver_t* sp = &(bp->solver);
     double last_utime, last_stime;
     double utime, stime;
@@ -1012,7 +1012,7 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
     }
 }
 
-static anbool is_field_solved(blind_t* bp, int fieldnum) {
+static anbool is_field_solved(onefield_t* bp, int fieldnum) {
     anbool solved = FALSE;
     if (bp->solved_in) {
         solved = solvedfile_get(bp->solved_in, fieldnum);
@@ -1027,7 +1027,7 @@ static anbool is_field_solved(blind_t* bp, int fieldnum) {
     return FALSE;
 }
 
-static void solved_field(blind_t* bp, int fieldnum) {
+static void solved_field(onefield_t* bp, int fieldnum) {
     // Record in solved file, or send to solved server.
     if (bp->solved_out) {
         logmsg("Field %i solved: writing to file %s to indicate this.\n", fieldnum, bp->solved_out);
@@ -1040,7 +1040,7 @@ static void solved_field(blind_t* bp, int fieldnum) {
         bp->single_field_solved = TRUE;
 }
 
-void blind_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest) {
+void onefield_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest) {
     if (!mo || !dest)
         return;
     if (mo->sip) {
@@ -1076,7 +1076,7 @@ void blind_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest) {
 }
 
 // Free the things I added to the mo.
-void blind_free_matchobj(MatchObj* mo) {
+void onefield_free_matchobj(MatchObj* mo) {
     if (!mo) return;
     if (mo->sip) {
         sip_free(mo->sip);
@@ -1123,7 +1123,7 @@ void blind_free_matchobj(MatchObj* mo) {
     }
 }
 
-static void remove_duplicate_solutions(blind_t* bp) {
+static void remove_duplicate_solutions(onefield_t* bp) {
     int i, j;
     // The solutions can fall out of order because tweak2() updates their logodds.
     bl_sort(bp->solutions, compare_matchobjs);
@@ -1138,14 +1138,14 @@ static void remove_duplicate_solutions(blind_t* bp) {
             if (mo->fieldnum != mo2->fieldnum)
                 break;
             assert(mo2->logodds <= mo->logodds);
-            blind_free_matchobj(mo2);
+            onefield_free_matchobj(mo2);
             verify_free_matchobj(mo2);
             bl_remove_index(bp->solutions, j);
         }
     }
 }
 
-static int write_match_file(blind_t* bp) {
+static int write_match_file(onefield_t* bp) {
     int i;
     bp->mf = matchfile_open_for_writing(bp->matchfname);
     if (!bp->mf) {
@@ -1153,9 +1153,8 @@ static int write_match_file(blind_t* bp) {
         return -1;
     }
     BOILERPLATE_ADD_FITS_HEADERS(bp->mf->header);
-    qfits_header_add(bp->mf->header, "HISTORY", "This file was created by the program \"blind\".", NULL, NULL);
     qfits_header_add(bp->mf->header, "DATE", qfits_get_datetime_iso8601(), "Date this file was created.", NULL);
-    add_blind_params(bp, bp->mf->header);
+    add_onefield_params(bp, bp->mf->header);
     if (matchfile_write_headers(bp->mf)) {
         logerr("Failed to write matchfile header.\n");
         return -1;
@@ -1176,7 +1175,7 @@ static int write_match_file(blind_t* bp) {
     return 0;
 }
 
-static int write_rdls_file(blind_t* bp) {
+static int write_rdls_file(onefield_t* bp) {
     int i;
     qfits_header* h;
     bp->indexrdls = rdlist_open_for_writing(bp->indexrdlsfname);
@@ -1188,10 +1187,9 @@ static int write_rdls_file(blind_t* bp) {
     h = rdlist_get_primary_header(bp->indexrdls);
 
     BOILERPLATE_ADD_FITS_HEADERS(h);
-    fits_add_long_history(h, "This \"indexrdls\" file was created by the program \"blind\"."
-                          "  It contains the RA/DEC of index objects that were found inside a solved field.");
+    fits_add_long_history(h, "This \"indexrdls\" file contains the RA/DEC of index objects that were found inside a solved field.");
     qfits_header_add(h, "DATE", qfits_get_datetime_iso8601(), "Date this file was created.", NULL);
-    add_blind_params(bp, h);
+    add_onefield_params(bp, h);
     if (rdlist_write_primary_header(bp->indexrdls)) {
         logerr("Failed to write index RDLS header.\n");
         return -1;
@@ -1253,7 +1251,7 @@ static int write_rdls_file(blind_t* bp) {
     return 0;
 }
 
-static int write_wcs_file(blind_t* bp) {
+static int write_wcs_file(onefield_t* bp) {
     int i;
     for (i=0; i<bl_size(bp->solutions); i++) {
         char wcs_fn[1024];
@@ -1276,10 +1274,10 @@ static int write_wcs_file(blind_t* bp) {
             hdr = tan_create_header(&(mo->wcstan));
 
         BOILERPLATE_ADD_FITS_HEADERS(hdr);
-        qfits_header_add(hdr, "HISTORY", "This WCS header was created by the program \"blind\".", NULL, NULL);
+        qfits_header_add(hdr, "HISTORY", "This is a WCS header was created by Astrometry.net.", NULL, NULL);
         tm = qfits_get_datetime_iso8601();
         qfits_header_add(hdr, "DATE", tm, "Date this file was created.", NULL);
-        add_blind_params(bp, hdr);
+        add_onefield_params(bp, hdr);
         fits_add_long_comment(hdr, "-- properties of the matching quad: --");
         fits_add_long_comment(hdr, "index id: %i", mo->indexid);
         fits_add_long_comment(hdr, "index healpix: %i", mo->healpix);
@@ -1317,7 +1315,7 @@ static int write_wcs_file(blind_t* bp) {
     return 0;
 }
 
-static int write_scamp_file(blind_t* bp) {
+static int write_scamp_file(onefield_t* bp) {
     int i;
     scamp_cat_t* scamp;
     qfits_header* hdr = NULL;
@@ -1365,7 +1363,7 @@ static int write_scamp_file(blind_t* bp) {
     return 0;
 }
 
-static int write_corr_file(blind_t* bp) {
+static int write_corr_file(onefield_t* bp) {
     int i;
     fitstable_t* tab;
     tab = fitstable_open_for_writing(bp->corr_fname);
@@ -1514,7 +1512,7 @@ static int write_corr_file(blind_t* bp) {
     return 0;
 }
 
-static int write_solutions(blind_t* bp) {
+static int write_solutions(onefield_t* bp) {
     anbool got_solutions = (bl_size(bp->solutions) > 0);
 
     // If we found no solution, don't write empty output files!

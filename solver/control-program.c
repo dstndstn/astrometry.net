@@ -469,7 +469,7 @@ int main(int argc, char** args) {
                 }
 
                 // Free the items allocated in record_match_callback.
-                blind_free_matchobj(match);
+                onefield_free_matchobj(match);
 
             } else {
                 logmsg("Failed to solve.\n");

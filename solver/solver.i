@@ -2,7 +2,7 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
  */
-%module(package="astrometry.blind") blind
+%module(package="astrometry.solver") solver
 
 %include <typemaps.i>
 %include <cstring.i>
