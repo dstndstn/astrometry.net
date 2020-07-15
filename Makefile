@@ -111,7 +111,7 @@ plot-extra: cairoutils
 ifneq ($(SYSTEM_GSL),yes)
 py: gsl-an
 endif
-py: catalogs pyutil libkd-spherematch sdss cairoutils pyplotstuff
+py: catalogs pyutil libkd-spherematch sdss cairoutils pyplotstuff pysolver
 
 libkd-spherematch:
 	$(MAKE) -C libkd pyspherematch
@@ -122,7 +122,10 @@ cairoutils:
 pyplotstuff: cairoutils
 	$(MAKE) -C plot pyplotstuff
 
-.PHONY: py libkd-spherematch cairoutils pyplotstuff
+pysolver: cairoutils
+	$(MAKE) -C solver pysolver
+
+.PHONY: py libkd-spherematch cairoutils pyplotstuff pysolver
 
 pyutil: qfits-an
 	$(MAKE) -C util pyutil
@@ -139,6 +142,7 @@ install: all report.txt
 	@echo
 	-$(MAKE) extra
 	-($(MAKE) -C util install || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n")
+	-($(MAKE) -C solver install-extra || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n")
 	-($(MAKE) -C plot install-extra || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n")
 	@echo
 

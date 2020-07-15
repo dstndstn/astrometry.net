@@ -342,6 +342,17 @@ _solver$(PYTHON_SO_EXT): solver.i $(ENGINE_OBJS)
 	CFLAGS="$(ANFILES_CFLAGS)" \
 	$(PYTHON) setup-solver.py build_ext -v --inplace --build-temp .
 
+PYTHON_EXTRA_INSTALL := _solver$(PYTHON_SO_EXT)
+
+install-extra: $(INSTALL_CAIRO_EXECS)
+	@echo Installing in directory '$(INSTALL_DIR)'
+	$(MAKE) $(PYTHON_EXTRA_INSTALL)
+	$(MKDIR) '$(PY_INSTALL_DIR)'
+	@for x in $(PYTHON_EXTRA_INSTALL); do \
+		echo $(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
+		$(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
+	done
+
 DEP_OBJ := $(ALL_OBJ)
 DEP_PREREQS := $(QFITS_LIB)
 
