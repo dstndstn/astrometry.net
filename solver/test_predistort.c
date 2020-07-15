@@ -171,7 +171,7 @@ void test_predistort(CuTest* ct) {
     solver->predistort = &distortion;
 
     // avoid solver freeing "xy_dist", but we still want to reset the preprocessing.
-    solver->fieldxy = NULL;
+    solver->fieldxy_orig = NULL;
     solver_set_field(solver, xy_dist);
     solver_set_field_bounds(solver, 0, imagew, 0, imageh);
 
