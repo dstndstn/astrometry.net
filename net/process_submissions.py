@@ -266,7 +266,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
         axyargs['--tweak-order'] = '%i' % sub.tweak_order
 
     if sub.use_sextractor:
-        axyflags.append('--use-sextractor')
+        axyflags.append('--use-source-extractor')
 
     if sub.crpix_center:
         axyflags.append('--crpix-center')

@@ -148,21 +148,21 @@ Odds ratio at which to reject a hypothesis (default: 1e\-100)
 \fB\-\-odds\-to\-stop\-looking\fR \fIodds\fR
 Odds ratio at which to stop adding stars when evaluating a hypothesis (default: HUGE_VAL)
 .TP
-\fB\-\-use\-sextractor\fR
-Use SExtractor rather than built\-in image2xy to find sources
+\fB\-\-use\-source\-extractor\fR
+Use Source Extractor rather than built\-in image2xy to find sources
 .TP
-\fB\-\-sextractor\-config\fR \fIfile\fR
-Use the given SExtractor config file. Note that CATALOG_NAME and CATALOG_TYPE values will be over\-ridden by
-command\-line values.  This option implies \fB\-\-use\-sextractor\fR.
+\fB\-\-source\-extractor\-config\fR \fIfile\fR
+Use the given Source Extractor config file. Note that CATALOG_NAME and CATALOG_TYPE values will be over\-ridden by
+command\-line values.  This option implies \fB\-\-use\-source\-extractor\fR.
 .TP
-\fB\-\-sextractor\-path\fR \fIfile\fR
-Use the given path to the SExtractor executable. Default: just 'sextractor',
+\fB\-\-source\-extractor\-path\fR \fIfile\fR
+Use the given path to the Source Extractor executable. Default: just 'source-extractor',
 assumed to be in your PATH. Note that you can give command line args here too
 (but put them in quotes), eg:
 .IP
-\fB\-\-sextractor\-path\fR 'sextractor -DETECT_TYPE CCD'.
+\fB\-\-source\-extractor\-path\fR 'source-extractor -DETECT_TYPE CCD'.
 .IP
-This option implies \fB\-\-use\-sextractor\fR.
+This option implies \fB\-\-use\-source\-extractor\fR.
 .TP
 \fB\-3\fR \fIRA\fR, \fB\-\-ra\fR \fIRA\fR
 RA of field center for search, format: degrees or hh:mm:ss

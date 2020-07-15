@@ -868,7 +868,7 @@ int augment_xylist(augment_xylist_t* axy,
             if (axy->source_extractor_path)
                 sl_append(cmd, axy->source_extractor_path);
             else
-                sl_append(cmd, "sex");
+                sl_append(cmd, "source-extractor");
 
             if (axy->source_extractor_config)
                 sl_appendf(cmd, "-c %s", axy->source_extractor_config);
