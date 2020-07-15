@@ -214,8 +214,8 @@ fitsutils: $(FITS_UTILS)
 simplexy: image2xy
 .PHONY: simplexy
 
-PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/blind
-LINK_DIR := $(PY_BASE_LINK_DIR)/blind
+PY_INSTALL_DIR := $(PY_BASE_INSTALL_DIR)/solver
+LINK_DIR := $(PY_BASE_LINK_DIR)/solver
 
 PYTHON_EXECS := plotann.py
 PYTHON_INSTALL := $(PYTHON_EXECS) __init__.py
@@ -409,14 +409,14 @@ ALL_OBJ += plotxy-main.o
 PLOTSTUFF_SRCS = $(subst .o,.c,$(PLOTSTUFF))
 PLOTSTUFF_HDRS = $(addprefix $(INCLUDE_DIR)/,$(subst .o,.h,$(PLOTSTUFF)))
 
-py: pyplotstuff pyblind
+py: pyplotstuff pysolver
 .PHONY: py
 
 pyplotstuff: _plotstuff_c$(PYTHON_SO_EXT)
 .PHONY: pyplotstuff
 
-pyblind: _blind$(PYTHON_SO_EXT)
-.PHONY: pyblind
+pysolver: _solver$(PYTHON_SO_EXT)
+.PHONY: pysolver
 
 _plotstuff_c$(PYTHON_SO_EXT): plotstuff.i $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS) $(CAIRO_LIBS)" \
@@ -426,12 +426,12 @@ _plotstuff_c$(PYTHON_SO_EXT): plotstuff.i $(PLOTSTUFF) $(CATS_LIB) $(CAIRO_SLIB)
 	CFLAGS="$(CFLAGS)" \
 	$(PYTHON) setup.py build_ext -v --inplace --build-temp .
 
-_blind$(PYTHON_SO_EXT): blind.i $(ENGINE_OBJS)
+_solver$(PYTHON_SO_EXT): solver.i $(ENGINE_OBJS)
 	LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" \
 	SLIB="$(SLIB)" \
 	INC="$(ANFILES_INC)" \
 	CFLAGS="$(ANFILES_CFLAGS)" \
-	$(PYTHON) setup-blind.py build_ext -v --inplace --build-temp .
+	$(PYTHON) setup-solver.py build_ext -v --inplace --build-temp .
 
 test_plotstuff-main.c: test_plotstuff.c
 	$(AN_SHELL) $(MAKE_TESTS) $^ > $@
