@@ -31,7 +31,7 @@
  backend -c none -i 't1?.index' -v t1.axy 
 
  (in util/ directory:)
- ../blind/test_multiindex2
+ ../solver/test_multiindex2
 
  */
 
