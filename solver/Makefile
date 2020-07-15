@@ -155,7 +155,7 @@ $(ENGINE_SO): $(ENGINE_OBJS) $(SLIB)
 	$(CC) $(LDFLAGS) $(SHAREDLIBFLAGS) -o $@ $^ $(LDLIBS)
 
 # old and miscellaneous executables that aren't part of the pipeline.
-OLDEXECS := plotquads rawstartree checkquads
+OLDEXECS := checkquads
 
 CAIROEXECS := plotquad plotxy plot-constellations
 
