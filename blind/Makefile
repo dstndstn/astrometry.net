@@ -170,7 +170,7 @@ INSTALL_EXECS := $(FITS_UTILS) fitsverify $(PIPELINE) $(PROGS)
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
 INSTALL_H := allquads.h augment-xylist.h axyfile.h \
-	engine.h blind.h blindutils.h build-index.h catalog.h \
+	engine.h onefield.h blindutils.h build-index.h catalog.h \
 	codefile.h codetree.h fits-guess-scale.h hpquads.h \
 	image2xy-files.h matchfile.h matchobj.h merge-index.h \
 	new-wcs.h quad-builder.h quad-utils.h resort-xylist.h \

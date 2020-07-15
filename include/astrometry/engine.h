@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-#include "astrometry/blind.h"
+#include "astrometry/onefield.h"
 #include "astrometry/bl.h"
 #include "astrometry/an-bool.h"
 #include "astrometry/index.h"

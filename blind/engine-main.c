@@ -42,7 +42,7 @@
 #include "math.h"
 #include "fitsioutils.h"
 #include "blindutils.h"
-#include "blind.h"
+#include "onefield.h"
 #include "log.h"
 #include "errors.h"
 #include "engine.h"

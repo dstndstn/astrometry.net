@@ -30,7 +30,7 @@
 #include "fitsioutils.h"
 #include "blindutils.h"
 #include "os-features.h"
-#include "blind.h"
+#include "onefield.h"
 #include "log.h"
 #include "anqfits.h"
 #include "errors.h"

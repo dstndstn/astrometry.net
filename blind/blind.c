@@ -22,7 +22,7 @@
 #include <assert.h>
 
 #include "os-features.h"
-#include "blind.h"
+#include "onefield.h"
 #include "tweak.h"
 #include "tweak2.h"
 #include "sip_qfits.h"
