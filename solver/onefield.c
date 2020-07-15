@@ -521,7 +521,7 @@ void onefield_init(onefield_t* bp) {
     // will get called next and wipe it out...
 }
 
-int onefield_parameters_are_sane(onefield_t* bp, solver_t* sp) {
+int onefield_parameters_are_okay(onefield_t* bp, solver_t* sp) {
     if (sp->distractor_ratio == 0) {
         logerr("You must set a \"distractors\" proportion.\n");
         return 0;

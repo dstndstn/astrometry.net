@@ -154,7 +154,7 @@ void onefield_init(onefield_t* bp);
 
 void onefield_cleanup(onefield_t* bp);
 
-int onefield_parameters_are_sane(onefield_t* bp, solver_t* sp);
+int onefield_parameters_are_okay(onefield_t* bp, solver_t* sp);
 
 int onefield_is_run_obsolete(onefield_t* bp, solver_t* sp);
 
