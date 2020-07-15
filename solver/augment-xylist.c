@@ -29,7 +29,7 @@
 #include "an-bool.h"
 #include "solver.h"
 #include "fitsioutils.h"
-#include "blindutils.h"
+#include "solverutils.h"
 #include "sip_qfits.h"
 #include "tabsort.h"
 #include "cut-table.h"

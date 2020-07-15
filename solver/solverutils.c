@@ -11,7 +11,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "blindutils.h"
+#include "solverutils.h"
 #include "ioutils.h"
 #include "bl.h"
 #include "errors.h"

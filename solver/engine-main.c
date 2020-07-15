@@ -41,7 +41,7 @@
 #include "solver.h"
 #include "math.h"
 #include "fitsioutils.h"
-#include "blindutils.h"
+#include "solverutils.h"
 #include "onefield.h"
 #include "log.h"
 #include "errors.h"

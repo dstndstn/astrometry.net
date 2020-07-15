@@ -99,7 +99,7 @@ UTIL_OBJS :=
 OTHER_OBJS := catalog.o codefile.o verify.o \
 	solver.o matchfile.o matchobj.o solvedfile.o pnpoly.o tweak.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
-	blindutils.o engine-main.o engine.o plotquad.o plotxy.o tweak2.o
+	solverutils.o engine-main.o engine.o plotquad.o plotxy.o tweak2.o
 
 NOT_INSTALLED_PIPELINE := agreeable certifiable \
 	hpquads codetree unpermute-quads unpermute-stars \
@@ -126,7 +126,7 @@ ANLIBS := $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 INSTALL_LIB := $(ENGINE_LIB) $(ENGINE_SO)
 
 ENGINE_OBJS := \
-		engine.o blindutils.o onefield.o solver.o quad-utils.o \
+		engine.o solverutils.o onefield.o solver.o quad-utils.o \
 		matchfile.o matchobj.o solvedfile.o tweak2.o \
 		verify.o tweak.o
 
@@ -170,7 +170,7 @@ INSTALL_EXECS := $(FITS_UTILS) fitsverify $(PIPELINE) $(PROGS)
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
 INSTALL_H := allquads.h augment-xylist.h axyfile.h \
-	engine.h onefield.h blindutils.h build-index.h catalog.h \
+	engine.h onefield.h solverutils.h build-index.h catalog.h \
 	codefile.h codetree.h fits-guess-scale.h hpquads.h \
 	image2xy-files.h matchfile.h matchobj.h merge-index.h \
 	new-wcs.h quad-builder.h quad-utils.h resort-xylist.h \
@@ -295,7 +295,7 @@ solver_test_2.o: solver.c
 #######################################
 
 # Add the basename of your test sources here...
-ALL_TEST_FILES = test_matchfile test_blindutils \
+ALL_TEST_FILES = test_matchfile test_solverutils \
 	test_resort-xylist test_tweak test_multiindex2 test_predistort
 
 #test_xscale -- requires a large index file...
