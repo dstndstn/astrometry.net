@@ -21,9 +21,6 @@ export SYSTEM_GSL
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.anfiles
 include $(COMMON)/makefile.cfitsio
-include $(COMMON)/makefile.png
-include $(COMMON)/makefile.jpeg
-include $(COMMON)/makefile.netpbm
 
 ifneq ($(MAKECMDGOALS),clean)
     include $(COMMON)/makefile.os-features
@@ -31,12 +28,6 @@ endif
 
 $(COMMON)/makefile.os-features:
 	$(MAKE) -C $(COMMON) makefile.os-features
-
-ifeq ($(HAVE_NETPBM),yes)
-else
-NETPBM_INC :=
-NETPBM_LIB :=
-endif
 
 SO=$(SHAREDLIB_SUFFIX)
 
