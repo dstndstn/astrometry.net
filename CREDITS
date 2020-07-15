@@ -38,24 +38,24 @@ Now, some miscellaneous files:
 -sdss/yanny.py
   (c) Ben Weaver
 
--blind/an_mm_malloc.h
+-solver/an_mm_malloc.h
   (c) FSF, from GCC.  GPL v3+.  Imported for use by ctmf.c
 
--blind/anet.py
+-solver/anet.py
   (c) Josh Bloom, licensed under GPL v3.
 
--blind/{tablist,modhead,fitscopy,tabmerge,fitstomatlab,liststruc,listhead,
+-solver/{tablist,modhead,fitscopy,tabmerge,fitstomatlab,liststruc,listhead,
         imcopy,imarith,imstat}.c
   From the CFITSIO utilities web page.
   http://heasarc.gsfc.nasa.gov/docs/software/fitsio/cexamples.html
   "You may freely modify, reuse, and redistribute these programs as you wish."
   (fitstomatlab.c is just a modified version of tablist.c)
 
--blind/fitsverify.c
+-solver/fitsverify.c
   From the "fitsverify" tool,
   http://heasarc.gsfc.nasa.gov/docs/software/ftools/fitsverify/
 
--blind/pnpoly.c
+-solver/pnpoly.c
   (c) Wm. Randolph Franklin, MIT license
   From http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 
