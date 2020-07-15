@@ -1,34 +1,11 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
-from __future__ import print_function
 
-import multiprocessing.queues
-import multiprocessing.pool
-import multiprocessing.synchronize
-
-from multiprocessing.util import debug
-
-import _multiprocessing
-import threading
-import time
-import os
-
-import sys
-py3 = (sys.version_info[0] >= 3)
-
-if py3:
-    # py3 loads cPickle if available
-    import pickle
-    # py3 renames Queue to queue
-    import queue
-    Connection = multiprocessing.connection.Connection
-else:
-    # py2
-    import cPickle as pickle
-    import Queue as queue
-    Connection = _multiprocessing.Connection
-
-from astrometry.util.ttime import CpuMeas
+## This file includes code from Python 3.8's multiprocessing module.
+#
+# Copyright (c) 2006-2008, R Oudkerk
+# Licensed to PSF under a Contributor Agreement.
+#
 
 '''
 This file provides a subclass of the multiprocessing.Pool class that
@@ -44,11 +21,8 @@ TimingPoolMeas, that records & reports the pool's worker CPU time.
 '''
 
 #
-# In Python 2.7 (and 2.6):
-#
 # Pool has an _inqueue (_quick_put) and _outqueue (_quick_get)
 # and _taskqueue:
-#
 #
 #   pool.map()  ---> sets cache[]
 #               ---> put work on taskqueue
@@ -60,7 +34,6 @@ TimingPoolMeas, that records & reports the pool's worker CPU time.
 #                             --> sets cache[]
 #
 #       meanwhile, handle_workers thread creates new workers as needed.
-#
 #
 # map() etc add themselves to cache[jobid] = self
 # and place work on the task queue.
@@ -78,29 +51,41 @@ TimingPoolMeas, that records & reports the pool's worker CPU time.
 #     pull task from inqueue
 #     job,i,func,arg,kwargs = task
 #     put (job,i,result) on outqueue
-
-# _inqueue,_outqueue are SimpleQueue (queues.py)
-# get->recv=_reader.recv and put->send=_writer.send
-# _reader,_writer = Pipe(duplex=False)
-
-# Pipe (connection.py)
-# uses os.pipe() with a _multiprocessing.Connection()
-# on each fd.
-
-# _multiprocessing = /u32/python/src/Modules/_multiprocessing/pipe_connection.c
-# -> connection.h : send() is connection_send_obj()
-# which uses pickle.
 #
-# Only _multiprocessing/socket_connection.c is used on non-Windows platforms.
+# _inqueue,_outqueue are SimpleQueue (queues.py)
 
-class TimingConnection():
+
+
+# To capture the pickle traffic, we subclass the Connection, Pipe, and Queue
+# classes.
+
+# To capture the worker CPU time, we intercept the messages put on the inqueue
+# and fetched from the outqueue --
+# The inqueue includes job ids, the function to called, and args.  We wrap the
+# function in time_func() object, so the worker records the CPU time, and
+# returns a tuple of the original result and the timing information.
+# When reading from the outqueue, we peel off the timing information.
+
+import os
+import sys
+import time
+
+import multiprocessing
+from multiprocessing.queues import SimpleQueue
+from multiprocessing.connection import Connection
+from multiprocessing.pool import Pool
+from multiprocessing import context
+ForkingPickler = context.reduction.ForkingPickler
+
+from astrometry.util.ttime import CpuMeas
+
+class TimingConnection(Connection):
     '''
     A *Connection* wrapper that keeps track of how many objects and
     how many bytes are pickled, and how long that takes.
     '''
-    
-    def __init__(self, fd, writable=True, readable=True):
-        self.real = Connection(fd, writable=writable, readable=readable)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.ptime = 0.
         self.uptime = 0.
         self.pbytes = 0
@@ -121,308 +106,84 @@ class TimingConnection():
                     unpickle_megabytes = 1e-6 * self.upbytes,
                     unpickle_cputime = self.uptime)
 
-    def poll(self):
-        return self.real.poll()
-
-    # called by py2 (multiprocessing.queues.Queue.get())
     def recv(self):
-        bb = self.real.recv_bytes()
+        """Receive a (picklable) object"""
+        self._check_closed()
+        self._check_readable()
         t0 = time.time()
-        obj = pickle.loads(bb)
+        buf = self._recv_bytes()
+        obj = ForkingPickler.loads(buf.getbuffer())
         dt = time.time() - t0
-        self.upbytes += len(bb)
+        self.upbytes += len(buf.getbuffer())
         self.uptime += dt
         self.upobjs += 1
         return obj
 
-    # called by py2
     def send(self, obj):
+        """Send a (picklable) object"""
+        self._check_closed()
+        self._check_writable()
         t0 = time.time()
-        s = pickle.dumps(obj, -1)
+        bb = ForkingPickler.dumps(obj)
         dt = time.time() - t0
-        self.pbytes += len(s)
+        self.pbytes += len(bb)
         self.ptime += dt
         self.pobjs += 1
-        return self.real.send_bytes(s)
+        return self._send_bytes(bb)
 
-    # called by py3 (multiprocessing.queues.Queue.get())
-    def recv_bytes(self):
-        bb = self.real.recv_bytes()
-        self.upbytes += len(bb)
-        #self.uptime += ... unpickled by the Queue
-        self.upobjs += 1
-        return bb
-    
-    # called by py3
-    def send_bytes(self, bb):
-        self.pbytes += len(bb)
-        #self.ptime += 
-        self.pobjs += 1
-        return self.real.send_bytes(bb)
-    
-    def close(self):
-        return self.real.close()
-
-def TimingPipe():
+def TimingPipe(track_input, track_output):
     '''
-    Creates a pipe composed of two TimingConnection objects.
+    Creates a pipe composed of Connection or TimingConnection objects,
+    depending on what we want to record.
     '''
     fd1, fd2 = os.pipe()
-    c1 = TimingConnection(fd1, writable=False)
-    c2 = TimingConnection(fd2, readable=False)
-    return c1,c2
+    if track_input:
+        r = TimingConnection(fd1, writable=False)
+    else:
+        r = Connection(fd1, writable=False)
+    if track_output:
+        w = TimingConnection(fd2, readable=False)
+    else:
+        w = Connection(fd2, readable=False)
+    return r,w
 
-class TimingSimpleQueue(multiprocessing.queues.SimpleQueue):
+def _sum_object_stats(O1, O2):
+    ''' used to sum the statistics from two objects that may have
+    a stats() function that returns a dict.'''
+    S1 = S2 = {}
+    if hasattr(O1, 'stats'):
+        S1 = O1.stats()
+    if hasattr(O2, 'stats'):
+        S2 = O2.stats()
+    # merge/sum
+    for k,v in S2.items():
+        if not k in S1:
+            S1[k] = v
+        else:
+            S1[k] = S1[k] + S2[k]
+    return S1
+
+class TimingSimpleQueue(SimpleQueue):
     '''
     A *SimpleQueue* subclass that uses a *TimingPipe* object to keep
     stats on how much pickling objects costs.
     '''
+
     # new method
     def stats(self):
         '''
         Returns stats on the objects sent through this queue.
         '''
-        S1 = self._reader.stats()
-        S2 = self._writer.stats()
-        return dict([(k, S1[k]+S2[k]) for k in S1.keys()])
+        return _sum_object_stats(self._reader, self._writer)
 
-    def __init__(self):
-        (self._reader, self._writer) = TimingPipe()
-        self._rlock = multiprocessing.Lock()
-        self._wlock = multiprocessing.Lock()
-        # py2
-        if hasattr(self, '_make_methods'):
-            self._make_methods()
-        # _make_methods creates two methods:
-        #
-        #  get:  self._rlock.acquire();
-        #        self._reader.recv();
-        #        self._rlock.release();
-        #
-        #  put:  self._wlock.acquire();
-        #        self._write_send();
-        #        self._wlock.release();
-        #
-        
-def timing_worker(inqueue, outqueue, progressqueue,
-                 initializer=None, initargs=(),
-                 maxtasks=None):
-    '''
-    A modified worker thread that tracks how much CPU time is used.
-    '''
-    assert(maxtasks is None or (type(maxtasks) == int and maxtasks > 0))
-    put = outqueue.put
-    get = inqueue.get
-    if hasattr(inqueue, '_writer'):
-        inqueue._writer.close()
-        outqueue._reader.close()
-        if progressqueue is not None:
-            progressqueue._reader.close()
-        
-    if initializer is not None:
-        initializer(*initargs)
-
-    mypid = os.getpid()
-        
-    completed = 0
-    #t0 = time.time()
-    while maxtasks is None or (maxtasks and completed < maxtasks):
-        #print 'PID %i @ %f: get task' % (os.getpid(), time.time()-t0)
-        try:
-            # print 'Worker pid', os.getpid(), 'getting task'
-            task = get()
-        except (EOFError, IOError):
-            debug('worker pid %i got EOFError or IOError -- exiting' % os.getpid())
-            break
-        except KeyboardInterrupt as e:
-            print('timing_worker caught KeyboardInterrupt during get()')
-            put((None, None, (None,(False,e))))
-            raise SystemExit('ctrl-c')
-            break
-
-        if task is None:
-            debug('worker got sentinel -- exiting')
-            break
-
-        # print 'PID %i @ %f: unpack task' % (os.getpid(), time.time()-t0)
-        job, i, func, args, kwds = task
-
-        if progressqueue is not None:
-            try:
-                # print 'Worker pid', os.getpid(), 'writing to progressqueue'
-                progressqueue.put((job, i, mypid))
-            except (EOFError, IOError):
-                print('worker got EOFError or IOError on progress queue -- exiting')
-                break
-
-        t1 = CpuMeas()
-        #print 'PID %i @ %f: run task' % (os.getpid(), time.time()-t0)
-        try:
-            success,val = (True, func(*args, **kwds))
-        except Exception as e:
-            success,val = (False, e)
-            #print 'timing_worker: caught', e
-        except KeyboardInterrupt as e:
-            success,val = (False, e)
-            #print 'timing_worker: caught ctrl-C during work', e
-            #print type(e)
-            put((None, None, (None,(False,e))))
-            raise
-        #print 'PID %i @ %f: ran task' % (os.getpid(), time.time()-t0)
-        t2 = CpuMeas()
-        dt = (t2.cpu_seconds_since(t1), t2.wall_seconds_since(t1))
-        put((job, i, dt,(success,val)))
-        completed += 1
-        #print 'PID %i @ %f: sent result' % (os.getpid(), time.time()-t0)
-    debug('worker exiting after %d tasks' % completed)
-
-        
-def timing_handle_results(outqueue, get, cache, beancounter, pool):
-    '''
-    A modified handle-results thread that tracks how much CPU time is
-    used by workers.
-    '''
-    thread = threading.current_thread()
-    while 1:
-        try:
-            task = get()
-        except (IOError, EOFError):
-            debug('result handler got EOFError/IOError -- exiting')
-            return
-        if thread._state:
-            assert(thread._state == multiprocessing.pool.TERMINATE)
-            debug('result handler found thread._state=TERMINATE')
-            break
-        if task is None:
-            debug('result handler got sentinel')
-            break
-        #print 'Got task:', task
-        (job, i, dt, obj) = task
-        # ctrl-C -> (None, None, None, (False, KeyboardInterrupt()))
-        if job is None:
-            (success, val) = obj
-            if not success:
-                if isinstance(val, KeyboardInterrupt):
-                    #print 'Terminating due to KeyboardInterrupt'
-                    thread._state = multiprocessing.pool.TERMINATE
-                    pool._state = multiprocessing.pool.CLOSE
-                    break
-        try:
-            #print 'cache[job]:', cache[job], 'job', job, 'i', i
-            cache[job]._set(i, obj)
-        except KeyError:
-            pass
-        beancounter.add_time(dt)
-
-    while cache and thread._state != multiprocessing.pool.TERMINATE:
-        try:
-            task = get()
-        except (IOError, EOFError):
-            debug('result handler got EOFError/IOError -- exiting')
-            return
-
-        if task is None:
-            debug('result handler ignoring extra sentinel')
-            continue
-        (job, i, dt, obj) = task
-        if job is None:
-            #print 'Ignoring another KeyboardInterrupt'
-            continue
-        try:
-            cache[job]._set(i, obj)
-        except KeyError:
-            pass
-        beancounter.add_time(dt)
-
-    if hasattr(outqueue, '_reader'):
-        debug('ensuring that outqueue is not full')
-        # If we don't make room available in outqueue then
-        # attempts to add the sentinel (None) to outqueue may
-        # block.  There is guaranteed to be no more than 2 sentinels.
-        try:
-            for i in range(10):
-                if not outqueue._reader.poll():
-                    break
-                get()
-        except (IOError, EOFError):
-            pass
-    debug('result handler exiting: len(cache)=%s, thread._state=%s',
-          len(cache), thread._state)
-
-    #print 'debug_handle_results finishing.'
-
-
-def timing_handle_tasks(taskqueue, put, outqueue, progressqueue, pool,
-                       maxnqueued):
-    thread = threading.current_thread()
-    if progressqueue is not None and hasattr(progressqueue, '_writer'):
-        progressqueue._writer.close()
-    
-    nqueued = 0
-    
-    for taskseq, set_length in iter(taskqueue.get, None):
-        i = -1
-        #print 'handle_tasks: task sequence', taskseq
-        for i, task in enumerate(taskseq):
-            # print 'handle_tasks: got task', i
-            if thread._state:
-                debug('task handler found thread._state != RUN')
-                break
-
-            # print 'N queue:', nqueued, 'max', maxnqueued
-            try:
-                # print 'Queueing new task'
-                put(task)
-                nqueued += 1
-            except IOError:
-                debug('could not put task on queue')
-                break
-
-            # print 'N queue:', nqueued, 'max', maxnqueued
-            if progressqueue is not None:
-                while maxnqueued and nqueued >= maxnqueued:
-                    try:
-                        (job,i,pid) = progressqueue.get()
-                        # print 'Job', job, 'element', i, 'pid', pid, 'started'
-                        nqueued -= 1
-                    except (IOError, EOFError):
-                        break
-
+    def __init__(self, track_input, track_output, ctx):
+        self._reader, self._writer = TimingPipe(track_input, track_output)
+        self._rlock = ctx.Lock()
+        self._poll = self._reader.poll
+        if sys.platform == 'win32':
+            self._wlock = None
         else:
-            if set_length:
-                debug('doing set_length()')
-                set_length(i+1)
-            continue
-        break
-    else:
-        debug('task handler got sentinel')
-
-    #print 'debug_handle_tasks got sentinel'
-
-    try:
-        # tell result handler to finish when cache is empty
-        debug('task handler sending sentinel to result handler')
-        outqueue.put(None)
-
-        # tell workers there is no more work
-        debug('task handler sending sentinel to workers')
-        for p in pool:
-            put(None)
-    except IOError:
-        debug('task handler got IOError when sending sentinels')
-
-    # Empty the progressqueue to prevent blocking writing workers?
-    if progressqueue is not None:
-        # print 'task thread: emptying progressqueue'
-        try:
-            # print 'task thread: reading from progressqueue.  nqueued=', nqueued
-            (job,i,pid) = progressqueue.get()
-            # print 'Job', job, 'element', i, 'pid', pid, 'started'
-            nqueued -= 1
-        except (IOError,EOFError):
-            pass
-    # print 'Task thread done.'
-    
+            self._wlock = ctx.Lock()
 
 class BeanCounter(object):
     '''
@@ -505,235 +266,126 @@ class TimingPoolTimestamp(object):
                      worker_wall = self.pool.get_worker_wall())
         return stats
 
-class TimingPool(multiprocessing.pool.Pool):
+class time_func(object):
+    '''A wrapper that records the CPU time used by a call, and returns that
+    along with the result.'''
+    def __init__(self, func):
+        self.func = func
+    def __call__(self, *args, **kwargs):
+        t1 = CpuMeas()
+        R = self.func(*args, **kwargs)
+        t2 = CpuMeas()
+        dt = (t2.cpu_seconds_since(t1), t2.wall_seconds_since(t1))
+        return R,dt
+
+class TimingPool(Pool):
     '''
-    A python multiprocessing Pool subclass that keeps track of the
-    resources used by workers, and tracks the expense of pickling
-    objects.
+    An astrometry.util.ttime Measurement object to measure the resources used
+    by workers, and by pickling objects.
     '''
-    def _setup_queues(self):
-        self._inqueue  = TimingSimpleQueue()
-        self._outqueue = TimingSimpleQueue()
-        self._quick_put = self._inqueue._writer.send
-        self._quick_get = self._outqueue._reader.recv
-        
+    # New functions added:
+    def get_worker_cpu(self):
+        return self.beancounter.get_cpu()
+    def get_worker_wall(self):
+        return self.beancounter.get_wall()
+    def get_pickle_traffic(self):
+        return _sum_object_stats(self._inqueue, self._outqueue)
     def get_pickle_traffic_string(self):
         S = self.get_pickle_traffic()
         return (('  pickled %i objs, %g MB, using %g s CPU\n' +
                  'unpickled %i objs, %g MB, using %g s CPU') %
-                 (S[k] for k in [
+                 tuple(S.get(k,0) for k in [
                      'pickle_objs', 'pickle_megabytes', 'pickle_cputime',
                      'unpickle_objs', 'unpickle_megabytes', 'unpickle_cputime']))
 
-    def get_pickle_traffic(self):
-        S1 = self._inqueue.stats()
-        S2 = self._outqueue.stats()
-        return dict([(k, S1[k]+S2[k]) for k in S1.keys()])
+    def __init__(self, *args,
+                 track_send_pickles=True,
+                 track_recv_pickles=True,
+                 **kwargs):
+        self.track_send_pickles = track_send_pickles
+        self.track_recv_pickles = track_recv_pickles
+        super().__init__(*args, **kwargs)
+        self.beancounter = BeanCounter()
 
-    def get_worker_cpu(self):
-        return self._beancounter.get_cpu()
-    def get_worker_wall(self):
-        return self._beancounter.get_wall()
-
-    ### This just replaces the "worker" call with our "timing_worker".
-    def _repopulate_pool(self):
-        """Bring the number of pool processes up to the specified number,
-        for use after reaping workers which have exited.
-        """
-        #print 'Repopulating pool with', (self._processes - len(self._pool)), 'workers'
-        for i in range(self._processes - len(self._pool)):
-            w = self.Process(target=timing_worker,
-                             args=(self._inqueue, self._outqueue,
-                                   self._progressqueue,
-                                   self._initializer,
-                                   self._initargs, self._maxtasksperchild)
-                            )
-            self._pool.append(w)
-            w.name = w.name.replace('Process', 'PoolWorker')
-            w.daemon = True
-            w.start()
-            debug('added worker')
-
-    def py3Process(self, *args, **kwargs):
-        from multiprocessing import Process
-        #return Process(self._ctx, *args, **kwargs)
-        return Process(*args, **kwargs)
-
-    # This is just copied from the superclass; we call our routines:
-    #  -handle_results -> timing_handle_results
-    # And add _beancounter.
-    def __init__(self, processes=None, initializer=None, initargs=(),
-                 maxtasksperchild=None, taskqueuesize=0, context=None):
-        '''
-        taskqueuesize: maximum number of tasks to put on the queue;
-          this is actually done by keeping a progressqueue, written-to
-          by workers as they take work off the inqueue, and read by
-          the handle_tasks thread.  (Can't use a limit on _taskqueue,
-          because (a) multi-element tasks are written; and (b)
-          taskqueue is between the caller and the handle_tasks thread,
-          which then just transfers the work to the inqueue, where it
-          piles up.  Can't easily use a limit on inqueue because it is
-          implemented via pipes with unknown, OS-controlled capacity
-          in units of bytes.)
-        '''
-        if context is None:
-            # py3
-            import multiprocessing.pool
-            if 'get_context' in dir(multiprocessing.pool):
-                context = multiprocessing.pool.get_context()
-        self._ctx = context
-
-        if py3:
-            self.Process = self.py3Process
-        
-        self._beancounter = BeanCounter()
-        self._setup_queues()
-        self._taskqueue = queue.Queue()
-        self._cache = {}
-        self._state = multiprocessing.pool.RUN
-        self._initializer = initializer
-        self._initargs = initargs
-        self._maxtasksperchild = maxtasksperchild
-
-        if taskqueuesize:
-            self._progressqueue = TimingSimpleQueue()
+    def _setup_queues(self):
+        if self.track_send_pickles:
+            self._inqueue = TimingSimpleQueue(False, True, self._ctx)
         else:
-            self._progressqueue = None
-        
-        if processes is None:
-            try:
-                processes = multiprocessing.cpu_count()
-            except NotImplementedError:
-                processes = 1
-
-        if initializer is not None and not hasattr(initializer, '__call__'):
-            raise TypeError('initializer must be a callable')
-
-        self._processes = processes
-        self._pool = []
-        self._repopulate_pool()
-
-        self._worker_handler = threading.Thread(
-        target=multiprocessing.pool.Pool._handle_workers,
-        args=(self, )
-            )
-        self._worker_handler.name = 'WorkerHandler'
-        self._worker_handler.daemon = True
-        self._worker_handler._state = multiprocessing.pool.RUN
-        self._worker_handler.start()
-
-        if True:
-            self._task_handler = threading.Thread(
-                target=timing_handle_tasks,
-                args=(self._taskqueue, self._quick_put, self._outqueue,
-                      self._progressqueue, self._pool,
-                      taskqueuesize))
+            self._inqueue = self._ctx.SimpleQueue()
+        if self.track_recv_pickles:
+            self._outqueue = TimingSimpleQueue(True, False, self._ctx)
         else:
-            self._task_handler = threading.Thread(
-                target=multiprocessing.pool.Pool._handle_tasks,
-                args=(self._taskqueue, self._quick_put, self._outqueue,
-                      self._pool))
-              
-        self._task_handler.name = 'TaskHandler'
-        self._task_handler.daemon = True
-        self._task_handler._state = multiprocessing.pool.RUN
-        self._task_handler.start()
+            self._outqueue = self._ctx.SimpleQueue()
+        self._quick_get = self._quick_get_wrapper
+        self._real_quick_get = self._outqueue._reader.recv
+        self._quick_put = self._quick_put_wrapper
+        self._real_quick_put = self._inqueue._writer.send
 
-        self._result_handler = threading.Thread(
-            target=timing_handle_results,
-            args=(self._outqueue, self._quick_get, self._cache,
-                  self._beancounter, self)
-            )
-        self._result_handler.name = 'ResultHandler'
-        self._result_handler.daemon = True
-        self._result_handler._state = multiprocessing.pool.RUN
-        self._result_handler.start()
+    def _quick_get_wrapper(self):
+        # Peel off the timing results
+        obj = self._real_quick_get()
+        if obj is None:
+            return obj
+        job, i, (success, res) = obj
+        if success:
+            res,dt = res
+            self.beancounter.add_time(dt)
+        return job, i, (success, res)
 
-        self._terminate = multiprocessing.util.Finalize(
-            self, self._terminate_pool,
-            args=(self._taskqueue, self._inqueue, self._outqueue, self._pool,
-                  self._worker_handler, self._task_handler,
-                  self._result_handler, self._cache),
-            exitpriority=15
-            )
+    def _quick_put_wrapper(self, task):
+        # Wrap tasks with timing results
+        if task is None:
+            return self._real_quick_put(task)
+        job, i, func, args, kwds = task
+        func = time_func(func)
+        return self._real_quick_put((job, i, func, args, kwds))
+
+
+######################################################
+
+
+def test_func(N):
+    import numpy as np
+    r = []
+    for i in range(N):
+        arr = np.random.normal(size=1000000)
+        r.append(arr)
+    s = 0.
+    for arr in r:
+        s = s + arr**2
+    return s
+
+def test_func_2(arr):
+    import numpy as np
+    return np.sum(arr**2)
 
 if __name__ == '__main__':
+    pool = TimingPool(4)
+    R = pool.map(test_func, [10, 20, 30])
+    #print(R)
+    print('worker cpu:', pool.get_worker_cpu())
+    print('worker wall:', pool.get_worker_wall())
+    print('pickles:', pool.get_pickle_traffic_string())
 
-    import sys
-    from astrometry.util import multiproc
-    from astrometry.util.ttime import *
+    import numpy as np
+    pool = TimingPool(4)
+    R = pool.map(test_func_2, [np.random.normal(size=1000000) for x in range(5)])
+    print(R)
+    print('worker cpu:', pool.get_worker_cpu())
+    print('worker wall:', pool.get_worker_wall())
+    print('pickles:', pool.get_pickle_traffic_string())
 
-    # import logging
-    # lvl = logging.DEBUG
-    # logging.basicConfig(level=lvl, format='%(message)s', stream=sys.stdout)
-    # import multiprocessing
-    # multiprocessing.get_logger()
-    
-    def work(i):
-        print('Doing work', i)
-        time.sleep(2)
-        print('Done work', i)
-        return i
-        
-    def realwork(i):
-        print('Doing work', i)
-        import numpy as np
-        X = 0
-        for j in range(100 - 10*i):
-            #print('work', i, j)
-            X = X + np.random.normal(size=(1000,1000))
-        print('Done work', i)
-        return i
-    
-    class ywrapper(object):
-        def __init__(self, y, n):
-            self.n = n
-            self.y = y
-        def __str__(self):
-            return 'ywrapper: n=%i; ' % self.n + self.y
-        def __iter__(self):
-            return self
-        def next(self):
-            return next(self.y)
-        def __len__(self):
-            return self.n
-        __next__ = next
-    def yielder(n):
-        for i in range(n):
-            print('Yielding', i)
-            yield i
+    pool = TimingPool(4, track_send_pickles=False, track_recv_pickles=False)
+    R = pool.map(test_func, [20, 20, 20])
+    #print(R)
+    print('worker cpu:', pool.get_worker_cpu())
+    print('worker wall:', pool.get_worker_wall())
+    print('pickles:', pool.get_pickle_traffic_string())
 
-    N = 20
-    y = yielder(N)
-    args = ywrapper(y, N)
-    
-    dpool = TimingPool(4, taskqueuesize=4)
-    dmup = multiproc.multiproc(pool=dpool)
-    Time.add_measurement(TimingPoolMeas(dpool))
-
-    # t0 = Time()
-    # res = dmup.map(work, args)
-    # print(Time()-t0)
-    # print('Got result:', res)
-
-    N = 20
-    y = yielder(N)
-    args = ywrapper(y, N)
+    from astrometry.util.ttime import Time
+    #Time.add_measurement(TimingPoolMeas(pool, pickleTraffic=False))
+    pool = TimingPool(4)
+    Time.add_measurement(TimingPoolMeas(pool, pickleTraffic=True))
     t0 = Time()
-    print('Doing real work...')
-    res = dmup.map(realwork, args)
+    R = pool.map(test_func, [20, 20, 20])
     print(Time()-t0)
-    print('Got result:', res)
-    
-    # Test taskqueuesize=1
-    dpool = TimingPool(4, taskqueuesize=1)
-    dmup = multiproc.multiproc(pool=dpool)
-    Time.add_measurement(TimingPoolMeas(dpool))
-    N = 20
-    y = yielder(N)
-    args = ywrapper(y, N)
-    t0 = Time()
-    print('Doing real work...')
-    res = dmup.map(realwork, args)
-    print(Time()-t0)
-    print('Got result:', res)
