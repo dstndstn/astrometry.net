@@ -186,6 +186,35 @@ test_plotstuff-main.c: test_plotstuff.c
 test_plotstuff: test_plotstuff-main.o test_plotstuff.o $(COMMON)/cutest.o $(PLOTSTUFF) $(CATS_SLIB) $(CAIRO_SLIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIBS)
 
+#######################################
+
+# Add the basename of your test sources here...
+ALL_TEST_FILES = test_plotstuff
+
+$(ALL_TEST_FILES): $(SLIB)
+
+ALL_TEST_EXTRA_OBJS := $(PLOTSTUFF)
+ALL_TEST_EXTRA_LDFLAGS := $(CAIRO_LIBS) -lm
+ALL_TEST_LIBS := $(CAIRO_SLIB)
+
+# Add the dependencies here...
+#test_multiindex2: test_multiindex2.o $(SLIB)
+
+tests: $(ALL_TEST_FILES)
+.PHONY: tests
+
+include $(COMMON)/makefile.tests
+
+ALL_OBJ += $(ALL_TEST_FILES_O) $(ALL_TEST_FILES_MAIN_O)
+ALL_OBJ += $(ALL_TEST_EXTRA_OBJS) test.o
+
+GENERATED_FILES += $(ALL_TEST_FILES_MAIN_C)
+
+ALL_EXECS += $(ALL_TEST_FILES) test
+
+# END OF KEIR'S SUPER SIMPLE TESTING FRAMEWORK
+######################################################
+
 DEP_OBJ := $(ALL_OBJ)
 DEP_PREREQS := $(QFITS_LIB)
 
