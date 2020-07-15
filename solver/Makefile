@@ -22,7 +22,6 @@ include $(COMMON)/makefile.common
 include $(COMMON)/makefile.anfiles
 include $(COMMON)/makefile.cfitsio
 include $(COMMON)/makefile.png
-include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.netpbm
 
@@ -52,15 +51,6 @@ LDLIBS += $(ANFILES_LIB)
 SLIB := $(ENGINE_LIB)
 SLIB += $(CATS_SLIB)
 SLIB += $(ANFILES_SLIB)
-
-CAIRO_SLIB := $(COMMON)/cairoutils.o
-CAIRO_SLIB += $(SLIB)
-
-CAIRO_LIBS := $(LDLIBS)
-CAIRO_LIBS += $(CAIRO_LIB)
-CAIRO_LIBS += $(PNG_LIB)
-CAIRO_LIBS += $(NETPBM_LIB)
-CAIRO_LIBS += $(JPEG_LIB)
 
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CATS_INC)
@@ -339,9 +329,6 @@ augment-xylist: augment-xylist-main.o augment-xylist.o image2xy-files.o \
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 ALL_OBJ += augment-xylist-main.o augment-xylist.o
 
-$(COMMON)/cairoutils.o:
-	$(MAKE) -C $(COMMON) cairoutils.o
-
 py: pysolver
 .PHONY: py
 
@@ -358,7 +345,6 @@ _solver$(PYTHON_SO_EXT): solver.i $(ENGINE_OBJS)
 DEP_OBJ := $(ALL_OBJ)
 DEP_PREREQS := $(QFITS_LIB)
 
-CFLAGS += $(CAIRO_INC)
 include $(COMMON)/makefile.deps
 
 .PHONY: clean
