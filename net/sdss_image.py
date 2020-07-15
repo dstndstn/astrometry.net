@@ -18,7 +18,7 @@ from astrometry.net import settings
 
 def plot_sdss_image(wcsfn, plotfn, image_scale=1.0, debug_ps=None):
     from astrometry.util import util as anutil
-    from astrometry.solver import plotstuff as ps
+    from astrometry.plot import plotstuff as ps
     # Parse the wcs.fits file
     wcs = anutil.Tan(wcsfn, 0)
     # grab SDSS tiles with about the same resolution as this image.

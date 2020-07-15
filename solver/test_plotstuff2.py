@@ -13,7 +13,7 @@ except ImportError:
     except ImportError:
         raise ImportError("Cannot import either pyfits or astropy.io.fits")
 from astrometry.util.fits import *
-from astrometry.solver.plotstuff import *
+from astrometry.plot.plotstuff import *
 import numpy as np
 import pylab as plt
 from math import pi,sqrt

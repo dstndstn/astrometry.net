@@ -2,7 +2,7 @@
  # This file is part of the Astrometry.net suite.
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
-%module(package="astrometry.solver") plotstuff_c
+%module(package="astrometry.plot") plotstuff_c
 
 %include <typemaps.i>
 

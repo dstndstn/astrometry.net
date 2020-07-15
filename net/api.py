@@ -439,7 +439,7 @@ def get_anns(cal, nbright=0):
     hipfn = settings.HIPPARCOS_CAT
     tycho2fn = settings.TYCHO2_KD
 
-    import astrometry.solver.plotann as plotann
+    import astrometry.plot.plotann as plotann
     opt = plotann.get_empty_opts()
     if nbright:
         opt.nbright = nbright
