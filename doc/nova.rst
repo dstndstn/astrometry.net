@@ -165,7 +165,7 @@ to log in::
 
     # id_nova_backend
     #
-    command="cd /home/solve/nova/blind; ../net/testscript-astro",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-rsa AAAA[.....] nova@webserver
+    command="cd /home/solve/nova/solver; ../net/testscript-astro",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-rsa AAAA[.....] nova@webserver
 
 That script
 (https://github.com/dstndstn/astrometry.net/blob/master/net/testscript-astro)

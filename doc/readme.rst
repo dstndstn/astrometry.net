@@ -399,7 +399,7 @@ Tricks and Tips
 
 * When solve-field processes FITS images, it looks for an existing
   WCS header.  If one is found, it tries to verify that header before
-  trying to solve the image blindly.  You can prevent this with::
+  trying to solve the image all-sky.  You can prevent this with::
 
     $ solve-field --no-verify ...
 
@@ -518,11 +518,10 @@ Image-solving programs:
 ^^^^^^^^^^^^^^^^^^^^^^^
 
   * solve-field: main high-level command-line user interface.
-  * backend: higher-level solver that reads "augmented xylists";
+  * astrometry-engine: higher-level solver that reads "augmented xylists";
     called by solve-field.
   * augment-xylist: creates "augmented xylists" from images, which
     include star positions and hints and instructions for solving.
-  * blind: low-level command-line solver.
   * image2xy: source extractor.
 
 Plotting programs:
@@ -710,7 +709,7 @@ exceptions are:
          MAG_AUTO
 
   2) We write a FILTER_NAME file containing a Gaussian PSF with FWHM
-     of 2 pixels.  (See blind/augment-xylist.c "filterstr" for the
+     of 2 pixels.  (See solver/augment-xylist.c "filterstr" for the
      exact string.)
 
   3) We set CATALOG_TYPE FITS_1.0
