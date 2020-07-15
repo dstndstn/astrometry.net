@@ -5,7 +5,7 @@
 
 
 /**
- A command-line interface to the blind solver system.
+ A command-line interface to the astrometry solver system.
  */
 
 #include <stdio.h>

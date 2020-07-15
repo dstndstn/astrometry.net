@@ -711,7 +711,7 @@ static int write_one(fitstable_t* table, const void* struc, anbool flip,
         // skips the required number of bytes.
         // This allows both structs and normal columns to coexist
         // (in theory -- is this ever used?)
-        // (yes, by blind.c when writing rdls and correspondence files
+        // (yes, by onefield.c when writing rdls and correspondence files
         //  with tag-along data...)
 
         if (columndata && col->fitstype != col->ctype) {

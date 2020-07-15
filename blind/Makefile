@@ -126,7 +126,7 @@ ANLIBS := $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 INSTALL_LIB := $(ENGINE_LIB) $(ENGINE_SO)
 
 ENGINE_OBJS := \
-		engine.o blindutils.o blind.o solver.o quad-utils.o \
+		engine.o blindutils.o onefield.o solver.o quad-utils.o \
 		matchfile.o matchobj.o solvedfile.o tweak2.o \
 		verify.o tweak.o
 

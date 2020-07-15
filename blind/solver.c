@@ -300,14 +300,14 @@ void solver_print_to(const solver_t* sp, FILE* stream) {
  dest = malloc(sizeof(MatchObj));
  memcpy(dest, mo, sizeof(MatchObj));
  // various modules add things to a mo...
- blind_matchobj_deep_copy(mo, dest);
+ onefield_matchobj_deep_copy(mo, dest);
  verify_matchobj_deep_copy(mo, dest);
  return dest;
  }
  
  static void matchobj_free_data(MatchObj* mo) {
  verify_free_matchobj(mo);
- blind_free_matchobj(mo);
+ onefield_free_matchobj(mo);
  }
  */
 

@@ -3,8 +3,8 @@
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
-#ifndef BLIND_H
-#define BLIND_H
+#ifndef ONEFIELD_H
+#define ONEFIELD_H
 
 #include "astrometry/an-bool.h"
 #include "astrometry/solver.h"
@@ -16,7 +16,7 @@
 #define DEFAULT_QSF_LO 0.1
 #define DEFAULT_QSF_HI 1.0
 
-struct blind_params {
+struct onefield_params {
     solver_t solver;
 
     anbool indexes_inparallel;
@@ -122,46 +122,46 @@ struct blind_params {
 
     anbool best_hit_only;
 };
-typedef struct blind_params blind_t;
+typedef struct onefield_params onefield_t;
 
-void blind_set_field_file(blind_t* bp, const char* fn);
-void blind_set_cancel_file(blind_t* bp, const char* fn);
-void blind_set_solved_file(blind_t* bp, const char* fn);
-void blind_set_solvedin_file(blind_t* bp, const char* fn);
-void blind_set_solvedout_file(blind_t* bp, const char* fn);
-void blind_set_match_file(blind_t* bp, const char* fn);
-void blind_set_rdls_file(blind_t* bp, const char* fn);
-void blind_set_scamp_file(blind_t* bp, const char* fn);
-void blind_set_corr_file(blind_t* bp, const char* fn);
-void blind_set_wcs_file(blind_t* bp, const char* fn);
-void blind_set_xcol(blind_t* bp, const char* x);
-void blind_set_ycol(blind_t* bp, const char* x);
+void onefield_set_field_file(onefield_t* bp, const char* fn);
+void onefield_set_cancel_file(onefield_t* bp, const char* fn);
+void onefield_set_solved_file(onefield_t* bp, const char* fn);
+void onefield_set_solvedin_file(onefield_t* bp, const char* fn);
+void onefield_set_solvedout_file(onefield_t* bp, const char* fn);
+void onefield_set_match_file(onefield_t* bp, const char* fn);
+void onefield_set_rdls_file(onefield_t* bp, const char* fn);
+void onefield_set_scamp_file(onefield_t* bp, const char* fn);
+void onefield_set_corr_file(onefield_t* bp, const char* fn);
+void onefield_set_wcs_file(onefield_t* bp, const char* fn);
+void onefield_set_xcol(onefield_t* bp, const char* x);
+void onefield_set_ycol(onefield_t* bp, const char* x);
 
-void blind_add_verify_wcs(blind_t* bp, sip_t* wcs);
-void blind_add_loaded_index(blind_t* bp, index_t* ind);
-void blind_add_index(blind_t* bp, const char* index);
+void onefield_add_verify_wcs(onefield_t* bp, sip_t* wcs);
+void onefield_add_loaded_index(onefield_t* bp, index_t* ind);
+void onefield_add_index(onefield_t* bp, const char* index);
 
-void blind_clear_verify_wcses(blind_t* bp);
-void blind_clear_indexes(blind_t* bp);
-void blind_clear_solutions(blind_t* bp);
+void onefield_clear_verify_wcses(onefield_t* bp);
+void onefield_clear_indexes(onefield_t* bp);
+void onefield_clear_solutions(onefield_t* bp);
 
-void blind_add_field(blind_t* bp, int field);
-void blind_add_field_range(blind_t* bp, int lo, int hi);
+void onefield_add_field(onefield_t* bp, int field);
+void onefield_add_field_range(onefield_t* bp, int lo, int hi);
 
-void blind_run(blind_t* bp);
+void onefield_run(onefield_t* bp);
 
-void blind_init(blind_t* bp);
+void onefield_init(onefield_t* bp);
 
-void blind_cleanup(blind_t* bp);
+void onefield_cleanup(onefield_t* bp);
 
-int blind_parameters_are_sane(blind_t* bp, solver_t* sp);
+int onefield_parameters_are_sane(onefield_t* bp, solver_t* sp);
 
-int blind_is_run_obsolete(blind_t* bp, solver_t* sp);
+int onefield_is_run_obsolete(onefield_t* bp, solver_t* sp);
 
-void blind_log_run_parameters(blind_t* bp);
+void onefield_log_run_parameters(onefield_t* bp);
 
-void blind_free_matchobj(MatchObj* mo);
+void onefield_free_matchobj(MatchObj* mo);
 
-void blind_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest);
+void onefield_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest);
 
 #endif

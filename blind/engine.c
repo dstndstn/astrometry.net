@@ -6,8 +6,8 @@
 /**
  * Accepts an augmented xylist that describes a field or set of fields to solve.
  * Reads a config file to find local indices, and merges information about the
- * indices with the job description to create an input file for 'blind'.  Runs blind
- * and merges the results.
+ * indices with the job description to create an input file for 'onefield'.
+ * Runs and merges the results.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -205,7 +205,7 @@ int engine_add_index(engine_t* engine, char* path) {
     return 0;
 }
 
-static void add_index_to_blind(engine_t* engine, blind_t* bp,
+static void add_index_to_onefield(engine_t* engine, onefield_t* bp,
                                int i) {
     index_t* index;
     index = pl_get(engine->indexes, i);
@@ -223,9 +223,9 @@ static void add_index_to_blind(engine_t* engine, blind_t* bp,
             free(iname);
             free(ifn);
         }
-        blind_add_loaded_index(bp, index);
+        onefield_add_loaded_index(bp, index);
     } else {
-        blind_add_index(bp, index->indexname);
+        onefield_add_index(bp, index->indexname);
     }
 }
 
@@ -473,7 +473,7 @@ static double job_imageh(job_t* job) {
 }
 
 int engine_run_job(engine_t* engine, job_t* job) {
-    blind_t* bp = &(job->bp);
+    onefield_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
     
     int i;
@@ -481,7 +481,7 @@ int engine_run_job(engine_t* engine, job_t* job) {
     double app_max_default;
     anbool solved = FALSE;
 
-    if (blind_is_run_obsolete(bp, sp)) {
+    if (onefield_is_run_obsolete(bp, sp)) {
         goto finish;
     }
 
@@ -506,7 +506,7 @@ int engine_run_job(engine_t* engine, job_t* job) {
             // make depth ranges be inclusive.
             endobj++;
             // up to this point they are 1-indexed, but with default value
-            // zero; blind uses 0-indexed.
+            // zero; onefield uses 0-indexed.
             if (startobj)
                 startobj--;
             if (endobj)
@@ -577,24 +577,24 @@ int engine_run_job(engine_t* engine, job_t* job) {
                             index->indexname, job->search_radius, job->ra_center, job->dec_center);
                     continue;
                 }
-                add_index_to_blind(engine, bp, ii);
+                add_index_to_onefield(engine, bp, ii);
             }
 
             il_free(indexlist);
 
-            logverb("Running blind solver:\n");
-            blind_log_run_parameters(bp);
+            logverb("Running solver:\n");
+            onefield_log_run_parameters(bp);
 
-            blind_run(bp);
+            onefield_run(bp);
 
             // we only want to try using the verify_wcses the first time.
-            blind_clear_verify_wcses(bp);
-            blind_clear_indexes(bp);
-            blind_clear_solutions(bp);
-            blind_clear_indexes(bp);
+            onefield_clear_verify_wcses(bp);
+            onefield_clear_indexes(bp);
+            onefield_clear_solutions(bp);
+            onefield_clear_indexes(bp);
             solver_clear_indexes(sp);
 
-            if (blind_is_run_obsolete(bp, sp)) {
+            if (onefield_is_run_obsolete(bp, sp)) {
                 solved = TRUE;
                 break;
             }
@@ -610,7 +610,7 @@ int engine_run_job(engine_t* engine, job_t* job) {
 
  finish:
     solver_cleanup(sp);
-    blind_cleanup(bp);
+    onefield_cleanup(bp);
     return 0;
 }
 
@@ -656,7 +656,7 @@ static void parse_sip_coeffs(const qfits_header* hdr, const char* prefix, sip_t*
 }
 
 static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
-    blind_t* bp = &(job->bp);
+    onefield_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
 
     double dnil = -HUGE_VAL;
@@ -675,7 +675,7 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
     double val;
     char pretty[FITS_LINESZ+1];
 
-    blind_init(bp);
+    onefield_init(bp);
     // must be in this order because init_parameters handily zeros out sp
     solver_set_default_values(sp);
 
@@ -701,26 +701,26 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
     if (val > 0.0)
         sp->distractor_ratio = val;
 
-    blind_set_solvedout_file  (bp, fn=fits_get_long_string(hdr, "ANSOLVED"));
+    onefield_set_solvedout_file  (bp, fn=fits_get_long_string(hdr, "ANSOLVED"));
     free(fn);
-    blind_set_solvedin_file  (bp, fn=fits_get_long_string(hdr, "ANSOLVIN"));
+    onefield_set_solvedin_file  (bp, fn=fits_get_long_string(hdr, "ANSOLVIN"));
     free(fn);
-    blind_set_match_file   (bp, fn=fits_get_long_string(hdr, "ANMATCH" ));
+    onefield_set_match_file   (bp, fn=fits_get_long_string(hdr, "ANMATCH" ));
     free(fn);
-    blind_set_rdls_file    (bp, fn=fits_get_long_string(hdr, "ANRDLS"  ));
+    onefield_set_rdls_file    (bp, fn=fits_get_long_string(hdr, "ANRDLS"  ));
     free(fn);
-    blind_set_scamp_file   (bp, fn=fits_get_long_string(hdr, "ANSCAMP" ));
+    onefield_set_scamp_file   (bp, fn=fits_get_long_string(hdr, "ANSCAMP" ));
     free(fn);
-    blind_set_wcs_file     (bp, fn=fits_get_long_string(hdr, "ANWCS"   ));
+    onefield_set_wcs_file     (bp, fn=fits_get_long_string(hdr, "ANWCS"   ));
     free(fn);
-    blind_set_corr_file    (bp, fn=fits_get_long_string(hdr, "ANCORR"  ));
+    onefield_set_corr_file    (bp, fn=fits_get_long_string(hdr, "ANCORR"  ));
     free(fn);
-    blind_set_cancel_file  (bp, fn=fits_get_long_string(hdr, "ANCANCEL"));
+    onefield_set_cancel_file  (bp, fn=fits_get_long_string(hdr, "ANCANCEL"));
     free(fn);
 
-    blind_set_xcol(bp, fn=fits_get_dupstring(hdr, "ANXCOL"));
+    onefield_set_xcol(bp, fn=fits_get_dupstring(hdr, "ANXCOL"));
     free(fn);
-    blind_set_ycol(bp, fn=fits_get_dupstring(hdr, "ANYCOL"));
+    onefield_set_ycol(bp, fn=fits_get_dupstring(hdr, "ANYCOL"));
     free(fn);
 
     bp->timelimit = qfits_header_getint(hdr, "ANTLIM", 0);
@@ -878,7 +878,7 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
             goto bailout;
         }
 
-        blind_add_field_range(bp, lo, hi);
+        onefield_add_field_range(bp, lo, hi);
         n++;
     }
 
@@ -896,7 +896,7 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
             goto bailout;
         }
 
-        blind_add_field(bp, fld);
+        onefield_add_field(bp, fld);
         n++;
     }
 
@@ -930,7 +930,7 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
 
         sip_ensure_inverse_polynomials(&wcs);
 
-        blind_add_verify_wcs(bp, &wcs);
+        onefield_add_verify_wcs(bp, &wcs);
         n++;
     }
 
@@ -961,7 +961,7 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
 
     // Default: solve first field.
     if (run && !il_size(bp->fieldlist)) {
-        blind_add_field(bp, 1);
+        onefield_add_field(bp, 1);
     }
 
     return TRUE;
@@ -1024,7 +1024,7 @@ void engine_free(engine_t* engine) {
 job_t* engine_read_job_file(engine_t* engine, const char* jobfn) {
     qfits_header* hdr;
     job_t* job;
-    blind_t* bp;
+    onefield_t* bp;
 
     // Read primary header.
     hdr = anqfits_get_header2(jobfn, 0);
@@ -1042,7 +1042,7 @@ job_t* engine_read_job_file(engine_t* engine, const char* jobfn) {
 
     bp = &(job->bp);
 
-    blind_set_field_file(bp, jobfn);
+    onefield_set_field_file(bp, jobfn);
 
     // If the job has no scale estimate, search everything provided
     // by the engine
@@ -1077,19 +1077,19 @@ job_t* engine_read_job_file(engine_t* engine, const char* jobfn) {
     }
 
     if (engine->cancelfn)
-        blind_set_cancel_file(bp, engine->cancelfn);
+        onefield_set_cancel_file(bp, engine->cancelfn);
     if (engine->solvedfn)
-        blind_set_solved_file(bp, engine->solvedfn);
+        onefield_set_solved_file(bp, engine->solvedfn);
 
     return job;
 }
 
 void job_set_cancel_file(job_t* job, const char* fn) {
-    blind_set_cancel_file(&(job->bp), fn);
+    onefield_set_cancel_file(&(job->bp), fn);
 }
 
 void job_set_solved_file(job_t* job, const char* fn) {
-    blind_set_solved_file(&(job->bp), fn);
+    onefield_set_solved_file(&(job->bp), fn);
 }
 
 // Modify all filenames to be relative to "dir".
@@ -1100,59 +1100,59 @@ int job_set_base_dir(job_t* job, const char* dir) {
 
 int job_set_input_base_dir(job_t* job, const char* dir) {
     char* path;
-    blind_t* bp = &(job->bp);
+    onefield_t* bp = &(job->bp);
     logverb("Changing input file base dir to %s\n", dir);
     if (bp->fieldfname) {
         path = resolve_path(bp->fieldfname, dir);
         logverb("Changing %s to %s\n", bp->fieldfname, path);
-        blind_set_field_file(bp, path);
+        onefield_set_field_file(bp, path);
     }
     return 0;
 }
 
 int job_set_output_base_dir(job_t* job, const char* dir) {
     char* path;
-    blind_t* bp = &(job->bp);
+    onefield_t* bp = &(job->bp);
     logverb("Changing output file base dir to %s\n", dir);
     if (bp->cancelfname) {
         path = resolve_path(bp->cancelfname, dir);
         logverb("Cancel file was %s, changing to %s.\n", bp->cancelfname, path);
-        blind_set_cancel_file(bp, path);
+        onefield_set_cancel_file(bp, path);
     }
     if (bp->solved_in) {
         path = resolve_path(bp->solved_in, dir);
         logverb("Changing %s to %s\n", bp->solved_in, path);
-        blind_set_solvedin_file(bp, path);
+        onefield_set_solvedin_file(bp, path);
     }
     if (bp->solved_out) {
         path = resolve_path(bp->solved_out, dir);
         logverb("Changing %s to %s\n", bp->solved_out, path);
-        blind_set_solvedout_file(bp, path);
+        onefield_set_solvedout_file(bp, path);
     }
     if (bp->matchfname) {
         path = resolve_path(bp->matchfname, dir);
         logverb("Changing %s to %s\n", bp->matchfname, path);
-        blind_set_match_file(bp, path);
+        onefield_set_match_file(bp, path);
     }
     if (bp->indexrdlsfname) {
         path = resolve_path(bp->indexrdlsfname, dir);
         logverb("Changing %s to %s\n", bp->indexrdlsfname, path);
-        blind_set_rdls_file(bp, path);
+        onefield_set_rdls_file(bp, path);
     }
     if (bp->scamp_fname) {
         path = resolve_path(bp->scamp_fname, dir);
         logverb("Changing %s to %s\n", bp->scamp_fname, path);
-        blind_set_scamp_file(bp, path);
+        onefield_set_scamp_file(bp, path);
     }
     if (bp->corr_fname) {
         path = resolve_path(bp->corr_fname, dir);
         logverb("Changing %s to %s\n", bp->corr_fname, path);
-        blind_set_corr_file(bp, path);
+        onefield_set_corr_file(bp, path);
     }
     if (bp->wcs_template) {
         path = resolve_path(bp->wcs_template, dir);
         logverb("Changing %s to %s\n", bp->wcs_template, path);
-        blind_set_wcs_file(bp, path);
+        onefield_set_wcs_file(bp, path);
     }
     return 0;
 }

@@ -6,7 +6,7 @@
 /**
  * Accepts an augmented xylist that describes a field or set of fields to solve.
  * Reads a config file to find local indices, and merges information about the
- * indices with the job description to create an input file for 'blind'.  Runs blind
+ * indices with the job description to create an input file for 'onefield'.  Runs
  * and merges the results.
  */
 

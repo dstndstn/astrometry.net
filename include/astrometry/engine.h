@@ -49,7 +49,7 @@ struct job_t {
     double dec_center;
     double search_radius;
     anbool use_radec_center;
-    blind_t bp;
+    onefield_t bp;
 };
 typedef struct job_t job_t;
 

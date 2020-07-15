@@ -30,7 +30,7 @@ COMMON := $(BASEDIR)/util
 
 # The internal Astrometry.net dependency stack, top to bottom, is:
 #
-#  blind/libastrometry.a  -- astrometry.net core
+#  solver/libastrometry.a  -- astrometry.net core
 #    catalogs/libcatalogs.a
 #    util/libanfiles.a  -- astrometry.net index files, etc
 #      libkd/libkd.a -- kd-trees
