@@ -70,7 +70,7 @@ subdirs: gsl-an
 solver: gsl-an
 endif
 
-SUBDIRS := util catalogs libkd solver sdss qfits-an
+SUBDIRS := util catalogs libkd solver sdss qfits-an plot
 SUBDIRS_OPT := gsl-an
 
 subdirs: $(SUBDIRS)
@@ -82,6 +82,8 @@ libkd: config util
 catalogs: config libkd
 
 solver: config util catalogs libkd qfits-an
+
+plot: config util catalogs libkd qfits-an
 
 $(SUBDIRS):
 	$(MAKE) -C $@
@@ -98,13 +100,12 @@ html:
 	$(MAKE) -C doc html
 
 # Targets that require extra libraries
-extra: qfits-an util catalogs solver-cairo
-
-solver-cairo: cairoutils
-	$(MAKE) -C solver cairo
-
-.PHONY: solver-cairo
+extra: qfits-an util catalogs plot-extra
 .PHONY: extra
+
+plot-extra: cairoutils
+	$(MAKE) -C plot cairo
+.PHONY: plot-extra
 
 # Targets that create python bindings (requiring swig)
 ifneq ($(SYSTEM_GSL),yes)
@@ -119,7 +120,7 @@ cairoutils:
 	$(MAKE) -C util cairoutils.o
 
 pyplotstuff: cairoutils
-	$(MAKE) -C solver pyplotstuff
+	$(MAKE) -C plot pyplotstuff
 
 .PHONY: py libkd-spherematch cairoutils pyplotstuff
 
@@ -138,7 +139,7 @@ install: all report.txt
 	@echo
 	-$(MAKE) extra
 	-($(MAKE) -C util install || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n")
-	-($(MAKE) -C solver install-extra || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n")
+	-($(MAKE) -C plot install-extra || echo "\nErrors in the previous make command are not fatal -- we try to build and install some optional code.\n\n")
 	@echo
 
 install-core:
@@ -340,6 +341,7 @@ test:
 	$(MAKE) -C catalogs test
 	$(MAKE) -C libkd test
 	$(MAKE) -C solver test
+	$(MAKE) -C plot test
 .PHONY: test
 
 clean:
@@ -352,6 +354,7 @@ clean:
 	$(MAKE) -C libkd clean
 	$(MAKE) -C solver clean
 	$(MAKE) -C sdss clean
+	$(MAKE) -C plot clean
 
 realclean: clean
 
