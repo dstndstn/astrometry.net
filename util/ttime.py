@@ -252,6 +252,9 @@ class Time(object):
     @staticmethod
     def add_measurement(m):
         Time.measurements.append(m)
+    @staticmethod
+    def remove_measurement(m):
+        Time.measurements.remove(m)
     measurements = [CpuMeas]
 
     def __init__(self):

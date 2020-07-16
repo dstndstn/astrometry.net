@@ -383,33 +383,45 @@ def test_func_2(arr):
     import numpy as np
     return np.sum(arr**2)
 
-if __name__ == '__main__':
+def test():
     pool = TimingPool(4)
     R = pool.map(test_func, [10, 20, 30])
-    #print(R)
     print('worker cpu:', pool.get_worker_cpu())
     print('worker wall:', pool.get_worker_wall())
     print('pickles:', pool.get_pickle_traffic_string())
+    print('deleting pool:')
+    del pool
+    print('deleted pool')
+    time.sleep(2)
 
     import numpy as np
+    print('Creating second pool')
     pool = TimingPool(4)
+    print('Using second pool')
     R = pool.map(test_func_2, [np.random.normal(size=1000000) for x in range(5)])
-    print(R)
+    print('Got result from second pool')
     print('worker cpu:', pool.get_worker_cpu())
     print('worker wall:', pool.get_worker_wall())
     print('pickles:', pool.get_pickle_traffic_string())
-
-    pool = TimingPool(4, track_send_pickles=False, track_recv_pickles=False)
-    R = pool.map(test_func, [20, 20, 20])
-    #print(R)
-    print('worker cpu:', pool.get_worker_cpu())
-    print('worker wall:', pool.get_worker_wall())
-    print('pickles:', pool.get_pickle_traffic_string())
+    print('deleting pool:')
+    del pool
+    print('deleted pool')
+    time.sleep(2)
 
     from astrometry.util.ttime import Time
-    #Time.add_measurement(TimingPoolMeas(pool, pickleTraffic=False))
+    pool = TimingPool(4, track_send_pickles=False, track_recv_pickles=False)
+    m = TimingPoolMeas(pool, pickleTraffic=False)
+    Time.add_measurement(m)
+    t0 = Time()
+    R = pool.map(test_func, [20, 20, 20])
+    print(Time()-t0)
+    Time.remove_measurement(m)
+
     pool = TimingPool(4)
     Time.add_measurement(TimingPoolMeas(pool, pickleTraffic=True))
     t0 = Time()
     R = pool.map(test_func, [20, 20, 20])
     print(Time()-t0)
+
+if __name__ == '__main__':
+    test()
