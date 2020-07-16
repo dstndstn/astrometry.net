@@ -227,26 +227,22 @@ class TimingPool(Pool):
         self.beancounter = BeanCounter()
 
     def _setup_queues(self):
-        print('TimingPool._setup_queues: _ctx is', self._ctx)
-        print('_ctx.SimpleQueue():', self._ctx.SimpleQueue)
         if self.track_send_pickles:
             self._inqueue = TimingSimpleQueue(False, True, self._ctx)
         else:
             self._inqueue = self._ctx.SimpleQueue()
-        print('TimingPool: pid', os.getpid(), '_inqueue', self._inqueue, 'writer', self._inqueue._writer, '_handle', self._inqueue._writer._handle)
         if self.track_recv_pickles:
             self._outqueue = TimingSimpleQueue(True, False, self._ctx)
         else:
             self._outqueue = self._ctx.SimpleQueue()
         self._quick_get = self._quick_get_wrapper
-        #self._real_quick_get = self._outqueue._reader.recv
+        self._real_quick_get = self._outqueue._reader.recv
         self._quick_put = self._quick_put_wrapper
-        #self._real_quick_put = self._inqueue._writer.send
+        self._real_quick_put = self._inqueue._writer.send
 
     def _quick_get_wrapper(self):
         # Peel off the timing results
-        #obj = self._real_quick_get()
-        obj = self._outqueue._reader.recv()
+        obj = self._real_quick_get()
         if obj is None:
             return obj
         job, i, (success, res) = obj
@@ -257,16 +253,11 @@ class TimingPool(Pool):
 
     def _quick_put_wrapper(self, task):
         # Wrap tasks with timing results
-        # if task is None:
-        #     return self._real_quick_put(task)
-        # job, i, func, args, kwds = task
-        # func = time_func(func)
-        # return self._real_quick_put((job, i, func, args, kwds))
         if task is not None:
             job, i, func, args, kwds = task
             func = time_func(func)
             task = job, i, func, args, kwds
-        return self._inqueue._writer.send(task)
+        return self._real_quick_put(task)
 
 class time_func(object):
     '''A wrapper that records the CPU time used by a call, and returns that
