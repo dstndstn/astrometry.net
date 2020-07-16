@@ -415,7 +415,6 @@ def test():
         t0 = Time()
         R = pool.map(test_func_3, [np.random.normal(size=1000000) for x in range(5)])
         print(Time()-t0)
-        #pool.terminate()
 
 if __name__ == '__main__':
     test()

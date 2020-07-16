@@ -9,12 +9,6 @@
 
 #include "os-features.h"
 
-#if defined(_POSIX_SYNCHRONIZED_IO) && (_POSIX_SYNCHRONIZED_IO > 0)
-#define NEED_FDATASYNC 0
-#else
-#define NEED_FDATASYNC 1
-#endif
-
 #if NEED_CANONICALIZE_FILE_NAME
 char* canonicalize_file_name(const char* fn) {
     char* path = malloc(1024);
@@ -26,12 +20,6 @@ char* canonicalize_file_name(const char* fn) {
     }
     path = realloc(path, strlen(path) + 1);
     return path;
-}
-#endif
-
-#if NEED_FDATASYNC
-int fdatasync(int fd) {
-    return fsync(fd);
 }
 #endif
 
