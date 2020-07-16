@@ -9,7 +9,7 @@
 
 #include "cutest.h"
 
-#include "os-features.h"
+#include "ioutils.h"
 
 char* true_baton_val = "MYBATON";
 
