@@ -5,15 +5,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef TEST_CANONICALIZE_FILE_NAME
-int main() {
-    char* path = canonicalize_file_name("/");
-    free(path);
-    //printf("#define NEED_CANONICALIZE_FILE_NAME 0\n");
-    return 0;
-}
-#endif
-
 #ifdef TEST_QSORT_R
 static int cmp(void* u, const void* a, const void* b) {
     return 0;
