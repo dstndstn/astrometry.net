@@ -75,7 +75,11 @@ from multiprocessing.queues import SimpleQueue
 from multiprocessing.connection import Connection
 from multiprocessing.pool import Pool
 from multiprocessing import context
-ForkingPickler = context.reduction.ForkingPickler
+try:
+    ForkingPickler = context.reduction.ForkingPickler
+except:
+    # python3.5
+    ForkingPickler = multiprocessing.reduction.ForkingPickler
 
 from astrometry.util.ttime import CpuMeas
 
