@@ -379,44 +379,44 @@ def test_func_3(arr):
     return arr[::2]**2
 
 def test():
-    pool = TimingPool(4)
-    R = pool.map(test_func, [10, 20, 30])
-    print('worker cpu:', pool.get_worker_cpu())
-    print('worker wall:', pool.get_worker_wall())
-    print('pickles:', pool.get_pickle_traffic_string())
-    print('deleting pool:')
-    del pool
-    print('deleted pool')
-    time.sleep(1)
+    #import logging
+    #multiprocessing.log_to_stderr().setLevel(logging.DEBUG)
+
+    # per multiprocess.Pool documentation (as of Python 3.8 at least), can't just
+    # let a Pool fall out of scope; must close or you risk the process hanging.
+    # This definitely happens on Linux!
+    with TimingPool(4) as pool:
+        R = pool.map(test_func, [10, 20, 30])
+        print('worker cpu:', pool.get_worker_cpu())
+        print('worker wall:', pool.get_worker_wall())
+        print('pickles:', pool.get_pickle_traffic_string())
 
     import numpy as np
     print('Creating second pool')
-    pool = TimingPool(4)
-    print('Using second pool')
-    R = pool.map(test_func_2, [np.random.normal(size=1000000) for x in range(5)])
-    print('Got result from second pool')
-    print('worker cpu:', pool.get_worker_cpu())
-    print('worker wall:', pool.get_worker_wall())
-    print('pickles:', pool.get_pickle_traffic_string())
-    print('deleting pool:')
-    del pool
-    print('deleted pool')
-    time.sleep(1)
+    with TimingPool(4) as pool:
+        print('Using second pool')
+        R = pool.map(test_func_2, [np.random.normal(size=1000000) for x in range(5)])
+        print('Got result from second pool')
+        print('worker cpu:', pool.get_worker_cpu())
+        print('worker wall:', pool.get_worker_wall())
+        print('pickles:', pool.get_pickle_traffic_string())
 
     from astrometry.util.ttime import Time
-    pool = TimingPool(4, track_send_pickles=False, track_recv_pickles=False)
-    m = TimingPoolMeas(pool, pickleTraffic=False)
-    Time.add_measurement(m)
-    t0 = Time()
-    R = pool.map(test_func, [20, 20, 20])
-    print(Time()-t0)
-    Time.remove_measurement(m)
+    with TimingPool(4, track_send_pickles=False, track_recv_pickles=False) as pool:
+        m = TimingPoolMeas(pool, pickleTraffic=False)
+        Time.add_measurement(m)
+        t0 = Time()
+        R = pool.map(test_func, [20, 20, 20])
+        print(Time()-t0)
+        Time.remove_measurement(m)
 
-    pool = TimingPool(4)
-    Time.add_measurement(TimingPoolMeas(pool, pickleTraffic=True))
-    t0 = Time()
-    R = pool.map(test_func_3, [np.random.normal(size=1000000) for x in range(5)])
-    print(Time()-t0)
+    with TimingPool(4) as pool:
+        Time.add_measurement(TimingPoolMeas(pool, pickleTraffic=True))
+        t0 = Time()
+        R = pool.map(test_func_3, [np.random.normal(size=1000000) for x in range(5)])
+        print(Time()-t0)
+        #pool.terminate()
 
 if __name__ == '__main__':
     test()
+    sys.exit()
