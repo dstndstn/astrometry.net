@@ -27,7 +27,6 @@
 
 #include "os-features.h"
 #include "ioutils.h"
-//#include "os-features.h"
 #include "errors.h"
 #include "log.h"
 

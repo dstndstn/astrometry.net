@@ -3,6 +3,8 @@
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
 
+#include "ioutils.h" // for QSORT_R
+
 #include "bl-sort.h"
 // for qsort_r
 #include "os-features.h"

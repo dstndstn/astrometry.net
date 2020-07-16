@@ -32,7 +32,7 @@ SO=$(SHAREDLIB_SUFFIX)
 
 ANBASE_OBJ := starutil.o mathutil.o bl-sort.o bl.o bt.o healpix-utils.o \
 	healpix.o permutedsort.o ioutils.o fileutils.o md5.o \
-	os-features.o an-endian.o errors.o an-opts.o tic.o log.o datalog.o \
+	an-endian.o errors.o an-opts.o tic.o log.o datalog.o \
 	sparsematrix.o coadd.o convolve-image.o resample.o \
 	intmap.o histogram.o histogram2d.o
 
@@ -263,38 +263,6 @@ $(INCLUDE_DIR)/os-features-config.h: os-features-test.c
 	-rm -f os-features.log
 	-rm -f $@ $@.tmp
 	@echo
-	@echo "Testing canonicalize_file_name..."
-	@echo "Testing canonicalize_file_name..." >> os-features.log
-	(($(CC) -o os-features-test-canonicalize \
-	  $(CPPFLAGS) $(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $^ $(LDFLAGS) >> os-features.log && \
-	  ./os-features-test-canonicalize >> os-features.log && \
-	  echo "#define NEED_CANONICALIZE_FILE_NAME 0") \
-	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1") >> $@.tmp
-	@echo
-	@echo "Testing declare qsort_r..."
-	@echo "Testing declare qsort_r..." >> os-features.log
-	(($(CC) -o os-features-test-declare-qsort \
-	   $(CPPFLAGS) $(CFLAGS) -DTEST_DECLARE_QSORT_R $^ $(LDFLAGS) >> os-features.log && \
-	   ./os-features-test-declare-qsort >> os-features.log && \
-	   echo "#define NEED_DECLARE_QSORT_R 1") \
-	|| echo "#define NEED_DECLARE_QSORT_R 0") >> $@.tmp
-	@echo
-	@echo "Testing qsort_r..."
-	@echo "Testing qsort_r..." >> os-features.log
-	(($(CC) -o os-features-test-qsort \
-	   $(CPPFLAGS) $(CFLAGS) -DTEST_QSORT_R $^ $(LDFLAGS) >> os-features.log && \
-	   ./os-features-test-qsort >> os-features.log && \
-	   echo "#define NEED_QSORT_R 0") \
-	|| echo "#define NEED_QSORT_R 1") >> $@.tmp
-	@echo
-	@echo "Testing swap qsort_r..."
-	@echo "Testing swap qsort_r..." >> os-features.log
-	(($(CC) -Werror -o os-features-test-swap-qsort \
-	   $(CPPFLAGS) $(CFLAGS) -DTEST_SWAP_QSORT_R $^ $(LDFLAGS) >> os-features.log && \
-	   ./os-features-test-swap-qsort >> os-features.log && \
-	   echo "#define NEED_SWAP_QSORT_R 0") \
-	|| echo "#define NEED_SWAP_QSORT_R 1") >> $@.tmp
-	@echo
 	@echo "Testing netpbm..."
 	@echo "   NETPBM_INC is $(NETPBM_INC_ORIG)"
 	@echo "   NETPBM_LIB is $(NETPBM_LIB_ORIG)"
@@ -363,11 +331,7 @@ reconfig:
 config: $(INCLUDE_DIR)/os-features-config.h makefile.os-features
 .PHONY: config
 
-ALL_OBJ += os-features.o
 ALL_TARGETS := os-features-test.o \
-	os-features-test-canonicalize \
-	os-features-test-declare-qsort \
-	os-features-test-qsort \
 	os-features-test-netpbm \
 	os-features-test-netpbm-make \
 	$(INCLUDE_DIR)/os-features-config.h
