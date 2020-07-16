@@ -43,7 +43,8 @@ script:
     - $PIP install fitsio
     - $PYTHON -c "import numpy as np"
     # quick py-only tests:
-    - python util/timingpool.py
+    - export PYVER=$(python -c "from __future__ import print_function; import sys; print('%i.%i' % sys.version_info[:2])")
+    - if [ $PYVER != "2.7" ]; then python util/timingpool.py; fi
     - make
     - make py
     - make extra

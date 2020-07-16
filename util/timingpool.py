@@ -374,6 +374,10 @@ def test_func_2(arr):
     import numpy as np
     return np.sum(arr**2)
 
+def test_func_3(arr):
+    import numpy as np
+    return arr[::2]**2
+
 def test():
     pool = TimingPool(4)
     R = pool.map(test_func, [10, 20, 30])
@@ -383,7 +387,7 @@ def test():
     print('deleting pool:')
     del pool
     print('deleted pool')
-    time.sleep(2)
+    time.sleep(1)
 
     import numpy as np
     print('Creating second pool')
@@ -397,7 +401,7 @@ def test():
     print('deleting pool:')
     del pool
     print('deleted pool')
-    time.sleep(2)
+    time.sleep(1)
 
     from astrometry.util.ttime import Time
     pool = TimingPool(4, track_send_pickles=False, track_recv_pickles=False)
@@ -411,7 +415,7 @@ def test():
     pool = TimingPool(4)
     Time.add_measurement(TimingPoolMeas(pool, pickleTraffic=True))
     t0 = Time()
-    R = pool.map(test_func, [20, 20, 20])
+    R = pool.map(test_func_3, [np.random.normal(size=1000000) for x in range(5)])
     print(Time()-t0)
 
 if __name__ == '__main__':
