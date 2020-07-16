@@ -51,14 +51,14 @@ script:
     - make py
     - make extra
     - make test
-    - (cd util; ./test)
-    - (cd libkd; ./test)
-    - (cd solver; ./test)
-    - (cd plot; ./test)
+    - (cd util && ./test)
+    - (cd libkd && ./test)
+    - (cd solver && ./test)
+    - (cd plot && ./test)
     - make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env $PYTHON"
     - ls ~/an/lib/python
     - export PYTHONPATH=${ORIG_PYTHONPATH}:~/an/lib/python
-    - $PYTHON -c "import astrometry.libkd.spherematch"
+    - (cd /tmp && $PYTHON -c "import astrometry.libkd.spherematch")
     - export PATH=${PATH}:~/an/bin
     - build-astrometry-index -d 3 -o index-9918.fits -P 18 -S mag -B 0.1 -s 0 -r 1 -I 9918 -M -i demo/tycho2-mag6.fits
     - echo -e 'add_path .\ninparallel\nindex index-9918.fits' > 99.cfg
