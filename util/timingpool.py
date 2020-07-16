@@ -135,6 +135,13 @@ class TimingConnection(Connection):
         self.pobjs += 1
         return self._send_bytes(bb)
 
+## This is essential! -- register a special pickler for our
+## Connection subclass.  Without this, the file descriptors don't
+## get set correctly across the spawn call.
+from multiprocessing import reduction
+from multiprocessing.connection import reduce_connection
+reduction.register(TimingConnection, reduce_connection)
+
 def TimingPipe(track_input, track_output):
     '''
     Creates a pipe composed of Connection or TimingConnection objects,
@@ -188,6 +195,93 @@ class TimingSimpleQueue(SimpleQueue):
             self._wlock = None
         else:
             self._wlock = ctx.Lock()
+
+class TimingPool(Pool):
+    '''
+    A python multiprocessing Pool subclass that keeps track of the
+    resources used by workers, and tracks the expense of pickling
+    objects.
+    '''
+    # New functions added:
+    def get_worker_cpu(self):
+        return self.beancounter.get_cpu()
+    def get_worker_wall(self):
+        return self.beancounter.get_wall()
+    def get_pickle_traffic(self):
+        return _sum_object_stats(self._inqueue, self._outqueue)
+    def get_pickle_traffic_string(self):
+        S = self.get_pickle_traffic()
+        return (('  pickled %i objs, %g MB, using %g s CPU\n' +
+                 'unpickled %i objs, %g MB, using %g s CPU') %
+                 tuple(S.get(k,0) for k in [
+                     'pickle_objs', 'pickle_megabytes', 'pickle_cputime',
+                     'unpickle_objs', 'unpickle_megabytes', 'unpickle_cputime']))
+
+    def __init__(self, *args,
+                 track_send_pickles=True,
+                 track_recv_pickles=True,
+                 **kwargs):
+        self.track_send_pickles = track_send_pickles
+        self.track_recv_pickles = track_recv_pickles
+        super().__init__(*args, **kwargs)
+        self.beancounter = BeanCounter()
+
+    def _setup_queues(self):
+        print('TimingPool._setup_queues: _ctx is', self._ctx)
+        print('_ctx.SimpleQueue():', self._ctx.SimpleQueue)
+        if self.track_send_pickles:
+            self._inqueue = TimingSimpleQueue(False, True, self._ctx)
+        else:
+            self._inqueue = self._ctx.SimpleQueue()
+        print('TimingPool: pid', os.getpid(), '_inqueue', self._inqueue, 'writer', self._inqueue._writer, '_handle', self._inqueue._writer._handle)
+        if self.track_recv_pickles:
+            self._outqueue = TimingSimpleQueue(True, False, self._ctx)
+        else:
+            self._outqueue = self._ctx.SimpleQueue()
+        self._quick_get = self._quick_get_wrapper
+        #self._real_quick_get = self._outqueue._reader.recv
+        self._quick_put = self._quick_put_wrapper
+        #self._real_quick_put = self._inqueue._writer.send
+
+    def _quick_get_wrapper(self):
+        # Peel off the timing results
+        #obj = self._real_quick_get()
+        obj = self._outqueue._reader.recv()
+        if obj is None:
+            return obj
+        job, i, (success, res) = obj
+        if success:
+            res,dt = res
+            self.beancounter.add_time(dt)
+        return job, i, (success, res)
+
+    def _quick_put_wrapper(self, task):
+        # Wrap tasks with timing results
+        # if task is None:
+        #     return self._real_quick_put(task)
+        # job, i, func, args, kwds = task
+        # func = time_func(func)
+        # return self._real_quick_put((job, i, func, args, kwds))
+        if task is not None:
+            job, i, func, args, kwds = task
+            func = time_func(func)
+            task = job, i, func, args, kwds
+        return self._inqueue._writer.send(task)
+
+class time_func(object):
+    '''A wrapper that records the CPU time used by a call, and returns that
+    along with the result.'''
+    def __init__(self, func):
+        self.func = func
+    def __call__(self, *args, **kwargs):
+        t1 = CpuMeas()
+        R = self.func(*args, **kwargs)
+        t2 = CpuMeas()
+        dt = (t2.cpu_seconds_since(t1), t2.wall_seconds_since(t1))
+        return R,dt
+
+######################################################
+# These classes handle tracking time & the Measurement framework.
 
 class BeanCounter(object):
     '''
@@ -270,82 +364,8 @@ class TimingPoolTimestamp(object):
                      worker_wall = self.pool.get_worker_wall())
         return stats
 
-class time_func(object):
-    '''A wrapper that records the CPU time used by a call, and returns that
-    along with the result.'''
-    def __init__(self, func):
-        self.func = func
-    def __call__(self, *args, **kwargs):
-        t1 = CpuMeas()
-        R = self.func(*args, **kwargs)
-        t2 = CpuMeas()
-        dt = (t2.cpu_seconds_since(t1), t2.wall_seconds_since(t1))
-        return R,dt
-
-class TimingPool(Pool):
-    '''
-    An astrometry.util.ttime Measurement object to measure the resources used
-    by workers, and by pickling objects.
-    '''
-    # New functions added:
-    def get_worker_cpu(self):
-        return self.beancounter.get_cpu()
-    def get_worker_wall(self):
-        return self.beancounter.get_wall()
-    def get_pickle_traffic(self):
-        return _sum_object_stats(self._inqueue, self._outqueue)
-    def get_pickle_traffic_string(self):
-        S = self.get_pickle_traffic()
-        return (('  pickled %i objs, %g MB, using %g s CPU\n' +
-                 'unpickled %i objs, %g MB, using %g s CPU') %
-                 tuple(S.get(k,0) for k in [
-                     'pickle_objs', 'pickle_megabytes', 'pickle_cputime',
-                     'unpickle_objs', 'unpickle_megabytes', 'unpickle_cputime']))
-
-    def __init__(self, *args,
-                 track_send_pickles=True,
-                 track_recv_pickles=True,
-                 **kwargs):
-        self.track_send_pickles = track_send_pickles
-        self.track_recv_pickles = track_recv_pickles
-        super().__init__(*args, **kwargs)
-        self.beancounter = BeanCounter()
-
-    def _setup_queues(self):
-        if self.track_send_pickles:
-            self._inqueue = TimingSimpleQueue(False, True, self._ctx)
-        else:
-            self._inqueue = self._ctx.SimpleQueue()
-        if self.track_recv_pickles:
-            self._outqueue = TimingSimpleQueue(True, False, self._ctx)
-        else:
-            self._outqueue = self._ctx.SimpleQueue()
-        self._quick_get = self._quick_get_wrapper
-        self._real_quick_get = self._outqueue._reader.recv
-        self._quick_put = self._quick_put_wrapper
-        self._real_quick_put = self._inqueue._writer.send
-
-    def _quick_get_wrapper(self):
-        # Peel off the timing results
-        obj = self._real_quick_get()
-        if obj is None:
-            return obj
-        job, i, (success, res) = obj
-        if success:
-            res,dt = res
-            self.beancounter.add_time(dt)
-        return job, i, (success, res)
-
-    def _quick_put_wrapper(self, task):
-        # Wrap tasks with timing results
-        if task is None:
-            return self._real_quick_put(task)
-        job, i, func, args, kwds = task
-        func = time_func(func)
-        return self._real_quick_put((job, i, func, args, kwds))
-
-
 ######################################################
+
 
 
 def test_func(N):
