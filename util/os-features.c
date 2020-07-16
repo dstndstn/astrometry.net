@@ -9,6 +9,3 @@
 
 #include "os-features.h"
 
-#if NEED_QSORT_R
-#include "qsort_reentrant.c"
-#endif

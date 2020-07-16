@@ -33,6 +33,8 @@
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
 
+#include "qsort_reentrant.c"
+
 int copy_file(const char* infn, const char* outfn) {
     FILE* fin = fopen(infn, "rb");
     FILE* fout = fopen(outfn, "wb");
