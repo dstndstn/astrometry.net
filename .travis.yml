@@ -44,6 +44,8 @@ script:
     - $PYTHON -c "import numpy as np"
     # quick py-only tests:
     - export PYVER=$(python -c "from __future__ import print_function; import sys; print('%i.%i' % sys.version_info[:2])")
+    - export ORIG_PYTHONPATH=${PYTHONPATH}
+    - export PYTHONPATH=${PYTHONPATH}:.
     - if [ $PYVER != "2.7" ]; then python util/timingpool.py; fi
     - make
     - make py
@@ -55,7 +57,7 @@ script:
     - (cd plot; ./test)
     - make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env $PYTHON"
     - ls ~/an/lib/python
-    - export PYTHONPATH=${PYTHONPATH}:~/an/lib/python
+    - export PYTHONPATH=${ORIG_PYTHONPATH}:~/an/lib/python
     - $PYTHON -c "import astrometry.libkd.spherematch"
     - export PATH=${PATH}:~/an/bin
     - build-astrometry-index -d 3 -o index-9918.fits -P 18 -S mag -B 0.1 -s 0 -r 1 -I 9918 -M -i demo/tycho2-mag6.fits
