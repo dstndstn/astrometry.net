@@ -18,6 +18,8 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 import django
 django.setup()
 
+from django.core.exceptions import MultipleObjectsReturned
+
 import tempfile
 import traceback
 from urllib.parse import urlparse
@@ -368,7 +370,13 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
         nside = int(2**round(math.log(nside, 2)))
         nside = max(1, nside)
         healpix = anutil.radecdegtohealpix(ra, dec, nside)
-        sky_location, created = SkyLocation.objects.get_or_create(nside=nside, healpix=healpix)
+        try:
+            sky_location, created = SkyLocation.objects.get_or_create(nside=nside, healpix=healpix)
+        except MultipleObjectsReturned:
+            log.msg('Multiple SkyLocations for nside %i, healpix %i' % (nside, healpix))
+            # arbitrarily take the first one.
+            sky_location = SkyLocation.objects.filter(nside=nside, healpix=healpix)[0]
+            
         log.msg('SkyLocation:', sky_location)
 
         # Find bounds for the Calibration object.
