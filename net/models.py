@@ -1236,7 +1236,7 @@ class Comment(models.Model):
 
 class UserProfile(models.Model):
     API_KEY_LENGTH = 16
-    display_name = models.CharField(max_length=32)
+    display_name = models.CharField(max_length=256)
     user = models.ForeignKey(User, models.CASCADE, unique=True, related_name='profile',
                              editable=False)
     apikey = models.CharField(max_length = API_KEY_LENGTH)
