@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+
+# This file is part of the Astrometry.net suite.
+# Copyright 2009 Dustin Lang
+# Licensed under a 3-clause BSD style license - see LICENSE
+# https://github.com/dstndstn/astrometry.net
+
 from __future__ import print_function
 import os
 import sys

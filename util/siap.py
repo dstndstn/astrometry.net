@@ -5,8 +5,13 @@ from xml.dom import minidom, Node
 import numpy as np
 from astrometry.util.fits import *
 
-def siap_parse_result(fn=None):
-    dom1 = minidom.parse(fn)
+def siap_parse_result(fn=None, txt=None):
+    if fn is not None:
+        dom1 = minidom.parse(fn)
+    elif txt is not None:
+        dom1 = minidom.parseString(txt)
+    else:
+        raise RuntimeError('Need filename or text to parse!')
 
     tables = dom1.getElementsByTagName('TABLE')
     assert(len(tables) == 1)
