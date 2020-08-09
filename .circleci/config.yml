@@ -2,7 +2,6 @@ version: 2
 
 jobs:
   build-docker-ubuntu-18:
-    steps:
     docker:
       - image: ubuntu:18.04
     steps:
