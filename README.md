@@ -1,7 +1,8 @@
 Astrometry.net
 ==============
 
-[![Build Status](https://travis-ci.org/dstndstn/astrometry.net.png?branch=master)](https://travis-ci.org/dstndstn/astrometry.net)
+Travis: [![Build Status](https://travis-ci.org/dstndstn/astrometry.net.png?branch=master)](https://travis-ci.org/dstndstn/astrometry.net)
+CircleCI: [![Build Status](https://img.shields.io/circleci/project/github/dstndstn/astrometry.net.svg)](https://circleci.com/gh/dstndstn/astrometry.net)
 [![Tag Version](https://img.shields.io/github/tag/dstndstn/astrometry.net.svg)](https://github.com/dstndstn/astrometry.net/tags)
 [![License](http://img.shields.io/:license-gpl3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0.html)
 
