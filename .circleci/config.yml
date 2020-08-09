@@ -18,6 +18,7 @@ jobs:
           name: Python packages
           command: |
             pip3 install numpy
+            pip3 install fitsio
       - checkout
       - run:
           name: Make
