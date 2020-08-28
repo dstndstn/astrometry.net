@@ -464,8 +464,13 @@ class Image(models.Model):
             raise RuntimeError('Failed to make resized image for %s: pnmscale: %s' % (str(self), err))
         df = DiskFile.from_file(imagefn, Image.RESIZED_COLLECTION)
         logmsg('Resized disk file:', df)
-        image, created = Image.objects.get_or_create(disk_file=df, width=W, height=H)
-        logmsg('Created:', created)
+        try:
+            image, created = Image.objects.get_or_create(disk_file=df, width=W, height=H)
+            if created:
+                logmsg('Created:', created)
+        except Image.MultipleObjectsReturned:
+            image = Image.objects.filter(disk_file=df, width=W, height=H)
+            image = image[0]
         return image
 
     def render(self, f):

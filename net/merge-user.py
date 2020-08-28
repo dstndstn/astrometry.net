@@ -5,15 +5,15 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(p)
 
+import django
+django.setup()
+
 from astrometry.net.models import *
 from log import *
 from django.contrib.auth.models import User
 
-import django
-django.setup()
-
-
 users = User.objects.filter(email__contains='godard')
+#users = User.objects.filter(id=5898)
 print(users.count(), 'Users match')
 bestuser = None
 nmax = 0

@@ -54,11 +54,8 @@ from django.db.models import Count
 from django.db import DatabaseError
 from django.db.models import Q
 
-from logging.config import dictConfig
-dictConfig(settings.LOGGING)
-
-import logging
-logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+#import logging
+#logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
 def is_tarball(fn):
     logmsg('is_tarball: %s' % fn)
@@ -553,36 +550,59 @@ def create_user_image(sub, img, original_filename):
         sub.album.user_images.add(uimg)
     return uimg
 
-def get_or_create_image(df):
-    # Is there already an Image for this DiskFile?
-    try:
-        img = Image.objects.get(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
-    except Image.MultipleObjectsReturned:
-        logmsg("multiple found")
-        imgs = Image.objects.filter(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
-        for i in range(1,len(imgs)):
-            imgs[i].delete()
-        img = imgs[0]
-    except Image.DoesNotExist:
-        # try to create image assume disk file is an image file (png, jpg, etc)
-        logmsg('Image database object does not exist; creating')
-        img = create_image(df)
-        logmsg('img = ' + str(img))
-        if img is None:
-            # try to create sourcelist image
-            img = create_source_list(df)
+def get_or_create_image(df, create_thumb=True):
 
-        if img:
-            # cache
-            print('Creating thumbnail')
-            img.get_thumbnail()
-            print('Creating display-sized image')
-            img.get_display_image()
-            print('Saving image')
-            img.save()
-        else:
-            raise Exception('This file\'s type is not supported.')
+    imgs = Image.objects.filter(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
+    if imgs.count():
+        return imgs[0]
+
+    img = create_image(df)
+    logmsg('img = ' + str(img))
+    if img is None:
+        # try to create sourcelist image
+        img = create_source_list(df)
+    if img and create_thumb:
+        # cache
+        print('Creating thumbnail')
+        img.get_thumbnail()
+        print('Creating display-sized image')
+        img.get_display_image()
+        print('Saving image')
+        img.save()
+    elif img:
+        img.save()
+    else:
+        raise Exception('This file\'s type is not supported.')
     return img
+
+    # # Is there already an Image for this DiskFile?
+    # try:
+    # except Image.MultipleObjectsReturned:
+    #     logmsg("multiple found")
+    #     imgs = Image.objects.filter(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
+    #     for i in range(1,len(imgs)):
+    #         imgs[i].delete()
+    #     img = imgs[0]
+    # except Image.DoesNotExist:
+    #     # try to create image assume disk file is an image file (png, jpg, etc)
+    #     logmsg('Image database object does not exist; creating')
+    #     img = create_image(df)
+    #     logmsg('img = ' + str(img))
+    #     if img is None:
+    #         # try to create sourcelist image
+    #         img = create_source_list(df)
+    # 
+    #     if img:
+    #         # cache
+    #         print('Creating thumbnail')
+    #         img.get_thumbnail()
+    #         print('Creating display-sized image')
+    #         img.get_display_image()
+    #         print('Saving image')
+    #         img.save()
+    #     else:
+    #         raise Exception('This file\'s type is not supported.')
+    # return img
 
 
 def create_image(df):
@@ -674,6 +694,10 @@ def job_callback(result):
 
 def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
          solve_command, solve_locally):
+
+    from logging.config import dictConfig
+    dictConfig(settings.LOGGING)
+
     dojob_pool = None
     dosub_pool = None
     if dojob_nthreads > 1:
