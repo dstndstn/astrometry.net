@@ -5,11 +5,11 @@ from astrometry.net.tmpfile import *
 from astrometry.net import settings
 
 from astrometry.util import util as anutil
-from astrometry.plot import plotstuff as ps
 
 def plot_wcs_outline(tanwcs, plotfn, W=256, H=256, width=36, zoom=True,
                      zoomwidth=3.6, grid=10, hd=False, hd_labels=False,
                      tycho2=False):
+    from astrometry.plot import plotstuff as ps
     anutil.log_init(3)
     #anutil.log_set_level(3)
 
@@ -112,6 +112,7 @@ def plot_wcs_outline(tanwcs, plotfn, W=256, H=256, width=36, zoom=True,
     plot.write(plotfn)
 
 def plot_aitoff_wcs_outline(tanwcs, plotfn, W=256, zoom=True):
+    from astrometry.plot import plotstuff as ps
     #anutil.log_init(3)
     H = int(W//2)
     # Create Hammer-Aitoff WCS of the appropriate size.

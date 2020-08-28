@@ -36,7 +36,6 @@ from astrometry.net.log import *
 from astrometry.net.tmpfile import *
 from astrometry.net.sdss_image import plot_sdss_image
 
-from astrometry.plot.plotstuff import *
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 from astrometry.util.file import *
@@ -472,6 +471,12 @@ def sdss_image(req, calid=None, size='full'):
     return res
 
 def red_green_image(req, job_id=None, size='full'):
+    from astrometry.plot.plotstuff import (Plotstuff,
+                                           PLOTSTUFF_FORMAT_PNG,
+                                           PLOTSTUFF_FORMAT_PPM,
+                                           #plotstuff_set_size_wcs,
+    )
+
     job = get_object_or_404(Job, pk=job_id)
     ui = job.user_image
     sub = ui.submission
@@ -494,7 +499,8 @@ def red_green_image(req, job_id=None, size='full'):
         plot.outformat = PLOTSTUFF_FORMAT_PNG
         plot.outfn = exfn
         plot.scale_wcs(scale)
-        plotstuff_set_size_wcs(plot.pargs)
+        plot.set_size_from_wcs()
+        #plotstuff_set_size_wcs(plot.pargs)
 
         # plot image
         pimg = plot.image
@@ -518,7 +524,7 @@ def red_green_image(req, job_id=None, size='full'):
             xy.xoff = 0.
             xy.yoff = 0.
 
-        plot_xy_set_filename(xy, str(axyfn))
+        xy.set_filename(str(axyfn))
         xy.scale = scale
         plot.color = 'red'
         xy.nobjs = 200
@@ -528,7 +534,7 @@ def red_green_image(req, job_id=None, size='full'):
 
         # plot green
         rd = plot.radec
-        plot_radec_set_filename(rd, str(rdlsfn))
+        rd.set_filename(str(rdlsfn))
         plot.color = 'green'
         plot.markersize = 4
         plot.plot('radec')
@@ -543,6 +549,10 @@ def red_green_image(req, job_id=None, size='full'):
     return res
 
 def extraction_image(req, job_id=None, size='full'):
+    from astrometry.plot.plotstuff import (Plotstuff,
+                                           PLOTSTUFF_FORMAT_PNG,
+                                           PLOTSTUFF_FORMAT_PPM)
+
     job = get_object_or_404(Job, pk=job_id)
     ui = job.user_image
     sub = ui.submission
@@ -582,7 +592,7 @@ def extraction_image(req, job_id=None, size='full'):
             xy.xcol = 'X_IMAGE'
             xy.ycol = 'Y_IMAGE'
 
-        plot_xy_set_filename(xy, str(axyfn))
+        xy.set_filename(str(axyfn))
         xy.scale = scale
         plot.color = 'red'
         # plot 50 brightest
@@ -607,6 +617,8 @@ def extraction_image(req, job_id=None, size='full'):
         plot.plot('xy')
         plot.write()
     except:
+        import traceback
+        traceback.print_exc()
         return HttpResponse("plot failed")
 
     f = open(exfn, 'rb')
@@ -883,6 +895,7 @@ def new_fits_file(req, jobid=None):
     return res
 
 def kml_file(req, jobid=None):
+    return HttpResponse('KMZ requests are off for now.  Post at https://groups.google.com/forum/#!forum/astrometry for help.')
     import PIL.Image
     job = get_object_or_404(Job, pk=jobid)
     wcsfn = job.get_wcs_file()
@@ -1063,7 +1076,8 @@ if __name__ == '__main__':
     from django.test import Client
     c = Client()
     #r = c.get('/user_images/2676353')
-    r = c.get('/extraction_image_full/4005556')
+    #r = c.get('/extraction_image_full/4005556')
+    r = c.get('/red_green_image_display/4515804')
     #print(r)
     with open('out.html', 'wb') as f:
         for x in r:

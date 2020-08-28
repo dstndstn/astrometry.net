@@ -425,6 +425,18 @@ typedef enum cairo_op cairo_operator_t;
     plotoutline_args.__setattr__ = plotoutline_setattr
 %}
 
+%extend plotxy_args {
+    void set_filename(const char* fn) {
+      plot_xy_set_filename(self, fn);
+    }
+}
+
+%extend plotradec_args {
+    void set_filename(const char* fn) {
+      plot_radec_set_filename(self, fn);
+    }
+}
+
 %extend plotimage_args {
     int _set_image_from_numpy(PyObject* arr) {
         // Pirate array

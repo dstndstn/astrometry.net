@@ -43,6 +43,7 @@ def main():
     parser.add_option('-u', '--userimage', type=int, dest='uimage', help='UserImage ID')
     parser.add_option('-e', '--email', help='Find user id with given email address')
     parser.add_option('-i', '--image', type=int, dest='image', help='Image ID')
+    parser.add_option('-d', '--disk-file', type=str, dest='df', help='DiskFile id')
     parser.add_option('-r', '--rerun', dest='rerun', action='store_true',
                       help='Re-run this submission/job?')
 
@@ -81,7 +82,7 @@ def main():
             print(u.id, u, u.email)
         sys.exit(0)
 
-    if not (opt.sub or opt.job or opt.uimage or opt.image or opt.ssh or opt.empty):
+    if not (opt.sub or opt.job or opt.uimage or opt.image or opt.ssh or opt.empty or opt.df):
         print('Must specify one of --sub, --job, or --userimage or --image (or --ssh or --empty)')
 
         parser.print_help()
@@ -169,8 +170,26 @@ def main():
             #     for sub in failedsubs:
             #         print('Re-trying sub', sub.id)
             #         try_dosub(sub, 1)
-            
 
+    if opt.df:
+        dfs = DiskFile.objects.filter(file_hash=opt.df)
+        print('Found', dfs.count(), 'matching DiskFiles')
+        for df in dfs:
+            print('  ', df)
+            print('    ', df.get_path())
+            ims = Image.objects.filter(disk_file=df)
+            print('  Used by', ims.count(), 'Image objects')
+            for im in ims:
+                print('    ', im, im.id)
+                print('      size %i x %i' % (im.width, im.height))
+                print('      thumb Image', im.thumbnail, (im.thumbnail and im.thumbnail.id or ''))
+                print('      display Image', im.display_image, (im.display_image and im.display_image.id or ''))
+
+            ims = Image.objects.filter(disk_file=df,
+                                       display_image__isnull=False,
+                                       thumbnail__isnull=False)
+            print('  found', ims.count(), 'Images for this df w/ display and thumbnails')
+                
     if opt.sub:
         sub = Submission.objects.all().get(id=opt.sub)
         print('Submission', sub)
