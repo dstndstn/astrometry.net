@@ -151,6 +151,14 @@ def upload_common(request, url=None, file=None):
     if url is not None:
         subargs.update(url=url)
 
+    if 'album' in json:
+        albumname = str(json['album'])
+        albums = Album.objects.filter(title=str(albumname))
+        if albums.count() == 0:
+            return HttpResponseErrorJson('Failed to find an Album with title "%s"' % albumname)
+        album = albums[0]
+        subargs.update(album=album)
+
     for key,typ in [('scale_units', str),
                     ('scale_type', str),
                     ('scale_lower', float),

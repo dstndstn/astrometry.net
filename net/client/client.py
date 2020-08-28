@@ -151,6 +151,7 @@ class Client(object):
                                 ('image_height', None, int),
                                 ('x', None, list),
                                 ('y', None, list),
+                                ('album', None, str),
                                 ]:
             if key in kwargs:
                 val = kwargs.pop(key)
