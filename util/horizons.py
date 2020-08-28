@@ -96,26 +96,28 @@ class optcallback(object):
             # 16-bit big-endian W x H (0x00, 0x80) = 128
             reply = (tn.IAC + tn.WILL + tn.NAWS +
                      tn.IAC + tn.SB + tn.NAWS +
-                     chr(0) + chr(0x80) + chr(0) + chr(0x80) +
+                     #chr(0) + chr(0x80) + chr(0) + chr(0x80) +
+                     b'\x00' + b'\0x80' +
+                     b'\x00' + b'\0x80' +
                      tn.IAC + tn.SE)
             if self.debug:
                 print('Replying:', reply)
                 print(' hex: ', end=' ')
                 for c in reply:
-                    print('0x%02x' % ord(c), end=' ')
+                    print('0x%02x' % c, end=' ')
                 print()
             socket.send(reply)
         elif cnum == tn.DO and onum == tn.TTYPE:
             if self.debug: print('Got DO TTYPE')
             reply = (tn.IAC + tn.WILL + tn.TTYPE +
-                     tn.IAC + tn.SB + tn.TTYPE + chr(0) +
-                     'DEC-VT100' +
+                     tn.IAC + tn.SB + tn.TTYPE + b'\x00' +
+                     b'DEC-VT100' +
                      tn.IAC + tn.SE)
             if self.debug:
                 print('Replying:', reply)
                 print(' hex: ', end=' ')
                 for c in reply:
-                    print('0x%02x' % ord(c), end=' ')
+                    print('0x%02x' % c, end=' ')
                 print()
             socket.send(reply)
         elif cnum == tn.DO: # and onum == tn.TTYPE:
@@ -195,17 +197,17 @@ def _horizons_login(debug=False):
     # t.write(ESC + '[50;150R')
 
     if debug: print('Waiting for Horizons prompt')
-    txt = t.read_until('Horizons>', 30)
+    txt = t.read_until(b'Horizons>', 30)
     # Don't do page breaks
-    t.write('PAGE\n')
+    t.write(b'PAGE\n')
     if debug: print('Waiting for Horizons prompt')
-    txt = t.read_until('Horizons>', 30)
+    txt = t.read_until(b'Horizons>', 30)
     return t
 
 def get_radec_for_jds(bodyname, jd0, jd1, interval='1d', debug=False):
     t = _horizons_login(debug=debug)
     t.write( # Body name; if found, it asks "Continue?"
-             '%s\r\n' % bodyname)
+             b'%s\r\n' % bodyname.encode())
     #t.read_until('[A]pproaches, [E]phemeris, [F]tp,')
 
     #time.sleep(5)
@@ -218,15 +220,14 @@ def get_radec_for_jds(bodyname, jd0, jd1, interval='1d', debug=False):
     #txt2 = t.read_until('Horizons> ')
     #txt2 = t.read_until('<cr>: ')
     txt=''
-    txt2 = t.read_until('<cr>')
+    txt2 = t.read_until(b'<cr>')
     print()
     print('--------------------------------')
     print()
-    print(txt, txt2)
+    print(txt, txt2.decode())
     print()
     print('--------------------------------')
     print()
-    t.write('\n')
 
     # if 'EXACT' in txt2:
     #     '''
@@ -245,24 +246,29 @@ def get_radec_for_jds(bodyname, jd0, jd1, interval='1d', debug=False):
     # t.write('\n')
     # txt = t.read_until('\nHorizons> ')
     # print txt
-    txt = t.read_until('[E]phemeris')
-    t.write('E\r\n')
+
+    key = b'[E]phemeris'
+    if not key in txt2:
+        print('Waiting for', key)
+        t.write(b'\n')
+        txt = t.read_until(key)
+    t.write(b'E\r\n')
     
-    txt = t.read_until('Observe, Elements, Vectors  [o,e,v,?]')
+    txt = t.read_until(b'Observe, Elements, Vectors  [o,e,v,?]')
     print(txt)
-    t.write('o\n')
-    t.read_until('Coordinate center [ <id>,coord,geo  ]')
-    t.write('geo\n')
-    t.read_until('Starting UT')
-    t.write('JD %.9f\n' % jd0)
-    t.read_until('Ending   UT')
-    t.write('JD %.9f\n' % jd1)
-    t.read_until('Output interval [ex: 10m, 1h, 1d, ? ]')
-    t.write('%s\n' % interval)
-    t.read_until('Accept default output [ cr=(y), n, ?]')
-    t.write('\n')
-    t.read_until('Select table quantities [ <#,#..>, ?]')
-    t.write('1\n')
+    t.write(b'o\n')
+    t.read_until(b'Coordinate center [ <id>,coord,geo  ]')
+    t.write(b'geo\n')
+    t.read_until(b'Starting UT')
+    t.write(b'JD %.9f\n' % jd0)
+    t.read_until(b'Ending   UT')
+    t.write(b'JD %.9f\n' % jd1)
+    t.read_until(b'Output interval [ex: 10m, 1h, 1d, ? ]')
+    t.write(b'%s\n' % interval.encode())
+    t.read_until(b'Accept default output [ cr=(y), n, ?]')
+    t.write(b'\n')
+    t.read_until(b'Select table quantities [ <#,#..>, ?]')
+    t.write(b'1\n')
 
     # t.write('n\n')
     # t.read_until('Select table quantities')
@@ -315,10 +321,12 @@ def get_radec_for_jds(bodyname, jd0, jd1, interval='1d', debug=False):
     #txt = t.read_until('Working ...', 10)
     #eph = t.read_until('>>> Select...', 60)
 
-    txt = t.read_until('Ephemeris / PORT_LOGIN')
-    header = t.read_until('$$SOE')
-    eph = t.read_until('$$EOE')
+    txt = t.read_until(b'Ephemeris / PORT_LOGIN')
+    header = t.read_until(b'$$SOE')
+    eph = t.read_until(b'$$EOE')
 
+    header = header.decode()
+    eph = eph.decode()
     print('Header:', header)
     print('Eph:', eph)
 

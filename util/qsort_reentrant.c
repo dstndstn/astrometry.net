@@ -35,14 +35,13 @@
 #endif
 //__FBSDID("$FreeBSD: src/sys/libkern/qsort.c,v 1.15 2004/07/15 23:58:23 glebius Exp $");
 
-// Astrometry: We want reentrant!
-#define I_AM_QSORT_R
+// Astrometry.net: we lightly modified this file:
+// - renamed qsort_r to QSORT_R to avoid clashes with system version
+// - removed the preprocessor magic that support re-entrant and non-
+//   functions in the same source code.
 
-#ifdef  I_AM_QSORT_R
 typedef int             cmp_t(void *, const void *, const void *);
-#else
-typedef int             cmp_t(const void *, const void *);
-#endif
+
 static __inline char    *med3(char *, char *, char *, cmp_t *, void *);
 static __inline void     swapfunc(char *, char *, int, int);
 
@@ -84,32 +83,18 @@ swapfunc(char *a, char *b, int n, int swaptype)
 
 #define vecswap(a, b, n)        if ((n) > 0) swapfunc(a, b, n, swaptype)
 
-#ifdef I_AM_QSORT_R
 #define CMP(t, x, y) (cmp((t), (x), (y)))
-#else
-#define CMP(t, x, y) (cmp((x), (y)))
-#endif
 
 static __inline char *
-med3(char *a, char *b, char *c, cmp_t *cmp, void *thunk
-#ifndef I_AM_QSORT_R
-__unused
-#endif
-)
+med3(char *a, char *b, char *c, cmp_t *cmp, void *thunk)
 {
         return CMP(thunk, a, b) < 0 ?
                (CMP(thunk, b, c) < 0 ? b : (CMP(thunk, a, c) < 0 ? c : a ))
               :(CMP(thunk, b, c) > 0 ? b : (CMP(thunk, a, c) < 0 ? a : c ));
 }
 
-#ifdef I_AM_QSORT_R
 void
-qsort_r(void *a, size_t n, size_t es, void *thunk, cmp_t *cmp)
-#else
-#define thunk NULL
-void
-qsort(void *a, size_t n, size_t es, cmp_t *cmp)
-#endif
+QSORT_R(void *a, size_t n, size_t es, void *thunk, cmp_t *cmp)
 {
         char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
         int d, r, swaptype, swap_cnt;
@@ -177,11 +162,8 @@ loop:   SWAPINIT(a, es);
         r = min(pd - pc, pn - pd - es);
         vecswap(pb, pn - r, r);
         if ((r = pb - pa) > es)
-#ifdef  I_AM_QSORT_R
-                qsort_r(a, r / es, es, thunk, cmp);
-#else
-                qsort(a, r / es, es, cmp);
-#endif
+                QSORT_R(a, r / es, es, thunk, cmp);
+
         if ((r = pd - pc) > es) {
                 /* Iterate rather than recurse to save stack space */
                 a = pn - r;

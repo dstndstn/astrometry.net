@@ -38,7 +38,7 @@ char* find_executable(const char* progname, const char* sibling) {
 
     // If it's a relative path, resolve it.
     if (strchr(progname, '/')) {
-        path = canonicalize_file_name(progname);
+        path = an_canonicalize_file_name(progname);
         if (path && file_executable(path))
             return path;
         free(path);

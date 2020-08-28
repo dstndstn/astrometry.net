@@ -14,7 +14,7 @@ if path not in sys.path:
 path = os.path.dirname(__file__)
 path = os.path.dirname(path)
 
-os.environ['PATH'] += ':/usr/local/netpbm/bin:%s/blind:%s/util' % (path,path)
+os.environ['PATH'] += ':/usr/local/netpbm/bin:%s/solver:%s/util' % (path,path)
 
 import logging
 logfn = os.path.join(path, 'net', 'nova.log')

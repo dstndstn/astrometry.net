@@ -27,11 +27,12 @@
 
 #include "os-features.h"
 #include "ioutils.h"
-//#include "os-features.h"
 #include "errors.h"
 #include "log.h"
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
+
+#include "qsort_reentrant.c"
 
 int copy_file(const char* infn, const char* outfn) {
     FILE* fin = fopen(infn, "rb");

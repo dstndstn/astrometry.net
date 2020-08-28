@@ -61,7 +61,7 @@ BASEDIR = '/home/dstn/astrometry/src/'
 LOG_DIR = BASEDIR + 'astrometry/net/log/'
 ANDIR = BASEDIR + 'astrometry/'
 UTIL_DIR = ANDIR + 'util/'
-BLIND_DIR = ANDIR + 'blind/'
+SOLVER_DIR = ANDIR + 'solver/'
 JOB_QUEUE_DIR = DATADIR + 'job-queue/'
 
 JOB_DIR = DATADIR + 'web-data/'

@@ -7,7 +7,7 @@
 #define PERMUTED_SORT_H
 
 // for QSORT_COMPARISON_FUNCTION
-#include "os-features.h"
+#include "ioutils.h"
 
 /*
  Computes the permutation array that will cause the "realarray" to be

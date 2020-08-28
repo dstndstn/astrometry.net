@@ -6,7 +6,7 @@ Astrometry.net code structure
 This is meant to be an introduction to what parts of the codebase run
 during a solve.
 
-*blind/solve-field.c*
+*solver/solve-field.c*
 ---------------------
 
 * parses command-line args
@@ -17,7 +17,7 @@ during a solve.
 * runs *astrometry-engine* to actually do the solve
 * produces plots (*-objs.png, *-ngc.png, etc)
 
-*blind/augment-xylist.c*
+*solver/augment-xylist.c*
 ------------------------
 
 A field to solve is encapsulated in an "axy" file, which is a FITS
@@ -35,7 +35,7 @@ creates these "axy" files.
 * run *uniformize.py* to select a spatially uniform subset of stars
 * add headers to xylist to create axy file
 
-*blind/engine-main.c*
+*solver/engine-main.c*
 ---------------------
 
 This is the *astrometry-engine* executable.
@@ -45,19 +45,19 @@ This is the *astrometry-engine* executable.
 * reads axy file
 * runs *engine_run_job()* to actually do the solve
 
-*blind/engine.c*
+*solver/engine.c*
 ----------------
 
 *engine_run_job()*
 
 * parses axy file
 * based on range of image scales, selects index files to use
-* calls *blind_run()*
+* calls *onefield_run()*
 
-*blind/blind.c*
+*solver/onefield.c*
 ---------------
 
-*blind_run()*
+*onefield_run()*
 
 Runs a set of fields with a set of index files.
 
@@ -71,7 +71,7 @@ Runs a set of fields with a set of index files.
 * calls *solver_preprocess_field()*
 * calls *solver_run()*
 
-*blind/solver.c*
+*solver/solver.c*
 ----------------
 
 Runs a single field with a set of index files.
@@ -118,7 +118,7 @@ Runs a single field with a set of index files.
 * calls *verify_hit()* to confirm the match
 * if matched, calls *solver_tweak2()* to compute SIP coefficients
 
-*blind/verify.c*
+*solver/verify.c*
 ----------------
 
 *verify_hit()*

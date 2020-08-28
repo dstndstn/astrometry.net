@@ -16,7 +16,7 @@ struct scamp_catalog {
 };
 typedef struct scamp_catalog scamp_cat_t;
 
-// These definitions are imported from SExtractor 2.5.0, and should
+// These definitions are imported from Source Extractor 2.5.0, and should
 // be OR'd together to form the "flags" field.
 
 // "The object has neighbours, bright and close enough to significantly bias

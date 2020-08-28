@@ -9,8 +9,8 @@ path = os.path.realpath(__file__)
 basedir = os.path.dirname(os.path.dirname(path))
 sys.path.append(basedir)
 
-# add ../blind and ../util to PATH
-os.environ['PATH'] += ':' + os.path.join(basedir, 'blind')
+# add ../solver and ../util to PATH
+os.environ['PATH'] += ':' + os.path.join(basedir, 'solver')
 os.environ['PATH'] += ':' + os.path.join(basedir, 'util')
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
@@ -265,7 +265,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
         axyargs['--tweak-order'] = '%i' % sub.tweak_order
 
     if sub.use_sextractor:
-        axyflags.append('--use-sextractor')
+        axyflags.append('--use-source-extractor')
 
     if sub.crpix_center:
         axyflags.append('--crpix-center')

@@ -17,6 +17,16 @@
 
 extern uint32_t ENDIAN_DETECTOR;
 
+void QSORT_R(void* base, size_t nmembers, size_t member_size,
+             void* token, int (*compar)(void *, const void *, const void *));
+
+/**
+   You should define the "comparison" function like this:
+
+   static int QSORT_COMPARISON_FUNCTION(my_comparison, void* token, const void* v1, const void* v2) {
+ */
+#define QSORT_COMPARISON_FUNCTION(func, thunk, v1, v2) func(thunk, v1, v2)
+
 int copy_file(const char* infn, const char* outfn);
 
 int pad_fid(FILE* fid, size_t len, char pad);
