@@ -85,8 +85,9 @@ from astrometry.util.ttime import CpuMeas
 
 class TimingConnection(Connection):
     '''
-    A *Connection* wrapper that keeps track of how many objects and
-    how many bytes are pickled, and how long that takes.
+    A multiprocessing *Connection* subclass that keeps track of how
+    many objects and how many bytes are pickled, and how long that
+    takes.
     '''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -100,6 +101,8 @@ class TimingConnection(Connection):
     def stats(self):
         '''
         Returns statistics of the objects handled by this connection.
+
+        This method is new in this subclass.
         '''
         return dict(pickle_objs = self.pobjs,
                     pickle_bytes = self.pbytes,
@@ -111,14 +114,18 @@ class TimingConnection(Connection):
                     unpickle_cputime = self.uptime)
 
     def recv(self):
-        """Receive a (picklable) object"""
+        """Receive a (picklable) object.
+
+        This is overriding a core method in the Connection superclass."""
         self._check_closed()
         self._check_readable()
         t0 = time.time()
         buf = self._recv_bytes()
-        obj = ForkingPickler.loads(buf.getbuffer())
+        buf = buf.getbuffer()
+        n = len(buf)
+        obj = ForkingPickler.loads(buf)
         dt = time.time() - t0
-        self.upbytes += len(buf.getbuffer())
+        self.upbytes += n
         self.uptime += dt
         self.upobjs += 1
         return obj
