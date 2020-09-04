@@ -109,6 +109,8 @@ def user_image(req, user_image_id=None):
         if job.calibration:
             images['annotated_display'] = reverse('annotated_image', kwargs={'jobid':job.id,'size':'display'})
             images['annotated'] = reverse('annotated_image', kwargs={'jobid':job.id,'size':'full'})
+            images['grid_display'] = reverse('grid_image', kwargs={'jobid':job.id,'size':'display'})
+            images['grid'] = reverse('grid_image', kwargs={'jobid':job.id,'size':'full'})
             images['sdss_display'] = reverse('sdss_image', kwargs={'calid':job.calibration.id,'size':'display'})
             images['sdss'] = reverse('sdss_image', kwargs={'calid':job.calibration.id,'size':'full'})
             images['galex_display'] = reverse('galex_image', kwargs={'calid':job.calibration.id,'size':'display'})
@@ -263,6 +265,66 @@ def serve_image(req, id=None):
     if 'filename' in req.GET:
         res['Content-Disposition'] = 'filename=%s' % req.GET['filename']
     image.render(res)
+    return res
+
+def grid_image(req, jobid=None, size='full'):
+    job = get_object_or_404(Job, pk=jobid)
+    ui = job.user_image
+    img = ui.image
+    if size == 'display':
+        scale = float(img.get_display_image().width)/img.width
+        img = img.get_display_image()
+    else:
+        scale = 1.0
+
+    wcsfn = job.get_wcs_file()
+    pnmfn = img.get_pnm_path()
+    outfn = get_temp_file()
+
+    plot = Plotstuff()
+    plot.wcs_file = wcsfn
+    plot.outformat = PLOTSTUFF_FORMAT_JPG
+    plot.outfn = outfn
+    plot.scale_wcs(scale)
+    plotstuff_set_size_wcs(plot.pargs)
+
+    # plot image
+    pimg = plot.image
+    pimg.set_file(str(pnmfn))
+    pimg.format = PLOTSTUFF_FORMAT_PPM
+    plot.plot('image')
+    #plot.color = 'white'
+    #plot.alpha = 1.
+
+    grid = plot.grid
+
+    ra,dec,radius = job.calibration.get_center_radecradius()
+
+    steps = np.array([ 0.02, 0.05, 0.1, 0.2, 0.5,
+                       1., 2., 5., 10., 15.,  30., 60. ])
+
+    istep = np.argmin(np.abs(np.log(radius) - np.log(steps)))
+    grid.decstep = steps[min(istep+1, len(steps)-1)]
+    grid.declabelstep = steps[istep]
+    plot.lw = 3
+    #plot.rgb = (0.4, 0.6, 0.4)
+    plot.plot('grid')
+    grid.decstep = 0
+    grid.declabelstep = 0
+
+    # RA
+    cosdec = np.cos(np.deg2rad(dec))
+    istep = np.argmin(np.abs(np.log(radius)/cosdec - np.log(steps)))
+    grid.ralabelstep = steps[min(istep+1, len(steps)-1)]
+    grid.rastep = steps[istep]
+    #plot.rgb = (0.6, 0.4, 0.4)
+    plot.plot('grid')
+
+    plot.write()
+
+    f = open(outfn, 'rb')
+    res = HttpResponse(f)
+    res['Content-Type'] = 'image/jpeg'
     return res
 
 def annotated_image(req, jobid=None, size='full'):

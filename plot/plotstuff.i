@@ -375,6 +375,13 @@ typedef enum cairo_op cairo_operator_t;
         return plotstuff_set_size_wcs(self);
     }
 
+    int count_ra_labels() {
+      return plot_grid_count_ra_labels(self);
+    }
+    int count_dec_labels() {
+      return plot_grid_count_dec_labels(self);
+    }
+
     void loginit(int level) {
         log_init(level);
     }
