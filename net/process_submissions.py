@@ -9,9 +9,10 @@ path = os.path.realpath(__file__)
 basedir = os.path.dirname(os.path.dirname(path))
 sys.path.append(basedir)
 
-# add ../solver and ../util to PATH
+# add ../solver and ../util and ../plot to PATH
 os.environ['PATH'] += ':' + os.path.join(basedir, 'solver')
 os.environ['PATH'] += ':' + os.path.join(basedir, 'util')
+os.environ['PATH'] += ':' + os.path.join(basedir, 'plot')
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
@@ -698,6 +699,11 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
     from logging.config import dictConfig
     dictConfig(settings.LOGGING)
 
+    # exit after a day
+    maxtime = 3600 #*24
+
+    t_start = time.time()
+    
     dojob_pool = None
     dosub_pool = None
     if dojob_nthreads > 1:
@@ -746,6 +752,9 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
 
         print()
 
+        t_now = time.time() - t_start
+        quitnow = (t_now > maxtime)
+        
         #print('Checking for new Submissions')
         newsubs = Submission.objects.filter(processing_started__isnull=True)
         if newsubs.count():
@@ -764,10 +773,10 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             print('Submissions running:', len(subresults))
             lastsubs = subresults
         for sid,res in subresults:
-            print('  Submission id', sid, 'ready:', res.ready(),)
+            print('  Submission id', sid, 'ready:', res.ready(), end=' ')
             if res.ready():
                 subresults.remove((sid,res))
-                print('success:', res.successful(),)
+                print('success:', res.successful(), end=' ')
 
                 qs = runsubs.get(submission__id=sid)
                 qs.finished = True
@@ -775,18 +784,17 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                 qs.save()
 
                 if res.successful():
-                    print('result:', res.get(),)
+                    print('result:', res.get(), end=' ')
             print()
-
         runjobs = me.jobs.filter(finished=False)
         if jobresults != lastjobs:
             print('Jobs running:', len(jobresults))
             lastjobs = jobresults
         for jid,res in jobresults:
-            print('  Job id', jid, 'ready:', res.ready(),)
+            print('  Job id', jid, 'ready:', res.ready(), end=' ')
             if res.ready():
                 jobresults.remove((jid,res))
-                print('success:', res.successful(),)
+                print('success:', res.successful())
 
                 qj = runjobs.get(job__id=jid)
                 qj.finished = True
@@ -810,6 +818,15 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             print()
         if len(jobresults):
             print('Still waiting for', len(jobresults), 'Jobs')
+
+        if quitnow:
+            if len(jobresults) == 0:
+                print('Timed out -- exiting.')
+                break
+                
+            print('Timed out -- not launching new jobs, waiting for',
+                  len(jobresults), 'jobs to finish')
+            continue
 
         if (len(newsubs) + len(newuis)) == 0:
             time.sleep(refresh_rate)
