@@ -24,7 +24,7 @@ void* plot_grid_init(plot_args_t* plotargs) {
     plotgrid_t* args = calloc(1, sizeof(plotgrid_t));
     args->dolabel = TRUE;
     args->raformat = strdup("%.2f");
-    args->decformat = strdup("%.2f");
+    args->decformat = strdup("%+.2f");
     return args;
 }
 
