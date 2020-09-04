@@ -268,6 +268,11 @@ def serve_image(req, id=None):
     return res
 
 def grid_image(req, jobid=None, size='full'):
+    from astrometry.plot.plotstuff import (Plotstuff,
+                                           PLOTSTUFF_FORMAT_JPG,
+                                           PLOTSTUFF_FORMAT_PPM,
+                                           plotstuff_set_size_wcs,
+    )
     job = get_object_or_404(Job, pk=jobid)
     ui = job.user_image
     img = ui.image
@@ -293,35 +298,45 @@ def grid_image(req, jobid=None, size='full'):
     pimg.set_file(str(pnmfn))
     pimg.format = PLOTSTUFF_FORMAT_PPM
     plot.plot('image')
-    #plot.color = 'white'
-    #plot.alpha = 1.
 
     grid = plot.grid
-
     ra,dec,radius = job.calibration.get_center_radecradius()
-
     steps = np.array([ 0.02, 0.05, 0.1, 0.2, 0.5,
                        1., 2., 5., 10., 15.,  30., 60. ])
-
     istep = np.argmin(np.abs(np.log(radius) - np.log(steps)))
-    grid.decstep = steps[min(istep+1, len(steps)-1)]
     grid.declabelstep = steps[istep]
-    plot.lw = 3
-    #plot.rgb = (0.4, 0.6, 0.4)
+    nd = plot.count_dec_labels()
+    if nd < 2:
+        istep = max(istep-1, 0)
+        grid.declabelstep = steps[istep]
+    grid.decstep = grid.declabelstep
+    plot.alpha = 1.
+    plot.plot('grid')
+
+    plot.alpha = 0.7
+    grid.declabelstep = 0
+    grid.decstep /= 2.
     plot.plot('grid')
     grid.decstep = 0
-    grid.declabelstep = 0
 
     # RA
     cosdec = np.cos(np.deg2rad(dec))
-    istep = np.argmin(np.abs(np.log(radius)/cosdec - np.log(steps)))
-    grid.ralabelstep = steps[min(istep+1, len(steps)-1)]
-    grid.rastep = steps[istep]
-    #plot.rgb = (0.6, 0.4, 0.4)
+    istep = np.argmin(np.abs(np.log(radius/cosdec) - np.log(steps)))
+    grid.ralabelstep = steps[istep] #min(istep+1, len(steps)-1)]
+    nra = plot.count_ra_labels()
+    if nra < 2:
+        istep = max(istep-1, 0)
+        grid.ralabelstep = steps[istep]
+    grid.rastep = grid.ralabelstep
+    plot.alpha = 1.
+    plot.plot('grid')
+
+    plot.alpha = 0.7
+    grid.ralabelstep = 0
+    grid.rastep /= 2.
     plot.plot('grid')
 
     plot.write()
-
     f = open(outfn, 'rb')
     res = HttpResponse(f)
     res['Content-Type'] = 'image/jpeg'
