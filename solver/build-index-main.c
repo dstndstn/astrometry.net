@@ -54,6 +54,7 @@ static void print_help(char* progname) {
            "      [-A <column>]: specify the RA  column name in the input FITS table (default \"RA\")\n"
            "      [-D <column>]: specify the Dec column name in the input FITS table (default \"Dec\")\n"
            "      [-B <val>]: cut any object whose sort-column value is less than 'val'; for mags this is a bright limit\n"
+           "      [-K]: keep original RA,Dec columns in the tag-along table.\n"
            "      [-U]: healpix Nside for uniformization (default: same as -N)\n"
            "      [-H <big healpix>]; default is all-sky\n"
            "      [-s <big healpix Nside>]; default is 1\n"
@@ -107,6 +108,9 @@ int main(int argc, char** argv) {
             break;
         case 'B':
             p->brightcut = atof(optarg);
+            break;
+        case 'K':
+            p->drop_radec = FALSE;
             break;
         case 'P':
             preset = atoi(optarg);

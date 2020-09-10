@@ -543,7 +543,7 @@ int build_index(fitstable_t* catalog, index_params_t* p,
                     return -1;
                 }
             }
-            if (startree_write_tagalong_table(uniform, startag, p->racol, p->deccol, NULL, TRUE)) {
+            if (startree_write_tagalong_table(uniform, startag, p->racol, p->deccol, NULL, p->drop_radec)) {
                 ERROR("Failed to write tag-along table");
                 return -1;
             }
@@ -721,6 +721,7 @@ void build_index_defaults(index_params_t* p) {
     p->sweeps = 10;
     p->racol = "RA";
     p->deccol = "DEC";
+    p->drop_radec = TRUE;
     p->passes = 16;
     p->Nreuse = 8;
     p->Nloosen = 20;
