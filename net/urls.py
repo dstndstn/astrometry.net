@@ -82,12 +82,13 @@ urlpatterns.extend([
 ])
 
 from astrometry.net.views.image import (
-    index, index_tag, annotated_image, index_location, index_nearby, index_recent, index_all, index_by_user,
+    index, index_tag, annotated_image, grid_image, index_location, index_nearby, index_recent, index_all, index_by_user,
     index_user, index_album, hide, unhide, user_image, edit, search, serve_image, image_set,
     onthesky_image, sdss_image, galex_image, red_green_image, extraction_image, wcs_file, new_fits_file,
     kml_file, rdls_file, axy_file, corr_file)
 urlpatterns.extend([
     url(r'^annotated_(?P<size>full|display)/(?P<jobid>' + jobpattern + r')/?', annotated_image, name='annotated_image'),
+    url(r'^grid_(?P<size>full|display)/(?P<jobid>' + jobpattern + r')/?', grid_image, name='grid_image'),
     url(r'^user_images/?$', index, name='images'),
     url(r'^user_images/tag/?$', index_tag, name='images-tag'),
     url(r'^user_images/location/?$', index_location, name='images-location'),

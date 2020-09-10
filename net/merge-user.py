@@ -12,8 +12,9 @@ from astrometry.net.models import *
 from log import *
 from django.contrib.auth.models import User
 
-users = User.objects.filter(email__contains='godard')
+#users = User.objects.filter(email__contains='godard')
 #users = User.objects.filter(id=5898)
+users = User.objects.filter(email__contains='stiefvater')
 print(users.count(), 'Users match')
 bestuser = None
 nmax = 0
@@ -24,6 +25,8 @@ for u in users:
         bestuser = u
         nmax = nsub
 
+sys.exit(0)
+        
 from social.apps.django_app.default.models import UserSocialAuth
 
 socs = {}
