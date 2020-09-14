@@ -14,7 +14,10 @@ from django.contrib.auth.models import User
 
 #users = User.objects.filter(email__contains='godard')
 #users = User.objects.filter(id=5898)
-users = User.objects.filter(email__contains='stiefvater')
+#users = User.objects.filter(email__contains='stiefvater')
+
+users = User.objects.filter(email__contains='blake')
+
 print(users.count(), 'Users match')
 bestuser = None
 nmax = 0
