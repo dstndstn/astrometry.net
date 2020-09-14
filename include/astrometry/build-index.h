@@ -28,6 +28,9 @@ struct index_params {
     int margin;
     int UNside;
 
+    // drop RA,Dec from the tagalong table?
+    anbool drop_radec;
+
     // hpquads:
     int Nside;
 
