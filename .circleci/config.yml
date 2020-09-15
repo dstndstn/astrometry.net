@@ -43,6 +43,7 @@ jobs:
             solve-field --config 99.cfg demo/apod4.jpg  --continue
             tablist demo/apod4.match
             listhead demo/apod4.wcs
+            (cd /tmp && python3 -c "import astrometry.util.util; print(dir(astrometry.util.util))")
 
   build-docker-centos-8:
     docker:
