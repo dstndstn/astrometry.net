@@ -13,10 +13,8 @@ from log import *
 from django.contrib.auth.models import User
 
 #users = User.objects.filter(email__contains='godard')
-#users = User.objects.filter(id=5898)
-#users = User.objects.filter(email__contains='stiefvater')
-
-users = User.objects.filter(email__contains='blake')
+#users = User.objects.filter(id=298)
+users = User.objects.filter(id__in=[298, 22385])
 
 print(users.count(), 'Users match')
 bestuser = None
@@ -27,8 +25,9 @@ for u in users:
     if nsub > nmax:
         bestuser = u
         nmax = nsub
+    print('  API key', u.profile.all()[0].apikey)
 
-sys.exit(0)
+#sys.exit(0)
         
 from social.apps.django_app.default.models import UserSocialAuth
 
@@ -39,11 +38,14 @@ for u in users:
     for s in soc:
         socs[s.id] = s
 
+sys.exit(0)
+
 if len(socs) == 1:
     # Make the single social auth -> the User with the most submissions.
-    soc = socs.values()[0]
+    ss = list(socs.values())
+    soc = ss[0]
     olduser = soc.user
     print("Social auth's OLD user:", olduser.id, olduser)
     print('Updating to', bestuser.id, bestuser)
-    #soc.user = bestuser
-    #soc.save()
+    soc.user = bestuser
+    soc.save()
