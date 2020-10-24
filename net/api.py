@@ -1,11 +1,10 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import base64
-
+import os
 from functools import wraps
 
 if __name__ == '__main__':
-    import os
     os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
     import sys
     fn = os.path.dirname(os.path.dirname(__file__))
@@ -250,9 +249,12 @@ def api_sdss_image_for_wcs(req):
     plotfn = get_temp_file()
     write_wcs_file(req, wcsfn)
     plot_sdss_image(wcsfn, plotfn)
-    return HttpResponseJson({'status': 'success',
+    os.remove(wcsfn)
+    res = HttpResponseJson({'status': 'success',
                              'plot': base64.b64encode(open(plotfn).read()),
                              })
+    os.remove(plotfn)
+    return res
 
 @csrf_exempt
 @requires_json_args
@@ -263,9 +265,12 @@ def api_galex_image_for_wcs(req):
     plotfn = get_temp_file()
     write_wcs_file(req, wcsfn)
     plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR)
-    return HttpResponseJson({'status': 'success',
+    os.remove(wcsfn)
+    res = HttpResponseJson({'status': 'success',
                              'plot': base64.b64encode(open(plotfn).read()),
                              })
+    os.remove(plotfn)
+    return res
 
 @csrf_exempt
 @requires_json_args

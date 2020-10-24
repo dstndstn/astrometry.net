@@ -2,7 +2,6 @@ from __future__ import print_function
 import shutil
 import os, errno
 import hashlib
-import tempfile
 
 try:
     # py3
@@ -26,6 +25,7 @@ from django import forms
 from django.forms.models import inlineformset_factory
 from django.http import HttpResponseRedirect
 
+from astrometry.net.tmpfile import get_temp_file
 from astrometry.util.run_command import run_command
 
 
@@ -350,7 +350,7 @@ def handle_upload(file=None,url=None):
 
     # get file/url onto disk
     file_hash = DiskFile.get_hash()
-    temp_file_path = tempfile.mktemp()
+    temp_file_path = get_temp_file()
     with open(temp_file_path, 'wb+') as uploaded_file:
         original_filename = ''
 

@@ -1,13 +1,10 @@
 from __future__ import print_function
-import shutil
-import os, errno
-import hashlib
 import tempfile
+import os
 import math
 import stat
 import time
 from datetime import datetime, timedelta
-
 
 try:
     # py3
@@ -337,9 +334,10 @@ def grid_image(req, jobid=None, size='full'):
     plot.plot('grid')
 
     plot.write()
-    f = open(outfn, 'rb')
-    res = HttpResponse(f)
+    res = HttpResponse(open(outfn, 'rb'))
     res['Content-Type'] = 'image/jpeg'
+    os.remove(outfn)
+    os.remove(pnmfn)
     return res
 
 def annotated_image(req, jobid=None, size='full'):
@@ -418,11 +416,12 @@ def annotated_image(req, jobid=None, size='full'):
         logmsg('out: ' + out)
         logmsg('err: ' + err)
         return HttpResponse('plot failed: ' + err + "<br><pre>" + out + "</pre><br><pre>" + err + "</pre>")
-    f = open(annfn, 'rb')
-    res = HttpResponse(f)
+    res = HttpResponse(open(annfn, 'rb'))
     #res['Content-Type'] = 'image/png'
     # plotann.py produces jpeg by default
     res['Content-Type'] = 'image/jpeg'
+    os.remove(annfn)
+    os.remove(pnmfn)
     return res
 
 def onthesky_image(req, zoom=None, calid=None):
@@ -457,9 +456,9 @@ def onthesky_image(req, zoom=None, calid=None):
                          hd=True, hd_labels=True, tycho2=True)
     else:
         return HttpResponse('invalid zoom')
-    f = open(plotfn, 'rb')
-    res = HttpResponse(f)
+    res = HttpResponse(open(plotfn, 'rb'))
     res['Content-Type'] = 'image/png'
+    os.remove(plotfn)
     return res
 
 
@@ -491,8 +490,7 @@ def galex_image(req, calid=None, size='full'):
         df = CachedFile.add(key, plotfn)
     else:
         logmsg('Cache hit for key "%s"' % key)
-    f = open(df.get_path(), 'rb')
-    res = HttpResponse(f)
+    res = HttpResponse(open(df.get_path(), 'rb'))
     res['Content-Type'] = 'image/png'
     return res
 
@@ -620,9 +618,10 @@ def red_green_image(req, job_id=None, size='full'):
     except:
         return HttpResponse("plot failed")
 
-    f = open(exfn, 'rb')
-    res = StreamingHttpResponse(f)
+    res = StreamingHttpResponse(open(exfn, 'rb'))
     res['Content-Type'] = 'image/png'
+    os.remove(exfn)
+    os.remove(pnmfn)
     return res
 
 def extraction_image(req, job_id=None, size='full'):
@@ -698,9 +697,10 @@ def extraction_image(req, job_id=None, size='full'):
         traceback.print_exc()
         return HttpResponse("plot failed")
 
-    f = open(exfn, 'rb')
-    res = HttpResponse(f)
+    res = HttpResponse(open(exfn, 'rb'))
     res['Content-Type'] = 'image/png'
+    os.remove(exfn)
+    os.remove(pnmfn)
     return res
 
 # 2MASS:
@@ -957,6 +957,7 @@ def new_fits_file(req, jobid=None):
             logmsg('out: ' + out)
             logmsg('err: ' + err)
             return HttpResponse('image2pnm.py failed: out ' + out + ', err ' + err)
+        os.remove(pnmfn)
     outfn = get_temp_file()
     cmd = 'new-wcs -i %s -w %s -o %s -d' % (fitsinfn, wcsfn, outfn)
     logmsg('Running: ' + cmd)
@@ -969,6 +970,7 @@ def new_fits_file(req, jobid=None):
     res['Content-Type'] = 'application/fits'
     res['Content-Length'] = file_size(outfn)
     res['Content-Disposition'] = 'attachment; filename=new-image.fits'
+    os.remove(outfn)
     return res
 
 def kml_file(req, jobid=None):
@@ -1010,6 +1012,11 @@ def kml_file(req, jobid=None):
     res['Content-Type'] = 'application/x-zip-compressed'
     res['Content-Length'] = file_size(outfn)
     res['Content-Disposition'] = 'attachment; filename=image.kmz'
+    os.remove(outfn)
+    os.remove(pnmfn)
+    os.remove(imgfn)
+    import shutil
+    shutil.rmtree(dirnm)
     return res
 
 class ImageSearchForm(forms.Form):
