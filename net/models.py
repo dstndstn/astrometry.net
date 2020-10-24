@@ -457,6 +457,7 @@ class Image(models.Model):
         cmd = 'pnmscale -width %i -height %i %s | pnmtojpeg > %s' % (W, H, pnmfn, imagefn)
         logmsg("Making resized image: %s" % cmd)
         rtn,out,err = run_command(cmd)
+        os.remove(pnmfn)
         if rtn:
             logmsg('pnmscale failed: rtn %i' % rtn)
             logmsg('out: ' + out)
@@ -471,6 +472,11 @@ class Image(models.Model):
         except Image.MultipleObjectsReturned:
             image = Image.objects.filter(disk_file=df, width=W, height=H)
             image = image[0]
+
+        # DEBUG TEMPFILES
+        if os.path.exists(imagefn):
+            logmsg('TEMPFILE create_resized_image', imagefn)
+            
         return image
 
     def render(self, f):
@@ -488,6 +494,7 @@ class Image(models.Model):
                     cmd = 'pnmtojpeg < %s > %s' % (pnmfn, imagefn)
                     logmsg("render: Making resized image: %s" % cmd)
                     rtn,out,err = run_command(cmd)
+                    os.remove(pnmfn)
                     if rtn:
                         logmsg('pnmtojpeg failed: rtn %i' % rtn)
                         logmsg('out: ' + out)
