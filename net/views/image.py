@@ -1,5 +1,4 @@
 from __future__ import print_function
-import tempfile
 import os
 import math
 import stat
@@ -98,7 +97,7 @@ def user_image(req, user_image_id=None):
     tag_form = get_session_form(req.session, TagForm)
 
     images = {}
-    dim = uimage.image.get_display_image()
+    dim = uimage.image.get_display_image(tempfiles=req.tempfiles)
     images['original_display'] = reverse('serve_image', kwargs={'id':dim.id})
     images['original'] = reverse('serve_image', kwargs={'id':uimage.image.id})
     image_type = 'original'
@@ -261,7 +260,7 @@ def serve_image(req, id=None):
     res['Last-Modified'] = time.asctime(time.gmtime(mtime))
     if 'filename' in req.GET:
         res['Content-Disposition'] = 'filename=%s' % req.GET['filename']
-    image.render(res)
+    image.render(res, tempfiles=req.tempfiles)
     return res
 
 def grid_image(req, jobid=None, size='full'):
@@ -274,14 +273,15 @@ def grid_image(req, jobid=None, size='full'):
     ui = job.user_image
     img = ui.image
     if size == 'display':
-        scale = float(img.get_display_image().width)/img.width
-        img = img.get_display_image()
+        dimg = img.get_display_image(tempfiles=req.tempfiles)
+        scale = float(dimg.width)/img.width
+        img = dimg
     else:
         scale = 1.0
 
     wcsfn = job.get_wcs_file()
-    pnmfn = img.get_pnm_path()
-    outfn = get_temp_file()
+    pnmfn = img.get_pnm_path(tempfiles=req.tempfiles)
+    outfn = get_temp_file(tempfiles=req.tempfiles)
 
     plot = Plotstuff()
     plot.wcs_file = wcsfn
@@ -336,8 +336,6 @@ def grid_image(req, jobid=None, size='full'):
     plot.write()
     res = HttpResponse(open(outfn, 'rb'))
     res['Content-Type'] = 'image/jpeg'
-    os.remove(outfn)
-    os.remove(pnmfn)
     return res
 
 def annotated_image(req, jobid=None, size='full'):
@@ -345,14 +343,15 @@ def annotated_image(req, jobid=None, size='full'):
     ui = job.user_image
     img = ui.image
     if size == 'display':
-        scale = float(img.get_display_image().width)/img.width
-        img = img.get_display_image()
+        dimg = img.get_display_image(tempfiles=req.tempfiles)
+        scale = float(dimg.width)/img.width
+        img = dimg
     else:
         scale = 1.0
 
     wcsfn = job.get_wcs_file()
-    pnmfn = img.get_pnm_path()
-    annfn = get_temp_file()
+    pnmfn = img.get_pnm_path(tempfiles=req.tempfiles)
+    annfn = get_temp_file(tempfiles=req.tempfiles)
 
     #datadir = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)), 'data')
     catdir = settings.CAT_DIR
@@ -420,8 +419,6 @@ def annotated_image(req, jobid=None, size='full'):
     #res['Content-Type'] = 'image/png'
     # plotann.py produces jpeg by default
     res['Content-Type'] = 'image/jpeg'
-    os.remove(annfn)
-    os.remove(pnmfn)
     return res
 
 def onthesky_image(req, zoom=None, calid=None):
@@ -431,7 +428,7 @@ def onthesky_image(req, zoom=None, calid=None):
     #
     cal = get_object_or_404(Calibration, pk=calid)
     wcsfn = cal.get_wcs_file()
-    plotfn = get_temp_file()
+    plotfn = get_temp_file(tempfiles=req.tempfiles)
 
     logmsg('onthesky_image: cal', cal, 'wcs', wcsfn, 'plot', plotfn)
 
@@ -458,7 +455,6 @@ def onthesky_image(req, zoom=None, calid=None):
         return HttpResponse('invalid zoom')
     res = HttpResponse(open(plotfn, 'rb'))
     res['Content-Type'] = 'image/png'
-    os.remove(plotfn)
     return res
 
 
@@ -472,10 +468,11 @@ def galex_image(req, calid=None, size='full'):
 
     if df is None:
         wcsfn = cal.get_wcs_file()
-        plotfn = get_temp_file()
+        plotfn = get_temp_file(tempfiles=req.tempfiles)
         if size == 'display':
             image = cal.job.user_image
-            scale = float(image.image.get_display_image().width)/image.image.width
+            dimg = image.image.get_display_image(tempfiles=req.tempfiles)
+            scale = float(dimg.width)/image.image.width
         else:
             scale = 1.0
 
@@ -507,7 +504,8 @@ def sdss_image(req, calid=None, size='full'):
 
         if size == 'display':
             image = cal.job.user_image
-            scale = float(image.image.get_display_image().width)/image.image.width
+            dimg = image.image.get_display_image(tempfiles=req.tempfiles)
+            scale = float(dimg.width)/image.image.width
             wcs = wcs.scale(scale)
 
         else:
@@ -557,16 +555,17 @@ def red_green_image(req, job_id=None, size='full'):
     sub = ui.submission
     img = ui.image
     if size == 'display':
-        scale = float(img.get_display_image().width)/img.width
-        img = img.get_display_image()
+        dimg = img.get_display_image(tempfiles=req.tempfiles)
+        scale = float(dimg.width)/img.width
+        img = dimg
     else:
         scale = 1.0
 
     axyfn = job.get_axy_file()
     wcsfn = job.get_wcs_file()
     rdlsfn = job.get_rdls_file()
-    pnmfn = img.get_pnm_path()
-    exfn = get_temp_file()
+    pnmfn = img.get_pnm_path(tempfiles=req.tempfiles)
+    exfn = get_temp_file(tempfiles=req.tempfiles)
 
     try:
         plot = Plotstuff()
@@ -593,7 +592,7 @@ def red_green_image(req, job_id=None, size='full'):
         xy = plot.xy
         if hasattr(img, 'sourcelist'):
             # set xy offsets for source lists
-            fits = img.sourcelist.get_fits_table()
+            fits = img.sourcelist.get_fits_table(tempfiles=req.tempfiles)
             #xy.xoff = int(fits.x.min())
             #xy.yoff = int(fits.y.min())
             xy.xoff = 0.
@@ -620,8 +619,6 @@ def red_green_image(req, job_id=None, size='full'):
 
     res = StreamingHttpResponse(open(exfn, 'rb'))
     res['Content-Type'] = 'image/png'
-    os.remove(exfn)
-    os.remove(pnmfn)
     return res
 
 def extraction_image(req, job_id=None, size='full'):
@@ -634,14 +631,15 @@ def extraction_image(req, job_id=None, size='full'):
     sub = ui.submission
     img = ui.image
     if size == 'display':
-        scale = float(img.get_display_image().width)/img.width
-        img = img.get_display_image()
+        dimg = img.get_display_image(tempfiles=req.tempfiles)
+        scale = float(dimg.width)/img.width
+        img = dimg
     else:
         scale = 1.0
 
     axyfn = job.get_axy_file()
-    pnmfn = img.get_pnm_path()
-    exfn = get_temp_file()
+    pnmfn = img.get_pnm_path(tempfiles=req.tempfiles)
+    exfn = get_temp_file(tempfiles=req.tempfiles)
 
     try:
         plot = Plotstuff()
@@ -659,7 +657,7 @@ def extraction_image(req, job_id=None, size='full'):
         xy = plot.xy
         if hasattr(img, 'sourcelist'):
             # set xy offsets for source lists
-            fits = img.sourcelist.get_fits_table()
+            fits = img.sourcelist.get_fits_table(tempfiles=req.tempfiles)
             #xy.xoff = int(fits.x.min())
             #xy.yoff = int(fits.y.min())
             xy.xoff = xy.yoff = 1.
@@ -699,8 +697,6 @@ def extraction_image(req, job_id=None, size='full'):
 
     res = HttpResponse(open(exfn, 'rb'))
     res['Content-Type'] = 'image/png'
-    os.remove(exfn)
-    os.remove(pnmfn)
     return res
 
 # 2MASS:
@@ -948,8 +944,8 @@ def new_fits_file(req, jobid=None):
         fitsinfn = infn
     else:
         ## FIXME -- could convert other formats to FITS...
-        pnmfn = get_temp_file()
-        fitsinfn = get_temp_file()
+        pnmfn = get_temp_file(tempfiles=req.tempfiles)
+        fitsinfn = get_temp_file(tempfiles=req.tempfiles)
         cmd = 'image2pnm.py -i %s -o %s && an-pnmtofits %s > %s' % (infn, pnmfn, pnmfn, fitsinfn)
         logmsg('Running: ' + cmd)
         (rtn, out, err) = run_command(cmd)
@@ -957,8 +953,7 @@ def new_fits_file(req, jobid=None):
             logmsg('out: ' + out)
             logmsg('err: ' + err)
             return HttpResponse('image2pnm.py failed: out ' + out + ', err ' + err)
-        os.remove(pnmfn)
-    outfn = get_temp_file()
+    outfn = get_temp_file(tempfiles=req.tempfiles)
     cmd = 'new-wcs -i %s -w %s -o %s -d' % (fitsinfn, wcsfn, outfn)
     logmsg('Running: ' + cmd)
     (rtn, out, err) = run_command(cmd)
@@ -970,26 +965,27 @@ def new_fits_file(req, jobid=None):
     res['Content-Type'] = 'application/fits'
     res['Content-Length'] = file_size(outfn)
     res['Content-Disposition'] = 'attachment; filename=new-image.fits'
-    os.remove(outfn)
     return res
 
 def kml_file(req, jobid=None):
     #return HttpResponse('KMZ requests are off for now.  Post at https://groups.google.com/forum/#!forum/astrometry for help.')
+    import tempfile
     import PIL.Image
     job = get_object_or_404(Job, pk=jobid)
     wcsfn = job.get_wcs_file()
     img = job.user_image.image
     df = img.disk_file
 
-    pnmfn = img.get_pnm_path()
-    imgfn = get_temp_file()
+    pnmfn = img.get_pnm_path(tempfiles=req.tempfiles)
+    imgfn = get_temp_file(tempfiles=req.tempfiles)
     image = PIL.Image.open(pnmfn)
     image.save(imgfn, 'PNG')
 
     dirnm = tempfile.mkdtemp()
+    req.tempdirs.append(dirnm)
     warpedimgfn = 'image.png'
     kmlfn = 'doc.kml'
-    outfn = get_temp_file()
+    outfn = get_temp_file(tempfiles=req.tempfiles)
     cmd = ('cd %(dirnm)s'
            '; %(wcs2kml)s '
            '--input_image_origin_is_upper_left '
@@ -1012,11 +1008,6 @@ def kml_file(req, jobid=None):
     res['Content-Type'] = 'application/x-zip-compressed'
     res['Content-Length'] = file_size(outfn)
     res['Content-Disposition'] = 'attachment; filename=image.kmz'
-    os.remove(outfn)
-    os.remove(pnmfn)
-    os.remove(imgfn)
-    import shutil
-    shutil.rmtree(dirnm)
     return res
 
 class ImageSearchForm(forms.Form):

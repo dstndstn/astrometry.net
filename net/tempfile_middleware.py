@@ -1,6 +1,8 @@
 import os
 import shutil
 
+from astrometry.net.log import logmsg
+
 class TempfileMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -17,9 +19,17 @@ class TempfileMiddleware:
         # Code to be executed for each request/response after
         # the view is called.
         for dirnm in request.tempdirs:
-            shutil.rmtree(dirnm)
+            if os.path.exists(dirnm):
+                try:
+                    shutil.rmtree(dirnm)
+                except OSError as e:
+                    logmsg('Failed to delete temp dir', dirnm, ':', e)
         for fn in request.tempfiles:
-            os.remove(fn)
+            if os.path.exists(fn):
+                try:
+                    os.remove(fn)
+                except OSError as e:
+                    logmsg('Failed to delete temp file', fn, ':', e)
 
         return response
 

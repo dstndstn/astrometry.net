@@ -127,7 +127,8 @@ def upload_common(request, url=None, file=None):
                                 collection=Image.ORIG_COLLECTION)
         original_filename = 'json-xy'
     else:
-        df, original_filename = handle_upload(file=file, url=url)
+        df, original_filename = handle_upload(file=file, url=url,
+                                              tempfiles=request.tempfiles)
     submittor = request.user if request.user.is_authenticated else None
     pro = get_user_profile(submittor)
     allow_commercial_use = json.get('allow_commercial_use', 'd')
@@ -245,15 +246,13 @@ def write_wcs_file(req, wcsfn):
 @requires_json_session
 def api_sdss_image_for_wcs(req):
     from .sdss_image import plot_sdss_image
-    wcsfn = get_temp_file()
-    plotfn = get_temp_file()
+    wcsfn = get_temp_file(tempfiles=req.tempfiles)
+    plotfn = get_temp_file(tempfiles=req.tempfiles)
     write_wcs_file(req, wcsfn)
     plot_sdss_image(wcsfn, plotfn)
-    os.remove(wcsfn)
     res = HttpResponseJson({'status': 'success',
                              'plot': base64.b64encode(open(plotfn).read()),
                              })
-    os.remove(plotfn)
     return res
 
 @csrf_exempt
@@ -261,15 +260,13 @@ def api_sdss_image_for_wcs(req):
 @requires_json_session
 def api_galex_image_for_wcs(req):
     from .galex_jpegs import plot_into_wcs
-    wcsfn = get_temp_file()
-    plotfn = get_temp_file()
+    wcsfn = get_temp_file(tempfiles=req.tempfiles)
+    plotfn = get_temp_file(tempfiles=req.tempfiles)
     write_wcs_file(req, wcsfn)
     plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR)
-    os.remove(wcsfn)
     res = HttpResponseJson({'status': 'success',
                              'plot': base64.b64encode(open(plotfn).read()),
                              })
-    os.remove(plotfn)
     return res
 
 @csrf_exempt
