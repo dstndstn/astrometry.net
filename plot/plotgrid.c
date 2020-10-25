@@ -266,7 +266,7 @@ static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
                 lra -= 360;
 
 	    if (count_ra)
-	      *count_ra++;
+	      (*count_ra)++;
 	    if (doplot)
 	      plot_grid_add_label(pargs, ra, dec, lra, args->raformat);
         }
@@ -285,7 +285,7 @@ static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
                                                   ramax, args->declabeldir, &ra))
                 continue;
 	    if (count_dec)
-	      *count_dec++;
+	      (*count_dec)++;
 	    if (doplot)
 	      plot_grid_add_label(pargs, ra, dec, dec, args->decformat);
         }
