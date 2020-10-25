@@ -418,76 +418,78 @@ class Image(models.Model):
         else:
             return self.MIME_TYPES.get(self.disk_file.file_type, '')
 
-    def get_thumbnail(self):
+    def get_thumbnail(self, tempfiles=None):
         if self.thumbnail is None:
-            self.thumbnail = self.create_resized_image(256)
+            self.thumbnail = self.create_resized_image(256, tempfiles=tempfiles)
             self.save()
         return self.thumbnail
 
-    def get_display_image(self):
+    def get_display_image(self, tempfiles=None):
         if self.display_image is None:
-            self.display_image = self.create_resized_image(640)
+            self.display_image = self.create_resized_image(640, tempfiles=tempfiles)
             self.save()
         return self.display_image
 
-    def get_image_path(self):
+    def get_image_path(self, tempfiles=None):
         if hasattr(self, 'sourcelist'):
-            return self.sourcelist.get_image_path()
+            return self.sourcelist.get_image_path(tempfiles=tempfiles)
         else:
             return self.disk_file.get_path()
 
-    def get_pnm_path(self):
-        imgfn = self.get_image_path()
-        #pnmfn = get_temp_file(suffix='.pnm')
-        #(filetype, errstr) = image2pnm(imgfn, pnmfn)
-        pnmfn = get_temp_file(suffix='.ppm')
+    def get_pnm_path(self, tempfiles=None):
+        imgfn = self.get_image_path(tempfiles=tempfiles)
+        pnmfn = get_temp_file(suffix='.ppm', tempfiles=tempfiles)
         (filetype, errstr) = image2pnm(imgfn, pnmfn, force_ppm=True)
         if errstr:
-            raise RuntimeError('Error converting image file %s: %s' % (imgfn, errstr))
+            raise RuntimeError('Error converting image file %s: %s' %
+                               (imgfn, errstr))
         return pnmfn
 
-    def create_resized_image(self, maxsize):
+    def create_resized_image(self, maxsize, tempfiles=None):
         if max(self.width, self.height) <= maxsize:
             return self
-        pnmfn = self.get_pnm_path()
-        imagefn = get_temp_file()
+        pnmfn = self.get_pnm_path(tempfiles=tempfiles)
+        # will get moved by DiskFile below.
+        imagefn = get_temp_file(tempfiles=tempfiles)
         # find scale
         scale = float(maxsize) / float(max(self.width, self.height))
         W,H = int(round(scale * self.width)), int(round(scale * self.height))
         cmd = 'pnmscale -width %i -height %i %s | pnmtojpeg > %s' % (W, H, pnmfn, imagefn)
         logmsg("Making resized image: %s" % cmd)
         rtn,out,err = run_command(cmd)
+        os.remove(pnmfn)
         if rtn:
             logmsg('pnmscale failed: rtn %i' % rtn)
             logmsg('out: ' + out)
             logmsg('err: ' + err)
             raise RuntimeError('Failed to make resized image for %s: pnmscale: %s' % (str(self), err))
         df = DiskFile.from_file(imagefn, Image.RESIZED_COLLECTION)
-        logmsg('Resized disk file:', df)
+        #logmsg('Resized disk file:', df)
         try:
             image, created = Image.objects.get_or_create(disk_file=df, width=W, height=H)
-            if created:
-                logmsg('Created:', created)
+            #if created:
+            #    logmsg('Created:', created)
         except Image.MultipleObjectsReturned:
             image = Image.objects.filter(disk_file=df, width=W, height=H)
             image = image[0]
         return image
 
-    def render(self, f):
+    def render(self, f, tempfiles=None):
         if hasattr(self, 'sourcelist'):
             # image is a source list
-            self.sourcelist.render(f)
+            self.sourcelist.render(f, tempfiles=tempfiles)
         else:
             if self.disk_file.is_fits_image():
                 # convert fits image to jpg for browser rendering
                 key = 'jpg_image%i' % self.id
                 df = CachedFile.get(key)
                 if df is None:
-                    imagefn = get_temp_file()
-                    pnmfn = self.get_pnm_path()
+                    imagefn = get_temp_file(tempfiles=tempfiles)
+                    pnmfn = self.get_pnm_path(tempfiles=tempfiles)
                     cmd = 'pnmtojpeg < %s > %s' % (pnmfn, imagefn)
                     logmsg("render: Making resized image: %s" % cmd)
                     rtn,out,err = run_command(cmd)
+                    os.remove(pnmfn)
                     if rtn:
                         logmsg('pnmtojpeg failed: rtn %i' % rtn)
                         logmsg('out: ' + out)
@@ -517,14 +519,14 @@ class SourceList(Image):
 
     source_type = models.CharField(max_length=4, choices=SOURCE_TYPE_CHOICES)
 
-    def get_fits_path(self):
+    def get_fits_path(self, tempfiles=None):
         if self.source_type == 'fits':
             return self.disk_file.get_path()
         elif self.source_type == 'text':
             key = 'fits_table_df%s' % self.disk_file.file_hash
             df = CachedFile.get(key)
             if df is None:
-                fitsfn = get_temp_file()
+                fitsfn = get_temp_file(tempfiles=tempfiles)
 
                 with open(str(self.disk_file.get_path())) as text_file:
                     text = text_file.read()
@@ -546,34 +548,33 @@ class SourceList(Image):
                 logmsg('Cache hit for key "%s"' % key)
             return df.get_path()
 
-    def get_fits_table(self):
-        table = fits_table(str(self.get_fits_path()))
+    def get_fits_table(self, tempfiles=None):
+        table = fits_table(str(self.get_fits_path(tempfiles=tempfiles)))
         return table
 
-    def get_image_path(self):
-        imgfn = get_temp_file()
+    def get_image_path(self, tempfiles=None):
+        imgfn = get_temp_file(tempfiles=tempfiles)
         with open(imgfn, 'wb') as f:
-            self.render(f)
+            self.render(f, tempfiles=tempfiles)
         return imgfn
 
     def get_mime_type(self):
         return 'image/png'
 
-    def create_resized_image(self, maxsize):
+    def create_resized_image(self, maxsize, tempfiles=None):
         if max(self.width, self.height) <= maxsize:
             return self
-
         scale = float(maxsize) / float(max(self.width, self.height))
         W,H = int(round(scale * self.width)), int(round(scale * self.height))
         image = SourceList(disk_file=self.disk_file, source_type=self.source_type, width=W, height=H)
         image.save()
         return image
 
-    def render(self, f):
+    def render(self, f, tempfiles=None):
         from math import ceil
         import PIL.Image, PIL.ImageDraw
 
-        fits = self.get_fits_table()
+        fits = self.get_fits_table(tempfiles=tempfiles)
         #w = int(fits.x.max()-fits.x.min())
         #h = int(fits.y.max()-fits.y.min())
         w = int(ceil(fits.x.max()))
@@ -582,10 +583,8 @@ class SourceList(Image):
         #xmin = int(fits.x.min())
         #ymin = int(fits.y.min())
         xmin = ymin = 1.
-
         img = PIL.Image.new('RGB',(self.width,self.height))
         draw = PIL.ImageDraw.Draw(img)
-
         r = round(0.001*self.width)
         for (x, y) in zip(fits.x,fits.y):
             x = int((x-xmin)*scale)
@@ -593,8 +592,6 @@ class SourceList(Image):
             draw.ellipse((x-r,y-r,x+r+1,y+r+1),fill="rgb(255,255,255)")
         del draw
         img.save(f, 'PNG')
-
-
 
 class SkyObject(models.Model):
     name = models.CharField(max_length=1024, primary_key=True)
@@ -717,7 +714,7 @@ class Calibration(models.Model):
                 logmsg('err: ' + stderr);
                 if deleteonfail:
                     os.unlink(deleteonfail)
-                raise FileConversionError(errmsg)
+                raise RuntimeError(errmsg)
 
         def annotate_command(job):
             hd = False
@@ -1202,8 +1199,8 @@ class Submission(Hideable):
         self.comment_receiver.save()
         #self.license.save(default_license=default_license)
 
-        logmsg('saving submission: license id = %d' % self.license.id)
-        logmsg('saving submission: commentreceiver id = %d' % self.comment_receiver.id)
+        #logmsg('saving submission: license id = %d' % self.license.id)
+        #logmsg('saving submission: commentreceiver id = %d' % self.comment_receiver.id)
 
         now = datetime.now()
         return super(Submission, self).save(*args, **kwargs)

@@ -42,6 +42,7 @@ def main():
     parser.add_option('-j', '--job', type=int, dest='job', help='Job ID')
     parser.add_option('-u', '--userimage', type=int, dest='uimage', help='UserImage ID')
     parser.add_option('-e', '--email', help='Find user id with given email address')
+    parser.add_option('-U', '--userid', help='Find user with given numerical ID', type=int)
     parser.add_option('-i', '--image', type=int, dest='image', help='Image ID')
     parser.add_option('-d', '--disk-file', type=str, dest='df', help='DiskFile id')
     parser.add_option('-r', '--rerun', dest='rerun', action='store_true',
@@ -49,7 +50,7 @@ def main():
 
     parser.add_option('--threads', type=int, help='Re-run failed jobs within this process using N threads; else submit to process_submissions process.')
 
-    parser.add_option('--chown', dest='chown', type=int, default=0, help='Change owner of userimage by user id #')
+    parser.add_option('--chown', dest='chown', type=int, default=0, help='Change owner of userimage or submission by user id #')
 
     parser.add_option('--solve-command',
                       help='Command to run instead of ssh to actually solve image')
@@ -82,6 +83,14 @@ def main():
             print(u.id, u, u.email)
         sys.exit(0)
 
+    if opt.userid:
+        users = User.objects.filter(id=opt.userid)
+        print('Users with ID', opt.userid)
+        for u in users:
+            print(u.id, u, u.email)
+            print(u.profile)
+        sys.exit(0)
+        
     if not (opt.sub or opt.job or opt.uimage or opt.image or opt.ssh or opt.empty or opt.df):
         print('Must specify one of --sub, --job, or --userimage or --image (or --ssh or --empty)')
 
@@ -199,13 +208,21 @@ def main():
             print('Path', sub.disk_file.get_path())
             print('Is fits image:', sub.disk_file.is_fits_image())
             print('Is fits image:', sub.disk_file.file_type)
+        print('User:', sub.user)
         uis = sub.user_images.all()
         print('UserImages:', len(uis))
         for ui in uis:
             print('  ', ui)
+            print('  user', ui.user)
             print('  with Jobs:', len(ui.jobs.all()))
             for j in ui.jobs.all():
                 print('    ', j)
+
+        if opt.chown:
+            newuser = User.objects.all().get(id=opt.chown)
+            for ui in uis:
+                ui.user = newuser
+                ui.save()
 
         if opt.rerun:
             from process_submissions import try_dosub, dosub

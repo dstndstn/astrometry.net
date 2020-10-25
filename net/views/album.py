@@ -1,6 +1,4 @@
-import shutil
-import os, errno
-import tempfile
+import os
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
