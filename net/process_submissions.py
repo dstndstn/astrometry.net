@@ -21,7 +21,6 @@ django.setup()
 
 from django.core.exceptions import MultipleObjectsReturned
 
-import tempfile
 import traceback
 from urllib.parse import urlparse
 import urllib.request, urllib.parse, urllib.error
@@ -34,24 +33,33 @@ import gzip
 import zipfile
 import math
 
-from astrometry.util import image2pnm
-from astrometry.util.filetype import filetype_short
-from astrometry.util.run_command import run_command
-
-from astrometry.util.util import Tan
-from astrometry.util import util as anutil
-from astrometry.util.fits import *
-
-import settings
+from astrometry.net import settings
 settings.LOGGING['loggers'][''] = {
     'handlers': ['console'],
     'level': 'INFO',
-    'propagate': True,
+    'propagate': False,
 }
-from astrometry.net.models import *
-from log import *
 
+tempdir = os.path.join(settings.TEMPDIR, 'proc-subs')
+try:
+    os.makedirs(tempdir)
+except:
+    pass
+settings.TEMPDIR     = tempdir
+os.environ['TMP']    = tempdir
+os.environ['TMPDIR'] = tempdir
+
+import tempfile
 from astrometry.net.tmpfile import get_temp_file
+
+from astrometry.util import image2pnm
+from astrometry.util.filetype import filetype_short
+from astrometry.util.run_command import run_command
+from astrometry.util.util import Tan
+from astrometry.util import util as anutil
+from astrometry.util.fits import *
+from astrometry.net.models import *
+from astrometry.net.log import logmsg
 
 from django.db.models import Count
 from django.db import DatabaseError
@@ -201,6 +209,7 @@ def try_dojob(job, userimage, solve_command, solve_locally):
 
 def dojob(job, userimage, log=None, solve_command=None, solve_locally=None,
           tempfiles=None):
+    print('dojob: tempdir:', tempfile.gettempdir())
     jobdir = job.make_dir()
     #print('Created job dir', jobdir)
     #log = create_job_logger(job)
@@ -473,6 +482,7 @@ def try_dosub(sub, max_retries):
                 logmsg('Failed to delete temp file', fn, ':', e)
 
 def dosub(sub, tempfiles=None, tempdirs=None):
+    print('dosub: tempdir:', tempfile.gettempdir())
     sub.set_processing_started()
     sub.save()
     print('Submission disk file:', sub.disk_file)
@@ -725,6 +735,8 @@ def job_callback(result):
 def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
          solve_command, solve_locally):
 
+    print('Tempdir:', tempfile.gettempdir())
+    
     from logging.config import dictConfig
     dictConfig(settings.LOGGING)
 
