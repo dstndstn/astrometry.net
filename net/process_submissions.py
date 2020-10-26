@@ -52,6 +52,8 @@ os.environ['TMPDIR'] = tempdir
 import tempfile
 from astrometry.net.tmpfile import get_temp_file
 
+print('get_temp_file():', get_temp_file())
+
 from astrometry.util import image2pnm
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
@@ -124,11 +126,11 @@ def run_pnmfile(fn):
     # and the sysadmin has to make sure the correct pnmfile is found in the PATH
     # TODO: document this for sysadmins
     out = check_output(['pnmfile', fn]).decode().strip() #nosec
-    logmsg('pnmfile output: ' + out)
+    logdebug('pnmfile output: ' + out)
     pat = re.compile(r'P(?P<pnmtype>[BGP])M .*, (?P<width>\d*) by (?P<height>\d*)( *maxval (?P<maxval>\d*))?')
     match = pat.search(out)
     if not match:
-        logmsg('No match.')
+        logmsg('pnmfile: No regex match.')
         return None
     w = int(match.group('width'))
     h = int(match.group('height'))
@@ -138,7 +140,7 @@ def run_pnmfile(fn):
         maxval = 1
     else:
         maxval = int(mv)
-    logmsg('Type %s, w %i, h %i, maxval %i' % (pnmtype, w, h, maxval))
+    logdebug('Type %s, w %i, h %i, maxval %i' % (pnmtype, w, h, maxval))
     return (w, h, pnmtype, maxval)
 
 class MyLogger(object):
@@ -167,11 +169,11 @@ def create_job_logger(job):
 def try_dojob(job, userimage, solve_command, solve_locally):
     print('try_dojob', job, '(sub', job.user_image.submission.id, ')')
     tempfiles = []
+    rtn = None
     try:
-        r = dojob(job, userimage, solve_command=solve_command,
+        rtn = dojob(job, userimage, solve_command=solve_command,
                      solve_locally=solve_locally, tempfiles=tempfiles)
-        print('try_dojob', job, 'completed:', r)
-        return r
+        print('try_dojob', job, 'completed:', rtn)
     except OSError as e:
         print('OSError processing job', job)
         print(e)
@@ -206,6 +208,7 @@ def try_dojob(job, userimage, solve_command, solve_locally):
                 os.remove(fn)
             except OSError as e:
                 logmsg('Failed to delete temp file', fn, ':', e)
+    return rtn
 
 def dojob(job, userimage, log=None, solve_command=None, solve_locally=None,
           tempfiles=None):
@@ -432,8 +435,9 @@ def try_dosub(sub, max_retries):
     subid = sub.id
     tempfiles = []
     tempdirs = []
+    rtn = None
     try:
-        return dosub(sub, tempfiles=tempfiles, tempdirs=tempdirs)
+        rtn = dosub(sub, tempfiles=tempfiles, tempdirs=tempdirs)
     except DatabaseError as e:
         print('Caught DatabaseError while processing Submission', sub)
         traceback.print_exc(None, sys.stdout)
@@ -446,8 +450,8 @@ def try_dosub(sub, max_retries):
             print('Retrying processing Submission %s' % str(sub))
             sub.processing_retries += 1
             sub.save()
-            return try_dosub(sub, max_retries,
-                             tempfiles=tempfiles, tempdirs=tempdirs)
+            rtn = try_dosub(sub, max_retries,
+                            tempfiles=tempfiles, tempdirs=tempdirs)
         else:
             print('Submission retry limit reached')
             sub.set_error_message(
@@ -455,7 +459,7 @@ def try_dosub(sub, max_retries):
                 + traceback.format_exc(None))
             sub.set_processing_finished()
             sub.save()
-            return 'exception'
+            rtn = 'exception'
     except:
         print('Caught exception while processing Submission', sub)
         traceback.print_exc(None, sys.stdout)
@@ -466,7 +470,7 @@ def try_dosub(sub, max_retries):
         sub.save()
         logmsg('Caught exception while processing Submission ' + str(sub))
         logmsg('  ' + traceback.format_exc(None))
-        return 'exception'
+        rtn = 'exception'
 
     for dirnm in tempdirs:
         if os.path.exists(dirnm):
@@ -480,6 +484,7 @@ def try_dosub(sub, max_retries):
                 os.remove(fn)
             except OSError as e:
                 logmsg('Failed to delete temp file', fn, ':', e)
+    return rtn
 
 def dosub(sub, tempfiles=None, tempdirs=None):
     print('dosub: tempdir:', tempfile.gettempdir())
@@ -560,12 +565,11 @@ def dosub(sub, tempfiles=None, tempdirs=None):
         logmsg('File %s: single file' % fn)
         # create Image object
         img = get_or_create_image(df, tempfiles=tempfiles)
-        logmsg('File %s: created Image %s' % (fn, str(img)))
+        logdebug('File %s: created Image %s' % (fn, str(img)))
         # create UserImage object.
         if img:
-            logmsg('File %s: Image id %i' % (fn, img.id))
             uimg = create_user_image(sub, img, original_filename)
-            logmsg('Image %i: created UserImage %i' % (img.id, uimg.id))
+            logmsg('File %s: Image id %i, UserImage id %i' % (fn, img.id, uimg.id))
 
     sub.set_processing_finished()
     sub.save()
@@ -597,22 +601,21 @@ def get_or_create_image(df, create_thumb=True, tempfiles=None):
         return imgs[0]
 
     img = create_image(df, tempfiles=tempfiles)
-    logmsg('img = ' + str(img))
+    #logmsg('img = ' + str(img))
     if img is None:
         # try to create sourcelist image
         img = create_source_list(df, tempfiles=tempfiles)
     if img and create_thumb:
         # cache
-        print('Creating thumbnail')
+        logdebug('Creating thumbnail')
         img.get_thumbnail(tempfiles=tempfiles)
-        print('Creating display-sized image')
+        logdebug('Creating display-sized image')
         img.get_display_image(tempfiles=tempfiles)
-        print('Saving image')
         img.save()
     elif img:
         img.save()
     else:
-        raise Exception('This file\'s type is not supported.')
+        raise Exception("This file's type is not supported.")
     return img
 
     # # Is there already an Image for this DiskFile?
@@ -656,7 +659,7 @@ def create_image(df, tempfiles=None):
         if x is None:
             raise RuntimeError('Could not find image file size')
         (w, h, pnmtype, maxval) = x
-        logmsg('Type %s, w %i, h %i' % (pnmtype, w, h))
+        logdebug('Type %s, w %i, h %i' % (pnmtype, w, h))
         img.width = w
         img.height = h
         img.save()
