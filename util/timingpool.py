@@ -470,6 +470,6 @@ def test_jumbo():
         print(Time()-t0)
 
 if __name__ == '__main__':
-    test_jumbo()
-    #test()
+    #test_jumbo()
+    test()
     sys.exit()
