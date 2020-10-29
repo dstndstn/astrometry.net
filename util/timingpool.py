@@ -144,38 +144,40 @@ class TimingConnection(Connection):
         self.pobjs += 1
         return self._send_bytes(bb)
 
-    # def _send_bytes(self, buf):
-    #     n = len(buf)
-    #     if n > 0x7fffffff:
-    #         pre_header = struct.pack("!i", -1)
-    #         header = struct.pack("!Q", n)
-    #         self._send(pre_header)
-    #         self._send(header)
-    #         self._send(buf)
-    #     else:
-    #         # For wire compatibility with 3.7 and lower
-    #         header = struct.pack("!i", n)
-    #         if n > 16384:
-    #             # The payload is large so Nagle's algorithm won't be triggered
-    #             # and we'd better avoid the cost of concatenation.
-    #             self._send(header)
-    #             self._send(buf)
-    #         else:
-    #             # Issue #20540: concatenate before sending, to avoid delays due
-    #             # to Nagle's algorithm on a TCP socket.
-    #             # Also note we want to avoid sending a 0-length buffer separately,
-    #             # to avoid "broken pipe" errors if the other end closed the pipe.
-    #             self._send(header + buf)
-    # 
-    # def _recv_bytes(self, maxsize=None):
-    #     buf = self._recv(4)
-    #     size, = struct.unpack("!i", buf.getvalue())
-    #     if size == -1:
-    #         buf = self._recv(8)
-    #         size, = struct.unpack("!Q", buf.getvalue())
-    #     if maxsize is not None and size > maxsize:
-    #         return None
-    #     return self._recv(size)
+    # Borrowed from the python3.8 superclass -- handles > 2GB pickles.
+    def _send_bytes(self, buf):
+        n = len(buf)
+        if n > 0x7fffffff:
+            pre_header = struct.pack("!i", -1)
+            header = struct.pack("!Q", n)
+            self._send(pre_header)
+            self._send(header)
+            self._send(buf)
+        else:
+            # For wire compatibility with 3.7 and lower
+            header = struct.pack("!i", n)
+            if n > 16384:
+                # The payload is large so Nagle's algorithm won't be triggered
+                # and we'd better avoid the cost of concatenation.
+                self._send(header)
+                self._send(buf)
+            else:
+                # Issue #20540: concatenate before sending, to avoid delays due
+                # to Nagle's algorithm on a TCP socket.
+                # Also note we want to avoid sending a 0-length buffer separately,
+                # to avoid "broken pipe" errors if the other end closed the pipe.
+                self._send(header + buf)
+
+    # Borrowed from the python3.8 superclass -- handles > 2GB pickles.
+    def _recv_bytes(self, maxsize=None):
+        buf = self._recv(4)
+        size, = struct.unpack("!i", buf.getvalue())
+        if size == -1:
+            buf = self._recv(8)
+            size, = struct.unpack("!Q", buf.getvalue())
+        if maxsize is not None and size > maxsize:
+            return None
+        return self._recv(size)
 
 ## This is essential! -- register a special pickler for our
 ## Connection subclass.  Without this, the file descriptors don't
@@ -190,14 +192,8 @@ def TimingPipe(track_input, track_output):
     depending on what we want to record.
     '''
     fd1, fd2 = os.pipe()
-    if track_input:
-        r = TimingConnection(fd1, writable=False)
-    else:
-        r = Connection(fd1, writable=False)
-    if track_output:
-        w = TimingConnection(fd2, readable=False)
-    else:
-        w = Connection(fd2, readable=False)
+    r = TimingConnection(fd1, writable=False)
+    w = TimingConnection(fd2, readable=False)
     return r,w
 
 def _sum_object_stats(O1, O2):
@@ -469,7 +465,7 @@ def test_jumbo():
     with TimingPool(2) as pool:
         Time.add_measurement(TimingPoolMeas(pool, pickleTraffic=True))
         t0 = Time()
-        R = pool.map(test_func_4, np.ones(int(2.1 * 1024 * 1024 * 1024 / 8)))
+        R = pool.map(test_func_4, [np.ones(int(2.1 * 1024 * 1024 * 1024 / 8))])
         print('Jumbo:', np.sum(R))
         print(Time()-t0)
 
