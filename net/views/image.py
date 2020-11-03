@@ -123,6 +123,9 @@ def user_image(req, user_image_id=None):
     if image_type in images:
         display_url = images[image_type + '_display']
         fullsize_url = images[image_type]
+    else:
+        display_url=''
+        fullsize_url=''
 
     flags = Flag.objects.all()
     if req.user.is_authenticated:
