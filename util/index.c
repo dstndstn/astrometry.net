@@ -92,7 +92,8 @@ anbool index_is_file_index(const char* filename) {
     anbool rtn = TRUE;
     indexfn = get_filename(filename);
     if (!file_readable(indexfn)) {
-        ERROR("Index file %s is not readable.", indexfn);
+        ERROR("Index file %s -> %s is not readable.", filename, indexfn);
+        rtn = FALSE;
         goto finish;
     }
     if (!qfits_is_fits(indexfn)) {
