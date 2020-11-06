@@ -14,7 +14,7 @@ SOCIAL_INSTALLED_APPS = (
 SOCIAL_AUTH_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
     'social_core.backends.twitter.TwitterOAuth',
-    'social_core.backends.yahoo.YahooOpenId',
+    'social_core.backends.yahoo.YahooOAuth2',
     'social_core.backends.github.GithubOAuth2',
     'social_core.backends.flickr.FlickrOAuth',
     #'django.contrib.auth.backends.ModelBackend',
@@ -31,6 +31,9 @@ SOCIAL_TEMPLATE_CONTEXT_PROCESSORS = (
 
 # SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 # SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
+
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY    = authsecrets.google.key
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = authsecrets.google.secret
@@ -58,10 +61,12 @@ SOCIAL_AUTH_TWITTER_SCOPE = ['email']
 #SOCIAL_AUTH_TWITTER_SCOPE = ['user:email']
 
 # Key not working.... keep getting 401 auth req'd, with message oauth_problem=consumer_key_rejected
-
 # SOCIAL_AUTH_YAHOO_OAUTH_KEY    = authsecrets.yahoo.key
 # SOCIAL_AUTH_YAHOO_OAUTH_SECRET = authsecrets.yahoo.secret
 # SOCIAL_AUTH_YAHOO_OAUTH_VERIFY_SSL = False
+
+SOCIAL_AUTH_YAHOO_OAUTH2_KEY    = authsecrets.yahoo.key
+SOCIAL_AUTH_YAHOO_OAUTH2_SECRET = authsecrets.yahoo.secret
 
 SOCIAL_AUTH_RAISE_EXCEPTIONS = True
 

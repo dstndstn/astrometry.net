@@ -9,16 +9,18 @@ path = os.path.realpath(__file__)
 basedir = os.path.dirname(os.path.dirname(path))
 sys.path.append(basedir)
 
-# add ../solver and ../util to PATH
+# add ../solver and ../util and ../plot to PATH
 os.environ['PATH'] += ':' + os.path.join(basedir, 'solver')
 os.environ['PATH'] += ':' + os.path.join(basedir, 'util')
+os.environ['PATH'] += ':' + os.path.join(basedir, 'plot')
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
 import django
 django.setup()
 
-import tempfile
+from django.core.exceptions import MultipleObjectsReturned
+
 import traceback
 from urllib.parse import urlparse
 import urllib.request, urllib.parse, urllib.error
@@ -31,32 +33,42 @@ import gzip
 import zipfile
 import math
 
-from astrometry.util import image2pnm
-from astrometry.util.filetype import filetype_short
-from astrometry.util.run_command import run_command
-
-from astrometry.util.util import Tan
-from astrometry.util import util as anutil
-from astrometry.util.fits import *
-
-import settings
+from astrometry.net import settings
 settings.LOGGING['loggers'][''] = {
     'handlers': ['console'],
     'level': 'INFO',
-    'propagate': True,
+    'propagate': False,
 }
+
+tempdir = os.path.join(settings.TEMPDIR, 'proc-subs')
+try:
+    os.makedirs(tempdir)
+except:
+    pass
+settings.TEMPDIR     = tempdir
+os.environ['TMP']    = tempdir
+os.environ['TMPDIR'] = tempdir
+
+import tempfile
+from astrometry.net.tmpfile import get_temp_file
+
+print('get_temp_file():', get_temp_file())
+
+from astrometry.util import image2pnm
+from astrometry.util.filetype import filetype_short
+from astrometry.util.run_command import run_command
+from astrometry.util.util import Tan
+from astrometry.util import util as anutil
+from astrometry.util.fits import *
 from astrometry.net.models import *
-from log import *
+from astrometry.net.log import logmsg
 
 from django.db.models import Count
 from django.db import DatabaseError
 from django.db.models import Q
 
-from logging.config import dictConfig
-dictConfig(settings.LOGGING)
-
-import logging
-logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+#import logging
+#logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
 def is_tarball(fn):
     logmsg('is_tarball: %s' % fn)
@@ -67,9 +79,11 @@ def is_tarball(fn):
             return True
     return False
 
-def get_tarball_files(fn):
+def get_tarball_files(fn, tempdirs=None):
     # create temp dir to extract tarfile.
     tempdir = tempfile.mkdtemp()
+    if tempdirs is not None:
+        tempdirs.append(tempdir)
     cmd = 'tar xvf %s -C %s' % (fn, tempdir)
     #userlog('Extracting tarball...')
     (rtn, out, err) = run_command(cmd)
@@ -112,11 +126,11 @@ def run_pnmfile(fn):
     # and the sysadmin has to make sure the correct pnmfile is found in the PATH
     # TODO: document this for sysadmins
     out = check_output(['pnmfile', fn]).decode().strip() #nosec
-    logmsg('pnmfile output: ' + out)
+    logdebug('pnmfile output: ' + out)
     pat = re.compile(r'P(?P<pnmtype>[BGP])M .*, (?P<width>\d*) by (?P<height>\d*)( *maxval (?P<maxval>\d*))?')
     match = pat.search(out)
     if not match:
-        logmsg('No match.')
+        logmsg('pnmfile: No regex match.')
         return None
     w = int(match.group('width'))
     h = int(match.group('height'))
@@ -126,7 +140,7 @@ def run_pnmfile(fn):
         maxval = 1
     else:
         maxval = int(mv)
-    logmsg('Type %s, w %i, h %i, maxval %i' % (pnmtype, w, h, maxval))
+    logdebug('Type %s, w %i, h %i, maxval %i' % (pnmtype, w, h, maxval))
     return (w, h, pnmtype, maxval)
 
 class MyLogger(object):
@@ -154,11 +168,12 @@ def create_job_logger(job):
 
 def try_dojob(job, userimage, solve_command, solve_locally):
     print('try_dojob', job, '(sub', job.user_image.submission.id, ')')
+    tempfiles = []
+    rtn = None
     try:
-        r = dojob(job, userimage, solve_command=solve_command,
-                     solve_locally=solve_locally)
-        print('try_dojob', job, 'completed:', r)
-        return r
+        rtn = dojob(job, userimage, solve_command=solve_command,
+                     solve_locally=solve_locally, tempfiles=tempfiles)
+        print('try_dojob', job, 'completed:', rtn)
     except OSError as e:
         print('OSError processing job', job)
         print(e)
@@ -187,7 +202,17 @@ def try_dojob(job, userimage, solve_command, solve_locally):
         log.msg('Caught exception while processing Job', job.id)
         log.msg(traceback.format_exc(None))
 
-def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
+    for fn in tempfiles:
+        if os.path.exists(fn):
+            try:
+                os.remove(fn)
+            except OSError as e:
+                logmsg('Failed to delete temp file', fn, ':', e)
+    return rtn
+
+def dojob(job, userimage, log=None, solve_command=None, solve_locally=None,
+          tempfiles=None):
+    print('dojob: tempdir:', tempfile.gettempdir())
     jobdir = job.make_dir()
     #print('Created job dir', jobdir)
     #log = create_job_logger(job)
@@ -243,7 +268,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
 
     if hasattr(img,'sourcelist'):
         # image is a source list; use --xylist
-        axyargs['--xylist'] = img.sourcelist.get_fits_path()
+        axyargs['--xylist'] = img.sourcelist.get_fits_path(tempfiles=tempfiles)
         w,h = img.width, img.height
         if sub.image_width:
             w = sub.image_width
@@ -368,7 +393,13 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
         nside = int(2**round(math.log(nside, 2)))
         nside = max(1, nside)
         healpix = anutil.radecdegtohealpix(ra, dec, nside)
-        sky_location, created = SkyLocation.objects.get_or_create(nside=nside, healpix=healpix)
+        try:
+            sky_location, created = SkyLocation.objects.get_or_create(nside=nside, healpix=healpix)
+        except MultipleObjectsReturned:
+            log.msg('Multiple SkyLocations for nside %i, healpix %i' % (nside, healpix))
+            # arbitrarily take the first one.
+            sky_location = SkyLocation.objects.filter(nside=nside, healpix=healpix)[0]
+            
         log.msg('SkyLocation:', sky_location)
 
         # Find bounds for the Calibration object.
@@ -402,8 +433,11 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None):
 
 def try_dosub(sub, max_retries):
     subid = sub.id
+    tempfiles = []
+    tempdirs = []
+    rtn = None
     try:
-        return dosub(sub)
+        rtn = dosub(sub, tempfiles=tempfiles, tempdirs=tempdirs)
     except DatabaseError as e:
         print('Caught DatabaseError while processing Submission', sub)
         traceback.print_exc(None, sys.stdout)
@@ -416,7 +450,8 @@ def try_dosub(sub, max_retries):
             print('Retrying processing Submission %s' % str(sub))
             sub.processing_retries += 1
             sub.save()
-            return try_dosub(sub, max_retries)
+            rtn = try_dosub(sub, max_retries,
+                            tempfiles=tempfiles, tempdirs=tempdirs)
         else:
             print('Submission retry limit reached')
             sub.set_error_message(
@@ -424,7 +459,7 @@ def try_dosub(sub, max_retries):
                 + traceback.format_exc(None))
             sub.set_processing_finished()
             sub.save()
-            return 'exception'
+            rtn = 'exception'
     except:
         print('Caught exception while processing Submission', sub)
         traceback.print_exc(None, sys.stdout)
@@ -435,9 +470,24 @@ def try_dosub(sub, max_retries):
         sub.save()
         logmsg('Caught exception while processing Submission ' + str(sub))
         logmsg('  ' + traceback.format_exc(None))
-        return 'exception'
+        rtn = 'exception'
 
-def dosub(sub):
+    for dirnm in tempdirs:
+        if os.path.exists(dirnm):
+            try:
+                shutil.rmtree(dirnm)
+            except OSError as e:
+                logmsg('Failed to delete temp dir', dirnm, ':', e)
+    for fn in tempfiles:
+        if os.path.exists(fn):
+            try:
+                os.remove(fn)
+            except OSError as e:
+                logmsg('Failed to delete temp file', fn, ':', e)
+    return rtn
+
+def dosub(sub, tempfiles=None, tempdirs=None):
+    print('dosub: tempdir:', tempfile.gettempdir())
     sub.set_processing_started()
     sub.save()
     print('Submission disk file:', sub.disk_file)
@@ -471,8 +521,7 @@ def dosub(sub):
     # check if file is a gzipped file
     try:
         with gzip.open(fn) as gzip_file:
-            f, tempfn = tempfile.mkstemp()
-            os.close(f)
+            tempfn = get_temp_file(tempfiles=tempfiles)
             with open(tempfn, 'wb') as f:
                 # should fail on the following line if not a gzip file
                 f.write(gzip_file.read())
@@ -496,6 +545,8 @@ def dosub(sub):
         logmsg('File %s: tarball' % fn)
         tar = tarfile.open(fn)
         dirnm = tempfile.mkdtemp()
+        if tempdirs is not None:
+            tempdirs.append(dirnm)
         for tarinfo in tar.getmembers():
             if tarinfo.isfile():
                 logmsg('extracting file %s' % tarinfo.name)
@@ -503,7 +554,7 @@ def dosub(sub):
                 tempfn = os.path.join(dirnm, tarinfo.name)
                 df = DiskFile.from_file(tempfn, 'uploaded-untar')
                 # create Image object
-                img = get_or_create_image(df)
+                img = get_or_create_image(df, tempfiles=tempfiles)
                 # create UserImage object.
                 if img:
                     create_user_image(sub, img, tarinfo.name)
@@ -513,13 +564,12 @@ def dosub(sub):
         # assume file is single image
         logmsg('File %s: single file' % fn)
         # create Image object
-        img = get_or_create_image(df)
-        logmsg('File %s: created Image %s' % (fn, str(img)))
+        img = get_or_create_image(df, tempfiles=tempfiles)
+        logdebug('File %s: created Image %s' % (fn, str(img)))
         # create UserImage object.
         if img:
-            logmsg('File %s: Image id %i' % (fn, img.id))
             uimg = create_user_image(sub, img, original_filename)
-            logmsg('Image %i: created UserImage %i' % (img.id, uimg.id))
+            logmsg('File %s: Image id %i, UserImage id %i' % (fn, img.id, uimg.id))
 
     sub.set_processing_finished()
     sub.save()
@@ -545,50 +595,71 @@ def create_user_image(sub, img, original_filename):
         sub.album.user_images.add(uimg)
     return uimg
 
-def get_or_create_image(df):
-    # Is there already an Image for this DiskFile?
-    try:
-        img = Image.objects.get(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
-    except Image.MultipleObjectsReturned:
-        logmsg("multiple found")
-        imgs = Image.objects.filter(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
-        for i in range(1,len(imgs)):
-            imgs[i].delete()
-        img = imgs[0]
-    except Image.DoesNotExist:
-        # try to create image assume disk file is an image file (png, jpg, etc)
-        logmsg('Image database object does not exist; creating')
-        img = create_image(df)
-        logmsg('img = ' + str(img))
-        if img is None:
-            # try to create sourcelist image
-            img = create_source_list(df)
+def get_or_create_image(df, create_thumb=True, tempfiles=None):
+    imgs = Image.objects.filter(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
+    if imgs.count():
+        return imgs[0]
 
-        if img:
-            # cache
-            print('Creating thumbnail')
-            img.get_thumbnail()
-            print('Creating display-sized image')
-            img.get_display_image()
-            print('Saving image')
-            img.save()
-        else:
-            raise Exception('This file\'s type is not supported.')
+    img = create_image(df, tempfiles=tempfiles)
+    #logmsg('img = ' + str(img))
+    if img is None:
+        # try to create sourcelist image
+        img = create_source_list(df, tempfiles=tempfiles)
+    if img and create_thumb:
+        # cache
+        logdebug('Creating thumbnail')
+        img.get_thumbnail(tempfiles=tempfiles)
+        logdebug('Creating display-sized image')
+        img.get_display_image(tempfiles=tempfiles)
+        img.save()
+    elif img:
+        img.save()
+    else:
+        raise Exception("This file's type is not supported.")
     return img
 
+    # # Is there already an Image for this DiskFile?
+    # try:
+    # except Image.MultipleObjectsReturned:
+    #     logmsg("multiple found")
+    #     imgs = Image.objects.filter(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
+    #     for i in range(1,len(imgs)):
+    #         imgs[i].delete()
+    #     img = imgs[0]
+    # except Image.DoesNotExist:
+    #     # try to create image assume disk file is an image file (png, jpg, etc)
+    #     logmsg('Image database object does not exist; creating')
+    #     img = create_image(df)
+    #     logmsg('img = ' + str(img))
+    #     if img is None:
+    #         # try to create sourcelist image
+    #         img = create_source_list(df)
+    # 
+    #     if img:
+    #         # cache
+    #         print('Creating thumbnail')
+    #         img.get_thumbnail()
+    #         print('Creating display-sized image')
+    #         img.get_display_image()
+    #         print('Saving image')
+    #         img.save()
+    #     else:
+    #         raise Exception('This file\'s type is not supported.')
+    # return img
 
-def create_image(df):
+
+def create_image(df, tempfiles=None):
     img = None
     try:
         img = Image(disk_file=df)
         # FIXME -- move this code to Image?
         # Convert file to pnm to find its size.
-        pnmfn = img.get_pnm_path()
+        pnmfn = img.get_pnm_path(tempfiles=tempfiles)
         x = run_pnmfile(pnmfn)
         if x is None:
             raise RuntimeError('Could not find image file size')
         (w, h, pnmtype, maxval) = x
-        logmsg('Type %s, w %i, h %i' % (pnmtype, w, h))
+        logdebug('Type %s, w %i, h %i' % (pnmtype, w, h))
         img.width = w
         img.height = h
         img.save()
@@ -597,7 +668,7 @@ def create_image(df):
         img = None
     return img
 
-def create_source_list(df):
+def create_source_list(df, tempfiles=None):
     img = None
     fits = None
     source_type = None
@@ -613,7 +684,7 @@ def create_source_list(df):
         logmsg('file is not a fits table')
         # otherwise, check to see if it is a text list
         try:
-            fitsfn = get_temp_file()
+            fitsfn = get_temp_file(tempfiles=tempfiles)
 
             text_file = open(str(df.get_path()))
             text = text_file.read()
@@ -666,6 +737,17 @@ def job_callback(result):
 
 def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
          solve_command, solve_locally):
+
+    print('Tempdir:', tempfile.gettempdir())
+    
+    from logging.config import dictConfig
+    dictConfig(settings.LOGGING)
+
+    # exit after a day
+    maxtime = 3600 #*24
+
+    t_start = time.time()
+    
     dojob_pool = None
     dosub_pool = None
     if dojob_nthreads > 1:
@@ -714,6 +796,9 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
 
         print()
 
+        t_now = time.time() - t_start
+        quitnow = (t_now > maxtime)
+        
         #print('Checking for new Submissions')
         newsubs = Submission.objects.filter(processing_started__isnull=True)
         if newsubs.count():
@@ -732,10 +817,10 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             print('Submissions running:', len(subresults))
             lastsubs = subresults
         for sid,res in subresults:
-            print('  Submission id', sid, 'ready:', res.ready(),)
+            print('  Submission id', sid, 'ready:', res.ready(), end=' ')
             if res.ready():
                 subresults.remove((sid,res))
-                print('success:', res.successful(),)
+                print('success:', res.successful(), end=' ')
 
                 qs = runsubs.get(submission__id=sid)
                 qs.finished = True
@@ -743,18 +828,17 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                 qs.save()
 
                 if res.successful():
-                    print('result:', res.get(),)
+                    print('result:', res.get(), end=' ')
             print()
-
         runjobs = me.jobs.filter(finished=False)
         if jobresults != lastjobs:
             print('Jobs running:', len(jobresults))
             lastjobs = jobresults
         for jid,res in jobresults:
-            print('  Job id', jid, 'ready:', res.ready(),)
+            print('  Job id', jid, 'ready:', res.ready(), end=' ')
             if res.ready():
                 jobresults.remove((jid,res))
-                print('success:', res.successful(),)
+                print('success:', res.successful())
 
                 qj = runjobs.get(job__id=jid)
                 qj.finished = True
@@ -778,6 +862,15 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             print()
         if len(jobresults):
             print('Still waiting for', len(jobresults), 'Jobs')
+
+        if quitnow:
+            if len(jobresults) == 0:
+                print('Timed out -- exiting.')
+                break
+                
+            print('Timed out -- not launching new jobs, waiting for',
+                  len(jobresults), 'jobs to finish')
+            continue
 
         if (len(newsubs) + len(newuis)) == 0:
             time.sleep(refresh_rate)
@@ -856,7 +949,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                                              callback=job_callback)
                 jobresults.append((job.id, res))
             else:
-                dojob(job, userimage, solve_command=solve_command, solve_locally=solve_locally)
+                try_dojob(job, userimage, solve_command=solve_command, solve_locally=solve_locally)
 
 if __name__ == '__main__':
     import optparse

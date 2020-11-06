@@ -24,7 +24,7 @@ void* plot_grid_init(plot_args_t* plotargs) {
     plotgrid_t* args = calloc(1, sizeof(plotgrid_t));
     args->dolabel = TRUE;
     args->raformat = strdup("%.2f");
-    args->decformat = strdup("%.2f");
+    args->decformat = strdup("%+.2f");
     return args;
 }
 
@@ -219,9 +219,16 @@ int plot_grid_find_ra_label_location(plot_args_t* pargs, double ra, double cdec,
 
 static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
                            double ramin, double ramax,
-                           double decmin, double decmax) {
+                           double decmin, double decmax,
+			   anbool doplot,
+			   int* count_ra, int* count_dec) {
     double cra, cdec;
     double ra, dec;
+
+    if (count_ra)
+      *count_ra = 0;
+    if (count_dec)
+      *count_dec = 0;
 
     args->dolabel = (args->ralabelstep > 0) || (args->declabelstep > 0);
     if (!args->dolabel)
@@ -257,8 +264,11 @@ static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
                 lra += 360;
             if (lra >= 360)
                 lra -= 360;
-            //logmsg("Label \"%s\" at (%g,%g)\n", label, ra, dec);
-            plot_grid_add_label(pargs, ra, dec, lra, args->raformat);
+
+	    if (count_ra)
+	      (*count_ra)++;
+	    if (doplot)
+	      plot_grid_add_label(pargs, ra, dec, lra, args->raformat);
         }
     }
     if (args->declabelstep > 0) {
@@ -274,11 +284,38 @@ static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
             if (plot_grid_find_dec_label_location(pargs, dec, cra, ramin,
                                                   ramax, args->declabeldir, &ra))
                 continue;
-            //logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, ra, dec);
-            plot_grid_add_label(pargs, ra, dec, dec, args->decformat);
+	    if (count_dec)
+	      (*count_dec)++;
+	    if (doplot)
+	      plot_grid_add_label(pargs, ra, dec, dec, args->decformat);
         }
     }
     return 1;
+}
+
+// With the current "ralabelstep", how many labels will be added?
+int plot_grid_count_ra_labels(plot_args_t* pargs) {
+  plotgrid_t* grid = plot_grid_get(pargs);
+  int count;
+  double ramin,ramax,decmin,decmax;
+  if (!pargs->wcs)
+    return -1;
+  // Find image bounds in RA,Dec...
+  plotstuff_get_radec_bounds(pargs, 50, &ramin, &ramax, &decmin, &decmax);
+  do_radec_labels(pargs, grid, ramin, ramax, decmin, decmax, FALSE, &count, NULL);
+  return count;
+}
+// With the current "declabelstep", how many labels will be added?
+int plot_grid_count_dec_labels(plot_args_t* pargs) {
+  plotgrid_t* grid = plot_grid_get(pargs);
+  int count;
+  double ramin,ramax,decmin,decmax;
+  if (!pargs->wcs)
+    return -1;
+  // Find image bounds in RA,Dec...
+  plotstuff_get_radec_bounds(pargs, 50, &ramin, &ramax, &decmin, &decmax);
+ do_radec_labels(pargs, grid, ramin, ramax, decmin, decmax, FALSE, NULL, &count);
+  return count;
 }
 
 void plot_grid_add_label(plot_args_t* pargs, double ra, double dec,
@@ -342,7 +379,8 @@ int plot_grid_plot(const char* command,
         }
     }
 
-    if (do_radec_labels(pargs, args, ramin, ramax, decmin, decmax)) {
+    if (do_radec_labels(pargs, args, ramin, ramax, decmin, decmax,
+			TRUE, NULL, NULL)) {
         plotstuff_plot_stack(pargs, cairo);
     }
     return 0;

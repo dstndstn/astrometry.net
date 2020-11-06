@@ -375,6 +375,13 @@ typedef enum cairo_op cairo_operator_t;
         return plotstuff_set_size_wcs(self);
     }
 
+    int count_ra_labels() {
+      return plot_grid_count_ra_labels(self);
+    }
+    int count_dec_labels() {
+      return plot_grid_count_dec_labels(self);
+    }
+
     void loginit(int level) {
         log_init(level);
     }
@@ -424,6 +431,18 @@ typedef enum cairo_op cairo_operator_t;
     plotoutline_args.__swig__setattr__ = plotoutline_args.__setattr__
     plotoutline_args.__setattr__ = plotoutline_setattr
 %}
+
+%extend plotxy_args {
+    void set_filename(const char* fn) {
+      plot_xy_set_filename(self, fn);
+    }
+}
+
+%extend plotradec_args {
+    void set_filename(const char* fn) {
+      plot_radec_set_filename(self, fn);
+    }
+}
 
 %extend plotimage_args {
     int _set_image_from_numpy(PyObject* arr) {

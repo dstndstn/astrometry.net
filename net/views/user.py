@@ -1,8 +1,4 @@
-import shutil
-import os, errno
-import hashlib
-import tempfile
-import math
+import os
 
 from django.urls import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict

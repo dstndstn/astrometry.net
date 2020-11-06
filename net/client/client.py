@@ -151,6 +151,7 @@ class Client(object):
                                 ('image_height', None, int),
                                 ('x', None, list),
                                 ('y', None, list),
+                                ('album', None, str),
                                 ]:
             if key in kwargs:
                 val = kwargs.pop(key)
@@ -289,6 +290,7 @@ if __name__ == '__main__':
     parser.add_option('--invert', action='store_true', default=None, help='Invert image before detecting sources -- for white-sky, black-stars images')
     parser.add_option('--image-width', type=int, help='Set image width for x,y lists')
     parser.add_option('--image-height', type=int, help='Set image height for x,y lists')
+    parser.add_option('--album', type=str, help='Add image to album with given title string')
     parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--jobid', '-i', dest='solved_id', type=int,help='retrieve result for jobId instead of submitting new image')
@@ -361,7 +363,8 @@ if __name__ == '__main__':
                 kwargs.update(scale_upper=opt.scale_upper)
 
         for key in ['scale_units', 'center_ra', 'center_dec', 'radius',
-                    'downsample_factor', 'positional_error', 'tweak_order', 'crpix_center',]:
+                    'downsample_factor', 'positional_error', 'tweak_order', 'crpix_center',
+                    'album']:
             if getattr(opt, key) is not None:
                 kwargs[key] = getattr(opt, key)
         if opt.parity is not None:

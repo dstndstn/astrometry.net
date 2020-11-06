@@ -217,6 +217,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'astrometry.net.tempfile_middleware.TempfileMiddleware',
 ]
 
 ROOT_URLCONF = 'astrometry.net.urls'

@@ -1,11 +1,10 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import base64
-
+import os
 from functools import wraps
 
 if __name__ == '__main__':
-    import os
     os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
     import sys
     fn = os.path.dirname(os.path.dirname(__file__))
@@ -128,7 +127,8 @@ def upload_common(request, url=None, file=None):
                                 collection=Image.ORIG_COLLECTION)
         original_filename = 'json-xy'
     else:
-        df, original_filename = handle_upload(file=file, url=url)
+        df, original_filename = handle_upload(file=file, url=url,
+                                              tempfiles=request.tempfiles)
     submittor = request.user if request.user.is_authenticated else None
     pro = get_user_profile(submittor)
     allow_commercial_use = json.get('allow_commercial_use', 'd')
@@ -150,6 +150,14 @@ def upload_common(request, url=None, file=None):
         )
     if url is not None:
         subargs.update(url=url)
+
+    if 'album' in json:
+        albumname = str(json['album'])
+        albums = Album.objects.filter(title=str(albumname))
+        if albums.count() == 0:
+            return HttpResponseErrorJson('Failed to find an Album with title "%s"' % albumname)
+        album = albums[0]
+        subargs.update(album=album)
 
     for key,typ in [('scale_units', str),
                     ('scale_type', str),
@@ -238,26 +246,28 @@ def write_wcs_file(req, wcsfn):
 @requires_json_session
 def api_sdss_image_for_wcs(req):
     from .sdss_image import plot_sdss_image
-    wcsfn = get_temp_file()
-    plotfn = get_temp_file()
+    wcsfn = get_temp_file(tempfiles=req.tempfiles)
+    plotfn = get_temp_file(tempfiles=req.tempfiles)
     write_wcs_file(req, wcsfn)
     plot_sdss_image(wcsfn, plotfn)
-    return HttpResponseJson({'status': 'success',
+    res = HttpResponseJson({'status': 'success',
                              'plot': base64.b64encode(open(plotfn).read()),
                              })
+    return res
 
 @csrf_exempt
 @requires_json_args
 @requires_json_session
 def api_galex_image_for_wcs(req):
     from .galex_jpegs import plot_into_wcs
-    wcsfn = get_temp_file()
-    plotfn = get_temp_file()
+    wcsfn = get_temp_file(tempfiles=req.tempfiles)
+    plotfn = get_temp_file(tempfiles=req.tempfiles)
     write_wcs_file(req, wcsfn)
     plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR)
-    return HttpResponseJson({'status': 'success',
+    res = HttpResponseJson({'status': 'success',
                              'plot': base64.b64encode(open(plotfn).read()),
                              })
+    return res
 
 @csrf_exempt
 @requires_json_args

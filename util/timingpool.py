@@ -69,6 +69,8 @@ TimingPoolMeas, that records & reports the pool's worker CPU time.
 import os
 import sys
 import time
+import struct
+import io
 
 import multiprocessing
 from multiprocessing.queues import SimpleQueue
@@ -85,8 +87,9 @@ from astrometry.util.ttime import CpuMeas
 
 class TimingConnection(Connection):
     '''
-    A *Connection* wrapper that keeps track of how many objects and
-    how many bytes are pickled, and how long that takes.
+    A multiprocessing *Connection* subclass that keeps track of how
+    many objects and how many bytes are pickled, and how long that
+    takes.
     '''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -100,6 +103,8 @@ class TimingConnection(Connection):
     def stats(self):
         '''
         Returns statistics of the objects handled by this connection.
+
+        This method is new in this subclass.
         '''
         return dict(pickle_objs = self.pobjs,
                     pickle_bytes = self.pbytes,
@@ -111,14 +116,18 @@ class TimingConnection(Connection):
                     unpickle_cputime = self.uptime)
 
     def recv(self):
-        """Receive a (picklable) object"""
+        """Receive a (picklable) object.
+
+        This is overriding a core method in the Connection superclass."""
         self._check_closed()
         self._check_readable()
         t0 = time.time()
         buf = self._recv_bytes()
-        obj = ForkingPickler.loads(buf.getbuffer())
+        buf = buf.getbuffer()
+        n = len(buf)
+        obj = ForkingPickler.loads(buf)
         dt = time.time() - t0
-        self.upbytes += len(buf.getbuffer())
+        self.upbytes += n
         self.uptime += dt
         self.upobjs += 1
         return obj
@@ -135,6 +144,41 @@ class TimingConnection(Connection):
         self.pobjs += 1
         return self._send_bytes(bb)
 
+    # Borrowed from the python3.8 superclass -- handles > 2GB pickles.
+    def _send_bytes(self, buf):
+        n = len(buf)
+        if n > 0x7fffffff:
+            pre_header = struct.pack("!i", -1)
+            header = struct.pack("!Q", n)
+            self._send(pre_header)
+            self._send(header)
+            self._send(buf)
+        else:
+            # For wire compatibility with 3.7 and lower
+            header = struct.pack("!i", n)
+            if n > 16384:
+                # The payload is large so Nagle's algorithm won't be triggered
+                # and we'd better avoid the cost of concatenation.
+                self._send(header)
+                self._send(buf)
+            else:
+                # Issue #20540: concatenate before sending, to avoid delays due
+                # to Nagle's algorithm on a TCP socket.
+                # Also note we want to avoid sending a 0-length buffer separately,
+                # to avoid "broken pipe" errors if the other end closed the pipe.
+                self._send(header + buf)
+
+    # Borrowed from the python3.8 superclass -- handles > 2GB pickles.
+    def _recv_bytes(self, maxsize=None):
+        buf = self._recv(4)
+        size, = struct.unpack("!i", buf.getvalue())
+        if size == -1:
+            buf = self._recv(8)
+            size, = struct.unpack("!Q", buf.getvalue())
+        if maxsize is not None and size > maxsize:
+            return None
+        return self._recv(size)
+
 ## This is essential! -- register a special pickler for our
 ## Connection subclass.  Without this, the file descriptors don't
 ## get set correctly across the spawn call.
@@ -148,14 +192,8 @@ def TimingPipe(track_input, track_output):
     depending on what we want to record.
     '''
     fd1, fd2 = os.pipe()
-    if track_input:
-        r = TimingConnection(fd1, writable=False)
-    else:
-        r = Connection(fd1, writable=False)
-    if track_output:
-        w = TimingConnection(fd2, readable=False)
-    else:
-        w = Connection(fd2, readable=False)
+    r = TimingConnection(fd1, writable=False)
+    w = TimingConnection(fd2, readable=False)
     return r,w
 
 def _sum_object_stats(O1, O2):
@@ -375,7 +413,6 @@ def test_func_2(arr):
     return np.sum(arr**2)
 
 def test_func_3(arr):
-    import numpy as np
     return arr[::2]**2
 
 def test():
@@ -416,6 +453,23 @@ def test():
         R = pool.map(test_func_3, [np.random.normal(size=1000000) for x in range(5)])
         print(Time()-t0)
 
+
+def test_func_4(arr):
+    arr = arr**2
+    return arr
+
+def test_jumbo():
+    # Test jumbo (> 2 GB) args/results
+    import numpy as np
+    from astrometry.util.ttime import Time
+    with TimingPool(2) as pool:
+        Time.add_measurement(TimingPoolMeas(pool, pickleTraffic=True))
+        t0 = Time()
+        R = pool.map(test_func_4, [np.ones(int(2.1 * 1024 * 1024 * 1024 / 8))])
+        print('Jumbo:', np.sum(R))
+        print(Time()-t0)
+
 if __name__ == '__main__':
+    #test_jumbo()
     test()
     sys.exit()

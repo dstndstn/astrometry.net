@@ -2,7 +2,6 @@ from __future__ import print_function
 import shutil
 import os, errno
 import hashlib
-import tempfile
 
 try:
     # py3
@@ -26,6 +25,7 @@ from django import forms
 from django.forms.models import inlineformset_factory
 from django.http import HttpResponseRedirect
 
+from astrometry.net.tmpfile import get_temp_file
 from astrometry.util.run_command import run_command
 
 
@@ -267,7 +267,9 @@ def upload_file(request):
 
             sub.user = request.user if request.user.is_authenticated else User.objects.get(username=ANONYMOUS_USERNAME)
             if form.cleaned_data['upload_type'] == 'file':
-                sub.disk_file, sub.original_filename = handle_upload(file=request.FILES['file'])
+                sub.disk_file, sub.original_filename = handle_upload(
+                    file=request.FILES['file'],
+                    tempfiles=request.tempfiles)
             elif form.cleaned_data['upload_type'] == 'url':
                 sub.url = form.cleaned_data['url']
                 p = urlparse(sub.url)
@@ -277,7 +279,6 @@ def upload_file(request):
                     sub.original_filename = s[-1]
                 # Don't download the URL now!  Let process_submissions do that!
                 # sub.disk_file, sub.original_filename = handle_upload(url=sub.url)
-
             try:
                 sub.save()
             except DuplicateSubmissionException:
@@ -342,7 +343,7 @@ def status(req, subid=None):
             'finished': finished,
         })
 
-def handle_upload(file=None,url=None):
+def handle_upload(file=None, url=None, tempfiles=None):
     #logmsg('handle_uploaded_file: req=' + str(req))
     #logmsg('handle_uploaded_file: req.session=' + str(req.session))
     #logmsg('handle_uploaded_file: req.session.user=' + str(req.session.user))
@@ -350,7 +351,7 @@ def handle_upload(file=None,url=None):
 
     # get file/url onto disk
     file_hash = DiskFile.get_hash()
-    temp_file_path = tempfile.mktemp()
+    temp_file_path = get_temp_file(tempfiles=tempfiles)
     with open(temp_file_path, 'wb+') as uploaded_file:
         original_filename = ''
 

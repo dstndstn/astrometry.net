@@ -4,11 +4,14 @@
 */deps
 */lib*.a
 */test_*-main.c
-**/*.pyc
+*/*.pyc
+blind/*
 __pycache__
+solver/allquads
 solver/astrometry-engine
 solver/augment-xylist
 solver/build-astrometry-index
+solver/control-program
 solver/fits-guess-scale
 solver/fitscopy
 solver/fitsverify
@@ -25,6 +28,7 @@ solver/solve-field
 solver/query-starkd
 solver/tablist
 solver/tabmerge
+solver/unpermute-stars
 solver/test.c
 solver/wcs-grab
 solver/job.axy
