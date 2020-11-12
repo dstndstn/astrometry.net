@@ -222,11 +222,6 @@ class SubmissionForm(forms.ModelForm):
                 self.fields['publicly_visible'].initial = pro.default_publicly_visible
 
 def upload_file(request):
-    default_license = License.get_default()
-    if request.user.is_authenticated:
-        pro = get_user_profile(request.user)
-        default_license = pro.default_license
-
     if request.method == 'POST':
         form = SubmissionForm(request.user, request.POST, request.FILES)
         if form.is_valid():
@@ -255,12 +250,15 @@ def upload_file(request):
                         print(e)
 
             default_license = None
+            if request.user.is_authenticated:
+                pro = get_user_profile(request.user)
+                if pro is not None:
+                    default_license = pro.default_license
+            if default_license is None:
+                default_license = License.get_default()
+
             if not request.user.is_authenticated:
                 sub.publicly_visible = 'y'
-                default_license = License.get_default()
-            else:
-                pro = get_user_profile(request.user)
-                default_license = pro.default_license
 
             new_license, created = License.objects.get_or_create(
                 default_license=default_license,
