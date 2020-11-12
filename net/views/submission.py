@@ -222,6 +222,14 @@ class SubmissionForm(forms.ModelForm):
                 self.fields['publicly_visible'].initial = pro.default_publicly_visible
 
 def upload_file(request):
+    default_license = None
+    if request.user.is_authenticated:
+        pro = get_user_profile(request.user)
+        if pro is not None:
+            default_license = pro.default_license
+    if default_license is None:
+        default_license = License.get_default()
+
     if request.method == 'POST':
         form = SubmissionForm(request.user, request.POST, request.FILES)
         if form.is_valid():
@@ -248,14 +256,6 @@ def upload_file(request):
                         sub.album = Album.objects.get(pk=int(form.cleaned_data['album']))
                     except Exception as e:
                         print(e)
-
-            default_license = None
-            if request.user.is_authenticated:
-                pro = get_user_profile(request.user)
-                if pro is not None:
-                    default_license = pro.default_license
-            if default_license is None:
-                default_license = License.get_default()
 
             if not request.user.is_authenticated:
                 sub.publicly_visible = 'y'
