@@ -1,6 +1,6 @@
 {% if user %}
 <a href="{% url 'user_profile' user_id=user.id %}">
-<span class="display_name">{{user.get_profile.display_name}}</span>
+<span class="display_name">{{user.profile.display_name}}</span>
 <span class="user_id">({{user.id}})</span>
 </a>
 {% else %}

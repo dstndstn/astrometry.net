@@ -1238,9 +1238,10 @@ class Comment(models.Model):
 
 class UserProfile(models.Model):
     API_KEY_LENGTH = 16
-    display_name = models.CharField(max_length=256)
-    user = models.ForeignKey(User, models.CASCADE, unique=True, related_name='profile',
-                             editable=False)
+    display_name = models.CharField(max_length=256, default='')
+    #user = models.ForeignKey(User, models.CASCADE, unique=True, related_name='profile',
+    #  editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     apikey = models.CharField(max_length = API_KEY_LENGTH)
     default_license = models.ForeignKey('License', models.SET_DEFAULT, default=DEFAULT_LICENSE_ID)
 
@@ -1284,9 +1285,11 @@ def get_user_profile(user):
         # AnonymousUsers seem to end up here
         #print('User:', user, 'dir', dir(user))
         return None
-    profiles = user.profile.all()
-    if len(profiles) > 0:
-        return profiles[0]
+    if user.profile is not None:
+        return user.profile
+    #profiles = user.profile#.all()
+    #if len(profiles) > 0:
+    #    return profiles[0]
     # Create new profile?
     profile = UserProfile(user=user)
     print('Creating new profile for user', user)
