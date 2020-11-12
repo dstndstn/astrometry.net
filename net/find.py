@@ -107,7 +107,12 @@ def main():
         print('Users with ID', opt.userid)
         for u in users:
             print(u.id, u, u.email)
-            #print(u.profile)
+            print(u.profile)
+            print(u.profile)
+            for k in ['email', 'first_name', 'last_name', 'profile', 'social_auth', 'username']:
+                print(' ',k,getattr(u,k))
+            for f in ['get_full_name', 'get_short_name', 'get_username',]:
+                print(' ',f,getattr(u,f)())
         if opt.deluser:
             delete_user(u)
         sys.exit(0)
