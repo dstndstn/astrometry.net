@@ -215,6 +215,11 @@ class SubmissionForm(forms.ModelForm):
             self.fields['album'].choices += [('new', 'create new album...')]
         self.fields['album'].initial = ''
 
+        # set default value of 'publicly_visible' from user profile
+        if not self.is_bound and user.is_authenticated:
+            pro = get_user_profile(user)
+            if pro is not None:
+                self.fields['publicly_visible'].initial = pro.default_publicly_visible
 
 def upload_file(request):
     default_license = License.get_default()

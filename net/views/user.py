@@ -17,11 +17,15 @@ from astrometry.util.run_command import run_command
 from astrometry.net.util import get_page, get_session_form, store_session_form
 from astrometry.net.views.album import *
 from astrometry.net.views.license import LicenseForm
+from astrometry.net.util import NoBulletsRadioSelect
 
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         exclude = ('apikey', 'default_license')
+        widgets = {
+            'default_publicly_visible': NoBulletsRadioSelect(),
+            }
 
 def dashboard(request):
     return render(request, "dashboard/index.html")

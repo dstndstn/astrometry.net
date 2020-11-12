@@ -1244,6 +1244,9 @@ class UserProfile(models.Model):
     apikey = models.CharField(max_length = API_KEY_LENGTH)
     default_license = models.ForeignKey('License', models.SET_DEFAULT, default=DEFAULT_LICENSE_ID)
 
+    default_publicly_visible = models.CharField(choices=Hideable.YES_NO, max_length=1,
+                                                default='y')
+
     def __str__(self):
         s = ('UserProfile: user %s, API key %s' % (self.user.get_full_name().encode('ascii','replace'), self.apikey))
         return s
@@ -1270,10 +1273,8 @@ class UserProfile(models.Model):
 
     def save(self, *args, **kwargs):
         # for sorting users, enforce capitalization of first letter
-        self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
-
+        #self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
         return super(UserProfile, self).save(*args, **kwargs)
-
 
 def get_user_profile(user):
     if user is None:

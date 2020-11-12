@@ -50,6 +50,21 @@
         {{ license_form.allow_modifications }}
     </td>
 </tr>
+<tr>
+    <td class="leftcolumn">
+        <div class="setting_title">Default Visibility:</div>
+        <div class="setting_description">
+          You can set a default for the Visibily option for new submissions you upload.
+	  <br/><br/>
+	  This determines whether other people can see your images and results.
+        </div>
+    </td>
+    <td>
+        <b>Default Publicly Visible setting</b>
+        {{ profile_form.default_publicly_visible }}
+        {{ profile_form.default_publicly_visible.errors }}
+    </td>
+</tr>
 </table>
 <br />
 <div style="text-align:center">
