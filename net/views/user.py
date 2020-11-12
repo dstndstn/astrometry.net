@@ -22,7 +22,7 @@ from astrometry.net.util import NoBulletsRadioSelect
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        exclude = ('apikey', 'default_license')
+        exclude = ('apikey', 'default_license', 'user')
         widgets = {
             'default_publicly_visible': NoBulletsRadioSelect(),
             }
