@@ -1284,6 +1284,13 @@ def get_user_profile(user):
         ##???
         # AnonymousUsers seem to end up here
         #print('User:', user, 'dir', dir(user))
+
+        if user.is_authenticated:
+            print('User:', user, 'is authenticated but has no profile -- creating one!')
+            pro = create_new_user_profile(user)
+            pro.save()
+            return pro
+
         return None
     if user.profile is not None:
         return user.profile
@@ -1291,6 +1298,12 @@ def get_user_profile(user):
     #if len(profiles) > 0:
     #    return profiles[0]
     # Create new profile?
+    #profile = create_new_user_profile(user)
+    #profile.save()
+    #return profile
+    return None
+
+def create_new_user_profile(user):
     profile = UserProfile(user=user)
     print('Creating new profile for user', user)
     profile.create_api_key()
@@ -1299,7 +1312,6 @@ def get_user_profile(user):
         profile.display_name = user.get_full_name()
     else:
         profile.display_name = user.username
-    profile.save()
     return profile
 
 ## This is a hack: a template context processor that sets
