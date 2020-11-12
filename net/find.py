@@ -89,6 +89,11 @@ def main():
         for u in users:
             print(u.id, u, u.email)
             print(u.profile)
+            for k in ['email', 'first_name', 'last_name', 'profile', 'social_auth', 'username']:
+                print(' ',k,getattr(u,k))
+            for f in ['get_full_name', 'get_short_name', 'get_username',]:
+                print(' ',f,getattr(u,f)())
+
         sys.exit(0)
         
     if not (opt.sub or opt.job or opt.uimage or opt.image or opt.ssh or opt.empty or opt.df):
