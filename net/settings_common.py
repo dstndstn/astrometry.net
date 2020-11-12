@@ -233,7 +233,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'astrometry.net',
+    'astrometry.net.app.AstrometryNetConfig',
 )
 
 AUTHENTICATION_BACKENDS = (
