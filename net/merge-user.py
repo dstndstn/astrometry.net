@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 
 #users = User.objects.filter(email__contains='godard')
 #users = User.objects.filter(id=298)
-users = User.objects.filter(id__in=[298, 22385])
+users = User.objects.filter(id__in=[5617, 10007])
 
 print(users.count(), 'Users match')
 bestuser = None
@@ -34,7 +34,7 @@ from social.apps.django_app.default.models import UserSocialAuth
 socs = {}
 for u in users:
     soc = UserSocialAuth.objects.filter(user=u)
-    print('  User', u.id, 'has', soc.count(), 'social auths', [s.id for s in soc])
+    print('  User', u.id, 'has', soc.count(), 'social auths', [s.id for s in soc], [s.provider for s in soc])
     for s in soc:
         socs[s.id] = s
 

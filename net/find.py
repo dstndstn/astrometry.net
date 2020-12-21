@@ -21,6 +21,20 @@ import logging
 logging.basicConfig(format='%(message)s',
                     level=logging.DEBUG)
 
+def delete_user(u):
+    print('Deleting user', u)
+    u.user_images.all().delete()
+    u.submissions.all().delete()
+    u.albums.all().delete()
+    u.comments_left.all().delete()
+    try:
+        u.profile.delete()
+    except:
+        import traceback
+        traceback.print_exc()
+    u.delete()
+    print('Deleted user', u)
+
 def bounce_try_dojob(X):
     jobid, solve_command, solve_locally = X
     try:
@@ -68,6 +82,9 @@ def main():
     parser.add_option('--delete', action='store_true', default=False,
               help='Delete everything associated with the given image')
 
+    parser.add_option('--deluser', action='store_true', default=False,
+                      help='Delete everything associated with the given user')
+
     parser.add_option('--delextra', action='store_true', default=False,
                       help='Delete extraneous duplicate jobs?')
     
@@ -81,6 +98,8 @@ def main():
         print('Users with email containing "%s":' % opt.email)
         for u in users:
             print(u.id, u, u.email)
+        if opt.deluser:
+            delete_user(u)
         sys.exit(0)
 
     if opt.userid:
@@ -89,6 +108,13 @@ def main():
         for u in users:
             print(u.id, u, u.email)
             print(u.profile)
+            print(u.profile)
+            for k in ['email', 'first_name', 'last_name', 'profile', 'social_auth', 'username']:
+                print(' ',k,getattr(u,k))
+            for f in ['get_full_name', 'get_short_name', 'get_username',]:
+                print(' ',f,getattr(u,f)())
+        if opt.deluser:
+            delete_user(u)
         sys.exit(0)
         
     if not (opt.sub or opt.job or opt.uimage or opt.image or opt.ssh or opt.empty or opt.df):

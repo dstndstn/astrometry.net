@@ -202,7 +202,7 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-                
+
                 'astrometry.net.models.context_user_profile',
             ],
         },
@@ -233,7 +233,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'astrometry.net',
+    'astrometry.net.app.AstrometryNetConfig',
 )
 
 AUTHENTICATION_BACKENDS = (
