@@ -60,7 +60,7 @@ gsl_frexp (const double x, int *e)
       *e = 0;
       return 0.0;
     }
-  else if (!finite (x))
+  else if (!isfinite (x))
     {
       *e = 0;
       return x;
@@ -85,7 +85,7 @@ gsl_frexp (const double x, int *e)
 
       f = x * pow (2.0, -ei);
 
-      if (!finite (f))
+      if (!isfinite (f))
         {
           /* This should not happen */
           *e = 0;
