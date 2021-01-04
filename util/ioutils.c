@@ -648,7 +648,7 @@ static char* get_temp_dir() {
 char* create_temp_file(const char* fn, const char* dir) {
     char* tempfile;
     int fid;
-    if (!dir) {
+    if (!dir || !strcmp(dir, "/tmp")) {
         dir = get_temp_dir();
     }
 
