@@ -1394,6 +1394,14 @@ double healpix_distance_to_xyz(int hp, int Nside, const double* xyz,
 
     if (closestxyz)
         memcpy(closestxyz, midxyz, 3*sizeof(double));
+    /*{
+      double ra,dec;
+      double close[2];
+      xyzarr2radecdeg(xyz, &ra,&dec);
+      xyzarr2radecdegarr(midxyz, close);
+      printf("healpix_distance_to_xyz: %.4f,%.4f, hp %i -> closest %.4f, %.4f -> dist %g deg\n",
+	     ra, dec, hp, close[0],close[1], distsq2deg(dist2mid));
+	     }*/
     return distsq2deg(dist2mid);
 }
 
@@ -1411,7 +1419,7 @@ double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
 
 int healpix_within_range_of_radec(int hp, int Nside, double ra, double dec,
                                   double radius) {
-    // This is the dumb trivial implementation...
+    // the trivial implementation...
     return (healpix_distance_to_radec(hp, Nside, ra, dec, NULL) <= radius);
 }
 int healpix_within_range_of_xyz(int hp, int Nside, const double* xyz,
