@@ -762,7 +762,7 @@ def fits_table(dataorfn=None, rows=None, hdunum=1, hdu=None, ext=None,
             if lower:
                 c = c.lower()
             T.set(c, X)
-        
+
     else:
         if columns is None:
             columns = data.dtype.names
@@ -842,9 +842,6 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
     ncomplain = 0
     i0 = 0
     while True:
-        import time
-        t0 = time.clock()
-
         # Create empty data arrays
         data = [[None] * Nchunk for t in coltypes]
         j = 0
@@ -874,8 +871,6 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
         nread = i+1
         goodrows = j
         
-        t1 = time.clock()
-
         floattypes = [float,np.float32,np.float64]
         inttypes = [int, np.int16, np.int32, np.int64]
 
@@ -899,8 +894,7 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
                 # null out blank values
                 if d is not None and len(d.strip()) == 0:
                     dat[i] = valmap['']
-        t2 = time.clock()
-                    
+
         # trim to valid rows
         data = [dat[:goodrows] for dat in data]
         # convert
@@ -911,15 +905,6 @@ def streaming_text_table(forfn, skiplines=0, split=None, maxcols=None,
                 print('Column', name)
                 np.array(dat).astype(typ)
             raise
-        t3 = time.clock()
-
-        #print 'Reading & splitting:', t1-t0
-        #print 'Bad values:', t2-t1
-        #print 'Conversion:', t3-t2
-        #print 'Total:', t3-t0
-
-        # print 'Read', i+1, 'lines'
-        # print 'Read', j, 'valid lines'
         print('Read line', i0 + nread)
         
         alldata.append(data)

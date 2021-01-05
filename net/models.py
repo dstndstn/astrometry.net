@@ -1238,11 +1238,15 @@ class Comment(models.Model):
 
 class UserProfile(models.Model):
     API_KEY_LENGTH = 16
-    display_name = models.CharField(max_length=256)
-    user = models.ForeignKey(User, models.CASCADE, unique=True, related_name='profile',
-                             editable=False)
+    display_name = models.CharField(max_length=256, default='')
+    #user = models.ForeignKey(User, models.CASCADE, unique=True, related_name='profile',
+    #  editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     apikey = models.CharField(max_length = API_KEY_LENGTH)
     default_license = models.ForeignKey('License', models.SET_DEFAULT, default=DEFAULT_LICENSE_ID)
+
+    default_publicly_visible = models.CharField(choices=Hideable.YES_NO, max_length=1,
+                                                default='y')
 
     def __str__(self):
         s = ('UserProfile: user %s, API key %s' % (self.user.get_full_name().encode('ascii','replace'), self.apikey))
@@ -1270,10 +1274,8 @@ class UserProfile(models.Model):
 
     def save(self, *args, **kwargs):
         # for sorting users, enforce capitalization of first letter
-        self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
-
+        #self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
         return super(UserProfile, self).save(*args, **kwargs)
-
 
 def get_user_profile(user):
     if user is None:
@@ -1282,11 +1284,26 @@ def get_user_profile(user):
         ##???
         # AnonymousUsers seem to end up here
         #print('User:', user, 'dir', dir(user))
+
+        if user.is_authenticated:
+            print('User:', user, 'is authenticated but has no profile -- creating one!')
+            pro = create_new_user_profile(user)
+            pro.save()
+            return pro
+
         return None
-    profiles = user.profile.all()
-    if len(profiles) > 0:
-        return profiles[0]
+    if user.profile is not None:
+        return user.profile
+    #profiles = user.profile#.all()
+    #if len(profiles) > 0:
+    #    return profiles[0]
     # Create new profile?
+    #profile = create_new_user_profile(user)
+    #profile.save()
+    #return profile
+    return None
+
+def create_new_user_profile(user):
     profile = UserProfile(user=user)
     print('Creating new profile for user', user)
     profile.create_api_key()
@@ -1295,7 +1312,6 @@ def get_user_profile(user):
         profile.display_name = user.get_full_name()
     else:
         profile.display_name = user.username
-    profile.save()
     return profile
 
 ## This is a hack: a template context processor that sets
