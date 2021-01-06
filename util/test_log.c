@@ -61,8 +61,8 @@ void test_log_ts(CuTest* tc) {
     log_set_thread_specific();
     logmsg("Logging set thread specific.\n");
 
-    fn1 = create_temp_file("log", "/tmp");
-    fn2 = create_temp_file("log", "/tmp");
+    fn1 = create_temp_file("log", NULL);
+    fn2 = create_temp_file("log", NULL);
 
     logmsg("File 1 is %s\n", fn1);
     logmsg("File 2 is %s\n", fn2);

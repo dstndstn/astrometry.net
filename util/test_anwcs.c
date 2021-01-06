@@ -197,7 +197,7 @@ void test_wcslib_equals_tan(CuTest* tc) {
 #endif
     anwcs_t* anwcs = NULL;
     tan_t* tan;
-    char* tmpfile = create_temp_file("test-anwcs-wcs", "/tmp");
+    char* tmpfile = create_temp_file("test-anwcs-wcs", NULL);
     double x, y, x2, y2, ra, dec, ra2, dec2;
     int ok, ok2;
     int i;
