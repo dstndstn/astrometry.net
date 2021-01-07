@@ -180,7 +180,7 @@ void test_run_command(CuTest* tc) {
     int trial;
     log_init(3);
 
-    tmpfn = create_temp_file("test_run_command", "/tmp");
+    tmpfn = create_temp_file("test_run_command", NULL);
     CuAssertPtrNotNull(tc, tmpfn);
 
     for (trial=0; trial<4; trial++) {

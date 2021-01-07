@@ -46,7 +46,7 @@ static void delete_existing_an_headers(qfits_header* hdr);
 
 void augment_xylist_init(augment_xylist_t* axy) {
     memset(axy, 0, sizeof(augment_xylist_t));
-    axy->tempdir = "/tmp";
+    axy->tempdir = NULL;
     axy->tweak = TRUE;
     axy->tweakorder = 2;
     axy->depths = il_new(4);
