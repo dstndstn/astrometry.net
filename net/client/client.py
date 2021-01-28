@@ -414,6 +414,9 @@ if __name__ == '__main__':
             if stat.get('status','') in ['success']:
                 success = (stat['status'] == 'success')
                 break
+            elif stat.get('status','') in ['failure']:
+                print("Image solving failed")
+                sys.exit(-1)
             time.sleep(5)
 
     if opt.solved_id:
