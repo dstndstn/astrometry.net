@@ -85,10 +85,10 @@ def get_tarball_files(fn, tempdirs=None):
     if tempdirs is not None:
         tempdirs.append(tempdir)
     cmd = 'tar xvf %s -C %s' % (fn, tempdir)
-    #userlog('Extracting tarball...')
+    print('Extracting tarball: %s' % cmd)
     (rtn, out, err) = run_command(cmd)
     if rtn:
-        #userlog('Failed to un-tar file:\n' + err)
+        print('Failed to un-tar file:\n' + err)
         #bailout(submission, 'failed to extract tar file')
         print('failed to extract tar file')
         return None
@@ -744,7 +744,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
     dictConfig(settings.LOGGING)
 
     # exit after a day
-    maxtime = 3600 #*24
+    maxtime = 3600 * 24
 
     t_start = time.time()
     
