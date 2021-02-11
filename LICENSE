@@ -1,3 +1,10 @@
+NOTE: Parts of the code written by the Astrometry.net Team are
+licensed under the 3-clause BSD-style license below.  HOWEVER, since
+this code uses libraries licensed under the GNU GPL (including a
+vendored GSL), the whole work must be distributed under the GPL
+version 2 or later.
+
+
 Copyright (c) 2006-2015, Astrometry.net Developers
 
 All rights reserved.

@@ -32,8 +32,9 @@ Barron, Christopher Stumm, Michal Kočer (Klet Observatory) and others.
 Parts of the code written by the Astrometry.net Team are licensed
 under a 3-clause BSD-style license.  See the file LICENSE for the full
 license text.  However, since this code uses libraries licensed under
-the GNU GPL, the whole work is distributed under the GPL version 3 or
-later.
+the GNU GPL, the whole work must be distributed under the GPL version
+2 or later.  However, some files retain the GPL v2-only license as
+noted in individual files.
 
 Code development happens at http://github.com/dstndstn/astrometry.net
 
