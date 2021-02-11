@@ -11,10 +11,28 @@
 #include "cutest.h"
 #include "starutil.h"
 #include "healpix.h"
+#include "healpix-utils.h"
 #include "bl.h"
 
 static double square(double x) {
     return x*x;
+}
+
+void test_hp_rangesearch(CuTest* ct) {
+    double ra = 120.12998471831297;
+    double dec = 37.72245880730694;
+    double rad = 0.2242483527520963;
+    int nside = 8;
+    il* hps = il_new(4);
+    int i;
+    healpix_rangesearch_radec(ra, dec, rad, nside, hps);
+    for (i=0; i<il_size(hps); i++) {
+        int hp = il_get(hps, i);
+        printf("Healpix %i\n", hp);
+    }
+    CuAssertIntEquals(ct, il_size(hps), 2);
+    CuAssertIntEquals(ct, il_get(hps,0), 84);
+    CuAssertIntEquals(ct, il_get(hps,1), 85);
 }
 
 void test_side_length(CuTest* ct) {

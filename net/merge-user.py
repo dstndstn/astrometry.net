@@ -14,7 +14,8 @@ from django.contrib.auth.models import User
 
 #users = User.objects.filter(email__contains='godard')
 #users = User.objects.filter(id=298)
-users = User.objects.filter(id__in=[5617, 10007])
+#users = User.objects.filter(id__in=[5617, 10007])
+users = User.objects.filter(email__icontains='myneni')
 
 print(users.count(), 'Users match')
 bestuser = None
@@ -25,7 +26,7 @@ for u in users:
     if nsub > nmax:
         bestuser = u
         nmax = nsub
-    print('  API key', u.profile.all()[0].apikey)
+    print('  API key', u.profile.apikey)
 
 #sys.exit(0)
         

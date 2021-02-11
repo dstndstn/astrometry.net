@@ -10,7 +10,13 @@
 
 /**
  Returns healpixes that are / may be within range of the given point, resp.
- */
+
+ The non-approx versions take radius in *degrees*!
+
+ The approx vesions take radius in *unit-sphere distance*!
+
+ This makes no sense!
+*/
 il* healpix_rangesearch_xyz(const double* xyz, double radius, int Nside, il* hps);
 il* healpix_rangesearch_xyz_approx(const double* xyz, double radius, int Nside, il* hps);
 il* healpix_rangesearch_radec_approx(double ra, double dec, double radius, int Nside, il* hps);

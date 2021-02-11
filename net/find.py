@@ -159,13 +159,18 @@ def main():
                         log = read_file(logfn)
                         # 'Connection refused'
                         # 'Connection timed out'
-                        if not 'ssh: connect to host astro.cs.toronto.edu port 22:' in log:
+                        if not (('ssh: connect to host astro.cs.toronto.edu port 22:' in log) or
+                                ('ssh: Could not resolve' in log)):
                             allfailed = False
                             break
                         print('SSH failed')
                         failedjob = job
 
                     if opt.empty:
+                        # exists but empty?
+                        if file_size(logfn) == 0:
+                            failedjob = job
+                            continue
                         # log file found
                         allfailed = False
                         break
