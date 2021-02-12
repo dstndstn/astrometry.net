@@ -22,15 +22,11 @@ jobs:
           command: |
             pip3 install numpy
             pip3 install fitsio
-      - run:
-          name: hmmm
-          command: |
-            ls -l /root
-            ls -l /root/project
       - checkout
       - run:
           name: Make
           command: |
+            export PYTHON=python3.9
             make
             make py
             make extra
@@ -42,16 +38,16 @@ jobs:
             (cd libkd && ./test)
             (cd solver && ./test)
             (cd plot && ./test)
-            make install INSTALL_DIR=~/an PYTHON="python3.9" PYTHON_SCRIPT="/usr/bin/env python3.9"
+            make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env python3.9"
             export PYTHONPATH=${PYTHONPATH}:~/an/lib/python
-            (cd /tmp && python3 -c "import astrometry.libkd.spherematch")
+            (cd /tmp && $PYTHON -c "import astrometry.libkd.spherematch")
             export PATH=${PATH}:~/an/bin
             build-astrometry-index -d 3 -o index-9918.fits -P 18 -S mag -B 0.1 -s 0 -r 1 -I 9918 -M -i demo/tycho2-mag6.fits
             echo -e 'add_path .\ninparallel\nindex index-9918.fits' > 99.cfg
             solve-field --config 99.cfg demo/apod4.jpg  --continue
             tablist demo/apod4.match
             listhead demo/apod4.wcs
-            (cd /tmp && python3.9 -c "import astrometry.util.util; print(dir(astrometry.util.util))")
+            (cd /tmp && $PYTHON -c "import astrometry.util.util; print(dir(astrometry.util.util))")
 
   build-docker-ubuntu-18:
     docker:
