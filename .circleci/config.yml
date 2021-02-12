@@ -58,7 +58,7 @@ jobs:
             yum -y install patch gcc make file pkg-config wget curl swig git
             yum -y install gsl-devel cairo-devel libpng-devel libjpeg-turbo-devel zlib-devel bzip2-devel swig python36-devel
             dnf install -y 'dnf-command(config-manager)'
-            dnf config-manager --set-enabled PowerTools
+            #dnf config-manager --set-enabled PowerTools
             yum -y install netpbm netpbm-devel netpbm-progs
             yum -y install epel-release
             yum -y install cfitsio cfitsio-devel wcslib wcslib-utils wcslib-devel
