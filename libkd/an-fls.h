@@ -39,28 +39,16 @@
 #include <assert.h>
 
 /*
- * Find Last Set bit
- */
-static inline int
-BSD_fls(int mask)
-{
-	int bit;
-
-	if (mask == 0)
-		return (0);
-	for (bit = 1; mask != 1; bit++)
-		mask = (unsigned int)mask >> 1;
-	return (bit);
-}
-
-
-/*
  * flsB()  =  fls() - 1.
  *
  * Note that x MUST be > 0.
  */
 static inline uint8_t an_flsB(uint32_t x) {
-    return BSD_fls(x)-1;
+    assert(x > 0);
+    uint8_t bit;
+    for (bit = 0; x != 1; bit++)
+        x = x >> 1;
+    return bit;
 }
 
 #endif
