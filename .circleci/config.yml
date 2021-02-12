@@ -34,6 +34,7 @@ jobs:
       - run:
           name: Tests
           command: |
+            export PYTHON=python3.9
             (cd util && ./test)
             (cd libkd && ./test)
             (cd solver && ./test)
