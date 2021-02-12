@@ -118,6 +118,11 @@ jobs:
           command: |
             pip3 install numpy
             pip3 install fitsio
+      - run:
+          name: hmmm
+          command: |
+            ls -l /root
+            ls -l /root/project
       - checkout
       - run:
           name: Make
