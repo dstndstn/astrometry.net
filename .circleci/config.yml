@@ -57,10 +57,14 @@ jobs:
           command: |
             yum -y install patch gcc make file pkg-config wget curl swig git
             yum -y install gsl-devel cairo-devel libpng-devel libjpeg-turbo-devel zlib-devel bzip2-devel swig python36-devel
-            dnf install -y 'dnf-command(config-manager)'
-            #dnf config-manager --set-enabled PowerTools
-            yum -y install netpbm netpbm-devel netpbm-progs
+            dnf -y install dnf-plugins-core
+            dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
             yum -y install epel-release
+            dnf install -y 'dnf-command(config-manager)'
+            dnf repolist
+            dnf config-manager --set-enabled powertools
+            dnf repolist
+            yum -y install netpbm netpbm-devel netpbm-progs
             yum -y install cfitsio cfitsio-devel wcslib wcslib-utils wcslib-devel
             ln -s /usr/lib64/libnetpbm.so.11 /usr/local/lib/libnetpbm.so
       - run:
