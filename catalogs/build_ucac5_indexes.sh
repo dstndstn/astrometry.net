@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Build the full set of UCAC5 indexes
 # Copyright 2021 Vladimir Kouprianov, Skynet RTN, University of North Carolina at Chapel Hill
 
@@ -37,19 +37,20 @@ NSIDE=2
 ucac5tofits -N $NSIDE -e $EPOCH -m $MARGIN -f $FULL -o ucac5_%02i.fits z???
 
 NJOBS=0
-for ((HP=0; HP<48; HP++)); do
-  for ((SCALE=0; SCALE<=2; SCALE++)); do
+HP=0
+while [ $HP -lt 48 ]; do
+  for SCALE in 0 1 2; do
     # shellcheck disable=SC2046 disable=SC2086
     build-astrometry-index -A RA -D DEC -S MAG -E -t tmp -j 0.06 -P $SCALE -H $HP -s $NSIDE \
       -I $DATE$(printf %02i $SCALE) -i ucac5_$(printf %02i $HP).fits \
       -o $PREFIX$(printf %02i $SCALE)-$(printf %02i $HP).fits &
     NJOBS=$((NJOBS+1))
-    if [ $NJOBS -ge $JOBS ]
-    then
+    if [ $NJOBS -ge $JOBS ]; then
       NJOBS=0
       wait
     fi
   done
+  HP=$((HP+1))
 done
 wait
 
@@ -62,19 +63,20 @@ NSIDE=1
 ucac5tofits -N $NSIDE -e $EPOCH -m $MARGIN -f $FULL -o ucac5_%02i.fits z???
 
 NJOBS=0
-for ((HP=0; HP<12; HP++)); do
-  for ((SCALE=3; SCALE<=6; SCALE++)); do
+HP=0
+while [ $HP -lt 12 ]; do
+  for SCALE in 3 4 5 6; do
     # shellcheck disable=SC2046 disable=SC2086
     build-astrometry-index -A RA -D DEC -S MAG -E -t tmp -j 0.06 -P $SCALE -H $HP -s $NSIDE \
       -I $DATE$(printf %02i $SCALE) -i ucac5_$(printf %02i $HP).fits \
       -o $PREFIX$(printf %02i $SCALE)-$(printf %02i $HP).fits &
     NJOBS=$((NJOBS+1))
-    if [ $NJOBS -ge $JOBS ]
-    then
+    if [ $NJOBS -ge $JOBS ]; then
       NJOBS=0
       wait
     fi
   done
+  HP=$((HP+1))
 done
 wait
 
@@ -86,13 +88,13 @@ rm ucac5_??.fits tmp/*
 ucac5tofits -N 0 -e $EPOCH -f $FULL -o ucac5.fits z???
 
 NJOBS=0
-for ((SCALE=7; SCALE<=19; SCALE++)); do
+for SCALE in 7 8 9 10 11 12 13 14 15 16 17 18 19; do
   # shellcheck disable=SC2046 disable=SC2086
   build-astrometry-index -A RA -D DEC -S MAG -E -t tmp -j 0.06 -P $SCALE \
-    -I $DATE$(printf %02i $SCALE) -i ucac5.fits -o $PREFIX$(printf %02i $SCALE).fits &
+    -I $DATE$(printf %02i $SCALE) -i ucac5.fits \
+    -o $PREFIX$(printf %02i $SCALE).fits &
   NJOBS=$((NJOBS+1))
-  if [ $NJOBS -ge $JOBS ]
-  then
+  if [ $NJOBS -ge $JOBS ]; then
     NJOBS=0
     wait
   fi
