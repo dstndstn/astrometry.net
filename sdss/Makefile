@@ -25,7 +25,7 @@ _cutils$(PYTHON_SO_EXT) cutils.py: cutils.i
 
 INSTALL_PY := __init__.py common.py cutout.py dr7.py dr8.py runList-dr8.par \
 	dr9.py fields.py cutout.py runList-dr9.par dr10.py runList-dr10.par \
-	sdss_das.py sdss_name.py yanny.py
+	sdss_das.py sdss_name.py yanny.py casjobs.py
 
 INSTALL_LIB := cutils.py _cutils$(PYTHON_SO_EXT)
 
