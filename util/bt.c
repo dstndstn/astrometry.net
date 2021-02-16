@@ -3,7 +3,7 @@
  # Licensed under a 3-clause BSD style license - see LICENSE
 
  The AVL tree portion of this code was adapted from GNU libavl,
- licensed under the GPL.
+ licensed under the GPL v2 or later.
  */
 
 #include <stdio.h>
