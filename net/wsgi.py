@@ -11,8 +11,9 @@ path = os.path.dirname(path)
 if path not in sys.path:
     sys.path.append(path)
 
-path = os.path.dirname(__file__)
+path = os.path.dirname(os.path.abspath(__file__))
 path = os.path.dirname(path)
+print('Path:', path)
 
 os.environ['PATH'] += ':/usr/local/netpbm/bin:%s/solver:%s/util:%s/plot' % (path,path,path)
 
