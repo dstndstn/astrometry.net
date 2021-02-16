@@ -194,6 +194,9 @@ class SubmissionForm(forms.ModelForm):
                 url = url[7:]
             if len(url) == 0:
                 raise forms.ValidationError("You must enter a url to upload.")
+            print('Length of URL:', len(url))
+            if len(url) >= 200:
+                raise forms.ValidationError("Max URL length is 200 characters.")
             print('Cleaned URL:', url)
             urlvalidator = URLValidator()
             try:
