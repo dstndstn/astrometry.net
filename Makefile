@@ -387,7 +387,8 @@ report:
 	@echo "FLAGS_DEF: $(FLAGS_DEF)"
 	@echo "CFLAGS_DEF: $(CFLAGS_DEF)"
 	@echo "LDFLAGS_DEF: $(LDFLAGS_DEF)"
-	-python -V
+	@echo "PYTHON: $(PYTHON)"
+	-$(PYTHON) -V
 	@echo "PYTHONPATH: $${PYTHONPATH}"
 	@echo "PATH: $${PATH}"
 	@echo "pkg-config --cflags cfitsio:"
