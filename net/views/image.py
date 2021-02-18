@@ -1129,7 +1129,7 @@ def search(req):
             if image_id:
                 image = get_object_or_404(UserImage, pk=image_id)
                 context['image'] = image
-                images = image.get_neighbouring_user_images()
+                images = image.get_neighbouring_user_images(limit=None)
 
     if calibrated is False:
         images = images.exclude(jobs__status='S')
@@ -1151,6 +1151,24 @@ if __name__ == '__main__':
     # req = Duck()
     # onthesky_image(req, zoom=0, calid=1)
 
+
+    loc = SkyLocation()
+    loc.nside = 16
+    loc.healpix = 889
+    import time
+    t0 = time.time()
+    locs = loc.get_neighbouring_user_images()
+    t1 = time.time()
+    locs = locs[:6]
+    t2 = time.time()
+    print(len(locs), 'locations found')
+    t3 = time.time()
+    print('get_neighbouring_user_image:', t1-t0)
+    print('limit:', t2-t1)
+    print('count:', t3-t2)
+    import sys
+    sys.exit(0)
+    
     from django.test import Client
     c = Client()
     #r = c.get('/user_images/2676353')

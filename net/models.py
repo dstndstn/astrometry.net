@@ -11,7 +11,6 @@ except ImportError:
     # py2
     from urllib2 import urlopen
 
-
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -879,14 +878,29 @@ class SkyLocation(models.Model):
         user_images = user_images.filter(jobs__calibration__sky_location__healpix=healpix)
         return user_images
 
-    def get_neighbouring_user_images(self):
+    def get_neighbouring_user_images(self, limit=6):
         user_images = UserImage.objects.all_visible()
-
         from django.db.models import Q
+
+        if limit is not None:
+            # Try within my own healpix & scale
+            u0 = user_images.filter(jobs__calibration__sky_location__nside=self.nside,
+                                    jobs__calibration__sky_location__healpix=self.healpix)
+            if u0.count() > limit:
+                #print('Found', u0.count(), 'within my own scale & healpix')
+                return u0
+
         # add neighbors at current scale
         neighbours = anutil.healpix_get_neighbours(self.healpix, self.nside)
         q1 = Q(jobs__calibration__sky_location__nside = self.nside,
                jobs__calibration__sky_location__healpix__in = neighbours + [self.healpix])
+
+        if limit is not None:
+            u1 = user_images.filter(q1)
+            if u1.count() > limit:
+                #print('Found', u1.count(), 'within my own scale')
+                return u1
+
         # next bigger scale
         q2 = Q(jobs__calibration__sky_location__nside = self.nside//2,
                jobs__calibration__sky_location__healpix = self.healpix//4)
