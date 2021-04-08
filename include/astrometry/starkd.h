@@ -183,9 +183,9 @@ int startree_D(const startree_t* s);
 
 qfits_header* startree_header(const startree_t* s);
 
-int startree_get(startree_t* s, int starid, double* posn);
+int startree_get(startree_t* s, int starid, double *p_xyz);
 
-int startree_get_radec(startree_t* s, int starid, double* ra, double* dec);
+int startree_get_radec(startree_t* s, int starid, double *p_ra, double *p_dec);
 
 int startree_close(startree_t* s);
 
