@@ -34,6 +34,11 @@ DATABASES['default']['NAME'] = 'an-nova'
 
 LOGGING['loggers']['django.request']['level'] = 'WARN'
 
+import logging
+logger = logging.getLogger('django.db.backends')
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler())
+
 SESSION_COOKIE_NAME = 'NovaAstrometrySession'
 
 ssh_solver_config = 'an-nova'

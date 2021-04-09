@@ -1,3 +1,20 @@
+0.85:
+	One tiny bit of GPL v2-only code was replaced with a BSD equivalent.
+
+	The primary branch on Github has been changed to 'main'.
+
+	Minor: an-pnmtofits adds a CTYPE3='RGB' card for the Aladin image
+	viewer.
+
+0.84:
+	Minor: change the python 'multiproc' module to handle >2GB pickles.
+
+0.83:
+	Minor: re-add -K flag to build-astrometry-index to keep RA,Dec columns.
+
+0.82:
+	Simplify os-features tests by always using our vendored qsort_r.
+
 0.81:
 	All 'sextractor' command-line args renamed to 'source-extractor'.
 

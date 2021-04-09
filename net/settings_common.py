@@ -255,6 +255,11 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        }
+    },
     'formatters': {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
@@ -276,13 +281,15 @@ LOGGING = {
         'console':{
             'level':'DEBUG',
             'class':'logging.StreamHandler',
-            'formatter': 'simple'
+            'formatter': 'simple',
+            'filters': ['require_debug_true'],
         },
     },
     'loggers': {
         'django.db': {                                                                                                                      
             'handlers': ['console'],                                                                                                        
             'level': 'INFO',
+            #'level': 'DEBUG',
             'propagate': True,                                                                                                              
             },
         'django.request': {

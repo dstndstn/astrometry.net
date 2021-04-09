@@ -184,7 +184,7 @@ PYTHON_INSTALL := image2pnm.py addpath.py \
 	starutil.py starutil_numpy.py \
 	shell.py __init__.py file.py run_command.py \
 	filetype.py fits.py fix_sdss_idr.py removelines.py \
-	uniformize.py casjobs.py \
+	uniformize.py \
 	usnob_catalog.py usnob_get_image.py usnob_get_region.py \
 	find_data_file.py plotshift.py plotutils.py miscutils.py multiproc.py \
 	ttime.py resample.py EXIF.py horizons.py \

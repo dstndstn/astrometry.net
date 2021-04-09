@@ -21,6 +21,12 @@ export SYSTEM_GSL
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.anfiles
 include $(COMMON)/makefile.cfitsio
+# only for tweak-main.c
+include $(COMMON)/makefile.png
+include $(COMMON)/makefile.cairo
+include $(COMMON)/makefile.jpeg
+include $(COMMON)/makefile.netpbm
+include $(COMMON)/makefile.cairo
 
 ifneq ($(MAKECMDGOALS),clean)
     include $(COMMON)/makefile.os-features
@@ -319,6 +325,14 @@ augment-xylist: augment-xylist-main.o augment-xylist.o image2xy-files.o \
 		$(SLIB) $(CFITS_SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 ALL_OBJ += augment-xylist-main.o augment-xylist.o
+
+PLOTDIR=$(BASEDIR)/plot/
+PLOTSTUFF=$(addprefix $(PLOTDIR),plotstuff.o plotannotations.o plotfill.o plotgrid.o plothealpix.o plotimage.o plotindex.o plotmatch.o plotoutline.o plotradec.o plotxy.o)
+tweak: tweak-main.o $(SLIB) $(CFITS_SLIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(PLOTSTUFF) $(COMMON)/cairoutils.o $(CAIRO_LIB) $(PNG_LIB) $(JPEG_LIB) $(NETPBM_LIB) $(LDLIBS)
+tweak-main.o: tweak-main.c
+	$(CC) -c -o $@ $(CFLAGS) $(CAIRO_INC) tweak-main.c
+ALL_OBJ += tweak-main.o
 
 py: pysolver
 .PHONY: py
