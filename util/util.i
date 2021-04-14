@@ -923,6 +923,22 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
     free(result);
 }
 
+// for startree_get()
+%typemap(in, numinputs=0) double *p_xyz (double tempxyz[3]) {
+    $1 = tempxyz;
+}
+%apply double *OUTPUT { double *p_x, double *p_y, double *p_z };
+%apply double *OUTPUT { double *p_ra, double *p_dec };
+//%apply double *OUTPUT { double *xyz };
+
+// anwcs_pixelxy2xyz, startree_get
+%typemap(in, numinputs=0) double* p_xyz (double tempxyz[3]) {
+    $1 = tempxyz;
+}
+// in the argout typemap we don't know about the swap (but that's ok)
+%typemap(argout) double* p_xyz {
+  $result = Py_BuildValue("(ddd)", $1[0], $1[1], $1[2]);
+}
 
 %include "index.h"
 %include "quadfile.h"
@@ -937,6 +953,7 @@ long codekd_addr(index_t* ind);
 long starkd_addr(index_t* ind);
 long quadfile_addr(index_t* ind);
 //long qidxfile_addr(qidxfile* qf);
+
 
 %apply double *OUTPUT { double *dx, double *dy };
 %apply double *OUTPUT { double *ra, double *dec };
@@ -998,21 +1015,8 @@ long quadfile_addr(index_t* ind);
 // anwcs_get_radec_bounds
 %apply double *OUTPUT { double* pramin, double* pramax, double* pdecmin, double* pdecmax };
 
-%apply double *OUTPUT { double *p_x, double *p_y, double *p_z };
-%apply double *OUTPUT { double *p_ra, double *p_dec };
-//%apply double *OUTPUT { double *xyz };
-
 // eg anwcs_radec2pixelxy
 %apply double *OUTPUT { double *p_x, double *p_y };
-
-// anwcs_pixelxy2xyz
-%typemap(in, numinputs=0) double* p_xyz (double tempxyz[3]) {
-    $1 = tempxyz;
-}
-// in the argout typemap we don't know about the swap (but that's ok)
-%typemap(argout) double* p_xyz {
-  $result = Py_BuildValue("(ddd)", $1[0], $1[1], $1[2]);
-}
 
 // anwcs_get_cd_matrix
 %typemap(in, numinputs=0) double* p_cd (double tempcd[4]) {

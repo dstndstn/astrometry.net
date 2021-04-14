@@ -249,6 +249,8 @@ int main(int argc, char** args) {
     logmsg("Using %i-bit output\n", bits);
 
     hdr = fits_get_header_for_image3(W, H, outformat, depth, NULL);
+    if (depth == 3)
+        qfits_header_add(hdr, "CTYPE3", "RGB", "Tell Aladin this is RGB", NULL);
     if (bzero)
         fits_header_add_int(hdr, "BZERO", bzero, "Number that has been subtracted from pixel values");
     if (qfits_header_dump(hdr, fout)) {

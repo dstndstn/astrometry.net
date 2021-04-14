@@ -32,7 +32,7 @@ For full functionality, you will need:
   * libjpeg
   * libz
   * bzip2
-  * python (probably >= 2.4; 2.7 or 3.6 preferred)
+  * python (3.x preferred)
   * numpy
   * swig (>= 2.0)
   * fitsio https://github.com/esheldon/fitsio or astropy http://www.astropy.org/ or pyfits: http://www.stsci.edu/resources/software_hardware/pyfits (version >= 3.1)
@@ -58,6 +58,13 @@ For example, in Debian 9 (Stretch)::
                            python-pyfits python-dev zlib1g-dev \
                            libbz2-dev swig libcfitsio-dev
 
+In Ubunutu 20.04::
+
+    $ sudo apt install build-essential curl git file pkg-config swig \
+           libcairo2-dev libnetpbm10-dev netpbm libpng-dev libjpeg-dev \
+           zlib1g-dev libbz2-dev libcfitsio-dev wcslib-dev \
+           python3 python3-pip python3-distutils python3-dev \
+           python3-numpy python3-scipy python3-pil
 
 As of April 2019, the script doc/install_astrometry_on_linux.sh will install all dependencies along with astrometry.net on Linux, and download 4200/ index files.
 

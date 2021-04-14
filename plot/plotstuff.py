@@ -15,6 +15,9 @@ class Plotstuff(object):
 
     def __init__(self, outformat=None, size=None, ra=None, dec=None, width=None,
                  rdw=None, wcsfn=None, wcsext=0, alpha=1., outfn=None):
+        '''
+        size: (W, H), integer pixels
+        '''
         p = plotstuff_new()
         self.pargs = p
         if outformat is not None:
