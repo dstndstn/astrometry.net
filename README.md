@@ -37,6 +37,8 @@ the GNU GPL, the whole work must be distributed under the GPL version
 
 Code development happens at http://github.com/dstndstn/astrometry.net
 
+The web service is at http://nova.astrometry.net
+
 The documentation is at http://astrometry.net/doc
 
 There is a (google group) forum at http://astrometry.net/group
@@ -44,8 +46,6 @@ There is a (google group) forum at http://astrometry.net/group
 Additional stuff at http://astrometry.net
 
 Code snapshots and releases are at http://astrometry.net/downloads
-
-The web service is at http://nova.astrometry.net
 
 For academic use, please cite the paper:
 

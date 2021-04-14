@@ -60,7 +60,7 @@ Now, some miscellaneous files:
   From http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 
 -libkd/an-fls.h
-  (c) Linus Torvalds, GPL v2
+  From FreeBSD; BSD 3-clause.
 
 
 Data files:
