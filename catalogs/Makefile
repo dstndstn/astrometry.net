@@ -45,12 +45,12 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 
 OBJS := openngc.o brightstars.o constellations.o \
 	tycho2-fits.o tycho2.o usnob-fits.o usnob.o nomad.o nomad-fits.o \
-	ucac3-fits.o ucac3.o ucac4-fits.o ucac4.o 2mass-fits.o 2mass.o hd.o \
-	constellation-boundaries.o
+	ucac3-fits.o ucac3.o ucac4-fits.o ucac4.o ucac5-fits.o ucac5.o \
+	2mass-fits.o 2mass.o hd.o constellation-boundaries.o
 
 HEADERS := brightstars.h constellations.h openngc.h \
 	tycho2.h tycho2-fits.h usnob-fits.h usnob.h nomad-fits.h nomad.h \
-	2mass-fits.h 2mass.h hd.h ucac3.h ucac4.h constellation-boundaries.h
+	2mass-fits.h 2mass.h hd.h ucac3.h ucac4.h ucac5.h constellation-boundaries.h
 
 HEADERS_PATH := $(addprefix $(INCLUDE_DIR)/,$(HEADERS))
 
@@ -90,7 +90,7 @@ $(LIBCAT): $(OBJS)
 	$(RANLIB) $@
 
 PROGS := build-hd-tree tycho2tofits usnobtofits nomadtofits \
-	2masstofits
+	2masstofits ucac5tofits
 	#ucac3tofits ucac4tofits
 
 # not built by default
@@ -103,6 +103,10 @@ ALL_OBJ += ucac3tofits.o
 ucac4tofits: ucac4tofits.o $(SLIB)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) -lbz2
 ALL_OBJ += ucac4tofits.o
+
+ucac5tofits: ucac5tofits.o $(SLIB)
+	$(CC) -o $@ $(LDFLAGS) $^ $(LDLIBS) -lbz2
+ALL_OBJ += ucac5tofits.o
 
 2masstofits: 2masstofits.o $(SLIB)
 	echo ZLIB_LIB is $(ZLIB_LIB)
@@ -120,23 +124,23 @@ hd1.fits: henry-draper.tsv build-hd-tree
 # hd.fits: you can grab a pre-built one from:
 #    http://data.astrometry.net/hd.fits
 # The instructions below are commented-out because some of the URLs have disappeared.
-# 
+#
 # hd.fits: henry-draper.tsv build-hd-tree tycho2.fits tyc2_hd.dat
 # 	build-hd-tree -s -R 16 -T tycho2.fits -X tyc2_hd.dat henry-draper.tsv $@
-# 
+#
 # tyc2_hd.dat:
 # 	wget "ftp://cdsarc.u-strasbg.fr/pub/cats/IV/25/tyc2_hd.dat.gz" -O $@.gz
 # 	gunzip $@.gz
-# 
+#
 # henry-draper.tsv:
 # 	wget "http://trac.astrometry.net/browser/binary/henry-draper/henry-draper.tsv?format=txt" -O $@
-# 
+#
 # tycho2.fits: catalog.dat suppl_1.dat
 # 	tycho2tofits -o $@ $^
-# 
+#
 # catalog.dat:
 # 	wget -c http://www.astro.ku.dk/~cf/CD/data/catalog.dat
-# 
+#
 # suppl_1.dat:
 # 	wget -c http://www.astro.ku.dk/~cf/CD/data/suppl_1.dat
 
@@ -171,9 +175,9 @@ pyinstall: $(PYTHON_INSTALL)
 
 ALL_TEST_FILES = test_tycho2 test_usnob test_nomad test_2mass test_hd \
 	test_boundaries
-ALL_TEST_EXTRA_OBJS = 
+ALL_TEST_EXTRA_OBJS =
 ALL_TEST_LIBS = $(SLIB)
-ALL_TEST_EXTRA_LDFLAGS = 
+ALL_TEST_EXTRA_LDFLAGS =
 include $(COMMON)/makefile.tests
 
 $(ALL_TEST_FILES): $(SLIB)
