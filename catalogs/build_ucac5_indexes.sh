@@ -1,6 +1,7 @@
 #!/bin/sh
 # Build the full set of UCAC5 indexes
 # Copyright 2021 Vladimir Kouprianov, Skynet RTN, University of North Carolina at Chapel Hill
+# Licensed under a 3-clause BSD style license - see LICENSE
 
 # This script assumes that uncompressed UCAC5 files (z001..z900) are present in the current directory
 # and that the following Astrometry.net binaries are on the path:
