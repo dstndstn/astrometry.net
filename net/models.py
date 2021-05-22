@@ -965,6 +965,9 @@ class UserImage(Hideable):
     license = models.ForeignKey('License', models.SET_NULL, null=True)
     comment_receiver = models.OneToOneField('CommentReceiver', models.CASCADE)
 
+    # Does this UserImage have at least one Job?
+    has_job = models.BooleanField(default=False)
+
     # Reverse mappings:
     #  jobs -> Job
     #  albums -> Album
