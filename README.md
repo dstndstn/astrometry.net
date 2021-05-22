@@ -27,7 +27,8 @@ Mierle and Sam Roweis (the Astrometry.net Team).
 
 Contributions from Sjoert van Velzen, Themos Tsikas, Andrew Hood,
 Thomas Stibor, Denis Vida, Ole Streicher, David Warde-Farley, Jon
-Barron, Christopher Stumm, Michal Kočer (Klet Observatory) and others.
+Barron, Christopher Stumm, Michal Kočer (Klet Observatory), Vladimir
+Kouprianov and others.
 
 Parts of the code written by the Astrometry.net Team are licensed
 under a 3-clause BSD-style license.  See the file LICENSE for the full
@@ -37,6 +38,8 @@ the GNU GPL, the whole work must be distributed under the GPL version
 
 Code development happens at http://github.com/dstndstn/astrometry.net
 
+The web service is at http://nova.astrometry.net
+
 The documentation is at http://astrometry.net/doc
 
 There is a (google group) forum at http://astrometry.net/group
@@ -44,8 +47,6 @@ There is a (google group) forum at http://astrometry.net/group
 Additional stuff at http://astrometry.net
 
 Code snapshots and releases are at http://astrometry.net/downloads
-
-The web service is at http://nova.astrometry.net
 
 For academic use, please cite the paper:
 

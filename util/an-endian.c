@@ -48,6 +48,28 @@ inline uint32_t u32_htole(uint32_t i) {
     return u32_letoh(i);
 }
 
+// convert a u64 from little-endian to local.
+inline uint64_t u64_letoh(uint64_t i) {
+#if IS_BIG_ENDIAN
+    return (
+            ((i & 0x00000000000000ff) << 56) |
+            ((i & 0x000000000000ff00) << 40) |
+            ((i & 0x0000000000ff0000) << 24) |
+            ((i & 0x00000000ff000000) <<  8) |
+            ((i & 0x000000ff00000000) >>  8) |
+            ((i & 0x0000ff0000000000) >> 24) |
+            ((i & 0x00ff000000000000) >> 40) |
+            ((i & 0xff00000000000000) >> 56));
+#else
+    return i;
+#endif
+}
+
+// convert a u64 from local to little-endian.
+inline uint64_t u64_htole(uint64_t i) {
+    return u64_letoh(i);
+}
+
 static inline void v_swap(void* p, int nbytes) {
     int i;
     unsigned char* c = p;
