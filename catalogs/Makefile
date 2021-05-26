@@ -42,6 +42,15 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 		starutil.o mathutil.o bl.o an-endian.o errors.o log.o ioutils.o qsort_reentrant.o tic.o
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
+# brightstars-data.c and brightstars.fits:
+# I fetched hip.fits by visiting
+# http://vizier.u-strasbg.fr/viz-bin/VizieR-3?-source=I/239/hip_main
+# and selecting FITS binary output, and columns HIP, Vmag, _RA.icrs, _DE.icrs
+# the latter of which are ICRS, epoch 2000 coordinates.
+#
+# Then ran:
+# python brightstars.py /Applications/Stellarium.app/Contents/Resources/skycultures/western/star_names.fab hip.fits brightstars.fits --letternames /Applications/Stellarium.app/Contents/Resources/stars/default/name.fab --brightstars brightstars-data.c --multi
+
 
 OBJS := openngc.o brightstars.o constellations.o \
 	tycho2-fits.o tycho2.o usnob-fits.o usnob.o nomad.o nomad-fits.o \
