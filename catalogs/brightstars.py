@@ -54,6 +54,8 @@ def main():
             line = line.strip()
             if line.startswith('#'):
                 continue
+            if len(line) == 0:
+                continue
             hipnum = line.split('|')[0]
             hipnum = int(hipnum)
             if not is_letter:
@@ -78,17 +80,6 @@ def main():
                       bright.letternames[i], 'and', bright.names[i])
                 if is_letter:
                     bright.letternames[i].append(name)
-                    # if len(bright.lettername[i]) and opt.multi:
-                    #     # Append letter name.
-                    #     bright.lettername[i] = bright.lettername[i] + b' / ' + name
-                    # elif len(bright.lettername[i]) == 0:
-                    #     print('Setting letter name for HIP number', hipnum, ':', name)
-                    #     bright.lettername[i] = name
-                    #elif not opt.multi:
-                    #print('Already got a name for HIP number', hipnum, '; skipping')
-                    #else:
-                    # append name
-                    #bright.names[i] = bright.names[i] + b' / ' + name
                 else:
                     bright.names[i].append(name)
                 continue
