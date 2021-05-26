@@ -164,11 +164,11 @@ def get_annotations_for_wcs(wcs, opt):
     for ann in anns:
         r,d,typ,names = ann[:4]
         ok,x,y = wcs.radec2pixelxy(float(r),float(d))
-        dd = dict(type=typ, names=names, pixelx=x, pixely=y,
+        dd = dict(type=typ, names=names, pixelx=float(x), pixely=float(y),
                   radius=0.)
         if len(ann) == 5:
             mag = ann[4]
-            dd.update(vmag=mag)
+            dd.update(vmag=float(mag))
         jobjs.append(dd)
     for r,d,typ,names,rad in circs:
         ok,x,y = wcs.radec2pixelxy(float(r),float(d))
@@ -314,6 +314,7 @@ if __name__ == '__main__':
         wcs = anwcs(wcsfn,0)
         jobjs = get_annotations_for_wcs(wcs, opt)
         import json
+        print(jobjs)
         j = json.dumps(jobjs)
         print(j)
         sys.exit(0)
