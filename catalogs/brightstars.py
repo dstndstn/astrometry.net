@@ -66,7 +66,8 @@ def main():
                 name = line[i0:i1]
             else:
                 name = line.split('|')[1]
-            name = name.encode()
+                name = name.replace('_', ' ')
+            name = name.encode('ascii', 'backslashreplace')
             hipi = hipmap[hipnum]
             print('Name', name, 'HIP', hipnum, H.ra[hipi], H.dec[hipi])
             ra = H.ra[hipi]
@@ -96,7 +97,6 @@ def main():
                 bright.names.append([name])
 
             i = len(bright.hip)-1
-            #print('HIP', hipnum, 'is at index', i, '->', bright.hip[i])
             assert(hipnum not in got_hipnums)
             assert(bright.hip[i] == hipnum)
             got_hipnums[hipnum] = i
