@@ -49,6 +49,37 @@ ok = np.array_equal(truedists[order], dists.ravel())
 print('Dists equal:', ok)
 
 
+### Repeat for u64 trees
+
+S = float(1<<63)
+ux1 = (x1 * S).astype(np.uint64)
+ux2 = (x2 * S).astype(np.uint64)
+
+t0 = time()
+(inds,dists) = spherematch.match(ux1, ux2, r*S)
+dt = time() - t0
+
+print('spherematch.match: found', len(inds), 'pairs in', int(dt*1000.), 'ms with uint64 trees')
+order = np.argsort(inds[:,0]*N2 + inds[:,1])
+inds = inds[order]
+dists = dists[order]
+ok = np.array_equal(pairs, inds)
+print('Indices equal:', ok)
+
+print('Build uint64 tree...')
+kd = spherematch.tree_build(ux1)
+kd.print()
+
+data = kd.get_data(np.array([0,3,5]).astype(np.uint32))
+assert(data.dtype == np.uint64)
+print('Kd data:', data.dtype, data)
+
+del kd
+
+###
+
+
+
 t0 = time()
 (inds,dists) = spherematch.nearest(x1, x2, r)
 dt = time() - t0
@@ -58,7 +89,6 @@ inds = spherematch.match(x1, x2, r, indexlist=True)
 dt = time() - t0
 
 kd = spherematch.tree_build(x1)
-spherematch.tree_print(kd)
 kd.print()
 R = spherematch.tree_search(kd, x2[0,:], 1.)
 print('tree_search:', len(R), 'results')

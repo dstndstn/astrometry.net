@@ -470,7 +470,7 @@ static void print_results(kdtree_qres_t* res, int D) {
             if (res->results.any) {
                 printf(", pt [ ");
                 for (d=0; d<D; d++)
-                    printf("%g ", res->results.ETYPE[i*D + d]);
+                    printf("%g ", (double)res->results.ETYPE[i*D + d]);
                 printf("]");
             }
             printf("\n");

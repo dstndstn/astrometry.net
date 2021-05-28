@@ -86,16 +86,28 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *keywords) {
         int N, D;
         int i,j;
         double* data;
+        uint64_t* udata;
+        void* kd_data;
+        anbool isdouble = TRUE;
 
         self->opened = 0;
         if (PyArray_NDIM(x) != 2) {
             PyErr_SetString(PyExc_ValueError, "array must be two-dimensional");
             return -1;
         }
-        if (PyArray_TYPE(x) != NPY_DOUBLE) {
-            PyErr_SetString(PyExc_ValueError, "array must contain doubles");
+
+
+        if (PyArray_TYPE(x) == NPY_DOUBLE) {
+            treetype = KDTT_DOUBLE;
+            isdouble = TRUE;
+        } else if (PyArray_TYPE(x) == NPY_UINT64) {
+            treetype = KDTT_U64;
+            isdouble = FALSE;
+        } else {
+            PyErr_SetString(PyExc_ValueError, "array must contain doubles or uint64s");
             return -1;
         }
+
         N = (int)PyArray_DIM(x, 0);
         D = (int)PyArray_DIM(x, 1);
         if (D > 10) {
@@ -107,21 +119,31 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *keywords) {
             return -1;
         }
         // FIXME -- should be able to do this faster...
-        data = malloc(N * D * sizeof(double));
-        for (i=0; i<N; i++) {
-            for (j=0; j<D; j++) {
-                double* pd = PyArray_GETPTR2(x, i, j);
-                data[i*D + j] = *pd;
+        if (isdouble) {
+            data = malloc(N * D * sizeof(double));
+            kd_data = data;
+            for (i=0; i<N; i++) {
+                for (j=0; j<D; j++) {
+                    double* pd = PyArray_GETPTR2(x, i, j);
+                    data[i*D + j] = *pd;
+                }
+            }
+        } else {
+            udata = malloc(N * D * sizeof(uint64_t));
+            kd_data = udata;
+            for (i=0; i<N; i++) {
+                for (j=0; j<D; j++) {
+                    uint64_t* pd = PyArray_GETPTR2(x, i, j);
+                    udata[i*D + j] = *pd;
+                }
             }
         }
-        treetype = KDTT_DOUBLE;
         treeoptions = 0;
         if (do_bbox)
             treeoptions |= KD_BUILD_BBOX;
         if (do_split)
             treeoptions |= KD_BUILD_SPLIT;
-        self->kd = kdtree_build(NULL, data, N, D, Nleaf,
-                                treetype, treeoptions);
+        self->kd = kdtree_build(NULL, kd_data, N, D, Nleaf, treetype, treeoptions);
         if (!self->kd)
             return -1;
         return 0;
@@ -203,7 +225,7 @@ static PyObject* KdTree_print(KdObject* self) {
 }
 
 static PyObject* KdTree_search(KdObject* self, PyObject* args) {
-    double* X;
+    void* X;
     PyObject* rtn;
     npy_intp dims[1];
     kdtree_t* kd;
@@ -212,7 +234,7 @@ static PyObject* KdTree_search(KdObject* self, PyObject* args) {
     PyArrayObject* npI;
     PyObject* pyInds;
     PyObject* pyDists = NULL;
-    PyArray_Descr* dtype = PyArray_DescrFromType(NPY_DOUBLE);
+    PyArray_Descr* dtype;
     int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_NOTSWAPPED
         | NPY_ARRAY_ELEMENTSTRIDES;
     double radius;
@@ -233,10 +255,15 @@ static PyObject* KdTree_search(KdObject* self, PyObject* args) {
         getdists = 1;
     }
 
+    if (kdtree_exttype(kd) == KDT_EXT_U64)
+        dtype = PyArray_DescrFromType(NPY_UINT64);
+    else
+        dtype = PyArray_DescrFromType(NPY_DOUBLE);
+
     Py_INCREF(dtype);
     npI = (PyArrayObject*)PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
     if (!npI) {
-        PyErr_SetString(PyExc_ValueError, "Failed to convert query point array to np array of float");
+        PyErr_SetString(PyExc_ValueError, "Failed to convert query point array to np array of float or uint64 (depending on tree data type)");
         Py_XDECREF(dtype);
         return NULL;
     }
@@ -287,12 +314,10 @@ static PyObject* KdTree_search(KdObject* self, PyObject* args) {
 
 static PyObject* KdTree_get_data(KdObject* self, PyObject* args) {
     PyArrayObject* pyX;
-    double* X;
     PyObject* rtn;
     npy_intp dims[2];
     kdtree_t* kd;
     int k, D, N;
-    //npy_int* I;
     npy_uint32* I;
     PyObject* pyO;
     PyArrayObject* npI;
@@ -311,7 +336,7 @@ static PyObject* KdTree_get_data(KdObject* self, PyObject* args) {
     Py_INCREF(dtype);
     npI = (PyArrayObject*)PyArray_FromAny(pyO, dtype, 1, 1, req, NULL);
     if (!npI) {
-        PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of int");
+        PyErr_SetString(PyExc_ValueError, "Failed to convert index array to np array of uint32");
         Py_XDECREF(dtype);
         return NULL;
     }
@@ -320,15 +345,26 @@ static PyObject* KdTree_get_data(KdObject* self, PyObject* args) {
     dims[0] = N;
     dims[1] = D;
 
-    pyX = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
-    X = PyArray_DATA(pyX);
     I = PyArray_DATA(npI);
-
-    for (k=0; k<N; k++) {
-        kdtree_copy_data_double(kd, I[k], 1, X);
-        X += D;
+    if (kdtree_datatype(kd) == KDT_DATA_U64) {
+        uint64_t* X;
+        pyX = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_UINT64);
+        X = PyArray_DATA(pyX);
+        for (k=0; k<N; k++) {
+            memcpy(X, kdtree_get_data(kd, I[k]), D*sizeof(uint64_t));
+            X += D;
+        }
+        Py_DECREF(npI);
+    } else {
+        double* X;
+        pyX = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_DOUBLE);
+        X = PyArray_DATA(pyX);
+        for (k=0; k<N; k++) {
+            kdtree_copy_data_double(kd, I[k], 1, X);
+            X += D;
+        }
+        Py_DECREF(npI);
     }
-    Py_DECREF(npI);
     Py_DECREF(dtype);
     rtn = Py_BuildValue("O", pyX);
     Py_DECREF(pyX);
