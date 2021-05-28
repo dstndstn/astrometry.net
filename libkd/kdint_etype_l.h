@@ -11,6 +11,3 @@ typedef u64 etype;
 #define ETYPE_MIN  0
 
 #define ETYPE l
-#define ETYPE_M l
-
-//#define ETYPE_KDT_DATA  KDT_DATA_U32
