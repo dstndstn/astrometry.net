@@ -11,6 +11,3 @@ typedef float etype;
 #define ETYPE_MIN -KDT_INFTY_FLOAT
 
 #define ETYPE f
-#define ETYPE_M f
-
-//#define ETYPE_KDT_DATA  KDT_DATA_FLOAT

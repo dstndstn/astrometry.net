@@ -15,6 +15,7 @@ SO=$(SHAREDLIB_SUFFIX)
 INTERNALS := \
 	kdint_ddd.o \
 	kdint_fff.o \
+	kdint_lll.o \
 	kdint_ddu.o \
 	kdint_duu.o \
 	kdint_dds.o \
@@ -59,6 +60,7 @@ LIBKD_NOIO := libkd-noio.a
 INTERNALS_NOIO := \
 	kdint_ddd_noio.o \
 	kdint_fff_noio.o \
+	kdint_lll_noio.o \
 	kdint_ddu_noio.o \
 	kdint_duu_noio.o \
 	kdint_dds_noio.o \

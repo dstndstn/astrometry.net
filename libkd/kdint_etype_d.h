@@ -11,5 +11,3 @@ typedef double etype;
 #define ETYPE_MIN -KDT_INFTY_DOUBLE
 
 #define ETYPE d
-#define ETYPE_M d
-

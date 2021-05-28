@@ -8,24 +8,23 @@
 
 #include "astrometry/kdtree.h"
 
-
 #define GLUE3(base, x, y, z) base ## _ ## x ## y ## z
 #define KDMANGLE(func, e, d, t) GLUE3(func, e, d, t)
-
 
 #define KD_DECLARE(func, rtn, args) \
 rtn KDMANGLE(func, d, d, d)args; \
 rtn KDMANGLE(func, f, f, f)args; \
+rtn KDMANGLE(func, l, l, l)args; \
 rtn KDMANGLE(func, d, d, u)args; \
 rtn KDMANGLE(func, d, u, u)args; \
 rtn KDMANGLE(func, d, d, s)args; \
 rtn KDMANGLE(func, d, s, s)args
 
-
 #define KD_DISPATCH(func, tt, rtn, args) \
 	switch (tt) { \
 	case KDTT_DOUBLE: rtn KDMANGLE(func, d, d, d)args; break; \
 	case KDTT_FLOAT:  rtn KDMANGLE(func, f, f, f)args; break; \
+	case KDTT_U64:    rtn KDMANGLE(func, l, l, l)args; break; \
 	case KDTT_DUU: \
                       rtn KDMANGLE(func, d, u, u)args; break; \
 	case KDTT_DSS: \

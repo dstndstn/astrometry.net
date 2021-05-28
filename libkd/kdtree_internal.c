@@ -470,7 +470,7 @@ static void print_results(kdtree_qres_t* res, int D) {
             if (res->results.any) {
                 printf(", pt [ ");
                 for (d=0; d<D; d++)
-                    printf("%g ", res->results.ETYPE[i*D + d]);
+                    printf("%g ", (double)res->results.ETYPE[i*D + d]);
                 printf("]");
             }
             printf("\n");
@@ -2062,9 +2062,11 @@ static void convert_data(kdtree_t* kd, etype* edata, int N, int D, int Nleaf) {
             }
             // Right place for this?  Not really....
             if (!ETYPE_INTEGER) {
+                // to avoid compiler warnings about int types, even though this will never happen at runtime.
+                double ddd = (double)dd;
                 // NaN and Inf detection...
-                if (!isfinite(dd) || isnan(dd)) {
-                    WARNING("Replacing inf/nan value (element %i,%i) = %g with %g\n", i, d, (double)dd, (double)DTYPE_MAX);
+                if (!isfinite(ddd) || isnan(ddd)) {
+                    WARNING("Replacing inf/nan value (element %i,%i) = %g with %g\n", i, d, ddd, (double)DTYPE_MAX);
                     dd = DTYPE_MAX;
                 }
             }
@@ -2194,8 +2196,10 @@ kdtree_t* MANGLE(kdtree_build_2)
                 for (i=0; i<N; i++) {
                     for (d=0; d<D; d++) {
                         etype dd = edata[i*D + d];
+                        // to avoid compiler warnings about int types, even though this will never happen at runtime.
+                        double ddd = (double)dd;
                         // NaN and Inf detection...
-                        if (!isfinite(dd) || isnan(dd)) {
+                        if (!isfinite(ddd) || isnan(ddd)) {
                             WARNING("Replacing inf/nan value (element %i,%i) = %g with %g\n", i, d, (double)dd, (double)DTYPE_MAX);
                             edata[i*D + d] = DTYPE_MAX;
                         }

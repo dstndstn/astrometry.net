@@ -73,20 +73,23 @@ enum kd_types {
     KDT_DATA_FLOAT  = 0x2,
     KDT_DATA_U32    = 0x4,
     KDT_DATA_U16    = 0x8,
+    KDT_DATA_U64    = 0x10,
     KDT_TREE_NULL   = 0,
     KDT_TREE_DOUBLE = 0x100,
     KDT_TREE_FLOAT  = 0x200,
     KDT_TREE_U32    = 0x400,
     KDT_TREE_U16    = 0x800,
+    KDT_TREE_U64    = 0x1000,
     KDT_EXT_NULL    = 0,
     KDT_EXT_DOUBLE  = 0x10000,
-    KDT_EXT_FLOAT   = 0x20000
+    KDT_EXT_FLOAT   = 0x20000,
+    KDT_EXT_U64     = 0x40000
 };
 typedef enum kd_types kd_types;
 
-#define KDT_DATA_MASK  0xf
-#define KDT_TREE_MASK  0xf00
-#define KDT_EXT_MASK   0x30000
+#define KDT_DATA_MASK  0x1f
+#define KDT_TREE_MASK  0x1f00
+#define KDT_EXT_MASK   0x70000
 
 /*
  Possible values for the "treetype" member.
@@ -97,6 +100,10 @@ typedef enum kd_types kd_types;
  (c) the external type.
 
  These are called the "data", "tree", and "ext" types.
+
+ For each of these entries, there is a kdint_XXX.c file with the implementation.
+ When adding a new one, you must also add it to KD_DECLARE and KD_DISPATCH in
+ kdtree_internal.h.
  */
 enum kd_tree_types {
     KDTT_NULL = 0,
@@ -106,6 +113,9 @@ enum kd_tree_types {
 
     /* "All floats, all the time". */
     KDTT_FLOAT  = KDT_EXT_FLOAT | KDT_DATA_FLOAT  | KDT_TREE_FLOAT,
+
+    /* "All U64, all the time". */
+    KDTT_U64 = KDT_EXT_U64 | KDT_DATA_U64 | KDT_TREE_U64,
 
     /* Data are "doubles", tree is u32.  aka inttree. */
     KDTT_DOUBLE_U32 = KDT_EXT_DOUBLE | KDT_DATA_DOUBLE | KDT_TREE_U32,
@@ -184,6 +194,7 @@ struct kdtree {
     union {
         float* f;
         double* d;
+        u64* l;
         u32* u;
         u16* s;
         void* any;
@@ -195,6 +206,7 @@ struct kdtree {
     union {
         float* f;
         double* d;
+        u64* l;
         u32* u;
         u16* s;
         void* any;
@@ -212,6 +224,7 @@ struct kdtree {
     union {
         float* f;
         double* d;
+        u64* l;
         u32* u;
         u16* s;
         void* any;
@@ -253,6 +266,7 @@ struct kdtree_qres {
     union {
         double* d;
         float* f;
+        u64* l;
         u32* u;
         u16* s;
         void* any;
@@ -530,61 +544,56 @@ void kdtree_output_dot(FILE* fid, kdtree_t* kd);
 
 
  When you're done with your tree, kdtree_free() it.
-
  */
 kdtree_t* KDFUNC(kdtree_build)
      (kdtree_t* kd, void *data, int N, int D, int Nleaf,
       int treetype, unsigned int options);
+     
+kdtree_t* KDFUNC(kdtree_build_2)
+     (kdtree_t* kd, void *data, int N, int D, int Nleaf,
+      int treetype, unsigned int options,
+      double* minval, double* maxval);
 
+/* Range seach for a single point.
+ 
+ kdtree_rangesearch()
 
-     kdtree_t* KDFUNC(kdtree_build_2)
-          (kdtree_t* kd, void *data, int N, int D, int Nleaf,
-           int treetype, unsigned int options,
-           double* minval, double* maxval);
+ kd: kd-tree object.
 
+ pt: pointer to the query point -- the thing you are searching for.
+ The data type of this depends on the "treetype" of the kd-tree.  For
+ a KDTT_DOUBLE, it must be a D-dimensional array of doubles.  For
+ KDTT_FLOAT, an array of floats.
 
+ maxd2: maximum distance-squared of the search.
 
+ The resulting kdtree_qres_t* object will be sorted by distance
+ (nearest first), and you can get the results.  Again, the type
+ depends on the kd-tree's "treetype"; for KDTT_DOUBLE, the "results.d"
+ field contains the results; "nres" is the number of points within
+ range.  "sdists" are the squared-distances, and "inds" are the
+ indices of the matches.
 
-          /* Range seach for a single point.
+ Free the query results with kdtree_free_query().
+ */
+kdtree_qres_t* KDFUNC(kdtree_rangesearch)(const kdtree_t *kd, const void *pt, double maxd2);
 
-           kdtree_rangesearch()
+/*
+ Like kdtree_rangesearch(), but don't sort the results by distance.
+ */
+kdtree_qres_t* KDFUNC(kdtree_rangesearch_nosort)(const kdtree_t *kd, const void *pt, double maxd2);
 
-           kd: kd-tree object.
+/*
+ Like kdtree_rangesearch, but you get to call the shots; see
+ kd_rangesearch_options for what the "options" are.
+ */
+kdtree_qres_t* KDFUNC(kdtree_rangesearch_options)(const kdtree_t *kd, const void *pt, double maxd2, int options);
 
-           pt: pointer to the query point -- the thing you are searching for.
-           The data type of this depends on the "treetype" of the kd-tree.  For
-           a KDTT_DOUBLE, it must be a D-dimensional array of doubles.  For
-           KDTT_FLOAT, an array of floats.
-
-           maxd2: maximum distance-squared of the search.
-
-           The resulting kdtree_qres_t* object will be sorted by distance
-           (nearest first), and you can get the results.  Again, the type
-           depends on the kd-tree's "treetype"; for KDTT_DOUBLE, the "results.d"
-           field contains the results; "nres" is the number of points within
-           range.  "sdists" are the squared-distances, and "inds" are the
-           indices of the matches.
-
-           Free the query results with kdtree_free_query().
-           */
-          kdtree_qres_t* KDFUNC(kdtree_rangesearch)(const kdtree_t *kd, const void *pt, double maxd2);
-
-                                                   /*
-                                                    Like kdtree_rangesearch(), but don't sort the results by distance.
-                                                    */
-                                                   kdtree_qres_t* KDFUNC(kdtree_rangesearch_nosort)(const kdtree_t *kd, const void *pt, double maxd2);
-
-                                                                                                   /*
-                                                                                                    Like kdtree_rangesearch, but you get to call the shots; see
-                                                                                                    kd_rangesearch_options for what the "options" are.
-                                                                                                    */
-                                                                                                   kdtree_qres_t* KDFUNC(kdtree_rangesearch_options)(const kdtree_t *kd, const void *pt, double maxd2, int options);
-
-                                                                                                                                                    /*
-                                                                                                                                                     Like kdtree_rangesearch_options, except reuse a kdtree_qres_t* from a
-                                                                                                                                                     previous call, to avoid a lot of freeing and allocating memory.
-                                                                                                                                                     */
-                                                                                                                                                    kdtree_qres_t* KDFUNC(kdtree_rangesearch_options_reuse)(const kdtree_t *kd, kdtree_qres_t* res, const void *pt, double maxd2, int options);
+/*
+ Like kdtree_rangesearch_options, except reuse a kdtree_qres_t* from a
+ previous call, to avoid a lot of freeing and allocating memory.
+ */
+kdtree_qres_t* KDFUNC(kdtree_rangesearch_options_reuse)(const kdtree_t *kd, kdtree_qres_t* res, const void *pt, double maxd2, int options);
 
 #if !defined(KD_DIM)
 #undef KD_DIM_GENERIC
