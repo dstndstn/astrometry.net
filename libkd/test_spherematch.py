@@ -74,7 +74,16 @@ data = kd.get_data(np.array([0,3,5]).astype(np.uint32))
 assert(data.dtype == np.uint64)
 print('Kd data:', data.dtype, data)
 
+kd.write('kd-u64.fits')
+
+kd2 = spherematch.tree_open('kd-u64.fits')
+data2 = kd2.get_data(np.array([0,3,5]).astype(np.uint32))
+assert(data2.dtype == np.uint64)
+print('Kd data2:', data2.dtype, data2)
+assert(np.all(data == data2))
+
 del kd
+del kd2
 
 ###
 
