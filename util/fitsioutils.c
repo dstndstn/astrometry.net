@@ -968,7 +968,7 @@ int fits_write_data_array(FILE* fid, const void* vvalue, tfits_type type,
     const char* pvalue = (const char*)vvalue;
 
     if (pvalue == NULL) {
-        if (fseeko(fid, fits_get_atom_size(type) * N, SEEK_CUR)) {
+        if (fseeko(fid, (size_t)fits_get_atom_size(type) * (size_t)N, SEEK_CUR)) {
             fprintf(stderr, "Failed to skip %i bytes in fits_write_data_array: %s\n",
                     fits_get_atom_size(type) * N, strerror(errno));
             return -1;

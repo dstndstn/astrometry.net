@@ -238,6 +238,7 @@ static void ctmf_helper(
 
     Histogram H[4];
     uint16_t *h_coarse, *h_fine, luc[4][16];
+    size_t sz_coarse, sz_fine;
 
     assert( src );
     assert( dst );
@@ -247,15 +248,17 @@ static void ctmf_helper(
     assert( src_step != 0 );
     assert( dst_step != 0 );
 
+    sz_coarse = (size_t)( 1 * 16) * (size_t)n * (size_t)cn * sizeof(uint16_t);
+    sz_fine   = (size_t)(16 * 16) * (size_t)n * (size_t)cn * sizeof(uint16_t);
     /* SSE2 and MMX need aligned memory, provided by _mm_malloc(). */
 #if defined(USE_SSE2) || defined(USE_MMX)
-    h_coarse = (uint16_t*) _mm_malloc(  1 * 16 * n * cn * sizeof(uint16_t), 16 );
-    h_fine   = (uint16_t*) _mm_malloc( 16 * 16 * n * cn * sizeof(uint16_t), 16 );
-    memset( h_coarse, 0,  1 * 16 * n * cn * sizeof(uint16_t) );
-    memset( h_fine,   0, 16 * 16 * n * cn * sizeof(uint16_t) );
+    h_coarse = (uint16_t*) _mm_malloc( sz_coarse, 16 );
+    h_fine   = (uint16_t*) _mm_malloc( sz_fine,   16 );
+    memset( h_coarse, 0, sz_coarse );
+    memset( h_fine,   0, sz_fine   );
 #else
-    h_coarse = (uint16_t*) calloc(  1 * 16 * n * cn, sizeof(uint16_t) );
-    h_fine   = (uint16_t*) calloc( 16 * 16 * n * cn, sizeof(uint16_t) );
+    h_coarse = (uint16_t*) calloc( sz_coarse );
+    h_fine   = (uint16_t*) calloc( sz_fine   );
 #endif
 
     /* First row initialization */

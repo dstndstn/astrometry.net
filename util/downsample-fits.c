@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     winw = W;
     winh = (int)ceil(ceil(1024*1024 / (float)winw) / (float)scale) * scale;
 
-    outimg = malloc((int)ceil(winw/scale)*(int)ceil(winh/scale) * sizeof(float));
+    outimg = malloc((size_t)ceil(winw/scale)*(size_t)ceil(winh/scale) * sizeof(float));
 			
     logmsg("Image is %i x %i x %i\n", W, H, (int)animg->planes);
     logmsg("Output will be %i x %i x %i\n", outw, outh, (int)animg->planes);

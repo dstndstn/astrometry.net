@@ -27,8 +27,8 @@ coadd_t* coadd_new_from_wcs(anwcs_t* wcs) {
 
 coadd_t* coadd_new(int W, int H) {
     coadd_t* ca = calloc(1, sizeof(coadd_t));
-    ca->img = calloc(W * H, sizeof(number));
-    ca->weight = calloc(W * H, sizeof(number));
+    ca->img = calloc((size_t)W * (size_t)H, sizeof(number));
+    ca->weight = calloc((size_t)W * (size_t)H, sizeof(number));
     ca->W = W;
     ca->H = H;
     ca->resample_func = nearest_resample_f;
