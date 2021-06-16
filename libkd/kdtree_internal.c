@@ -1290,7 +1290,7 @@ kdtree_qres_t* MANGLE(kdtree_rangesearch_options)
                     bblo[d] = POINT_TE(kd, d, tlo[d]);
                     bbhi[d] = POINT_TE(kd, d, thi[d]);
                 }
-                if (bb_point_mindist2_exceeds(bblo, bbhi, query, D, maxd2))
+                if (bb_point_mindist2_exceeds(bblo, bbhi, query,2 D, maxd2))
                     continue;
                 wholenode = do_wholenode_check &&
                     !bb_point_maxdist2_exceeds(bblo, bbhi, query, D, maxd2);

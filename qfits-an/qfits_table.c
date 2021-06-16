@@ -607,7 +607,7 @@ qfits_table * qfits_table_open2(const qfits_header* hdr, off_t offset_beg, size_
                 offset_beg += (int)(next_col_pos - col_pos);
 
             } else if (table_type == QFITS_BINTABLE) {
-                offset_beg += atom_nb * atom_size;
+                offset_beg += (size_t)atom_nb * (size_t)atom_size;
             }
         }
         curr_col++;
@@ -718,7 +718,7 @@ unsigned char * qfits_query_column(
     }
    
     /* Allocate data array */
-    array = qfits_malloc(nb_rows * field_size * sizeof(char)); 
+    array = qfits_malloc((size_t)nb_rows * (size_t)field_size * sizeof(char)); 
             
     /* Position the input pointer at the begining of the column data */
     r = array;
@@ -825,7 +825,7 @@ unsigned char * qfits_query_column_seq(
     }
    
     /* Allocate data array */
-    array = qfits_malloc(nb_rows * field_size * sizeof(char)); 
+    array = qfits_malloc((size_t)nb_rows * (size_t)field_size * sizeof(char)); 
             
     /* Position the input pointer at the begining of the column data */
     r = array;
