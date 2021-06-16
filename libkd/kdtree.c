@@ -117,11 +117,11 @@ size_t kdtree_sizeof_perm(const kdtree_t* kd) {
 }
 
 size_t kdtree_sizeof_bb(const kdtree_t* kd) {
-    return get_tree_size(kd->treetype) * kd->ndim * kd->nnodes;
+    return (size_t)get_tree_size(kd->treetype) * (size_t)kd->ndim * (size_t)kd->nnodes;
 }
 
 size_t kdtree_sizeof_split(const kdtree_t* kd) {
-    return get_tree_size(kd->treetype) * kd->ninterior;
+    return (size_t)get_tree_size(kd->treetype) * (size_t)kd->ninterior;
 }
 
 size_t kdtree_sizeof_splitdim(const kdtree_t* kd) {
@@ -129,7 +129,7 @@ size_t kdtree_sizeof_splitdim(const kdtree_t* kd) {
 }
 
 size_t kdtree_sizeof_data(const kdtree_t* kd) {
-    return get_data_size(kd->treetype) * kd->ndim * kd->ndata;
+    return (size_t)get_data_size(kd->treetype) * (size_t)kd->ndim * (size_t)kd->ndata;
 }
 
 void kdtree_memory_report(kdtree_t* kd) {
@@ -255,7 +255,7 @@ void kdtree_copy_data_double(const kdtree_t* kd, int start, int N, double* dest)
     switch (kdtree_datatype(kd)) {
     case KDT_DATA_DOUBLE:
         memcpy(dest, kd->data.d + start*D,
-               N * D * sizeof(double));
+               (size_t)N * (size_t)D * sizeof(double));
         break;
     case KDT_DATA_FLOAT:
         for (i=0; i<(N * D); i++)

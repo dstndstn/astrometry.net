@@ -1421,7 +1421,7 @@ static void copy_data_double(const kdtree_t* kd, int start, int N,
     D = kd->ndim;
 #if DTYPE_DOUBLE
     //#warning "Data type is double; just copying data."
-    memcpy(dest, kd->data.DTYPE + start*D, N*D*sizeof(etype));
+    memcpy(dest, kd->data.DTYPE + start*D, (size_t)N*(size_t)D*sizeof(etype));
 #elif (!DTYPE_INTEGER && !ETYPE_INTEGER)
     //#warning "Etype and Dtype are both reals; just casting values."
     for (i=0; i<(N * D); i++)
@@ -2238,17 +2238,17 @@ kdtree_t* MANGLE(kdtree_build_2)
     assert(kd->lr);
 
     if (options & KD_BUILD_BBOX) {
-        kd->bb.any = MALLOC(kd->nnodes * 2 * D * sizeof(ttype));
+        kd->bb.any = MALLOC((size_t)kd->nnodes * (size_t)2 * (size_t)D * sizeof(ttype));
         kd->n_bb = kd->nnodes;
         assert(kd->bb.any);
     }
     if (options & KD_BUILD_SPLIT) {
-        kd->split.any = MALLOC(kd->ninterior * sizeof(ttype));
+        kd->split.any = MALLOC((size_t)kd->ninterior * sizeof(ttype));
         assert(kd->split.any);
     }
     if (((options & KD_BUILD_SPLIT) && !TTYPE_INTEGER) ||
         (options & KD_BUILD_SPLITDIM)) {
-        kd->splitdim = MALLOC(kd->ninterior * sizeof(u8));
+        kd->splitdim = MALLOC((size_t)kd->ninterior * sizeof(u8));
         kd->splitmask = UINT32_MAX;
         kd->dimmask = 0;
     } else if (options & KD_BUILD_SPLIT)
