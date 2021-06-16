@@ -925,7 +925,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
                     found_it = 1;
                     qf->exts[qf->Nexts].hdr_start = n_blocks-1;
                 } else {
-                    qfits_warning("Failed to find XTENSION in the FITS block following the previous data block -- whaddup?  Filename %s, block %i, hdu %i",
+                    qfits_warning("Failed to find XTENSION in the FITS block following the previous data block -- whaddup?  Filename %s, block %zi, hdu %i",
                                   filename, n_blocks, qf->Nexts-1);
                 }
                 // FIXME -- should we really just skip the block if we don't find the "XTENSION=" header?
@@ -1149,7 +1149,7 @@ void* anqfits_readpix(const anqfits_t* qf, int ext,
     }
 
     if ((plane < 0) || (plane >= img->planes)) {
-        qfits_error("Plane %i not in [0, %i) reading %s ext %i\n",
+        qfits_error("Plane %i not in [0, %zi) reading %s ext %i\n",
                     plane, img->planes, qf->filename, ext);
         return NULL;
     }
