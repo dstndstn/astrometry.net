@@ -1204,7 +1204,7 @@ bread_t* buffered_read_new(int elementsize, int Nbuffer, int Ntotal,
 void* buffered_read(bread_t* br) {
     void* rtn;
     if (!br->buffer) {
-        br->buffer = malloc(br->blocksize * br->elementsize);
+        br->buffer = malloc((size_t)br->blocksize * (size_t)br->elementsize);
         br->nbuff = br->off = br->buffind = 0;
     }
     if (br->buffind == br->nbuff) {
@@ -1216,7 +1216,7 @@ void* buffered_read(bread_t* br) {
             n = br->ntotal - br->off;
         if (!n)
             return NULL;
-        memset(br->buffer, 0, br->blocksize * br->elementsize);
+        memset(br->buffer, 0, (size_t)br->blocksize * (size_t)br->elementsize);
         if (br->refill_buffer(br->userdata, br->buffer, br->off, n)) {
             fprintf(stderr, "buffered_read: Error filling buffer.\n");
             return NULL;
@@ -1232,7 +1232,7 @@ void* buffered_read(bread_t* br) {
 void buffered_read_resize(bread_t* br, int newsize) {
     br->blocksize = newsize;
     if (br->buffer)
-        br->buffer = realloc(br->buffer, br->blocksize * br->elementsize);
+        br->buffer = realloc(br->buffer, (size_t)br->blocksize * (size_t)br->elementsize);
 }
 
 void buffered_read_reset(bread_t* br) {

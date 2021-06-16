@@ -33,17 +33,17 @@ void permutation_apply(const int* perm, int Nperm, const void* inarray,
     char* coutput;
 
     if (inarray == outarray) {
-        temparr = malloc(elemsize * Nperm);
+        temparr = malloc((size_t)elemsize * (size_t)Nperm);
         coutput = temparr;
     } else
         coutput = outarray;
 
     cinput = inarray;
     for (i=0; i<Nperm; i++)
-        memcpy(coutput + i * elemsize, cinput + perm[i] * elemsize, elemsize);
+        memcpy(coutput + i * elemsize, cinput + (size_t)perm[i] * (size_t)elemsize, elemsize);
 
     if (inarray == outarray) {
-        memcpy(outarray, temparr, elemsize * Nperm);
+        memcpy(outarray, temparr, (size_t)elemsize * (size_t)Nperm);
         free(temparr);
     }
 }

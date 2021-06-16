@@ -214,7 +214,7 @@ int simplexy_run(simplexy_t* s) {
         if (s->image)
             bgsub = s->image;
         else {
-            bgsub_i16 = malloc(nx * ny * sizeof(int16_t));
+            bgsub_i16 = malloc((size_t)nx * (size_t)ny * sizeof(int16_t));
             bgfree = bgsub_i16;
             for (i=0; i<nx*ny; i++)
                 bgsub_i16[i] = s->image_u8[i];
@@ -226,7 +226,7 @@ int simplexy_run(simplexy_t* s) {
 
         if (s->image) {
             float* medianfiltered;
-            medianfiltered = malloc(nx * ny * sizeof(float));
+            medianfiltered = malloc((size_t)nx * (size_t)ny * sizeof(float));
             bgfree = medianfiltered;
             dmedsmooth(s->image, NULL, nx, ny, s->halfbox, medianfiltered);
 
@@ -258,7 +258,7 @@ int simplexy_run(simplexy_t* s) {
             }
 
             // Background-subtracted image.
-            bgsub_i16 = malloc(nx * ny * sizeof(int16_t));
+            bgsub_i16 = malloc((size_t)nx * (size_t)ny * sizeof(int16_t));
             bgfree = bgsub_i16;
             for (i=0; i<nx*ny; i++)
                 //bgsub_i16[i] = (int16_t)s->image_u8[i] - (int16_t)medianfiltered_u8[i];
@@ -276,7 +276,7 @@ int simplexy_run(simplexy_t* s) {
     }
 
     if (s->dpsf > 0.0) {
-        smoothed = malloc(nx * ny * sizeof(float));
+        smoothed = malloc((size_t)nx * (size_t)ny * sizeof(float));
         smoothfree = smoothed;
         /* smooth by the point spread function (the optimal detection
          filter, since we assume a symmetric Gaussian PSF) */
@@ -288,7 +288,7 @@ int simplexy_run(simplexy_t* s) {
         if (bgsub)
             smoothed = bgsub;
         else {
-            smoothed = malloc(nx * ny * sizeof(float));
+            smoothed = malloc((size_t)nx * (size_t)ny * sizeof(float));
             smoothfree = smoothed;
             for (i=0; i<(nx*ny); i++)
                 smoothed[i] = bgsub_i16[i];
@@ -328,7 +328,7 @@ int simplexy_run(simplexy_t* s) {
     }
 
     /* find pixels above the noise level, and flag a box of pixels around each one. */
-    mask = malloc(nx*ny);
+    mask = malloc((size_t)nx*(size_t)ny);
     if (!dmask(smoothed, nx, ny, limit, s->dpsf, mask)) {
         FREEVEC(smoothfree);
         return 0;
@@ -339,13 +339,13 @@ int simplexy_run(simplexy_t* s) {
     if (s->maskimgfn) {
         logverb("Writing masked image \"%s\"\n", s->maskimgfn);
         if (s->image_u8) {
-            uint8_t* maskedimg = malloc(nx * ny);
+            uint8_t* maskedimg = malloc((size_t)nx * (size_t)ny);
             for (i=0; i<nx*ny; i++)
                 maskedimg[i] = mask[i] * s->image_u8[i];
             write_fits_u8_image(maskedimg, nx, ny, s->maskimgfn);
             free(maskedimg);
         } else {
-            float* maskedimg = malloc(nx * ny * sizeof(float));
+            float* maskedimg = malloc((size_t)nx * (size_t)ny * sizeof(float));
             for (i=0; i<nx*ny; i++)
                 maskedimg[i] = mask[i] * s->image[i];
             write_fits_float_image(maskedimg, nx, ny, s->maskimgfn);
@@ -354,14 +354,14 @@ int simplexy_run(simplexy_t* s) {
     }
 
     /* find connected-components in the mask image. */
-    ccimg = malloc(nx * ny * sizeof(int));
+    ccimg = malloc((size_t)nx * (size_t)ny * sizeof(int));
     dfind2_u8(mask, nx, ny, ccimg, &nblobs);
     FREEVEC(mask);
     logverb("simplexy: found %i blobs\n", nblobs);
 
     if (s->blobimgfn) {
         int j;
-        uint8_t* blobimg = malloc(nx * ny);
+        uint8_t* blobimg = malloc((size_t)nx * (size_t)ny);
         logverb("Writing blob image \"%s\"\n", s->blobimgfn);
         memset(blobimg, 0, sizeof(uint8_t) * nx*ny);
         for (j=0; j<ny; j++) {
@@ -453,7 +453,7 @@ int simplexy_run(simplexy_t* s) {
 
             } else {
                 int N = 2*L.order+1;
-                float* tempimg = malloc(N*N*sizeof(float));
+                float* tempimg = malloc((size_t)N*(size_t)N*sizeof(float));
                 int xlo,xhi,ylo,yhi;
                 int j,k;
                 xlo = MAX(0, ix-L.order);

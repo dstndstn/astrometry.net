@@ -827,12 +827,12 @@ int fitstable_write_one_column(fitstable_t* table, int colnum,
     if (in_memory(table)) {
         for (i=0; i<nrows; i++) {
             memcpy(((char*)bl_access(table->rows, rowoffset + i)) + off,
-                   src, col->fitssize * col->arraysize);
+                   src, (size_t)col->fitssize * (size_t)col->arraysize);
             src = ((const char*)src) + src_stride;
         }
     } else {
         for (i=0; i<nrows; i++) {
-            if (fseeko(table->fid, start + i * table->table->tab_w, SEEK_SET) ||
+            if (fseeko(table->fid, start + (size_t)i * (size_t)table->table->tab_w, SEEK_SET) ||
                 fits_write_data_array(table->fid, src, col->fitstype, col->arraysize, flip)) {
                 SYSERROR("Failed to write row %i of column %i", rowoffset+i, colnum);
                 return -1;
@@ -916,7 +916,7 @@ static void* read_array_into(const fitstable_t* tab,
     if (dest)
         cdata = dest;
     else
-        cdata = calloc(Nread * arraysize, csize);
+        cdata = calloc((size_t)Nread * (size_t)arraysize, csize);
 
     if (dest && deststride > 0)
         cstride = deststride;
@@ -927,7 +927,7 @@ static void* read_array_into(const fitstable_t* tab,
     if (csize < fitssize) {
         // Need to allocate a bigger temp array and down-convert the data.
         // HACK - could set data=tempdata and realloc after (if 'dest' is NULL)
-        tempdata = calloc(Nread * arraysize, fitssize);
+        tempdata = calloc((size_t)Nread * (size_t)arraysize, fitssize);
         fitsdata = tempdata;
     } else {
         // We'll read the data into the first fraction of the output array.
@@ -987,7 +987,7 @@ static void* read_array_into(const fitstable_t* tab,
                               -csize, ctype,
                               fitsdata + (((off_t)Nread*(off_t)arraysize)-1) * (off_t)fitssize,
                               -fitssize, fitstype,
-                              1, Nread * arraysize);
+                              1, (size_t)Nread * (size_t)arraysize);
         }
     }
 

@@ -18,7 +18,7 @@ static histogram2d* hist_new(int nx, int ny) {
         ERROR("Couldn't allocate a histogram2d.");
         return NULL;
     }
-    h->hist = calloc(nx*ny, sizeof(int));
+    h->hist = calloc((size_t)nx*(size_t)ny, sizeof(int));
     if (!h->hist) {
         ERROR("Couldn't allocate a histogram2d with %ix%i bins.", nx, ny);
         free(h);
