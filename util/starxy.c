@@ -141,14 +141,14 @@ void starxy_free(starxy_t* f) {
 }
 
 double* starxy_copy_x(const starxy_t* xy) {
-    double* res = malloc(sizeof(double) * starxy_n(xy));
-    memcpy(res, xy->x, sizeof(double) * starxy_n(xy));
+    double* res = malloc(sizeof(double) * (size_t)starxy_n(xy));
+    memcpy(res, xy->x, sizeof(double) * (size_t)starxy_n(xy));
     return res;
 }
 
 double* starxy_copy_y(const starxy_t* xy) {
-    double* res = malloc(sizeof(double) * starxy_n(xy));
-    memcpy(res, xy->y, sizeof(double) * starxy_n(xy));
+    double* res = malloc(sizeof(double) * (size_t)starxy_n(xy));
+    memcpy(res, xy->y, sizeof(double) * (size_t)starxy_n(xy));
     return res;
 }
 

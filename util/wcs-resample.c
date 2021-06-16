@@ -92,7 +92,7 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
     logmsg("Input  image is %i x %i pixels.\n", inW, inH);
     logmsg("Output image is %i x %i pixels.\n", outW, outH);
 
-    outimg = calloc(outW * outH, sizeof(float));
+    outimg = calloc((size_t)outW * (size_t)outH, sizeof(float));
 
     if (resample_wcs(inwcs, inimg, inW, inH,
                      outwcs, outimg, outW, outH, 1, lorder)) {
@@ -161,7 +161,7 @@ static anbool* find_overlap_grid(int B, int outW, int outH,
 
     BW = (int)ceil(outW / (float)B);
     BH = (int)ceil(outH / (float)B);
-    bib = calloc(BW*BH, sizeof(anbool));
+    bib = calloc((size_t)BW*(size_t)BH, sizeof(anbool));
     for (i=0; i<BH; i++) {
         for (j=0; j<BW; j++) {
             int x,y;
@@ -182,7 +182,7 @@ static anbool* find_overlap_grid(int B, int outW, int outH,
         }
     }
     // Grow the in-bounds area:
-    bib2 = calloc(BW*BH, sizeof(anbool));
+    bib2 = calloc((size_t)BW*(size_t)BH, sizeof(anbool));
     for (i=0; i<BH; i++)
         for (j=0; j<BW; j++) {
             int di,dj;
