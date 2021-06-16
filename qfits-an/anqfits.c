@@ -1117,21 +1117,21 @@ void* anqfits_readpix(const anqfits_t* qf, int ext,
 
     if (x0) {
         if ((x0 < 0) || (x1 && (x0 >= x1)) || (x0 >= img->width)) {
-            qfits_error("Invalid x0=%i not in [0, x1=%i <= W=%i) reading %s ext %i",
+            qfits_error("Invalid x0=%i not in [0, x1=%i <= W=%zi) reading %s ext %i",
                         x0, x1, img->width, qf->filename, ext);
             return NULL;
         }
     }
     if (y0) {
         if ((y0 < 0) || (y1 && (y0 >= y1)) || (y0 >= img->height)) {
-            qfits_error("Invalid y0=%i not in [0, y1=%i <= W=%i) reading %s ext %i",
+            qfits_error("Invalid y0=%i not in [0, y1=%i <= W=%zi) reading %s ext %i",
                         y0, y1, img->height, qf->filename, ext);
             return NULL;
         }
     }
     if (x1) {
         if ((x1 < 0) || (x1 <= x0) || (x1 > img->width)) {
-            qfits_error("Invalid x1=%i not in [0, x0=%i, W=%i) reading %s ext %i",
+            qfits_error("Invalid x1=%i not in [0, x0=%i, W=%zi) reading %s ext %i",
                         x1, x0, img->width, qf->filename, ext);
             return NULL;
         }
@@ -1140,7 +1140,7 @@ void* anqfits_readpix(const anqfits_t* qf, int ext,
     }
     if (y1) {
         if ((y1 < 0) || (y1 <= y0) || (y1 > img->height)) {
-            qfits_error("Invalid y1=%i not in [0, y0=%i, H=%i) reading %s ext %i",
+            qfits_error("Invalid y1=%i not in [0, y0=%i, H=%zi) reading %s ext %i",
                         y1, y0, img->height, qf->filename, ext);
             return NULL;
         }

@@ -249,7 +249,7 @@ int simplexy_run(simplexy_t* s) {
                 s->halfbox = floor(((float)MIN(nx,ny) - 1.0) / 2.0);
             assert(MIN(nx,ny) >= 2*s->halfbox+1);
 
-            medianfiltered_u8 = malloc(nx * ny * sizeof(unsigned char));
+            medianfiltered_u8 = malloc((size_t)nx * (size_t)ny * sizeof(unsigned char));
             ctmf(s->image_u8, medianfiltered_u8, nx, ny, nx, nx, s->halfbox, 1, 512*1024);
 
             if (s->bgimgfn) {
