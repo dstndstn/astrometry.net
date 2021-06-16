@@ -1950,7 +1950,7 @@ static char * qfits_bintable_field_to_string(
     switch(col->atom_type) {
     case TFITS_BIN_TYPE_A:
         ccol = (char*)field;
-        strncpy(ctmp, ccol, col->atom_size * col->atom_nb);
+        strncpy(ctmp, ccol, (size_t)col->atom_size * (size_t)col->atom_nb);
         ctmp[col->atom_size*col->atom_nb] = '\0';
         strcpy(stmp, ctmp);
         break;
@@ -2454,7 +2454,7 @@ static int qfits_table_append_data(
         field_size = qfits_table_get_field_size(t->tab_t, curr_col);
 
         /* Copy data from data to array (unsigned char) */
-        array[i] = qfits_malloc(t->nr * field_size);
+        array[i] = qfits_malloc((size_t)t->nr * (size_t)field_size);
         r = (unsigned char *)array[i];
         inbuf = (unsigned char *)(data[i]);
 

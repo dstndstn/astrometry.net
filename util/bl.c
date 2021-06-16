@@ -620,7 +620,7 @@ void bl_insert(bl* list, size_t index, const void* data) {
             // shift the existing elements up by one position...
             memmove(NODE_CHARDATA(next) + list->datasize,
                     NODE_CHARDATA(next),
-                    next->N * list->datasize);
+                    (size_t)next->N * (size_t)list->datasize);
             destnode = next;
         } else {
             // create and insert a new node.

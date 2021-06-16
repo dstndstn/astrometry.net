@@ -491,7 +491,7 @@ anbool resize_results(kdtree_qres_t* res, int newsize, int D,
     if (do_dists)
         res->sdists  = REALLOC(res->sdists , newsize * sizeof(double));
     if (do_points)
-        res->results.any = REALLOC(res->results.any, newsize * D * sizeof(etype));
+        res->results.any = REALLOC(res->results.any, (size_t)newsize * (size_t)D * sizeof(etype));
     res->inds = REALLOC(res->inds, newsize * sizeof(u32));
     if (newsize && (!res->results.any || (do_dists && !res->sdists) || !res->inds))
         SYSERROR("Failed to resize kdtree results arrays");
