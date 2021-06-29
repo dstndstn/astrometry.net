@@ -17,6 +17,8 @@ SOCIAL_AUTH_BACKENDS = (
     'social_core.backends.yahoo.YahooOAuth2',
     'social_core.backends.github.GithubOAuth2',
     'social_core.backends.flickr.FlickrOAuth',
+    'social_core.backends.evernote.EvernoteOAuth',
+    'social_core.backends.amazon.AmazonOAuth2',
     #'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -33,7 +35,6 @@ SOCIAL_TEMPLATE_CONTEXT_PROCESSORS = (
 # SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
 
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
-
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY    = authsecrets.google.key
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = authsecrets.google.secret
@@ -72,3 +73,8 @@ SOCIAL_AUTH_RAISE_EXCEPTIONS = True
 
 #SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 
+SOCIAL_AUTH_EVERNOTE_KEY = authsecrets.evernote.key
+SOCIAL_AUTH_EVERNOTE_SECRET = authsecrets.evernote.secret
+
+SOCIAL_AUTH_AMAZON_KEY = authsecrets.amazon.key
+SOCIAL_AUTH_AMAZON_SECRET = authsecrets.amazon.secret
