@@ -137,7 +137,7 @@ static anbool find_stars(hpquads_t* me, double radius2, int R) {
          Alternatively, we could re-fetch the results.d ...
          */
         int k;
-        char* tempdata = malloc(me->sort_size * N);
+        char* tempdata = malloc((size_t)me->sort_size * (size_t)N);
         for (k=0; k<N; k++)
             memcpy(tempdata + k*me->sort_size,
                    ((char*)me->sort_data) + me->sort_size * me->res->inds[k],

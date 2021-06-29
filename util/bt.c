@@ -191,7 +191,7 @@ static Malloc bt_node* bt_new_branch(bt* tree) {
 }
 
 static Malloc bt_node* bt_new_leaf(bt* tree) {
-    bt_node* n = malloc(sizeof(bt_leaf) + tree->datasize * tree->blocksize);
+    bt_node* n = malloc(sizeof(bt_leaf) + (size_t)tree->datasize * (size_t)tree->blocksize);
     if (!n) {
         fprintf(stderr, "Failed to allocate a new bt_node: %s\n", strerror(errno));
         return NULL;
@@ -247,7 +247,7 @@ static anbool bt_leaf_insert(bt* tree, bt_leaf* leaf, void* data, anbool unique,
     }
     memmove(get_element(tree, leaf, index+1),
             get_element(tree, leaf, index),
-            nshift * tree->datasize);
+            (size_t)nshift * (size_t)tree->datasize);
     // insert...
     memcpy(get_element(tree, leaf, index), data, tree->datasize);
     return TRUE;

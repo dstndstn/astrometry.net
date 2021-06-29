@@ -236,7 +236,7 @@ static byte * qfits_pixdump_float(const float * buf, int npix, int ptype)
     short       spix;
     double      dpix;
 
-    buf_out = qfits_malloc(npix * BYTESPERPIXEL(ptype));
+    buf_out = qfits_malloc((size_t)npix * (size_t)BYTESPERPIXEL(ptype));
     op = buf_out;
     switch (ptype) {
         case 8:
@@ -350,7 +350,7 @@ static byte * qfits_pixdump_int(const int * buf, int npix, int ptype)
     float   fpix;
     double  dpix;
 
-    buf_out = qfits_malloc(npix * BYTESPERPIXEL(ptype));
+    buf_out = qfits_malloc((size_t)npix * (size_t)BYTESPERPIXEL(ptype));
     op = buf_out;
     switch (ptype) {
         case 8:
@@ -451,7 +451,7 @@ static byte * qfits_pixdump_double(const double * buf, int npix, int ptype)
     float   fpix;
     int     lpix;
 
-    buf_out = qfits_malloc(npix * BYTESPERPIXEL(ptype));
+    buf_out = qfits_malloc((size_t)npix * (size_t)BYTESPERPIXEL(ptype));
     op = buf_out;
     switch (ptype) {
         case 8:

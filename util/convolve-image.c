@@ -46,10 +46,10 @@ float* convolve_separable_weighted_f(const float* img, int W, int H,
     int i, j, k;
 
     if (!tempimg)
-        freeimg = tempimg = malloc(W * H * sizeof(float));
+        freeimg = tempimg = malloc((size_t)W * (size_t)H * sizeof(float));
 
     if (!outimg)
-        outimg = malloc(W * H * sizeof(float));
+        outimg = malloc((size_t)W * (size_t)H * sizeof(float));
 
     for (i=0; i<H; i++) {
         /* // DEBUG

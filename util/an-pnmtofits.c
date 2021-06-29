@@ -112,7 +112,8 @@ static int maxval_to_bytes(int maxval) {
 
 static int read_pnm_row(FILE* fid, int W, int depth, int maxval, void* buffer) {
     int bps = maxval_to_bytes(maxval);
-    if (fread(buffer, bps, W*depth, fid) != W*depth) {
+    size_t n = (size_t)W * (size_t)depth;
+    if (fread(buffer, bps, n, fid) != n) {
         SYSERROR("Failed to read PNM row");
         return -1;
     }
@@ -233,7 +234,7 @@ int main(int argc, char** args) {
     }
     bits = 8 * maxval_to_bytes(maxval);
 
-    rowbuf = malloc(W * depth * (bits/8));
+    rowbuf = malloc((size_t)W * (size_t)depth * (size_t)(bits/8));
 
 #endif
 

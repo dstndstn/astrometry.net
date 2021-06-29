@@ -162,7 +162,7 @@ int quadbuilder_create(quadbuilder_t* qb) {
         free(qb->pquads);
         qb->Ncq = qb->Nstars;
         qb->inbox =  calloc(qb->Nstars, sizeof(int));
-        qb->pquads = calloc(qb->Nstars * qb->Nstars, sizeof(pquad_t));
+        qb->pquads = calloc((size_t)qb->Nstars * (size_t)qb->Nstars, sizeof(pquad_t));
         if (!qb->inbox || !qb->pquads) {
             ERROR("quad-builder: failed to malloc qb->inbox or qb->pquads.  Nstars=%i.\n", qb->Nstars);
             return -1;

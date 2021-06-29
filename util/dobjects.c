@@ -29,7 +29,7 @@ int dmask(float *image, int nx, int ny, float limit,
     int flagged_one = 0;
     int boxsize = 3 * dpsf;
     
-    memset(mask, 0, nx*ny);
+    memset(mask, 0, (size_t)nx*(size_t)ny);
 
     /* This makes a mask which dfind uses when looking at the pixels; dfind
      * ignores any pixels the mask flagged as uninteresting. */
@@ -88,7 +88,7 @@ int dobjects(float *smooth,
     /* limit is the threshold at which to pay attention to a pixel */
     //limit = sigma * plim;
 
-    mask = malloc(nx * ny);
+    mask = malloc((size_t)nx * (size_t)ny);
     rtn = dmask(smooth, nx, ny, limit, dpsf, mask);
     if (rtn) {
         free(mask);

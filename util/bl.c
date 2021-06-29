@@ -115,7 +115,7 @@ void bl_split(bl* src, bl* dest, size_t split) {
         newnode->next = node->next;
         memcpy(NODE_CHARDATA(newnode),
                NODE_CHARDATA(node) + (ind * src->datasize),
-               newnode->N * src->datasize);
+               (size_t)newnode->N * (size_t)src->datasize);
         node->N -= (node->N - ind);
         node->next = NULL;
         src->tail = node;
@@ -234,7 +234,7 @@ static void bl_remove_from_node(bl* list, bl_node* node,
         if (ncopy > 0) {
             memmove(NODE_CHARDATA(node) + index_in_node * list->datasize,
                     NODE_CHARDATA(node) + (index_in_node+1) * list->datasize,
-                    ncopy * list->datasize);
+                    (size_t)ncopy * (size_t)list->datasize);
         }
         node->N--;
     }
@@ -391,7 +391,7 @@ void bl_append_list(bl* list1, bl* list2) {
 static bl_node* bl_new_node(bl* list) {
     bl_node* rtn;
     // merge the mallocs for the node and its data into one malloc.
-    rtn = malloc(sizeof(bl_node) + list->datasize * list->blocksize);
+    rtn = malloc(sizeof(bl_node) + (size_t)list->datasize * (size_t)list->blocksize);
     if (!rtn) {
         printf("Couldn't allocate memory for a bl node!\n");
         return NULL;
@@ -620,7 +620,7 @@ void bl_insert(bl* list, size_t index, const void* data) {
             // shift the existing elements up by one position...
             memmove(NODE_CHARDATA(next) + list->datasize,
                     NODE_CHARDATA(next),
-                    next->N * list->datasize);
+                    (size_t)next->N * (size_t)list->datasize);
             destnode = next;
         } else {
             // create and insert a new node.
@@ -642,7 +642,7 @@ void bl_insert(bl* list, size_t index, const void* data) {
             nshift = node->N - localindex - 1;
             memmove(NODE_CHARDATA(node) + (localindex+1) * list->datasize,
                     NODE_CHARDATA(node) + localindex * list->datasize,
-                    nshift * list->datasize);
+                    (size_t)nshift * (size_t)list->datasize);
             // insert the new element...
             memcpy(NODE_CHARDATA(node) + localindex * list->datasize, data, list->datasize);
         }
@@ -657,7 +657,7 @@ void bl_insert(bl* list, size_t index, const void* data) {
         nshift = node->N - localindex;
         memmove(NODE_CHARDATA(node) + (localindex+1) * list->datasize,
                 NODE_CHARDATA(node) + localindex * list->datasize,
-                nshift * list->datasize);
+                (size_t)nshift * (size_t)list->datasize);
         // insert...
         memcpy(NODE_CHARDATA(node) + localindex * list->datasize,
                data, list->datasize);

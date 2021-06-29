@@ -1065,8 +1065,8 @@ void onefield_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest) {
             tagcopy.name = strdup_safe(tag->name);
             tagcopy.units = strdup_safe(tag->units);
             if (tag->data) {
-                tagcopy.data = malloc(tag->Ndata * tag->itemsize);
-                memcpy(tagcopy.data, tag->data, tag->Ndata * tag->itemsize);
+                tagcopy.data = malloc((size_t)tag->Ndata * (size_t)tag->itemsize);
+                memcpy(tagcopy.data, tag->data, (size_t)tag->Ndata * (size_t)tag->itemsize);
             }
             bl_append(dest->tagalong, &tagcopy);
         }

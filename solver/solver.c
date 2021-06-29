@@ -836,7 +836,7 @@ void solver_run(solver_t* solver) {
          MIN(M_PI, arcsec2rad(field_diag * solver->funits_upper)) ...
          */
 
-        pquads = calloc(numxy * numxy, sizeof(pquad));
+        pquads = calloc((size_t)numxy * (size_t)numxy, sizeof(pquad));
 
         /* We maintain an array of "potential quads" (pquad) structs, where
          * each struct corresponds to one choice of stars A and B; the struct

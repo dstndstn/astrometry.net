@@ -470,7 +470,7 @@ static void print_results(kdtree_qres_t* res, int D) {
             if (res->results.any) {
                 printf(", pt [ ");
                 for (d=0; d<D; d++)
-                    printf("%g ", res->results.ETYPE[i*D + d]);
+                    printf("%g ", (double)res->results.ETYPE[i*D + d]);
                 printf("]");
             }
             printf("\n");
@@ -491,7 +491,7 @@ anbool resize_results(kdtree_qres_t* res, int newsize, int D,
     if (do_dists)
         res->sdists  = REALLOC(res->sdists , newsize * sizeof(double));
     if (do_points)
-        res->results.any = REALLOC(res->results.any, newsize * D * sizeof(etype));
+        res->results.any = REALLOC(res->results.any, (size_t)newsize * (size_t)D * sizeof(etype));
     res->inds = REALLOC(res->inds, newsize * sizeof(u32));
     if (newsize && (!res->results.any || (do_dists && !res->sdists) || !res->inds))
         SYSERROR("Failed to resize kdtree results arrays");
@@ -1421,7 +1421,7 @@ static void copy_data_double(const kdtree_t* kd, int start, int N,
     D = kd->ndim;
 #if DTYPE_DOUBLE
     //#warning "Data type is double; just copying data."
-    memcpy(dest, kd->data.DTYPE + start*D, N*D*sizeof(etype));
+    memcpy(dest, kd->data.DTYPE + start*D, (size_t)N*(size_t)D*sizeof(etype));
 #elif (!DTYPE_INTEGER && !ETYPE_INTEGER)
     //#warning "Etype and Dtype are both reals; just casting values."
     for (i=0; i<(N * D); i++)
@@ -2062,9 +2062,11 @@ static void convert_data(kdtree_t* kd, etype* edata, int N, int D, int Nleaf) {
             }
             // Right place for this?  Not really....
             if (!ETYPE_INTEGER) {
+                // to avoid compiler warnings about int types, even though this will never happen at runtime.
+                double ddd = (double)dd;
                 // NaN and Inf detection...
-                if (!isfinite(dd) || isnan(dd)) {
-                    WARNING("Replacing inf/nan value (element %i,%i) = %g with %g\n", i, d, (double)dd, (double)DTYPE_MAX);
+                if (!isfinite(ddd) || isnan(ddd)) {
+                    WARNING("Replacing inf/nan value (element %i,%i) = %g with %g\n", i, d, ddd, (double)DTYPE_MAX);
                     dd = DTYPE_MAX;
                 }
             }
@@ -2194,8 +2196,10 @@ kdtree_t* MANGLE(kdtree_build_2)
                 for (i=0; i<N; i++) {
                     for (d=0; d<D; d++) {
                         etype dd = edata[i*D + d];
+                        // to avoid compiler warnings about int types, even though this will never happen at runtime.
+                        double ddd = (double)dd;
                         // NaN and Inf detection...
-                        if (!isfinite(dd) || isnan(dd)) {
+                        if (!isfinite(ddd) || isnan(ddd)) {
                             WARNING("Replacing inf/nan value (element %i,%i) = %g with %g\n", i, d, (double)dd, (double)DTYPE_MAX);
                             edata[i*D + d] = DTYPE_MAX;
                         }
@@ -2234,17 +2238,17 @@ kdtree_t* MANGLE(kdtree_build_2)
     assert(kd->lr);
 
     if (options & KD_BUILD_BBOX) {
-        kd->bb.any = MALLOC(kd->nnodes * 2 * D * sizeof(ttype));
+        kd->bb.any = MALLOC((size_t)kd->nnodes * (size_t)2 * (size_t)D * sizeof(ttype));
         kd->n_bb = kd->nnodes;
         assert(kd->bb.any);
     }
     if (options & KD_BUILD_SPLIT) {
-        kd->split.any = MALLOC(kd->ninterior * sizeof(ttype));
+        kd->split.any = MALLOC((size_t)kd->ninterior * sizeof(ttype));
         assert(kd->split.any);
     }
     if (((options & KD_BUILD_SPLIT) && !TTYPE_INTEGER) ||
         (options & KD_BUILD_SPLITDIM)) {
-        kd->splitdim = MALLOC(kd->ninterior * sizeof(u8));
+        kd->splitdim = MALLOC((size_t)kd->ninterior * sizeof(u8));
         kd->splitmask = UINT32_MAX;
         kd->dimmask = 0;
     } else if (options & KD_BUILD_SPLIT)

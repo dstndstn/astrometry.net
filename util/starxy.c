@@ -141,14 +141,14 @@ void starxy_free(starxy_t* f) {
 }
 
 double* starxy_copy_x(const starxy_t* xy) {
-    double* res = malloc(sizeof(double) * starxy_n(xy));
-    memcpy(res, xy->x, sizeof(double) * starxy_n(xy));
+    double* res = malloc(sizeof(double) * (size_t)starxy_n(xy));
+    memcpy(res, xy->x, sizeof(double) * (size_t)starxy_n(xy));
     return res;
 }
 
 double* starxy_copy_y(const starxy_t* xy) {
-    double* res = malloc(sizeof(double) * starxy_n(xy));
-    memcpy(res, xy->y, sizeof(double) * starxy_n(xy));
+    double* res = malloc(sizeof(double) * (size_t)starxy_n(xy));
+    memcpy(res, xy->y, sizeof(double) * (size_t)starxy_n(xy));
     return res;
 }
 
@@ -201,11 +201,11 @@ void starxy_alloc_data(starxy_t* f, int N, anbool flux, anbool back) {
     f->x = malloc(N * sizeof(double));
     f->y = malloc(N * sizeof(double));
     if (flux)
-        f->flux = malloc(N * sizeof(double));
+        f->flux = malloc((size_t)N * sizeof(double));
     else
         f->flux = NULL;
     if (back)
-        f->background = malloc(N * sizeof(double));
+        f->background = malloc((size_t)N * sizeof(double));
     else
         f->background = NULL;
     f->N = N;
@@ -220,7 +220,7 @@ double* starxy_to_flat_array(starxy_t* xy, double* arr) {
         nr++;
 
     if (!arr)
-        arr = malloc(nr * starxy_n(xy) * sizeof(double));
+        arr = malloc((size_t)nr * (size_t)starxy_n(xy) * sizeof(double));
 
     ind = 0;
     for (i=0; i<xy->N; i++) {
@@ -243,7 +243,7 @@ double* starxy_to_flat_array(starxy_t* xy, double* arr) {
 double* starxy_to_xy_array(starxy_t* xy, double* arr) {
     int i;
     if (!arr)
-        arr = malloc(2 * starxy_n(xy) * sizeof(double));
+        arr = malloc((size_t)2 * (size_t)starxy_n(xy) * sizeof(double));
     for (i=0; i<starxy_n(xy); i++) {
         arr[2*i]   = xy->x[i];
         arr[2*i+1] = xy->y[i];

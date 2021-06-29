@@ -83,6 +83,8 @@ static int get_tree_size(int treetype) {
         return sizeof(double);
     case KDT_TREE_FLOAT:
         return sizeof(float);
+    case KDT_TREE_U64:
+        return sizeof(uint64_t);
     case KDT_TREE_U32:
         return sizeof(u32);
     case KDT_TREE_U16:
@@ -96,6 +98,8 @@ static int get_data_size(int treetype) {
         return sizeof(double);
     case KDT_DATA_FLOAT:
         return sizeof(float);
+    case KDT_DATA_U64:
+        return sizeof(uint64_t);
     case KDT_DATA_U32:
         return sizeof(u32);
     case KDT_DATA_U16:
@@ -113,11 +117,11 @@ size_t kdtree_sizeof_perm(const kdtree_t* kd) {
 }
 
 size_t kdtree_sizeof_bb(const kdtree_t* kd) {
-    return get_tree_size(kd->treetype) * kd->ndim * kd->nnodes;
+    return (size_t)get_tree_size(kd->treetype) * (size_t)kd->ndim * (size_t)kd->nnodes;
 }
 
 size_t kdtree_sizeof_split(const kdtree_t* kd) {
-    return get_tree_size(kd->treetype) * kd->ninterior;
+    return (size_t)get_tree_size(kd->treetype) * (size_t)kd->ninterior;
 }
 
 size_t kdtree_sizeof_splitdim(const kdtree_t* kd) {
@@ -125,7 +129,7 @@ size_t kdtree_sizeof_splitdim(const kdtree_t* kd) {
 }
 
 size_t kdtree_sizeof_data(const kdtree_t* kd) {
-    return get_data_size(kd->treetype) * kd->ndim * kd->ndata;
+    return (size_t)get_data_size(kd->treetype) * (size_t)kd->ndim * (size_t)kd->ndata;
 }
 
 void kdtree_memory_report(kdtree_t* kd) {
@@ -207,21 +211,18 @@ int kdtree_get_level(const kdtree_t* kd, int nodeid) {
 }
 
 int kdtree_get_splitdim(const kdtree_t* kd, int nodeid) {
-    u32 tmpsplit;
     if (kd->splitdim)
         return kd->splitdim[nodeid];
 
     switch (kdtree_treetype(kd)) {
+    case KDT_TREE_U64:
+        return kd->split.l[nodeid] & kd->dimmask;
     case KDT_TREE_U32:
-        tmpsplit = kd->split.u[nodeid];
-        break;
+        return kd->split.u[nodeid] & kd->dimmask;
     case KDT_TREE_U16:
-        tmpsplit = kd->split.s[nodeid];
-        break;
-    default:
-        return -1;
+        return kd->split.s[nodeid] & kd->dimmask;
     }
-    return tmpsplit & kd->dimmask;
+    return -1;
 }
 
 double kdtree_get_splitval(const kdtree_t* kd, int nodeid) {
@@ -235,6 +236,8 @@ void* kdtree_get_data(const kdtree_t* kd, int i) {
         return kd->data.d + kd->ndim * i;
     case KDT_DATA_FLOAT:
         return kd->data.f + kd->ndim * i;
+    case KDT_DATA_U64:
+        return kd->data.l + kd->ndim * i;
     case KDT_DATA_U32:
         return kd->data.u + kd->ndim * i;
     case KDT_DATA_U16:
@@ -252,11 +255,16 @@ void kdtree_copy_data_double(const kdtree_t* kd, int start, int N, double* dest)
     switch (kdtree_datatype(kd)) {
     case KDT_DATA_DOUBLE:
         memcpy(dest, kd->data.d + start*D,
-               N * D * sizeof(double));
+               (size_t)N * (size_t)D * sizeof(double));
         break;
     case KDT_DATA_FLOAT:
         for (i=0; i<(N * D); i++)
             dest[i] = kd->data.f[start*D + i];
+        break;
+    case KDT_DATA_U64:
+        for (i=0; i<(N*D); i++)
+            // ??
+            dest[i] = kd->data.l[start*D + i];
         break;
     case KDT_DATA_U32:
         for (i=0; i<N; i++)
@@ -315,6 +323,10 @@ const char* kdtree_kdtype_to_string(int kdtype) {
     case KDT_TREE_FLOAT:
     case KDT_EXT_FLOAT:
         return "float";
+    case KDT_EXT_U64:
+    case KDT_DATA_U64:
+    case KDT_TREE_U64:
+        return "u64";
     case KDT_DATA_U32:
     case KDT_TREE_U32:
         return "u32";
@@ -332,6 +344,8 @@ int kdtree_kdtype_parse_data_string(const char* str) {
         return KDT_DATA_DOUBLE;
     } else if (!strcmp(str, "float")) {
         return KDT_DATA_FLOAT;
+    } else if (!strcmp(str, "u64")) {
+        return KDT_DATA_U64;
     } else if (!strcmp(str, "u32")) {
         return KDT_DATA_U32;
     } else if (!strcmp(str, "u16")) {
@@ -346,6 +360,8 @@ int kdtree_kdtype_parse_tree_string(const char* str) {
         return KDT_TREE_DOUBLE;
     } else if (!strcmp(str, "float")) {
         return KDT_TREE_FLOAT;
+    } else if (!strcmp(str, "u64")) {
+        return KDT_TREE_U64;
     } else if (!strcmp(str, "u32")) {
         return KDT_TREE_U32;
     } else if (!strcmp(str, "u16")) {
@@ -360,6 +376,8 @@ int kdtree_kdtype_parse_ext_string(const char* str) {
         return KDT_EXT_DOUBLE;
     } else if (!strcmp(str, "float")) {
         return KDT_EXT_FLOAT;
+    } else if (!strcmp(str, "u64")) {
+        return KDT_EXT_U64;
     } else
         return KDT_EXT_NULL;
 }

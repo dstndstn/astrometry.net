@@ -338,7 +338,7 @@ static void verify_apply_ror(verify_t* v,
 
         if (binids) {
             assert(uni_nw);
-            goodbins = malloc(uni_nw * uni_nh * sizeof(anbool));
+            goodbins = malloc((size_t)uni_nw * (size_t)uni_nh * sizeof(anbool));
             Ngoodbins = 0;
             for (i=0; i<(uni_nw * uni_nh); i++) {
                 double binr2 = distsq(bincenters + 2*i, qc, 2);
@@ -931,11 +931,11 @@ void verify_uniformize_field(const double* xy,
     int* binids = NULL;
 
     if (p_binids) {
-        binids = malloc(N * sizeof(int));
+        binids = malloc((size_t)N * sizeof(int));
         *p_binids = binids;
     }
 
-    lists = malloc(nw * nh * sizeof(il*));
+    lists = malloc((size_t)nw * (size_t)nh * sizeof(il*));
     for (i=0; i<(nw*nh); i++)
         lists[i] = il_new(16);
 
@@ -953,7 +953,7 @@ void verify_uniformize_field(const double* xy,
 
     if (p_bincounts) {
         // note the bin occupancies.
-        bincounts = malloc(nw * nh * sizeof(int));
+        bincounts = malloc((size_t)nw * (size_t)nh * sizeof(int));
         for (i=0; i<(nw*nh); i++) {
             bincounts[i] = il_size(lists[i]);
             //logverb("bin %i has %i stars\n", i, bincounts[i]);
@@ -989,7 +989,7 @@ void verify_uniformize_field(const double* xy,
 double* verify_uniformize_bin_centers(double fieldW, double fieldH,
                                       int nw, int nh) {
     int i,j;
-    double* bxy = malloc(nw * nh * 2 * sizeof(double));
+    double* bxy = malloc((size_t)nw * (size_t)nh * (size_t)2 * sizeof(double));
     for (j=0; j<nh; j++)
         for (i=0; i<nw; i++) {
             bxy[(j * nw + i)*2 +0] = (i + 0.5) * fieldW / (double)nw;

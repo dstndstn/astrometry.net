@@ -587,7 +587,7 @@ char * qfits_memory_falloc(
         /* Check offset request does not go past end of file */
         if (offs>=(size_t)sta.st_size) {
 			qfits_warning("qfits_memory_falloc(%s:%i): offset request exceeds file size (%zu > %zu) for file \"%s\"\n",
-						  srcname, srclin, offs, (size_t)sta.st_size);
+                                      srcname, srclin, offs, (size_t)sta.st_size, name);
             if (QFITS_MEMORY_MODE == 0) return NULL;
             else exit(1);
         }

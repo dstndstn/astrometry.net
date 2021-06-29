@@ -3,11 +3,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE
 */
 
-typedef u16 etype;
+typedef u64 etype;
 
 #define ETYPE_INTEGER 1
 
-#define ETYPE_MAX  0xffffu
+#define ETYPE_MAX  UINT64_MAX
 #define ETYPE_MIN  0
 
-#define ETYPE s
+#define ETYPE l

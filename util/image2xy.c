@@ -23,7 +23,7 @@
 static float* upconvert(unsigned char* u8,
                         int nx, int ny) {
     int i;
-    float* f = malloc(nx * ny * sizeof(float));
+    float* f = malloc((size_t)nx * (size_t)ny * sizeof(float));
     if (!f) {
         SYSERROR("Failed to allocate image array to upconvert u8 image to floating-point.");
         return NULL;

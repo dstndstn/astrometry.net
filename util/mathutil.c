@@ -92,7 +92,7 @@ float* average_weighted_image_f(const float* image, const float* weight,
     if (get_output_image_size(W, H, S, edgehandling, &outw, &outh))
         return NULL;
     if (output == NULL) {
-        output = malloc(outw * outh * sizeof(float));
+        output = malloc((size_t)outw * (size_t)outh * sizeof(float));
         if (!output) {
             SYSERROR("Failed to allocate %i x %i floats", outw, outh);
             return NULL;

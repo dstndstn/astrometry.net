@@ -186,19 +186,18 @@ static long qfits_time_now(void)
 /*----------------------------------------------------------------------------*/
 static long timer_to_date(time_t time_secs)
 {
-    struct tm *time_struct;
+    struct tm time_struct;
 
     if (time_secs == 0) {
         return 0;
     } else {
         /*  Convert into a long value CCYYMMDD */
-        time_struct = localtime (&time_secs);
-        if (time_struct) {
-            time_struct-> tm_year += 1900;
-            return (MAKE_DATE (    time_struct-> tm_year / 100,
-                                time_struct-> tm_year % 100,
-                                time_struct-> tm_mon + 1,
-                                time_struct-> tm_mday));
+        if (localtime_r (&time_secs, &time_struct)) {
+            time_struct.tm_year += 1900;
+            return (MAKE_DATE ( time_struct.tm_year / 100,
+                                time_struct.tm_year % 100,
+                                time_struct.tm_mon + 1,
+                                time_struct.tm_mday));
         } else {
             return (19700101);
         }
@@ -220,17 +219,16 @@ static long timer_to_date(time_t time_secs)
 /*----------------------------------------------------------------------------*/
 static long timer_to_time(time_t time_secs)
 {
-    struct tm *time_struct;
+    struct tm time_struct;
 
     if (time_secs == 0) {
         return 0;
     } else {
         /*  Convert into a long value HHMMSS00 */
-        time_struct = localtime (&time_secs);
-        if (time_struct) {
-            return (MAKE_TIME (time_struct-> tm_hour,
-                               time_struct-> tm_min,
-                               time_struct-> tm_sec,
+        if (localtime_r (&time_secs, &time_struct)) {
+            return (MAKE_TIME (time_struct.tm_hour,
+                               time_struct.tm_min,
+                               time_struct.tm_sec,
                                0));
         } else {
             return 0;

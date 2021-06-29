@@ -159,7 +159,7 @@ def get_annotations_for_wcs(wcs, opt):
             nb += 1
             if opt.nbright and nb >= opt.nbright:
                 break
-            
+
     jobjs = []
     for ann in anns:
         r,d,typ,names = ann[:4]
@@ -314,7 +314,6 @@ if __name__ == '__main__':
         wcs = anwcs(wcsfn,0)
         jobjs = get_annotations_for_wcs(wcs, opt)
         import json
-        print(jobjs)
         j = json.dumps(jobjs)
         print(j)
         sys.exit(0)

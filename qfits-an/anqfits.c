@@ -925,7 +925,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
                     found_it = 1;
                     qf->exts[qf->Nexts].hdr_start = n_blocks-1;
                 } else {
-                    qfits_warning("Failed to find XTENSION in the FITS block following the previous data block -- whaddup?  Filename %s, block %i, hdu %i",
+                    qfits_warning("Failed to find XTENSION in the FITS block following the previous data block -- whaddup?  Filename %s, block %zi, hdu %i",
                                   filename, n_blocks, qf->Nexts-1);
                 }
                 // FIXME -- should we really just skip the block if we don't find the "XTENSION=" header?
@@ -1117,22 +1117,22 @@ void* anqfits_readpix(const anqfits_t* qf, int ext,
 
     if (x0) {
         if ((x0 < 0) || (x1 && (x0 >= x1)) || (x0 >= img->width)) {
-            qfits_error("Invalid x0=%i not in [0, x1=%i <= W=%i) reading %s ext %i",
+            qfits_error("Invalid x0=%i not in [0, x1=%i <= W=%zi) reading %s ext %i",
                         x0, x1, img->width, qf->filename, ext);
             return NULL;
         }
     }
     if (y0) {
         if ((y0 < 0) || (y1 && (y0 >= y1)) || (y0 >= img->height)) {
-            qfits_error("Invalid y0=%i not in [0, y1=%i <= W=%i) reading %s ext %i",
+            qfits_error("Invalid y0=%i not in [0, y1=%i <= W=%zi) reading %s ext %i",
                         y0, y1, img->height, qf->filename, ext);
             return NULL;
         }
     }
     if (x1) {
         if ((x1 < 0) || (x1 <= x0) || (x1 > img->width)) {
-            qfits_error("Invalid x1=%i not in [0, x0=%i, W=%i) reading %s ext %i",
-                        x1, x0, img->width);
+            qfits_error("Invalid x1=%i not in [0, x0=%i, W=%zi) reading %s ext %i",
+                        x1, x0, img->width, qf->filename, ext);
             return NULL;
         }
     } else {
@@ -1140,8 +1140,8 @@ void* anqfits_readpix(const anqfits_t* qf, int ext,
     }
     if (y1) {
         if ((y1 < 0) || (y1 <= y0) || (y1 > img->height)) {
-            qfits_error("Invalid y1=%i not in [0, y0=%i, H=%i) reading %s ext %i",
-                        y1, y0, img->height);
+            qfits_error("Invalid y1=%i not in [0, y0=%i, H=%zi) reading %s ext %i",
+                        y1, y0, img->height, qf->filename, ext);
             return NULL;
         }
     } else {
@@ -1149,7 +1149,7 @@ void* anqfits_readpix(const anqfits_t* qf, int ext,
     }
 
     if ((plane < 0) || (plane >= img->planes)) {
-        qfits_error("Plane %i not in [0, %i) reading %s ext %i\n",
+        qfits_error("Plane %i not in [0, %zi) reading %s ext %i\n",
                     plane, img->planes, qf->filename, ext);
         return NULL;
     }

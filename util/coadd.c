@@ -27,8 +27,8 @@ coadd_t* coadd_new_from_wcs(anwcs_t* wcs) {
 
 coadd_t* coadd_new(int W, int H) {
     coadd_t* ca = calloc(1, sizeof(coadd_t));
-    ca->img = calloc(W * H, sizeof(number));
-    ca->weight = calloc(W * H, sizeof(number));
+    ca->img = calloc((size_t)W * (size_t)H, sizeof(number));
+    ca->weight = calloc((size_t)W * (size_t)H, sizeof(number));
     ca->W = W;
     ca->H = H;
     ca->resample_func = nearest_resample_f;
@@ -158,7 +158,7 @@ number* coadd_get_snapshot(coadd_t* co, number* outimg,
                            number badpix) {
     int i;
     if (!outimg)
-	outimg = calloc(co->W * co->H, sizeof(number));
+	outimg = calloc((size_t)co->W * (size_t)co->H, sizeof(number));
 
     for (i=0; i<(co->W * co->H); i++) {
         if (co->weight[i] == 0)
@@ -190,7 +190,7 @@ void coadd_free(coadd_t* ca) {
 number* coadd_create_weight_image_from_range(const number* img, int W, int H,
                                              number lowval, number highval) {
     int i;
-    number* weight = malloc(W*H*sizeof(number));
+    number* weight = malloc((size_t)W*(size_t)H*sizeof(number));
     for (i=0; i<(W*H); i++) {
         if (img[i] <= lowval)
             weight[i] = 0;
