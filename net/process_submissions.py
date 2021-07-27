@@ -183,14 +183,17 @@ def try_dojob(job, userimage, solve_command, solve_locally):
         print('errno.EMFILE:', errno.EMFILE)
         if e.errno == errno.EMFILE:
             print('Too many open files -- exiting!')
-            sys.exit(-1)
+            #sys.exit(-1)
+            ## Want to stop the main process, not just this pool worker process
+            raise e
     except IOError as e:
         import errno
         print('Caught IOError')
         print('Errno:', e.errno)
         if e.errno == errno.EMFILE:
             print('Too many open files!')
-            sys.exit(-1)
+            ##sys.exit(-1)
+            raise e
     except:
         print('Caught exception while processing Job', job)
         traceback.print_exc(None, sys.stdout)
@@ -252,6 +255,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None,
         '--dec': sub.center_dec,
         '--radius': sub.radius,
         '--downsample': sub.downsample_factor,
+        '--objs': 1000,
         # tuning-up maybe fixed; if not, turn it off with:
         #'--odds-to-tune': 1e9,
 
@@ -745,7 +749,9 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
 
     # exit after a day
     maxtime = 3600 * 24
-
+    # force quit after this much extra time (10 mins)
+    extratime = 600
+    
     t_start = time.time()
     
     dojob_pool = None
@@ -804,13 +810,13 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
         if newsubs.count():
             print('Found', newsubs.count(), 'unstarted Submissions:', [s.id for s in newsubs])
 
-        #print('Checking for UserImages without Jobs')
+        print('Checking for UserImages without Jobs')
         all_user_images = UserImage.objects.annotate(job_count=Count('jobs'))
         newuis = all_user_images.filter(job_count=0)
         if newuis.count():
             #print('Found', len(newuis), 'UserImages without Jobs:', [u.id for u in newuis])
             #print('Found', len(newuis), 'UserImages without Jobs.')
-            print('Jobs queued:', len(newuis))
+            print('Jobs need to be started for', len(newuis), 'UserImages')
 
         runsubs = me.subs.filter(finished=False)
         if subresults != lastsubs:
@@ -867,9 +873,14 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             if len(jobresults) == 0:
                 print('Timed out -- exiting.')
                 break
-                
+
+            if t_now > (maxtime + extratime):
+                print('Timed out + extra time -- force quit.')
+                break
+
             print('Timed out -- not launching new jobs, waiting for',
                   len(jobresults), 'jobs to finish')
+            time.sleep(refresh_rate)
             continue
 
         if (len(newsubs) + len(newuis)) == 0:
@@ -940,6 +951,8 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             job = Job(user_image=userimage)
             job.set_queued_time()
             job.save()
+            userimage.has_job = True
+            userimage.save()
 
             qj = QueuedJob(procsub=me, job=job)
             qj.save()

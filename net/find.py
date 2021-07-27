@@ -254,6 +254,8 @@ def main():
             for ui in uis:
                 ui.user = newuser
                 ui.save()
+            sub.user = newuser
+            sub.save()
 
         if opt.rerun:
             from process_submissions import try_dosub, dosub

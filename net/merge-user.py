@@ -15,18 +15,24 @@ from django.contrib.auth.models import User
 #users = User.objects.filter(email__contains='godard')
 #users = User.objects.filter(id=298)
 #users = User.objects.filter(id__in=[5617, 10007])
-users = User.objects.filter(email__icontains='myneni')
+#users = User.objects.filter(id__in=[6143, 22881])
+
+#bestuser = User.objects.get(id=26255)
+#u = bestuser
+#nsub = u.submissions.count()
+#print('  User', u.id, 'has', nsub, 'Submissions')
 
 print(users.count(), 'Users match')
-bestuser = None
-nmax = 0
-for u in users:
-    nsub = u.submissions.count()
-    print('  User', u.id, 'has', nsub, 'Submissions')
-    if nsub > nmax:
-        bestuser = u
-        nmax = nsub
-    print('  API key', u.profile.apikey)
+if True:
+    bestuser = None
+    nmax = 0
+    for u in users:
+        nsub = u.submissions.count()
+        print('  User', u.id, 'has', nsub, 'Submissions')
+        if nsub > nmax:
+            bestuser = u
+            nmax = nsub
+        print('  API key', u.profile.apikey)
 
 #sys.exit(0)
         
