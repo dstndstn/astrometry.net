@@ -52,48 +52,43 @@ static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
      seem worse.
      */
 
-    //static const int L = 5;
+    // L must be defined before including this file; L=3 or L=5 in practice.
+
     // Nlutunit is number of bins per unit x
-    //static const int Nlutunit = 1024;
-    static const int Nlutunit = 2048;
-    static const double lut0 = -(L + 0.5); //-5.5; //-(L+0.5);
-    static const int Nunits = 2*(L+1); //12; //2*(L+1);
-    //static const int Nlut = Nunits * Nlutunit;
-    //static float lut[24576];
-    //static float lut[Nunits*Nlutunit];
-    // HACK -- 2048 here == Nlutunit... some versions of gcc don't believe Nunits*Nlutunit is constant
-    static float lut[2*(L+1)*2048];
+    static const int Nlutunit = 1024;
+    static float lut[2*(L+1)*(1024+1)];
+    // HACK -- we repeat the constant here because some versions of gcc don't believe Nunits*Nlutunit is constant
+
+    static const double lut0 = -(L + 0.5);
+    static const int Nunits = 2*(L+1);
     static int initialized = 0;
 
     if (!initialized) {
         // this table has the elements you need to use together
         // stored together: L(x[0]), L(x[0]+1), L(x[0]+2), ...;
         // L(x[1]), L(x[1]+1), L(x[2]+2), ...
-        for (i=0; i<Nlutunit; i++) {
+        for (i=0; i<=Nlutunit; i++) {
             double x,f;
             double acc = 0.;
-            x = (lut0 + ((i+0.5) / (double)Nlutunit));
+            x = lut0 + i / (double)(Nlutunit);
             for (j=0; j<Nunits; j++, x+=1.0) {
-                if (x <= -L || x >= L) {
-                    f = 0.0;
-                } else if (x == 0) {
-                    f = 1.0;
-                } else {
-                    f = L * sin(M_PI * x) * sin(M_PI / L * x) / 
-                        (M_PI * M_PI * x * x);
-                }
+                f = lanczos_kernel(L, x);
                 lut[i * Nunits + j] = f;
                 acc += f;
             }
             lut[i*Nunits + Nunits-1] = acc;
-            //printf("acc: %f\n", acc);
         }
-        /*
-         for (i=0; i<Nlut; i++) {
-         printf("lut[% 4li] = %f\n", i, lut[i]);
-         }
-         */
         initialized = 1;
+        /* Print JSON
+         printf("{ \"lut\": [\n");
+         for (i=0; i<=Nlutunit; i++) {
+         printf("%s[", i?",\n":"");
+         for (j=0; j<Nunits; j++)
+         printf("%s%f", j?",":"", lut[i*Nunits+j]);
+         printf("]");
+         }
+         printf("] }\n");
+         */
     }
 
     // CheckFromAny steals the dtype reference
@@ -170,11 +165,20 @@ static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
             float nacc;
             const float* ly;
             int ix,iy;
-            tx0 = (int)((-(dx[j]+L) - lut0) * Nlutunit);
-            ty0 = (int)((-(dy[j]+L) - lut0) * Nlutunit);
+            float fx,fy, rx, ry;
+            float k;
+            float slope, slopey;
+            fx = (-(dx[j]+L) - lut0) * (Nlutunit);
+            fy = (-(dy[j]+L) - lut0) * (Nlutunit);
+            tx0 = (int)fx;
+            ty0 = (int)fy;
             // clip
             tx0 = MAX(0, MIN(Nlutunit-1, tx0));
             ty0 = MAX(0, MIN(Nlutunit-1, ty0));
+            // what fraction of the way through the bin are we?
+            rx = fx - tx0;
+            ry = fy - ty0;
+
             tx0 *= Nunits;
             ty0 *= Nunits;
             ly = lut + ty0;
@@ -193,15 +197,16 @@ static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
                     // Lanczos kernel in x direction
                     for (u=0; u<2*L+1; u++, ix++, lx++) {
                         int clipix = MAX(0, MIN((int)(W-1), ix));
-                        accx  += (*lx) * (inpix[clipix]);
+                        slope = lx[Nunits] - (*lx);
+                        accx  += ((*lx) + slope*rx) * (inpix[clipix]);
                     }
-                    acc  += (*ly) * accx;
+                    slope = ly[Nunits] - (*ly);
+                    acc  += ((*ly) + slope*ry) * accx;
                 }
             } else {
                 iy -= L;
                 // Lanczos kernel in y direction
-                for (v=0; v<2*L+1; v++,
-                         iy++, ly++) {
+                for (v=0; v<2*L+1; v++, iy++, ly++) {
                     float accx = 0;
                     int ix = *ixi - L;
                     const float* lx = lut + tx0;
@@ -209,12 +214,18 @@ static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
                     // Lanczos kernel in x direction
                     for (u=0; u<2*L+1; u++,
                              lx++, inpix++) {
-                        accx  += (*lx) * (*inpix);
+                        slope = lx[Nunits] - (*lx);
+                        accx  += ((*lx) + slope*rx) * (*inpix);
                     }
-                    acc  += (*ly) * accx;
+                    slope = ly[Nunits] - (*ly);
+                    acc  += ((*ly) + slope*ry) * accx;
                 }
             }
-            nacc = lut[tx0 + Nunits-1] * lut[ty0 + Nunits-1];
+            // Compute the slope across the X,Y normalizers as well.
+            slope = lut[tx0 + Nunits-1 + Nunits] - lut[tx0 + Nunits-1];
+            slopey = lut[ty0 + Nunits-1 + Nunits] - lut[ty0 + Nunits-1];
+            nacc = ((lut[tx0 + Nunits-1] + slope  * rx) *
+                    (lut[ty0 + Nunits-1] + slopey * ry));
             *outimg = acc / nacc;
         }
         Py_DECREF(np_inimg);

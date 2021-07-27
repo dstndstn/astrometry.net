@@ -495,6 +495,15 @@ void log_set_level(int lvl);
         return 0;
     }
 
+    static double lanczos_kernel(int L, double x) {
+        if (x <= -L || x >= L)
+            return 0.0;
+        if (x == 0)
+            return 1.0;
+        return L * sin(M_PI * x) * sin(M_PI / L * x) /
+            (M_PI * M_PI * x * x);
+    }
+
     #define LANCZOS_INTERP_FUNC lanczos5_interpolate
     #define L 5
         static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
