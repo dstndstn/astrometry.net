@@ -166,7 +166,6 @@ static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
             const float* ly;
             int ix,iy;
             float fx,fy, rx, ry;
-            float k;
             float slope, slopey;
             fx = (-(dx[j]+L) - lut0) * (Nlutunit);
             fy = (-(dy[j]+L) - lut0) * (Nlutunit);
