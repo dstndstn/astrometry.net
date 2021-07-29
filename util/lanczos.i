@@ -163,7 +163,7 @@ static float GLUE(lanczos_resample_one_, L)
         // Lanczos kernel in y direction
         for (v=0; v<2*L+1; v++, iy++, ly++) {
             const float* lx = lut + tx0;
-            const float* inpix = inimg + iy * W + ix;
+            const float* inpix = inimg + iy * W + ix - L;
             accx = 0;
             // Lanczos kernel in x direction
             for (u=0; u<2*L+1; u++, lx++, inpix++) {
