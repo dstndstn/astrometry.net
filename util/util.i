@@ -495,34 +495,29 @@ void log_set_level(int lvl);
         return 0;
     }
 
-    #define LANCZOS_INTERP_FUNC lanczos5_interpolate
-    #define LANCZOS_INTERP_GRID lanczos5_interpolate_grid
-    #define L 5
-    static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
-                                   PyObject* np_dx, PyObject* np_dy,
-                                   PyObject* loutputs, PyObject* linputs);
-    static PyObject* LANCZOS_INTERP_GRID(float x0, float xstep,
-                                         float y0, float ystep,
-                                         PyObject* output_img, PyObject* input_img);
-    #include "lanczos.i"
+#define L 5
 
-    #undef LANCZOS_INTERP_FUNC
-    #undef LANCZOS_INTERP_GRID
-    #undef L
+    static int lanczos5_interpolate(PyObject* np_ixi, PyObject* np_iyi,
+                                    PyObject* np_dx, PyObject* np_dy,
+                                    PyObject* loutputs, PyObject* linputs);
+    static PyObject* lanczos5_interpolate_grid(float x0, float xstep,
+                                               float y0, float ystep,
+                                               PyObject* output_img,
+                                               PyObject* input_img);
+#include "lanczos.i"
+#undef L
 
-    #define LANCZOS_INTERP_FUNC lanczos3_interpolate
-    #define LANCZOS_INTERP_GRID lanczos3_interpolate_grid
-    #define L 3
-    static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
-                                   PyObject* np_dx, PyObject* np_dy,
-                                   PyObject* loutputs, PyObject* linputs);
-    static PyObject* LANCZOS_INTERP_GRID(float x0, float xstep,
-                                         float y0, float ystep,
-                                         PyObject* output_img, PyObject* input_img);
-    #include "lanczos.i"
-    #undef LANCZOS_INTERP_FUNC
-    #undef LANCZOS_INTERP_GRID
-    #undef L
+#define L 3
+
+    static int lanczos3_interpolate(PyObject* np_ixi, PyObject* np_iyi,
+                                    PyObject* np_dx, PyObject* np_dy,
+                                    PyObject* loutputs, PyObject* linputs);
+    static PyObject* lanczos3_interpolate_grid(float x0, float xstep,
+                                               float y0, float ystep,
+                                               PyObject* output_img,
+                                               PyObject* input_img);
+#include "lanczos.i"
+#undef L
 
     static int lanczos5_filter(PyObject* py_dx, PyObject* py_f) {
         npy_intp N;

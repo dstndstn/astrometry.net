@@ -8,6 +8,9 @@
 // Preprocessor magic to glue together function names with L (3 or 5)
 #define MOREGLUE(x, y) x ## y
 #define GLUE(x, y) MOREGLUE(x, y)
+// and for 3 tokens
+#define MOREGLUE3(x, y, z) x ## y ## z
+#define GLUE3(x, y, z) MOREGLUE3(x, y, z)
 
 // lanczos_kernelf_[L]
 static
@@ -26,11 +29,7 @@ float GLUE(lanczos_kernelf_, L)(float x) {
 // NOTE that this is share across different L values.
 #ifndef LANCZOS_NLUT
 #define LANCZOS_NLUT 1024
-//static const int Nlutunit = 1024;
 #endif
-
-// HACK -- we repeat the constant here because some versions of gcc don't believe Nunits*Nlutunit is constant
-//static float (GLUE(lut_, L))[2*(L+1)*(1024+1)];
 
 // We add an extra row to LANCZOS_NLUT so that we can compute the
 // slope across each bin.
@@ -38,6 +37,7 @@ static float (GLUE(lut_, L))[2*(L+1)*(LANCZOS_NLUT+1)];
 // Have we initialized the Look-up Table?
 static int GLUE(lut_initialized_,L) = 0;
 
+// Init look-up table
 static void GLUE(lut_init_, L)() {
     if (GLUE(lut_initialized_,L))
         return;
@@ -122,15 +122,11 @@ static float GLUE(lanczos_resample_one_, L)
     int tx0, ty0;
 
     // float bin
-    //fx = (-(dx+L) - lut0) * Nlutunit;
-    //fy = (-(dy+L) - lut0) * Nlutunit;
     fx = (-(dx+L) - lut0) * LANCZOS_NLUT;
     fy = (-(dy+L) - lut0) * LANCZOS_NLUT;
     tx0 = (int)fx;
     ty0 = (int)fy;
     // clip int bins
-    //tx0 = MAX(0, MIN(Nlutunit-1, tx0));
-    //ty0 = MAX(0, MIN(Nlutunit-1, ty0));
     tx0 = MAX(0, MIN(LANCZOS_NLUT-1, tx0));
     ty0 = MAX(0, MIN(LANCZOS_NLUT-1, ty0));
     // what fraction of the way through the bin are we?
@@ -188,9 +184,10 @@ static float GLUE(lanczos_resample_one_, L)
 #define lanczos_resample_one GLUE(lanczos_resample_one_, L)
 
 
-static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
-                               PyObject* py_dx, PyObject* py_dy,
-                               PyObject* loutputs, PyObject* linputs) {
+static int GLUE3(lanczos, L, _interpolate)
+     (PyObject* py_ixi, PyObject* py_iyi,
+      PyObject* py_dx, PyObject* py_dy,
+      PyObject* loutputs, PyObject* linputs) {
     npy_intp W,H, N;
     npy_intp Nimages;
     npy_intp i, j;
@@ -287,9 +284,11 @@ static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
     return 0;
 }
 
-static PyObject* LANCZOS_INTERP_GRID(float x0, float xstep,
-                                     float y0, float ystep,
-                                     PyObject* output_img, PyObject* input_img) {
+static PyObject* GLUE3(lanczos, L, _interpolate_grid)
+     (float x0, float xstep,
+      float y0, float ystep,
+      PyObject* output_img,
+      PyObject* input_img) {
     PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
     int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
         NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
