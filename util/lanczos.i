@@ -184,7 +184,7 @@ static float GLUE(lanczos_resample_one_, L)
 #define lanczos_resample_one GLUE(lanczos_resample_one_, L)
 
 
-static int GLUE3(lanczos, L, _interpolate)
+static PyObject* GLUE3(lanczos, L, _interpolate)
      (PyObject* py_ixi, PyObject* py_iyi,
       PyObject* py_dx, PyObject* py_dy,
       PyObject* loutputs, PyObject* linputs) {
@@ -214,30 +214,30 @@ static int GLUE3(lanczos, L, _interpolate)
     np_dy  = (PyArrayObject*)PyArray_CheckFromAny(py_dy,  dtype, 1, 1, req, NULL);
     // dtype refcount = 1 (we use it more below)
     if (!np_ixi || !np_iyi) {
-        ERR("ixi,iyi arrays are wrong type / shape\n");
-        return -1;
+        PyErr_SetString(PyExc_ValueError, "ixi,iyi arrays are wrong type / shape");
+        return NULL;
     }
     if (!np_dx || !np_dy) {
-        ERR("dx,dy arrays are wrong type / shape\n");
-        return -1;
+        PyErr_SetString(PyExc_ValueError, "dx,dy arrays are wrong type / shape");
+        return NULL;
     }
     N = PyArray_DIM(np_ixi, 0);
     if ((PyArray_DIM(np_iyi, 0) != N) ||
         (PyArray_DIM(np_dx,  0) != N) ||
         (PyArray_DIM(np_dy,  0) != N)) {
-        ERR("ixi,iyi,dx,dy arrays must be same size\n");
-        return -1;
+        PyErr_SetString(PyExc_ValueError, "ixi,iyi,dx,dy arrays must be same size");
+        return NULL;
     }
 
     if (!PyList_Check(loutputs) ||
         !PyList_Check(linputs)) {
-        ERR("loutputs and linputs must be lists of np arrays\n");
-        return -1;
+        PyErr_SetString(PyExc_ValueError, "loutputs and linputs must be lists of np arrays");
+        return NULL;
     }
     Nimages = PyList_Size(loutputs);
     if (PyList_Size(linputs) != Nimages) {
-        ERR("loutputs and linputs must be same length\n");
-        return -1;
+        PyErr_SetString(PyExc_ValueError, "loutputs and linputs must be same length");
+        return NULL;
     }
 
     for (i=0; i<Nimages; i++) {
@@ -256,12 +256,12 @@ static int GLUE3(lanczos, L, _interpolate)
         np_inimg  = (PyArrayObject*)PyArray_CheckFromAny(PyList_GetItem(linputs,  i), dtype, 2, 2, req, NULL);
         np_outimg = (PyArrayObject*)PyArray_CheckFromAny(PyList_GetItem(loutputs, i), dtype, 1, 1, reqout, NULL);
         if (!np_inimg || !np_outimg) {
-            ERR("Failed to convert input and output images to right type/shape\n");
-            return -1;
+            PyErr_SetString(PyExc_ValueError, "Failed to convert input and output images to right type/shape");
+            return NULL;
         }
         if (PyArray_DIM(np_outimg, 0) != N) {
-            ERR("Output image must be same shape as ixo\n");
-            return -1;
+            PyErr_SetString(PyExc_ValueError, "Output image must be same shape as ixo");
+            return NULL;
         }
         H = PyArray_DIM(np_inimg, 0);
         W = PyArray_DIM(np_inimg, 1);
@@ -281,7 +281,7 @@ static int GLUE3(lanczos, L, _interpolate)
     Py_DECREF(np_iyi);
     Py_DECREF(np_dx);
     Py_DECREF(np_dy);
-    return 0;
+    Py_RETURN_NONE;
 }
 
 static PyObject* GLUE3(lanczos, L, _interpolate_grid)

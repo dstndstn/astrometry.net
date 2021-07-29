@@ -277,8 +277,8 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
 
         if cinterp:
             from astrometry.util.util import lanczos3_interpolate
-            rtn = lanczos3_interpolate(ixi, iyi, dx, dy, laccs,
-                                       [lim.astype(np.float32) for lim in Limages])
+            lanczos3_interpolate(ixi, iyi, dx, dy, laccs,
+                                 [lim.astype(np.float32) for lim in Limages])
         else:
             _lanczos_interpolate(L, ixi, iyi, dx, dy, laccs, Limages, table=table)
         rims = laccs

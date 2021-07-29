@@ -497,9 +497,9 @@ void log_set_level(int lvl);
 
 #define L 5
 
-    static int lanczos5_interpolate(PyObject* np_ixi, PyObject* np_iyi,
-                                    PyObject* np_dx, PyObject* np_dy,
-                                    PyObject* loutputs, PyObject* linputs);
+    static PyObject*lanczos5_interpolate(PyObject* np_ixi, PyObject* np_iyi,
+                                         PyObject* np_dx, PyObject* np_dy,
+                                         PyObject* loutputs, PyObject* linputs);
     static PyObject* lanczos5_interpolate_grid(float x0, float xstep,
                                                float y0, float ystep,
                                                PyObject* output_img,
@@ -509,9 +509,9 @@ void log_set_level(int lvl);
 
 #define L 3
 
-    static int lanczos3_interpolate(PyObject* np_ixi, PyObject* np_iyi,
-                                    PyObject* np_dx, PyObject* np_dy,
-                                    PyObject* loutputs, PyObject* linputs);
+    static PyObject* lanczos3_interpolate(PyObject* np_ixi, PyObject* np_iyi,
+                                          PyObject* np_dx, PyObject* np_dy,
+                                          PyObject* loutputs, PyObject* linputs);
     static PyObject* lanczos3_interpolate_grid(float x0, float xstep,
                                                float y0, float ystep,
                                                PyObject* output_img,
