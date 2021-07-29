@@ -2,6 +2,192 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
  */
+
+// L must be defined before including this file; L=3 or L=5 in practice.
+
+// Preprocessor magic to glue together function names with L (3 or 5)
+#define MOREGLUE(x, y) x ## y
+#define GLUE(x, y) MOREGLUE(x, y)
+
+// lanczos_kernelf_[L]
+static
+float GLUE(lanczos_kernelf_, L)(float x) {
+    static const float pif = M_PI;
+    static const float pi2f = M_PI * M_PI;
+    if (x <= -L || x >= L)
+        return 0.0;
+    if (x == 0)
+        return 1.0;
+    return L * sinf(pif * x) * sinf(pif / L * x) / (pi2f * x * x);
+}
+#define lanczos_kernelf(L, x) GLUE(lanczos_kernelf_, L)(x)
+
+// Nlutunit is number of bins per unit x
+// NOTE that this is share across different L values.
+#ifndef LANCZOS_NLUT
+#define LANCZOS_NLUT 1024
+//static const int Nlutunit = 1024;
+#endif
+
+// HACK -- we repeat the constant here because some versions of gcc don't believe Nunits*Nlutunit is constant
+//static float (GLUE(lut_, L))[2*(L+1)*(1024+1)];
+
+// We add an extra row to LANCZOS_NLUT so that we can compute the
+// slope across each bin.
+static float (GLUE(lut_, L))[2*(L+1)*(LANCZOS_NLUT+1)];
+// Have we initialized the Look-up Table?
+static int GLUE(lut_initialized_,L) = 0;
+
+static void GLUE(lut_init_, L)() {
+    if (GLUE(lut_initialized_,L))
+        return;
+    /*
+     dx,dy are in [-0.5, 0.5].
+
+     Lanczos-3 kernel is zero outside [-3,3].
+
+     We build a look-up table where [0] is L(-3.5).
+
+     And organized so that:
+     lut[0] = L(-3.5)
+     lut[1] = L(-2.5)
+     lut[2] = L(-1.5)
+     lut[3] = L(-0.5)
+     lut[4] = L( 0.5)
+     lut[5] = L( 1.5)
+     lut[6] = L( 2.5)
+     lut[7] stores sum(lut[0:7])
+
+     lut[8]  = L(-3.499)
+     lut[9]  = L(-2.499)
+     lut[10] = L(-1.499)
+     ...
+     ...
+     lut[8184] = L(-2.501)
+     lut[8185] = L(-1.501)
+     lut[8186] = L(-0.501)
+     ...
+
+     This is annoying because [-3.5,3] and [3,3.5] are zero so we
+     have to sum 7 elements rather than 6.  But the alternatives
+     seem worse.
+
+     LANCZOS_NLUT aka Nlutunit is number of bins per unit x.
+     Nunits is the number of units, ie the support of the kernel.
+     */
+    static const float lut0 = -(L + 0.5);
+    static const int Nunits = 2*(L+1);
+    // this table has the elements you need to use together
+    // stored together: L(x[0]), L(x[0]+1), L(x[0]+2), ...;
+    // L(x[1]), L(x[1]+1), L(x[2]+2), ...
+    int i, j;
+    float* lut = GLUE(lut_,L);
+    //for (i=0; i<=Nlutunit; i++) {
+    for (i=0; i<=LANCZOS_NLUT; i++) {
+        float x,f;
+        float acc = 0.;
+        //x = lut0 + i / (float)(Nlutunit);
+        x = lut0 + i / (float)(LANCZOS_NLUT);
+        for (j=0; j<Nunits; j++, x+=1.0) {
+            f = lanczos_kernelf(L, x);
+            lut[i * Nunits + j] = f;
+            acc += f;
+        }
+        // last column contains the sum
+        lut[i*Nunits + Nunits-1] = acc;
+    }
+}
+#define lut_init(L) GLUE(lut_init_, L)()
+
+static float GLUE(lanczos_resample_one_, L)
+     (int ix,
+      float dx,
+      int iy,
+      float dy,
+      const float* inimg,
+      const int W,
+      const int H) {
+
+    const float* lut = GLUE(lut_, L);
+    const float lut0 = -(L + 0.5);
+    const int Nunits = 2*(L+1);
+
+    float acc = 0.;
+    float accx;
+    float nacc;
+    const float* ly;
+    float fx,fy;
+    float slope, slopey;
+    npy_intp u,v;
+    int tx0, ty0;
+
+    // float bin
+    //fx = (-(dx+L) - lut0) * Nlutunit;
+    //fy = (-(dy+L) - lut0) * Nlutunit;
+    fx = (-(dx+L) - lut0) * LANCZOS_NLUT;
+    fy = (-(dy+L) - lut0) * LANCZOS_NLUT;
+    tx0 = (int)fx;
+    ty0 = (int)fy;
+    // clip int bins
+    //tx0 = MAX(0, MIN(Nlutunit-1, tx0));
+    //ty0 = MAX(0, MIN(Nlutunit-1, ty0));
+    tx0 = MAX(0, MIN(LANCZOS_NLUT-1, tx0));
+    ty0 = MAX(0, MIN(LANCZOS_NLUT-1, ty0));
+    // what fraction of the way through the bin are we?
+    fx = fx - tx0;
+    fy = fy - ty0;
+
+    // find start of LUT row for this bin.
+    tx0 *= Nunits;
+    ty0 *= Nunits;
+
+    ly = lut + ty0;
+    // special-case pixels near the image edges.
+    // (this is the same code except for the "clip" checks on X,Y coords)
+    if (ix < L || ix >= (W-L) || iy < L || iy >= (H-L)) {
+        iy -= L;
+        // Lanczos kernel in y direction
+        for (v=0; v<2*L+1; v++, iy++, ly++) {
+            int clipiy = MAX(0, MIN((int)(H-1), iy));
+            int x = ix - L;
+            const float* lx = lut + tx0;
+            const float* inpix = inimg + clipiy * W;
+            // Lanczos kernel in x direction
+            accx = 0.;
+            for (u=0; u<2*L+1; u++, x++, lx++) {
+                int clipix = MAX(0, MIN((int)(W-1), x));
+                slope = lx[Nunits] - (*lx);
+                accx  += ((*lx) + slope*fx) * (inpix[clipix]);
+            }
+            slope = ly[Nunits] - (*ly);
+            acc  += ((*ly) + slope*fy) * accx;
+        }
+    } else {
+        iy -= L;
+        // Lanczos kernel in y direction
+        for (v=0; v<2*L+1; v++, iy++, ly++) {
+            const float* lx = lut + tx0;
+            const float* inpix = inimg + iy * W + ix;
+            accx = 0;
+            // Lanczos kernel in x direction
+            for (u=0; u<2*L+1; u++, lx++, inpix++) {
+                slope = lx[Nunits] - (*lx);
+                accx  += ((*lx) + slope*fx) * (*inpix);
+            }
+            slope = ly[Nunits] - (*ly);
+            acc  += ((*ly) + slope*fy) * accx;
+        }
+    }
+    // Compute the slope across the X,Y normalizers as well.
+    slope = lut[tx0 + Nunits-1 + Nunits] - lut[tx0 + Nunits-1];
+    slopey = lut[ty0 + Nunits-1 + Nunits] - lut[ty0 + Nunits-1];
+    nacc = ((lut[tx0 + Nunits-1] + slope  * fx) *
+            (lut[ty0 + Nunits-1] + slopey * fy));
+    return acc / nacc;
+}
+#define lanczos_resample_one GLUE(lanczos_resample_one_, L)
+
+
 static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
                                PyObject* py_dx, PyObject* py_dy,
                                PyObject* loutputs, PyObject* linputs) {
@@ -18,78 +204,7 @@ static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
     const float *dx, *dy;
 
     PyArrayObject *np_ixi, *np_iyi, *np_dx, *np_dy;
-
-    /*
-     dx,dy are in [-0.5, 0.5].
-
-     Lanczos-3 kernel is zero outside [-3,3].
-
-     We build a look-up table where [0] is L(-3.5).
-
-     And organized so that:
-     lut[0] = L(-3.5)
-     lut[1] = L(-2.5)
-     lut[2] = L(-1.5)
-     lut[3] = L(-0.5)
-     lut[4] = L( 0.5)
-     lut[5] = L( 1.5)
-     lut[6] = L( 2.5)
-     lut[7] is empty for padding
-            actually, = sum(lut[0:7])
-
-     lut[8]  = L(-3.499)
-     lut[9]  = L(-2.499)
-     lut[10] = L(-1.499)
-     ...
-     ...
-     lut[8184] = L(-2.501)
-     lut[8185] = L(-1.501)
-     lut[8186] = L(-0.501)
-     ...
-
-     This is annoying because [-3.5,3] and [3,3.5] are zero so we
-     have to sum 7 elements rather than 6.  But the alternatives
-     seem worse.
-     */
-
-    // L must be defined before including this file; L=3 or L=5 in practice.
-
-    // Nlutunit is number of bins per unit x
-    static const int Nlutunit = 1024;
-    static float lut[2*(L+1)*(1024+1)];
-    // HACK -- we repeat the constant here because some versions of gcc don't believe Nunits*Nlutunit is constant
-
-    static const double lut0 = -(L + 0.5);
-    static const int Nunits = 2*(L+1);
-    static int initialized = 0;
-
-    if (!initialized) {
-        // this table has the elements you need to use together
-        // stored together: L(x[0]), L(x[0]+1), L(x[0]+2), ...;
-        // L(x[1]), L(x[1]+1), L(x[2]+2), ...
-        for (i=0; i<=Nlutunit; i++) {
-            double x,f;
-            double acc = 0.;
-            x = lut0 + i / (double)(Nlutunit);
-            for (j=0; j<Nunits; j++, x+=1.0) {
-                f = lanczos_kernel(L, x);
-                lut[i * Nunits + j] = f;
-                acc += f;
-            }
-            lut[i*Nunits + Nunits-1] = acc;
-        }
-        initialized = 1;
-        /* Print JSON
-         printf("{ \"lut\": [\n");
-         for (i=0; i<=Nlutunit; i++) {
-         printf("%s[", i?",\n":"");
-         for (j=0; j<Nunits; j++)
-         printf("%s%f", j?",":"", lut[i*Nunits+j]);
-         printf("]");
-         }
-         printf("] }\n");
-         */
-    }
+    lut_init(L);
 
     // CheckFromAny steals the dtype reference
     Py_INCREF(itype);
@@ -159,73 +274,7 @@ static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
         for (j=0; j<N; j++, outimg++, ixi++, iyi++) {
             // resample inimg[ iyi[j] + dy[j], ixi[j] + dx[j] ]
             // to outimg[ j ]
-            npy_intp u,v;
-            int tx0, ty0;
-            float acc = 0.;
-            float nacc;
-            const float* ly;
-            int ix,iy;
-            float fx,fy, rx, ry;
-            float slope, slopey;
-            fx = (-(dx[j]+L) - lut0) * (Nlutunit);
-            fy = (-(dy[j]+L) - lut0) * (Nlutunit);
-            tx0 = (int)fx;
-            ty0 = (int)fy;
-            // clip
-            tx0 = MAX(0, MIN(Nlutunit-1, tx0));
-            ty0 = MAX(0, MIN(Nlutunit-1, ty0));
-            // what fraction of the way through the bin are we?
-            rx = fx - tx0;
-            ry = fy - ty0;
-
-            tx0 *= Nunits;
-            ty0 *= Nunits;
-            ly = lut + ty0;
-            iy = *iyi;
-            ix = *ixi;
-            // special-case pixels near the image edges.
-            if (ix < L || ix >= (W-L) || iy < L || iy >= (H-L)) {
-                iy -= L;
-                // Lanczos kernel in y direction
-                for (v=0; v<2*L+1; v++, iy++, ly++) {
-                    float accx = 0;
-                    int clipiy = MAX(0, MIN((int)(H-1), iy));
-                    int ix = *ixi - L;
-                    const float* lx = lut + tx0;
-                    const float* inpix = inimg + clipiy * W;
-                    // Lanczos kernel in x direction
-                    for (u=0; u<2*L+1; u++, ix++, lx++) {
-                        int clipix = MAX(0, MIN((int)(W-1), ix));
-                        slope = lx[Nunits] - (*lx);
-                        accx  += ((*lx) + slope*rx) * (inpix[clipix]);
-                    }
-                    slope = ly[Nunits] - (*ly);
-                    acc  += ((*ly) + slope*ry) * accx;
-                }
-            } else {
-                iy -= L;
-                // Lanczos kernel in y direction
-                for (v=0; v<2*L+1; v++, iy++, ly++) {
-                    float accx = 0;
-                    int ix = *ixi - L;
-                    const float* lx = lut + tx0;
-                    const float* inpix = inimg + iy * W + ix;
-                    // Lanczos kernel in x direction
-                    for (u=0; u<2*L+1; u++,
-                             lx++, inpix++) {
-                        slope = lx[Nunits] - (*lx);
-                        accx  += ((*lx) + slope*rx) * (*inpix);
-                    }
-                    slope = ly[Nunits] - (*ly);
-                    acc  += ((*ly) + slope*ry) * accx;
-                }
-            }
-            // Compute the slope across the X,Y normalizers as well.
-            slope = lut[tx0 + Nunits-1 + Nunits] - lut[tx0 + Nunits-1];
-            slopey = lut[ty0 + Nunits-1 + Nunits] - lut[ty0 + Nunits-1];
-            nacc = ((lut[tx0 + Nunits-1] + slope  * rx) *
-                    (lut[ty0 + Nunits-1] + slopey * ry));
-            *outimg = acc / nacc;
+            *outimg = lanczos_resample_one(*ixi, dx[j], *iyi, dy[j], inimg, W, H);
         }
         Py_DECREF(np_inimg);
         Py_DECREF(np_outimg);
@@ -237,3 +286,74 @@ static int LANCZOS_INTERP_FUNC(PyObject* py_ixi, PyObject* py_iyi,
     Py_DECREF(np_dy);
     return 0;
 }
+
+static PyObject* LANCZOS_INTERP_GRID(float x0, float xstep,
+                                     float y0, float ystep,
+                                     PyObject* output_img, PyObject* input_img) {
+    PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
+    int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
+        NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
+    int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
+
+    lut_init(L);
+
+    PyArrayObject* np_inimg;
+    PyArrayObject* np_outimg;
+    // CheckFromAny steals the dtype reference
+    Py_INCREF(dtype);
+    np_inimg  = (PyArrayObject*)PyArray_CheckFromAny(input_img, dtype, 2, 2, req, NULL);
+    if (!np_inimg) {
+        PyErr_SetString(PyExc_ValueError, "input_image must be a 2-d float32 array");
+        Py_XDECREF(dtype);
+        return NULL;
+    }
+    Py_INCREF(dtype);
+    np_outimg = (PyArrayObject*)PyArray_CheckFromAny(output_img, dtype, 2, 2, reqout, NULL);
+    if (!np_outimg) {
+        PyErr_SetString(PyExc_ValueError, "output_image must be a 2-d float32 array");
+        Py_XDECREF(np_inimg);
+        Py_XDECREF(dtype);
+        return NULL;
+    }
+
+    const float *inimg = PyArray_DATA(np_inimg);
+    float *outimg = PyArray_DATA(np_outimg);
+    const npy_intp H = PyArray_DIM(np_inimg, 0);
+    const npy_intp W = PyArray_DIM(np_inimg, 1);
+    const npy_intp outH = PyArray_DIM(np_outimg, 0);
+    const npy_intp outW = PyArray_DIM(np_outimg, 1);
+    npy_intp i, j;
+    for (j=0; j<outH; j++) {
+        float y = y0 + j*ystep;
+        int iy = lrintf(y);
+        float dy = y - iy;
+        assert((dy >= -0.5) && (dy <= 0.5));
+
+        // Beyond the top of the input image + margin
+        if ((iy < -L) || (iy >= H+L))
+            continue;
+
+        for (i=0; i<outW; i++) {
+            float x = x0 + i*xstep;
+            int ix = lrintf(x);
+            float dx = x - ix;
+            assert((dx >= -0.5) && (dx <= 0.5));
+
+            if ((ix < -L) || (ix >= W+L))
+                continue;
+
+            outimg[j * outW + i] = lanczos_resample_one(ix, dx, iy, dy, inimg, W, H);
+        }
+    }
+    Py_DECREF(np_inimg);
+    Py_DECREF(np_outimg);
+    Py_DECREF(dtype);
+    Py_RETURN_NONE;
+}
+
+#undef MOREGLUE
+#undef GLUE
+#undef lanczos_kernelf
+#undef LANCZOS_NLUT
+#undef lut_init
+#undef lanczos_resample_one

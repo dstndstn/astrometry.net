@@ -495,31 +495,33 @@ void log_set_level(int lvl);
         return 0;
     }
 
-    static double lanczos_kernel(int L, double x) {
-        if (x <= -L || x >= L)
-            return 0.0;
-        if (x == 0)
-            return 1.0;
-        return L * sin(M_PI * x) * sin(M_PI / L * x) /
-            (M_PI * M_PI * x * x);
-    }
-
     #define LANCZOS_INTERP_FUNC lanczos5_interpolate
+    #define LANCZOS_INTERP_GRID lanczos5_interpolate_grid
     #define L 5
-        static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
-                                       PyObject* np_dx, PyObject* np_dy,
-                                       PyObject* loutputs, PyObject* linputs);
+    static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
+                                   PyObject* np_dx, PyObject* np_dy,
+                                   PyObject* loutputs, PyObject* linputs);
+    static PyObject* LANCZOS_INTERP_GRID(float x0, float xstep,
+                                         float y0, float ystep,
+                                         PyObject* output_img, PyObject* input_img);
     #include "lanczos.i"
+
     #undef LANCZOS_INTERP_FUNC
+    #undef LANCZOS_INTERP_GRID
     #undef L
 
     #define LANCZOS_INTERP_FUNC lanczos3_interpolate
+    #define LANCZOS_INTERP_GRID lanczos3_interpolate_grid
     #define L 3
-        static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
-                                       PyObject* np_dx, PyObject* np_dy,
-                                       PyObject* loutputs, PyObject* linputs);
+    static int LANCZOS_INTERP_FUNC(PyObject* np_ixi, PyObject* np_iyi,
+                                   PyObject* np_dx, PyObject* np_dy,
+                                   PyObject* loutputs, PyObject* linputs);
+    static PyObject* LANCZOS_INTERP_GRID(float x0, float xstep,
+                                         float y0, float ystep,
+                                         PyObject* output_img, PyObject* input_img);
     #include "lanczos.i"
     #undef LANCZOS_INTERP_FUNC
+    #undef LANCZOS_INTERP_GRID
     #undef L
 
     static int lanczos5_filter(PyObject* py_dx, PyObject* py_f) {
