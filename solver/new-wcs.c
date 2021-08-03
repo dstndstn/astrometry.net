@@ -38,6 +38,8 @@ static char* exclude_input[] = {
     "^END$",
     // our TAN/SIP
     "^IMAGE[HW]$",
+    // Pinpoint proprietary distortion
+    "^TR[12]_[[:digit:]]+$",
 };
 static int NE1 = sizeof(exclude_input) / sizeof(char*);
 
