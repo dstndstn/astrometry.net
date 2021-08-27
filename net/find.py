@@ -80,7 +80,10 @@ def main():
               help='Find submissions whose jobs have no log files')
 
     parser.add_option('--delete', action='store_true', default=False,
-              help='Delete everything associated with the given image')
+              help='Delete everything associated with the given job/submission/image')
+
+    parser.add_option('--delete-sub', action='store_true', default=False,
+                      help='When deleting a Job/UserImage, also delete the Submission?')
 
     parser.add_option('--deluser', action='store_true', default=False,
                       help='Delete everything associated with the given user')
@@ -291,6 +294,10 @@ def main():
             print('Deleting job', job)
             job.delete()
 
+            if opt.delete_sub:
+                print('Deleting submission', sub)
+                sub.delete()
+
     if opt.uimage:
         ui = UserImage.objects.all().get(id=opt.uimage)
         print('UserImage', ui)
@@ -311,11 +318,12 @@ def main():
         if opt.delete:
             print('Deleting ui', ui)
             ui.delete()
-
+        if opt.delete_sub:
+            print('Deleting sub', sub)
+            sub.delete()
         if opt.hide:
             print('Hiding ui', ui)
             ui.hide()
-
 
     if opt.image:
         im = Image.objects.all().get(id=opt.image)
