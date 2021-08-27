@@ -30,10 +30,10 @@ if settings.ENABLE_SOCIAL2:
 
 from astrometry.net.views.home import signin, signout, signedin, newuser
 urlpatterns.extend([
-    url(r'^signin/',   signin, name='signin'),
-    url(r'^signout/',  signout, name='signout'),
-    url(r'^signedin/', signedin),
-    url(r'^newuser/',  newuser),
+    url(r'^signin/?',   signin, name='signin'),
+    url(r'^signout/?',  signout, name='signout'),
+    url(r'^signedin/?', signedin),
+    url(r'^newuser/?',  newuser),
 ])
 
 from astrometry.net.views.search import images, users
@@ -177,7 +177,7 @@ urlpatterns.extend([
     url(r'^api/galex_image_for_wcs/?$', api_galex_image_for_wcs, name='api_galex_image_for_wcs'),
     url(r'^api/submission_images/?$', api_submission_images, name='api_submission_images'),
     url(r'^api/submissions/(?P<sub_id>' + idpattern + r')/?$', submission_status, name='api_submission_status'),
-    url(r'^api/myjobs/', myjobs, name='api_myjobs'),
+    url(r'^api/myjobs/?', myjobs, name='api_myjobs'),
     url(r'^api/jobs/(?P<job_id>' + idpattern + r')/?$', job_status, name='api_job_status'),
     url(r'^api/jobs/(?P<job_id>' + idpattern + r')/calibration/?$', calibration, name='api_calibration'),
     url(r'^api/jobs/(?P<job_id>' + idpattern + r')/tags/?$', tags, name='api_tags'),
