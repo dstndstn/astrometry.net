@@ -16,7 +16,7 @@ jobs:
           command: |
             sudo apt update && sudo apt install -y apt-utils
             DEBIAN_FRONTEND=noninteractive sudo apt install -y --no-install-recommends make gcc patch git openssh-client file pkg-config wget curl swig netpbm wcslib-dev wcslib-tools zlib1g-dev libbz2-dev libcairo2-dev libcfitsio-dev libcfitsio-bin libgsl-dev libjpeg-dev libnetpbm10-dev libpng-dev python3.9-dev libpython3.9-dev ca-certificates
-            sudo apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+            sudo apt clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
             curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
             sudo python3.9 get-pip.py
             rm get-pip.py
