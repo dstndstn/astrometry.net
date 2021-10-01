@@ -41,7 +41,8 @@ c_au_per_yr = 63239.6717 # google says
 
 #GM_sun = 2.9591310798672560E-04 #AU^3/d^2
 # Google says mass of the sun * G = 39.4775743 (au^3) / (yr^2)
-GM_sun = 39.4775743 # AU^3 / yr^2
+#GM_sun = 39.4775743 # AU^3 / yr^2
+GM_sun = 39.47692429969446
 
 def norm1d(x):
     assert(len(x.shape) == 1)
@@ -114,6 +115,22 @@ def orbital_vectors_from_orbital_elements(i, Omega, pomega):
     tmpydir= np.cross(zhat, ascendingnodevector)
     xhat= np.cos(pomega) * ascendingnodevector + np.sin(pomega) * tmpydir
     yhat = np.cross(zhat, xhat)
+    # # AKA the Euler angles;
+    # cosOM = np.cos(OM)
+    # sinOM = np.sin(OM)
+    # cosw = np.cos(W)
+    # sinw = np.sin(W)
+    # cosi = np.cos(I)
+    # sini = np.sin(I)
+    # xhat = np.array([cosOM * cosw - sinOM * cosi * sinw,
+    #                  sinOM * cosw + cosOM * cosi * sinw,
+    #                  sini * sinw])
+    # yhat = np.array([-cosOM * sinw - sinOM * cosi * cosw,
+    #                  -sinOM * sinw + cosOM * cosi * cosw,
+    #                  sini * cosw])
+    # zhat = np.array([sini * sinOM,
+    #                  -sini * cosOM,
+    #                  cosi])
     return (xhat, yhat, zhat)
 
 def position_from_orbital_vectors(xhat, yhat, a, e, M):
@@ -138,6 +155,10 @@ def phase_space_coordinates_from_orbital_elements(a, e, i, Omega, pomega, M, GM)
     (xhat, yhat, zhat) = orbital_vectors_from_orbital_elements(i, Omega, pomega)
     # [radians/yr]
     dMdt = np.sqrt(GM / a**3)
+    # M -> [0, 2 pi]
+    M = np.fmod(M, 2.*np.pi)
+    if M < 0:
+        M += 2.*np.pi
     E = eccentric_anomaly_from_mean_anomaly(M, e)
     cosE = np.cos(E)
     sinE = np.sin(E)
@@ -330,6 +351,126 @@ def eccentricity_from_fourier_amplitudes(amplitudes):
 
 # some functional testing
 if __name__ == '__main__':
+    ''' JPL Horizons
+    Target body name: 105201 (2000 OG40)              {source: JPL#32}
+    Center body name: Sun (10)                        {source: DE441}
+    Center-site name: BODY CENTER
+
+    EPOCH=  2457376.5 ! 2015-Dec-20.00 (TDB)         Residual RMS= .23903        
+    EC= .1214573226702652   QR= 2.431978006028732   TP= 2457113.7899002889      
+    OM= 245.5053398400074   W=  156.6198969044629   IN= 5.843059968041627       
+    A= 2.768195636688418    MA= 56.21933103112961   ADIST= 3.104413267348103
+    PER= 4.60578            N= .213997595           ANGMOM= .028408784
+    Equivalent ICRF heliocentric cartesian coordinates (au, au/d):
+    X=-9.220040951931038E-01  Y= 2.311093286357726E+00  Z= 7.957020628018918E-01
+    VX=-1.054110284344558E-02 VY=-2.217596535512919E-03 VZ=-1.902294975851540E-03
+
+    2459304.649058500 = A.D. 2021-Mar-31 03:34:38.6544 TDB [del_T=     69.185670 s]
+    X =-2.774279377230669E+00 Y = 8.181017668313512E-01 Z =-2.936497005070638E-01
+    VX=-3.838220104810370E-03 VY=-9.051672592320136E-03 VZ= 3.005327929385958E-05
+    '''
+    epoch = 2457376.5
+    a = 2.768195636688418
+    e = .1214573226702652
+    i = np.deg2rad(5.843059968041627)
+    om = np.deg2rad(245.5053398400074)
+    pom = np.deg2rad(156.6198969044629)
+    M = np.deg2rad(56.21933103112961)
+    GM = GM_sun
+
+    # GM = N^2 / a^3
+    N = .213997595
+    GMx = a**3 * (np.deg2rad(N)*days_per_year)**2
+    print('GM_sun', GM_sun)
+    print('GM', GMx)
+    GM = GMx
+
+    jd = 2459304.649058500
+    X = np.array([-2.774279377230669E+00,  8.181017668313512E-01, -2.936497005070638E-01])
+    V = np.array([-3.838220104810370E-03, -9.051672592320136E-03,  3.005327929385958E-05])
+
+    Mnow = M + np.deg2rad(N * (jd - epoch))
+    x,v = phase_space_coordinates_from_orbital_elements(a, e, i, om, pom, Mnow, GM)
+
+    print('x ', x)
+    print('vs', X)
+
+    print()
+
+    print('v ', v / 365.25)
+    print('vs', V)
+
+    f = open('jpl.txt')
+    txt = f.read()
+    txt = txt[txt.index('$$SOE'):]
+    txt = txt[:txt.index('$$EOE')]
+    txt = txt.split('\n')
+    txt = txt[1:-1]
+    from astrometry.util.fits import fits_table
+    jpl = fits_table()
+    jpl.jd = []
+    jpl.xyz = []
+    jpl.v = []
+    for line in txt:
+        words = line.strip().split(',')
+        jpl.jd.append(float(words[0]))
+        jpl.xyz.append((float(words[3]), float(words[4]), float(words[5])))
+        jpl.v.append((float(words[6]), float(words[7]), float(words[8])))
+    jpl.to_np_arrays()
+
+    C = np.zeros((3,3))
+    for ii in range(3):
+        for jj in range(3):
+            C[ii,jj] = np.mean(jpl.xyz[:,ii] * jpl.xyz[:,jj])
+    u,s,v = np.linalg.svd(C)
+
+    j0 = u[:,0]
+    j1 = u[:,1]
+    j2 = u[:,2]
+    
+    plt.clf()
+    xp = np.sum(jpl.xyz * j0, axis=1)
+    yp = np.sum(jpl.xyz * j1, axis=1)
+    zp = np.sum(jpl.xyz * j2, axis=1)
+    plt.plot(jpl.jd, xp, 'b-')
+    plt.plot(jpl.jd, yp, 'g-')
+    plt.plot(jpl.jd, zp, 'r-')
+    plt.title('JPL proj on u')
+    plt.savefig('1.png')
+    
+    print('u', u)
+    
+    xh, yh, zh = orbital_vectors_from_orbital_elements(i, om, pom)
+
+    print('xh', xh)
+    print('yh', yh)
+    print('zh', zh)
+
+    print('j0 . xh:', np.sum(j0 * xh))
+    print('j0 . yh:', np.sum(j0 * yh))
+    print('j0 . zh:', np.sum(j0 * zh))
+
+    print('j1 . xh:', np.sum(j1 * xh))
+    print('j1 . yh:', np.sum(j1 * yh))
+    print('j1 . zh:', np.sum(j1 * zh))
+    
+    print('j2 . xh:', np.sum(j2 * xh))
+    print('j2 . yh:', np.sum(j2 * yh))
+    print('j2 . zh:', np.sum(j2 * zh))
+
+    xx = []
+    vv = []
+    for jd in jpl.jd:
+        E = [a, e, i, om, pom, M + np.deg2rad(N * (jd - epoch)), GM]
+        x,v = phase_space_coordinates_from_orbital_elements(*E)
+        xx.append(x)
+        vv.append(v)
+    xx = np.array(xx)
+
+    
+    import sys
+    sys.exit(0)
+    
     from test_celestial_mechanics import *
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestOrbitalElements)
 
