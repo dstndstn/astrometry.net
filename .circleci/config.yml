@@ -217,3 +217,4 @@ workflows:
       - "build-docker-ubuntu-20-py39"
       - "build-docker-ubuntu-18"
       - "build-docker-centos-8"
+      - "build-arm-docker-ubuntu-20-py39"
