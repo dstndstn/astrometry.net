@@ -1033,6 +1033,7 @@ int main(int argc, char** args) {
 
         isurl = (!file_exists(infile) &&
                  (starts_with(infile, "http://") ||
+                  starts_with(infile, "https://") ||
                   starts_with(infile, "ftp://")));
 
         if (outdir)

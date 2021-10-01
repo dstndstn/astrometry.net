@@ -10,7 +10,7 @@ jobs:
     steps:
       - run:
           name: CPU info
-          command: cat /proc/cpuinfo
+          command: cat /proc/cpuinfo; lscpu
       - run:
           name: Ubuntu packages
           command: |

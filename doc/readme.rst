@@ -226,8 +226,9 @@ Copyrights and credits for the demo images are listed in the file
 
 Note that you can also give solve-field a URL rather than a file as input::
 
-   $ solve-field --out apod1b http://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg
+   $ solve-field --out apod1b --downsample 2 http://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg
 
+(this one will work with index file 4108).
 
 If you don't have the netpbm tools (eg jpegtopnm), do this instead:
 
