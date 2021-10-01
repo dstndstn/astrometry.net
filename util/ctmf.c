@@ -257,8 +257,8 @@ static void ctmf_helper(
     memset( h_coarse, 0, sz_coarse );
     memset( h_fine,   0, sz_fine   );
 #else
-    h_coarse = (uint16_t*) calloc( sz_coarse );
-    h_fine   = (uint16_t*) calloc( sz_fine   );
+    h_coarse = (uint16_t*) calloc( sz_coarse, 1);
+    h_fine   = (uint16_t*) calloc( sz_fine,   1);
 #endif
 
     /* First row initialization */
