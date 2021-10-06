@@ -127,6 +127,12 @@ use Fink you will need to add something like this in your
     export CFLAGS="-I/usr/local/include -I/sw/include"
     export LDFLAGS="-L/usr/local/lib -L/sw/lib"
 
+Windows 10/11:
+^^^^^^^^^^^^^^^^^^^^
+
+Since there is `Windows Subsystem for Linux (WSL) <https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux>` compatibility layer available on Windows 10/11 OS, you can follow the WSL install `guide <https://docs.microsoft.com/en-us/windows/wsl/install>`.
+Once WSL is installed, the build steps are the same as for Debian/Ubuntu-like systems. See above.
+
 Getting/Building
 ----------------
 
