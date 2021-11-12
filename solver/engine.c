@@ -815,21 +815,17 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
         char key[64];
         double lo, hi;
         sprintf(key, "ANAPPL%i", n);
-        lo = qfits_header_getdouble(hdr, key, dnil);
+        lo = qfits_header_getdouble(hdr, key, 0.);
         sprintf(key, "ANAPPU%i", n);
-        hi = qfits_header_getdouble(hdr, key, dnil);
-        if ((hi == dnil) && (lo == dnil))
+        hi = qfits_header_getdouble(hdr, key, 0.);
+        if ((hi == 0.) && (lo == 0.))
             break;
-        if ((lo != dnil) && (hi != dnil)) {
+        if ((lo != 0.) && (hi != 0.)) {
             if ((lo < 0) || (lo > hi)) {
                 logerr("Scale range %g to %g is invalid: min must be >= 0, max must be >= min.\n", lo, hi);
                 goto bailout;
             }
         }
-        if (hi == dnil)
-            hi = 0.0;
-        if (lo == dnil)
-            lo = 0.0;
         dl_append(job->scales, lo);
         dl_append(job->scales, hi);
         n++;
