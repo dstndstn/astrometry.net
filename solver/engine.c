@@ -754,8 +754,8 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
         sp->parity = PARITY_NORMAL;
 
     sp->set_crpix_center = qfits_header_getboolean(hdr, "ANCRPIXC", FALSE);
-    sp->crpix[0] = qfits_header_getint(hdr, "ANCRPIX1", sp->crpix[0]);
-    sp->crpix[1] = qfits_header_getint(hdr, "ANCRPIX2", sp->crpix[1]);
+    sp->crpix[0] = qfits_header_getdouble(hdr, "ANCRPIX1", sp->crpix[0]);
+    sp->crpix[1] = qfits_header_getdouble(hdr, "ANCRPIX2", sp->crpix[1]);
     sp->set_crpix = (sp->set_crpix_center || 
                      // were the values set?
                      qfits_header_getstr(hdr, "ANCRPIX1") ||
