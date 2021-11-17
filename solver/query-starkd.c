@@ -219,7 +219,8 @@ int main(int argc, char **argv) {
                 exit(-1);
             }
             itemsize = fits_get_atom_size(type) * arraysize;
-            data = fitstable_read_column_array_inds(tagalong, col, type, inds, N, NULL);
+            // Type could be anything. Let's convert to double for display purposes.
+            data = fitstable_read_column_array_inds(tagalong, col, fitscolumn_double_type(), inds, N, NULL);
             if (!data) {
                 ERROR("Failed to read data for column \"%s\" in index", col);
                 exit(-1);
@@ -229,18 +230,16 @@ int main(int argc, char **argv) {
         }
 
         for (i=0; i<N; i++) {
-            //int j;
+            int j;
             printf("%g, %g", radec[i*2+0], radec[i*2+1]);
             if (getinds)
                 printf(", %i", inds[i]);
 
-            //// FIXME -- print tag-along data of generic type.
-            /*
-             for (j=0; j<pl_size(tagdata); j++) {
-             double* data = pl_get(tagdata, j);
-             printf(", %g", data[i]);
-             }
-             */
+            for (j=0; j<pl_size(tagdata); j++) {
+                // We converted to 'double' above.
+                double* data = pl_get(tagdata, j);
+                printf(", %g", data[i]);
+            }
 
             printf("\n");
         }
