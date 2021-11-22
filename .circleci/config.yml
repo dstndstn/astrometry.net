@@ -210,6 +210,18 @@ jobs:
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
 
+  build-macos-1240:
+    macos:
+      xcode: 12.4.0
+    steps:
+      - run:
+          name: Prereqs
+          command: |
+            xcodebuild -version
+            gcc --version
+            make --version
+            make
+
 workflows:
   version: 2
   build:
@@ -218,3 +230,4 @@ workflows:
       - "build-docker-ubuntu-18"
       - "build-docker-centos-8"
       - "build-arm-docker-ubuntu-20-py39"
+      - "build-macos-1240"
