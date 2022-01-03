@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#if defined(TEST_NETPBM)
 #include <pam.h>
 int main(int argc, char** args) {
     struct pam img;
@@ -14,4 +13,3 @@ int main(int argc, char** args) {
     printf("the answer is %i\n", img.size);
     return 0;
 }
-#endif
