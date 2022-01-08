@@ -153,7 +153,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
         inorder = permuted_sort(sortval, sizeof(double),
                                 sort_ascending ? compare_doubles_asc : compare_doubles_desc,
                                 NULL, N);
-        if (sort_min_cut > -HUGE_VAL) {
+        if (sort_min_cut > -LARGE_VAL) {
             logverb("Cutting to %s > %g...\n", sortcol, sort_min_cut);
             // Cut objects with sortval < sort_min_cut.
             if (sort_ascending) {

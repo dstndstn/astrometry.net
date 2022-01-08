@@ -21,12 +21,14 @@
 #include <dirent.h>
 #include <assert.h>
 
+#include "math.h"
+
+#include "mathutil.h"
 #include "ioutils.h"
 #include "fileutils.h"
 #include "bl.h"
 #include "an-bool.h"
 #include "solver.h"
-#include "math.h"
 #include "fitsioutils.h"
 #include "solverutils.h"
 #include "os-features.h"
@@ -659,7 +661,7 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
     onefield_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
 
-    double dnil = -HUGE_VAL;
+    double dnil = -LARGE_VAL;
     char *pstr;
     int n;
     anbool run;
@@ -782,12 +784,12 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
     if (val > 0.0)
         bp->quad_size_fraction_hi = val;
 
-    job->ra_center = qfits_header_getdouble(hdr, "ANERA", HUGE_VAL);
-    job->dec_center = qfits_header_getdouble(hdr, "ANEDEC", HUGE_VAL);
-    job->search_radius = qfits_header_getdouble(hdr, "ANERAD", HUGE_VAL);
-    job->use_radec_center = ((job->ra_center     != HUGE_VAL) &&
-                             (job->dec_center    != HUGE_VAL) &&
-                             (job->search_radius != HUGE_VAL));
+    job->ra_center = qfits_header_getdouble(hdr, "ANERA", dnil);
+    job->dec_center = qfits_header_getdouble(hdr, "ANEDEC", dnil);
+    job->search_radius = qfits_header_getdouble(hdr, "ANERAD", dnil);
+    job->use_radec_center = ((job->ra_center     != dnil) &&
+                             (job->dec_center    != dnil) &&
+                             (job->search_radius != dnil));
 
     // tag-along columns
     bp->rdls_tagalong_all = qfits_header_getboolean(hdr, "ANTAGALL", FALSE);
@@ -977,8 +979,8 @@ engine_t* engine_new() {
     engine->ismallest = il_new(4);
     engine->ibiggest = il_new(4);
     engine->default_depths = il_new(4);
-    engine->sizesmallest = HUGE_VAL;
-    engine->sizebiggest = -HUGE_VAL;
+    engine->sizesmallest = LARGE_VAL;
+    engine->sizebiggest = -LARGE_VAL;
 
     // Default scale estimate: field width, in degrees:
     engine->minwidth = 0.1;

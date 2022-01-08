@@ -8,6 +8,7 @@
 
 #include "os-features.h"
 #include "sparsematrix.h"
+#include "mathutil.h"
 
 struct entry {
     int c;
@@ -178,7 +179,7 @@ void sparsematrix_subset_rows(sparsematrix_t* sp, const int* rows, int NR) {
 }
 
 double sparsematrix_max(const sparsematrix_t* sp) {
-    double mx = -HUGE_VAL;
+    double mx = -LARGE_VAL;
     FOR_EACH(sp, mx = MAX(mx, e->val));
     /*
      FOR_EACH_DECL();
@@ -190,7 +191,7 @@ double sparsematrix_max(const sparsematrix_t* sp) {
 }
 
 double sparsematrix_argmax(const sparsematrix_t* sp, int* pr, int* pc) {
-    double mx = -HUGE_VAL;
+    double mx = -LARGE_VAL;
     FOR_EACH(sp, if (e->val > mx) { mx = e->val; *pr = r; *pc = e->c; });
     return mx;
 }

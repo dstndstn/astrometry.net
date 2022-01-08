@@ -119,7 +119,7 @@ struct solver_t {
     double logratio_bail_threshold;
 
     // During verification, if the log-odds ratio rises above this level, we accept the
-    // match and bail out.  Default: HUGE_VAL (ie, don't bail out: keep going to find the
+    // match and bail out.  Default: LARGE_VAL (ie, don't bail out: keep going to find the
     // maximum Bayes factor value).
     double logratio_stoplooking;
 

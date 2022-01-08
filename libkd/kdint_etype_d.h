@@ -7,7 +7,7 @@ typedef double etype;
 
 #define ETYPE_INTEGER 0
 
-#define ETYPE_MAX  KDT_INFTY_DOUBLE
-#define ETYPE_MIN -KDT_INFTY_DOUBLE
+#define ETYPE_MAX  KDT_LARGEVAL
+#define ETYPE_MIN -KDT_LARGEVAL
 
 #define ETYPE d

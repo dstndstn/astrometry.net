@@ -8,8 +8,8 @@ typedef double dtype;
 #define DTYPE_INTEGER 0
 #define DTYPE_DOUBLE  1
 
-#define DTYPE_MAX  KDT_INFTY_DOUBLE
-#define DTYPE_MIN -KDT_INFTY_DOUBLE
+#define DTYPE_MAX  KDT_LARGEVAL
+#define DTYPE_MIN -KDT_LARGEVAL
 
 #define DTYPE d
 #define DTYPE_M d

@@ -16,8 +16,8 @@
 #include "errors.h"
 #include "log.h"
 #include "ioutils.h"
-
 #include "anqfits.h"
+#include "mathutil.h"
 
 sip_t* sip_from_string(const char* str, int slen, sip_t* dest) {
     qfits_header* hdr;
@@ -308,7 +308,7 @@ static anbool read_polynomial(const qfits_header* hdr, const char* format,
                               anbool skip_linear, anbool skip_zero) {
     int i, j;
     char key[64];
-    double nil = -HUGE_VAL;
+    double nil = -LARGE_VAL;
     double val;
     for (i=0; i<=order; i++)
         for (j=0; (i+j)<=order; j++) {

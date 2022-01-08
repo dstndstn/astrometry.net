@@ -17,6 +17,7 @@
 #include "starutil.h"
 #include "errors.h"
 #include "log.h"
+#include "mathutil.h"
 
 int fits_guess_scale(const char* infn,
                      sl** p_methods, dl** p_scales) {
@@ -79,7 +80,7 @@ void fits_guess_scale_hdr(const qfits_header* hdr,
     if (!gotsip) {
         // it might have a correct CD matrix but be missing other parts (eg CRVAL)
         double cd11, cd12, cd21, cd22;
-        double errval = -HUGE_VAL;
+        double errval = -LARGE_VAL;
         cd11 = qfits_header_getdouble(hdr, "CD1_1", errval);
         cd12 = qfits_header_getdouble(hdr, "CD1_2", errval);
         cd21 = qfits_header_getdouble(hdr, "CD2_1", errval);

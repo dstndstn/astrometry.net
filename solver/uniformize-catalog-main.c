@@ -16,6 +16,7 @@
 #include "errors.h"
 #include "log.h"
 #include "fitsioutils.h"
+#include "mathutil.h"
 
 const char* OPTIONS = "hvH:s:n:N:d:R:D:S:fm:";
 
@@ -53,7 +54,7 @@ int main(int argc, char *argv[]) {
     int Nside = 100;
     double dedup = 0.0;
     int margin = 0;
-    double mincut = -HUGE_VAL;
+    double mincut = -LARGE_VAL;
 	
     fitstable_t* intable;
     fitstable_t* outtable;

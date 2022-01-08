@@ -1435,8 +1435,8 @@ void healpix_radec_bounds(int hp, int nside,
     double ralo,rahi,declo,dechi;
     double ra,dec;
     double dx, dy;
-    ralo = declo =  HUGE_VAL;
-    rahi = dechi = -HUGE_VAL;
+    ralo = declo =  LARGE_VAL;
+    rahi = dechi = -LARGE_VAL;
     for (dy=0; dy<2; dy+=1.0) {
         for (dx=0; dx<2; dx+=1.0) {
             healpix_to_radecdeg(hp, nside, dx, dy, &ra, &dec);

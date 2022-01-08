@@ -22,6 +22,7 @@
 #include "fitsioutils.h"
 #include "anwcs.h"
 #include "resample.h"
+#include "mathutil.h"
 
 int resample_wcs_files(const char* infitsfn, int infitsext,
                        const char* inwcsfn, int inwcsext,
@@ -104,16 +105,16 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
         double pmin, pmax;
         int i;
         /*
-         pmin =  HUGE_VAL;
-         pmax = -HUGE_VAL;
+         pmin =  LARGE_VAL;
+         pmax = -LARGE_VAL;
          for (i=0; i<(inW*inH); i++) {
          pmin = MIN(pmin, inimg[i]);
          pmax = MAX(pmax, inimg[i]);
          }
          logmsg("Input image bounds: %g to %g\n", pmin, pmax);
          */
-        pmin =  HUGE_VAL;
-        pmax = -HUGE_VAL;
+        pmin =  LARGE_VAL;
+        pmax = -LARGE_VAL;
         for (i=0; i<(outW*outH); i++) {
             pmin = MIN(pmin, outimg[i]);
             pmax = MAX(pmax, outimg[i]);
@@ -236,8 +237,8 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
         double xmin, xmax, ymin, ymax;
         int x, y, W, H;
         double xx,yy;
-        xmin = ymin = HUGE_VAL;
-        xmax = ymax = -HUGE_VAL;
+        xmin = ymin = LARGE_VAL;
+        xmax = ymax = -LARGE_VAL;
         // HACK -- just look at the corners.  Could anwcs_walk_boundary.
         W = anwcs_imagew(inwcs);
         H = anwcs_imageh(inwcs);

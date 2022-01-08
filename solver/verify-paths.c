@@ -196,7 +196,7 @@ int main(int argc, char** args) {
     double fieldW=0, fieldH=0;
     double logbail = log(1e-100);
     double logkeep = log(1e12);
-    double logaccept = HUGE_VAL;
+    double logaccept = LARGE_VAL;
     anbool growvariance = TRUE;
     anbool fake = FALSE;
     double logodds;
@@ -343,7 +343,7 @@ int main(int argc, char** args) {
         for (i=0; i<mo->dimquads; i++) {
             double qxy[2];
             int besti = -1;
-            double bestd2 = HUGE_VAL;
+            double bestd2 = LARGE_VAL;
             if (!tan_xyzarr2pixelxy(&(mo->wcstan), mo->quadxyz + 3*i, qxy, qxy+1)) {
                 ERROR("quad star projects to wrong side of sphere!");
                 exit(-1);

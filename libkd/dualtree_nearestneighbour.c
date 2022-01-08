@@ -78,7 +78,7 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2
         params.nearest_d2 = malloc(NY * sizeof(double));
 
     if (maxdist2 == 0.0)
-        maxdist2 = HUGE_VAL;
+        maxdist2 = LARGE_VAL;
     for (i=0; i<NY; i++)
         params.nearest_d2[i] = maxdist2;
 

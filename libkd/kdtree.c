@@ -18,6 +18,7 @@
 #include "an-fls.h"
 #include "errors.h"
 #include "log.h"
+#include "mathutil.h"
 
 kdtree_t* kdtree_build(kdtree_t* kd, void *data, int N, int D, int Nleaf,
                        int treetype, unsigned int options) {
@@ -565,7 +566,7 @@ void kdtree_free(kdtree_t *kd) {
 }
 
 int kdtree_nearest_neighbour(const kdtree_t* kd, const void* pt, double* p_mindist2) {
-    return kdtree_nearest_neighbour_within(kd, pt, HUGE_VAL, p_mindist2);
+    return kdtree_nearest_neighbour_within(kd, pt, LARGE_VAL, p_mindist2);
 }
 
 int kdtree_check(const kdtree_t* kd) {
@@ -590,7 +591,7 @@ KD_DECLARE(kdtree_node_node_mindist2, double, (const kdtree_t* kd1, int node1, c
 
 double kdtree_node_node_mindist2(const kdtree_t* kd1, int node1,
                                  const kdtree_t* kd2, int node2) {
-    double res = HUGE_VAL;
+    double res = LARGE_VAL;
     KD_DISPATCH(kdtree_node_node_mindist2, kd1->treetype, res=, (kd1, node1, kd2, node2));
     return res;
 }
@@ -599,7 +600,7 @@ KD_DECLARE(kdtree_node_node_maxdist2, double, (const kdtree_t* kd1, int node1, c
 
 double kdtree_node_node_maxdist2(const kdtree_t* kd1, int node1,
                                  const kdtree_t* kd2, int node2) {
-    double res = HUGE_VAL;
+    double res = LARGE_VAL;
     KD_DISPATCH(kdtree_node_node_maxdist2, kd1->treetype, res=, (kd1, node1, kd2, node2));
     return res;
 }
@@ -627,7 +628,7 @@ int kdtree_node_node_maxdist2_exceeds(const kdtree_t* kd1, int node1,
 KD_DECLARE(kdtree_node_point_mindist2, double, (const kdtree_t* kd, int node, const void* query));
 
 double kdtree_node_point_mindist2(const kdtree_t* kd, int node, const void* pt) {
-    double res = HUGE_VAL;
+    double res = LARGE_VAL;
     KD_DISPATCH(kdtree_node_point_mindist2, kd->treetype, res=, (kd, node, pt));
     return res;
 }
@@ -635,7 +636,7 @@ double kdtree_node_point_mindist2(const kdtree_t* kd, int node, const void* pt) 
 KD_DECLARE(kdtree_node_point_maxdist2, double, (const kdtree_t* kd, int node, const void* query));
 
 double kdtree_node_point_maxdist2(const kdtree_t* kd, int node, const void* pt) {
-    double res = HUGE_VAL;
+    double res = LARGE_VAL;
     KD_DISPATCH(kdtree_node_point_maxdist2, kd->treetype, res=, (kd, node, pt));
     return res;
 }

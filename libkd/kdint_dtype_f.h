@@ -8,8 +8,8 @@ typedef float dtype;
 #define DTYPE_INTEGER 0
 #define DTYPE_DOUBLE  0
 
-#define DTYPE_MAX  KDT_INFTY_FLOAT
-#define DTYPE_MIN -KDT_INFTY_FLOAT
+#define DTYPE_MAX  KDT_LARGEVALF
+#define DTYPE_MIN -KDT_LARGEVALF
 
 #define DTYPE f
 #define DTYPE_M f

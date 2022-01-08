@@ -24,6 +24,7 @@
 #include "errors.h"
 #include "log.h"
 #include "errors.h"
+#include "mathutil.h"
 
 Malloc
 char* fits_to_string(const qfits_header* hdr, int* size) {
@@ -307,7 +308,7 @@ double fits_get_double_val(const qfits_table* table, int column,
     } else {
         fprintf(stderr, "Invalid column type %i.\n", table->col[column].atom_type);
     }
-    return HUGE_VAL;
+    return LARGE_VAL;
 }
 
 int fits_is_table_header(const char* key) {

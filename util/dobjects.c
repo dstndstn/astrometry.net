@@ -12,6 +12,7 @@
 #include "dimage.h"
 #include "simplexy-common.h"
 #include "log.h"
+#include "mathutil.h"
 
 /*
  * dobjects.c
@@ -55,7 +56,7 @@ int dmask(float *image, int nx, int ny, float limit,
     if (!flagged_one) {
         /* no pixels were masked - what parameter settings would cause at
          least one pixel to be masked? */
-        float maxval = -HUGE_VAL;
+        float maxval = -LARGE_VALF;
         for (i=0; i<(nx*ny); i++)
             maxval = MAX(maxval, image[i]);
         logmsg("No pixels were marked as significant.\n"

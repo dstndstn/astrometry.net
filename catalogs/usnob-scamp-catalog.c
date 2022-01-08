@@ -10,11 +10,11 @@
 #include "os-features.h"
 #include "scamp-catalog.h"
 #include "usnob-fits.h"
-//#include "healpix-utils.h"
 #include "healpix.h"
 #include "starutil.h"
 #include "errors.h"
 #include "log.h"
+#include "mathutil.h"
 
 const char* OPTIONS = "hu:o:A:D:r:n:RBNv";
 
@@ -92,7 +92,7 @@ int main(int argc, char** args) {
     }
     log_init(loglvl);
 
-    if (ra == HUGE_VAL || dec == HUGE_VAL || !usnobpath || !scampref || radius == 0.0 || !nside) {
+    if (ra == LARGE_VAL || dec == LARGE_VAL || !usnobpath || !scampref || radius == 0.0 || !nside) {
         print_help(args[0]);
         printf("\n\nNeed RA, Dec, USNOB path, Nside, Scamp output file, and radius.\n");
         exit(-1);

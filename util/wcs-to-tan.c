@@ -45,8 +45,8 @@ int main(int argc, char** args) {
     anbool forcewcslib = FALSE;
     double xlo = 1;
     double ylo = 1;
-    double xhi = HUGE_VAL;
-    double yhi = HUGE_VAL;
+    double xhi = LARGE_VAL;
+    double yhi = LARGE_VAL;
     int N = 20;
 
     double* xyz = NULL;
@@ -128,20 +128,20 @@ int main(int argc, char** args) {
         anwcs_print(inwcs, log_get_fid());
     }
 
-    if (xhi == HUGE_VAL) {
+    if (xhi == LARGE_VAL) {
         xhi = anwcs_imagew(inwcs);
         logverb("Setting image width to %g\n", xhi);
     }
-    if (yhi == HUGE_VAL) {
+    if (yhi == LARGE_VAL) {
         yhi = anwcs_imageh(inwcs);
         logverb("Setting image height to %g\n", yhi);
     }
     // FIXME -- what if the user wants xhi or yhi == 0?
-    if (xhi == HUGE_VAL || xhi == 0) {
+    if (xhi == LARGE_VAL || xhi == 0) {
         ERROR("Couldn't find the image size; please supply -W\n");
         exit(-1);
     }
-    if (yhi == HUGE_VAL || yhi == 0) {
+    if (yhi == LARGE_VAL || yhi == 0) {
         ERROR("Couldn't find the image size; please supply -H\n");
         exit(-1);
     }

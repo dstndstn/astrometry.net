@@ -25,6 +25,7 @@
 #include "cairoutils.h"
 #include "fitsioutils.h"
 #include "tweak2.h"
+#include "mathutil.h"
 
 static const char* OPTIONS = "hx:m:r:vj:p:i:J:o:W:w:s:X:Y:";
 
@@ -223,7 +224,7 @@ int main(int argc, char** args) {
     int order = 2;
 
     int loglvl = LOG_MSG;
-    double crpix[] = { HUGE_VAL, HUGE_VAL };
+    double crpix[] = { LARGE_VAL, LARGE_VAL };
     anbool do_crpix = FALSE;
 
     //FILE* logstream = stderr;
@@ -288,7 +289,7 @@ int main(int argc, char** args) {
         exit(-1);
     }
 
-    do_crpix = (crpix[0] != HUGE_VAL) && (crpix[1] != HUGE_VAL);
+    do_crpix = (crpix[0] != LARGE_VAL) && (crpix[1] != LARGE_VAL);
 
     log_init(loglvl);
 

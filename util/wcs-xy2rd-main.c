@@ -18,6 +18,7 @@
 #include "errors.h"
 #include "wcs-xy2rd.h"
 #include "log.h"
+#include "mathutil.h"
 
 const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:X:Y:LTvs";
 
@@ -59,7 +60,7 @@ int main(int argc, char** args) {
     double x, y;
     int loglvl = LOG_MSG;
 
-    x = y = HUGE_VAL;
+    x = y = LARGE_VAL;
     fields = il_new(16);
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
@@ -119,7 +120,7 @@ int main(int argc, char** args) {
         exit(-1);
     }
 
-    if (!(wcsfn && ((rdlsfn && xylsfn) || ((x != HUGE_VAL) && (y != HUGE_VAL))))) {
+    if (!(wcsfn && ((rdlsfn && xylsfn) || ((x != LARGE_VAL) && (y != LARGE_VAL))))) {
         print_help(args[0]);
         exit(-1);
     }

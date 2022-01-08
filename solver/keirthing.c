@@ -12,6 +12,7 @@
 #include "log.h"
 #include "errors.h"
 #include "tweak.h"
+#include "mathutil.h"
 
 static const char* OPTIONS = "hW:H:X:Y:vo:";
 
@@ -27,7 +28,7 @@ int main(int argc, char** args) {
     int i, N;
     tan_t tan, tan2, tan3;
     int W=0, H=0;
-    double crpix[] = { HUGE_VAL, HUGE_VAL };
+    double crpix[] = { LARGE_VAL, LARGE_VAL };
     int loglvl = LOG_MSG;
     FILE* logstream = stderr;
     int order = 1;
@@ -67,9 +68,9 @@ int main(int argc, char** args) {
         logerr("Need -W, -H\n");
         exit(-1);
     }
-    if (crpix[0] == HUGE_VAL)
+    if (crpix[0] == LARGE_VAL)
         crpix[0] = W/2.0;
-    if (crpix[1] == HUGE_VAL)
+    if (crpix[1] == LARGE_VAL)
         crpix[1] = H/2.0;
 
     while (1) {

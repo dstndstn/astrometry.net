@@ -11,8 +11,9 @@
 
 #define KDTREE_MAX_LEVELS 1000
 
-#define KDT_INFTY_DOUBLE HUGE_VAL
-#define KDT_INFTY_FLOAT  HUGE_VALF
+// negatives of these values should be valid also
+#define KDT_LARGEVAL  1e308
+#define KDT_LARGEVALF 1e38
 
 enum kd_rangesearch_options {
     KD_OPTIONS_COMPUTE_DISTS    = 0x1,

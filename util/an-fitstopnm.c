@@ -19,6 +19,7 @@
 #include "log.h"
 #include "errors.h"
 #include "fitsioutils.h"
+#include "mathutil.h"
 
 static const char* OPTIONS = "hi:o:Oe:p:m:IX:N:xnrsvML:H:";
 
@@ -271,7 +272,7 @@ int main(int argc, char *argv[]) {
         float scale;
 
         if (find_min) {
-            minval = HUGE_VALF;
+            minval = LARGE_VALF;
             for (i=0; i<(nx*ny); i++) {
                 if (isfinite(img[i])) {
                     minval = MIN(minval, img[i]);
@@ -281,7 +282,7 @@ int main(int argc, char *argv[]) {
             logverb("Minimum pixel value: %g\n", minval);
         }
         if (find_max) {
-            maxval = -HUGE_VALF;
+            maxval = -LARGE_VALF;
             for (i=0; i<(nx*ny); i++) {
                 if (isfinite(img[i])) {
                     maxval = MAX(maxval, img[i]);
