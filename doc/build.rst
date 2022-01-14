@@ -94,25 +94,14 @@ First set up homebrew:
   * grab `Homebrew <http://mxcl.github.com/homebrew/>`_
   * grab `pip <http://www.pip-installer.org/en/latest/installing.html>`_ if you don't have it already
 
-Get homebrew dependencies that need special instructions::
-
-    $ brew install --HEAD --use-gcc netpbm
-
-Optionally, grab some other handy homebrew packages::
+Optionally, grab some handy homebrew packages::
 
     $ brew install cfitsio --with-examples
     $ brew install md5sha1sum     # OSX doesn't come with this?!  For shame
  
-Get our fork of homebrew-science and install::
+Install:
 
-    $ brew tap homebrew/homebrew-science
     $ brew install astrometry-net
-
-Or::
-
-    $ brew install --HEAD astrometry.net
-
-if you like to live dangerously (but trendily).
 
 
 Mac OS X using Fink:
