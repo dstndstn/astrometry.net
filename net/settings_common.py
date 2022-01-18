@@ -19,7 +19,10 @@ ALLOWED_HOSTS = ['astro.cs.toronto.edu', 'nova2.astrometry.net', 'localhost',
 
 MULTI_HOSTS = []
 
-WCS2KML = '/usr/local/wcs2kml/bin/wcs2kml'
+# broiler
+#WCS2KML = '/usr/local/wcs2kml/bin/wcs2kml'
+# bbq
+WCS2KML = '/usr/local/bin/wcs2kml'
 
 ENABLE_SOCIAL=False
 ENABLE_SOCIAL2=False
