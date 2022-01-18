@@ -2,6 +2,7 @@ import os
 import astrometry.net
 import astrometry.net.appsecrets.django_db as dbsecrets
 import astrometry.net.appsecrets.auth as authsecrets
+import astrometry.net.appsecrets.django as djsecrets
 from astrometry.net.util import dict_pack
 
 ALLOWED_HOSTS = ['astro.cs.toronto.edu', 'nova2.astrometry.net', 'localhost',
@@ -15,6 +16,7 @@ ALLOWED_HOSTS = ['astro.cs.toronto.edu', 'nova2.astrometry.net', 'localhost',
                  'nova5.astrometry.net',
                  'nova6.astrometry.net',
                  'testserver',
+                 'ccnova.astrometry.net',
 ]
 
 MULTI_HOSTS = []
@@ -183,7 +185,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'd_&$%*@=ttb$qu047w0_35g=t@9+brymn)_si787g*52x_9e%n'
+SECRET_KEY = djsecrets.DJANGO_SECRET_KEY
 
 TEMPLATES = [
     {

@@ -4,6 +4,12 @@ import os
 import sys
 from subprocess import check_output #nosec
 
+
+print('Initial PYTHONPATH:', os.environ.get('PYTHONPATH'))
+print('Initial sys.path:')
+print('\n'.join(sys.path))
+print('Initial PATH:', os.environ.get('PATH'))
+
 # add .. to PYTHONPATH
 path = os.path.realpath(__file__)
 basedir = os.path.dirname(os.path.dirname(path))
@@ -15,6 +21,12 @@ os.environ['PATH'] += ':' + os.path.join(basedir, 'util')
 os.environ['PATH'] += ':' + os.path.join(basedir, 'plot')
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+
+print('Final PYTHONPATH:', os.environ.get('PYTHONPATH'))
+print('Final sys.path:')
+print('\n'.join(sys.path))
+print('Final PATH:', os.environ.get('PATH'))
+
 
 import django
 django.setup()

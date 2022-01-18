@@ -19,7 +19,7 @@ os.environ['PATH'] += ':/usr/local/netpbm/bin:%s/solver:%s/util:%s/plot' % (path
 
 import logging
 #logfn = os.path.join(path, 'net', 'nova.log')
-logfn = '/data2/nova/nova.log'
+logfn = '/data/nova/nova.log'
 print('Logging to', logfn, file=sys.stderr)
 logging.basicConfig(filename=logfn, level=logging.DEBUG)
 

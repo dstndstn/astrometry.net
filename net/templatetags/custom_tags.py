@@ -1,5 +1,5 @@
 from django import template
-from django.utils.http import urlquote
+from urllib.parse import quote as urlquote
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 import types
