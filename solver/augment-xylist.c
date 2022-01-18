@@ -41,6 +41,7 @@
 #include "augment-xylist.h"
 #include "log.h"
 #include "anqfits.h"
+#include "mathutil.h"
 
 static void delete_existing_an_headers(qfits_header* hdr);
 
@@ -56,8 +57,8 @@ void augment_xylist_init(augment_xylist_t* axy) {
     axy->tagalong = sl_new(4);
     axy->try_verify = TRUE;
     axy->resort = TRUE;
-    axy->ra_center = HUGE_VAL;
-    axy->dec_center = HUGE_VAL;
+    axy->ra_center = LARGE_VAL;
+    axy->dec_center = LARGE_VAL;
     axy->parity = PARITY_BOTH;
     axy->uniformize = 10;
     axy->verify_uniformize = TRUE;
@@ -137,7 +138,7 @@ static an_option_t options[] = {
     {'#', "odds-to-reject",   required_argument, "odds",
      "odds ratio at which to reject a hypothesis (default: 1e-100)"},
     {'%', "odds-to-stop-looking", required_argument, "odds",
-     "odds ratio at which to stop adding stars when evaluating a hypothesis (default: HUGE_VAL)"},
+     "odds ratio at which to stop adding stars when evaluating a hypothesis (default: LARGE_VAL)"},
     {'^', "use-source-extractor", no_argument, NULL,
      "use SourceExtractor rather than built-in image2xy to find sources"},
     {'&', "source-extractor-config", required_argument, "filename",
@@ -343,14 +344,14 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         break;
     case '3':
         axy->ra_center = atora(optarg);
-        if (axy->ra_center == HUGE_VAL) {
+        if (axy->ra_center == LARGE_VAL) {
             ERROR("Couldn't understand your RA center argument \"%s\"", optarg);
             return -1;
         }
         break;
     case '4':
         axy->dec_center = atodec(optarg);
-        if (axy->dec_center == HUGE_VAL) {
+        if (axy->dec_center == LARGE_VAL) {
             ERROR("Couldn't understand your Dec center argument \"%s\"", optarg);
             return -1;
         }
@@ -1313,8 +1314,8 @@ int augment_xylist(augment_xylist_t* axy,
             qfits_header_add(hdr, "ANPARITY", "NEG", "det(CD) < 0", NULL);
     }
 
-    if ((axy->ra_center != HUGE_VAL) &&
-        (axy->dec_center != HUGE_VAL) &&
+    if ((axy->ra_center != LARGE_VAL) &&
+        (axy->dec_center != LARGE_VAL) &&
         (axy->search_radius >= 0.0)) {
         fits_header_add_double(hdr, "ANERA", axy->ra_center, "RA center estimate (deg)");
         fits_header_add_double(hdr, "ANEDEC", axy->dec_center, "Dec center estimate (deg)");

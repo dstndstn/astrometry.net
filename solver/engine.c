@@ -21,12 +21,14 @@
 #include <dirent.h>
 #include <assert.h>
 
+#include "math.h"
+
+#include "mathutil.h"
 #include "ioutils.h"
 #include "fileutils.h"
 #include "bl.h"
 #include "an-bool.h"
 #include "solver.h"
-#include "math.h"
 #include "fitsioutils.h"
 #include "solverutils.h"
 #include "os-features.h"
@@ -659,7 +661,7 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
     onefield_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
 
-    double dnil = -HUGE_VAL;
+    double dnil = -LARGE_VAL;
     char *pstr;
     int n;
     anbool run;
@@ -754,8 +756,8 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
         sp->parity = PARITY_NORMAL;
 
     sp->set_crpix_center = qfits_header_getboolean(hdr, "ANCRPIXC", FALSE);
-    sp->crpix[0] = qfits_header_getint(hdr, "ANCRPIX1", sp->crpix[0]);
-    sp->crpix[1] = qfits_header_getint(hdr, "ANCRPIX2", sp->crpix[1]);
+    sp->crpix[0] = qfits_header_getdouble(hdr, "ANCRPIX1", sp->crpix[0]);
+    sp->crpix[1] = qfits_header_getdouble(hdr, "ANCRPIX2", sp->crpix[1]);
     sp->set_crpix = (sp->set_crpix_center || 
                      // were the values set?
                      qfits_header_getstr(hdr, "ANCRPIX1") ||
@@ -782,12 +784,12 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
     if (val > 0.0)
         bp->quad_size_fraction_hi = val;
 
-    job->ra_center = qfits_header_getdouble(hdr, "ANERA", HUGE_VAL);
-    job->dec_center = qfits_header_getdouble(hdr, "ANEDEC", HUGE_VAL);
-    job->search_radius = qfits_header_getdouble(hdr, "ANERAD", HUGE_VAL);
-    job->use_radec_center = ((job->ra_center     != HUGE_VAL) &&
-                             (job->dec_center    != HUGE_VAL) &&
-                             (job->search_radius != HUGE_VAL));
+    job->ra_center = qfits_header_getdouble(hdr, "ANERA", dnil);
+    job->dec_center = qfits_header_getdouble(hdr, "ANEDEC", dnil);
+    job->search_radius = qfits_header_getdouble(hdr, "ANERAD", dnil);
+    job->use_radec_center = ((job->ra_center     != dnil) &&
+                             (job->dec_center    != dnil) &&
+                             (job->search_radius != dnil));
 
     // tag-along columns
     bp->rdls_tagalong_all = qfits_header_getboolean(hdr, "ANTAGALL", FALSE);
@@ -815,21 +817,17 @@ static anbool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
         char key[64];
         double lo, hi;
         sprintf(key, "ANAPPL%i", n);
-        lo = qfits_header_getdouble(hdr, key, dnil);
+        lo = qfits_header_getdouble(hdr, key, 0.);
         sprintf(key, "ANAPPU%i", n);
-        hi = qfits_header_getdouble(hdr, key, dnil);
-        if ((hi == dnil) && (lo == dnil))
+        hi = qfits_header_getdouble(hdr, key, 0.);
+        if ((hi == 0.) && (lo == 0.))
             break;
-        if ((lo != dnil) && (hi != dnil)) {
+        if ((lo != 0.) && (hi != 0.)) {
             if ((lo < 0) || (lo > hi)) {
                 logerr("Scale range %g to %g is invalid: min must be >= 0, max must be >= min.\n", lo, hi);
                 goto bailout;
             }
         }
-        if (hi == dnil)
-            hi = 0.0;
-        if (lo == dnil)
-            lo = 0.0;
         dl_append(job->scales, lo);
         dl_append(job->scales, hi);
         n++;
@@ -981,8 +979,8 @@ engine_t* engine_new() {
     engine->ismallest = il_new(4);
     engine->ibiggest = il_new(4);
     engine->default_depths = il_new(4);
-    engine->sizesmallest = HUGE_VAL;
-    engine->sizebiggest = -HUGE_VAL;
+    engine->sizesmallest = LARGE_VAL;
+    engine->sizebiggest = -LARGE_VAL;
 
     // Default scale estimate: field width, in degrees:
     engine->minwidth = 0.1;

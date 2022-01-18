@@ -154,6 +154,9 @@ static float GLUE(lanczos_resample_one_, L)
                 int clipix = MAX(0, MIN((int)(W-1), x));
                 slope = lx[Nunits] - (*lx);
                 accx  += ((*lx) + slope*fx) * (inpix[clipix]);
+
+                //printf("weighting input (%i, %i) by kernel %f\n",
+                //clipix, clipiy, (*lx) + slope*fx);
             }
             slope = ly[Nunits] - (*ly);
             acc  += ((*ly) + slope*fy) * accx;
@@ -169,6 +172,9 @@ static float GLUE(lanczos_resample_one_, L)
             for (u=0; u<2*L+1; u++, lx++, inpix++) {
                 slope = lx[Nunits] - (*lx);
                 accx  += ((*lx) + slope*fx) * (*inpix);
+
+                //printf("weighting input (%i, %i) by kernel %f\n",
+                //ix, clipiy, (*lx) + slope*fx);
             }
             slope = ly[Nunits] - (*ly);
             acc  += ((*ly) + slope*fy) * accx;
@@ -341,6 +347,7 @@ static PyObject* GLUE3(lanczos, L, _interpolate_grid)
             if ((ix < -L) || (ix >= W+L))
                 continue;
 
+            //printf("resampling input at (%.3f, %.3f)\n", x, y);
             outimg[j * outW + i] = lanczos_resample_one(ix, dx, iy, dy, inimg, W, H);
         }
     }

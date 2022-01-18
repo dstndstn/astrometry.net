@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     int fieldfile;
     int totalsolved, totalunsolved;
     int mode = MODE_BEST;
-    double logodds_tosolve = -HUGE_VAL;
+    double logodds_tosolve = -LARGE_VAL;
     anbool agree = FALSE;
 
     MatchObj* bestmo;

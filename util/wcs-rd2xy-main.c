@@ -16,6 +16,7 @@
 #include "anwcs.h"
 #include "errors.h"
 #include "log.h"
+#include "mathutil.h"
 
 const char* OPTIONS = "hi:o:w:f:R:D:te:r:d:Lv";
 
@@ -48,7 +49,7 @@ int main(int argc, char** args) {
     anbool forcetan = FALSE;
     il* fields;
     int ext = 0;
-    double ra=HUGE_VAL, dec=HUGE_VAL;
+    double ra=LARGE_VAL, dec=LARGE_VAL;
     anbool wcslib = FALSE;
     int loglvl = LOG_MSG;
 
@@ -105,7 +106,7 @@ int main(int argc, char** args) {
         exit(-1);
     }
 
-    if (!(wcsfn && ((rdlsfn && xylsfn) || ((ra != HUGE_VAL) && (dec != HUGE_VAL))))) {
+    if (!(wcsfn && ((rdlsfn && xylsfn) || ((ra != LARGE_VAL) && (dec != LARGE_VAL))))) {
         print_help(args[0]);
         exit(-1);
     }

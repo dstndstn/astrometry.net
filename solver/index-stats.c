@@ -104,8 +104,8 @@ int main(int argc, char** args) {
                 for (k=0; k<dimquads; k++) 
                     var += square(mags[k] - mean);
                 var /= (double)dimquads;
-                mn =  HUGE_VAL;
-                mx = -HUGE_VAL;
+                mn =  LARGE_VAL;
+                mx = -LARGE_VAL;
                 for (k=0; k<dimquads; k++) {
                     mn = MIN(mn, mags[k]);
                     mx = MAX(mx, mags[k]);

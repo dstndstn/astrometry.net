@@ -30,7 +30,6 @@ void printHelp(char* progname) {
 
 int main(int argc, char **argv) {
     int argchar;
-    //double ra=HUGE_VAL, dec=HUGE_VAL, radius=HUGE_VAL;
     int loglvl = LOG_MSG;
     char** myargs;
     int nmyargs;
@@ -38,17 +37,6 @@ int main(int argc, char **argv) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
-            /*
-             case 'r':
-             ra = atof(optarg);
-             break;
-             case 'd':
-             dec = atof(optarg);
-             break;
-             case 'R':
-             radius = atof(optarg);
-             break;
-             */
         case 'v':
             loglvl++;
             break;

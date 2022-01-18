@@ -36,7 +36,7 @@ int main(int argc, char** args) {
     int healpix = -1;
     int i;
     anbool degrees = TRUE;
-    double radius = HUGE_VAL;
+    double radius = LARGE_VAL;
     int nargs;
     int c;
     int Nside = 1;
@@ -152,7 +152,7 @@ int main(int argc, char** args) {
         printf("]\n");
     }
 
-    if (radius != HUGE_VAL) {
+    if (radius != LARGE_VAL) {
         il* hps;
         printf("Healpixes within radius %g degrees: [", radius);
         hps = healpix_rangesearch_xyz(xyz, radius, Nside, NULL);

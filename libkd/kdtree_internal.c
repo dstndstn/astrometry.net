@@ -14,6 +14,7 @@
 #include "kdtree_mem.h"
 #include "keywords.h"
 #include "errors.h"
+#include "mathutil.h"
 
 #define KDTREE_MAX_RESULTS 1000
 #define KDTREE_MAX_DIM 100
@@ -659,7 +660,7 @@ static void kdtree_nn_bb(const kdtree_t* kd, const etype* query,
             continue;
         }
 
-        childd2[0] = childd2[1] = HUGE_VAL;
+        childd2[0] = childd2[1] = LARGE_VAL;
         for (child=0; child<2; child++) {
             anbool bailed;
             double dist2;
@@ -728,11 +729,11 @@ static void kdtree_nn_bb(const kdtree_t* kd, const etype* query,
             secondid = KD_CHILD_LEFT(nodeid);
         }
 
-        if (firstd2 == HUGE_VAL)
+        if (firstd2 == LARGE_VAL)
             continue;
 
         // it's a stack, so put the "second" one on first.
-        if (secondd2 != HUGE_VAL) {
+        if (secondd2 != LARGE_VAL) {
             stackpos++;
             nodestack[stackpos] = secondid;
             dist2stack[stackpos] = secondd2;
@@ -1215,7 +1216,7 @@ kdtree_qres_t* MANGLE(kdtree_rangesearch_options)
                     // HACK - should do "use_dtype", just like "use_ttype".
                     if (dist2_exceeds(kd, query, data, D, maxd2))
                         continue;
-                    if (!add_result(kd, res, HUGE_VAL, KD_PERM(kd, i), data,
+                    if (!add_result(kd, res, LARGE_VAL, KD_PERM(kd, i), data,
                                     D, do_dists, do_points))
                         return NULL;
                 }
@@ -1309,7 +1310,7 @@ kdtree_qres_t* MANGLE(kdtree_rangesearch_options)
                     }
                 } else {
                     for (i=L; i<=R; i++)
-                        if (!add_result(kd, res, HUGE_VAL, KD_PERM(kd, i),
+                        if (!add_result(kd, res, LARGE_VAL, KD_PERM(kd, i),
                                         KD_DATA(kd, D, i), D,
                                         do_dists, do_points))
                             return NULL;
@@ -2531,7 +2532,7 @@ double MANGLE(kdtree_node_point_mindist2)
     double d2 = 0.0;
     if (!bboxes(kd, node, &tlo, &thi, D)) {
         ERROR("Error: kdtree does not have bounding boxes!");
-        return HUGE_VAL;
+        return LARGE_VAL;
     }
     for (d=0; d<D; d++) {
         etype delta;

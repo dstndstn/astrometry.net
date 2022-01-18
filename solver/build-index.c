@@ -37,6 +37,7 @@
 #include "merge-index.h"
 #include "fitsioutils.h"
 #include "permutedsort.h"
+#include "mathutil.h"
 
 static void add_boilerplate(index_params_t* p, qfits_header* hdr) {
 }
@@ -727,7 +728,7 @@ void build_index_defaults(index_params_t* p) {
     p->Nloosen = 20;
     p->dimquads = 4;
     p->sortasc = TRUE;
-    p->brightcut = -HUGE_VAL;
+    p->brightcut = -LARGE_VAL;
     // default to all-sky
     p->bighp = -1;
     //p->inmemory = TRUE;

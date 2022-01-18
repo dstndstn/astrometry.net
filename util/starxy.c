@@ -10,6 +10,7 @@
 #include "os-features.h"
 #include "starxy.h"
 #include "permutedsort.h"
+#include "mathutil.h"
 
 void starxy_set_xy_array(starxy_t* s, const double* xy) {
     int i,N;
@@ -39,8 +40,8 @@ starxy_t* starxy_copy(starxy_t* s) {
 
 void starxy_compute_range(starxy_t* xy) {
     int i, N;
-    xy->xlo = xy->ylo =  HUGE_VAL;
-    xy->xhi = xy->yhi = -HUGE_VAL;
+    xy->xlo = xy->ylo =  LARGE_VAL;
+    xy->xhi = xy->yhi = -LARGE_VAL;
     N = starxy_n(xy);
     for (i=0; i<N; i++) {
         xy->xlo = MIN(xy->xlo, starxy_getx(xy, i));

@@ -364,7 +364,7 @@ void onefield_run(onefield_t* bp) {
         // logodds-to-solve impossibly high so that a "good enough" solution doesn't
         // stop us from continuing to search...
         double oldodds = bp->logratio_tosolve;
-        bp->logratio_tosolve = HUGE_VAL;
+        bp->logratio_tosolve = LARGE_VAL;
 
         for (w = 0; w < bl_size(bp->verify_wcs_list); w++) {
             double pixscale;

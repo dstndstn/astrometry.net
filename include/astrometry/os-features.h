@@ -48,9 +48,6 @@
                                             ? __x_n >= __LDBL_MIN__ \
                                             : __x_n >= __DBL_MIN__), 1); })
 
-#undef HUGE_VALF
-#define HUGE_VALF (1e50f)
-
 #endif
 
 

@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /*
@@ -58,6 +58,8 @@
  -----------------------------------------------------------------------------*/
 
 #define ELEMENT_MAX_DISPLAY_SIZE    50
+
+#define LARGE_VALF 1e30f
 
 /*-----------------------------------------------------------------------------
  Function prototypes
@@ -565,8 +567,8 @@ qfits_table * qfits_table_open2(const qfits_header* hdr, off_t offset_beg, size_
         /* zero <-> TZERO */
         sprintf(keyword, "TZERO%d", i+1);
         zero_present = 1;
-        zero = qfits_header_getdouble(hdr, keyword, HUGE_VAL);
-        if (zero == HUGE_VAL) {
+        zero = qfits_header_getdouble(hdr, keyword, LARGE_VALF);
+        if (zero == LARGE_VALF) {
             zero = 0.0;
             zero_present = 0;
         }
@@ -574,8 +576,8 @@ qfits_table * qfits_table_open2(const qfits_header* hdr, off_t offset_beg, size_
         /* scale <-> TSCAL */
         sprintf(keyword, "TSCAL%d", i+1);
         scale_present = 1;
-        scale = qfits_header_getdouble(hdr, keyword, HUGE_VAL);
-        if (scale == HUGE_VAL) {
+        scale = qfits_header_getdouble(hdr, keyword, LARGE_VALF);
+        if (scale == LARGE_VALF) {
             scale = 1.0;
             scale_present = 0;
         }

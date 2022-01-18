@@ -335,8 +335,8 @@ static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* arg
         }
         {
             // DEBUG
-            double plo = HUGE_VAL;
-            double phi = -HUGE_VAL;
+            double plo = LARGE_VAL;
+            double phi = -LARGE_VAL;
             int i;
             for (i=0; i<(pargs->W * pargs->H); i++) {
                 plo = MIN(plo, rimg[i]);
@@ -367,8 +367,8 @@ unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg) {
         if (args->auto_scale) {
             // min/max, or percentiles?
             /*
-             double mn = HUGE_VAL;
-             double mx = -HUGE_VAL;
+             double mn = LARGE_VAL;
+             double mx = -LARGE_VAL;
              for (i=0; i<(args->W*args->H); i++) {
              mn = MIN(mn, fimg[i]);
              mx = MAX(mx, fimg[i]);

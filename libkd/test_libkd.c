@@ -293,7 +293,7 @@ static void run_test_nn(CuTest* tc, int treetype, int treeopts,
 
         ind = kdtree_nearest_neighbour(kd, query, &d2);
 
-        trued2 = HUGE_VAL;
+        trued2 = LARGE_VAL;
         trueind = -1;
         for (i=0; i<N; i++) {
             double d2 = distsq(query, origdata + i*D, D);

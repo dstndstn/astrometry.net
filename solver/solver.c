@@ -630,8 +630,8 @@ static void find_field_boundaries(solver_t* solver) {
     if ((solver->field_minx == solver->field_maxx) ||
         (solver->field_miny == solver->field_maxy)) {
         int i;
-        solver->field_minx = solver->field_miny =  HUGE_VAL;
-        solver->field_maxx = solver->field_maxy = -HUGE_VAL;
+        solver->field_minx = solver->field_miny =  LARGE_VAL;
+        solver->field_maxx = solver->field_maxy = -LARGE_VAL;
         for (i = 0; i < starxy_n(solver->fieldxy); i++) {
             solver->field_minx = MIN(solver->field_minx, field_getx(solver, i));
             solver->field_maxx = MAX(solver->field_maxx, field_getx(solver, i));
@@ -797,8 +797,8 @@ void solver_run(solver_t* solver) {
     {
         double minAB2s[num_indexes];
         double maxAB2s[num_indexes];
-        solver->minminAB2 = HUGE_VAL;
-        solver->maxmaxAB2 = -HUGE_VAL;
+        solver->minminAB2 = LARGE_VAL;
+        solver->maxmaxAB2 = -LARGE_VAL;
         for (i = 0; i < num_indexes; i++) {
             double minAB=0, maxAB=0;
             index_t* index = pl_get(solver->indexes, i);
@@ -1640,10 +1640,10 @@ solver_t* solver_new() {
 void solver_set_default_values(solver_t* solver) {
     memset(solver, 0, sizeof(solver_t));
     solver->indexes = pl_new(16);
-    solver->funits_upper = HUGE_VAL;
+    solver->funits_upper = LARGE_VAL;
     solver->logratio_bail_threshold = log(1e-100);
-    solver->logratio_stoplooking = HUGE_VAL;
-    solver->logratio_totune = HUGE_VAL;
+    solver->logratio_stoplooking = LARGE_VAL;
+    solver->logratio_totune = LARGE_VAL;
     solver->parity = DEFAULT_PARITY;
     solver->codetol = DEFAULT_CODE_TOL;
     solver->distractor_ratio = DEFAULT_DISTRACTOR_RATIO;

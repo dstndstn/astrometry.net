@@ -135,12 +135,12 @@ double atora(const char* str) {
 
     if (!str) {
         //ERROR("Null string to atora()");
-        return HUGE_VAL;
+        return LARGE_VAL;
     }
     rtn = parse_hms_string(str, &sgn, &hr, &min, &sec);
     if (rtn == -1) {
         ERROR("Failed to run regex");
-        return HUGE_VAL;
+        return LARGE_VAL;
     }
     if (rtn == 0)
         return sgn * hms2ra(hr, min, sec);
@@ -148,7 +148,7 @@ double atora(const char* str) {
     ra = strtod(str, &eptr);
     if (eptr == str)
         // no conversion
-        return HUGE_VAL;
+        return LARGE_VAL;
     return ra;
 }
 
@@ -162,7 +162,7 @@ double atodec(const char* str) {
     rtn = parse_hms_string(str, &sgn, &deg, &min, &sec);
     if (rtn == -1) {
         ERROR("Failed to run regex");
-        return HUGE_VAL;
+        return LARGE_VAL;
     }
     if (rtn == 0)
         return dms2dec(sgn, deg, min, sec);
@@ -170,7 +170,7 @@ double atodec(const char* str) {
     dec = strtod(str, &eptr);
     if (eptr == str)
         // no conversion
-        return HUGE_VAL;
+        return LARGE_VAL;
     return dec;
 }
 

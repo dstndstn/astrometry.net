@@ -6,13 +6,13 @@
 typedef float ttype;
 
 #define BIGTTYPE float
-#define BIGTTYPE_MAX KDT_INFTY_FLOAT
+#define BIGTTYPE_MAX KDT_LARGEVALF
 typedef float bigttype;
 
 #define TTYPE_INTEGER 0
 
-#define TTYPE_MIN -KDT_INFTY_FLOAT
-#define TTYPE_MAX  KDT_INFTY_FLOAT
+#define TTYPE_MIN -KDT_LARGEVALF
+#define TTYPE_MAX  KDT_LARGEVALF
 #define TTYPE_SQRT_MAX  1e19
 
 #define TTYPE f

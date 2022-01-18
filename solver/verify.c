@@ -32,7 +32,6 @@
 #define DLOG_ODDS 10
 
 #define DLOG_ODDS_MIN log(1e6)
-//#define DLOG_ODDS_MIN -HUGE_VAL
 
 #define dlog(lev, fmt, ...) data_log(DATALOG_MASK_VERIFY, lev, fmt, ##__VA_ARGS__)
 
@@ -476,7 +475,7 @@ static double real_verify_star_lists(verify_t* v,
 
     if (!v->NR || !v->NT) {
         logerr("real_verify_star_lists: NR=%i, NT=%i\n", v->NR, v->NT);
-        return -HUGE_VAL;
+        return -LARGE_VAL;
     }
 
     // Build a tree out of the index stars in pixel space...
@@ -501,7 +500,7 @@ static double real_verify_star_lists(verify_t* v,
 
     rprobs = malloc(v->NR * sizeof(double));
     for (i=0; i<v->NR; i++)
-        rprobs[i] = -HUGE_VAL;
+        rprobs[i] = -LARGE_VAL;
 
     if (p_logodds || data_log_passes(DATALOG_MASK_VERIFY, DLOG_ODDS))
         all_logodds = calloc(v->NT, sizeof(double));
@@ -518,8 +517,8 @@ static double real_verify_star_lists(verify_t* v,
     logbg = log(1.0 / effective_area);
 
     worstlogodds = 0;
-    bestlogodds = -HUGE_VAL;
-    bestworstlogodds = -HUGE_VAL;
+    bestlogodds = -LARGE_VAL;
+    bestworstlogodds = -LARGE_VAL;
     besti = -1;
     logodds = 0.0;
     mu = 0;
@@ -548,7 +547,7 @@ static double real_verify_star_lists(verify_t* v,
             // no nearest neighbour within range.
             debug2("  No nearest neighbour.\n");
             refi = -1;
-            logfg = -HUGE_VAL;
+            logfg = -LARGE_VAL;
         } else {
             double loggmax;
             // Note that "refi" is w.r.t. the "refcopy" array (not the original data).
@@ -1047,7 +1046,7 @@ static void set_null_mo(MatchObj* mo) {
     mo->nfield = 0;
     mo->nmatch = 0;
     matchobj_compute_derived(mo);
-    mo->logodds = -HUGE_VAL;
+    mo->logodds = -LARGE_VAL;
 }
 
 static void check_permutation(const int* perm, int N) {
@@ -1158,7 +1157,7 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
         if (theta[i] < 0) {
             etheta[ti] = theta[i];
             // No match -> no weight.
-            eodds[ti] = -HUGE_VAL;
+            eodds[ti] = -LARGE_VAL;
         } else {
             if (DEBUGVERIFY)
                 assert(invrperm[theta[i]] != BAD_PERM);
@@ -1172,7 +1171,7 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
     for (i=v->NT; i<v->NTall; i++) {
         ti = v->testperm[i];
         etheta[ti] = THETA_FILTERED;
-        eodds[ti] = -HUGE_VAL;
+        eodds[ti] = -LARGE_VAL;
     }
 
     if (DEBUGVERIFY) {
@@ -1393,7 +1392,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
         goto bailout;
     }
 
-    worst = -HUGE_VAL;
+    worst = -LARGE_VAL;
     K = real_verify_star_lists(v, effA, distractors,
                                logbail, logstoplooking, &besti, &allodds, &theta, &worst,
                                &ibailed, &istopped);
@@ -1436,7 +1435,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
                         ti = mo->field[j];
                         assert(etheta[ti] == THETA_FILTERED);
                         etheta[ti] = ri;
-                        eodds[ti] = HUGE_VAL;
+                        eodds[ti] = LARGE_VAL;
                         debug2("Matched ref index %i (star %i) to test index %i; ref pos=(%.1f, %.1f), test pos=(%.1f, %.1f)\n",
                                ri, v->refstarid[ri], ti, v->refxy[ri*2+0], v->refxy[ri*2+1], v->testxy[ti*2+0], v->testxy[ti*2+1]);
                         break;
@@ -1745,7 +1744,7 @@ double verify_star_lists_ror(double* refxys, int NR,
             *p_besti = besti;
 
     } else {
-        X = -HUGE_VAL;
+        X = -LARGE_VAL;
     }
 
 

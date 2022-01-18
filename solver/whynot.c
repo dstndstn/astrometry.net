@@ -960,7 +960,7 @@ int main(int argc, char** args) {
 
                 verify_hit(indx->starkd, indx->cutnside, &mo, NULL, vf, verpix2,
                            DEFAULT_DISTRACTOR_RATIO, W, H,
-                           log(1e-100), log(1e9), HUGE_VAL, TRUE, FALSE);
+                           log(1e-100), log(1e9), LARGE_VAL, TRUE, FALSE);
 
                 verify_field_free(vf);
             }

@@ -16,6 +16,7 @@
 #include "boilerplate.h"
 #include "tic.h"
 #include "fitstable.h"
+#include "mathutil.h"
 
 static const char* OPTIONS = "hvr:d:R:o:";
 
@@ -33,7 +34,7 @@ void printHelp(char* progname) {
 
 int main(int argc, char **argv) {
     int argchar;
-    double ra=HUGE_VAL, dec=HUGE_VAL, radius=HUGE_VAL;
+    double ra=LARGE_VAL, dec=LARGE_VAL, radius=LARGE_VAL;
     int loglvl = LOG_MSG;
     char** myargs;
     int nmyargs;
@@ -73,7 +74,7 @@ int main(int argc, char **argv) {
         printHelp(argv[0]);
         exit(-1);
     }
-    if (ra == HUGE_VAL || dec == HUGE_VAL || radius == HUGE_VAL) {
+    if (ra == LARGE_VAL || dec == LARGE_VAL || radius == LARGE_VAL) {
         printHelp(argv[0]);
         exit(-1);
     }

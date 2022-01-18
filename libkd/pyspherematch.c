@@ -23,6 +23,7 @@
 #include "dualtree_rangesearch.h"
 #include "dualtree_nearestneighbour.h"
 #include "bl.h"
+#include "mathutil.h"
 
 typedef struct {
     PyObject_HEAD
@@ -734,7 +735,7 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
 
     for (i=0; i<NY; i++) {
         pinds[i] = -1;
-        pdist2s[i] = HUGE_VAL;
+        pdist2s[i] = LARGE_VAL;
     }
     // and apply kd2's permutation array!
     for (i=0; i<NY; i++) {

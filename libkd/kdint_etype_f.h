@@ -7,7 +7,7 @@ typedef float etype;
 
 #define ETYPE_INTEGER 0
 
-#define ETYPE_MAX  KDT_INFTY_FLOAT
-#define ETYPE_MIN -KDT_INFTY_FLOAT
+#define ETYPE_MAX  KDT_LARGEVALF
+#define ETYPE_MIN -KDT_LARGEVALF
 
 #define ETYPE f

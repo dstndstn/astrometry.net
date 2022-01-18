@@ -9,6 +9,9 @@
 #include "astrometry/keywords.h"
 #include "bl.h"
 
+#define LARGE_VAL  1e30
+#define LARGE_VALF 1e30f
+
 int point_in_polygon(double x, double y, const dl* polygon);
 
 /*

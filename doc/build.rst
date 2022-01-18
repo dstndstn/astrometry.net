@@ -94,25 +94,14 @@ First set up homebrew:
   * grab `Homebrew <http://mxcl.github.com/homebrew/>`_
   * grab `pip <http://www.pip-installer.org/en/latest/installing.html>`_ if you don't have it already
 
-Get homebrew dependencies that need special instructions::
-
-    $ brew install --HEAD --use-gcc netpbm
-
-Optionally, grab some other handy homebrew packages::
+Optionally, grab some handy homebrew packages::
 
     $ brew install cfitsio --with-examples
     $ brew install md5sha1sum     # OSX doesn't come with this?!  For shame
  
-Get our fork of homebrew-science and install::
+Install:
 
-    $ brew tap homebrew/homebrew-science
     $ brew install astrometry-net
-
-Or::
-
-    $ brew install --HEAD astrometry.net
-
-if you like to live dangerously (but trendily).
 
 
 Mac OS X using Fink:
@@ -126,6 +115,12 @@ use Fink you will need to add something like this in your
     . /sw/bin/init.sh
     export CFLAGS="-I/usr/local/include -I/sw/include"
     export LDFLAGS="-L/usr/local/lib -L/sw/lib"
+
+Windows 10/11:
+^^^^^^^^^^^^^^^^^^^^
+
+Since there is `Windows Subsystem for Linux (WSL) <https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux>` compatibility layer available on Windows 10/11 OS, you can follow the WSL install `guide <https://docs.microsoft.com/en-us/windows/wsl/install>`.
+Once WSL is installed, the build steps are the same as for Debian/Ubuntu-like systems. See above.
 
 Getting/Building
 ----------------

@@ -43,6 +43,7 @@
 static an_option_t options[] = {
     {'h', "help",		   no_argument, NULL,
      "print this help message" },
+    {'\x95', "version", no_argument, NULL, "print version string and exit"},
     {'v', "verbose",       no_argument, NULL,
      "be more chatty -- repeat for even more verboseness" },
     {'D', "dir", required_argument, "directory",
@@ -902,6 +903,10 @@ int main(int argc, char** args) {
         case 'J':
             skip_solved = TRUE;
             break;
+        case '\x95':
+            printf("%s\n", AN_GIT_REVISION);
+            exit(rtn);
+            break;
         default:
             res = augment_xylist_parse_option(c, optarg, allaxy);
             if (res) {
@@ -1033,6 +1038,7 @@ int main(int argc, char** args) {
 
         isurl = (!file_exists(infile) &&
                  (starts_with(infile, "http://") ||
+                  starts_with(infile, "https://") ||
                   starts_with(infile, "ftp://")));
 
         if (outdir)

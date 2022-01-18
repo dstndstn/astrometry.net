@@ -350,7 +350,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
              logodds = verify_star_lists(indexpix, Nin,
              fieldxy, fieldsigma2s, Nfield,
              W*H, distractors,
-             logodds_bail, HUGE_VAL,
+             logodds_bail, LARGE_VAL,
              &besti, &odds, &theta, NULL,
              &testperm);
              */
@@ -360,7 +360,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
                                             fieldxy, fieldsigma2s, Nfield,
                                             pix2, gamma, qc, quadR2,
                                             W, H, distractors,
-                                            logodds_bail, HUGE_VAL,
+                                            logodds_bail, LARGE_VAL,
                                             &besti, &odds, &theta, NULL,
                                             &testperm, &refperm);
 
@@ -524,7 +524,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
                                         fieldxy, fieldsigma2s, Nfield,
                                         pix2, gamma, qc, quadR2,
                                         W, H, distractors,
-                                        logodds_bail, HUGE_VAL,
+                                        logodds_bail, LARGE_VAL,
                                         &besti, &odds, &theta, NULL,
                                         &testperm, &refperm);
         logverb("Logodds: %g\n", logodds);
