@@ -232,9 +232,10 @@ int main(int argc, char** argv) {
     }
 
     if (preset > -100) {
-        // I don't think we can do -6 easily (due to healpix limitations)
-        const int minpreset = -5;
-        double scales[] = { 
+        // presets of -6 and below require 64-bit healpixes
+        const int minpreset = -10;
+        double scales[] = {
+            0.06, 0.09, 0.13, 0.18, 0.25,
             0.35, 0.5, 0.7, 1., 1.4,
             2., 2.8, 4., 5.6, 8., 11., 16., 22., 30., 42., 60., 85.,
             120., 170., 240., 340., 480., 680., 1000., 1400., 2000. };

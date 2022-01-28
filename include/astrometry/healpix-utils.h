@@ -46,4 +46,11 @@ il* healpix_region_search(int seed, il* seeds, int Nside,
                           int depth);
 
 
+ll* healpix_region_searchl(int64_t seed, ll* seeds, int Nside,
+                           ll* accepted, ll* rejected,
+                           int (*accept)(int64_t hp, void* token),
+                           void* token,
+                           int depth);
+
+
 #endif

@@ -212,6 +212,7 @@ an output resolution "outnside", returns the healpix index at the
 output resolution.
  */
 void healpix_convert_nside(int hp, int nside, int outnside, int* outhp);
+void healpix_convert_nsidel(int64_t hp, int nside, int outnside, int64_t* outhp);
 
 /**
    Converts (RA, DEC) coordinates (in radians) to healpix index.

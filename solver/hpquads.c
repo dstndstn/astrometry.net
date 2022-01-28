@@ -32,9 +32,30 @@
 #include "quad-utils.h"
 #include "quad-builder.h"
 
+// healpix type
+/*
+typedef il hpl;
+typedef int hpint;
+#define hpl_new il_new
+#define hpl_insert_unique_ascending il_insert_unique_ascending
+#define hpl_size il_size
+#define hpl_get il_get
+#define hpl_append il_append
+#define hpl_free il_free
+ */
+
+typedef ll hpl;
+typedef int64_t hpint;
+#define hpl_new ll_new
+#define hpl_insert_unique_ascending ll_insert_unique_ascending
+#define hpl_size ll_size
+#define hpl_get ll_get
+#define hpl_append ll_append
+#define hpl_free ll_free
+
 struct hpquads {
     int dimquads;
-    int Nside;
+    hpint Nside;
     startree_t* starkd;
 
     // bounds of quad scale, in distance between AB on the sphere.
@@ -64,7 +85,7 @@ struct hpquads {
     int hp;
 
     // for build_quads():
-    il* retryhps;
+    hpl* retryhps;
 };
 typedef struct hpquads hpquads_t;
 
@@ -249,21 +270,21 @@ static void add_headers(qfits_header* hdr, char** argv, int argc,
     }
 }
 
-static int build_quads(hpquads_t* me, int Nhptotry, il* hptotry, int R) {
+static int build_quads(hpquads_t* me, hpint Nhptotry, hpl* hptotry, int R) {
     int nthispass = 0;
-    int lastgrass = 0;
-    int i;
+    hpint lastgrass = 0;
+    hpint i;
 
     for (i=0; i<Nhptotry; i++) {
         anbool ok;
-        int hp;
+        hpint hp;
         if ((i * 80 / Nhptotry) != lastgrass) {
             printf(".");
             fflush(stdout);
             lastgrass = i * 80 / Nhptotry;
         }
         if (hptotry)
-            hp = il_get(hptotry, i);
+            hp = hpl_get(hptotry, i);
         else
             hp = i;
         me->hp = hp;
@@ -280,7 +301,7 @@ static int build_quads(hpquads_t* me, int Nhptotry, il* hptotry, int R) {
                 //il_insert_unique_ascending(me->retryhps, hp);
                 // we don't mind hps showing up multiple times because we want to make up for the lost
                 // passes during loosening...
-                il_append(me->retryhps, hp);
+                hpl_append(me->retryhps, hp);
             // FIXME -- could also track which hps are worth visiting in a future pass
         }
     }
@@ -291,7 +312,7 @@ static int build_quads(hpquads_t* me, int Nhptotry, il* hptotry, int R) {
 int hpquads(startree_t* starkd,
             codefile_t* codes,
             quadfile_t* quads,
-            int Nside,
+            int Nside_int,
             double scale_min_arcmin,
             double scale_max_arcmin,
             int dimquads,
@@ -313,13 +334,13 @@ int hpquads(startree_t* starkd,
     int pass;
     anbool circle = TRUE;
     double radius2;
-    il* hptotry;
-    int Nhptotry = 0;
+    hpl* hptotry;
+    hpint Nhptotry = 0;
     int nquads;
     double hprad;
     double quadscale;
 
-    int skhp, sknside;
+    hpint skhp, sknside;
 
     qfits_header* qhdr;
     qfits_header* chdr;
@@ -327,7 +348,10 @@ int hpquads(startree_t* starkd,
     int N;
     int dimcodes;
     int quadsize;
-    int NHP;
+    hpint NHP;
+    // Nside would fit in int, but it's often used in hpint math, so this
+    // makes life easier.
+    hpint Nside = Nside_int;
 
     memset(me, 0, sizeof(hpquads_t));
 
@@ -346,7 +370,7 @@ int hpquads(startree_t* starkd,
     dimcodes = dimquad2dimcode(dimquads);
     quadsize = sizeof(unsigned int) * dimquads;
 
-    logmsg("Nside=%i.  Nside^2=%i.  Number of healpixes=%i.  Healpix side length ~ %g arcmin.\n",
+    logmsg("Nside=%lli.  Nside^2=%lli.  Number of healpixes=%lli.  Healpix side length ~ %g arcmin.\n",
            me->Nside, me->Nside*me->Nside, NHP, healpix_side_length_arcmin(me->Nside));
 
     me->sort_data = sort_data;
@@ -369,7 +393,7 @@ int hpquads(startree_t* starkd,
     sknside = qfits_header_getint(startree_header(me->starkd), "HPNSIDE", 1);
 
     if (sknside && Nside % sknside) {
-        logerr("Error: Nside (-n) must be a multiple of the star kdtree healpixelisation: %i\n", sknside);
+        logerr("Error: Nside (-n) must be a multiple of the star kdtree healpixelisation: %lli\n", sknside);
         return -1;
     }
 
@@ -427,34 +451,34 @@ int hpquads(startree_t* starkd,
            distsq2arcsec(quadscale*quadscale),
            distsq2arcsec(radius2));
 
-    hptotry = il_new(1024);
+    hptotry = hpl_new(1024);
 
     if (scanoccupied) {
         logmsg("Scanning %i input stars...\n", N);
         for (i=0; i<N; i++) {
             double xyz[3];
-            int j;
+            hpint j;
             if (startree_get(me->starkd, i, xyz)) {
                 ERROR("Failed to get star %i", i);
                 return -1;
             }
-            j = xyzarrtohealpix(xyz, Nside);
-            il_insert_unique_ascending(hptotry, j);
+            j = xyzarrtohealpixl(xyz, Nside);
+            hpl_insert_unique_ascending(hptotry, j);
             if (log_get_level() > LOG_VERB) {
                 double ra,dec;
                 if (startree_get_radec(me->starkd, i, &ra, &dec)) {
                     ERROR("Failed to get RA,Dec for star %i\n", i);
                     return -1;
                 }
-                logdebug("star %i: RA,Dec %g,%g; xyz %g,%g,%g; hp %i\n",
+                logdebug("star %i: RA,Dec %g,%g; xyz %g,%g,%g; hp %lli\n",
                          i, ra, dec, xyz[0], xyz[1], xyz[2], j);
             }
         }
-        logmsg("Will check %zu healpixes.\n", il_size(hptotry));
+        logmsg("Will check %zu healpixes.\n", hpl_size(hptotry));
         if (log_get_level() > LOG_VERB) {
             logdebug("Checking healpixes: [ ");
-            for (i=0; i<il_size(hptotry); i++)
-                logdebug("%i ", il_get(hptotry, i));
+            for (i=0; i<hpl_size(hptotry); i++)
+                logdebug("%lli ", hpl_get(hptotry, i));
             logdebug("]\n");
         }
 
@@ -481,31 +505,31 @@ int hpquads(startree_t* starkd,
 
             for (y=y0; y<y1; y++) {
                 for (x=x0; x<x1; x++) {
-                    int j = healpix_compose_xy(starhp, x, y, Nside);
-                    il_append(hptotry, j);
+                    hpint j = healpix_compose_xyl(starhp, x, y, Nside);
+                    hpl_append(hptotry, j);
                 }
             }
-            assert(il_size(hptotry) == (Nside/sknside) * (Nside/sknside));
+            assert(hpl_size(hptotry) == (Nside/sknside) * (Nside/sknside));
         }
     }
     if (hptotry)
-        Nhptotry = il_size(hptotry);
+        Nhptotry = hpl_size(hptotry);
 
     me->quadlist = bl_new(65536, quadsize);
 
     if (Nloosen)
-        me->retryhps = il_new(1024);
+        me->retryhps = hpl_new(1024);
 
     for (pass=0; pass<passes; pass++) {
         char key[64];
         int nthispass;
 
         logmsg("Pass %i of %i.\n", pass+1, passes);
-        logmsg("Trying %i healpixes.\n", Nhptotry);
+        logmsg("Trying %lli healpixes.\n", Nhptotry);
 
         nthispass = build_quads(me, Nhptotry, hptotry, Nreuses);
 
-        logmsg("Made %i quads (out of %i healpixes) this pass.\n", nthispass, Nhptotry);
+        logmsg("Made %i quads (out of %lli healpixes) this pass.\n", nthispass, Nhptotry);
         logmsg("Made %i quads so far.\n", (me->bigquadlist ? bt_size(me->bigquadlist) : 0) + (int)bl_size(me->quadlist));
 
         sprintf(key, "PASS%i", pass+1);
@@ -522,25 +546,25 @@ int hpquads(startree_t* starkd,
         bl_remove_all(me->quadlist);
     }
 
-    il_free(hptotry);
+    hpl_free(hptotry);
     hptotry = NULL;
 
     if (Nloosen) {
         int R;
         for (R=Nreuses+1; R<=Nloosen; R++) {
-            il* trylist;
+            hpl* trylist;
             int nthispass;
 
             logmsg("Loosening reuse maximum to %i...\n", R);
-            logmsg("Trying %zu healpixes.\n", il_size(me->retryhps));
-            if (!il_size(me->retryhps))
+            logmsg("Trying %zu healpixes.\n", hpl_size(me->retryhps));
+            if (!hpl_size(me->retryhps))
                 break;
 
             trylist = me->retryhps;
-            me->retryhps = il_new(1024);
-            nthispass = build_quads(me, il_size(trylist), trylist, R);
-            logmsg("Made %i quads (out of %zu healpixes) this pass.\n", nthispass, il_size(trylist));
-            il_free(trylist);
+            me->retryhps = hpl_new(1024);
+            nthispass = build_quads(me, hpl_size(trylist), trylist, R);
+            logmsg("Made %i quads (out of %zu healpixes) this pass.\n", nthispass, hpl_size(trylist));
+            hpl_free(trylist);
             for (i=0; i<bl_size(me->quadlist); i++) {
                 void* q = bl_access(me->quadlist, i);
                 bt_insert2(me->bigquadlist, q, FALSE, compare_quads, &me->dimquads);
@@ -549,7 +573,7 @@ int hpquads(startree_t* starkd,
         }
     }
     if (me->retryhps)
-        il_free(me->retryhps);
+        hpl_free(me->retryhps);
 
     kdtree_free_query(me->res);
     me->res = NULL;

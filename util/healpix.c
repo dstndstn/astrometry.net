@@ -407,6 +407,14 @@ void healpix_convert_nside(int hp, int nside, int outnside, int* outhp) {
     *outhp = healpix_compose_xy(basehp, ox, oy, outnside);
 }
 
+void healpix_convert_nsidel(int64_t hp, int nside, int outnside, int64_t* outhp) {
+    int basehp, x, y;
+    int ox, oy;
+    healpix_decompose_xyl(hp, &basehp, &x, &y, nside);
+    healpix_convert_xy_nside(x, y, nside, outnside, &ox, &oy);
+    *outhp = healpix_compose_xyl(basehp, ox, oy, outnside);
+}
+
 void healpix_convert_xy_nside(int x, int y, int nside, int outnside,
                               int* outx, int* outy) {
     double fx, fy;
