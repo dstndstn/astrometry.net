@@ -39,6 +39,9 @@ static void intltohp(int64_t pix, hp_t* hp, int Nside) {
 static void inttohp(int pix, hp_t* hp, int Nside) {
     healpix_decompose_xy(pix, &hp->bighp, &hp->x, &hp->y, Nside);
 }
+static void longtohp(int64_t pix, hp_t* hp, int Nside) {
+    healpix_decompose_xyl(pix, &hp->bighp, &hp->x, &hp->y, Nside);
+}
 
 static void hp_decompose(hp_t* hp, int* php, int* px, int* py) {
     if (php)
@@ -405,6 +408,14 @@ void healpix_convert_nside(int hp, int nside, int outnside, int* outhp) {
     healpix_decompose_xy(hp, &basehp, &x, &y, nside);
     healpix_convert_xy_nside(x, y, nside, outnside, &ox, &oy);
     *outhp = healpix_compose_xy(basehp, ox, oy, outnside);
+}
+
+void healpix_convert_nsidel(int64_t hp, int nside, int outnside, int64_t* outhp) {
+    int basehp, x, y;
+    int ox, oy;
+    healpix_decompose_xyl(hp, &basehp, &x, &y, nside);
+    healpix_convert_xy_nside(x, y, nside, outnside, &ox, &oy);
+    *outhp = healpix_compose_xyl(basehp, ox, oy, outnside);
 }
 
 void healpix_convert_xy_nside(int x, int y, int nside, int outnside,
@@ -1124,6 +1135,13 @@ void healpix_to_xyzarr(int ihp, int Nside,
                        double* xyz) {
     hp_t hp;
     inttohp(ihp, &hp, Nside);
+    hp_to_xyz(&hp, Nside, dx, dy, xyz, xyz+1, xyz+2);
+}
+
+void healpixl_to_xyzarr(int64_t ihp, int Nside, double dx, double dy,
+                        double* xyz) {
+    hp_t hp;
+    longtohp(ihp, &hp, Nside);
     hp_to_xyz(&hp, Nside, dx, dy, xyz, xyz+1, xyz+2);
 }
 

@@ -13,24 +13,7 @@
  Maps integers to lists of objects.
  */
 
-
-// FIXME -- would this work better with "bt" for the keys?
-struct intmap {
-    // dense only:
-    bl** dense;
-    int ND;
-
-    // sparse only:
-    il* keys;
-    // list of bl*
-    pl* lists;
-
-    // common:
-    // list blocksize
-    int blocksize;
-    // data size
-    int datasize;
-};
+struct intmap;
 typedef struct intmap intmap_t;
 
 /**
@@ -65,6 +48,19 @@ void intmap_append(intmap_t* it, int key, void* pval);
  The iteration proceeds in a random order.
  */
 anbool intmap_get_entry(intmap_t* it, int index, int* key, bl** list);
+
+
+
+
+
+struct longmap;
+typedef struct longmap longmap_t;
+longmap_t* longmap_new(int datasize, int subblocksize, int blocksize, int Ndense);
+void longmap_free(longmap_t* it);
+bl* longmap_find(longmap_t* it, int64_t key, anbool create);
+void longmap_append(longmap_t* it, int64_t key, void* pval);
+anbool longmap_get_entry(longmap_t* it, int index, int64_t* key, bl** list);
+
 
 #endif
 

@@ -20,22 +20,32 @@
 #include "boilerplate.h"
 #include "fitsioutils.h"
 
+// use 64-bit healpixes
+typedef int64_t hpint;
+// blocklist types
+typedef ll hpl;
+#define hpl_new ll_new
+#define hpl_free ll_free
+#define hpl_append ll_append
+#define hpl_size ll_size
+#define hpl_sort ll_sort
+
 struct oh_token {
     int hp;
-    int nside;
-    int finenside;
+    hpint nside;
+    hpint finenside;
 };
 
 // Return 1 if the given "hp" is outside the healpix described in "oh_token".
-static int outside_healpix(int hp, void* vtoken) {
+static int outside_healpix(hpint hp, void* vtoken) {
     struct oh_token* token = vtoken;
-    int bighp;
-    healpix_convert_nside(hp, token->finenside, token->nside, &bighp);
+    hpint bighp;
+    healpix_convert_nsidel(hp, token->finenside, token->nside, &bighp);
     return (bighp == token->hp ? 0 : 1);
 }
 
 static anbool is_duplicate(int hp, double ra, double dec, int Nside,
-                           intmap_t* starlists,
+                           longmap_t* starlists,
                            double* ras, double* decs, double dedupr2) {
     double xyz[3];
     int neigh[9];
@@ -50,7 +60,7 @@ static anbool is_duplicate(int hp, double ra, double dec, int Nside,
     nn = 1 + healpix_get_neighbours(hp, neigh+1, Nside);
     for (k=0; k<nn; k++) {
         int otherhp = neigh[k];
-        bl* lst = intmap_find(starlists, otherhp, FALSE);
+        bl* lst = longmap_find(starlists, otherhp, FALSE);
         if (!lst)
             continue;
         for (j=0; j<bl_size(lst); j++) {
@@ -72,13 +82,12 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
                        int bighp, int bignside,
                        int nmargin,
                        // uniformization nside.
-                       int Nside,
+                       int Nside_int,
                        double dedup_radius,
                        int nsweeps,
                        char** args, int argc) {
     anbool allsky;
-    intmap_t* starlists;
-    int NHP;
+    longmap_t* starlists;
     anbool dense = FALSE;
     double dedupr2 = 0.0;
     tfits_type dubl;
@@ -87,7 +96,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
     int* outorder = NULL;
     int outi;
     double *ra = NULL, *dec = NULL;
-    il* myhps = NULL;
+    hpl* myhps = NULL;
     int i,j,k;
     int nkeep = nsweeps;
     int noob = 0;
@@ -97,6 +106,11 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
     qfits_header* outhdr = NULL;
     double *sortval = NULL;
 
+    hpint NHP;
+    // up-convert Nside; which Nside will always fit in int32, we do a lot of math
+    // on it where we want the results to be type hpint.
+    hpint Nside = Nside_int;
+    
     if (bignside == 0)
         bignside = 1;
     allsky = (bighp == -1);
@@ -105,16 +119,17 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
         ERROR("Fine healpixelization Nside must be a multiple of the coarse healpixelization Nside");
         return -1;
     }
-    if (Nside > HP_MAX_INT_NSIDE) {
-        ERROR("Error: maximum healpix Nside = %i", HP_MAX_INT_NSIDE);
-        return -1;
-    }
-
+    /*
+     if (Nside > HP_MAX_INT_NSIDE) {
+     ERROR("Error: maximum healpix Nside = %i", HP_MAX_INT_NSIDE);
+     return -1;
+     }
+     */
     NHP = 12 * Nside * Nside;
-    logverb("Healpix Nside: %i, # healpixes on the whole sky: %i\n", Nside, NHP);
+    logverb("Healpix Nside: %lli, # healpixes on the whole sky: %lli\n", Nside, NHP);
     if (!allsky) {
         logverb("Creating index for healpix %i, nside %i\n", bighp, bignside);
-        logverb("Number of healpixes: %i\n", ((Nside/bignside)*(Nside/bignside)));
+        logverb("Number of healpixes: %lli\n", ((Nside/bignside)*(Nside/bignside)));
     }
     logverb("Healpix side length: %g arcmin.\n", healpix_side_length_arcmin(Nside));
 
@@ -175,7 +190,6 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
             }
             logverb("Cut to %i objects\n", N);
         }
-        //free(sortval);
     }
 
     token.nside = bignside;
@@ -184,11 +198,9 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 
     if (!allsky && nmargin) {
         int bigbighp, bighpx, bighpy;
-        //int ninside;
-        il* seeds = il_new(256);
+        hpl* seeds = hpl_new(256);
         logverb("Finding healpixes in range...\n");
         healpix_decompose_xy(bighp, &bigbighp, &bighpx, &bighpy, bignside);
-        //ninside = (Nside/bignside)*(Nside/bignside);
         // Prime the queue with the fine healpixes that are on the
         // boundary of the big healpix.
         for (i=0; i<((Nside / bignside) - 1); i++) {
@@ -206,26 +218,26 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
             assert(x1 < Nside);
             assert(y0 < Nside);
             assert(y1 < Nside);
-            il_append(seeds, healpix_compose_xy(bigbighp, xx, y0, Nside));
-            il_append(seeds, healpix_compose_xy(bigbighp, xx, y1, Nside));
-            il_append(seeds, healpix_compose_xy(bigbighp, x0, yy, Nside));
-            il_append(seeds, healpix_compose_xy(bigbighp, x1, yy, Nside));
+            hpl_append(seeds, healpix_compose_xyl(bigbighp, xx, y0, Nside));
+            hpl_append(seeds, healpix_compose_xyl(bigbighp, xx, y1, Nside));
+            hpl_append(seeds, healpix_compose_xyl(bigbighp, x0, yy, Nside));
+            hpl_append(seeds, healpix_compose_xyl(bigbighp, x1, yy, Nside));
         }
-        logmsg("Number of boundary healpixes: %zu (Nside/bignside = %i)\n", il_size(seeds), Nside/bignside);
+        logmsg("Number of boundary healpixes: %zu (Nside/bignside = %lli)\n", hpl_size(seeds), Nside/bignside);
 
-        myhps = healpix_region_search(-1, seeds, Nside, NULL, NULL,
-                                      outside_healpix, &token, nmargin);
-        logmsg("Number of margin healpixes: %zu\n", il_size(myhps));
-        il_free(seeds);
+        myhps = healpix_region_searchl(-1, seeds, Nside, NULL, NULL,
+                                       outside_healpix, &token, nmargin);
+        logmsg("Number of margin healpixes: %zu\n", hpl_size(myhps));
+        hpl_free(seeds);
 
-        il_sort(myhps, TRUE);
+        hpl_sort(myhps, TRUE);
         // DEBUG
-        il_check_consistency(myhps);
-        il_check_sorted_ascending(myhps, TRUE);
+        //il_check_consistency(myhps);
+        //il_check_sorted_ascending(myhps, TRUE);
     }
 
     dedupr2 = arcsec2distsq(dedup_radius);
-    starlists = intmap_new(sizeof(int32_t), nkeep, 0, dense);
+    starlists = longmap_new(sizeof(int32_t), nkeep, 0, dense);
 
     logverb("Placing stars in grid cells...\n");
     for (i=0; i<N; i++) {
@@ -254,7 +266,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
             continue;
         }
 
-        lst = intmap_find(starlists, hp, TRUE);
+        lst = longmap_find(starlists, hp, TRUE);
         /*
          printf("list has %i existing entries.\n", bl_size(lst));
          for (k=0; k<bl_size(lst); k++) {
@@ -303,8 +315,8 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
         int32_t j32;
         for (i=0;; i++) {
             bl* lst;
-            int hp;
-            if (!intmap_get_entry(starlists, i, &hp, &lst))
+            int64_t hp;
+            if (!longmap_get_entry(starlists, i, &hp, &lst))
                 break;
             if (bl_size(lst) <= k)
                 continue;
@@ -330,7 +342,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
         }
 
     }
-    intmap_free(starlists);
+    longmap_free(starlists);
     starlists = NULL;
 
     //////
@@ -355,7 +367,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
         fits_add_long_history(outhdr, "    (ie, for mag-like sort columns)");
     else
         fits_add_long_history(outhdr, "    (ie, for flux-like sort columns)");
-    fits_add_long_history(outhdr, "  uniformization nside: %i", Nside);
+    fits_add_long_history(outhdr, "  uniformization nside: %i", (int)Nside);
     fits_add_long_history(outhdr, "    (ie, side length ~ %g arcmin)", healpix_side_length_arcmin(Nside));
     fits_add_long_history(outhdr, "  deduplication scale: %g arcsec", dedup_radius);
     fits_add_long_history(outhdr, "  number of sweeps: %i", nsweeps);

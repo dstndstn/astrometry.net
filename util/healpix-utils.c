@@ -64,6 +64,63 @@ il* healpix_region_search(int seed, il* seeds, int Nside,
     return accepted;
 }
 
+ll* healpix_region_searchl(int64_t seed, ll* seeds, int Nside,
+                           ll* accepted, ll* rejected,
+                           int (*accept)(int64_t hp, void* token),
+                           void* token,
+                           int depth) {
+    ll* frontier;
+    anbool allocd_rej = FALSE;
+    int d;
+
+    if (!accepted)
+        accepted = ll_new(256);
+    if (!rejected) {
+        rejected = ll_new(256);
+        allocd_rej = TRUE;
+    }
+
+    if (seeds)
+        frontier = ll_dupe(seeds);
+    else {
+        frontier = ll_new(256);
+        ll_append(frontier, seed);
+    }
+
+    for (d=0; !depth || d<depth; d++) {
+        int j, N;
+        N = ll_size(frontier);
+        if (N == 0)
+            break;
+        for (j=0; j<N; j++) {
+            int64_t hp;
+            int i, nn;
+            int64_t neigh[8];
+            hp = ll_get(frontier, j);
+            nn = healpix_get_neighboursl(hp, neigh, Nside);
+            for (i=0; i<nn; i++) {
+                if (ll_contains(frontier, neigh[i]))
+                    continue;
+                if (ll_contains(rejected, neigh[i]))
+                    continue;
+                if (ll_contains(accepted, neigh[i]))
+                    continue;
+                if (accept(neigh[i], token)) {
+                    ll_append(accepted, neigh[i]);
+                    ll_append(frontier, neigh[i]);
+                } else
+                    ll_append(rejected, neigh[i]);
+            }
+        }
+        ll_remove_index_range(frontier, 0, N);
+    }
+
+    ll_free(frontier);
+    if (allocd_rej)
+        ll_free(rejected);
+    return accepted;
+}
+
 
 static il* hp_rangesearch(const double* xyz, double radius, int Nside, il* hps, anbool approx) {
     int hp;
