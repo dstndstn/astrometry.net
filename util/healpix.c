@@ -39,6 +39,9 @@ static void intltohp(int64_t pix, hp_t* hp, int Nside) {
 static void inttohp(int pix, hp_t* hp, int Nside) {
     healpix_decompose_xy(pix, &hp->bighp, &hp->x, &hp->y, Nside);
 }
+static void longtohp(int64_t pix, hp_t* hp, int Nside) {
+    healpix_decompose_xyl(pix, &hp->bighp, &hp->x, &hp->y, Nside);
+}
 
 static void hp_decompose(hp_t* hp, int* php, int* px, int* py) {
     if (php)
@@ -1132,6 +1135,13 @@ void healpix_to_xyzarr(int ihp, int Nside,
                        double* xyz) {
     hp_t hp;
     inttohp(ihp, &hp, Nside);
+    hp_to_xyz(&hp, Nside, dx, dy, xyz, xyz+1, xyz+2);
+}
+
+void healpixl_to_xyzarr(int64_t ihp, int Nside, double dx, double dy,
+                        double* xyz) {
+    hp_t hp;
+    longtohp(ihp, &hp, Nside);
     hp_to_xyz(&hp, Nside, dx, dy, xyz, xyz+1, xyz+2);
 }
 

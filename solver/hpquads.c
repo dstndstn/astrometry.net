@@ -82,7 +82,7 @@ struct hpquads {
     // for create_quad():
     anbool quad_created;
     anbool count_uses;
-    int hp;
+    hpint hp;
 
     // for build_quads():
     hpl* retryhps;
@@ -110,7 +110,12 @@ static anbool find_stars(hpquads_t* me, double radius2, int R) {
     double centre[3];
     int* perm;
 
-    healpix_to_xyzarr(me->hp, me->Nside, 0.5, 0.5, centre);
+    healpixl_to_xyzarr(me->hp, me->Nside, 0.5, 0.5, centre);
+    {
+        double ra,dec;
+        xyzarr2radecdeg(centre, &ra, &dec);
+        logverb("Find_stars: healpix center (%.5f, %.5f)\n", ra, dec);
+    }
     me->res = kdtree_rangesearch_options_reuse(me->starkd->tree, me->res,
                                                centre, radius2, KD_OPTIONS_RETURN_POINTS);
 
@@ -120,6 +125,7 @@ static anbool find_stars(hpquads_t* me, double radius2, int R) {
 
     N = me->res->nres;
     me->Nstars = N;
+    logverb("Found %i stars near healpix center\n", N);
     if (N < me->dimquads)
         return FALSE;
 
@@ -186,7 +192,7 @@ static anbool find_stars(hpquads_t* me, double radius2, int R) {
 
 static anbool check_midpoint(quadbuilder_t* qb, pquad_t* pq, void* vtoken) {
     hpquads_t* me = vtoken;
-    return (xyzarrtohealpix(pq->midAB, me->Nside) == me->hp);
+    return (xyzarrtohealpixl(pq->midAB, me->Nside) == me->hp);
 }
 
 static anbool check_full_quad(quadbuilder_t* qb, unsigned int* quad, int nstars, void* vtoken) {
@@ -287,6 +293,7 @@ static int build_quads(hpquads_t* me, hpint Nhptotry, hpl* hptotry, int R) {
             hp = hpl_get(hptotry, i);
         else
             hp = i;
+        logverb("Trying healpix %lli\n", hp);
         me->hp = hp;
         me->quad_created = FALSE;
         ok = find_stars(me, me->radius2, R);
@@ -355,10 +362,12 @@ int hpquads(startree_t* starkd,
 
     memset(me, 0, sizeof(hpquads_t));
 
-    if (Nside > HP_MAX_INT_NSIDE) {
-        ERROR("Error: maximum healpix Nside = %i", HP_MAX_INT_NSIDE);
-        return -1;
-    }
+    /*
+     if (Nside > HP_MAX_INT_NSIDE) {
+     ERROR("Error: maximum healpix Nside = %i", HP_MAX_INT_NSIDE);
+     return -1;
+     }
+     */
     if (Nreuses > 255) {
         ERROR("Error, reuse (-r) must be less than 256");
         return -1;

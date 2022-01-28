@@ -119,11 +119,12 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
         ERROR("Fine healpixelization Nside must be a multiple of the coarse healpixelization Nside");
         return -1;
     }
-    if (Nside > HP_MAX_INT_NSIDE) {
-        ERROR("Error: maximum healpix Nside = %i", HP_MAX_INT_NSIDE);
-        return -1;
-    }
-
+    /*
+     if (Nside > HP_MAX_INT_NSIDE) {
+     ERROR("Error: maximum healpix Nside = %i", HP_MAX_INT_NSIDE);
+     return -1;
+     }
+     */
     NHP = 12 * Nside * Nside;
     logverb("Healpix Nside: %lli, # healpixes on the whole sky: %lli\n", Nside, NHP);
     if (!allsky) {

@@ -71,9 +71,9 @@ check_inbox(pquad_t* pq, int* inds, int ninds, double* stars) {
         double r;
         ind = inds[i];
         starpos = stars + ind*3;
-        logverb("Star position: [%.4f, %.4f, %.4f]\n",
+        logverb("Star position: [%.5f, %.5f, %.5f]\n",
                 starpos[0], starpos[1], starpos[2]);
-        logverb("MidAB: [%.4f, %.4f, %.4f]\n",
+        logverb("MidAB: [%.5f, %.5f, %.5f]\n",
                 pq->midAB[0], pq->midAB[1], pq->midAB[2]);
 
         ok = star_coords(starpos, pq->midAB, TRUE, &Dy, &Dx);

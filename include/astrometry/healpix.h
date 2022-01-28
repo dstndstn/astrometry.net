@@ -275,6 +275,10 @@ void healpix_to_xyz(int hp, int Nside, double dx, double dy,
 void healpix_to_xyzarr(int hp, int Nside, double dx, double dy,
 					   double* xyz);
 
+void healpixl_to_xyzarr(int64_t hp, int Nside, double dx, double dy,
+                        double* xyz);
+
+
 /**
    Same as healpix_to_xyz, but returns (RA,DEC) in radians.
 */

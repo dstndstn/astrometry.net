@@ -74,7 +74,7 @@ static void print_help(char* progname) {
            "\n"
            "      [-M]: in-memory (don't use temp files)\n"
            "      [-T]: don't delete temp files\n"
-           "      [-t <temp-dir>]: use this temp direcotry (default: /tmp)\n"
+           "      [-t <temp-dir>]: use this temp directory (default: /tmp)\n"
            "      [-v]: add verbosity.\n"
            "\n", progname);
 }
