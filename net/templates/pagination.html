@@ -5,11 +5,11 @@
     {% if show_first %}<a class="paginate_first" href="?{% query_string 'page' 1 %}" title="First Page">&laquo;</a>{% endif %}
     {% if has_previous %}<a class="paginate_previous" href="?{% query_string 'page' previous %}" title="Previous Page">&lt;</a>{% endif %}
     {% for num in page_numbers %}
-    {% ifequal num page %}
+    {% if num == page %}
       <span class="paginate_link paginate_current" title="Current Page">{{ num }}</span>
     {% else %}
     <a class="paginate_link" href="?{% query_string 'page' num %}" title="Page {{ num }}">{{ num }}</a>
-    {% endifequal %}
+    {% endif %}
     {% endfor %}
     {% if has_next %}<a class="paginate_next" href="?{% query_string 'page' next %}" title="Next Page">&gt;</a>{% endif %}
     {% if show_last %}<a class="paginate_last" href="?{% query_string 'page' pages %}" title="Last Page">&raquo;</a>{% endif %}
