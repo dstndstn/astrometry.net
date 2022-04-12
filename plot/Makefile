@@ -102,20 +102,6 @@ LINK_DIR := $(PY_BASE_LINK_DIR)/plot
 PYTHON_EXECS := plotann.py
 PYTHON_INSTALL := $(PYTHON_EXECS) __init__.py
 
-install:
-	@echo Installing in directory '$(INSTALL_DIR)'
-	$(MKDIR) '$(PY_INSTALL_DIR)'
-	@for x in $(PYTHON_INSTALL); do \
-		echo $(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
-		$(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
-	done
-	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
-	$(MKDIR) '$(BIN_INSTALL_DIR)'
-	@for x in $(PYTHON_EXECS); do \
-		echo ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
-		ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
-	done
-
 PYTHON_EXTRA_INSTALL := plotstuff.py plotstuff_c.py _plotstuff_c$(PYTHON_SO_EXT)
 
 install-extra: $(INSTALL_CAIRO_EXECS)
@@ -135,6 +121,16 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 	@for x in $(PYTHON_EXTRA_INSTALL); do \
 		echo $(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
 		$(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
+	done
+	@for x in $(PYTHON_INSTALL); do \
+		echo $(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
+		$(CP) $$x '$(PY_INSTALL_DIR)/'$$x; \
+	done
+	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
+	$(MKDIR) '$(BIN_INSTALL_DIR)'
+	@for x in $(PYTHON_EXECS); do \
+		echo ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
+		ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
 	done
 
 $(COMMON)/cairoutils.o:
