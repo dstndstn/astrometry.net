@@ -456,17 +456,35 @@ def get_anns(cal, nbright=0):
     rad = cal.get_radius()
     # These are the same limits used in views/image.py for annotations
     if rad < 1.:
-        opt.abellcat = abellfn
-        opt.hdcat = hdfn
+        if os.path.exists(abellfn):
+            opt.abellcat = abellfn
+        else:
+            print('Abell catalog file does not exist:', abellfn)
+        if os.path.exists(hdfn):
+            opt.hdcat = hdfn
+        else:
+            print('Henry Draper catalog file does not exist:', hdfn)
     if rad < 0.25:
-        opt.t2cat = tycho2fn
-        opt.hipcat = hipfn
+        if os.path.exists(tycho2fn):
+            opt.t2cat = tycho2fn
+        else:
+            print('Tycho-2 catalog file does not exist:', tycho2fn)
+        if os.path.exists(hipfn):
+            opt.hipcat = hipfn
+        else:
+            print('Hipparcos catalog file does not exist:', hipfn)
     if rad < 10:
-        opt.ngc = True
-        opt.ngccat = ngcfn
-        opt.ngcname = ngcnamesfn
-        opt.iccat = icfn
-    opt.brightcat = brightfn
+        if os.path.exists(ngcfn) and os.path.exists(ngcnamesfn) and os.path.exists(icfn):
+            opt.ngc = True
+            opt.ngccat = ngcfn
+            opt.ngcname = ngcnamesfn
+            opt.iccat = icfn
+        else:
+            print('NGC/IC catalog files do not exist:', ngcfn, ngcnamesfn, icfn)
+    if os.path.exists(brightfn):
+        opt.brightcat = brightfn
+    else:
+        print('Bright star catalog file does not exist:', brightfn)
 
     jobjs = plotann.get_annotations_for_wcs(wcs, opt)
     return jobjs

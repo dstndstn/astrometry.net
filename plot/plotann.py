@@ -118,7 +118,6 @@ def get_annotations_for_wcs(wcs, opt):
                 anns.append((T.ra[i], T.dec[i], nm.lower(), names))
 
     if opt.hdcat:
-        #print 'Matching HD...'
         ra,dec,I = match_kdtree_catalog(wcs, opt.hdcat)
         for r,d,i in zip(ra,dec,I):
             if not wcs.is_inside(r, d):
