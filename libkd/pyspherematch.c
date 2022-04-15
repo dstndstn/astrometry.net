@@ -24,6 +24,7 @@
 #include "dualtree_nearestneighbour.h"
 #include "bl.h"
 #include "mathutil.h"
+#include "errors.h"
 
 typedef struct {
     PyObject_HEAD
@@ -167,8 +168,6 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *keywords) {
     if (fnbytes == NULL)
         return -1;
     filename = PyBytes_AsString(fnbytes);
-    self->kd = kdtree_fits_read(filename, treename, NULL);
-    Py_DECREF(fnbytes);
 #else
     if (n == 1) {
         if (!PyArg_ParseTuple(args, "s", &filename))
@@ -177,10 +176,26 @@ static int KdTree_init(KdObject *self, PyObject *args, PyObject *keywords) {
         if (!PyArg_ParseTuple(args, "ss", &filename, &treename))
             return -1;
     }
-    self->kd = kdtree_fits_read(filename, treename, NULL);
 #endif
-    if (!self->kd)
+
+    char* errstr = NULL;
+    errors_start_logging_to_string();
+    self->kd = kdtree_fits_read(filename, treename, NULL);
+    errstr = errors_stop_logging_to_string("\n");
+
+    if (!self->kd) {
+        if (fnbytes && ((errno == ENOENT) || (errno == EACCES) || (errno == EEXIST))) {
+            PyErr_SetFromErrnoWithFilenameObject(PyExc_OSError, fnbytes);
+            Py_DECREF(fnbytes);
+            return -1;
+        }
+        PyErr_SetString(PyExc_ValueError, errstr);
+        if (fnbytes)
+            Py_DECREF(fnbytes);
         return -1;
+    }
+    if (fnbytes)
+        Py_DECREF(fnbytes);
     return 0;
 }
 
