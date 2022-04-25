@@ -101,7 +101,7 @@ static void print_help(const char* progname, bl* opts) {
     BOILERPLATE_HELP_HEADER(stdout);
     printf("\nUsage:   %s [options]  [<image-file-1> <image-file-2> ...] [<xyls-file-1> <xyls-file-2> ...]\n"
            "\n"
-           "You can specify http:// or ftp:// URLs instead of filenames.  The \"wget\" or \"curl\" program will be used to retrieve the URL.\n"
+           "You can specify http:// or https:// or ftp:// URLs instead of filenames.  The \"wget\" or \"curl\" program will be used to retrieve the URL.\n"
            "\n", progname);
     printf("Options include:\n");
     opts_print_help(opts, stdout, augment_xylist_print_special_opts, NULL);
