@@ -155,13 +155,20 @@ def run_pnmfile(fn):
     return (w, h, pnmtype, maxval)
 
 class MyLogger(object):
-    def __init__(self, logger):
+    def __init__(self, logger, fh):
         self.logger = logger
+        self.fh = fh
+        self.logger.addHandler(fh)
     def debug(self, *args):
         return self.logger.debug(' '.join(str(x) for x in args))
     def info(self, *args):
         return self.logger.info(' '.join(str(x) for x in args))
     msg = info
+    def close(self):
+        self.logger.removeHandler(fh)
+        self.fh.close()
+        self.logger = None
+        self.fh = None
 
 def create_job_logger(job):
     '''
@@ -174,16 +181,16 @@ def create_job_logger(job):
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s %(message)s')
     fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    return MyLogger(logger)
+    return MyLogger(logger, fh)
 
 def try_dojob(job, userimage, solve_command, solve_locally):
     print('try_dojob', job, '(sub', job.user_image.submission.id, ')')
+    log = create_job_logger(job)
     tempfiles = []
     rtn = None
     try:
         rtn = dojob(job, userimage, solve_command=solve_command,
-                     solve_locally=solve_locally, tempfiles=tempfiles)
+                     solve_locally=solve_locally, tempfiles=tempfiles, log=log)
         print('try_dojob', job, 'completed:', rtn)
     except OSError as e:
         print('OSError processing job', job)
@@ -212,24 +219,27 @@ def try_dojob(job, userimage, solve_command, solve_locally):
         job.set_end_time()
         job.status = 'F'
         job.save()
-        log = create_job_logger(job)
         log.msg('Caught exception while processing Job', job.id)
         log.msg(traceback.format_exc(None))
 
+    # Delete tempfiles
     for fn in tempfiles:
         if os.path.exists(fn):
             try:
                 os.remove(fn)
             except OSError as e:
                 logmsg('Failed to delete temp file', fn, ':', e)
+
+    # Shut down logging to file
+    log.close()
+
     return rtn
 
 def dojob(job, userimage, log=None, solve_command=None, solve_locally=None,
           tempfiles=None):
-    print('dojob: tempdir:', tempfile.gettempdir())
+    #print('dojob: tempdir:', tempfile.gettempdir())
     jobdir = job.make_dir()
     #print('Created job dir', jobdir)
-    #log = create_job_logger(job)
     #jobdir = job.get_dir()
     if log is None:
         log = create_job_logger(job)
