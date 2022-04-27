@@ -4,12 +4,7 @@ import os
 from datetime import datetime
 import itertools
 
-try:
-    # py3
-    from urllib.request import urlopen
-except ImportError:
-    # py2
-    from urllib2 import urlopen
+from urllib.request import urlopen
 
 from django.db import models
 from django.db.models import Q
@@ -30,8 +25,6 @@ from astrometry.util.image2pnm import image2pnm
 from astrometry.util import util as anutil
 from astrometry.net.tmpfile import *
 from astrometry.net.abstract_models import *
-
-### Admin view -- running Submissions and Jobs
 
 # = dt.total_seconds() in python 2.7
 class DuplicateSubmissionException(Exception):

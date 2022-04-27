@@ -63,7 +63,6 @@ os.environ['TMPDIR'] = tempdir
 
 import tempfile
 from astrometry.net.tmpfile import get_temp_file
-
 print('get_temp_file():', get_temp_file())
 
 from astrometry.util import image2pnm
@@ -794,7 +793,11 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
     #    #print('Resetting the processing status of', job)
     #    #job.start_time = None
     #    #job.save()
-    # FIXME -- really?
+
+    for job in oldjobs:
+        if job.user_image is not None:
+            job.user_image.has_job = False
+            job.user_image.save()
     oldjobs.delete()
 
     subresults = []
@@ -816,15 +819,16 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
 
         t_now = time.time() - t_start
         quitnow = (t_now > maxtime)
-        
+
         #print('Checking for new Submissions')
         newsubs = Submission.objects.filter(processing_started__isnull=True)
         if newsubs.count():
             print('Found', newsubs.count(), 'unstarted Submissions:', [s.id for s in newsubs])
 
         print('Checking for UserImages without Jobs')
-        all_user_images = UserImage.objects.annotate(job_count=Count('jobs'))
-        newuis = all_user_images.filter(job_count=0)
+        #all_user_images = UserImage.objects.annotate(job_count=Count('jobs'))
+        #newuis = all_user_images.filter(job_count=0)
+        newuis = UserImage.objects.filter(has_job=False)
         if newuis.count():
             #print('Found', len(newuis), 'UserImages without Jobs:', [u.id for u in newuis])
             #print('Found', len(newuis), 'UserImages without Jobs.')
@@ -899,11 +903,9 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             time.sleep(refresh_rate)
             continue
 
-        # FIXME -- order by user, etc
-
         ## HACK -- order 'newuis' to do the newest ones first... helpful when there
         # is a big backlog.
-        newuis = newuis.order_by('-submission__submitted_on')
+        #newuis = newuis.order_by('-submission__submitted_on')
 
         for sub in newsubs:
             print('Enqueuing submission:', str(sub))
@@ -923,7 +925,6 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             else:
                 try_dosub(sub, max_sub_retries)
 
-
         if dojob_pool:
             n_add = dojob_nthreads - len(jobresults)
             if n_add <= 0:
@@ -934,8 +935,10 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             start_newuis = []
             import numpy as np
             from collections import Counter
-            print('Need to start', n_add, 'jobs;', len(newuis), 'eligible uis')
+            print('Can start up to', n_add, 'jobs;', len(newuis), 'eligible images')
             while n_add > 0:
+                if len(newuis) == 0:
+                    break
                 cusers = Counter([u.user for u in newuis])
                 print('Jobs queued:', len(newuis), 'by', len(cusers), 'users; top:')
                 for k,user in cusers.most_common(5):
