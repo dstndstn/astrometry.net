@@ -92,6 +92,14 @@ def user_image(req, user_image_id=None):
     if job:
         calib = job.calibration
 
+    print('Displaying user_image', user_image_id)
+    print('Job', job)
+    print('Image', uimage.image)
+    print('Submission', uimage.submission)
+    print('Submission user_images:', list(uimage.submission.user_images.all()))
+    print('Submission disk file:', uimage.submission.disk_file.get_path())
+    print('Image disk file:', uimage.image.disk_file.get_path())
+
     #license_form = get_session_form(req.session, PartialLicenseForm)
     comment_form = get_session_form(req.session, PartialCommentForm)
     tag_form = get_session_form(req.session, TagForm)
@@ -253,8 +261,9 @@ def edit(req, user_image_id=None):
     }
     return render(req, 'user_image/edit.html', context)
 
-def serve_image(req, id=None):
-    image = get_object_or_404(Image, pk=id)
+def serve_image(req, id=None, image=None):
+    if image is None:
+        image = get_object_or_404(Image, pk=id)
     res = HttpResponse(content_type=image.get_mime_type())
 
     date = datetime.now() + timedelta(days=7)
@@ -265,6 +274,13 @@ def serve_image(req, id=None):
         res['Content-Disposition'] = 'filename=%s' % req.GET['filename']
     image.render(res, tempfiles=req.tempfiles)
     return res
+
+def serve_thumbnail_image(req, id=None):
+    image = get_object_or_404(Image, pk=id)
+    thumb = image.get_thumbnail()
+    if thumb is None:
+        return HttpResponse('missing image file')
+    return serve_image(req, image=thumb)
 
 def grid_image(req, jobid=None, size='full'):
     from astrometry.plot.plotstuff import (Plotstuff,
@@ -1176,7 +1192,9 @@ if __name__ == '__main__':
     #r = c.get('/red_green_image_display/4515804')
     #r = c.get('/user_images/4470069/')
     # jobid
-    r = c.get('/annotated_display/6411716')
+    #r = c.get('/annotated_display/6411716')
+    #r = c.get('/thumbnail_of_image/12561093')
+    r = c.get('/user_images/5845514')
     #print(r)
     with open('out.html', 'wb') as f:
         for x in r:

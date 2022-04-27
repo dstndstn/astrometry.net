@@ -82,7 +82,7 @@ urlpatterns.extend([
 
 from astrometry.net.views.image import (
     index, index_tag, annotated_image, grid_image, index_location, index_nearby, index_recent, index_all, index_by_user,
-    index_user, index_album, hide, unhide, user_image, edit, search, serve_image, image_set,
+    index_user, index_album, hide, unhide, user_image, edit, search, serve_image, serve_thumbnail_image, image_set,
     onthesky_image, sdss_image, galex_image, red_green_image, extraction_image, wcs_file, new_fits_file,
     kml_file, rdls_file, axy_file, corr_file)
 urlpatterns.extend([
@@ -103,6 +103,7 @@ urlpatterns.extend([
     re_path(r'^user_images/(?P<user_image_id>' + idpattern + r')/edit/?$', edit, name='image_edit'),
     re_path(r'^user_images/search/?$', search, name='image-search'),
     re_path(r'^image/(?P<id>' + imagepattern + r')/?$', serve_image, name='serve_image'),
+    re_path(r'^thumbnail_of_image/(?P<id>' + imagepattern + r')/?$', serve_thumbnail_image, name='serve_thumbnail_image'),
     re_path(r'^images/(?P<category>\w+)/(?P<id>' + idpattern + r')/?$', image_set),
     re_path(r'^sky_plot/zoom(?P<zoom>[0-3])/(?P<calid>' + idpattern + r')/?$', onthesky_image, name='onthesky_image'),
     re_path(r'^sdss_image_(?P<size>full|display)/(?P<calid>' + idpattern + r')/?$', sdss_image, name='sdss_image'),

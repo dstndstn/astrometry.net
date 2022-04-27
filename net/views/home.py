@@ -19,7 +19,7 @@ def home(req):
             return rtn
 
     context = {
-        'images':UserImage.objects.public_only(req.user)[:8],
+        'uimages':UserImage.objects.public_only(req.user)[:8],
     }
     if hasattr(settings,"MULTI_HOSTS") and len(settings.MULTI_HOSTS):
         context.update({

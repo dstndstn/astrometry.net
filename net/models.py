@@ -387,6 +387,9 @@ class Image(models.Model):
     RESIZED_COLLECTION = 'resized'
     ORIG_COLLECTION = 'uploaded'
 
+    THUMBNAIL_SIZE = 256
+    DISPLAY_SIZE = 640
+
     MIME_TYPES = {
         'PNG image': 'image/png',
         'JPEG image data': 'image/jpeg',
@@ -416,22 +419,33 @@ class Image(models.Model):
             return self.MIME_TYPES.get(self.disk_file.file_type, '')
 
     def get_thumbnail(self, tempfiles=None):
+        if self.thumbnail is not None:
+            df = self.thumbnail.disk_file
+            if df is not None and not os.path.exists(df.get_path()):
+                print('Re-creating thumbnail image for Image', self.id, 'disk file', self.disk_file.get_path())
+                self.thumbnail = None
         if self.thumbnail is None:
-            self.thumbnail = self.create_resized_image(256, tempfiles=tempfiles)
+            self.thumbnail = self.create_resized_image(Image.THUMBNAIL_SIZE, tempfiles=tempfiles)
             self.save()
         return self.thumbnail
 
     def get_display_image(self, tempfiles=None):
-        print('get_display_image for', self.id, ':', self.display_image)
+        #print('get_display_image for', self.id, ':', self.display_image)
         if self.display_image is not None:
             df = self.display_image.disk_file
             if df is not None and not os.path.exists(df.get_path()):
-                print('but file does not exist on disk')
+                #print('but file does not exist on disk')
                 self.display_image = None
         if self.display_image is None:
-            self.display_image = self.create_resized_image(640, tempfiles=tempfiles)
+            self.display_image = self.create_resized_image(Image.DISPLAY_SIZE, tempfiles=tempfiles)
             self.save()
         return self.display_image
+
+    def image_file_exists(self):
+        if hasattr(self, 'sourcelist'):
+            return True
+        else:
+            return os.path.exists(self.disk_file.get_path())
 
     def get_image_path(self, tempfiles=None):
         if hasattr(self, 'sourcelist'):
@@ -449,6 +463,8 @@ class Image(models.Model):
         return pnmfn
 
     def create_resized_image(self, maxsize, tempfiles=None):
+        if not self.image_file_exists():
+            return None
         if max(self.width, self.height) <= maxsize:
             return self
         pnmfn = self.get_pnm_path(tempfiles=tempfiles)
@@ -510,6 +526,24 @@ class Image(models.Model):
             with open(df.get_path(), 'rb') as dfile:
                 f.write(dfile.read())
 
+    # These are "what would my thumbnail's offsets be?"
+    def get_offset_x_of_thumbnail(self):
+        maxsize = Image.THUMBNAIL_SIZE
+        scale = float(maxsize) / float(max(self.width, self.height))
+        W,H = int(round(scale * self.width)), int(round(scale * self.height))
+        return (235-W)//2
+    def get_offset_y_of_thumbnail(self):
+        maxsize = Image.THUMBNAIL_SIZE
+        scale = float(maxsize) / float(max(self.width, self.height))
+        W,H = int(round(scale * self.width)), int(round(scale * self.height))
+        return (235-H)//2
+    def get_thumbnail_width(self):
+        maxsize = Image.THUMBNAIL_SIZE
+        scale = float(maxsize) / float(max(self.width, self.height))
+        W,H = int(round(scale * self.width)), int(round(scale * self.height))
+        return W
+
+    # These are "if I'm a thumbnail image, what should my offsets be?"
     def get_thumbnail_offset_x(self):
         return (235-self.width)//2
 

@@ -1,6 +1,6 @@
 <div class="image_set">
 {% spaceless %}
-{% for image in images %}
+{% for uimage in images %}
     <div class="thumbnail_container
     {% if thumbnail_size == 'small' %}
         thumbnail_small
@@ -11,32 +11,31 @@
         thumbnail_large
     {% endif %}{% endif %}
     ">
-        <a href="{% url 'user_image' image.id %}">
-            {% with thumbnail=image.image.get_thumbnail %}
-            {% with offset_x=thumbnail.get_thumbnail_offset_x offset_y=thumbnail.get_thumbnail_offset_y %}
+        <a href="{% url 'user_image' uimage.id %}">
+            {% with offset_x=uimage.image.get_offset_x_of_thumbnail offset_y=uimage.image.get_offset_y_of_thumbnail thumb_width=uimage.image.get_thumbnail_width %}
             <img class="image"
 		 {% if multi_hosts %}
-		 src="http://{{ multi_hosts.get }}{% url 'serve_image' id=thumbnail.id %}"
+		 src="http://{{ multi_hosts.get }}{% url 'serve_thumbnail_image' id=uimage.image.id %}"
 		 {% else %}
-		 src="{% url 'serve_image' id=thumbnail.id %}"
+		 src="{% url 'serve_thumbnail_image' id=uimage.image.id %}"
 		 {% endif %}
                  {% if thumbnail_size == 'small' %}
                  style="left: {% widthratio offset_x 235 100 %}px;
                         top: {% widthratio offset_y 235 100 %}px;
-                        width: {% widthratio thumbnail.width 235 100 %}px;
+                        width: {% widthratio thumb_width 235 100 %}px;
                         height: auto;"
                  {% else %}
                  {% if thumbnail_size == 'medium' %}
                  style="left: {% widthratio offset_x 235 170 %}px;
                         top: {% widthratio offset_y 235 170 %}px;
-                        width: {% widthratio thumbnail.width 235 170 %}px;
+                        width: {% widthratio thumb_width 235 170 %}px;
                         height: auto;"
                  {% else %}
                  style="left: {{ offset_x }}px;
                         top: {{ offset_y }}px;"
                  {% endif %}{% endif %}
              />
-            {% endwith %}{% endwith %}
+            {% endwith %}
         </a>
     </div>
 {% empty %}

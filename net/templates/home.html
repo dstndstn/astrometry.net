@@ -58,7 +58,7 @@
 
 
 	<h2 style="display:inline-block">Recently Submitted Images</h2> (<a href="{% url 'explore' %}">See More</a>)
-	{% include 'user_image/image_set.html' with images=images|slice:":8" thumbnail_size='medium' %}
+	{% include 'user_image/image_set.html' with images=uimages|slice:":8" thumbnail_size='medium' %}
 </div>
 <div style="clear: both"></div>
 {% endblock %}

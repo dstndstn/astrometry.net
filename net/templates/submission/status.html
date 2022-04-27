@@ -184,7 +184,7 @@ Submission {{ sub.id }}
 <tr>
 <td>
     <a href="{% url 'user_image' image.id %}">
-    <img src="{% url 'serve_image' id=image.image.get_thumbnail.id %}" />
+    <img src="{% url 'serve_thumbnail_image' id=image.image.id %}" />
     </a>
 </td>
 <td>

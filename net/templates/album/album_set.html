@@ -9,7 +9,7 @@
             {% if images.0 %}
             <div class="image_frame loading_container">
                 <div class="image_container" 
-                     style="background-image: url('{% url 'serve_image' id=images.0.image.get_thumbnail.id %}')">
+                     style="background-image: url('{% url 'serve_thumbnail_image' id=images.0.image.id %}')">
                 </div>
             </div>
             {% else %}
