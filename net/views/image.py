@@ -1174,7 +1174,9 @@ if __name__ == '__main__':
     #r = c.get('/user_images/2676353')
     #r = c.get('/extraction_image_full/4005556')
     #r = c.get('/red_green_image_display/4515804')
-    r = c.get('/user_images/4470069/')
+    #r = c.get('/user_images/4470069/')
+    # jobid
+    r = c.get('/annotated_display/6411716')
     #print(r)
     with open('out.html', 'wb') as f:
         for x in r:

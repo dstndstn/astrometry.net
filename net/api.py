@@ -590,7 +590,8 @@ if __name__ == '__main__':
 
     from django.test import Client
     c = Client()
-    r = c.post('/api/login', data={'request-json': '{"apikey": ""}'})
+    # anonymous
+    r = c.post('/api/login', data={'request-json': '{"apikey": "1jcrmadfnxngxscd"}'})
     print('Got response:', r)
 
     f = open('out', 'wb')

@@ -2,7 +2,7 @@
 {% spaceless %}
 <div class="pagination">
 {% if page_numbers|length > 1 %}
-    {% if show_first %}<a class="paginate_first" href="?{% query_string 'page' 1 %}" title="First Page">&laquo;</a>{% endif %}
+    {% if show_first %}<a class="paginate_first" href="?{% query_string 'page' "1" %}" title="First Page">&laquo;</a>{% endif %}
     {% if has_previous %}<a class="paginate_previous" href="?{% query_string 'page' previous|stringformat:"i" %}" title="Previous Page">&lt;</a>{% endif %}
     {% for num in page_numbers %}
     {% if num == page %}

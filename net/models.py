@@ -327,6 +327,8 @@ class DiskFile(models.Model):
         df,created = DiskFile.objects.get_or_create(
             file_hash=hashkey,
             defaults=dict(size=0, file_type='', collection=collection))
+        if not created and not os.path.exists(df.get_path()):
+            print('A known DiskFile is to be added, but it does not exist on disk.  Adding:', filename, 'to', df.get_path())
         if created or not os.path.exists(df.get_path()):
             try:
                 import stat
@@ -341,6 +343,9 @@ class DiskFile(models.Model):
                 df.set_size_and_file_type()
                 df.save()
             except:
+                print('Failed to move into place:')
+                import traceback
+                traceback.print_exc()
                 df.delete()
                 raise
         return df
@@ -417,6 +422,12 @@ class Image(models.Model):
         return self.thumbnail
 
     def get_display_image(self, tempfiles=None):
+        print('get_display_image for', self.id, ':', self.display_image)
+        if self.display_image is not None:
+            df = self.display_image.disk_file
+            if df is not None and not os.path.exists(df.get_path()):
+                print('but file does not exist on disk')
+                self.display_image = None
         if self.display_image is None:
             self.display_image = self.create_resized_image(640, tempfiles=tempfiles)
             self.save()
