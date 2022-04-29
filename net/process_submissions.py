@@ -185,6 +185,7 @@ def create_job_logger(job):
 
 def try_dojob(job, userimage, solve_command, solve_locally):
     print('try_dojob', job, '(sub', job.user_image.submission.id, ')')
+    jobdir = job.make_dir()
     log = create_job_logger(job)
     tempfiles = []
     rtn = None
@@ -866,9 +867,11 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
         if jobresults != lastjobs:
             print('Jobs running:', len(jobresults))
             lastjobs = jobresults
+        any_jobs_finished = False
         for jid,res in jobresults:
             print('  Job id', jid, 'ready:', res.ready(), end=' ')
             if res.ready():
+                any_jobs_finished = True
                 jobresults.remove((jid,res))
                 print('success:', res.successful())
 
@@ -909,6 +912,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             time.sleep(refresh_rate)
             continue
 
+        # No new work to do?
         if (len(newsubs) + len(newuis)) == 0:
             time.sleep(refresh_rate)
             continue
@@ -939,6 +943,11 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             n_add = dojob_nthreads - len(jobresults)
             if n_add <= 0:
                 # Already full!
+
+                print('No room to queue more jobs.  # new submissions:', len(newsubs))
+                if len(newsubs) == 0:
+                    time.sleep(refresh_rate)
+
                 continue
             # Queue some new ones -- randomly select from waiting users
             newuis = list(newuis)

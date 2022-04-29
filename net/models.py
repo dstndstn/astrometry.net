@@ -15,7 +15,7 @@ from django.urls import reverse
 from astrometry.net.settings import *
 from astrometry.net.wcs import *
 from astrometry.net.log import *
-from astrometry.net.enhance_models import *
+#from astrometry.net.enhance_models import *
 
 from astrometry.util.starutil_numpy import ra2hmsstring, dec2dmsstring
 from astrometry.util.filetype import filetype_short
@@ -408,6 +408,11 @@ class Image(models.Model):
     #  image_thumbnail_set -> Image
     #  image_display_set -> Image
 
+    # JPEG / PNG / GIF (not FITS)
+    def is_jpeglike(self):
+        ft = self.disk_file.file_type
+        return ('PNG' in ft) or ('JPEG' in ft) or ('GIF' in ft)
+
     def is_source_list(self):
         ''' xy list? '''
         return hasattr(self, 'sourcelist')
@@ -539,6 +544,14 @@ class Image(models.Model):
         return (235-H)//2
     def get_thumbnail_width(self):
         maxsize = Image.THUMBNAIL_SIZE
+        scale = float(maxsize) / float(max(self.width, self.height))
+        W,H = int(round(scale * self.width)), int(round(scale * self.height))
+        return W
+
+    def get_display_width(self):
+        maxsize = Image.DISPLAY_SIZE
+        if max(self.width, self.height) < maxsize:
+            return self.width
         scale = float(maxsize) / float(max(self.width, self.height))
         W,H = int(round(scale * self.width)), int(round(scale * self.height))
         return W
@@ -690,8 +703,7 @@ class Calibration(models.Model):
     def get_orientation(self):
         orient = self.raw_tan.get_orientation()
         # JPEG or PNG image input (not FITS): flip up/down.
-        ft = self.job.user_image.image.disk_file.file_type
-        if 'PNG' in ft or 'JPEG' in ft or 'GIF' in ft:
+        if self.job.user_image.image.is_jpeglike():
             orient = (((180 - orient) + 360) % 360)
         return orient
 

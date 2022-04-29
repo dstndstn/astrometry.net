@@ -83,7 +83,7 @@ urlpatterns.extend([
 from astrometry.net.views.image import (
     index, index_tag, annotated_image, grid_image, index_location, index_nearby, index_recent, index_all, index_by_user,
     index_user, index_album, hide, unhide, user_image, edit, search, serve_image, serve_thumbnail_image, image_set,
-    onthesky_image, sdss_image, galex_image, red_green_image, extraction_image, wcs_file, new_fits_file,
+    onthesky_image, sdss_image, galex_image, unwise_image, legacysurvey_image, red_green_image, extraction_image, wcs_file, new_fits_file,
     kml_file, rdls_file, axy_file, corr_file)
 urlpatterns.extend([
     re_path(r'^annotated_(?P<size>full|display)/(?P<jobid>' + jobpattern + r')/?', annotated_image, name='annotated_image'),
@@ -108,6 +108,8 @@ urlpatterns.extend([
     re_path(r'^sky_plot/zoom(?P<zoom>[0-3])/(?P<calid>' + idpattern + r')/?$', onthesky_image, name='onthesky_image'),
     re_path(r'^sdss_image_(?P<size>full|display)/(?P<calid>' + idpattern + r')/?$', sdss_image, name='sdss_image'),
     re_path(r'^galex_image_(?P<size>full|display)/(?P<calid>' + idpattern + r')/?$', galex_image, name='galex_image'),
+    re_path(r'^unwise_image_(?P<size>full|display)/(?P<calid>' + idpattern + r')/?$', unwise_image, name='unwise_image'),
+    re_path(r'^legacysurvey_image_(?P<size>full|display)/(?P<calid>' + idpattern + r')/?$', legacysurvey_image, name='legacysurvey_image'),
     re_path(r'^red_green_image_(?P<size>full|display)/(?P<job_id>' + idpattern + r')/?$', red_green_image, name='red_green_image'),
     re_path(r'^extraction_image_(?P<size>full|display)/(?P<job_id>' + idpattern + r')/?$', extraction_image, name='extraction_image'),
     re_path(r'^wcs_file/(?P<jobid>' + idpattern + r')/?$', wcs_file, name='wcs-file'),

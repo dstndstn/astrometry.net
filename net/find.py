@@ -116,6 +116,10 @@ def main():
                 print(' ',k,getattr(u,k))
             for f in ['get_full_name', 'get_short_name', 'get_username',]:
                 print(' ',f,getattr(u,f)())
+
+            print(' submissions:')
+            for s in u.submissions.all().order_by('-id'):
+                print('    ', s.id)
         if opt.deluser:
             delete_user(u)
         sys.exit(0)

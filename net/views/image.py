@@ -119,6 +119,10 @@ def user_image(req, user_image_id=None):
             images['sdss'] = reverse('sdss_image', kwargs={'calid':job.calibration.id,'size':'full'})
             images['galex_display'] = reverse('galex_image', kwargs={'calid':job.calibration.id,'size':'display'})
             images['galex'] = reverse('galex_image', kwargs={'calid':job.calibration.id,'size':'full'})
+            images['unwise_display'] = reverse('unwise_image', kwargs={'calid':job.calibration.id,'size':'display'})
+            images['unwise'] = reverse('unwise_image', kwargs={'calid':job.calibration.id,'size':'full'})
+            images['legacysurvey_display'] = reverse('legacysurvey_image', kwargs={'calid':job.calibration.id,'size':'display'})
+            images['legacysurvey'] = reverse('legacysurvey_image', kwargs={'calid':job.calibration.id,'size':'full'})
             images['redgreen_display'] = reverse('red_green_image', kwargs={'job_id':job.id,'size':'display'})
             images['redgreen'] = reverse('red_green_image', kwargs={'job_id':job.id,'size':'full'})
             #images['enhanced_display'] = reverse('enhanced_image', kwargs={'job_id':job.id,'size':'display'})
@@ -477,90 +481,89 @@ def onthesky_image(req, zoom=None, calid=None):
     return res
 
 
-def galex_image(req, calid=None, size='full'):
-    from astrometry.util import util as anutil
-    from astrometry.plot import plotstuff as ps
-    from astrometry.net.galex_jpegs import plot_into_wcs
-    cal = get_object_or_404(Calibration, pk=calid)
-    key = 'galex_size%s_cal%i' % (size, cal.id)
-    df = CachedFile.get(key)
+# def galex_image(req, calid=None, size='full'):
+#     from astrometry.util import util as anutil
+#     from astrometry.plot import plotstuff as ps
+#     from astrometry.net.galex_jpegs import plot_into_wcs
+#     cal = get_object_or_404(Calibration, pk=calid)
+#     key = 'galex_size%s_cal%i' % (size, cal.id)
+#     df = CachedFile.get(key)
+# 
+#     if df is None:
+#         wcsfn = cal.get_wcs_file()
+#         plotfn = get_temp_file(tempfiles=req.tempfiles)
+#         if size == 'display':
+#             image = cal.job.user_image
+#             dimg = image.image.get_display_image(tempfiles=req.tempfiles)
+#             scale = float(dimg.width)/image.image.width
+#         else:
+#             scale = 1.0
+# 
+#         # logmsg('WCS filename:', wcsfn)
+#         # logmsg('Plot filename:', plotfn)
+#         # logmsg('Basedir:', settings.GALEX_JPEG_DIR)
+#         # logmsg('Scale:', scale)
+# 
+#         plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR, scale=scale)
+#         # cache
+#         logmsg('Caching key "%s"' % key)
+#         df = CachedFile.add(key, plotfn)
+#     else:
+#         logmsg('Cache hit for key "%s"' % key)
+#     res = HttpResponse(open(df.get_path(), 'rb'))
+#     res['Content-Type'] = 'image/png'
+#     return res
 
-    if df is None:
-        wcsfn = cal.get_wcs_file()
-        plotfn = get_temp_file(tempfiles=req.tempfiles)
-        if size == 'display':
-            image = cal.job.user_image
-            dimg = image.image.get_display_image(tempfiles=req.tempfiles)
-            scale = float(dimg.width)/image.image.width
-        else:
-            scale = 1.0
 
-        # logmsg('WCS filename:', wcsfn)
-        # logmsg('Plot filename:', plotfn)
-        # logmsg('Basedir:', settings.GALEX_JPEG_DIR)
-        # logmsg('Scale:', scale)
+def legacysurvey_viewer_image(req, cal, size, layer):
+    wcsfn = cal.get_wcs_file()
 
-        plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR, scale=scale)
-        # cache
-        logmsg('Caching key "%s"' % key)
-        df = CachedFile.add(key, plotfn)
+    from astrometry.util.util import Tan
+    wcs = Tan(wcsfn)
+    image = cal.job.user_image.image
+
+    if size == 'display':
+        dw = image.get_display_width()
+        scale = float(dw)/image.width
+        print('Dispaly width:', dw, 'full width:', image.width, 'scale', scale)
+        wcs = wcs.scale(scale)
+
     else:
-        logmsg('Cache hit for key "%s"' % key)
-    res = HttpResponse(open(df.get_path(), 'rb'))
-    res['Content-Type'] = 'image/png'
-    return res
+        scale = 1.0
 
+    args = dict(crval1='%.6f' % wcs.crval[0],
+                crval2='%.6f' % wcs.crval[1],
+                crpix1='%.2f' % wcs.crpix[0],
+                crpix2='%.2f' % wcs.crpix[1],
+                cd11='%.6g' % wcs.cd[0],
+                cd12='%.6g' % wcs.cd[1],
+                cd21='%.6g' % wcs.cd[2],
+                cd22='%.6g' % wcs.cd[3],
+                imagew='%i' % int(wcs.imagew),
+                imageh='%i' % int(wcs.imageh))
+    urlargs = urlencode(args)
+    #flip = image.is_jpeglike()
+    #if not flip:
+    #    urlargs += '&flip'
+    url = 'https://legacysurvey.org/viewer/cutout-wcs/?layer=' + layer + '&' + urlargs
+    print('Redirecting to URL', url)
+    return HttpResponseRedirect(url)
 
 def sdss_image(req, calid=None, size='full'):
     cal = get_object_or_404(Calibration, pk=calid)
-    key = 'sdss_size%s_cal%i' % (size, cal.id)
-    df = CachedFile.get(key)
-    if df is None:
-        wcsfn = cal.get_wcs_file()
+    return legacysurvey_viewer_image(req, cal, size, 'sdss')
 
-        from astrometry.util.util import Tan
-        wcs = Tan(wcsfn)
+def galex_image(req, calid=None, size='full'):
+    cal = get_object_or_404(Calibration, pk=calid)
+    return legacysurvey_viewer_image(req, cal, size, 'galex')
 
-        if size == 'display':
-            image = cal.job.user_image
-            dimg = image.image.get_display_image(tempfiles=req.tempfiles)
-            scale = float(dimg.width)/image.image.width
-            wcs = wcs.scale(scale)
+def unwise_image(req, calid=None, size='full'):
+    cal = get_object_or_404(Calibration, pk=calid)
+    return legacysurvey_viewer_image(req, cal, size, 'unwise-neo6')
 
-        else:
-            scale = 1.0
-
-        urlargs = urlencode(dict(crval1='%.6f' % wcs.crval[0],
-                                 crval2='%.6f' % wcs.crval[1],
-                                 crpix1='%.2f' % wcs.crpix[0],
-                                 crpix2='%.2f' % wcs.crpix[1],
-                                 cd11='%.6g' % wcs.cd[0],
-                                 cd12='%.6g' % wcs.cd[1],
-                                 cd21='%.6g' % wcs.cd[2],
-                                 cd22='%.6g' % wcs.cd[3],
-                                 imagew='%i' % int(wcs.imagew),
-                                 imageh='%i' % int(wcs.imageh)))
-
-        url = 'http://legacysurvey.org/viewer/cutout-wcs/?layer=sdssco&' + urlargs
-        return HttpResponseRedirect(url)
-
-        #print('Retrieving:', url)
-        #f = urlopen(url)
-        #plotfn = get_temp_file()
-        #plotfn, headers = urlretrieve(url, plotfn)
-        #print('Headers:', headers)
-
-        #plot_sdss_image(wcsfn, plotfn, scale)
-
-        # cache
-        # logmsg('Caching key "%s"' % key)
-        # df = CachedFile.add(key, plotfn)
-    else:
-        logmsg('Cache hit for key "%s" -> %s' % (key, df.get_path()))
-    f = open(df.get_path() , 'rb')
-    res = HttpResponse(f)
-    res['Content-Type'] = 'image/jpeg'
-    return res
+def legacysurvey_image(req, calid=None, size='full'):
+    cal = get_object_or_404(Calibration, pk=calid)
+    return legacysurvey_viewer_image(req, cal, size, 'ls-dr9')
 
 def red_green_image(req, job_id=None, size='full'):
     from astrometry.plot.plotstuff import (Plotstuff,
@@ -1194,7 +1197,8 @@ if __name__ == '__main__':
     # jobid
     #r = c.get('/annotated_display/6411716')
     #r = c.get('/thumbnail_of_image/12561093')
-    r = c.get('/user_images/5845514')
+    #r = c.get('/user_images/5845514')
+    r = c.get('/sdss_image_display/4629768')
     #print(r)
     with open('out.html', 'wb') as f:
         for x in r:
