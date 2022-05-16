@@ -61,7 +61,9 @@ def main():
     parser.add_option('-d', '--disk-file', type=str, dest='df', help='DiskFile id')
     parser.add_option('-r', '--rerun', dest='rerun', action='store_true',
                       help='Re-run this submission/job?')
-
+    parser.add_option('--list-socials', default=False, action='store_true')
+    parser.add_option('--list-profiles', default=False, action='store_true')
+    
     parser.add_option('--threads', type=int, help='Re-run failed jobs within this process using N threads; else submit to process_submissions process.')
 
     parser.add_option('--chown', dest='chown', type=int, default=0, help='Change owner of userimage or submission by user id #')
@@ -95,6 +97,20 @@ def main():
                       help='For a UserImage, set publicly_visible=False')
     
     opt,args = parser.parse_args()
+
+    if opt.list_socials:
+        #from social.apps.django_app.default.models import UserSocialAuth
+        ## ????
+        from social_django.models import UserSocialAuth
+        socs = UserSocialAuth.objects.order_by('created')
+        for soc in socs:
+            print('soc for user', soc.user.id, soc.user, 'provider', soc.provider, 'uid', soc.uid, 'extra', soc.extra_data)
+        sys.exit(0)
+    if opt.list_profiles:
+        pros = UserProfile.objects.all()
+        for pro in pros:
+            print('userid', pro.user.id, 'display', pro.display_name, 'apikey', pro.apikey)
+        sys.exit(0)
 
     if opt.email:
         users = User.objects.filter(email__contains=opt.email)
