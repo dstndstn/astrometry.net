@@ -1,18 +1,14 @@
+This is a self-contained Python client for the astrometry.net web
+service.
 
-simplejson is no longer needed. client.py uses the python builtin json libs coming with version >=2.6
+You can either use it as a command-line program, or as a Python
+library.
 
-Supernova API is at:
-  http://supernova.astrometry.net/api
+In either case, you will need your "API Key", a 16-character random
+string that identifies you.  Keep your API Key secret!
 
-Nova API is at:
-  http://nova.astrometry.net/api
+Example use:
 
-
-Note on supernova:
-  Since supernova is undergoing continuous development, consider your API
-  key for it short lived and volatile.
-  
-  That said:
-    If you find that the client is no longer able to connect to the
-    (experimental) supernova API, please check that your API key hasn't
-    changed by visiting http://supernova.astrometry.net/dashboard/profile/
+'''
+python3 client.py -u ../../demo/apod1.jpg -k XXXXXXXX --scale-lower 0.2 --scale-units degwidth --wcs apod1.wcs
+'''
