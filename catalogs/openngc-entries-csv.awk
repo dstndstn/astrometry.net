@@ -5,6 +5,7 @@
 NR==1 { next }
 
 {
+# skip entries that are neither NGC not IC
 if ($1 !~ /^(IC|NGC)[0-9]*$/) next;
 # skip "Dup" entries such as NGC4443.
 if ($2 ~ /Dup/) next;

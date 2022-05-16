@@ -102,6 +102,7 @@ class Client(object):
 
         try:
             f = urlopen(request)
+            print('Got reply HTTP status code:', f.status)
             txt = f.read()
             print('Got json:', txt)
             result = json2python(txt)
