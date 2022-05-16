@@ -218,7 +218,7 @@ jobs:
           command: |
             yum -y install patch gcc make file pkg-config wget curl swig git
             yum -y install gsl-devel cairo-devel libpng-devel libjpeg-turbo-devel zlib-devel bzip2-devel swig python36-devel
-            yum install dnf
+            yum -y install dnf
             dnf -y install dnf-plugins-core
             dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
             yum -y install epel-release
