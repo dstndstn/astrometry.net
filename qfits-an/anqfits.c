@@ -718,7 +718,7 @@ static int parse_header_block(const char* buf, qfits_header* hdr, int* found_it)
             continue;
         key = qfits_getkey_r(line, getkey_buf);
         if (!key) {
-            printf("Skipping un-parseable header line: \"%.80s\"\n", line);
+            fprintf(stderr, "Skipping un-parseable header line: \"%.80s\"\n", line);
             continue;
         }
         val = qfits_getvalue_r(line, getval_buf);
