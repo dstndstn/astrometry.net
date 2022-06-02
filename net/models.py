@@ -266,7 +266,7 @@ class DiskFile(models.Model):
         st = os.stat(fn)
         self.size = st.st_size
         filetypes = filetype_short(fn)
-        self.file_type = ';'.join(filetypes)
+        self.file_type = ';'.join(filetypes)[:255]
 
     def get_file_types(self):
         return self.file_type.split(';')
