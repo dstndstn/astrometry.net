@@ -168,7 +168,8 @@ int main(int argc, char** args) {
                 hplist = il_new(1);
                 il_append(hplist, 0);
             }
-            for (int ihp=0; ihp<il_size(hplist); ihp++) {
+            int ihp;
+            for (ihp=0; ihp<il_size(hplist); ihp++) {
                 int hp = il_get(hplist, ihp);
                 if (!ucacs[hp]) {
                     char fn[256];

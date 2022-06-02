@@ -5,8 +5,6 @@ jobs:
     machine:
       image: ubuntu-2004:202101-01
     resource_class: arm.medium
-    #docker:
-    #  - image: ubuntu:20.04
     steps:
       - run:
           name: CPU info
@@ -55,7 +53,54 @@ jobs:
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
 
-
+  build-docker-ubuntu-22-py310:
+    docker:
+      - image: ubuntu:22.04
+    steps:
+      - run:
+          name: CPU info
+          command: cat /proc/cpuinfo
+      - run:
+          name: Ubuntu packages
+          command: |
+            apt update && apt install -y apt-utils
+            DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends make gcc patch git openssh-client file pkg-config wget curl swig netpbm wcslib-dev wcslib-tools zlib1g-dev libbz2-dev libcairo2-dev libcfitsio-dev libcfitsio-bin libgsl-dev libjpeg-dev libnetpbm10-dev libpng-dev python3.10-dev libpython3.10-dev ca-certificates
+            DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends python3-pip
+            apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+      - run:
+          name: Python packages
+          command: |
+            pip3 install numpy
+            pip3 install fitsio
+      - checkout
+      - run:
+          name: Make
+          command: |
+            export PYTHON=python3.10
+            make
+            make py
+            make extra
+            make test
+      - run:
+          name: Tests
+          command: |
+            export PYTHON=python3.10
+            (cd util && ./test)
+            (cd libkd && ./test)
+            (cd solver && ./test)
+            (cd plot && ./test)
+            make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env python3.10"
+            export PYTHONPATH=${PYTHONPATH}:~/an/lib/python
+            (cd /tmp && $PYTHON -c "import astrometry.libkd.spherematch")
+            export PATH=${PATH}:~/an/bin
+            build-astrometry-index -d 3 -o index-9918.fits -P 18 -S mag -B 0.1 -s 0 -r 1 -I 9918 -M -i demo/tycho2-mag6.fits
+            echo -e 'add_path .\ninparallel\nindex index-9918.fits' > 99.cfg
+            solve-field --config 99.cfg demo/apod4.jpg  --continue
+            tablist demo/apod4.match
+            listhead demo/apod4.wcs
+            (cd /tmp && $PYTHON -c "import astrometry.util.util; print(dir(astrometry.util.util))")
+            solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
+            listhead demo/apod5.wcs
 
   build-docker-ubuntu-20-py39:
     docker:
@@ -210,11 +255,125 @@ jobs:
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
 
+  build-docker-centos-7:
+    docker:
+      - image: centos:7
+    steps:
+      - run:
+          name: CPU info
+          command: cat /proc/cpuinfo
+      - run:
+          name: RPM packages
+          command: |
+            yum -y install patch gcc make file pkg-config wget curl swig git
+            yum -y install gsl-devel cairo-devel libpng-devel libjpeg-turbo-devel zlib-devel bzip2-devel swig python36-devel
+            yum -y install dnf
+            dnf -y install dnf-plugins-core
+            dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            yum -y install epel-release
+            dnf install -y 'dnf-command(config-manager)'
+            dnf repolist
+            yum -y install netpbm netpbm-devel netpbm-progs
+            yum -y install cfitsio cfitsio-devel wcslib wcslib-utils wcslib-devel
+            ln -s /usr/lib64/libnetpbm.so.11 /usr/local/lib/libnetpbm.so
+      - run:
+          name: Python packages
+          command: |
+            pip3 install numpy
+            pip3 install fitsio
+      - checkout
+      - run:
+          name: Make
+          command: |
+            NETPBM_INC=-I/usr/include/netpbm
+            NETPBM_LIB=-lnetpbm
+            make
+            make py
+            make extra
+            make test
+      - run:
+          name: Tests
+          command: |
+            (cd util && ./test)
+            (cd libkd && ./test)
+            (cd solver && ./test)
+            (cd plot && ./test)
+            make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env python3"
+            export PYTHONPATH=${PYTHONPATH}:~/an/lib/python
+            (cd /tmp && python3 -c "import astrometry.libkd.spherematch")
+            export PATH=${PATH}:~/an/bin
+            build-astrometry-index -d 3 -o index-9918.fits -P 18 -S mag -B 0.1 -s 0 -r 1 -I 9918 -M -i demo/tycho2-mag6.fits
+            echo -e 'add_path .\ninparallel\nindex index-9918.fits' > 99.cfg
+            solve-field --config 99.cfg demo/apod4.jpg  --continue
+            tablist demo/apod4.match
+            listhead demo/apod4.wcs
+            solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
+            listhead demo/apod5.wcs
+
+
+  build-docker-rocky-85:
+    docker:
+      - image: rockylinux:8.5
+    steps:
+      - run:
+          name: CPU info
+          command: cat /proc/cpuinfo
+      - run:
+          name: RPM packages
+          command: |
+            yum -y install patch gcc make file pkg-config wget curl swig git
+            yum -y install python3-devel
+            yum -y install gsl-devel cairo-devel libpng-devel libjpeg-turbo-devel zlib-devel bzip2-devel swig
+            yum -y install netpbm netpbm-progs
+            yum -y install bzip2
+            dnf -y install dnf-plugins-core
+            dnf -y install epel-release
+            dnf config-manager --set-enabled powertools
+            dnf -y update
+            yum -y install netpbm-devel cfitsio-devel wcslib-devel
+            ln -s /usr/lib64/libnetpbm.so.11 /usr/local/lib/libnetpbm.so
+      - run:
+          name: Python packages
+          command: |
+            pip3 install numpy
+            pip3 install fitsio
+      - checkout
+      - run:
+          name: Make
+          command: |
+            export NETPBM_INC=-I/usr/include/netpbm
+            export NETPBM_LIB=-lnetpbm
+            make
+            make py
+            make extra
+            make test
+      - run:
+          name: Tests
+          command: |
+            (cd util && ./test)
+            (cd libkd && ./test)
+            (cd solver && ./test)
+            (cd plot && ./test)
+            make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env python3"
+            export PYTHONPATH=${PYTHONPATH}:~/an/lib/python
+            (cd /tmp && python3 -c "import astrometry.libkd.spherematch")
+            export PATH=${PATH}:~/an/bin
+            build-astrometry-index -d 3 -o index-9918.fits -P 18 -S mag -B 0.1 -s 0 -r 1 -I 9918 -M -i demo/tycho2-mag6.fits
+            echo -e 'add_path .\ninparallel\nindex index-9918.fits' > 99.cfg
+            solve-field --config 99.cfg demo/apod4.jpg  --continue
+            tablist demo/apod4.match
+            listhead demo/apod4.wcs
+            solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
+            listhead demo/apod5.wcs
+
+
 workflows:
   version: 2
   build:
     jobs:
+      - "build-docker-ubuntu-22-py310"
       - "build-docker-ubuntu-20-py39"
       - "build-docker-ubuntu-18"
-      - "build-docker-centos-8"
+      - "build-docker-centos-7"
+      - "build-docker-rocky-85"
       - "build-arm-docker-ubuntu-20-py39"

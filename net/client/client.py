@@ -43,7 +43,7 @@ class RequestError(Exception):
     pass
 
 class Client(object):
-    default_url = 'http://nova.astrometry.net/api/'
+    default_url = 'https://nova.astrometry.net/api/'
 
     def __init__(self,
                  apiurl = default_url):
@@ -102,6 +102,7 @@ class Client(object):
 
         try:
             f = urlopen(request)
+            print('Got reply HTTP status code:', f.status)
             txt = f.read()
             print('Got json:', txt)
             result = json2python(txt)
@@ -272,7 +273,7 @@ if __name__ == '__main__':
     parser.add_option('--annotate','-a',dest='annotate',help='store information about annotations in give file, JSON format; implies --wait if --urlupload or --upload')
     parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
     parser.add_option('--scale-units', dest='scale_units',
-                      choices=('arcsecperpix', 'arcminwidth', 'degwidth', 'focalmm'), help='Units for scale estimate')
+                      choices=('arcsecperpix', 'arcminwidth', 'degwidth', 'focalmm'), help='Units for scale estimate ("arcsecperpix", "arcminwidth", "degwidth", or "focalmm")')
     #parser.add_option('--scale-type', dest='scale_type',
     #                  choices=('ul', 'ev'), help='Scale bounds: lower/upper or estimate/error')
     parser.add_option('--scale-lower', dest='scale_lower', type=float, help='Scale lower-bound')
