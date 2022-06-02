@@ -339,7 +339,7 @@ class DiskFile(models.Model):
                 shutil.move(filename, df.get_path())
                 # chmod (temp files are usually created with mode 600)
                 os.chmod(df.get_path(), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
-                print('Chmod', df.get_path(), 'to 0x%x' % (stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH))
+                #print('Chmod', df.get_path(), 'to 0x%x' % (stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH))
                 df.set_size_and_file_type()
                 df.save()
             except:

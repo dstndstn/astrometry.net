@@ -33,9 +33,10 @@ django.setup()
 
 from django.core.exceptions import MultipleObjectsReturned
 
+import requests
+
 import traceback
 from urllib.parse import urlparse
-import urllib.request, urllib.parse, urllib.error
 import shutil
 import multiprocessing
 import time
@@ -513,15 +514,26 @@ def try_dosub(sub, max_retries):
     return rtn
 
 def dosub(sub, tempfiles=None, tempdirs=None):
-    print('dosub: tempdir:', tempfile.gettempdir())
+    #print('dosub: tempdir:', tempfile.gettempdir())
     sub.set_processing_started()
     sub.save()
-    print('Submission disk file:', sub.disk_file)
+    #print('Submission disk file:', sub.disk_file)
 
     if sub.disk_file is None:
-        logmsg('Sub %i: retrieving URL' % (sub.id), sub.url)
-        (fn, headers) = urllib.request.urlretrieve(sub.url)
-        logmsg('Sub %i: wrote URL to file' % (sub.id), fn)
+        #(fn, headers) = urllib.request.urlretrieve(sub.url)
+        # open URL
+        # (note that the timeout is not on the overall request, it's a "haven't heard from you in...")
+        r = requests.get(sub.url, stream=True, timeout=10)
+        # stream URL contents to temp file
+        fn = get_temp_file(tempfiles=tempfiles)
+        logmsg('Sub %i: retrieving URL %s to temp file %s' % (sub.id, sub.url, fn))
+        with open(fn, 'wb') as fd:
+            for chunk in r.iter_content(chunk_size=8192):
+                fd.write(chunk)
+        # Raise an exception if we got a bad HTTP result code (404, etc)
+        r.raise_for_status()
+
+        logmsg('Sub %i: wrote URL %s to file %s' % (sub.id, sub.url, fn))
         df = DiskFile.from_file(fn, Image.ORIG_COLLECTION)
         logmsg('Created DiskFile', df)
         # Try to split the URL into a filename component and save it
