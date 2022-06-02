@@ -273,9 +273,8 @@ def upload_file(request):
 
             sub.user = request.user if request.user.is_authenticated else User.objects.get(username=ANONYMOUS_USERNAME)
             if form.cleaned_data['upload_type'] == 'file':
-                sub.disk_file, sub.original_filename = handle_upload(
-                    file=request.FILES['file'],
-                    tempfiles=request.tempfiles)
+                sub.disk_file, sub.original_filename = handle_file_upload(
+                    request.FILES['file'], tempfiles=request.tempfiles)
             elif form.cleaned_data['upload_type'] == 'url':
                 sub.url = form.cleaned_data['url']
                 p = urlparse(sub.url)
@@ -284,7 +283,6 @@ def upload_file(request):
                     s = p.split('/')
                     sub.original_filename = s[-1]
                 # Don't download the URL now!  Let process_submissions do that!
-                # sub.disk_file, sub.original_filename = handle_upload(url=sub.url)
             try:
                 sub.save()
             except DuplicateSubmissionException:
@@ -349,41 +347,16 @@ def status(req, subid=None):
             'finished': finished,
         })
 
-def handle_upload(file=None, url=None, tempfiles=None):
-    #logmsg('handle_uploaded_file: req=' + str(req))
-    #logmsg('handle_uploaded_file: req.session=' + str(req.session))
-    #logmsg('handle_uploaded_file: req.session.user=' + str(req.session.user))
-    #logmsg('handle_uploaded_file: req.user=' + str(req.user))
-
-    # get file/url onto disk
+def handle_file_upload(file, tempfiles=None):
+    # get file onto disk (and compute its hash)
     file_hash = DiskFile.get_hash()
     temp_file_path = get_temp_file(tempfiles=tempfiles)
     with open(temp_file_path, 'wb+') as uploaded_file:
         original_filename = ''
-
-        if file:
-            for chunk in file.chunks():
-                uploaded_file.write(chunk)
-                file_hash.update(chunk)
-            original_filename = file.name
-        elif url:
-            logmsg('handling url upload')
-            f = urlopen(url) # nosec
-            CHUNK_SIZE = 4096
-            while True:
-                chunk = f.read(CHUNK_SIZE)
-                if not chunk:
-                    break
-                uploaded_file.write(chunk)
-                file_hash.update(chunk)
-
-            p = urlparse(url)
-            p = p.path
-            if p:
-                s = p.split('/')
-                original_filename = s[-1]
-        else:
-            return None
+        for chunk in file.chunks():
+            uploaded_file.write(chunk)
+            file_hash.update(chunk)
+        original_filename = file.name
 
     df = DiskFile.from_file(temp_file_path, collection=Image.ORIG_COLLECTION,
                             hashkey=file_hash.hexdigest())

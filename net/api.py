@@ -20,7 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 # astrometry.net imports
 from astrometry.net.models import *
-from astrometry.net.views.submission import handle_upload
+from astrometry.net.views.submission import handle_file_upload
 from astrometry.net.api_util import *
 from astrometry.net.log import *
 from astrometry.net.tmpfile import *
@@ -105,6 +105,8 @@ def requires_json_login(handler):
 def upload_common(request, url=None, file=None):
     json = request.json
     logmsg('upload: JSON', json)
+    df = None
+    original_filename = ''
     # Handle X,Y coordinate lists
     if 'x' in json and 'y' in json:
         import numpy as np
@@ -126,9 +128,9 @@ def upload_common(request, url=None, file=None):
         df = DiskFile.from_file(temp_file_path,
                                 collection=Image.ORIG_COLLECTION)
         original_filename = 'json-xy'
-    else:
-        df, original_filename = handle_upload(file=file, url=url,
-                                              tempfiles=request.tempfiles)
+    elif file is not None:
+        df, original_filename = handle_file_upload(file, tempfiles=request.tempfiles)
+
     submittor = request.user if request.user.is_authenticated else None
     pro = get_user_profile(submittor)
     allow_commercial_use = json.get('allow_commercial_use', 'd')
@@ -185,9 +187,12 @@ def upload_common(request, url=None, file=None):
 
     sub = Submission(**subargs)
     sub.save()
-    return HttpResponseJson({'status': 'success',
-                             'subid': sub.id,
-                             'hash': sub.disk_file.file_hash})
+
+    rtn = {'status': 'success',
+           'subid': sub.id, }
+    if sub.disk_file is not None:
+        rtn.update({'hash': sub.disk_file.file_hash})
+    return HttpResponseJson(rtn)
 
 @csrf_exempt
 @requires_json_args
