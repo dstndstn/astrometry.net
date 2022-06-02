@@ -9,6 +9,14 @@ urlpatterns = []
 
 from astrometry.net.views.home import home, support, api_help, explore
 
+def dos_error(req):
+    from django.http import HttpResponse
+    return HttpResponse(content='django', status=503)
+
+urlpatterns.extend([
+    re_path(r'^new_fits_file/6490673$', dos_error)
+    ])
+
 urlpatterns.extend([
     re_path(r'^/?$', home),
     re_path(r'^support/?$', support, name='support'),
