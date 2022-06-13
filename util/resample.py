@@ -439,14 +439,14 @@ if __name__ == '__main__':
 
     
     for i in range(5):
-        t0 = time.clock()
+        t0 = time.process_time()
         Yo,Xo,Yi,Xi,ims = resample_with_wcs(cowcs, wcs, [pix], 3)
-        t1 = time.clock() - t0
+        t1 = time.process_time() - t0
         print('C resampling took', t1)
 
-    t0 = time.clock()
+    t0 = time.process_time()
     Yo2,Xo2,Yi2,Xi2,ims2 = resample_with_wcs(cowcs, wcs, [pix], 3, cinterp=False, table=False)
-    t2 = time.clock() - t0
+    t2 = time.process_time() - t0
     print('py resampling took', t2)
     
     out = np.zeros((H,W))
