@@ -94,7 +94,7 @@ NOT_INSTALLED_PIPELINE := agreeable certifiable \
 	augment-xylist merge-index index-to-table setsolved \
 	uniformize-catalog local-index index-info control-program
 
-PIPELINE := wcs-grab solve-field
+PIPELINE := wcs-grab solve-field augment-xylist
 
 MAIN_PROGS := image2xy new-wcs fits-guess-scale startree
 # hpquads
@@ -370,4 +370,6 @@ clean:
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) $(FITS_UTILS) $(ALL_OBJ) \
 		$(NODEP_OBJS) fitsverify \
 		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
-		$(ENGINE_LIB) $(ENGINE_SO) *.o *~ *.dep deps
+		$(ENGINE_LIB) $(ENGINE_SO) \
+		_solver$(PYTHON_SO_EXT) solver.py solver_wrap.c \
+		*.o *~ *.dep deps

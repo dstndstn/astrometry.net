@@ -53,5 +53,5 @@ install:
 
 .PHONY: clean
 clean:
-	rm -f _cutils$(PYTHON_SO_EXT) cutils_wrap.c cutils.py
+	rm -f _cutils$(PYTHON_SO_EXT) cutils_wrap.c cutils_wrap.o cutils.py
 

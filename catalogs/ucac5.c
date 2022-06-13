@@ -51,7 +51,6 @@ static uint8_t grab_u8(void** v) {
 
 int ucac5_parse_entry(ucac5_entry* entry, const void* encoded, float epoch) {
     //const uint32_t* udata = encoded;
-    uint32_t uval;
     void* buf = (void*)encoded;
 
     // RESIST THE URGE TO RE-ORDER THESE, bonehead!

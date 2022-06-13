@@ -223,4 +223,4 @@ clean:
 	rm -f $(DEPS) $(ALL_OBJ) \
 		$(NODEP_OBJS) plot-constellations plotquad plotxy \
 		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
-		plotstuff _plotstuff_c$(PYTHON_SO_EXT) *.o *~ *.dep deps
+		plotstuff _plotstuff_c$(PYTHON_SO_EXT) plotstuff_c.py plotstuff_wrap.c *.o *~ *.dep deps
