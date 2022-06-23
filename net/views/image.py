@@ -998,6 +998,25 @@ def kml_file(req, jobid=None):
     img = job.user_image.image
     df = img.disk_file
 
+    # Convert SIP to TAN if necessary (wcs2kml can't handle SIP)
+    import fitsio
+    wcshdr = fitsio.read_header(wcsfn)
+    #print('CTYPE1:', wcshdr.get('CTYPE1'))
+    if wcshdr.get('CTYPE1') == 'RA---TAN-SIP':
+        from astrometry.util.util import Sip, Tan
+        wcs = Sip(wcshdr)
+        #print('Sip:', wcs)
+        wcs = Tan(wcs.wcstan)
+        #print('Writing WCS', wcs)
+        hdr = fitsio.FITSHDR()
+        wcs.add_to_header(hdr)
+        #print('Header:', hdr)
+        hdr['EQUINOX'] = 2000.
+        tmpwcs = get_temp_file(tempfiles=req.tempfiles)
+        fitsio.write(tmpwcs, None, header=hdr, clobber=True)
+        #print('Wrote temp TAN WCS header', tmpwcs)
+        wcsfn = tmpwcs
+
     pnmfn = img.get_pnm_path(tempfiles=req.tempfiles)
     imgfn = get_temp_file(tempfiles=req.tempfiles)
     image = PIL.Image.open(pnmfn)
@@ -1198,7 +1217,9 @@ if __name__ == '__main__':
     #r = c.get('/annotated_display/6411716')
     #r = c.get('/thumbnail_of_image/12561093')
     #r = c.get('/user_images/5845514')
-    r = c.get('/sdss_image_display/4629768')
+    #r = c.get('/sdss_image_display/4629768')
+    #r = c.get('/user_images/1533706')
+    r = c.get('/kml_file/2646067?ignore=.kmz')
     #print(r)
     with open('out.html', 'wb') as f:
         for x in r:
