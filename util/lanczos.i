@@ -201,7 +201,7 @@ static PyObject* GLUE3(lanczos, L, _interpolate)
     PyArray_Descr* itype = PyArray_DescrFromType(NPY_INT32);
     int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
         NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
-    int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
+    int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_WRITEBACKIFCOPY;
 
     const int32_t *ixi, *iyi;
     const float *dx, *dy;
@@ -280,6 +280,11 @@ static PyObject* GLUE3(lanczos, L, _interpolate)
             *outimg = lanczos_resample_one(*ixi, dx[j], *iyi, dy[j], inimg, W, H);
         }
         Py_DECREF(np_inimg);
+        if (PyArray_ResolveWritebackIfCopy(np_outimg) == -1) {
+            PyErr_SetString(PyExc_ValueError, "Failed to write-back output image array!");
+            Py_DECREF(np_outimg);
+            return NULL;
+        }
         Py_DECREF(np_outimg);
     }
     Py_DECREF(dtype);
@@ -298,7 +303,7 @@ static PyObject* GLUE3(lanczos, L, _interpolate_grid)
     PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
     int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
         NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
-    int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
+    int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_WRITEBACKIFCOPY;
 
     lut_init(L);
 
@@ -352,8 +357,13 @@ static PyObject* GLUE3(lanczos, L, _interpolate_grid)
         }
     }
     Py_DECREF(np_inimg);
-    Py_DECREF(np_outimg);
     Py_DECREF(dtype);
+    if (PyArray_ResolveWritebackIfCopy(np_outimg) == -1) {
+        PyErr_SetString(PyExc_ValueError, "Failed to write-back output image array!");
+        Py_DECREF(np_outimg);
+        return NULL;
+    }
+    Py_DECREF(np_outimg);
     Py_RETURN_NONE;
 }
 
