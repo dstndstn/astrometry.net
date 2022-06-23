@@ -164,9 +164,11 @@ class MyLogger(object):
         return self.logger.debug(' '.join(str(x) for x in args))
     def info(self, *args):
         return self.logger.info(' '.join(str(x) for x in args))
-    msg = info
+    def msg(self, *args):
+        return self.logger.info(' '.join(str(x) for x in args))
+    #msg = info
     def close(self):
-        self.logger.removeHandler(fh)
+        self.logger.removeHandler(self.fh)
         self.fh.close()
         self.logger = None
         self.fh = None
@@ -178,11 +180,16 @@ def create_job_logger(job):
     logmsg("getlogger")
     logger = logging.getLogger('job.%i' % job.id)
     logger.setLevel(logging.DEBUG)
+    print('Logging to', job.get_log_file2())
     fh = logging.FileHandler(job.get_log_file2())
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s %(message)s')
     fh.setFormatter(formatter)
-    return MyLogger(logger, fh)
+    log = MyLogger(logger, fh)
+    print('Logger enabled for DEBUG:', logger.isEnabledFor(logging.DEBUG))
+    log.info('Testing logger')
+    log.msg('Testing log.msg()')
+    return log
 
 def try_dojob(job, userimage, solve_command, solve_locally):
     print('try_dojob', job, '(sub', job.user_image.submission.id, ')')
@@ -239,10 +246,10 @@ def try_dojob(job, userimage, solve_command, solve_locally):
 
 def dojob(job, userimage, log=None, solve_command=None, solve_locally=None,
           tempfiles=None):
-    #print('dojob: tempdir:', tempfile.gettempdir())
-    jobdir = job.make_dir()
-    #print('Created job dir', jobdir)
-    #jobdir = job.get_dir()
+    jobdir = job.get_dir()
+    if not os.path.exists(jobdir):
+        # make_dir deletes an existing directory if it already exists!!
+        jobdir = job.make_dir()
     if log is None:
         log = create_job_logger(job)
     log.msg('Starting Job processing for', job)

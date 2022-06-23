@@ -3,6 +3,11 @@ import shutil
 import os, errno
 import hashlib
 
+if __name__ == '__main__':
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+    import django
+    django.setup()
+
 try:
     # py3
     from urllib.parse import urlparse
@@ -361,3 +366,11 @@ def handle_file_upload(file, tempfiles=None):
     df = DiskFile.from_file(temp_file_path, collection=Image.ORIG_COLLECTION,
                             hashkey=file_hash.hexdigest())
     return df, original_filename
+
+if __name__ == '__main__':
+    from django.test import Client
+    c = Client()
+    r = c.get('/joblog2/6606830')
+    with open('out.html', 'wb') as f:
+        for x in r:
+            f.write(x)

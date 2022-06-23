@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.urls import reverse
 
+from astrometry.net import settings
 from astrometry.net.settings import *
 from astrometry.net.wcs import *
 from astrometry.net.log import *
@@ -840,7 +841,7 @@ class Job(models.Model):
 
     def get_dir(self):
         jtxt = '%08i' % self.id
-        return os.path.join(JOBDIR, jtxt[:4], jtxt)
+        return os.path.join(settings.JOBDIR, jtxt[:4], jtxt)
 
     def get_axy_file(self):
         return os.path.join(self.get_dir(), 'job.axy')
