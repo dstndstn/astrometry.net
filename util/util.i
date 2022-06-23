@@ -175,7 +175,7 @@ void log_set_level(int lvl);
         PyArray_Descr* itype = NULL;
         int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
                NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
-        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
+        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_WRITEBACKIFCOPY;
         PyArrayObject* np_arrx;
         PyArrayObject* np_arry;
         PyArrayObject* np_hist;
@@ -257,6 +257,11 @@ void log_set_level(int lvl);
 
         Py_DECREF(np_arrx);
         Py_DECREF(np_arry);
+        if (PyArray_ResolveWritebackIfCopy(np_hist) == -1) {
+            PyErr_SetString(PyExc_ValueError, "Failed to write-back hist array values!");
+            Py_DECREF(np_hist);
+            return NULL;
+        }
         Py_DECREF(np_hist);
     
         Py_RETURN_NONE;
