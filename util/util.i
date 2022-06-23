@@ -748,7 +748,7 @@ void log_set_level(int lvl);
         PyArray_Descr* dtype;
         int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED |
                NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
-        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
+        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_WRITEBACKIFCOPY;
         double *img, *weight, *outimg, *outweight;
 
         PyArrayObject *np_img=NULL, *np_weight=NULL, *np_outimg=NULL, *np_outweight=NULL;
@@ -867,6 +867,12 @@ void log_set_level(int lvl);
          Py_XDECREF(np_outimg);
          }
          */
+        if (PyArray_ResolveWritebackIfCopy(np_outimg) == -1) {
+            PyErr_SetString(PyExc_ValueError, "Failed to write-back output image!");
+            Py_DECREF(np_outimg);
+            return NULL;
+        }
+
         return 0;
     }
     %}
@@ -2439,7 +2445,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
                                 int weighted, int lorder) {
         PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
         int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_NOTSWAPPED | NPY_ARRAY_ELEMENTSTRIDES;
-        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
+        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_WRITEBACKIFCOPY;
         PyArrayObject *np_inimg=NULL, *np_outimg=NULL;
 
         Py_INCREF(dtype);
@@ -2476,6 +2482,11 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
 
         Py_DECREF(dtype);
         Py_DECREF(np_inimg);
+        if (PyArray_ResolveWritebackIfCopy(np_outimg) == -1) {
+            PyErr_SetString(PyExc_ValueError, "Failed to write-back output image!");
+            Py_DECREF(np_outimg);
+            return NULL;
+        }
         Py_DECREF(np_outimg);
 
         return res;
@@ -2526,7 +2537,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         PyArrayObject *np_counts=NULL, *np_x=NULL, *np_y=NULL;
         int req = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_NOTSWAPPED |
             NPY_ARRAY_ELEMENTSTRIDES;
-        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_UPDATEIFCOPY;
+        int reqout = req | NPY_ARRAY_WRITEABLE | NPY_ARRAY_WRITEBACKIFCOPY;
         int32_t *counts, *px, *py;
         int W, H, i, N;
 
@@ -2571,9 +2582,14 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
             px++;
             py++;
         }
-        Py_DECREF(np_counts);
         Py_DECREF(np_x);
         Py_DECREF(np_y);
+        if (PyArray_ResolveWritebackIfCopy(np_counts) == -1) {
+            PyErr_SetString(PyExc_ValueError, "Failed to write-back counts array!");
+            Py_DECREF(np_counts);
+            return NULL;
+        }
+        Py_DECREF(np_counts);
         return 0;
     }
 
