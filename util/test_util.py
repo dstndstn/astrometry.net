@@ -275,9 +275,9 @@ for seed in range(42, 100):
     # X = np.random.normal(scale=10.0, size=(10,10)).astype(np.float32)
 
     for i in range(3):
-        t0 = time.clock()
+        t0 = time.process_time()
         m = np.median(X)
-        t1 = time.clock() - t0
+        t1 = time.process_time() - t0
         print('np.median:', t1)
     print('value:', m)
 
@@ -286,9 +286,9 @@ for seed in range(42, 100):
     print('element[N/2] =', m)
 
     for i in range(3):
-        t0 = time.clock()
+        t0 = time.process_time()
         pym = flat_median_f(X)
-        t1 = time.clock() - t0
+        t1 = time.process_time() - t0
         print('flat_median:', t1)
     print('value:', pym)
     assert(pym == m)

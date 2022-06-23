@@ -36,8 +36,9 @@ static void add_columns(fitstable_t* tab, anbool write, anbool full) {
     tfits_type i64 = fitscolumn_i64_type();
     char* nil = " ";
 
-    if (full)
+    if (full) {
         ADDCOL(i64, i64, "ID", nil, srcid);
+    }
 
     ADDCOL(d, d, "RA",  "deg", ra);
     ADDCOL(d, d, "DEC", "deg", dec);

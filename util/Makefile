@@ -404,8 +404,10 @@ clean:
 		$(ALL_OBJ) $(DEPS) deps cairoutils.o \
 		grab-stellarium-constellations \
 		$(PROGS) $(MAIN_PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
-		cairoutils.dep makefile.os-features *.o *~ *.dep *$(PYTHON_SO_EXT) deps \
-		os-features.log os-features-makefile.log report.txt
+		cairoutils.dep makefile.os-features *.o *~ *.dep _util$(PYTHON_SO_EXT) util_wrap.c util.py deps \
+		os-features.log os-features-makefile.log \
+		os-features-test-netpbm os-features-test-netpbm-make \
+		report.txt
 
 check:
 	echo PYTHON_SO_EXT is $(PYTHON_SO_EXT)

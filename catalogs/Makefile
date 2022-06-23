@@ -195,7 +195,7 @@ tests: $(ALL_TEST_FILES)
 .PHONY: tests
 
 clean:
-	rm -f $(LIBCAT) $(OBJS) $(ALL_OBJ) $(DEPS) *.dep deps \
+	rm -f $(LIBCAT) $(OBJS) $(ALL_OBJ) $(DEPS) $(PROGS) *.dep deps \
 		grab-stellarium-constellations \
 		openngc-entries.csv openngc-names.csv \
 		openngc-entries.c openngc-names.c \
