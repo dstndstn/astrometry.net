@@ -46,8 +46,8 @@ Ubuntu or Debian-like systems:
 
 
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
-                           libpng2-dev libjpeg-dev python-numpy \
-                           python-dev python3-pip zlib1g-dev \
+                           libpng2-dev libjpeg-dev python3-numpy \
+                           python3-dev python3-pip zlib1g-dev \
                            libbz2-dev swig cfitsio-dev
     $ pip install fitsio # or astropy
 
