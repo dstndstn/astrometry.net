@@ -13,7 +13,7 @@
 
 #include <stdint.h>
 
-#include "astrometry/starutil.h"
+#include "astrometry/an-bool.h"
 
 // 206 bytes of data, but each record is supposed to be terminated
 // by \r\n, making...

@@ -7,7 +7,8 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "tycho2.h"
+#include "astrometry/tycho2.h"
+#include "astrometry/starutil.h"
 
 static void grab_substring(char* dst, const char* src, int n) {
     memset(dst, 0, n+1);
