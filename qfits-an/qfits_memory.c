@@ -314,12 +314,13 @@ void * qfits_memory_malloc(
         /* Create swap file with rights: rw-rw-rw- */
         swapfileid = ++ qfits_memory_table.file_reg;
         fname = qfits_memory_tmpfilename(swapfileid);
-        swapfd = open(fname, O_RDWR | O_CREAT);
+        mode_t mod = S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH;
+        swapfd = open(fname, O_RDWR | O_CREAT, mod);
         if (swapfd==-1) {
             fprintf(stderr, "qfits_mem: cannot create swap file\n");
             exit(-1);
         }
-        fchmod(swapfd, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+        fchmod(swapfd, mod);
 
         /* Compute number of passes to insert buffer */
         nbufs = size / MEMPAGESZ;
