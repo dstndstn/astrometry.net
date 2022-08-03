@@ -239,9 +239,9 @@ def convert_image(infile, outfile, uncompressed=None, force_ppm=False,
 
     if errstr:
         logging.error('ERROR: %s' % errstr)
-        return -1
+        raise RuntimeError(errstr)
     print(imgtype)
-    return 0
+    return (imgtype, errstr)
 
 def main():
     from optparse import OptionParser
@@ -295,12 +295,17 @@ def main():
         logging.basicConfig(level=logging.INFO, format=logformat)
     logging.raiseExceptions = False
 
-    R = convert_image(options.infile, options.outfile,
+    try:
+        convert_image(options.infile, options.outfile,
                       uncompressed=options.uncompressed_outfile,
                       force_ppm=options.force_ppm,
                       extension=options.extension,
                       mydir=dirs)
-    return R
+        return 0
+    except:
+        import traceback
+        traceback.print_exc()
+    return -1
 
 if __name__ == '__main__':
     sys.exit(main())
