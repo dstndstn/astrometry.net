@@ -134,8 +134,7 @@ $(ENGINE_LIB): $(ENGINE_OBJS)
 	$(RANLIB) $@
 
 $(ENGINE_SO): $(ENGINE_OBJS) $(SLIB)
-	$(CC) $(LDFLAGS) $(SHAREDLIBFLAGS) -Wl,-soname,$@.0 -o $@.0 $^ $(LDLIBS)
-	ln -s  $@.0 $@
+	$(CC) $(LDFLAGS) $(SHAREDLIBFLAGS) -o $@ $^ $(LDLIBS)
 
 # old and miscellaneous executables that aren't part of the pipeline.
 OLDEXECS := checkquads
