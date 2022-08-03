@@ -488,8 +488,15 @@ void* qfits_memory_falloc2(
 	off_t mapstart;
 	int mapoff;
 
+	/* Open file */
+	if ((fd=open(name, O_RDONLY))==-1) {
+		qfits_warning("qfits_memory_falloc2(%s:%i): failed to open file \"%s\": %s\n",
+					  srcname, srclin, name, strerror(errno));
+		if (QFITS_MEMORY_MODE == 0) return NULL;
+		else exit(1);
+	}
 	/* Check file's existence and compute its size */
-	if (stat(name, &sta)==-1) {
+	if (fstat(fd, &sta)==-1) {
 		qfits_warning("qfits_memory_falloc2(%s:%i): cannot stat file \"%s\"\n",
 					  srcname, srclin, name);
 		if (QFITS_MEMORY_MODE == 0) return NULL;
@@ -499,13 +506,6 @@ void* qfits_memory_falloc2(
 	if ((offs + size) > (size_t)sta.st_size) {
 		qfits_warning("qfits_memory_falloc2(%s:%i): offset request exceeds file size (%zu + %zu = %zu > %zu) for file \"%s\"\n",
 			      srcname, srclin, offs, size, (offs + size), (size_t)sta.st_size, name);
-		if (QFITS_MEMORY_MODE == 0) return NULL;
-		else exit(1);
-	}
-	/* Open file */
-	if ((fd=open(name, O_RDONLY))==-1) {
-		qfits_warning("qfits_memory_falloc2(%s:%i): failed to open file \"%s\": %s\n",
-					  srcname, srclin, name, strerror(errno));
 		if (QFITS_MEMORY_MODE == 0) return NULL;
 		else exit(1);
 	}
@@ -578,8 +578,15 @@ char * qfits_memory_falloc(
 
         if (size!=NULL) *size = 0;
 
+        /* Open file */
+        if ((fd=open(name, O_RDONLY))==-1) {
+			qfits_warning("qfits_memory_falloc(%s:%i): failed to open file \"%s\": %s\n",
+						  srcname, srclin, name, strerror(errno));
+            if (QFITS_MEMORY_MODE == 0) return NULL;
+            else exit(1);
+        }
         /* Check file's existence and compute its size */
-        if (stat(name, &sta)==-1) {
+        if (fstat(fd, &sta)==-1) {
 			qfits_warning("qfits_memory_falloc(%s:%i): cannot stat file \"%s\"\n",
 						  srcname, srclin, name);
             if (QFITS_MEMORY_MODE == 0) return NULL;
@@ -589,14 +596,6 @@ char * qfits_memory_falloc(
         if (offs>=(size_t)sta.st_size) {
 			qfits_warning("qfits_memory_falloc(%s:%i): offset request exceeds file size (%zu > %zu) for file \"%s\"\n",
                                       srcname, srclin, offs, (size_t)sta.st_size, name);
-            if (QFITS_MEMORY_MODE == 0) return NULL;
-            else exit(1);
-        }
-
-        /* Open file */
-        if ((fd=open(name, O_RDONLY))==-1) {
-			qfits_warning("qfits_memory_falloc(%s:%i): failed to open file \"%s\": %s\n",
-						  srcname, srclin, name, strerror(errno));
             if (QFITS_MEMORY_MODE == 0) return NULL;
             else exit(1);
         }
