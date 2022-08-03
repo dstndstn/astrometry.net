@@ -212,6 +212,9 @@ def main():
         print('Found total of', len(failedsubs), 'failed Submissions and', len(failedjobs), 'failed Jobs')
         if opt.rerun:
             from process_submissions import try_dosub, try_dojob
+            import logging
+            logformat = '%(message)s'
+            logging.basicConfig(level=logging.DEBUG, format=logformat)
 
             if opt.threads is not None:
                 args = []
