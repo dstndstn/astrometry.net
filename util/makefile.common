@@ -281,7 +281,7 @@ endif
 endif
 
 ifneq (CYGWIN,$(findstring CYGWIN,$(UNAME)))
-FLAGS_DEF += -fpic
+FLAGS_DEF += -fpic -fPIC
 endif
 
 # profily!
