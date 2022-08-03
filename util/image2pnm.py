@@ -281,9 +281,8 @@ def main():
         dirs.append(options.mydir)
     if len(sys.argv):
         dirs.append(os.path.dirname(sys.argv[0]))
-    # util/ -- useful when running from source directory
-    #dirs.append(os.path.dirname(__file__))
-    #print('Dirs:', dirs)
+    # util/ -- useful when running from source directory (for an-fitstopnm)
+    dirs.append(os.path.dirname(__file__))
     
     global verbose
     verbose = options.verbose
