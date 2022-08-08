@@ -88,6 +88,15 @@ anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
                                     double zoomfactor,
                                     int W, int H, anbool yflip);
 
+// Sets the pixel scale based on the width and zoom factor (same pixel scale horiz. & vert.)
+anwcs_t* anwcs_create_hammer_aitoff_rectangular(double refra, double refdec,
+                                                double zoomfactor, double rotate,
+                                                int W, int H, anbool yflip);
+
+anwcs_t* anwcs_create_hammer_aitoff_galactic(double ref_long, double ref_lat,
+                                             double zoomfactor,
+                                             int W, int H, anbool yflip);
+
 anwcs_t* anwcs_create_allsky_hammer_aitoff(double refra, double refdec,
                                            int W, int H);
 anwcs_t* anwcs_create_allsky_hammer_aitoff2(double refra, double refdec,

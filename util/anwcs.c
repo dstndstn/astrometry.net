@@ -1560,32 +1560,75 @@ anwcs_t* anwcs_create_allsky_hammer_aitoff2(double refra, double refdec,
 static anwcs_t* allsky_wcs(double refra, double refdec,
                            double zoomfactor,
                            int W, int H, anbool yflip,
-                           char* wcscode, char* wcsname) {
+                           char* wcscode, char* wcsname,
+                           anbool square_pixels,
+                           char* ctype1, char* ctype2, double rotate) {
     qfits_header* hdr;
     double xscale = -360. / (double)W;
-    double yscale =  180. / (double)H;
+    double yscale;
     char* str = NULL;
     int Nstr = 0;
     anwcs_t* anwcs = NULL;
     char code[64];
+    char ctype1str[5];
+    char ctype2str[5];
+    double cd11,cd12,cd21,cd22;
+
+    if (square_pixels)
+        yscale = xscale;
+    else
+        yscale =  180. / (double)H;
+
     if (yflip)
         yscale *= -1.;
     xscale /= zoomfactor;
     yscale /= zoomfactor;
 
+    if (ctype1 == NULL)
+        ctype1 = "RA";
+    if (ctype2 == NULL)
+        ctype2 = "DEC";
+
+    memset(ctype1str, '\0', 5);
+    memset(ctype2str, '\0', 5);
+    strncpy(ctype1str, ctype1, 4);
+    strncpy(ctype2str, ctype2, 4);
+    for (int i=0; i<4; i++) {
+        if (ctype1str[i] == '\0')
+            ctype1str[i] = '-';
+        if (ctype2str[i] == '\0')
+            ctype2str[i] = '-';
+    }
+
+    if (rotate == 0.0) {
+        cd11 = xscale;
+        cd12 = cd21 = 0.;
+        cd22 = yscale;
+    } else {
+        double r = deg2rad(rotate);
+        double cr = cos(r);
+        double sr = sin(r);
+        cd11 = xscale *  cr;
+        cd12 = xscale *  sr;
+        cd21 = yscale * -sr;
+        cd22 = yscale *  cr;
+    }
+    
     hdr = qfits_header_default();
-    sprintf(code, "RA---%s", wcscode);
+    //sprintf(code, "RA---%s", wcscode);
+    sprintf(code, "%s-%s", ctype1str, wcscode);
     qfits_header_add(hdr, "CTYPE1", code, wcsname, NULL);
-    sprintf(code, "DEC--%s", wcscode);
+    //sprintf(code, "DEC--%s", wcscode);
+    sprintf(code, "%s-%s", ctype2str, wcscode);
     qfits_header_add(hdr, "CTYPE2", code, wcsname, NULL);
     fits_header_add_double(hdr, "CRPIX1", W/2. + 0.5, NULL);
     fits_header_add_double(hdr, "CRPIX2", H/2. + 0.5, NULL);
     fits_header_add_double(hdr, "CRVAL1", refra,  NULL);
     fits_header_add_double(hdr, "CRVAL2", refdec, NULL);
-    fits_header_add_double(hdr, "CD1_1", xscale, NULL);
-    fits_header_add_double(hdr, "CD1_2", 0, NULL);
-    fits_header_add_double(hdr, "CD2_1", 0, NULL);
-    fits_header_add_double(hdr, "CD2_2", yscale, NULL);
+    fits_header_add_double(hdr, "CD1_1", cd11, NULL);
+    fits_header_add_double(hdr, "CD1_2", cd12, NULL);
+    fits_header_add_double(hdr, "CD2_1", cd21, NULL);
+    fits_header_add_double(hdr, "CD2_2", cd22, NULL);
     fits_header_add_int(hdr, "IMAGEW", W, NULL);
     fits_header_add_int(hdr, "IMAGEH", H, NULL);
 
@@ -1608,14 +1651,28 @@ anwcs_t* anwcs_create_mollweide(double refra, double refdec,
                                 double zoomfactor,
                                 int W, int H, anbool yflip) {
     return allsky_wcs(refra, refdec, zoomfactor, W, H, yflip,
-                      "MOL", "Mollweide");
+                      "MOL", "Mollweide", FALSE, NULL, NULL, 0.);
 }
 
 anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
                                     double zoomfactor,
                                     int W, int H, anbool yflip) {
     return allsky_wcs(refra, refdec, zoomfactor, W, H, yflip,
-                      "AIT", "Hammer-Aitoff");
+                      "AIT", "Hammer-Aitoff", FALSE, NULL, NULL, 0.);
+}
+
+anwcs_t* anwcs_create_hammer_aitoff_rectangular(double refra, double refdec,
+                                                double zoomfactor, double rotate,
+                                                int W, int H, anbool yflip) {
+    return allsky_wcs(refra, refdec, zoomfactor, W, H, yflip,
+                      "AIT", "Hammer-Aitoff", TRUE, NULL, NULL, rotate);
+}
+
+anwcs_t* anwcs_create_hammer_aitoff_galactic(double ref_long, double ref_lat,
+                                             double zoomfactor,
+                                             int W, int H, anbool yflip) {
+    return allsky_wcs(ref_long, ref_lat, zoomfactor, W, H, yflip,
+                      "AIT", "Hammer-Aitoff", TRUE, "GLON", "GLAT", 0.);
 }
 
 anwcs_t* anwcs_create_cea_wcs(double refra, double refdec,
