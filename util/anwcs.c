@@ -1725,6 +1725,7 @@ anwcs_t* anwcs_create_galactic_car_wcs(double refra, double refdec,
                                        double refx, double refy,
                                        double pixscale,
                                        int W, int H, anbool yflip) {
+#ifdef WCSLIB_EXISTS
     qfits_header* hdr;
     char* str = NULL;
     int Nstr = 0;
@@ -1771,6 +1772,10 @@ anwcs_t* anwcs_create_galactic_car_wcs(double refra, double refdec,
         return NULL;
     }
     return anwcs;
+#else
+    ERROR("WCSLib is required for anwcs_create_galactic_car_wcs");
+    return NULL;
+#endif
 }
 
 anwcs_t* anwcs_create_mercator_2(double refra, double refdec,
