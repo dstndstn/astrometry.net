@@ -22,7 +22,6 @@ from astrometry.util.starutil_numpy import ra2hmsstring, dec2dmsstring
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
 from astrometry.util.fits import *
-from astrometry.util.image2pnm import image2pnm
 from astrometry.util import util as anutil
 from astrometry.net.tmpfile import *
 from astrometry.net.abstract_models import *
@@ -460,9 +459,10 @@ class Image(models.Model):
             return self.disk_file.get_path()
 
     def get_pnm_path(self, tempfiles=None):
+        from astrometry.util.image2pnm import convert_image
         imgfn = self.get_image_path(tempfiles=tempfiles)
         pnmfn = get_temp_file(suffix='.ppm', tempfiles=tempfiles)
-        (filetype, errstr) = image2pnm(imgfn, pnmfn, force_ppm=True)
+        (filetype, errstr) = convert_image(imgfn, pnmfn, force_ppm=True)
         if errstr:
             raise RuntimeError('Error converting image file %s: %s' %
                                (imgfn, errstr))

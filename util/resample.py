@@ -19,6 +19,7 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
                       splineMargin=12,
                       table=True,
                       cinterp=True,
+                      carefulWrap=False,
                       intType=np.int32):
     '''
     Returns (Yo,Xo, Yi,Xi, ims)
@@ -73,20 +74,62 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
 
     for im in Limages:
         assert(im.shape == (h,w))
-    
-    # First find the approximate bbox of the input image in
-    # the target image so that we don't ask for way too
-    # many out-of-bounds pixels...
-    XY = []
-    for x,y in [(0,0), (w-1,0), (w-1,h-1), (0, h-1)]:
-        # [-2:]: handle ok,ra,dec or ra,dec
-        ok,xw,yw = targetwcs.radec2pixelxy(
-            *(wcs.pixelxy2radec(float(x + 1), float(y + 1))[-2:]))
-        XY.append((xw - 1, yw - 1))
-    XY = np.array(XY)
 
-    x0,y0 = np.rint(XY.min(axis=0))
-    x1,y1 = np.rint(XY.max(axis=0))
+    if carefulWrap:
+        # Be a bit more careful about wrap-around cases.
+        # (eg, where "targewcs" wraps around, and an input image spans that
+        # discontinuity).  There are still unhandled issues.  You probably also
+        # want to set "spline=False" for tricky cases.
+        # Start with the center pixel
+        ok,x0,y0 = targetwcs.radec2pixelxy(
+                *(wcs.pixelxy2radec(w/2+0.5, h/2+0.5)[-2:]))
+        x1,y1 = x0,y0
+        # Walk the boundary of the input image
+        # and project into output image space
+        # Also do a coarse grid.
+        xm,ym = np.meshgrid(np.linspace(0, w-1, 20), np.linspace(0, h-1, 20))
+        for x,y in [
+                (np.linspace(0.,   w-1., w), np.linspace(0.,   0.,   w)),
+                (np.linspace(w-1., w-1., h), np.linspace(0.,   h-1., h)),
+                (np.linspace(w-1.,   0., w), np.linspace(h-1., h-1., w)),
+                (np.linspace(0.,     0., h), np.linspace(h-1., 0.,   h)),
+                (xm.ravel(), ym.ravel())]:
+            # [-2:]: handle ok,ra,dec or ra,dec
+            ok,xw,yw = targetwcs.radec2pixelxy(
+                *(wcs.pixelxy2radec(x + 1., y + 1.)[-2:]))
+            x0 = min(x0, min(xw))
+            x1 = max(x1, max(xw))
+            y0 = min(y0, min(yw))
+            y1 = max(y1, max(yw))
+        del xm,ym,xw,yw,x,y
+        x0,y0 = int(x0),int(y0)
+        x1,y1 = int(x1),int(y1)
+        # # Any large breaks (eg, wrap-arounds)?
+        # dd = np.hypot(np.diff(XX), np.diff(YY))
+        # # jump in output pixels
+        # bigjump = 100
+        # I = np.flatnonzero(dd > bigjump)
+        # print('dd', dd)
+        # print('max', dd.max())
+        # import pylab as plt
+        # plt.clf()
+        # plt.plot(XX, YY, 'b-')
+        # plt.axis([0, 2000, 0, 1000])
+        # plt.savefig('/tmp/1.png')
+    else:
+        # First find the approximate bbox of the input image in
+        # the target image so that we don't ask for way too
+        # many out-of-bounds pixels...
+        XY = []
+        for x,y in [(0,0), (w-1,0), (w-1,h-1), (0, h-1)]:
+            # [-2:]: handle ok,ra,dec or ra,dec
+            ok,xw,yw = targetwcs.radec2pixelxy(
+                *(wcs.pixelxy2radec(float(x + 1), float(y + 1))[-2:]))
+            XY.append((xw - 1, yw - 1))
+        XY = np.array(XY)
+
+        x0,y0 = np.rint(XY.min(axis=0))
+        x1,y1 = np.rint(XY.max(axis=0))
 
     if spline:
         # Now we build a spline that maps "target" pixels to "input" pixels
@@ -174,6 +217,7 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
     if len(ixo) == 0 or len(iyo) == 0:
         raise NoOverlapError()
 
+    okpix = True
     if spline:
         # And run the interpolator.
         # [xy]spline() does a meshgrid-like broadcast, so fxi,fyi have
@@ -210,8 +254,9 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
             # ok,ra,dec
             R = R[1:]
         ok,fxi,fyi = wcs.radec2pixelxy(*R)
-        assert(np.all(ok))
-        del ok
+        #assert(np.all(ok))
+        #del ok
+        okpix = ok
         fxi -= 1.
         fyi -= 1.
 
@@ -226,7 +271,7 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
     iyi = (fyi + 0.5).astype(itype)
 
     # Cut to in-bounds pixels.
-    I,J = np.nonzero((ixi >= 0) * (ixi < w) * (iyi >= 0) * (iyi < h))
+    I,J = np.nonzero((ixi >= 0) * (ixi < w) * (iyi >= 0) * (iyi < h) * okpix)
     ixi = ixi[I,J]
     iyi = iyi[I,J]
     fxi = fxi[I,J]

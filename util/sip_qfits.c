@@ -525,10 +525,16 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
                 free(complaint);
                 return NULL;
             }
-            tan.cd[0][0] = cdelt1;
-            tan.cd[0][1] = 0.0;
-            tan.cd[1][0] = 0.0;
-            tan.cd[1][1] = cdelt2;
+            // Try PCi_j
+            double pc11 = qfits_header_getdouble(hdr, "PC1_1", 1.0);
+            double pc12 = qfits_header_getdouble(hdr, "PC1_2", 0.0);
+            double pc21 = qfits_header_getdouble(hdr, "PC2_1", 0.0);
+            double pc22 = qfits_header_getdouble(hdr, "PC2_2", 1.0);
+
+            tan.cd[0][0] = cdelt1 * pc11;
+            tan.cd[0][1] = cdelt1 * pc12;
+            tan.cd[1][0] = cdelt2 * pc21;
+            tan.cd[1][1] = cdelt2 * pc22;
         }
     }
 

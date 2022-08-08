@@ -12,11 +12,11 @@ from astrometry.util.fits import fits_table
 
 # Returns a numpy array of booleans
 def hist_remove_lines(x, binwidth, binoffset, logcut):
-    bins = -binoffset + np.arange(0, max(x)+binwidth, binwidth)
+    bins = -binoffset + np.arange(0, max(x)+binwidth+1, binwidth)
     (counts, thebins) = np.histogram(x, bins)
 
     # We're ignoring empty bins.
-    occupied = np.nonzero(counts > 0)[0]
+    occupied = np.nonzero(counts > 1)[0]
     noccupied = len(occupied)
     if noccupied == 0:
         return np.array([True] * len(x))

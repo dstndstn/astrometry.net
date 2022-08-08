@@ -48,7 +48,7 @@ class SubmissionForm(forms.ModelForm):
     SCALE_PRESET_SETTINGS = {'1':(0.1,180),
                              '2':(1,180),
                              '3':(10,180),
-                             '4':(0.05,0.15)}
+                             '4':(0.0333,0.1667)}
 
     file  = forms.FileField(
         required=False,
@@ -75,7 +75,7 @@ class SubmissionForm(forms.ModelForm):
             ('1','default (0.1 to 180 degrees)'),
             ('2','wide field (1 to 180 degrees)'),
             ('3','very wide field (10 to 180 degrees)'),
-            ('4','tiny (3 to 9 arcmin)'),
+            ('4','tiny (2 to 10 arcmin)'),
             ('5','custom')
         ),
         initial='1'

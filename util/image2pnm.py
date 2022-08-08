@@ -93,15 +93,18 @@ def uncompress_file(infile, uncompressed, typeinfo=None, extension=None):
             # FITS file.  Check header for ZIMAGE=T
             try:
                 import fitsio
-                logging.debug('Checking FITS header of', infile, 'ext',
-                              extension, 'for ZIMAGE card (fpack compression)')
+                if extension is None:
+                    # Check first extension for ZIMAGE card
+                    extension = 1
+                logging.debug(('Checking FITS header of %s ext %s for ZIMAGE card (fpack '
+                               + 'compression)') % (infile, extension))
                 hdr = fitsio.read_header(infile, ext=extension)
                 if hdr.get('ZIMAGE', False):
                     # Compressed
                     cmd = (funpack_cmd % (
                         extension or 0,
                         shell_escape(infile), shell_escape(uncompressed)))
-                    logging.debug('Fpack compressed; uncompressing with', cmd)
+                    logging.debug('Fpack compressed; uncompressing with %s' % cmd)
                     if os.system(cmd) == 0:
                         return 'fz'
             except:
@@ -151,7 +154,7 @@ def find_program(dirs, cmd):
         p = os.path.join(mydir, prog)
         if os.path.exists(p):
             return ' '.join([p, parts[1]])
-        logging.info('path', p, 'does not exist.')
+        logging.info('path %s does not exist.' % p)
     return None
 
 def image2pnm(infile, outfile, force_ppm=False, extension=None, mydir=None):
@@ -236,9 +239,9 @@ def convert_image(infile, outfile, uncompressed=None, force_ppm=False,
 
     if errstr:
         logging.error('ERROR: %s' % errstr)
-        return -1
+        raise RuntimeError(errstr)
     print(imgtype)
-    return 0
+    return (imgtype, errstr)
 
 def main():
     from optparse import OptionParser
@@ -249,7 +252,7 @@ def main():
     parser.add_option('-u', '--uncompressed-outfile',
                       dest='uncompressed_outfile',
                       help='uncompressed temporary FILE', metavar='FILE',
-                      default='')
+                      default=None)
     parser.add_option('-o', '--outfile',
                       dest='outfile',
                       help='output pnm image FILE', metavar='FILE')
@@ -278,9 +281,8 @@ def main():
         dirs.append(options.mydir)
     if len(sys.argv):
         dirs.append(os.path.dirname(sys.argv[0]))
-    # util/ -- useful when running from source directory
+    # util/ -- useful when running from source directory (for an-fitstopnm)
     dirs.append(os.path.dirname(__file__))
-    print('Dirs:', dirs)
     
     global verbose
     verbose = options.verbose
@@ -291,12 +293,18 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO, format=logformat)
     logging.raiseExceptions = False
-        
-    return convert_image(options.infile, options.outfile,
-                         uncompressed=options.uncompressed_outfile,
-                         force_ppm=options.force_ppm,
-                         extension=options.extension,
-                         mydir=dirs)
+
+    try:
+        convert_image(options.infile, options.outfile,
+                      uncompressed=options.uncompressed_outfile,
+                      force_ppm=options.force_ppm,
+                      extension=options.extension,
+                      mydir=dirs)
+        return 0
+    except:
+        import traceback
+        traceback.print_exc()
+    return -1
 
 if __name__ == '__main__':
     sys.exit(main())

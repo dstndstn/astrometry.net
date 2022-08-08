@@ -352,9 +352,7 @@ clean:
 	$(MAKE) -C util clean
 	$(MAKE) -C catalogs clean
 	-$(MAKE) -C qfits-an clean
-	-rm __init__.pyc
-	$(MAKE) -C gsl-an clean
-	-rm gsl-an/config.h
+	-rm -f __init__.pyc
 	$(MAKE) -C libkd clean
 	$(MAKE) -C solver clean
 	$(MAKE) -C sdss clean

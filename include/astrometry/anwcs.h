@@ -84,6 +84,12 @@ anwcs_t* anwcs_create_cea_wcs(double refra, double refdec,
                               double pixscale,
                               int W, int H, anbool yflip);
 
+/* plate CARree projection in Galactic coordinates. */
+anwcs_t* anwcs_create_galactic_car_wcs(double refra, double refdec,
+                                       double refx, double refy,
+                                       double pixscale,
+                                       int W, int H, anbool yflip);
+
 anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
                                     double zoomfactor,
                                     int W, int H, anbool yflip);

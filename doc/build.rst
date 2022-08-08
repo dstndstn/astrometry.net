@@ -46,10 +46,10 @@ Ubuntu or Debian-like systems:
 
 
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
-                           libpng2-dev libjpeg-dev python-numpy \
-                           python-pyfits python-dev zlib1g-dev \
+                           libpng2-dev libjpeg-dev python3-numpy \
+                           python3-dev python3-pip zlib1g-dev \
                            libbz2-dev swig cfitsio-dev
-
+    $ pip install fitsio # or astropy
 
 For example, in Debian 9 (Stretch):: 
 
@@ -65,6 +65,7 @@ In Ubunutu 20.04::
            zlib1g-dev libbz2-dev libcfitsio-dev wcslib-dev \
            python3 python3-pip python3-distutils python3-dev \
            python3-numpy python3-scipy python3-pil
+    $ pip install fitsio # or astropy
 
 As of April 2019, the script doc/install_astrometry_on_linux.sh will install all dependencies along with astrometry.net on Linux, and download 4200/ index files.
 
@@ -85,6 +86,17 @@ A package can be installed from the `Arch Linux (AUR)
 Mac OS X using homebrew:
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+First set up homebrew, as described at `Homebrew https://brew.sh/`_.
+
+The "formula" for installing Astrometry.net is called `astrometry-net` and is included in the "core" package
+repository, so you just need to
+
+    $ brew install astrometry-net
+
+
+Mac OS X using homebrew (ancient instructions):
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 These instructions *Worked For Me* as of September 2012 on OSX 10.8.
 
 First set up homebrew:
@@ -102,7 +114,6 @@ Optionally, grab some handy homebrew packages::
 Install:
 
     $ brew install astrometry-net
-
 
 Mac OS X using Fink:
 ^^^^^^^^^^^^^^^^^^^^
