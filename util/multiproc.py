@@ -96,6 +96,22 @@ class multiproc(object):
             return self.pool.map_async(funcwrapper(func), iterable)
         return self.pool.map_async(func, iterable)
 
+    def imap(self, func, iterable, chunksize=None, wrap=False):
+        cs = chunksize
+        if cs is None:
+            cs = self.map_chunksize
+        if self.pool is None:
+            import itertools
+            if 'imap' in dir(itertools):
+                # py2
+                return itertools.imap(func, iterable)
+            else:
+                # py3
+                return map(func, iterable)
+        if wrap or self.wrap_all:
+            func = funcwrapper(func)
+        return self.pool.imap(func, iterable, chunksize=cs)
+
     def imap_unordered(self, func, iterable, chunksize=None, wrap=False):
         cs = chunksize
         if cs is None:
