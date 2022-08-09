@@ -387,7 +387,7 @@ def axis_angle_rotation_matrix(axis, angle):
 galactic_pole = (192.85948, 27.12825)
 # vs Wikipedia's (192.859508, 27.128336)
 # This puts (RA,DEC) = (1,1) at (l,b) = (98.941031, -59.643798).
-# Mark Calabretta's WCSLib has:
+# Mark Calabretta's WCSLib has (wcs.h):
 #  (122.9319,+27.1283) galactic coordinates of J2000 celestial pole,
 #  (192.8595,+27.1283) J2000 equatorial coordinates of galactic pole.
 

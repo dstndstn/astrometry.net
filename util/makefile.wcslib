@@ -17,5 +17,7 @@ WCSLIB_INC ?= $(shell pkg-config --cflags wcslib 2>/dev/null)
 WCSLIB_LIB ?= $(shell pkg-config --libs wcslib 2>/dev/null)
 WCSLIB_SLIB ?=
 
+WCSLIB_HAS_WCSCCS ?= $(shell pkg-config --atleast-version=7.5 wcslib 2>/dev/null && echo 1 || echo 0)
+
 #WCSLIB_LIB ?=
 #WCSLIB_SLIB ?= $(shell pkg-config --static wcslib 2>/dev/null)

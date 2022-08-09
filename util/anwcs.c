@@ -1721,11 +1721,15 @@ anwcs_t* anwcs_create_cea_wcs(double refra, double refdec,
     return anwcs;
 }
 
+#ifndef WCSLIB_EXISTS
+#define WCSLIB_HAS_WCSCCS 0
+#endif
+
 anwcs_t* anwcs_create_galactic_car_wcs(double refra, double refdec,
                                        double refx, double refy,
                                        double pixscale,
                                        int W, int H, anbool yflip) {
-#ifdef WCSLIB_EXISTS
+#if WCSLIB_HAS_WCSCCS
     qfits_header* hdr;
     char* str = NULL;
     int Nstr = 0;
@@ -1768,12 +1772,12 @@ anwcs_t* anwcs_create_galactic_car_wcs(double refra, double refdec,
     rtn = wcsccs(anwcslib->wcs, 192.8595, 27.1283, 122.9319,
                  "RA", "DEC", "J2000", 2000.0, "");
     if (rtn != 0) {
-        ERROR("Failed to convert coordinate system with wcsccs()", wcsname);
+        ERROR("Failed to convert coordinate system with wcsccs()");
         return NULL;
     }
     return anwcs;
 #else
-    ERROR("WCSLib is required for anwcs_create_galactic_car_wcs");
+    ERROR("WCSLib >= v7.5 is required for anwcs_create_galactic_car_wcs");
     return NULL;
 #endif
 }
