@@ -38,7 +38,7 @@ static float (GLUE(lut_, L))[2*(L+1)*(LANCZOS_NLUT+1)];
 static int GLUE(lut_initialized_,L) = 0;
 
 // Init look-up table
-static void GLUE(lut_init_, L)() {
+static void GLUE(lut_init_, L)(void) {
     if (GLUE(lut_initialized_,L))
         return;
     /*
