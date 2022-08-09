@@ -84,6 +84,9 @@ anwcs_t* anwcs_create_cea_wcs(double refra, double refdec,
                               double pixscale,
                               int W, int H, anbool yflip);
 
+// In-place conversion from GLON,GLAT to RA,DEC coordinates.  Requires WCSLIB >= 7.5
+int anwcs_galactic_to_radec(anwcs_t* wcs);
+
 /* plate CARree projection in Galactic coordinates. */
 anwcs_t* anwcs_create_galactic_car_wcs(double refra, double refdec,
                                        double refx, double refy,

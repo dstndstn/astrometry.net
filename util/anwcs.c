@@ -1725,11 +1725,33 @@ anwcs_t* anwcs_create_cea_wcs(double refra, double refdec,
 #define WCSLIB_HAS_WCSCCS 0
 #endif
 
+int anwcs_galactic_to_radec(anwcs_t* wcs) {
+    if (!wcs) return -1;
+    if (wcs->type != ANWCS_TYPE_WCSLIB) {
+        ERROR("anwcs_galactic_to_radec is only implemented for WCSlib.");
+        return -1;
+    }
+#if WCSLIB_HAS_WCSCCS
+    // Convert from Galactic to RA,Dec basis
+    int rtn;
+    anwcslib_t* anwcslib = wcs->data;
+    rtn = wcsccs(anwcslib->wcs, 192.8595, 27.1283, 122.9319,
+                 "RA", "DEC", "J2000", 2000.0, "");
+    if (rtn) {
+        ERROR("Failed to convert coordinate system with wcsccs()");
+        return rtn;
+    }
+    return 0;
+#else
+    ERROR("WCSLib >= v7.5 is required for anwcs_create_galactic_car_wcs");
+    return -1;
+#endif
+}
+
 anwcs_t* anwcs_create_galactic_car_wcs(double refra, double refdec,
                                        double refx, double refy,
                                        double pixscale,
                                        int W, int H, anbool yflip) {
-#if WCSLIB_HAS_WCSCCS
     qfits_header* hdr;
     char* str = NULL;
     int Nstr = 0;
@@ -1766,20 +1788,7 @@ anwcs_t* anwcs_create_galactic_car_wcs(double refra, double refdec,
         ERROR("Failed to parse %s header string with wcslib", wcsname);
         return NULL;
     }
-    // Convert from Galactic to RA,Dec basis
-    anwcslib_t* anwcslib = anwcs->data;
-    int rtn;
-    rtn = wcsccs(anwcslib->wcs, 192.8595, 27.1283, 122.9319,
-                 "RA", "DEC", "J2000", 2000.0, "");
-    if (rtn != 0) {
-        ERROR("Failed to convert coordinate system with wcsccs()");
-        return NULL;
-    }
     return anwcs;
-#else
-    ERROR("WCSLib >= v7.5 is required for anwcs_create_galactic_car_wcs");
-    return NULL;
-#endif
 }
 
 anwcs_t* anwcs_create_mercator_2(double refra, double refdec,
