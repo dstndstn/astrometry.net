@@ -1573,7 +1573,7 @@ static anwcs_t* allsky_wcs(double refra, double refdec,
     char ctype1str[5];
     char ctype2str[5];
     double cd11,cd12,cd21,cd22;
-
+    int i;
     if (square_pixels)
         yscale = xscale;
     else
@@ -1593,7 +1593,7 @@ static anwcs_t* allsky_wcs(double refra, double refdec,
     memset(ctype2str, '\0', 5);
     strncpy(ctype1str, ctype1, 4);
     strncpy(ctype2str, ctype2, 4);
-    for (int i=0; i<4; i++) {
+    for (i=0; i<4; i++) {
         if (ctype1str[i] == '\0')
             ctype1str[i] = '-';
         if (ctype2str[i] == '\0')
