@@ -870,7 +870,7 @@ void log_set_level(int lvl);
         if (PyArray_ResolveWritebackIfCopy(np_outimg) == -1) {
             PyErr_SetString(PyExc_ValueError, "Failed to write-back output image!");
             Py_DECREF(np_outimg);
-            return NULL;
+            return -1;
         }
 
         return 0;
@@ -2485,7 +2485,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         if (PyArray_ResolveWritebackIfCopy(np_outimg) == -1) {
             PyErr_SetString(PyExc_ValueError, "Failed to write-back output image!");
             Py_DECREF(np_outimg);
-            return NULL;
+            return -1;
         }
         Py_DECREF(np_outimg);
 
@@ -2587,7 +2587,7 @@ static PyObject* anwcs_xy2rd_wrapper(const anwcs_t* wcs,
         if (PyArray_ResolveWritebackIfCopy(np_counts) == -1) {
             PyErr_SetString(PyExc_ValueError, "Failed to write-back counts array!");
             Py_DECREF(np_counts);
-            return NULL;
+            return -1;
         }
         Py_DECREF(np_counts);
         return 0;
