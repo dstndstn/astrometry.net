@@ -10,10 +10,10 @@ sys.path.append(os.path.dirname(os.path.dirname(path)))
 from an_build_ext import *
 
 from distutils.core import setup, Extension
-from numpy.distutils.misc_util import get_numpy_include_dirs
+import numpy
 from setuputils import *
 
-numpy_inc = get_numpy_include_dirs()
+numpy_inc = [numpy.get_include()]
 
 def strlist(s, split=' '):
     lst = s.split(split)
