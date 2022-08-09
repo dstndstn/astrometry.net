@@ -30,7 +30,7 @@ struct errentry {
 typedef struct errentry errentry_t;
 
 struct errors {
-    FILE* print;
+    FILE* print_f;
     anbool save;
     bl* errstack;
 

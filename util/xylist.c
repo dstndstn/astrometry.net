@@ -56,7 +56,7 @@ anbool xylist_is_file_xylist(const char* fn, int ext,
 
     errors_push_state();
     err = errors_get_state();
-    err->print = NULL;
+    err->print_f = NULL;
     err->save = TRUE;
 
     xyls = xylist_open(fn);

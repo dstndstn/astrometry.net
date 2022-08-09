@@ -18,7 +18,7 @@ static anbool atexit_registered = FALSE;
 static err_t* error_copy(err_t* e) {
     int i, N;
     err_t* copy = error_new();
-    copy->print = e->print;
+    copy->print_f = e->print_f;
     copy->save = e->save;
     N = error_stack_N_entries(e);
     for (i=0; i<N; i++) {
@@ -39,7 +39,7 @@ void errors_start_logging_to_string() {
     err_t* err;
     errors_push_state();
     err = errors_get_state();
-    err->print = NULL;
+    err->print_f = NULL;
     err->save = TRUE;
 }
 
@@ -57,7 +57,7 @@ int errors_print_on_exit(FILE* fid) {
     errors_push_state();
     e = errors_get_state();
     e->save = TRUE;
-    e->print = NULL;
+    e->print_f = NULL;
     print_errs_fid = fid;
     return atexit(print_errs);
 }
@@ -65,7 +65,7 @@ int errors_print_on_exit(FILE* fid) {
 void errors_log_to(FILE* f) {
     err_t* e;
     e = errors_get_state();
-    e->print = f;
+    e->print_f = f;
 }
 
 void errors_use_function(errfunc_t* func, void* baton) {
@@ -73,7 +73,7 @@ void errors_use_function(errfunc_t* func, void* baton) {
     e = errors_get_state();
     e->errfunc = func;
     e->baton = baton;
-    e->print = NULL;
+    e->print_f = NULL;
     e->save = FALSE;
 }
 
@@ -92,7 +92,7 @@ err_t* errors_get_state() {
     } 
     if (!pl_size(estack)) {
         err_t* e = error_new();
-        e->print = stderr;
+        e->print_f = stderr;
         pl_append(estack, e);
     }
     return pl_get(estack, pl_size(estack)-1);
@@ -174,13 +174,13 @@ void error_report(err_t* e, const char* module, int line, const char* func,
 
 void error_reportv(err_t* e, const char* module, int line,
                    const char* func, const char* fmt, va_list va) {
-    if (e->print) {
+    if (e->print_f) {
         if (line == -1)
-            fprintf(e->print, "%s: ", module);
+            fprintf(e->print_f, "%s: ", module);
         else
-            fprintf(e->print, "%s:%i:%s: ", module, line, func);
-        vfprintf(e->print, fmt, va);
-        fprintf(e->print, "\n");
+            fprintf(e->print_f, "%s:%i:%s: ", module, line, func);
+        vfprintf(e->print_f, fmt, va);
+        fprintf(e->print_f, "\n");
     }
     if (e->save) {
         error_stack_add_entryv(e, module, line, func, fmt, va);
