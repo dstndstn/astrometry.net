@@ -33,6 +33,7 @@
 #include "starutil.h"
 #include "an-bool.h"
 #include "ioutils.h"
+#include "errors.h"
 
 #include "coadd.h"
 #include "wcs-resample.h"
@@ -1056,6 +1057,9 @@ char* anwcs_wcslib_to_string(const anwcs_t* wcs,
 %ignore anwcs_wcslib_to_string;
 
 %include "anwcs.h"
+// from errors.h:
+void errors_start_logging_to_string(void);
+char* errors_stop_logging_to_string(const char* separator);
 
 %extend anwcs_t {
     anwcs_t(char* fn, int ext=0, int slen=0) {
@@ -1107,7 +1111,6 @@ char* anwcs_wcslib_to_string(const anwcs_t* wcs,
     int radec2pixelxy(double ra, double dec, double *p_x, double *p_y) {
         return anwcs_radec2pixelxy($self, ra, dec, p_x, p_y);
     }
-
     int write_to(const char* filename) {
         return anwcs_write($self, filename);
     }
@@ -1129,6 +1132,14 @@ def anwcs_t_set_shape(self, S):
     self.set_width(W)
 anwcs_t.set_shape = anwcs_t_set_shape
 anwcs_t.shape = property(anwcs_t.get_shape, anwcs_t.set_shape, None, 'image shape')
+
+def anwcs_t_galactic_to_radec(self):
+    errors_start_logging_to_string()
+    rtn = anwcs_galactic_to_radec(self)
+    err = errors_stop_logging_to_string('\n')
+    if rtn:
+        raise RuntimeError('Failed to convert galactic WCS to RA,Dec: ' + err)
+anwcs_t.galactic_to_radec = anwcs_t_galactic_to_radec
 
 # same API as tan_t
 anwcs.radec_center = anwcs.get_center
