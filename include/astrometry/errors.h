@@ -40,20 +40,20 @@ struct errors {
 
 /***    Global functions    ***/
 
-err_t* errors_get_state();
+err_t* errors_get_state(void);
 
 // takes a (deep) snapshot of the current error handling state and pushes it onto the
 // stack.
-void errors_push_state();
+void errors_push_state(void);
 
 // 
-void errors_pop_state();
+void errors_pop_state(void);
 
 void
 ATTRIB_FORMAT(printf,4,5)
     report_error(const char* modfile, int modline, const char* modfunc, const char* fmt, ...);
 
-void report_errno();
+void report_errno(void);
 
 #define ERROR(fmt, ...) report_error(__FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
 
@@ -68,19 +68,19 @@ void errors_use_function(errfunc_t* func, void* baton);
 
 void errors_print_stack(FILE* f);
 
-void errors_clear_stack();
+void errors_clear_stack(void);
 
 int errors_print_on_exit(FILE* fid);
 
 // free globals.
-void errors_free();
+void errors_free(void);
 
 /*
  A convenience routine for times when you want to suppress printing error
  messages and instead capture them to a string.  Use in conjunction with
  the following...
  */
-void errors_start_logging_to_string();
+void errors_start_logging_to_string(void);
 
 /*
  Reverts the error-processing system to its previous state and returns the
@@ -97,7 +97,7 @@ void errors_regex_error(int errcode, const regex_t* re);
 /***    End globals   ***/
 
 
-err_t* error_new();
+err_t* error_new(void);
 
 void error_free(err_t* e);
 
