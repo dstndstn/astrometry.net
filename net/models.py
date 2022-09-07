@@ -751,7 +751,7 @@ class Calibration(models.Model):
 
     def format_orientation(self):
         o = self.get_orientation()
-        return 'Up is %.3g degrees E of N' % o
+        return 'Up is %.1f degrees E of N' % o
 
     def get_objs_in_field(self):
         def run_convert_command(cmd, deleteonfail=None):
@@ -783,7 +783,7 @@ class Calibration(models.Model):
 
         objs = []
         cmd = annotate_command(self.job)
-        cmd += '-L > %s' % self.job.get_obj_file()
+        cmd += ' -L > %s' % self.job.get_obj_file()
         run_convert_command(cmd)
         with open(self.job.get_obj_file(), 'r') as objfile:
             objtxt = objfile.read()

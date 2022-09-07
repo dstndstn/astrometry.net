@@ -593,10 +593,42 @@ if __name__ == '__main__':
     lvl = logging.DEBUG
     logging.basicConfig(level=lvl, format='%(message)s', stream=sys.stdout)
 
+    from astrometry.net.models import Job
+    job = Job.objects.get(id=7009522)
+    skyobjs = job.calibration.get_objs_in_field()
+    print('Sky objects:', skyobjs)
+
+    ui = job.user_image
+
+    print('UI tags:', ui.tags.all())
+    print('UI sky objects:', ui.sky_objects.all())
+
+    for t in ui.tags.all():
+        print('Tag', t)
+        tui = TaggedUserImage.objects.filter(tag=t, user_image=ui)
+        print('TaggedUserImage:', tui)
+        tui.delete()
+    for t in ui.sky_objects.all():
+        print('SkyObj', t)
+        ui.sky_objects.remove(t)
+    # Noooo
+    #ui.tags.all().delete()
+    #ui.sky_objects.all().delete()
+    
+    ui.add_machine_tags(job)
+    ui.add_sky_objects(job)
+
+    print('UI tags:', ui.tags.all())
+    print('UI sky objects:', ui.sky_objects.all())
+
+    import sys
+    sys.exit(0)
+    
     from django.test import Client
     c = Client()
     # anonymous
-    r = c.post('/api/login', data={'request-json': '{"apikey": "1jcrmadfnxngxscd"}'})
+    #r = c.post('/api/login', data={'request-json': '{"apikey": "1jcrmadfnxngxscd"}'})
+    r = c.get('/api/jobs/7009522/objects_in_field')
     print('Got response:', r)
 
     f = open('out', 'wb')

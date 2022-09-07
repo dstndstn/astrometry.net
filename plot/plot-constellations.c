@@ -841,6 +841,8 @@ int main(int argc, char** args) {
             sl* names;
             double pixsize;
             char* text;
+	    double tx,ty;
+	    double fmargin;
 
             if (!ngc)
                 break;
@@ -851,6 +853,17 @@ int main(int argc, char** args) {
                 continue;
             if (px < 0 || py < 0 || px*scale > W || py*scale > H)
                 continue;
+
+	    // Due to SIP distortions, it is possible for objects WAY outside the field to
+	    // "fold" into the field.
+	    // An example: /home/nova/astrometry/net/data/jobs/0700/07009522/wcs.fits
+	    if (!tan_radec2pixelxy(&(sip.wcstan), ngc->ra, ngc->dec, &tx, &ty))
+	      continue;
+	    // margin: fraction of image size
+	    fmargin = 0.1;
+	    if (tx < -W*fmargin || tx*scale > (W*(1+fmargin)) ||
+		ty < -H*fmargin || ty*scale > (H*(1+fmargin)))
+	      continue;
 
             str = sl_new(4);
             //sl_appendf(str, "%s %i", (ngc->is_ngc ? "NGC" : "IC"), ngc->id);
