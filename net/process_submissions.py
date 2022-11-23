@@ -991,7 +991,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                 iu = np.random.randint(len(users))
                 user = users[iu]
                 print('Selected user', user)
-                for ui in newuis:
+                for ui in newuis[:]:
                     if ui.user == user:
                         print('Selected ui', ui)
                         newuis.remove(ui)
