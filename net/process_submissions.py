@@ -868,7 +868,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
         if subresults != lastsubs:
             print('Submissions running:', len(subresults))
             lastsubs = subresults
-        for sid,res in subresults:
+        for sid,res in subresults[:]:
             print('  Submission id', sid, 'ready:', res.ready(), end=' ')
             if res.ready():
                 subresults.remove((sid,res))
@@ -887,7 +887,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             print('Jobs running:', len(jobresults))
             lastjobs = jobresults
         any_jobs_finished = False
-        for jid,res in jobresults:
+        for jid,res in jobresults[:]:
             print('  Job id', jid, 'ready:', res.ready(), end=' ')
             if res.ready():
                 any_jobs_finished = True
@@ -991,7 +991,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                 iu = np.random.randint(len(users))
                 user = users[iu]
                 print('Selected user', user)
-                for ui in newuis:
+                for ui in newuis[:]:
                     if ui.user == user:
                         print('Selected ui', ui)
                         newuis.remove(ui)
