@@ -1,3 +1,4 @@
+
 # This file is part of the Astrometry.net suite.
 # Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 # Copyright 2010, 2011, 2012, 2013 Dustin Lang.
