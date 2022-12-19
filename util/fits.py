@@ -181,7 +181,7 @@ def cut_array(val, I, name=None, to=None):
             val[I] = to
             return
 
-    inttypes = [int, np.int64, np.int32, np.int]
+    inttypes = [int, np.int64, np.int32, np.int_]
 
     if type(val) in [list,tuple] and type(I) in inttypes:
         if to is None:
