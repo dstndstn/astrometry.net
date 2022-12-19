@@ -192,7 +192,7 @@ def cut_array(val, I, name=None, to=None):
 
     # HACK -- emulate numpy's boolean and int array slicing
     # (when "val" is a normal python list)
-    if type(I) is np.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, np.bool])
+    if type(I) is np.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, np.bool_])
                                                              or (I.dtype == bool)):
         try:
             if to is None:
@@ -555,11 +555,9 @@ class tabledata(object):
                 np.float32:'E',
                 np.int32:'J',
                 np.int64:'K',
-                np.uint8:'B', #
+                np.uint8:'B',
                 np.int16:'I',
-                #np.bool:'X',
-                #np.bool_:'X',
-                np.bool:'L',
+                #np.bool:'L',
                 np.bool_:'L',
                 np.string_:'A',
                 }

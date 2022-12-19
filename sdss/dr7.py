@@ -140,7 +140,7 @@ class DR7(SdssDR):
         ivarimg = 1./((img + sky) / gain + darkvar + skyerr)
 
         if invvar_and_mask:
-            mask = np.ones(ivarimg.shape, np.bool)
+            mask = np.ones(ivarimg.shape, bool)
             maskimg = mask
         else:
             maskimg = ivarimg
