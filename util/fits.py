@@ -339,8 +339,9 @@ class tabledata(object):
         self._columns.remove(c)
 
     def rename(self, c_old, c_new):
-        setattr(self, c_new, getattr(self, c_old))
+        val = getattr(self, c_old)
         self.delete_column(c_old)
+        setattr(self, c_new, val)
         
     def __setitem__(self, I, O):
 
