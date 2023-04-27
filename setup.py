@@ -19,7 +19,8 @@ except:
     traceback.print_exc()
     pass
 
-env = dict(AN_GIT_REVISION=version)
+env = os.environ.copy()
+env.update(AN_GIT_REVISION=version)
 
 class MyInstall(install):
     def run(self):
