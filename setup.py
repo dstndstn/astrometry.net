@@ -33,16 +33,16 @@ class MyInstall(install):
             myenv = env.copy()
             dirnm = self.install_base
             if dirnm is not None:
-                env.update(INSTALL_DIR=dirnm)
+                myenv.update(INSTALL_DIR=dirnm)
             pybase = self.install_platlib
             if pybase is not None:
                 pybase = os.path.join(pybase, 'astrometry')
-                env.update(PY_BASE_INSTALL_DIR=pybase)
+                myenv.update(PY_BASE_INSTALL_DIR=pybase)
             py = sys.executable
             if py is not None:
-                env.update(PYTHON=py)
+                myenv.update(PYTHON=py)
             print('Running:', cmd)
-            subprocess.call(cmd, shell=True, env=env)
+            subprocess.call(cmd, shell=True, env=myenv)
             install.run(self)
 
 class MyBuildExt(install):
