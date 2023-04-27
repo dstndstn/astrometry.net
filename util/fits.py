@@ -181,7 +181,7 @@ def cut_array(val, I, name=None, to=None):
             val[I] = to
             return
 
-    inttypes = [int, np.int64, np.int32, np.int]
+    inttypes = [int, np.int64, np.int32, np.int_]
 
     if type(val) in [list,tuple] and type(I) in inttypes:
         if to is None:
@@ -192,7 +192,7 @@ def cut_array(val, I, name=None, to=None):
 
     # HACK -- emulate numpy's boolean and int array slicing
     # (when "val" is a normal python list)
-    if type(I) is np.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, np.bool])
+    if type(I) is np.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, np.bool_])
                                                              or (I.dtype == bool)):
         try:
             if to is None:
@@ -339,8 +339,9 @@ class tabledata(object):
         self._columns.remove(c)
 
     def rename(self, c_old, c_new):
-        setattr(self, c_new, getattr(self, c_old))
+        val = getattr(self, c_old)
         self.delete_column(c_old)
+        setattr(self, c_new, val)
         
     def __setitem__(self, I, O):
 
@@ -555,11 +556,9 @@ class tabledata(object):
                 np.float32:'E',
                 np.int32:'J',
                 np.int64:'K',
-                np.uint8:'B', #
+                np.uint8:'B',
                 np.int16:'I',
-                #np.bool:'X',
-                #np.bool_:'X',
-                np.bool:'L',
+                #np.bool:'L',
                 np.bool_:'L',
                 np.string_:'A',
                 }
