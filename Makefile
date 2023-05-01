@@ -60,7 +60,7 @@ all: subdirs version
 .PHONY: all
 
 version:
-	echo $(AN_GIT_REVISION) | awk -F - '{printf "__version__ = \""; if (NF>2) {printf $$1".dev"$$2} else {printf $$1}; print "\""}' > __init__.py
+	echo $(AN_GIT_REVISION) | $(AWK) -F - '{printf "__version__ = \""; if (NF>2) {printf $$1".dev"$$2} else {printf $$1}; print "\""}' > __init__.py
 .PHONY: version
 
 check: pkgconfig
