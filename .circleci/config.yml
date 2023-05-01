@@ -28,7 +28,7 @@ jobs:
           name: Make
           command: |
             export PYTHON=python3.9
-            make reconfig && grep "HAVE_NETPBM := yes" util/makefile.os-features
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -78,7 +78,7 @@ jobs:
           name: Make
           command: |
             export PYTHON=python3.10
-            make reconfig && grep "HAVE_NETPBM := yes" util/makefile.os-features
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -130,7 +130,7 @@ jobs:
           name: Make
           command: |
             export PYTHON=python3.9
-            make reconfig && grep "HAVE_NETPBM := yes" util/makefile.os-features
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -178,7 +178,7 @@ jobs:
       - run:
           name: Make
           command: |
-            make reconfig && grep "HAVE_NETPBM := yes" util/makefile.os-features
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -236,7 +236,7 @@ jobs:
           command: |
             NETPBM_INC=-I/usr/include/netpbm
             NETPBM_LIB=-lnetpbm
-            make reconfig && grep "HAVE_NETPBM := yes" util/makefile.os-features
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -292,7 +292,7 @@ jobs:
           command: |
             NETPBM_INC=-I/usr/include/netpbm
             NETPBM_LIB=-lnetpbm
-            make reconfig && grep "HAVE_NETPBM := yes" util/makefile.os-features
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -349,7 +349,7 @@ jobs:
           command: |
             export NETPBM_INC=-I/usr/include/netpbm
             export NETPBM_LIB=-lnetpbm
-            make reconfig && grep "HAVE_NETPBM := yes" util/makefile.os-features
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
