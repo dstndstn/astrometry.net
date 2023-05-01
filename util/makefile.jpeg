@@ -14,5 +14,5 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-JPEG_INC ?= 
-JPEG_LIB ?= -ljpeg
+JPEG_INC ?= $(shell pkg-config --cflags libjpeg || echo)
+JPEG_LIB ?= $(shell pkg-config --libs libjpeg || echo "-ljpeg")
