@@ -407,7 +407,7 @@ int engine_parse_config_file_stream(engine_t* engine, FILE* fconf) {
             ind = sl_get(words, j);
             path = engine_find_index(engine, ind);
             if (!path) {
-                logmsg("Couldn't find index \"%s\".\n", path);
+                logmsg("Couldn't find index \"%s\".\n", ind);
                 rtn = -1;
                 goto done;
             }

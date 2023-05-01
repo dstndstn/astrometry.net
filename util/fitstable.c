@@ -1204,7 +1204,7 @@ static fitstable_t* open_for_writing(const char* fn, const char* mode, FILE* fid
         tab->fid = fid;
     else {
         tab->fid = fopen(fn, mode);
-        if (!tab->fid) {
+        if (!tab->fid && fn) {
             SYSERROR("Couldn't open output file %s for writing", fn);
             goto bailout;
         }
