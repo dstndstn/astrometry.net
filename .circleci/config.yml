@@ -30,6 +30,8 @@ jobs:
             export PYTHON=python3.9
             #ln -s /usr/include /usr/local/include/netpbm
             ln -s /usr/include netpbm
+            ls -l netpbm/pam.h
+            export NETPBM_INC=-I$(pwd)
             make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
