@@ -8,19 +8,23 @@ from glob import glob
 
 version = '0.0'
 try:
-    v = subprocess.check_output(['git', 'describe'], text=True)
-    v = v.strip()
-    words = v.split('-')
-    if len(words) == 3:
-        v = words[0] + '.dev' + words[1]
-    version = v
+    subprocess.call(['make', 'version'])
+    from __init__ import __version__
+    version = __version__
+    print('Got version string:', version)
+    # v = subprocess.check_output(['git', 'describe'], text=True)
+    # v = v.strip()
+    # words = v.split('-')
+    # if len(words) == 3:
+    #     v = words[0] + '.dev' + words[1]
+    # version = v
 except:
     import traceback
     traceback.print_exc()
     pass
 
 env = os.environ.copy()
-env.update(AN_GIT_REVISION=version)
+#env.update(AN_GIT_REVISION=version)
 
 class MyInstall(install):
     def run(self):

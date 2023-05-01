@@ -41,13 +41,26 @@ COMMON := $(BASEDIR)/util
 #          qfits-an/libqfits.a -- FITS files
 #            util/libanbase.a  -- basic stuff
 
+# Copy this stuff from makefile.common because it is needed to avoid checking
+# implicit rules for makefile.common itself!!
+$(COMMON):
+$(COMMON)/makefile.common:
+# no default rules
+.SUFFIXES :=
+# Cancel stupid implicit rules.
+%: %,v
+%: RCS/%,v
+%: RCS/%
+%: s.%
+%: SCCS/s.%
+
 include $(COMMON)/makefile.common
 
 all: subdirs version
 .PHONY: all
 
 version:
-	echo "__version__ = '$(AN_GIT_REVISION)'" > __init__.py
+	echo $(AN_GIT_REVISION) | awk -F - '{printf "__version__ = \""; if (NF>2) {printf $$1".dev"$$2} else {printf $$1}; print "\""}' > __init__.py
 .PHONY: version
 
 check: pkgconfig
