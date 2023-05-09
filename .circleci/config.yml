@@ -59,6 +59,7 @@ jobs:
             (cd /tmp && $PYTHON -c "import astrometry.util.util; print(dir(astrometry.util.util))")
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-ubuntu-22-py310:
     docker:
@@ -110,6 +111,7 @@ jobs:
             (cd /tmp && $PYTHON -c "import astrometry.util.util; print(dir(astrometry.util.util))")
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-ubuntu-20-py39:
     docker:
@@ -163,6 +165,7 @@ jobs:
             (cd /tmp && $PYTHON -c "import astrometry.util.util; print(dir(astrometry.util.util))")
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-ubuntu-18:
     docker:
@@ -211,6 +214,7 @@ jobs:
             (cd /tmp && python3 -c "import astrometry.util.util; print(dir(astrometry.util.util))")
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-centos-8:
     docker:
@@ -269,6 +273,7 @@ jobs:
             listhead demo/apod4.wcs
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-centos-7:
     docker:
@@ -325,7 +330,7 @@ jobs:
             listhead demo/apod4.wcs
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
-
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-rocky-85:
     docker:
@@ -382,7 +387,7 @@ jobs:
             listhead demo/apod4.wcs
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
-
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
 workflows:
   version: 2
