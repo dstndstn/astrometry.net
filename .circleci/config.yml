@@ -388,6 +388,7 @@ jobs:
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
             solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
+            listhead demo/apod5.wcs
 
 workflows:
   version: 2
