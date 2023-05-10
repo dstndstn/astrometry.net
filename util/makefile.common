@@ -5,6 +5,7 @@ INCLUDE_BASE_DIR := $(BASEDIR)/include
 INCLUDE_DIR := $(INCLUDE_BASE_DIR)/astrometry
 
 PYTHON ?= python3
+PYTHON_CONFIG ?= python3-config
 INSTALL_DIR ?= /usr/local/astrometry
 # Put INSTALL_DIR in the environment of commands run by Make.
 export INSTALL_DIR
