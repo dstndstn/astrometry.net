@@ -45,6 +45,8 @@ RUN for x in \
 RUN mkdir /src
 WORKDIR /src
 
+RUN ln -s /usr/include /usr/local/include/netpbm
+
 # Astrometry.net
 RUN git clone http://github.com/dstndstn/astrometry.net.git astrometry \
     && cd astrometry \
