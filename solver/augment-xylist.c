@@ -894,6 +894,7 @@ int augment_xylist(augment_xylist_t* axy,
                 axy->ycol = "Y_IMAGE";
                 axy->sortcol = "MAG_AUTO";
                 axy->sort_ascending = TRUE;
+                axy->resort = FALSE;
 
                 filterfn = create_temp_file("filter", axy->tempdir);
                 sl_append_nocopy(tempfiles, filterfn);
