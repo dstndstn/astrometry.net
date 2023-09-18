@@ -70,10 +70,10 @@ say, 10% to 100% of the sizes of the images you want to solve.
 For example, let's say you have some 1-degree square images.  You
 should grab index files that contain skymarks of size 0.1 to 1 degree,
 or 6 to 60 arcminutes.  Referring to the table below, you should grab
-index files 5203 through 5209.  You might find that the same number of
-fields solve, and faster, using just one or two of the index files in
-the middle of that range - in our example you might try 5205, 5206 and
-5207.
+index files 5203 through 5206 and 4107 through 4109.  You might find
+that the same number of fields solve, and faster, using just one or
+two of the index files in the middle of that range - in our example
+you might try 5205, 5206 and 4107.
 
 For reference, we used index files 202 alone for our SDSS tests (13x9
 arcmin fields); these are the same scale is the new 5202 files.
@@ -111,7 +111,7 @@ https://github.com/dstndstn/astrometry.net/blob/master/util/hp2.png
 +-----------------------+-----------------------------------------+
 | ``index-4108.fits``   |        30--42                           |
 +-----------------------+-----------------------------------------+
-| ``index-4107-*.fits`` |        22--30                           |
+| ``index-4107.fits`` |          22--30                           |
 +-----------------------+-----------------------------------------+
 | ``index-5206-*.fits`` |        16--22                           |
 +-----------------------+-----------------------------------------+
