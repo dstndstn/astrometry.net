@@ -246,7 +246,7 @@ Finally!  The real deal.
     
           [-M]: in-memory (don't use temp files)
           [-T]: don't delete temp files
-          [-t <temp-dir>]: use this temp direcotry (default: /tmp)
+          [-t <temp-dir>]: use this temp directory (default: /tmp)
           [-v]: add verbosity.
 
 
@@ -483,7 +483,7 @@ build extra features.
 
     [-M]: in-memory (don't use temp files)
     [-T]: don't delete temp files
-    [-t <temp-dir>]: use this temp direcotry (default: /tmp)
+    [-t <temp-dir>]: use this temp directory (default: /tmp)
     [-v]: add verbosity.
 
 The help messages are all pretty self-explanatory, no?
