@@ -18,7 +18,7 @@
 #include "os-features.h"
 
 #if HAVE_NETPBM
-#include <ppm.h>
+#include <netpbm/ppm.h>
 #endif
 
 #include "ioutils.h"

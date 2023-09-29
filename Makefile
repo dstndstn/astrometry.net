@@ -1,3 +1,4 @@
+
 # This file is part of the Astrometry.net suite.
 # Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 # Copyright 2010, 2011, 2012, 2013 Dustin Lang.
@@ -40,13 +41,26 @@ COMMON := $(BASEDIR)/util
 #          qfits-an/libqfits.a -- FITS files
 #            util/libanbase.a  -- basic stuff
 
+# Copy this stuff from makefile.common because it is needed to avoid checking
+# implicit rules for makefile.common itself!!
+$(COMMON):
+$(COMMON)/makefile.common:
+# no default rules
+.SUFFIXES :=
+# Cancel stupid implicit rules.
+%: %,v
+%: RCS/%,v
+%: RCS/%
+%: s.%
+%: SCCS/s.%
+
 include $(COMMON)/makefile.common
 
 all: subdirs version
 .PHONY: all
 
 version:
-	echo "__version__ = '$(AN_GIT_REVISION)'" > __init__.py
+	echo $(AN_GIT_REVISION) | $(AWK) -F - '{printf "__version__ = \""; if (NF>2) {printf $$1".dev"$$2} else {printf $$1}; print "\""}' > __init__.py
 .PHONY: version
 
 check: pkgconfig
@@ -236,6 +250,7 @@ release:
 	(cd $(RELEASE_DIR)/util  && swig -python -I. -I../include/astrometry util.i)
 	(cd $(RELEASE_DIR)/plot && swig -python -I. -I../util -I../include/astrometry plotstuff.i)
 	(cd $(RELEASE_DIR)/sdss  && swig -python -I. cutils.i)
+	(cd $(RELEASE_DIR)/solver && swig -python -I. -I../include/astrometry solver.i)
 	cat $(RELEASE_DIR)/util/makefile.common | sed "s/AN_GIT_REVISION .=.*/AN_GIT_REVISION := $$(git describe)/" | sed "s/AN_GIT_DATE .=.*/AN_GIT_DATE := $$(git log -n 1 --format=%cd | sed 's/ /_/g')/" > $(RELEASE_DIR)/util/makefile.common.x && mv $(RELEASE_DIR)/util/makefile.common.x $(RELEASE_DIR)/util/makefile.common
 	cat $(RELEASE_DIR)/Makefile | sed "s/RELEASE_VER .=.*/RELEASE_VER := $(RELEASE_VER)/" > $(RELEASE_DIR)/Makefile.x && mv $(RELEASE_DIR)/Makefile.x $(RELEASE_DIR)/Makefile
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)

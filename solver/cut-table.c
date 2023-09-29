@@ -79,7 +79,7 @@ int cut_table(const char* infn, const char* outfn, int N) {
             return -1;
         }
 
-        if (rows * width) {
+        if (rows && width) {
             int offset = in->table->col[0].off_beg;
             if (pipe_file_offset(fin, offset, (size_t)rows * (size_t)width, fid) ||
                 fits_pad_file(fid)) {

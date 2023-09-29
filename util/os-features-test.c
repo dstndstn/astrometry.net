@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <pam.h>
+#include <netpbm/pam.h>
 int main(int argc, char** args) {
     struct pam img;
     pm_init(args[0], 0);

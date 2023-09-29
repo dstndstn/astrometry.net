@@ -1,5 +1,5 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 
-NETPBM_INC ?=
-NETPBM_LIB ?= -L. -lnetpbm
+NETPBM_INC ?= $(shell pkg-config --exists netpbm && pkg-config --cflags netpbm || echo)
+NETPBM_LIB ?= $(shell pkg-config --exists netpbm && pkg-config --libs netpbm || echo "-L. -lnetpbm")

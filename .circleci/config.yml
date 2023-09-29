@@ -21,6 +21,7 @@ jobs:
       - run:
           name: Python packages
           command: |
+            pip3 install wheel
             pip3 install numpy
             pip3 install fitsio
       - checkout
@@ -28,6 +29,12 @@ jobs:
           name: Make
           command: |
             export PYTHON=python3.9
+            # Permission denied?  But I'm root?
+            #ln -s /usr/include /usr/local/include/netpbm
+            ln -s /usr/include netpbm
+            ls -l netpbm/pam.h
+            export NETPBM_INC=-I$(pwd)
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -52,6 +59,7 @@ jobs:
             (cd /tmp && $PYTHON -c "import astrometry.util.util; print(dir(astrometry.util.util))")
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-ubuntu-22-py310:
     docker:
@@ -66,6 +74,7 @@ jobs:
             apt update && apt install -y apt-utils
             DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends make gcc patch git openssh-client file pkg-config wget curl swig netpbm wcslib-dev wcslib-tools zlib1g-dev libbz2-dev libcairo2-dev libcfitsio-dev libcfitsio-bin libgsl-dev libjpeg-dev libnetpbm10-dev libpng-dev python3.10-dev libpython3.10-dev ca-certificates
             DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends python3-pip
+            DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends gdb
             apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
       - run:
           name: Python packages
@@ -77,6 +86,8 @@ jobs:
           name: Make
           command: |
             export PYTHON=python3.10
+            ln -s /usr/include /usr/local/include/netpbm
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -101,6 +112,7 @@ jobs:
             (cd /tmp && $PYTHON -c "import astrometry.util.util; print(dir(astrometry.util.util))")
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-ubuntu-20-py39:
     docker:
@@ -128,6 +140,8 @@ jobs:
           name: Make
           command: |
             export PYTHON=python3.9
+            ln -s /usr/include /usr/local/include/netpbm
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -152,6 +166,7 @@ jobs:
             (cd /tmp && $PYTHON -c "import astrometry.util.util; print(dir(astrometry.util.util))")
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-ubuntu-18:
     docker:
@@ -175,6 +190,8 @@ jobs:
       - run:
           name: Make
           command: |
+            ln -s /usr/include /usr/local/include/netpbm
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -198,6 +215,7 @@ jobs:
             (cd /tmp && python3 -c "import astrometry.util.util; print(dir(astrometry.util.util))")
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-centos-8:
     docker:
@@ -232,6 +250,8 @@ jobs:
           command: |
             NETPBM_INC=-I/usr/include/netpbm
             NETPBM_LIB=-lnetpbm
+            ln -s /usr/include /usr/local/include/netpbm
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -254,6 +274,7 @@ jobs:
             listhead demo/apod4.wcs
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-centos-7:
     docker:
@@ -287,6 +308,7 @@ jobs:
           command: |
             NETPBM_INC=-I/usr/include/netpbm
             NETPBM_LIB=-lnetpbm
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -309,7 +331,7 @@ jobs:
             listhead demo/apod4.wcs
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
-
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
   build-docker-rocky-85:
     docker:
@@ -343,6 +365,7 @@ jobs:
           command: |
             export NETPBM_INC=-I/usr/include/netpbm
             export NETPBM_LIB=-lnetpbm
+            make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
             make extra
@@ -365,7 +388,8 @@ jobs:
             listhead demo/apod4.wcs
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
-
+            solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
+            listhead demo/apod5.wcs
 
 workflows:
   version: 2

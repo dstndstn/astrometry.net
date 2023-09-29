@@ -965,7 +965,6 @@ def new_fits_file(req, jobid=None):
     if df.is_fits_image():
         fitsinfn = infn
     else:
-        ## FIXME -- could convert other formats to FITS...
         pnmfn = get_temp_file(tempfiles=req.tempfiles)
         fitsinfn = get_temp_file(tempfiles=req.tempfiles)
         cmd = 'image2pnm.py -i %s -o %s && an-pnmtofits %s > %s' % (infn, pnmfn, pnmfn, fitsinfn)

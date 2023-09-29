@@ -51,7 +51,7 @@ def removelines(infile, outfile, xcol='X', ycol='Y', ext=1, cut=None, **kwargs):
     #header.add_history('This xylist was filtered by the "removelines.py" program')
     #header.add_history('to remove horizontal and vertical lines of sources')
     #header['REMLINEN'] = (len(x) - len(xc), 'Number of sources removed by "removelines.py"')
-    T.writeto(outfile)
+    T.writeto(outfile, header=T.get_header())
     return 0
 
 def main():

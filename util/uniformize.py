@@ -14,7 +14,7 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
     T = fits_table(infile, lower=False)
     if len(T) == 0:
         print('No sources')
-        T.writeto(outfile)
+        T.writeto(outfile, header=T.get_header())
         return
     x = T.get(xcol)
     y = T.get(ycol)
@@ -63,7 +63,7 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', ext=1, **kwargs):
     J = np.array(J)
     #header.add_history('This xylist was filtered by the "uniformize.py" program')
     T.cut(J)
-    T.writeto(outfile)
+    T.writeto(outfile, header=T.get_header())
     return 0
 
 def main():

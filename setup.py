@@ -6,38 +6,59 @@ import os
 import sys
 from glob import glob
 
+version = '0.0'
+try:
+    subprocess.call(['make', 'version'])
+    from __init__ import __version__
+    version = __version__
+    print('Got version string:', version)
+    # v = subprocess.check_output(['git', 'describe'], text=True)
+    # v = v.strip()
+    # words = v.split('-')
+    # if len(words) == 3:
+    #     v = words[0] + '.dev' + words[1]
+    # version = v
+except:
+    import traceback
+    traceback.print_exc()
+    pass
+
+env = os.environ.copy()
+#env.update(AN_GIT_REVISION=version)
+
 class MyInstall(install):
     def run(self):
         print('MyInstall.run: calling "make -k"')
-        subprocess.call(['make', '-k'])
+        subprocess.call(['make', '-k'], env=env)
         print('MyInstall.run: calling "make -k py"')
-        subprocess.call(['make', '-k', 'py'])
+        subprocess.call(['make', '-k', 'py'], env=env)
 
         for cmd in ['make -k pyinstall',
                     'make -k install']:
+            myenv = env.copy()
             dirnm = self.install_base
             if dirnm is not None:
-                cmd += ' INSTALL_DIR="%s"' % dirnm
+                myenv.update(INSTALL_DIR=dirnm)
             pybase = self.install_platlib
             if pybase is not None:
                 pybase = os.path.join(pybase, 'astrometry')
-                cmd += ' PY_BASE_INSTALL_DIR="%s"' % pybase
+                myenv.update(PY_BASE_INSTALL_DIR=pybase)
             py = sys.executable
             if py is not None:
-                cmd += ' PYTHON="%s"' % py
+                myenv.update(PYTHON=py)
             print('Running:', cmd)
-            subprocess.call(cmd, shell=True)
+            subprocess.call(cmd, shell=True, env=myenv)
             install.run(self)
 
 class MyBuildExt(install):
     def run(self):
         print('MyBuildExt.run: calling "make -k"')
-        subprocess.call(['make', '-k'])
+        subprocess.call(['make', '-k'], env=env)
         print('MyBuildExt.run: calling "make -k py"')
-        subprocess.call(['make', '-k', 'py'])
+        subprocess.call(['make', '-k', 'py'], env=env)
 
 setup(name='astrometry',
-      version='git',
+      version=version,
       author='Astrometry.net team',
       author_email='dstndstn@gmail.com',
       url='http://astrometry.net',

@@ -404,6 +404,33 @@ if __name__ == '__main__':
             ann.add_target(ra, dec, name)
     plot.plot('annotations')
 
+    if False:
+        # Could plot bright stars like this, rather than via setting "ann.bright = True"
+        n = bright_stars_n()
+        plot.markersize = 5
+        plot.color = 'cyan'
+        plot.marker = 'circle'
+        plot.apply_settings()
+        for i in range(n):
+            s = bright_stars_get(i)
+            if len(s.name) == 0 and len(s.common_name) == 0:
+                continue
+            ok,x,y = plotstuff_radec2xy(plot, s.ra, s.dec)
+            if not ok:
+                continue
+            if x < 0 or y < 0 or x > plot.W or y > plot.H:
+                continue
+            #print('Star', s.name, '(%s)' % s.common_name, 'at %.1f, %.1f' % (x,y))
+            txt = s.common_name
+            if len(txt) == 0:
+                continue
+                #txt = s.name
+            # Grab first common name
+            txt = txt.split('/')[0]
+            plot.marker_xy(x, y)
+            plot.text_xy(x, y, txt)
+        plot.stroke()
+
     for rdfn in opt.rd:
         rd = plot.radec
         rd.fn = rdfn

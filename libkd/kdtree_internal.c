@@ -1749,10 +1749,9 @@ static void kdtree_quickselect_partition(dtype *arr, unsigned int *parr,
 
 
 static int kdtree_check_node(const kdtree_t* kd, int nodeid) {
-    int sum, i;
     int D = kd->ndim;
     int L, R;
-    int d;
+    int i, d;
 
     L = kdtree_left (kd, nodeid);
     R = kdtree_right(kd, nodeid);
@@ -1795,10 +1794,8 @@ static int kdtree_check_node(const kdtree_t* kd, int nodeid) {
         FREE(counts);
     }
 
-    sum = 0;
     if (kd->perm) {
         for (i=L; i<=R; i++) {
-            sum += kd->perm[i];
             assert(kd->perm[i] >= 0);
             assert(kd->perm[i] < kd->ndata);
             if (kd->perm[i] >= kd->ndata) {

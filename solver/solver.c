@@ -1562,6 +1562,22 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
             mo->sip = sip;
             
         } else {
+            // Take the coordinates after applying the --predistort,
+            // fit a TAN to those, and include the --predistort in the output
+            // SIP WCS.
+            if (sp->predistort) {
+                Ngood = 0;
+                for (i=0; i<N; i++) {
+                    if (mo->theta[i] < 0)
+                        continue;
+                    // Plug in the (undistorted) coordinates
+                    dx = starxy_get_x(sp->fieldxy, i);
+                    dy = starxy_get_y(sp->fieldxy, i);
+                    matchxy[2*Ngood + 0] = dx;
+                    matchxy[2*Ngood + 1] = dy;
+                }
+            }
+
             // Compute new TAN WCS...?
             fit_tan_wcs_weighted(matchxyz, matchxy, weights, Ngood,
                                  &mo->wcstan, NULL);
@@ -1571,6 +1587,13 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* verifysip,
                                                sp->crpix, &mo->wcstan, &wcs2);
                 fit_tan_wcs_move_tangent_point(matchxyz, matchxy, Ngood,
                                                sp->crpix, &wcs2, &mo->wcstan);
+            }
+            if (sp->predistort) {
+                // Copy the distortion
+                sip_t* sip = sip_create();
+                memcpy(sip, sp->predistort, sizeof(sip_t));
+                memcpy(&sip->wcstan, &mo->wcstan, sizeof(tan_t));
+                mo->sip = sip;
             }
         }
 

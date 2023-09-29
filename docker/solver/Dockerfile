@@ -45,6 +45,8 @@ RUN for x in \
 RUN mkdir /src
 WORKDIR /src
 
+RUN ln -s /usr/include /usr/local/include/netpbm
+
 # Astrometry.net
 RUN git clone http://github.com/dstndstn/astrometry.net.git astrometry \
     && cd astrometry \
@@ -52,7 +54,7 @@ RUN git clone http://github.com/dstndstn/astrometry.net.git astrometry \
     && make py \
     && make extra \
     && make install INSTALL_DIR=/usr/local \
-    && make clean
+    && make clean && echo 2
 
 # python = python3
 RUN ln -s /usr/bin/python3 /usr/bin/python

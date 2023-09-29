@@ -174,7 +174,7 @@ static an_option_t options[] = {
     {'{', "sigma", required_argument, "float",
      "set the noise level in the image"},
     {'\x93', "nsigma", required_argument, "float",
-     "number of sigma for a source detection; default 8"},
+     "number of sigma for a source detection; default 8 for FITS images, 4 for JPEG, etc"},
     {'9', "no-remove-lines", no_argument, NULL,
      "don't remove horizontal and vertical overdensities of sources."},
     {':', "uniformize", required_argument, "int",
@@ -894,6 +894,7 @@ int augment_xylist(augment_xylist_t* axy,
                 axy->ycol = "Y_IMAGE";
                 axy->sortcol = "MAG_AUTO";
                 axy->sort_ascending = TRUE;
+                axy->resort = FALSE;
 
                 filterfn = create_temp_file("filter", axy->tempdir);
                 sl_append_nocopy(tempfiles, filterfn);

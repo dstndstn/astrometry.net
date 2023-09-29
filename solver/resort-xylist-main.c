@@ -71,7 +71,7 @@ int main(int argc, char** args) {
     fits_use_error_system();
 
     if (resort_xylist(infn, outfn, fluxcol, backcol, ascending)) {
-        ERROR("Failed to re-sorting xylist by FLUX and BACKGROUND");
+        ERROR("Failed to re-sort xylist by FLUX and BACKGROUND columns \"%s\" and \"%s\"", fluxcol, backcol);
         exit(-1);
     }
 

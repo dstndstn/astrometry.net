@@ -8,9 +8,9 @@ path = os.path.abspath(__file__)
 sys.path.append(os.path.dirname(os.path.dirname(path)))
 
 from distutils.core import setup, Extension
-from numpy.distutils.misc_util import get_numpy_include_dirs
+import numpy
 
-numpy_inc = get_numpy_include_dirs()
+numpy_inc = [numpy.get_include()]
 
 def strlist(s, split=' '):
     lst = s.split(split)

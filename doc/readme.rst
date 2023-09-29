@@ -33,8 +33,9 @@ The code includes:
 * libkd, a compact and high-performance kdtree library
 
 The code requires *index* files, processed from an astrometric
-reference catalog such as USNO-B1 or 2MASS.  We have released several
-of these; see :ref:`getting-index-files`.
+reference catalog such as USNO-B1 or 2MASS.  (Or, more recently,
+Gaia.)  We have released several of these; see
+:ref:`getting-index-files`.
 
 Installing
 ==========
@@ -46,25 +47,19 @@ See :ref:`build`.
 Getting Index Files
 ===================
 
-Get pre-cooked index files from: <http://data.astrometry.net/4200>_
-(these are built from the 2MASS catalog).
-
-Or, for wide-angle images, <http://data.astrometry.net/4100>_
-(these are built from the Tycho-2 catalog).
-
-We used to have the "4000-series" files, but these suffer from a bug
-where parts of the sky do are not covered by the reference catalog.
+See <http://data.astrometry.net/>_ for descriptions of the available
+index files.
 
 Each index file is designed to solve images within a narrow range of
-scales.  The index files designed to solve small (angular size) images
-are rather large files, so you probably only want to grab the index
-files required for the images you wish to solve.  If you grab extra
-index files, the solver will run more slowly, but the results should
-be the same.
+scales.  The index files for small (angular size) images are rather
+large files, so you probably only want to grab the index files
+required for the images you wish to solve.  If you grab extra index
+files, the solver will run more slowly, but the results should be the
+same.
 
-The files are named like *index-42XX.fits* or *index-42XX-YY.fits*.
+The files are named like *index-41XX.fits* or *index-52XX-YY.fits*.
 *XX* is the "scale", *YY* is the "healpix" number.  These are called
-the "4200-series" index files.
+the "4100-series" or "5200-series" index files.
 
 Each index file contains a large number of "skymarks" (landmarks for
 the sky) that allow our solver to identify your images.  The skymarks
@@ -75,15 +70,15 @@ say, 10% to 100% of the sizes of the images you want to solve.
 For example, let's say you have some 1-degree square images.  You
 should grab index files that contain skymarks of size 0.1 to 1 degree,
 or 6 to 60 arcminutes.  Referring to the table below, you should grab
-index files 4203 through 4209.  You might find that the same number of
-fields solve, and faster, using just one or two of the index files in
-the middle of that range - in our example you might try 4205, 4206 and
-4207.
+index files 5203 through 5206 and 4107 through 4109.  You might find
+that the same number of fields solve, and faster, using just one or
+two of the index files in the middle of that range - in our example
+you might try 5205, 5206 and 4107.
 
 For reference, we used index files 202 alone for our SDSS tests (13x9
-arcmin fields); these are the same scale is the new 4202 files.
+arcmin fields); these are the same scale is the new 5202 files.
 
-The medium-sized index files are split into 12 "healpix" tiles; each
+The medium-angle index files are split into 12 "healpix" tiles; each
 one covers 1/12th of the sky.  The small-sized ones are split into 48
 healpixes.   See the maps here; you might not need all of them.
 https://github.com/dstndstn/astrometry.net/blob/master/util/hp.png
@@ -92,45 +87,45 @@ https://github.com/dstndstn/astrometry.net/blob/master/util/hp2.png
 +-----------------------+-----------------------------------------+
 | Index Filename        | Range of skymark diameters (arcminutes) |
 +=======================+=========================================+
-| ``index-4219.fits``   |      1400--2000                         |
+| ``index-4119.fits``   |      1400--2000                         |
 +-----------------------+-----------------------------------------+
-| ``index-4218.fits``   |      1000--1400                         |
+| ``index-4118.fits``   |      1000--1400                         |
 +-----------------------+-----------------------------------------+
-| ``index-4217.fits``   |       680--1000                         |
+| ``index-4117.fits``   |       680--1000                         |
 +-----------------------+-----------------------------------------+
-| ``index-4216.fits``   |       480--680                          |
+| ``index-4116.fits``   |       480--680                          |
 +-----------------------+-----------------------------------------+
-| ``index-4215.fits``   |       340--480                          |
+| ``index-4115.fits``   |       340--480                          |
 +-----------------------+-----------------------------------------+
-| ``index-4214.fits``   |       240--340                          |
+| ``index-4114.fits``   |       240--340                          |
 +-----------------------+-----------------------------------------+
-| ``index-4213.fits``   |       170--240                          |
+| ``index-4113.fits``   |       170--240                          |
 +-----------------------+-----------------------------------------+
-| ``index-4212.fits``   |       120--170                          |
+| ``index-4112.fits``   |       120--170                          |
 +-----------------------+-----------------------------------------+
-| ``index-4211.fits``   |        85--120                          |
+| ``index-4111.fits``   |        85--120                          |
 +-----------------------+-----------------------------------------+
-| ``index-4210.fits``   |        60---85                          |
+| ``index-4110.fits``   |        60---85                          |
 +-----------------------+-----------------------------------------+
-| ``index-4209.fits``   |        42--60                           |
+| ``index-4109.fits``   |        42--60                           |
 +-----------------------+-----------------------------------------+
-| ``index-4208.fits``   |        30--42                           |
+| ``index-4108.fits``   |        30--42                           |
 +-----------------------+-----------------------------------------+
-| ``index-4207-*.fits`` |        22--30                           |
+| ``index-4107.fits`` |          22--30                           |
 +-----------------------+-----------------------------------------+
-| ``index-4206-*.fits`` |        16--22                           |
+| ``index-5206-*.fits`` |        16--22                           |
 +-----------------------+-----------------------------------------+
-| ``index-4205-*.fits`` |        11--16                           |
+| ``index-5205-*.fits`` |        11--16                           |
 +-----------------------+-----------------------------------------+
-| ``index-4204-*.fits`` |         8--11                           |
+| ``index-5204-*.fits`` |         8--11                           |
 +-----------------------+-----------------------------------------+
-| ``index-4203-*.fits`` |         5.6--8.0                        |
+| ``index-5203-*.fits`` |         5.6--8.0                        |
 +-----------------------+-----------------------------------------+
-| ``index-4202-*.fits`` |         4.0--5.6                        |
+| ``index-5202-*.fits`` |         4.0--5.6                        |
 +-----------------------+-----------------------------------------+
-| ``index-4201-*.fits`` |         2.8--4.0                        |
+| ``index-5201-*.fits`` |         2.8--4.0                        |
 +-----------------------+-----------------------------------------+
-| ``index-4200-*.fits`` |         2.0--2.8                        |
+| ``index-5200-*.fits`` |         2.0--2.8                        |
 +-----------------------+-----------------------------------------+
 
 Download the index files you need and then either:
@@ -155,8 +150,11 @@ Big-Endian Machines
 
 Most CPUs these days are little-endian.  If you have an Intel or AMD
 chip, you can skip this section.  The most common big-endian CPU in
-recent times is the PowerPC used in Macs.  If you have one of these,
-read on.
+recent times is the PowerPC used in Macs.  (I am leaving that previous
+sentence there for the amusement of people old enough to remember
+that.)  In more recent years, some ARM architecture chips are also
+big-endian (but Macs with the "Apple silicon" M1/2 chips are run in
+little-endian mode).  If you have one of these, read on.
 
 The index files we are distributing are for little-endian machines.
 For big-endian machines, you must do the following::
@@ -204,19 +202,19 @@ If you have any of index files 4115 to 4119 (219)::
 
    $ solve-field --scale-low 45 demo/apod5.jpg
 
-If you have any of index files 210 to 214::
+If you have any of index files 4110 to 4114::
 
    $ solve-field --scale-low 1 demo/apod3.jpg
 
-If you have any of index files 206 to 211::
+If you have any of index files 5206, or 4107 to 4111::
 
    $ solve-field --scale-low 1 demo/apod2.jpg
 
-If you have any of index files 203 to 205::
+If you have any of index files 5203 to 5205::
 
    $ solve-field apod1.jpg
 
-If you have any of index files 200 to 203::
+If you have any of index files 5200 to 5203::
 
    $ solve-field demo/sdss.jpg
 
@@ -232,27 +230,27 @@ Note that you can also give solve-field a URL rather than a file as input::
 
 If you don't have the netpbm tools (eg jpegtopnm), do this instead:
 
-If you have any of index files 213 to 218::
+If you have any of index files 4113 to 4118::
 
    $ solve-field --scale-low 10 demo/apod4.xyls
 
-If you have index 219::
+If you have index 4119::
 
    $ solve-field --scale-low 30 demo/apod5.xyls
 
-If you have any of index files 210 to 214::
+If you have any of index files 4110 to 4114::
 
    $ solve-field --scale-low 1 demo/apod3.xyls
 
-If you have any of index files 206 to 211::
+If you have any of index files 4107 to 4111::
 
    $ solve-field --scale-low 1 demo/apod2.xyls
 
-If you have any of index files 203 to 205::
+If you have any of index files 5203 to 5205::
 
    $ solve-field demo/apod1.xyls
 
-If you have any of index files 200 to 203::
+If you have any of index files 5200 to 5203::
 
    $ solve-field demo/sdss.xyls
 
@@ -288,6 +286,9 @@ Output files
 +--------------------+-------------------------------------------------------------+
 |   <base>.match     |  a FITS BINTABLE describing the quad match that             |
 |                    |  solved the image.                                          |
++--------------------+-------------------------------------------------------------+
+|   <base>.corr      |  a FITS BINTABLE describing stars that we think match       |
+|                    |  between your image and the reference catalog.              |
 +--------------------+-------------------------------------------------------------+
 |   <base>.kmz       |  (optional) KMZ file for Google Sky-in-Earth.  You need     |
 |                    |  to have "wcs2kml" in your PATH.  See                       |
@@ -552,13 +553,9 @@ Miscellany:
 
   * an-fitstopnm: converts FITS images into ugly PNM images.
   * get-healpix: which healpix covers a given RA,Dec?
-  * hpowned: which small healpixels are inside a big healpixel?
   * control-program: sample code for how you might use the
     Astrometry.net code in your own software.
-  * xylist2fits: converts a text list of x,y positions to a FITS
-    binary table.
-  * rdlsinfo: print stats about a list of RA,Dec positions (rdlist).
-  * xylsinfo: print stats about a list of x,y positions (xylist).
+  * textfits: converts a text list (eg, CSV) to a FITS binary table.
 
 FITS utilities
 ^^^^^^^^^^^^^^
@@ -567,7 +564,6 @@ FITS utilities
   * modhead: print or modify FITS header cards.
   * fitscopy: general FITS image / table copier.
   * tabmerge: combines rows in two FITS tables.
-  * fitstomatlab: prints out FITS binary tables in a silly format.
   * liststruc: shows the structure of a FITS file.
   * listhead: prints FITS header cards.
   * imcopy: copies FITS images.
@@ -578,36 +574,29 @@ FITS utilities
   * subtable: pull out a set of columns from a many-column FITS binary
     table.
   * tabsort: sort a FITS binary table based on values in one column.
-  * column-merge: create a FITS binary table that includes columns
+  * merge-colums: create a FITS binary table that includes columns
     from two input tables.
-  * add-healpix-column: given a FITS binary table containing RA and
-    DEC columns, compute the HEALPIX and add it as a column.
   * resort-xylist: used by solve-field to sort a list of stars using a
     compromise between background-subtracted and non-background-subtracted
     flux (because our source extractor sometimes messes up the background
     subtraction).
   * fits-flip-endian: does endian-swapping of FITS binary tables.
-  * fits-dedup: removes duplicate header cards.
 
 Index-building programs
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-* build-index: given a FITS binary table with RA,Dec, build an index
-  file.  This is the "easy", recent way.  The old way uses the rest
-  of these programs:
+* build-astrometry-index: given a FITS binary table with RA,Dec, build
+  an index file.  This is the "easy", recent way.  The old way uses
+  the rest of these programs:
 
   * usnobtofits, tycho2tofits, nomadtofits, 2masstofits: convert
     catalogs into FITS binary tables.
-  * build-an-catalog: convert input catalogs into a standard FITS
-    binary table format.
-  * cut-an: grab a bright, uniform subset of stars from a catalog.
   * startree: build a star kdtree from a catalog.
   * hpquads: find a bright, uniform set of N-star features.
   * codetree: build a kdtree from N-star shape descriptors.
   * unpermute-quads, unpermute-stars: reorder index files for
     efficiency.
-
-* hpsplit: splits a list of FITS tables into healpix tiles
+  * hpsplit: splits a list of FITS tables into healpix tiles
 
 
 Source lists ("xylists")
@@ -746,13 +735,14 @@ Workarounds
 -----------
 * No python
 
-  There are two places we use python: handling images, and filtering FITS files.
+  There are two places we use python: handling images, and filtering source lists
+  before solving.
 
   You can avoid the image-handling code by doing source extraction
   yourself; see the "No netpbm" section below.
 
-  You can avoid filtering FITS files by using the "--no-fits2fits"
-  option to solve-field.
+  You can avoid filtering FITS files by using the "--no-remove-lines"
+  and "--uniformize 0" option to solve-field.
 
 * No netpbm
 
@@ -826,10 +816,9 @@ Contact
 =======
 
 You can post questions (or maybe even find the answer to your
-questions) at http://forum.astrometry.net .  However, please also send
-an email to "code2 at astrometry dot net" pointing out your post to
-the forum -- we never remember to check the forum!  We would also be
-happy to hear via email any bug reports, comments, critiques, feature
-requests, and in general any reports on your experiences, good or bad.
-
+questions) at https://groups.google.com/u/1/g/astrometry .  If you
+post there, it is often very useful to see an example image that
+you're working with, so if you are willing to, you could try
+submitting one to the https://nova.astrometry.net web service, and
+include the link in your post.
 

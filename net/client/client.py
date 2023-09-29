@@ -10,6 +10,7 @@ import os
 import sys
 import time
 import base64
+import shutil
 
 try:
     # py3
@@ -439,11 +440,9 @@ if __name__ == '__main__':
 
         for url,fn in retrieveurls:
             print('Retrieving file from', url, 'to', fn)
-            f = urlopen(url)
-            txt = f.read()
-            w = open(fn, 'wb')
-            w.write(txt)
-            w.close()
+            with urlopen(url) as r:
+                with open(fn, 'wb') as w:
+                    shutil.copyfileobj(r, w)
             print('Wrote to', fn)
 
         if opt.annotate:

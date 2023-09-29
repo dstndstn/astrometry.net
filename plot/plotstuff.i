@@ -42,7 +42,7 @@
 #include "resample.h"
 #include "cairoutils.h"
 #include "an-bool.h"
-
+#include "brightstars.h"
 
 #define true 1
 #define false 0
@@ -60,6 +60,7 @@
 %include "qfits_image.h"
 %include "fitsioutils.h"
 %include "convolve-image.h"
+%include "brightstars.h"
 
  /*
   number* coadd_create_weight_image_from_range(const number* img, int W, int H,
