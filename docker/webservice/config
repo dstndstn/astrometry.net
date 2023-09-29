@@ -1,0 +1,8 @@
+Host an-test
+Hostname 127.0.0.1
+User root
+IdentityFile ~/.ssh/id_ed25519
+IdentitiesOnly yes
+ForwardAgent no
+ForwardX11 no
+ForwardX11Trusted no
