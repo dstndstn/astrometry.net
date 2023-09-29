@@ -18,7 +18,8 @@ NotifyAccess=all
 WorkingDirectory=/home/nova/astrometry/net
 User=nova
 Environment="PYTHONPATH=/home/nova" "PATH=/usr/local/bin:/usr/bin:/bin:/home/nova/astrometry/util:/home/nova/astrometry/solver:/home/nova/astrometry/plot"
-ExecStart=/usr/local/bin/uwsgi -s :3030 --wsgi-file wsgi.py --touch-reload wsgi.py --processes 8 --reload-on-rss 768 -d /data/nova/uwsgi.log --limit-post 500000000
+ExecStart=/home/nova/astrometry/net/uwsgi.sh
+#/usr/local/bin/uwsgi -s :3030 --wsgi-file wsgi.py --touch-reload wsgi.py --processes 8 --reload-on-rss 768 -d /data/nova/uwsgi.log --limit-post 500000000
 
 [Install]
 WantedBy=multi-user.target

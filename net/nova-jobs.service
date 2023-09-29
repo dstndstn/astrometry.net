@@ -16,7 +16,7 @@ NotifyAccess=all
 WorkingDirectory=/home/nova/astrometry/net
 User=nova
 Environment="PYTHONPATH=/home/nova" "PATH=/usr/local/bin:/usr/bin:/bin:/home/nova/astrometry/util:/home/nova/astrometry/solver:/home/nova/astrometry/plot"
-ExecStart=/usr/bin/python3 -u process_submissions.py -j 16 -s 4 --solve-locally=$(pwd)/solvescript.sh
+ExecStart=/usr/bin/python3 -u process_submissions.py -j 16 -s 4 --solve-locally=/home/nova/astrometry/net/solvescript.sh
 #> /data/nova/dj.log 2>&1
 
 [Install]
