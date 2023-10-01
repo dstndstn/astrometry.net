@@ -59,7 +59,15 @@ sudo docker build -t astrometrynet/webservice:latest -f docker/webservice/Docker
 
 For the container to function properly, we still need to map the indexes folder to it, with some port mapping:
 ```
-sudo docker run -p 8000:8000 -v ~/astrometry_indexes:/usr/local/data astrometrynet/webservice
+sudo docker run -p 8000:8000 -v ~/astrometry_indexes:/data/INDEXES astrometrynet/webservice
 ```
 
 The the Astrometry.net website could be accessed on the host machine at http://localhost:8000.
+
+## Gap to Production
+
+Note the docker file still has quite some gap to production, especially in:
+
+1. All the data is stored in a SQLite "database," which is essentially a file and subject to loss after the container terminates. The solution is to create a "real" database somewhere, and let the django connect to it through the network.
+2. Similarly, all the user uploaded data, results, and logs will be lost after the container terminates. The solution is to map a volume to `net/data`.
+3. A good practice to handle many requests at the same time is to put the endpoint behind some reverse proxy with load balancing. Apache and Nginx are good candidates.
