@@ -5,7 +5,7 @@ WORKSPACE_DIR="/tmp"
 # basic linux install/build libs, python, and other support
 cd $WORKSPACE_DIR && \
 apt update && \
-apt install -y make build-essential python3 python3-pip netpbm libnetpbm10-dev zlib1g-dev libcairo2-dev libjpeg-dev libcfitsio-dev libbz2-dev wget wcslib-dev && \
+apt install -y make build-essential python3 python3-pip netpbm libnetpbm10-dev zlib1g-dev libcairo2-dev libjpeg-dev libcfitsio-dev libbz2-dev wget wcslib-dev swig && \
 pip3 install numpy scipy fitsio && \
 
 # astrometry
