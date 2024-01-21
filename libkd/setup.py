@@ -2,11 +2,10 @@ from __future__ import print_function
 # This file is part of libkd.
 # Licensed under a 3-clause BSD style license - see LICENSE
 from distutils.core import setup, Extension
-import numpy
 import os.path
 
 from numpy import get_include
-numpy_inc = [get_include()]
+numpy_inc = get_include()
 
 def strlist(s, split=' '):
     lst = s.split(split)
@@ -28,7 +27,7 @@ print(('cflags:', cflags))
 
 c_module = Extension('spherematch_c',
                      sources = ['pyspherematch.c'],
-                     include_dirs = numpy_inc + inc,
+                     include_dirs = [numpy_inc] + inc,
                      extra_objects = objs,
                      extra_compile_args = cflags,
                      extra_link_args=link,
