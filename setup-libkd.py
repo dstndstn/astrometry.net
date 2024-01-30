@@ -1,8 +1,8 @@
 import os
 from distutils.core import setup, Extension
 
-from numpy.distutils.misc_util import get_numpy_include_dirs
-numpy_inc = get_numpy_include_dirs()
+from numpy import get_include
+numpy_inc = get_include()
 
 inc = ['include', 'include/astrometry', 'util', 'qfits-an']
 
@@ -37,7 +37,7 @@ srcs = ([os.path.join('libkd',x) for x in libkd_srcs] +
     
 ext = Extension('astrometry.libkd.spherematch_c',
                 sources = srcs,
-                include_dirs = numpy_inc + inc,
+                include_dirs = [numpy_inc] + inc,
                 )
 
 setup(name='libkd',
