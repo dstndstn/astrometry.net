@@ -1183,6 +1183,9 @@ def search(req):
 
 
 if __name__ == '__main__':
+    import logging
+    logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+
     # class Duck(object):
     #     pass
     # req = Duck()
@@ -1218,7 +1221,8 @@ if __name__ == '__main__':
     #r = c.get('/user_images/5845514')
     #r = c.get('/sdss_image_display/4629768')
     #r = c.get('/user_images/1533706')
-    r = c.get('/kml_file/2646067?ignore=.kmz')
+    #r = c.get('/kml_file/2646067?ignore=.kmz')
+    r = c.get('/new_fits_file/9797275')
     #print(r)
     with open('out.html', 'wb') as f:
         for x in r:

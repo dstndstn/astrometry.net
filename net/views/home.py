@@ -3,6 +3,13 @@ from django.shortcuts import redirect, render
 from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
+import os
+
+if __name__ == '__main__':
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+    import django
+    django.setup()
+
 from astrometry.net.models import *
 
 def home(req):
@@ -26,6 +33,9 @@ def home(req):
             'multi_hosts': nexthost(settings.MULTI_HOSTS),
         })
     return render(req, 'home.html', context)
+
+def maintenance(req):
+    return render(req, 'maintenance.html', {})
 
 def support(req):
     context = {}
@@ -211,3 +221,11 @@ def post_auth(*args, **kwargs):
     print('post_auth()')
     about_user(*args, **kwargs)
     print()
+
+if __name__ == '__main__':
+    from django.test import Client
+    c = Client()
+    r = c.get('/login/twitter/')
+    with open('out.html', 'wb') as f:
+        for x in r:
+            f.write(x)

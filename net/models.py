@@ -407,7 +407,8 @@ class Image(models.Model):
     #  userimage_set -> UserImage
     #  image_thumbnail_set -> Image
     #  image_display_set -> Image
-
+    #  cachedfile_set
+    
     # JPEG / PNG / GIF (not FITS)
     def is_jpeglike(self):
         ft = self.disk_file.file_type
