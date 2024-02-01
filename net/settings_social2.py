@@ -13,7 +13,7 @@ SOCIAL_INSTALLED_APPS = (
 
 SOCIAL_AUTH_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
-    'social_core.backends.twitter.TwitterOAuth',
+    #'social_core.backends.twitter.TwitterOAuth',
     'social_core.backends.yahoo.YahooOAuth2',
     'social_core.backends.github.GithubOAuth2',
     'social_core.backends.flickr.FlickrOAuth',
