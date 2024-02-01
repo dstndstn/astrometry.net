@@ -23,10 +23,11 @@ RUN rm -R /usr/local/lib/python/astrometry/net && \
 
 RUN mkdir appsecrets && \
     touch appsecrets/__init__.py && \
-    touch appsecrets/auth.py
+    touch appsecrets/auth.py && \
+    cp appsecrets-example/django.py appsecrets
 COPY django_db.py /src/astrometry/net/appsecrets/
-
-RUN git stash && git pull
+#RUN (echo -n "DJANGO_SECRET_KEY = '"; tr -dc A-Za-z0-9 </dev/urandom | head -c 52; echo "'") > /src/astrometry/net/appsecrets/django.py
+#RUN git stash && git pull
 
 RUN mv migrations/* /tmp && \
     python manage.py makemigrations && \
@@ -36,6 +37,13 @@ RUN mv migrations/* /tmp && \
     python manage.py loaddata fixtures/initial_data.json && \
     python manage.py loaddata fixtures/flags.json
 
-CMD python manage.py runserver
+RUN git pull
+ENV WSGI_LOG_FILE=
+COPY run.sh /src/astrometry/net/
+COPY solvescript-docker.sh /src/astrometry/net
+RUN mkdir /index
+CMD ./run.sh
+
+#CMD python manage.py runserver 0.0.0.0:8000
 
 EXPOSE 8000

@@ -20,5 +20,6 @@ make install && \
 
 # download and install index files
 rm -rf /usr/local/astrometry/data/* && \
-wget -r -nd -np -P /usr/local/astrometry/data/ "data.astrometry.net/4100/" && \
-wget -r -nd -np -P /usr/local/astrometry/data/ "data.astrometry.net/5000/"
+wget -r -nd -np -P /usr/local/astrometry/data/ "http://data.astrometry.net/4100/" && \
+# These files are HUGE.....
+wget -r -nd -np -P /usr/local/astrometry/data/ "https://portal.nersc.gov/project/cosmo/temp/dstn/index-5200/LITE/"

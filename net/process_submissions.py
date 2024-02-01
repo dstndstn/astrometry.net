@@ -751,7 +751,7 @@ def create_source_list(df, tempfiles=None):
             # potential hack, assumes it doesn't exist...
             text = "# x y\n" + text
 
-            text_table = text_table_fields("", text=text)
+            text_table = text_table_fields("", text=text, coltypes=[float, float])
             text_table.write_to(fitsfn)
             logmsg("Creating fits table from text list")
 
