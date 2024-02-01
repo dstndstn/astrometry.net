@@ -88,7 +88,6 @@ LOGFILE = LOG_DIR + 'django.log'
 PORTAL_LOGFILE = LOG_DIR + 'portal.log'
 VO_LOGFILE = LOG_DIR + 'vo.log'
 
-# http://stackoverflow.com/questions/20301338/django-openid-auth-typeerror-openid-yadis-manager-yadisservicemanager-object-is
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 # must match fixtures/initial_data.json
