@@ -63,7 +63,7 @@ In Ubunutu 20.04::
     $ sudo apt install build-essential curl git file pkg-config swig \
            libcairo2-dev libnetpbm10-dev netpbm libpng-dev libjpeg-dev \
            zlib1g-dev libbz2-dev libcfitsio-dev wcslib-dev \
-           python3 python3-pip python3-distutils python3-dev \
+           python3 python3-pip python3-dev \
            python3-numpy python3-scipy python3-pil
     $ pip install fitsio # or astropy
 

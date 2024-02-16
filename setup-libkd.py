@@ -1,5 +1,5 @@
 import os
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 from numpy import get_include
 numpy_inc = get_include()
