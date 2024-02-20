@@ -1,6 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 import os
 import sys
 

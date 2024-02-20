@@ -118,7 +118,7 @@ SHAREDLIBFLAGS_DEF := $(shell $(LINKTEST))
 SHAREDLIB_SUFFIX = so
 
 # Cygwin peculiarities:
-# --.dll filename suffix for shared libraries (created by python distutils)
+# --.dll filename suffix for shared libraries (created by python setuptools)
 # -- -fPIC produces warnings
 
 UNAME = $(shell uname -s)
@@ -126,8 +126,8 @@ ifneq (CYGWIN,$(findstring CYGWIN,$(UNAME)))
   SHAREDLIBFLAGS_DEF += -fPIC
 endif 
 
-# Get the library suffix used by python distutils (.dll on cygwin, .so elsewhere for py2; .PLATFORM.so for py3)
-PYTHON_SO_EXT ?= $(shell $(PYTHON) -c "from distutils import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO'))")
+# Get the library suffix used by python sysconfig (.dll on cygwin, .so elsewhere for py2; .PLATFORM.so for py3)
+PYTHON_SO_EXT ?= $(shell $(PYTHON) -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO'))")
 
 # Set a default, otherwise terrible things happen:
 #   in util/Makefile : clean: rm -f *$(PYTHON_SO_EXT)
