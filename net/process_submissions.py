@@ -530,7 +530,9 @@ def dosub(sub, tempfiles=None, tempdirs=None):
         #(fn, headers) = urllib.request.urlretrieve(sub.url)
         # open URL
         # (note that the timeout is not on the overall request, it's a "haven't heard from you in...")
-        r = requests.get(sub.url, stream=True, timeout=10)
+        # imgur rejects the default, fake firefox
+        headers = {'user-agent': 'Mozilla/5.0'}
+        r = requests.get(sub.url, stream=True, timeout=10, headers=headers)
         # stream URL contents to temp file
         fn = get_temp_file(tempfiles=tempfiles)
         logmsg('Sub %i: retrieving URL %s to temp file %s' % (sub.id, sub.url, fn))
