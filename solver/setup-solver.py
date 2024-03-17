@@ -11,7 +11,7 @@ sys.path.append(os.path.join(dotdot, 'util'))
 
 
 from an_build_ext import an_build_ext
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 import numpy
 
 numpy_inc = [numpy.get_include()]

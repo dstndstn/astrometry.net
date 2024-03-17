@@ -1,7 +1,7 @@
 from __future__ import print_function
 # This file is part of libkd.
 # Licensed under a 3-clause BSD style license - see LICENSE
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 import os.path
 
 from numpy import get_include
