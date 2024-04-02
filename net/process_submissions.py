@@ -530,7 +530,9 @@ def dosub(sub, tempfiles=None, tempdirs=None):
         #(fn, headers) = urllib.request.urlretrieve(sub.url)
         # open URL
         # (note that the timeout is not on the overall request, it's a "haven't heard from you in...")
-        r = requests.get(sub.url, stream=True, timeout=10)
+        # imgur rejects the default, fake firefox
+        headers = {'user-agent': 'Mozilla/5.0'}
+        r = requests.get(sub.url, stream=True, timeout=10, headers=headers)
         # stream URL contents to temp file
         fn = get_temp_file(tempfiles=tempfiles)
         logmsg('Sub %i: retrieving URL %s to temp file %s' % (sub.id, sub.url, fn))
@@ -592,19 +594,30 @@ def dosub(sub, tempfiles=None, tempdirs=None):
         dirnm = tempfile.mkdtemp()
         if tempdirs is not None:
             tempdirs.append(dirnm)
+        any_worked = False
+        exc = None
         for tarinfo in tar.getmembers():
             if tarinfo.isfile():
                 logmsg('extracting file %s' % tarinfo.name)
                 tar.extract(tarinfo, dirnm)
                 tempfn = os.path.join(dirnm, tarinfo.name)
                 df = DiskFile.from_file(tempfn, 'uploaded-untar')
-                # create Image object
-                img = get_or_create_image(df, tempfiles=tempfiles)
-                # create UserImage object.
-                if img:
-                    create_user_image(sub, img, tarinfo.name)
+                try:
+                    # create Image object
+                    img = get_or_create_image(df, tempfiles=tempfiles)
+                    # create UserImage object.
+                    if img:
+                        create_user_image(sub, img, tarinfo.name)
+                    any_worked = True
+                except Exception as e:
+                    print('Failed to process tar-extracted file', tempfn, 'df', df.get_path())
+                    print('Exception:', e)
+                    if exc is None:
+                        exc = e
         tar.close()
         shutil.rmtree(dirnm, ignore_errors=True)
+        if not any_worked:
+            raise exc
     else:
         # assume file is single image
         logmsg('File %s: single file' % fn)
@@ -660,7 +673,8 @@ def get_or_create_image(df, create_thumb=True, tempfiles=None):
     elif img:
         img.save()
     else:
-        raise Exception("This file's type is not supported.")
+        raise Exception("This file's type is not supported.  disk_file %s, types %s" %
+                        (df.get_path(), df.get_file_types()))
     return img
 
     # # Is there already an Image for this DiskFile?

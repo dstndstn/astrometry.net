@@ -1,5 +1,5 @@
 from __future__ import print_function
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 from setuptools.command.install import install
 import subprocess
 import os

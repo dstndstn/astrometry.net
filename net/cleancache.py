@@ -6,7 +6,10 @@ if __name__ == '__main__':
     path = os.path.realpath(me)
     sys.path.append(os.path.dirname(os.path.dirname(path)))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
-import settings
+
+from astrometry.net import settings
+settings.DEBUG = True
+
 import django
 django.setup()
 from astrometry.net.models import *
@@ -79,12 +82,14 @@ def clean_cache():
     cfs = CachedFile.objects.all()
     print(cfs.count(), 'CachedFiles')
 
-    cfs = cfs.filter(key__contains='galex')
-    print(cfs.count(), 'GALEX cached files')
+    # These aren't produced any more...
+    #cfs = cfs.filter(key__contains='galex')
+    #print(cfs.count(), 'GALEX cached files')
     #cfs = cfs.filter(key__contains='sdss_size')
     #print(cfs.count(), 'SDSS cached files')
-    #cfs = cfs.filter(key__contains='jpg_image')
-    #print(cfs.count(), 'FITS->jpeg images')
+
+    cfs = cfs.filter(key__contains='jpg_image')
+    print(cfs.count(), 'FITS->jpeg images')
     #cfs = cfs.filter(key__contains='fits_table_')
     #print(cfs.count(), 'FITS tables')
 
@@ -103,8 +108,10 @@ def clean_cache():
             df.delete()
         print('Deleting Files...')
         for fn in delfiles:
-            os.unlink(fn)
-
+            if os.path.exists(fn):
+                os.unlink(fn)
+            else:
+                print('File to be unlinked does not exist:', fn)
     delfiles = set()
     delcfs = set()
     deldfs = set()
@@ -129,18 +136,103 @@ def clean_cache():
         print('->', path)
         print('Other CachedFiles sharing this DiskFile:')
         for ocf in df.cachedfile_set.all():
-            print('  ', ocf.key)
-            delcfs.add(ocf)
+            if ocf.key != cf.key:
+                print('  ', ocf.key)
+                delcfs.add(ocf)
         delcfs.add(cf)
         deldfs.add(df)
         delfiles.add(path)
 
     do_delete(delcfs, deldfs, delfiles)
 
+def clean_resized_images():
+
+    #images = Image.objects.all()
+    #print(images.count(), 'images')
+    images = Image.objects.all()
+    images = images.filter(disk_file__collection='resized')
+    print(images.count(), 'in resized collection')
+    
+    #images = images[:1000]
+    #print(images.count(), 'in resized collection')
+
+    freed = 0
+    
+    #i = 0
+    for i,img in enumerate(images):
+    #for img in images:
+        print()
+        #i += 1
+        print('Image', i+1, '-- freed', int(freed/1024/1024), 'MB so far')
+        df = img.disk_file
+        imgs = df.image_set.all()
+        if len(imgs) != 1:
+            print('Resized image', img, '-> disk file', df, '-> multiple images', imgs)
+            continue
+        print('Resized image', img, 'pixel size %i x %i' % (img.width, img.height))
+        print(' -> disk file', df)
+        print(' -> df path', df.get_path(), 'exists?', os.path.exists(df.get_path()))
+        display_of = img.image_display_set.all()
+        print(' -> display_set', display_of)
+        for orig in display_of:
+            print('    ->', orig, '-> display', orig.display_image)
+        thumbnail_of = img.image_thumbnail_set.all()
+        print(' -> thumbnail_set', thumbnail_of)
+        print(' -> userimage_set', img.userimage_set.all())
+        print(' -> display', img.display_image)
+        print(' -> thumbnail', img.thumbnail)
+        #print(' -> cachedfile_set', img.cachedfile_set)
+
+        if (img.display_image is None
+            and img.thumbnail is None
+            and len(img.userimage_set.all()) == 0):
+
+            if (len(thumbnail_of) == 0
+                and len(display_of) == 1
+                and display_of[0].display_image == img):
+                print('Simple display-size image', img)
+
+            elif (len(display_of) == 0
+                and len(thumbnail_of) == 1
+                and thumbnail_of[0].thumbnail == img):
+                print('Simple thumbnail image', img)
+                
+            else:
+                continue
+
+            fn = df.get_path()
+            if os.path.exists(fn):
+                print('Deleting', fn)
+                os.unlink(fn)
+                freed += df.size
+            print('Deleting', df)
+            df.delete()
+            print('Deleting', img)
+            img.delete()
+        
+    # from django.db import connection
+    # for q in connection.queries:
+    #     print('SQL:', q)
+
+    import numpy as np
+    from django.db import connections
+    times = []
+    sqls = []
+    for q in connections['default'].queries:
+        times.append(float(q['time']))
+        sqls.append(q['sql'])
+    times = np.array(times)
+    I = np.argsort(times)
+    for i in I:
+        if times[i] < 0.1:
+            continue
+        print('Time %.3f' % times[i], ':', sqls[i])
 
 if __name__ == '__main__':
 
-    clean_cache()
+    #clean_cache()
+    clean_resized_images()
+    
     sys.exit(0)
 
 
