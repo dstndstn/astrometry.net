@@ -469,7 +469,34 @@ def test_jumbo():
         print('Jumbo:', np.sum(R))
         print(Time()-t0)
 
+def test_input_generator(n):
+    for i in range(n):
+        import numpy as np
+        x = np.random.random((1000,1000))
+        print('Yielding input', i)
+        yield (i,x)
+
+def test_sleep(x):
+    import time
+    time.sleep(3.)
+    return x
+
+def test_queue():
+    # Generate a bunch of tasks with 1MB pickles...
+    in_iter = test_input_generator(100)
+    with TimingPool(4) as pool:
+        out_iter = pool.imap_unordered(test_sleep, in_iter)
+        while True:
+            try:
+                r = next(out_iter)
+                i,x = r
+                print('Got result', i)
+            except StopIteration:
+                print('StopIteration')
+                break
+
 if __name__ == '__main__':
     #test_jumbo()
-    test()
+    #test()
+    test_queue()
     sys.exit()
