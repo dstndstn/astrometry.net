@@ -982,7 +982,10 @@ def new_fits_file(req, jobid=None):
         logmsg('out: ' + out)
         logmsg('err: ' + err)
         return HttpResponse('plot failed: out ' + out + ', err ' + err)
-    res = HttpResponse(open(outfn, 'rb'))
+    logmsg('new-wcs completed, output file has length %i' % file_size(outfn))
+    #res = HttpResponse(open(outfn, 'rb'))
+    #res = HttpResponse(open(outfn, 'rb').read())
+    res = StreamingHttpResponse(open(outfn, 'rb'))
     res['Content-Type'] = 'application/fits'
     res['Content-Length'] = file_size(outfn)
     res['Content-Disposition'] = 'attachment; filename=new-image.fits'
