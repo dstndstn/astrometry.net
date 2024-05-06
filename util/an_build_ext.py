@@ -1,9 +1,14 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
-from distutils.command.build_ext import build_ext # as _build_py
-#from distutils.command import build_ext as _build_ext
-from distutils.dep_util import newer_group, newer
-from distutils import log
+from setuptools.command.build_ext import build_ext # as _build_py
+#from setuptools.command import build_ext as _build_ext
+try:
+    from setuptools.modified import newer_group, newer
+except ModuleNotFoundError:
+    from setuptools import distutils
+    newer_group = distutils.dep_util.newer_group
+    newer = distutils.dep_util.newer
+import logging as log
 import os
 
 class an_build_ext(build_ext):

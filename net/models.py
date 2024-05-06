@@ -1,7 +1,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import os
-from datetime import datetime
 import itertools
 
 from urllib.request import urlopen
@@ -11,6 +10,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.urls import reverse
+from django.utils import timezone
 
 from astrometry.net import settings
 from astrometry.net.settings import *
@@ -182,7 +182,7 @@ class ProcessSubmissions(models.Model):
     # jobs
 
     def set_watchdog(self):
-        self.watchdog = datetime.now()
+        self.watchdog = timezone.now()
 
     def count_queued_subs(self):
         return self.subs.filter(finished=False,
@@ -201,7 +201,7 @@ class ProcessSubmissions(models.Model):
                                 job__start_time__isnull=False).count()
 
     def watchdog_ago(self):
-        return datetime.now() - self.watchdog
+        return timezone.now() - self.watchdog
     def watchdog_sec_ago(self):
         dt = self.watchdog_ago()
         sec = dtsec(dt)
@@ -219,7 +219,7 @@ class QueuedThing(models.Model):
         if t is None:
             return '-'
         t = t.replace(microsecond=0)
-        return t.isoformat() + ' (%i sec ago)' % dtsec(datetime.now() - t)
+        return t.isoformat() + ' (%i sec ago)' % dtsec(timezone.now() - t)
 
 class QueuedSubmission(QueuedThing):
     procsub = models.ForeignKey('ProcessSubmissions', models.CASCADE, related_name='subs')
@@ -407,7 +407,8 @@ class Image(models.Model):
     #  userimage_set -> UserImage
     #  image_thumbnail_set -> Image
     #  image_display_set -> Image
-
+    #  cachedfile_set
+    
     # JPEG / PNG / GIF (not FITS)
     def is_jpeglike(self):
         ft = self.disk_file.file_type
@@ -826,13 +827,13 @@ class Job(models.Model):
         return s
 
     def set_queued_time(self):
-        self.queued_time = datetime.now()
+        self.queued_time = timezone.now()
 
     def set_start_time(self):
-        self.start_time = datetime.now()
+        self.start_time = timezone.now()
 
     def set_end_time(self):
-        self.end_time = datetime.now()
+        self.end_time = timezone.now()
 
     def OLD_get_dir(self):
         if self.id < 10000:
@@ -1245,9 +1246,9 @@ class Submission(Hideable):
             return None
 
     def set_processing_started(self):
-        self.processing_started = datetime.now()
+        self.processing_started = timezone.now()
     def set_processing_finished(self):
-        self.processing_finished = datetime.now()
+        self.processing_finished = timezone.now()
 
     def save(self, *args, **kwargs):
         pro = get_user_profile(self.user)
@@ -1270,7 +1271,7 @@ class Submission(Hideable):
         #logmsg('saving submission: license id = %d' % self.license.id)
         #logmsg('saving submission: commentreceiver id = %d' % self.comment_receiver.id)
 
-        now = datetime.now()
+        now = timezone.now()
         return super(Submission, self).save(*args, **kwargs)
 
 

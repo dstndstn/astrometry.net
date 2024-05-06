@@ -12,18 +12,17 @@ from astrometry.net.models import *
 from log import *
 from django.contrib.auth.models import User
 
-#users = User.objects.filter(email__contains='godard')
-#users = User.objects.filter(id=298)
-#users = User.objects.filter(id__in=[5617, 10007])
-#users = User.objects.filter(id__in=[6143, 22881])
+#users = User.objects.filter(email__contains='')
+#users = User.objects.filter(id=x)
+#users = User.objects.filter(id__in=[x,y])
+#users = User.objects.filter(profile__apikey='xxx')
 
-#bestuser = User.objects.get(id=26255)
 #u = bestuser
 #nsub = u.submissions.count()
 #print('  User', u.id, 'has', nsub, 'Submissions')
 
 print(users.count(), 'Users match')
-if True:
+if False:
     bestuser = None
     nmax = 0
     for u in users:
@@ -33,18 +32,32 @@ if True:
             bestuser = u
             nmax = nsub
         print('  API key', u.profile.apikey)
+for u in users:
+    nsub = u.submissions.count()
+    print('  User', u.id, 'has', nsub, 'Submissions')
+
+#bestuser = User.objects.get(id=x)
+bestuser = users[0]
+print('Updating to user:', bestuser, 'id', bestuser.id)
+
+#users = list(users) + [bestuser]
 
 #sys.exit(0)
         
-from social.apps.django_app.default.models import UserSocialAuth
+from social_django.models import UserSocialAuth
 
 socs = {}
 for u in users:
+#for u in [bestuser]:
     soc = UserSocialAuth.objects.filter(user=u)
     print('  User', u.id, 'has', soc.count(), 'social auths', [s.id for s in soc], [s.provider for s in soc])
     for s in soc:
         socs[s.id] = s
+        #s.user = u
+        s.user = bestuser
+        s.save()
 
+#bestuser = users[0]
 sys.exit(0)
 
 if len(socs) == 1:

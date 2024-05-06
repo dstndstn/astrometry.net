@@ -7,7 +7,7 @@ from astrometry.net import settings
 
 urlpatterns = []
 
-from astrometry.net.views.home import home, support, api_help, explore
+from astrometry.net.views.home import home, support, api_help, explore, maintenance
 
 def dos_error(req):
     from django.http import HttpResponse
@@ -18,7 +18,9 @@ urlpatterns.extend([
     ])
 
 urlpatterns.extend([
+    #re_path(r'', maintenance),
     re_path(r'^/?$', home),
+    re_path(r'^maintenance/?$', maintenance),
     re_path(r'^support/?$', support, name='support'),
     re_path(r'^api_help/?$', api_help, name='api-help'),
     # re_path(r'^new_api_key/?$', 'new_api_key', name='new_api_key'),

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block inline_css %}
+{{block.super}}
+{% include 'user_image/image_set.css' %}
+<style type="text/css">
+#intro {
+}
+.block {
+	display: block;
+	width: 200px;
+	height: 175px;
+	background: #ccc;
+	margin: 10px;
+	padding: 15px;
+}
+.block h1 {
+	margin-top: 0px;
+}
+</style>
+{% endblock %}
+
+{% block title %}
+<h2>Astrometry.net Maintenance</h2>
+{% endblock %}
+
+{% block content %}
+<div id="intro">
+	<h2 style="display:inline-block">Astrometry.net Maintenance</h2>
+	<p>
+	  We're doing a database upgrade!  Expect about 1 hour of downtime.
+	</p>
+</div>
+<div style="clear: both"></div>
+{% endblock %}

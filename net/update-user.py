@@ -13,18 +13,26 @@ from log import *
 from django.contrib.auth.models import User
 
 
-#old_users = User.objects.filter(email='krishna')
+old_users = User.objects.filter(email='christoph@nieswand.org')
 #old_users = User.objects.filter(id=15193)
-old_users = User.objects.filter(profile__apikey='')
+#old_users = User.objects.filter(profile__apikey='')
 print('Found old_user(s):', old_users)
 
 for u in old_users:
     print('  ', u.id, u, u.email)
     print(u.get_full_name(), u.profile, u.first_name, u.get_username(), u.username)
     print('date joined', u.date_joined)
+    u.profile.create_api_key()
+    u.profile.save()
+    print('New API key:', u.profile.apikey)
     #print(dir(u))
 
-#sys.exit(0)
+    # print('Generating new API key')
+    # u.profile.create_api_key()
+    # u.profile.save()
+    # print(u.get_full_name(), u.profile, u.first_name, u.get_username(), u.username)
+
+sys.exit(0)
 
 #new_users = User.objects.filter(email__icontains='')
 #new_user = User.objects.get(first_name='Haven')

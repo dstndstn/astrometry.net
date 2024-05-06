@@ -58,8 +58,6 @@ $(document).ready(function() {
                 Signed in as <span id="user_info">{{ user.id }} / {{ user.get_profile.display_name }} / {{ user.username }} ({{ user.email }})</span> |
                 <a href="{% url 'signout' %}">Sign Out</a>
             {% else %}
-		<span style="color:red;">NOTE:</span> signins should be working again... but read about
-		  <a href="https://groups.google.com/forum/#!topic/astrometry/YzNu5AF103s">account migration.</a></span>&nbsp;
                 Not signed in | 
 
 <a href="{% url 'signin' %}">Sign In</a>

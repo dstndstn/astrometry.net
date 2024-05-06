@@ -982,7 +982,10 @@ def new_fits_file(req, jobid=None):
         logmsg('out: ' + out)
         logmsg('err: ' + err)
         return HttpResponse('plot failed: out ' + out + ', err ' + err)
-    res = HttpResponse(open(outfn, 'rb'))
+    logmsg('new-wcs completed, output file has length %i' % file_size(outfn))
+    #res = HttpResponse(open(outfn, 'rb'))
+    #res = HttpResponse(open(outfn, 'rb').read())
+    res = StreamingHttpResponse(open(outfn, 'rb'))
     res['Content-Type'] = 'application/fits'
     res['Content-Length'] = file_size(outfn)
     res['Content-Disposition'] = 'attachment; filename=new-image.fits'
@@ -1183,6 +1186,9 @@ def search(req):
 
 
 if __name__ == '__main__':
+    import logging
+    logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+
     # class Duck(object):
     #     pass
     # req = Duck()
@@ -1218,7 +1224,8 @@ if __name__ == '__main__':
     #r = c.get('/user_images/5845514')
     #r = c.get('/sdss_image_display/4629768')
     #r = c.get('/user_images/1533706')
-    r = c.get('/kml_file/2646067?ignore=.kmz')
+    #r = c.get('/kml_file/2646067?ignore=.kmz')
+    r = c.get('/new_fits_file/9797275')
     #print(r)
     with open('out.html', 'wb') as f:
         for x in r:

@@ -27,6 +27,7 @@ ANFILES_LIB_FILE := libanfiles.a
 
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.anfiles
+include $(COMMON)/makefile.qfits
 
 SO=$(SHAREDLIB_SUFFIX)
 
@@ -390,6 +391,9 @@ NORMAL_TESTS := test_big_tables test_qsort_r \
 $(NORMAL_TESTS): $(ANFILES_SLIB)
 
 ### /TESTS
+
+../qfits-an/libqfits.a:
+	(cd ../qfits-an && make libqfits.a)
 
 # we'll just tack this on here... It depends on cairo, libjpeg, etc,
 # so it's not part of the anX.a libraries.

@@ -17,13 +17,17 @@ from log import *
 
 from django.contrib.auth.models import User
 
+from social_django.models import UserSocialAuth
+
 import logging
 logging.basicConfig(format='%(message)s',
                     level=logging.DEBUG)
 
 def delete_user(u):
     print('Deleting user', u)
+    print('Deleting', u.user_images.all().count(), 'user_images')
     u.user_images.all().delete()
+    print('Deleting', u.submissions.all().count(), 'submissions')
     u.submissions.all().delete()
     u.albums.all().delete()
     u.comments_left.all().delete()
@@ -84,6 +88,9 @@ def main():
     parser.add_option('--delete', action='store_true', default=False,
               help='Delete everything associated with the given job/submission/image')
 
+    parser.add_option('--delete-user-subs', action='store_true', default=False,
+                      help='Delete all submissions from a user listed with -U?')
+
     parser.add_option('--delete-sub', action='store_true', default=False,
                       help='When deleting a Job/UserImage, also delete the Submission?')
 
@@ -101,7 +108,7 @@ def main():
     if opt.list_socials:
         #from social.apps.django_app.default.models import UserSocialAuth
         ## ????
-        from social_django.models import UserSocialAuth
+        #from social_django.models import UserSocialAuth
         socs = UserSocialAuth.objects.order_by('created')
         for soc in socs:
             print('soc for user', soc.user.id, soc.user, 'provider', soc.provider, 'uid', soc.uid, 'extra', soc.extra_data)
@@ -127,15 +134,25 @@ def main():
         for u in users:
             print(u.id, u, u.email)
             print(u.profile)
-            print(u.profile)
+            # print('User dir():', dir(u))
             for k in ['email', 'first_name', 'last_name', 'profile', 'social_auth', 'username']:
-                print(' ',k,getattr(u,k))
+                print(' ', k, getattr(u,k), repr(getattr(u,k)))
+            print('  social_auths:', [u for u in u.social_auth.all()])
+            socs = UserSocialAuth.objects.filter(user=u)
+            print('  Social auths:', len(socs))
+            for s in socs:
+                print('    ', s, 'userid', s.user.id)
             for f in ['get_full_name', 'get_short_name', 'get_username',]:
                 print(' ',f,getattr(u,f)())
 
-            print(' submissions:')
+            print('  submissions:')
             for s in u.submissions.all().order_by('-id'):
                 print('    ', s.id)
+
+                if opt.delete_user_subs:
+                    print('Deleting submission', s)
+                    s.delete()
+
         if opt.deluser:
             delete_user(u)
         sys.exit(0)
@@ -259,6 +276,9 @@ def main():
     if opt.sub:
         sub = Submission.objects.all().get(id=opt.sub)
         print('Submission', sub)
+        print('  submitted via API?', sub.via_api)
+        if sub.url is not None:
+            print('  URL', sub.url)
         if sub.disk_file is None:
             print('  no disk file')
         else:

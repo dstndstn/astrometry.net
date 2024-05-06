@@ -6,8 +6,12 @@ import sys
 # add .. to pythonpath
 path = os.path.abspath(__file__)
 sys.path.append(os.path.dirname(os.path.dirname(path)))
+dotdot = os.path.dirname(os.path.dirname(path))
+sys.path.append(os.path.join(dotdot, 'util'))
 
-from distutils.core import setup, Extension
+
+from an_build_ext import an_build_ext
+from setuptools import setup, Extension
 import numpy
 
 numpy_inc = [numpy.get_include()]
@@ -40,7 +44,7 @@ c_swig_module = Extension('_solver',
                           swig_opts=['-I'+d for d in inc] + cflags,
     )
 
-setup(#cmdclass={'build_ext': an_build_ext},
+setup(cmdclass={'build_ext': an_build_ext},
       name = 'Access to Astrometry.net solver/ in python',
       version = '1.0',
       description = '',

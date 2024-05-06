@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(path)))
 
 from an_build_ext import *
 
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 import numpy
 from setuputils import *
 

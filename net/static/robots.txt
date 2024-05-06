@@ -1,0 +1,14 @@
+User-agent: GPTBot
+Disallow: /
+
+User-agent: claudebot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /

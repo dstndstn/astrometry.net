@@ -1022,6 +1022,8 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
                         cd.append(np.nan)
                         continue
                     c = floatvalmap.get(c, c)
+                    # strip stray spaces or commas from float values
+                    c = c.strip(', ')
 
                 if t in [int, np.int32, np.int64]:
                     try:
