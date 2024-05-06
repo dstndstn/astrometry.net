@@ -446,7 +446,7 @@ workflows:
   version: 2
   build:
     jobs:
-      - "build-docker-ubuntu-24-py311"
+      #- "build-docker-ubuntu-24-py311"
       - "build-docker-ubuntu-22-py310"
       - "build-docker-ubuntu-20-py39"
       - "build-docker-ubuntu-18"
