@@ -8,19 +8,19 @@ If you're planning to use them for production, they'll require further refinemen
 This folder contains two Docker files.
 The first is for the solver, which provides the command line tools for Astrometry.net.
 The second is for the web service, which includes the Django-based web server and API server. 
+
 Here's how you can set up a Docker container using these Docker files.
 
 ## solver
 
 The solver require "index files" to function.
-A common approach is to download the provided index files.
-One can use the command line provided below to download.
+
+One can use the command line provided below to download the publicly-available index files.
 Please note that all the command lines referenced in this document assume that they are being executed under the repository root, such as `~/astrometry.net`, and not the current folder.
 ```
-mkdir -p ../astrometry_indexes
-pushd ../astrometry_indexes/
+mkdir -p ~/astrometry_indexes
+cd ~/astrometry_indexes/
 wget -r -l1 --no-parent -nc -nd -A ".fits" http://data.astrometry.net/4100/
-popd
 ```
 
 This downloads only the "4100-series" index files, which are about 250 MB.  For narrower field-of-view images, you may need the "5200-series" index files as well.
@@ -29,11 +29,7 @@ See http://data.astrometry.net/ for details.
 Check out [this link](http://astrometry.net/doc/readme.html#getting-index-files) to understand whether it's possible to only download and use part of all the files.
 Otherwise, downloading all the files will also work.
 
-If web service is also desired, it's a good time to config the security settings (`appsecrets`).
-`appsecrets-example` is a good start point.
-If it's only for a quick peek, `cp -ar net/appsecrets-example net/appsecrets` is good enough.
-
-Then one can build the docker image using the command line:
+Optionally, you can build a local version of the Docker image:
 ```
 docker build -t astrometrynet/solver:latest -f docker/solver/Dockerfile .
 ```
@@ -53,36 +49,57 @@ This container depends on the `solver` container.
 First follow the steps in the previous section to build the `solver` container.
 Note if you made any changes to the repo, e.g. changing the secrets in the `appsecrets`, `solver` container needs to be rebuilt for the changes to take effect.
 
-Then build the `webservice` container:
+Optionally, build a local copy of the `webservice` container:
 ```
 docker build -t astrometrynet/webservice:latest -f docker/webservice/Dockerfile .
 ```
 
-For the container to function properly, we still need to map the indexes folder to it, with some port mapping:
+For the container to function properly, we still need to map the indexes folder to it.  We also need to expose the port it is listening on:
 ```
-docker run -p 8000:8000 -v ~/astrometry_indexes:/data/INDEXES astrometrynet/webservice
+docker run -p 8000:8000 -v ~/astrometry_indexes:/index astrometrynet/webservice
 ```
 
 The the Astrometry.net website could be accessed on the host machine at http://localhost:8000.
 
 ## Saving web service state
 
-The web service's state is saved in an SQLite database file,
+The web service's state is saved in an SQLite database file (`/src/astrometry/net/django.sqlite3` in the container).  If you want that to last between runs
+of the service, then you will need to first copy the initial version out of the contain, and then use that in future runs.
 
-1. All the data is stored in a SQLite "database," which is essentially a file and subject to loss after the container terminates. The solution is to create a "real" database somewhere, and let the django connect to it through the network.
-2. Similarly, all the user uploaded data, results, and logs will be lost after the container terminates. The solution is to map a volume to `net/data`.
-3. A good practice to handle many requests at the same time is to put the endpoint behind some reverse proxy with load balancing. Apache and Nginx are good candidates.
+Eg, first time:
+```
+mkdir ~/astrometry_data
+docker run -v ~/astrometry_data:/data astrometrynet/webservice cp astrometry/net/django.sqlite3 /data
+```
 
+Then,
+```
+docker run --mount type=bind,source=$HOME/astrometry_data/django.sqlite3,target=/src/astrometry/net/django.sqlite3 astrometrynet/webservice
+```
 
+Similarly, user data (uploaded files, etc) are stored in `/src/astrometry/net/data`, so if you want those to last from one run to the next, you must
+mount a volume there:
 
+```
+docker run -v ~/astrometry_data:/src/astrometry/net/data --mount type=bind,source=$HOME/astrometry_data/django.sqlite3,target=/src/astrometry/net/django.sqlite3 astrometrynet/webservice
+```
 
-Web service: create a directory (eg /tmp/index) with index files in it, 
-plus an astrometry.net configuration file named "docker.cfg", eg,
-  add_path /index
-  autoindex
-  inparallel
-and then mount that directory into the contain via:
+Putting it all together, you probably want something like:
+```
+docker run \
+  -p 8000:8000 \
+  -v ~/astrometry_data:/src/astrometry/net/data \
+  -v ~/astrometry_indexes:/index \
+  --mount type=bind,source=$HOME/astrometry_data/django.sqlite3,target=/src/astrometry/net/django.sqlite3 \
+  astrometrynet/webservice
+```
 
-docker run --net=host --volume /tmp/index:/index astrometrynet/webservice
+## Closer to production
 
-It will listen on port 8000.
+For something closer to the production `nova.astrometry.net` service, you probably want to do:
+
+1. Run a real database (we use Postgres; see the `webservice/Dockerfile` for how to initialize the database), potentially in another docker container via docker compose
+2. Perhaps use the `systemctl` services to run the `nova-uwsgi` and `nova-jobs` services
+3. Use `uwsgi` (eg via the `nova-uwsgi` service) rather than the Django built-in `manage.py runserver`
+4. Use apache2 or nginx as a front-end and SSL terminator
+
