@@ -21,6 +21,8 @@ ALLOWED_HOSTS = ['astro.cs.toronto.edu', 'nova2.astrometry.net', 'localhost',
 
 MULTI_HOSTS = []
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 # broiler
 #WCS2KML = '/usr/local/wcs2kml/bin/wcs2kml'
 # bbq

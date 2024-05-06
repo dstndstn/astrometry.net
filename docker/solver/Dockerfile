@@ -54,29 +54,26 @@ RUN ln -s /usr/include /usr/local/include/netpbm
 RUN ln -s /usr/bin/python3 /usr/bin/python
 ENV PYTHONPATH=/usr/local/lib/python
 
-# For compatibility with the service scripts
-# (e.g. https://github.com/dstndstn/astrometry.net/blob/main/net/nova-jobs.service),
-# we use a user nova here.  Change the default password for better
-# security here.
-RUN useradd -m nova -p x
-USER nova
-WORKDIR /home/nova
+# If you wanted to use the "systemctl" scripts rather than the "run.sh" script,
+# You could create and use a "nova" user.
+# RUN useradd --home-dir /src --create-home --password xxx nova
+# USER nova
 
-# Since this docker file is part of the repo, copy the current directory
-# (assumed to be the astrometry.net repo base directory) into the container.
+RUN mkdir /src
+WORKDIR /src
 
 # For releases:
 RUN git clone http://github.com/dstndstn/astrometry.net.git astrometry
-# For local use / debugging
-#ADD --chown=nova:nova . /home/nova/astrometry
+# For local use / debugging -- copy the current directory into the container.
+#ADD --chown=nova:nova . /src/astrometry
 
-RUN git config --global --add safe.directory /home/nova/astrometry
+RUN git config --global --add safe.directory /src/astrometry
 RUN cd astrometry \
     && make -j \
     && make py -j \
     && make extra -j
-USER root
+#USER root
 RUN cd astrometry \
-    && git config --global --add safe.directory /home/nova/astrometry \
+    && git config --global --add safe.directory /src/astrometry \
     && make install INSTALL_DIR=/usr/local
-USER nova
+#USER nova

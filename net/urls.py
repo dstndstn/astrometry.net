@@ -19,7 +19,7 @@ urlpatterns.extend([
 
 urlpatterns.extend([
     #re_path(r'', maintenance),
-    re_path(r'^/?$', home),
+    re_path(r'^$', home),
     re_path(r'^maintenance/?$', maintenance),
     re_path(r'^support/?$', support, name='support'),
     re_path(r'^api_help/?$', api_help, name='api-help'),
