@@ -12,11 +12,10 @@ from astrometry.net.models import *
 from log import *
 from django.contrib.auth.models import User
 
-#users = User.objects.filter(email__contains='godard')
-#users = User.objects.filter(id=36789)
-#users = User.objects.filter(id__in=[29376, 43427])
-users = User.objects.filter(id__in=[29427,44180])
-#users = User.objects.filter(profile__apikey='mevrrxqunbicseno')
+#users = User.objects.filter(email__contains='')
+#users = User.objects.filter(id=x)
+#users = User.objects.filter(id__in=[x,y])
+#users = User.objects.filter(profile__apikey='xxx')
 
 #u = bestuser
 #nsub = u.submissions.count()
@@ -37,7 +36,7 @@ for u in users:
     nsub = u.submissions.count()
     print('  User', u.id, 'has', nsub, 'Submissions')
 
-#bestuser = User.objects.get(id=43427)
+#bestuser = User.objects.get(id=x)
 bestuser = users[0]
 print('Updating to user:', bestuser, 'id', bestuser.id)
 
@@ -45,7 +44,6 @@ print('Updating to user:', bestuser, 'id', bestuser.id)
 
 #sys.exit(0)
         
-#from social.apps.django_app.default.models import UserSocialAuth
 from social_django.models import UserSocialAuth
 
 socs = {}
