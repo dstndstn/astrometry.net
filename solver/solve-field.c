@@ -55,6 +55,10 @@ static an_option_t options[] = {
      "use this config file for the \"astrometry-engine\" program"},
     {'\x89', "config", required_argument, "filename",
      "use this config file for the \"astrometry-engine\" program"},
+    {'\x96', "index-dir", required_argument, "dirname",
+     "search for index files in the given directory, for \"astrometry-engine\""},
+    {'\x97', "index-file", required_argument, "filename",
+     "add this index file to the \"astrometry-engine\" program; you can quote this and include wildcards."},
     {'(', "batch",  no_argument, NULL,
      "run astrometry-engine once, rather than once per input file"},
     {'f', "files-on-stdin", no_argument, NULL,
@@ -883,6 +887,14 @@ int main(int argc, char** args) {
         case 'b':
         case '\x89':
             sl_append(engineargs, "--config");
+            append_escape(engineargs, optarg);
+            break;
+        case '\x96':
+            sl_append(engineargs, "--index-dir");
+            append_escape(engineargs, optarg);
+            break;
+        case '\x97':
+            sl_append(engineargs, "--index");
             append_escape(engineargs, optarg);
             break;
         case 'f':
