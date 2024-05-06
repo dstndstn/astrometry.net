@@ -1339,6 +1339,8 @@ int main(int argc, char** args) {
             }
         }
         if (makeplots) {
+            logmsg("Making source extraction overlay plot -- pnmfn = %s\n", axy->pnmfn);
+
             // source extraction overlay
             if (plot_source_overlay(plotxy, axy, me, objsfn, plotscale, bgfn))
                 makeplots = FALSE;
