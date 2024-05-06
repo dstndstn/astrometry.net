@@ -20,12 +20,6 @@ RUN pip3 install --no-cache-dir \
 
 WORKDIR /src/astrometry/net
 
-#USER nova
-# For local development, re-copy the current directory into the container.
-#ADD --chown=nova:nova . /src/astrometry
-
-ADD . /src/astrometry
-
 RUN ln -sf settings_test.py settings.py
 
 ENV PYTHONPATH /src:${PYTHONPATH}
@@ -64,3 +58,8 @@ ENV WSGI_LOG_FILE=
 CMD ["/bin/bash", "./astrometry/docker/webservice/run.sh"]
 
 EXPOSE 8000
+
+#USER nova
+# For local development, re-copy the current directory into the container.
+#ADD --chown=nova:nova . /src/astrometry
+#ADD . /src/astrometry
