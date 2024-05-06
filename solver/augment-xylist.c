@@ -743,6 +743,7 @@ int augment_xylist(augment_xylist_t* axy,
                 sl_append(cmd, "--ppm");
             sl_append(cmd, "--mydir");
             append_escape(cmd, me);
+	    logmsg("Running command: %s\n", sl_join(cmd, " "));
             lines = backtick(cmd, verbose);
             axy->isfits = FALSE;
             for (i=0; i<sl_size(lines); i++) {
@@ -759,7 +760,6 @@ int augment_xylist(augment_xylist_t* axy,
             // Get image W, H, depth.
             sl_append(cmd, "pnmfile");
             append_escape(cmd, pnmfn);
-
             lines = backtick(cmd, verbose);
 
             if (sl_size(lines) == 0) {
