@@ -1305,9 +1305,14 @@ int main(int argc, char** args) {
             char* exec = find_executable("plotxy", me);
             free(exec);
             if (!exec) {
-                logmsg("Couldn't find \"plotxy\" executable - maybe you didn't build the plotting programs?\n");
-                logmsg("Disabling plots.\n");
-                makeplots = FALSE;
+                // Try ../plot/plotxy
+                exec = find_executable("../plot/plotxy", me);
+                free(exec);
+                if (!exec) {
+                    logmsg("Couldn't find \"plotxy\" executable - maybe you didn't build the plotting programs?\n");
+                    logmsg("Disabling plots.\n");
+                    makeplots = FALSE;
+                }
             }
         }
         if (makeplots) {
