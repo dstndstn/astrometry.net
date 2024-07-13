@@ -12,7 +12,7 @@
 {% block content %}
 <h2>About the API</h2>
 <p>
-    Astrometry.net allows you to access parts of the service through a JSON API.
+    Astrometry.net allows you to access most parts of the service through a JSON API.
     This API allows you to upload images, check job and submission statuses, and
     retrieve all those useful bits of data from successfully calibrated fields -
     all programmatically. This means that it's easy to write a script to upload
@@ -22,7 +22,13 @@
 </p>
 <h2>Getting Started</h2>
 <p>
-    Before you can start using the API, you need to grab an <u>API key</u>. 
+    Many API calls to retrieve information about existing images can be made
+    without permission. For example, you can retrieve the list of annotated
+    objects in an image via
+    {% url 'api/jobs/JOBID/annotations' %}.
+</p>
+<p></p>
+    If you want to modify data on the site, you need to grab an <u>API key</u> first.
     This is a randomly generated string tied to your user account; everything
     you do using the API will be through your account on the Astrometry.net
     web service (e.g. any API uploads will show up on your web profile).
