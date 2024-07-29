@@ -23,12 +23,12 @@ users = User.objects.filter(id__in=[29427,44180])
 #print('  User', u.id, 'has', nsub, 'Submissions')
 
 print(users.count(), 'Users match')
-if False:
+if True:
     bestuser = None
     nmax = 0
     for u in users:
         nsub = u.submissions.count()
-        print('  User', u.id, 'has', nsub, 'Submissions')
+        print('  User', u.id, 'email', u.email, 'has', nsub, 'Submissions')
         if nsub > nmax:
             bestuser = u
             nmax = nsub
@@ -38,7 +38,7 @@ for u in users:
     print('  User', u.id, 'has', nsub, 'Submissions')
 
 #bestuser = User.objects.get(id=43427)
-bestuser = users[0]
+#bestuser = users[0]
 print('Updating to user:', bestuser, 'id', bestuser.id)
 
 #users = list(users) + [bestuser]

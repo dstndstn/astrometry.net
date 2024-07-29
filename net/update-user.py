@@ -22,9 +22,9 @@ for u in old_users:
     print('  ', u.id, u, u.email)
     print(u.get_full_name(), u.profile, u.first_name, u.get_username(), u.username)
     print('date joined', u.date_joined)
-    u.profile.create_api_key()
-    u.profile.save()
-    print('New API key:', u.profile.apikey)
+    #u.profile.create_api_key()
+    #u.profile.save()
+    #print('New API key:', u.profile.apikey)
     #print(dir(u))
 
     # print('Generating new API key')
