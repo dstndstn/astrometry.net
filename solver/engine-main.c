@@ -68,6 +68,8 @@ static an_option_t myopts[] = {
      "read input filenames from the given file, \"-\" for stdin"},
     {'i', "index", required_argument, "file(s)",
      "use the given index files (in addition to any specified in the config file); put in quotes to use wildcards, eg: \" -i 'index-*.fits' \""},
+    {'I', "index-dir", required_argument, "directory",
+     "search for index files in the given directory (in addition to any specified in the config file)"},
     {'p', "in-parallel", no_argument, NULL,
      "run the index files in parallel"},
     {'D', "data-log file", required_argument, "file",
@@ -113,7 +115,8 @@ int main(int argc, char** args) {
     anbool fromstdin = FALSE;
 
     bl* opts = opts_from_array(myopts, sizeof(myopts)/sizeof(an_option_t), NULL);
-    sl* inds = sl_new(4);
+    sl* index_files = sl_new(4);
+    sl* index_dirs = sl_new(4);
 
     char* datalog = NULL;
 
@@ -133,7 +136,10 @@ int main(int argc, char** args) {
             engine->inparallel = TRUE;
             break;
         case 'i':
-            sl_append(inds, optarg);
+            sl_append(index_files, optarg);
+            break;
+        case 'I':
+            sl_append(index_dirs, optarg);
             break;
         case 'd':
             basedir = optarg;
@@ -253,10 +259,21 @@ int main(int argc, char** args) {
         }
     }
 
-    if (sl_size(inds)) {
+    if (sl_size(index_dirs)) {
+        // save the engine_t state, add the search paths & auto-index them, then revert.
+        sl* saved_paths = engine->index_paths;
+        engine->index_paths = index_dirs;
+        if (engine_autoindex_search_paths(engine)) {
+            logerr("Failed to search directories for index files: [%s]", sl_join(index_dirs, ", "));
+            exit( -1);
+        }
+        engine->index_paths = saved_paths;
+    }
+
+    if (sl_size(index_files)) {
         // Expand globs.
-        for (i=0; i<sl_size(inds); i++) {
-            char* s = sl_get(inds, i);
+        for (i=0; i<sl_size(index_files); i++) {
+            char* s = sl_get(index_files, i);
             glob_t myglob;
             int flags = GLOB_TILDE | GLOB_BRACE;
             if (glob(s, flags, NULL, &myglob)) {
@@ -340,7 +357,8 @@ int main(int argc, char** args) {
 
     engine_free(engine);
     sl_free2(strings);
-    sl_free2(inds);
+    sl_free2(index_files);
+    sl_free2(index_dirs);
 
     if (fin && !fromstdin)
         fclose(fin);

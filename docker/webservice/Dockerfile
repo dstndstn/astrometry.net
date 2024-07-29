@@ -1,6 +1,6 @@
 FROM astrometrynet/solver:latest
 
-RUN pip3 install --no-cache-dir Django
+#USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && \
@@ -8,26 +8,29 @@ RUN apt -y update && \
     apache2 \
     libapache2-mod-wsgi-py3 \
     less \
-    emacs-nox
+    emacs-nox \
+    tmux \
+    systemctl \
+    sqlite3
 
 RUN pip3 install --no-cache-dir \
-    social-auth-core django-social-auth3 social-auth-app-django
+    django \
+    social-auth-core django-social-auth3 social-auth-app-django \
+    uwsgi
 
 WORKDIR /src/astrometry/net
 
-RUN ln -s settings_test.py settings.py
+RUN ln -sf settings_test.py settings.py
 
-# Yuck!  The installed 'astrometry' package conflicts with '.', so paste it in...
-RUN rm -R /usr/local/lib/python/astrometry/net && \
-    ln -s /src/astrometry/net /usr/local/lib/python/astrometry/net
+ENV PYTHONPATH /src:${PYTHONPATH}
 
 RUN mkdir appsecrets && \
     touch appsecrets/__init__.py && \
     touch appsecrets/auth.py && \
     cp appsecrets-example/django.py appsecrets
-COPY django_db.py /src/astrometry/net/appsecrets/
+
+COPY docker/webservice/django_db.py appsecrets/
 #RUN (echo -n "DJANGO_SECRET_KEY = '"; tr -dc A-Za-z0-9 </dev/urandom | head -c 52; echo "'") > /src/astrometry/net/appsecrets/django.py
-#RUN git stash && git pull
 
 RUN mv migrations/* /tmp && \
     python manage.py makemigrations && \
@@ -37,13 +40,26 @@ RUN mv migrations/* /tmp && \
     python manage.py loaddata fixtures/initial_data.json && \
     python manage.py loaddata fixtures/flags.json
 
-RUN git pull
-ENV WSGI_LOG_FILE=
-COPY run.sh /src/astrometry/net/
-COPY solvescript-docker.sh /src/astrometry/net
-RUN mkdir /index
-CMD ./run.sh
+#USER root
 
-#CMD python manage.py runserver 0.0.0.0:8000
+# If you wanted to use the systemctl scripts instead of run.sh, you
+# would need to edit these files a bit first (changing /home/nova to
+# /src, removing User=nova, or enable the nova user in the Dockerfile), and then:
+# RUN cp nova-jobs.service  /etc/systemd/system
+# RUN cp nova-uwsgi.service /etc/systemd/system
+# RUN systemctl enable nova-jobs
+# RUN systemctl enable nova-uwsgi
+
+WORKDIR /src
+
+ENV WSGI_LOG_FILE=
+
+#USER root
+CMD ["/bin/bash", "./astrometry/docker/webservice/run.sh"]
 
 EXPOSE 8000
+
+#USER nova
+# For local development, re-copy the current directory into the container.
+#ADD --chown=nova:nova . /src/astrometry
+#ADD . /src/astrometry

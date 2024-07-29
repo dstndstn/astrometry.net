@@ -165,7 +165,7 @@ def cut_array(val, I, name=None, to=None):
             val[I] = to
             return
 
-    if isinstance(val, (np.ndarray, np.core.defchararray.chararray)):
+    if isinstance(val, (np.ndarray, np.char.chararray)):
         # You can't slice a two-dimensional, length-zero, numpy array,
         # with an empty array.
         if len(val) == 0:
@@ -398,7 +398,7 @@ class tabledata(object):
                 #print('copying scalar', name)
                 rtn.set(name, val)
                 continue
-            if type(val) in [np.ndarray, np.core.defchararray.chararray]:
+            if type(val) in [np.ndarray, np.char.chararray]:
                 #print('copying numpy array', name)
                 rtn.set(name, val.copy())
                 continue
@@ -560,7 +560,7 @@ class tabledata(object):
                 np.int16:'I',
                 #np.bool:'L',
                 np.bool_:'L',
-                np.string_:'A',
+                np.bytes_:'A',
                 }
 
         if columns is None:

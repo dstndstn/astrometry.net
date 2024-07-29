@@ -872,7 +872,9 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
         print('Checking for UserImages without Jobs')
         #all_user_images = UserImage.objects.annotate(job_count=Count('jobs'))
         #newuis = all_user_images.filter(job_count=0)
+        t0 = time.time()
         newuis = UserImage.objects.filter(has_job=False)
+        print('Selecting UserImages without Jobs: took', time.time()-t0, 'seconds')
         if newuis.count():
             #print('Found', len(newuis), 'UserImages without Jobs:', [u.id for u in newuis])
             #print('Found', len(newuis), 'UserImages without Jobs.')
@@ -993,15 +995,33 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                     break
                 cusers = Counter([u.user for u in newuis])
                 print('Jobs queued:', len(newuis), 'by', len(cusers), 'users; top:')
-                for k,user in cusers.most_common(5):
+                for user,n in cusers.most_common(5):
                     try:
-                        print('  ', k, user, user.get_profile().display_name)
+                        print('  ', n, user, user.get_profile().display_name)
                     except:
-                        print('  ', k, user)
+                        print('  ', n, user)
                 users = list(cusers.keys())
                 print(len(users), 'eligible users')
                 if len(users) == 0:
                     break
+                # Give more weight to anonymous submissions - scale with number of
+                # eligible users
+                n_anon_jobs = 0
+                anon_user = None
+                for user,n in cusers.most_common():
+                    if is_astrometrynet_anonymous_user(user):
+                        n_anon_jobs = n
+                        anon_user = user
+                        break
+                if anon_user is not None:
+                    print('Anonymous has', n_anon_jobs, 'images ready')
+                    frac_anon = 0.25
+                    # Anonymous already appears in the "users" list;
+                    # this is how many bonus entries to add.
+                    n_anon = int(frac_anon * (len(users)-1))
+                    print('Adding', n_anon, 'bonus copies of the anonymous user')
+                    users.extend([anon_user] * n_anon)
+
                 iu = np.random.randint(len(users))
                 user = users[iu]
                 print('Selected user', user)

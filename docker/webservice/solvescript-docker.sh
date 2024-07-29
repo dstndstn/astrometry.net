@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Run via:
-#   python process_submissions.py --solve-locally=$(pwd)/solvescript.sh
+#   python process_submissions.py --solve-locally=PATH_TO/solvescript-docker.sh
 
 set -e
 
