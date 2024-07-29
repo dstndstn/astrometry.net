@@ -1346,6 +1346,9 @@ class UserProfile(models.Model):
         #self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
         return super(UserProfile, self).save(*args, **kwargs)
 
+def is_astrometrynet_anonymous_user(user):
+    return user.id == 1
+
 def get_user_profile(user):
     if user is None:
         return None
@@ -1391,5 +1394,3 @@ def context_user_profile(req):
     if req.user.is_authenticated:
         req.user.get_profile = get_user_profile(req.user)
     return dict(user=req.user)
-
-

@@ -4,7 +4,8 @@ from setuptools.command.build_ext import build_ext # as _build_py
 #from setuptools.command import build_ext as _build_ext
 try:
     from setuptools.modified import newer_group, newer
-except ModuleNotFoundError:
+#except ModuleNotFoundError:
+except:# RuntimeError:
     from setuptools import distutils
     newer_group = distutils.dep_util.newer_group
     newer = distutils.dep_util.newer
