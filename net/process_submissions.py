@@ -373,9 +373,15 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None,
             log.msg('Solver failed with return value %i' % rtn)
             logmsg('Call to solver failed for job', job.id, 'with return val',
                    rtn)
-            raise Exception
-
-        log.msg('Solver completed successfully.')
+            # Try reading last line of log file for error message?
+            msg = 'Solver failed with return value %i' % rtn
+            if os.path.exists(logfn):
+                lines = open(logfn).readlines()
+                if len(lines):
+                    msg += ': last log line: "%s"' % (lines[-1].strip())
+            #raise Exception
+        else:
+            log.msg('Solver completed successfully.')
 
     else:
         if solve_command is None:
@@ -874,11 +880,15 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
         #newuis = all_user_images.filter(job_count=0)
         t0 = time.time()
         newuis = UserImage.objects.filter(has_job=False)
-        print('Selecting UserImages without Jobs: took', time.time()-t0, 'seconds')
-        if newuis.count():
+        t1 = time.time()
+        print('Selecting UserImages without Jobs: took %.1f seconds' % (t1-t0))
+        nuc = newuis.count()
+        t2 = time.time()
+        print('Counting: %.1f sec' % (t2-t1))
+        if nuc:
             #print('Found', len(newuis), 'UserImages without Jobs:', [u.id for u in newuis])
             #print('Found', len(newuis), 'UserImages without Jobs.')
-            print('Jobs need to be started for', len(newuis), 'UserImages')
+            print('Jobs need to be started for', nuc, 'UserImages')
 
         runsubs = me.subs.filter(finished=False)
         if subresults != lastsubs:
@@ -985,7 +995,10 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
 
                 continue
             # Queue some new ones -- randomly select from waiting users
+            t0 = time.time()
             newuis = list(newuis)
+            t1 = time.time()
+            print('Listing newuis: %.1f sec' % (t1-t0))
             start_newuis = []
             import numpy as np
             from collections import Counter
