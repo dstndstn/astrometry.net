@@ -60,6 +60,8 @@ def main():
     parser.add_option('-j', '--job', type=int, dest='job', help='Job ID')
     parser.add_option('-u', '--userimage', type=int, dest='uimage', help='UserImage ID')
     parser.add_option('-e', '--email', help='Find user id with given email address')
+    parser.add_option('--apikey', help='Find user id with given API key')
+    parser.add_option('--newkey', default=False, action='store_true', help='Generate new API key for this user (use with --apikey).')
     parser.add_option('-U', '--userid', help='Find user with given numerical ID', type=int)
     parser.add_option('-i', '--image', type=int, dest='image', help='Image ID')
     parser.add_option('-d', '--disk-file', type=str, dest='df', help='DiskFile id')
@@ -72,6 +74,9 @@ def main():
 
     parser.add_option('--chown', dest='chown', type=int, default=0, help='Change owner of userimage or submission by user id #')
 
+    parser.add_option('--public', default=False, action='store_true', help='Set UserImage to publicly visible')
+    parser.add_option('--private', default=False, action='store_true', help='Set UserImage to not publicly visible')
+    
     parser.add_option('--solve-command',
                       help='Command to run instead of ssh to actually solve image')
     parser.add_option('--solve-locally',
@@ -128,12 +133,26 @@ def main():
             delete_user(u)
         sys.exit(0)
 
+    if opt.apikey:
+        up = UserProfile.objects.filter(apikey=opt.apikey)
+        print('Users with API key %s:' % opt.apikey)
+        for upx in up:
+            u = upx.user
+            print(u.id, u, u.email)
+            if opt.newkey:
+                print('Generating new API key...')
+                upx.create_api_key()
+                print('New API key:', upx.apikey)
+                upx.save()
+        sys.exit(0)
+
     if opt.userid:
         users = User.objects.filter(id=opt.userid)
         print('Users with ID', opt.userid)
         for u in users:
             print(u.id, u, u.email)
             print(u.profile)
+            print('Is authenticated:', u.is_authenticated)
             # print('User dir():', dir(u))
             for k in ['email', 'first_name', 'last_name', 'profile', 'social_auth', 'username']:
                 print(' ', k, getattr(u,k), repr(getattr(u,k)))
@@ -357,6 +376,11 @@ def main():
             print('chowning', ui, 'to', user)
             ui.user = user
             ui.save()
+
+        if opt.public:
+            ui.unhide()
+        if opt.private:
+            ui.hide()
 
         if opt.delete:
             print('Deleting ui', ui)

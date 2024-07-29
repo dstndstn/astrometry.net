@@ -22,12 +22,12 @@ from django.contrib.auth.models import User
 #print('  User', u.id, 'has', nsub, 'Submissions')
 
 print(users.count(), 'Users match')
-if False:
+if True:
     bestuser = None
     nmax = 0
     for u in users:
         nsub = u.submissions.count()
-        print('  User', u.id, 'has', nsub, 'Submissions')
+        print('  User', u.id, 'email', u.email, 'has', nsub, 'Submissions')
         if nsub > nmax:
             bestuser = u
             nmax = nsub
