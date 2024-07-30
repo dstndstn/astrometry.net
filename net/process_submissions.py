@@ -75,9 +75,8 @@ from astrometry.util.fits import *
 from astrometry.net.models import *
 from astrometry.net.log import logmsg
 
-from django.db.models import Count
+from django.db.models import Count, Max, Q
 from django.db import DatabaseError
-from django.db.models import Q
 
 #import logging
 #logging.basicConfig(format='%(message)s', level=logging.DEBUG)
@@ -863,6 +862,10 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
     lastsubs = []
     lastjobs = []
 
+    first_maxui = UserImage.objects.aggregate(Max('id'))['id__max']
+    print('Maximum UserImage id on startup:', first_maxui)
+    n_jobs_done = 0
+
     while True:
         me.set_watchdog()
         me.save()
@@ -877,19 +880,15 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
         if newsubs.count():
             print('Found', newsubs.count(), 'unstarted Submissions:', [s.id for s in newsubs])
 
+        maxui = UserImage.objects.aggregate(Max('id'))['id__max']
+        print('New UserImages:', maxui-first_maxui, '; Jobs completed:', n_jobs_done)
+
         print('Checking for UserImages without Jobs')
         #all_user_images = UserImage.objects.annotate(job_count=Count('jobs'))
         #newuis = all_user_images.filter(job_count=0)
-        t0 = time.time()
         newuis = UserImage.objects.filter(has_job=False).select_related('user')
-        t1 = time.time()
-        print('Selecting UserImages without Jobs: took %.1f seconds' % (t1-t0))
         n_new_ui = newuis.count()
-        t2 = time.time()
-        print('Counting: %.1f sec' % (t2-t1))
         if n_new_ui:
-            #print('Found', len(newuis), 'UserImages without Jobs:', [u.id for u in newuis])
-            #print('Found', len(newuis), 'UserImages without Jobs.')
             print('Jobs need to be started for', n_new_ui, 'UserImages')
 
         runsubs = me.subs.filter(finished=False)
@@ -922,6 +921,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                   'running for %.1f sec' % (tnow - t0), 'user', u,
                   end=' ')
             if res.ready():
+                n_jobs_done += 1
                 any_jobs_finished = True
                 jobresults.remove((jid,res))
                 print('success:', res.successful())
@@ -1002,10 +1002,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
 
                 continue
             # Queue some new ones -- randomly select from waiting users
-            t0 = time.time()
             newuis = list(newuis)
-            t1 = time.time()
-            print('Listing newuis: %.1f sec' % (t1-t0))
             start_newuis = []
             import numpy as np
             from collections import Counter
@@ -1013,14 +1010,11 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
             while n_add > 0:
                 if len(newuis) == 0:
                     break
-                t0 = time.time()
                 cusers = Counter([u.user for u in newuis])
-                t1 = time.time()
-                print('Counting newui users: %.1f sec' % (t1-t0))
                 print('Jobs queued:', len(newuis), 'by', len(cusers), 'users; top:')
-                for user,n in cusers.most_common(5):
+                for user,n in cusers.most_common(20):
                     try:
-                        print('  ', n, user, user.get_profile().display_name)
+                        print('  ', n, user, '(id %i)' % user.id)#, user.get_profile().display_name)
                     except:
                         print('  ', n, user)
                 users = list(cusers.keys())
@@ -1029,6 +1023,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                     break
                 # Give more weight to anonymous submissions - scale with number of
                 # eligible users
+                frac_anon = 0.25
                 n_anon_jobs = 0
                 anon_user = None
                 for user,n in cusers.most_common():
@@ -1038,11 +1033,11 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                         break
                 if anon_user is not None:
                     print('Anonymous has', n_anon_jobs, 'images ready')
-                    frac_anon = 0.25
                     # Anonymous already appears in the "users" list;
                     # this is how many bonus entries to add.
                     n_anon = int(frac_anon * (len(users)-1))
-                    print('Adding', n_anon, 'bonus copies of the anonymous user')
+                    n_anon = min(n_anon, n_anon_jobs)
+                    #print('Adding', n_anon, 'bonus copies of the anonymous user')
                     users.extend([anon_user] * n_anon)
 
                 iu = np.random.randint(len(users))
