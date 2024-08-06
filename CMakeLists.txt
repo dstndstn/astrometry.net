@@ -247,3 +247,5 @@ target_link_libraries(solve-field
                       jpeg
                       cfitsio
                       gsl openblas m)
+
+install(TARGETS solve-field DESTINATION /usr/bin)
