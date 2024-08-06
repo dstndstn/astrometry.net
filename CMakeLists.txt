@@ -235,6 +235,27 @@ add_library(qfits STATIC qfits-an/anqfits.c
                             qfits-an/md5.c)
 target_include_directories(qfits PUBLIC include include/astrometry)
 
+set(KD_SRC libkd/kdtree.c
+           libkd/kdtree_dim.c
+           libkd/kdtree_mem.c)
+
+set(KD_FITS_SRC libkd/kdtree_fits_io.c)
+
+set(KD_INTERNALS_SRC libkd/kdint_ddd.c
+                     libkd/kdint_fff.c
+                     libkd/kdint_lll.c
+                     libkd/kdint_ddu.c
+                     libkd/kdint_duu.c
+                     libkd/kdint_dds.c
+                     libkd/kdint_dss.c)
+
+set(DT_SRC libkd/dualtree.c
+           libkd/dualtree_rangesearch.c
+           libkd/dualtree_nearestneighbour.c)
+
+add_library(kd STATIC ${KD_SRC} ${KD_FITS_SRC} ${KD_INTERNALS_SRC} ${DT_SRC})
+target_include_directories(kd PUBLIC include include/astrometry)
+
 target_link_libraries(solve-field
                       catalogs
                       astrometry
@@ -248,4 +269,9 @@ target_link_libraries(solve-field
                       cfitsio
                       gsl openblas m)
 
+add_executable(astrometry-engine solver/engine-main.c)
+target_link_libraries(astrometry-engine astrometry anfiles anutils anbase qfits kd gsl openblas m)
+target_include_directories(astrometry-engine PUBLIC include include/astrometry util)
+
 install(TARGETS solve-field DESTINATION /usr/bin)
+install(TARGETS astrometry-engine DESTINATION /usr/bin)
