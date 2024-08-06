@@ -97,3 +97,6 @@ util/wcs-match
 util/wcs-pv2sip
 report.txt
 .DS_Store
+.idea
+.vscode
+/cmake-build-debug/
