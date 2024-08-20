@@ -195,7 +195,7 @@ urlpatterns.extend([
     re_path(r'^api/jobs/(?P<job_id>' + idpattern + r')/tags/?$', tags, name='api_tags'),
     re_path(r'^api/jobs/(?P<job_id>' + idpattern + r')/machine_tags/?$', machine_tags, name='api_machine_tags'),
     re_path(r'^api/jobs/(?P<job_id>' + idpattern + r')/objects_in_field/?$', objects_in_field, name='api_objects_in_field'),
-    re_path(r'^api/jobs/(?P<job_id>' + idpattern + r')/annotations/?$', annotations_in_field, name='api_annotations_in_field'),
+    re_path(r'^api/jobs/(?P<job_id>(' + idpattern + r'|JOBID))/annotations/?$', annotations_in_field, name='api_annotations_in_field'),
     re_path(r'^api/jobs/(?P<job_id>' + idpattern + r')/info/?$', job_info, name='api_job_info'),
     re_path(r'^api/jobs_by_tag/?$', jobs_by_tag, name='api_jobs_by_tag'),
     #(r'^api/logout/?', 'logout'),
