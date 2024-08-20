@@ -270,7 +270,7 @@ def dojob(job, userimage, log=None, solve_command=None, solve_locally=None,
     # Note, this must match Job.get_wcs_file().
     wcsfile = 'wcs.fits'
     corrfile = 'corr.fits'
-    axyflags = []
+    axyflags = ['--tag-all']
     axyargs = {
         '--out': axypath,
         '--scale-low': slo,
