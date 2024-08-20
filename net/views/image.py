@@ -948,6 +948,31 @@ def axy_file(req, jobid=None):
     res['Content-Disposition'] = 'attachment; filename=axy.fits'
     return res
 
+def image_rd_file(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    wcsfn = job.get_wcs_file()
+    axyfn = job.get_axy_file()
+    rdfn = get_temp_file(tempfiles=req.tempfiles)
+    cmd = 'wcs-xy2rd -w %s -i %s -o %s' % (wcsfn, axyfn, rdfn)
+    logmsg('Running: ' + cmd)
+    (rtn, out, err) = run_command(cmd)
+    if rtn:
+        logmsg('out: ' + out)
+        logmsg('err: ' + err)
+        return HttpResponse('wcs-xy2rd failed: out ' + out + ', err ' + err)
+    from astrometry.util.fits import fits_table
+    xy = fits_table(axyfn)
+    rd = fits_table(rdfn)
+    for c in xy.get_columns():
+        rd.set(c, xy.get(c))
+    rd.writeto(rdfn)
+
+    res = HttpResponse(open(rdfn, 'rb'))
+    res['Content-Type'] = 'application/fits'
+    res['Content-Length'] = file_size(rdfn)
+    res['Content-Disposition'] = 'attachment; filename=image-radec.fits'
+    return res
+
 def corr_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
     f = open(job.get_corr_file(), 'rb')
