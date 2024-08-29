@@ -108,7 +108,10 @@ static anbool grab_tagalong_data(startree_t* starkd, MatchObj* mo, onefield_t* b
             ERROR("Failed to read data for column \"%s\" in index", col);
             continue;
         }
-        tag.name = strdup(col);
+        if ((strcaseeq(col, "ra") || strcaseeq(col, "dec")))
+            asprintf_safe(&(tag.name), "%s_ref", col);
+        else
+            tag.name = strdup(col);
         tag.units = strdup(tag.units);
         tag.itemsize = fits_get_atom_size(tag.type) * tag.arraysize;
         tag.Ndata = N;

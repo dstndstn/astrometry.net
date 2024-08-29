@@ -198,6 +198,10 @@ $(document).ready(function() {
           <td><a href="{% url 'axy-file' jobid=job.id %}">axy.fits</a></td>
         </tr>
         <tr>
+          <td>Stars detected in your images, converted to RA,Dec (FITS table):</td>
+          <td><a href="{% url 'image-rd-file' jobid=job.id %}">image-radec.fits</a></td>
+        </tr>
+        <tr>
           <td>Correspondences between image and reference stars (table):</td>
           <td><a href="{% url 'corr-file' jobid=job.id %}">corr.fits</a></td>
         </tr>
