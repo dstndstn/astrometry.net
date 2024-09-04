@@ -61,7 +61,7 @@ jobs:
             listhead demo/apod5.wcs
             solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
 
-  build-docker-ubuntu-24-py311:
+  build-docker-ubuntu-24-py312:
     docker:
       - image: ubuntu:24.04
     steps:
@@ -72,7 +72,7 @@ jobs:
           name: Ubuntu packages
           command: |
             apt update && apt install -y apt-utils
-            DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends make gcc patch git openssh-client file pkg-config wget curl swig netpbm wcslib-dev wcslib-tools zlib1g-dev libbz2-dev libcairo2-dev libcfitsio-dev libcfitsio-bin libgsl-dev libjpeg-dev libnetpbm10-dev libpng-dev python3.11-dev libpython3.11-dev ca-certificates python3-pip gdb
+            DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends make gcc patch git openssh-client file pkg-config wget curl swig netpbm wcslib-dev wcslib-tools zlib1g-dev libbz2-dev libcairo2-dev libcfitsio-dev libcfitsio-bin libgsl-dev libjpeg-dev libnetpbm11t64 libpng-dev python3.12-dev libpython3.12-dev ca-certificates python3-pip gdb
             apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
       - run:
           name: Python packages
@@ -83,7 +83,7 @@ jobs:
       - run:
           name: Make
           command: |
-            export PYTHON=python3.11
+            export PYTHON=python3.12
             ln -s /usr/include /usr/local/include/netpbm
             make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
@@ -93,12 +93,12 @@ jobs:
       - run:
           name: Tests
           command: |
-            export PYTHON=python3.11
+            export PYTHON=python3.12
             (cd util && ./test)
             (cd libkd && ./test)
             (cd solver && ./test)
             (cd plot && ./test)
-            make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env python3.11"
+            make install INSTALL_DIR=~/an PYTHON_SCRIPT="/usr/bin/env python3.12"
             export PYTHONPATH=${PYTHONPATH}:~/an/lib/python
             (cd /tmp && $PYTHON -c "import astrometry.libkd.spherematch")
             export PATH=${PATH}:~/an/bin
@@ -389,10 +389,10 @@ workflows:
   version: 2
   build:
     jobs:
-      - "build-docker-ubuntu-24-py311"
+      - "build-docker-ubuntu-24-py312"
       - "build-docker-ubuntu-22-py310"
       - "build-docker-ubuntu-20-py39"
       - "build-docker-ubuntu-18"
-      - "build-docker-centos-8"
       - "build-docker-rocky-85"
+      #- "build-docker-centos-8"
       #- "build-arm-docker-ubuntu-20-py39"
