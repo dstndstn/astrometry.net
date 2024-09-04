@@ -77,8 +77,8 @@ jobs:
       - run:
           name: Python packages
           command: |
-            pip3 install numpy
-            pip3 install fitsio
+            pip3 install --break-system-packages numpy
+            pip3 install --break-system-packages fitsio
       - checkout
       - run:
           name: Make
