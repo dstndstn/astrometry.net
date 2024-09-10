@@ -862,7 +862,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
     lastsubs = []
     lastjobs = []
 
-    first_maxui = UserImage.objects.aggregate(Max('id'))['id__max']
+    first_maxui = UserImage.objects.aggregate(Max('id'))['id__max'] or 0
     print('Maximum UserImage id on startup:', first_maxui)
     n_jobs_done = 0
 
@@ -880,7 +880,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
         if newsubs.count():
             print('Found', newsubs.count(), 'unstarted Submissions:', [s.id for s in newsubs])
 
-        maxui = UserImage.objects.aggregate(Max('id'))['id__max']
+        maxui = UserImage.objects.aggregate(Max('id'))['id__max'] or 0
         print('New UserImages:', maxui-first_maxui, '; Jobs completed:', n_jobs_done)
 
         print('Checking for UserImages without Jobs')
