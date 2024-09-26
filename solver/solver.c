@@ -1358,6 +1358,9 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field_xy,
         if (solver_handle_hit(solver, &mo, NULL, FALSE))
             solver->quit_now = TRUE;
 
+        sip_free(mo.sip);
+        mo.sip = NULL;
+
         if (unlikely(solver->quit_now))
             return;
     }
