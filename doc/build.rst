@@ -195,6 +195,18 @@ or::
 
      $ make install INSTALL_DIR=/your/install/directory PYTHON_SCRIPT="/usr/local/bin/python3.6"'
 
+Astrometry.net code includes some useful utilities copied from Cfitsio for working with fits files
+(fitscopy, fitsverify, imcopy). These utilities are not built and installed by default, as in modern linux
+distributions are usually provided by appropriate packages (for example `libcfitsio-bin` for Ubuntu/Debian,
+`cfitsio-utils` for Fedora, `fitsverify` for both).
+However, If you'd like to build and install them from the astrometry copies, run:
+
+    $ make cfitsio-utils
+
+and:
+
+    $ make install-cfitsio-utils
+
 
 Auto-config
 -----------
