@@ -99,6 +99,9 @@ solver: config util catalogs libkd qfits-an
 
 plot: config util catalogs libkd qfits-an
 
+cfitsio-utils:
+	$(MAKE) -C solver cfitsutils
+
 $(SUBDIRS):
 	$(MAKE) -C $@
 $(SUBDIRS_OPT):
@@ -187,6 +190,9 @@ install-core:
 		$(CHMOD_EXECUTABLE) '$(PY_BASE_INSTALL_DIR)/'$$x; \
 	done
 .PHONY: install install-core
+
+install-cfitsio-utils:
+	$(MAKE) -C solver install-cfitsutils
 
 ifeq ($(SYSTEM_GSL),yes)
 install-gsl:

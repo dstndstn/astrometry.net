@@ -71,11 +71,13 @@ ALL_WCSLIB_TARGETS :=
 # 	echo CFITS_INC: $(CFITS_INC)
 # 	echo ZLIB_INC: $(ZLIB_INC)
 
-CFITS_UTILS := tablist modhead fitscopy tabmerge liststruc \
-		listhead imcopy imarith imstat
+CFITS_UTILS := fitscopy imcopy
 # fitstomatlab 
 
-FITS_UTILS := $(CFITS_UTILS)
+# The following are not usually distributed through cfitsio packaged in
+# major linux distributions
+FITS_UTILS := tablist modhead tabmerge liststruc listhead \
+	imarith imstat
 
 MISC_EXECS := project-usnob diffractionFlag_check hpgrid resort-xylist
 
@@ -142,9 +144,11 @@ OLDEXECS_OBJS := catalog.o verify.o $(UTIL_OBJS)
 
 PIPELINE_MAIN_OBJ := $(addsuffix .o,$(PIPELINE))
 PROSPECTUS_MAIN_OBJ := $(addsuffix .o,$(PROSPECTUS))
+CFITS_UTILS_MAIN_OBJ := $(addsuffix .o,$(CFITS_UTILS))
 FITS_UTILS_MAIN_OBJ := $(addsuffix .o,$(FITS_UTILS))
 
-INSTALL_EXECS := $(FITS_UTILS) fitsverify $(PIPELINE) $(PROGS)
+INSTALL_EXECS := $(PIPELINE) $(PROGS) $(FITS_UTILS)
+INSTALL_CFITSUTILS := $(CFITS_UTILS) fitsverify
 
 INSTALL_H := allquads.h augment-xylist.h axyfile.h \
 	engine.h onefield.h solverutils.h build-index.h catalog.h \
@@ -156,13 +160,13 @@ INSTALL_H := allquads.h augment-xylist.h axyfile.h \
 	tweak2.h
 
 ALL_OBJ := $(UTIL_OBJS) $(KDTREE_OBJS) $(QFITS_OBJ) \
-	$(PIPELINE_MAIN_OBJ) $(PROSPECTUS_MAIN_OBJ) $(FITS_UTILS_MAIN_OBJ) \
-	$(OTHER_OBJS)
+	$(PIPELINE_MAIN_OBJ) $(PROSPECTUS_MAIN_OBJ) $(CFITS_UTILS_MAIN_OBJ) \
+	$(FITS_UTILS_MAIN_OBJ) $(OTHER_OBJS)
 ALL_EXECS :=
 
 all: $(QFITS_SLIB) $(LIBKD_LIB_FILE) \
 	$(ANUTILS_LIB_FILE) $(ANFILES_LIB_FILE) \
-	$(PROGS) $(PIPELINE) $(FITS_UTILS) fitsverify \
+	$(FITS_UTILS) $(PROGS) $(PIPELINE) \
 	$(ENGINE_LIB) $(ENGINE_SO) augment-xylist
 
 $(MAIN_PROGS): %: %-main.o $(SLIB)
@@ -176,6 +180,9 @@ pipeline: $(PIPELINE)
 
 .PHONY: prospectus_progs
 prospectus_progs: $(PROSPECTUS)
+
+.PHONY: cfitsutils
+cfitsutils: $(CFITS_UTILS) fitsverify
 
 .PHONY: fitsutils
 fitsutils: $(FITS_UTILS)
@@ -218,6 +225,15 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	@for x in $(PYTHON_EXECS); do \
 		echo ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
 		ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
+	done
+
+
+install-cfitsutils: $(CFITS_UTILS)
+	@echo Installing in directory '$(INSTALL_DIR)'
+	$(MKDIR) '$(INSTALL_DIR)/bin'
+	@for x in $(CFITS_UTILS); do \
+		echo $(CP) $$x '$(INSTALL_DIR)/bin'; \
+		$(CP) $$x '$(INSTALL_DIR)/bin'; \
 	done
 
 test-solver: test-solver.o solver_test.o $(SLIB)
@@ -297,6 +313,9 @@ hpgrid: hpgrid.o $(SLIB)
 $(CFITS_UTILS) :: %: %.o $(CFITS_SLIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 
+$(FITS_UTILS) :: %: %.o $(CFITS_SLIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
+
 fitsverify: ftverify.c fvrf_data.c fvrf_file.c fvrf_head.c fvrf_key.c fvrf_misc.c $(CFITS_SLIB)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -DSTANDALONE -trigraphs $(CFITS_INC) -o $@ $^ $(CFITS_LIB) -lm
 
@@ -367,7 +386,7 @@ include $(COMMON)/makefile.deps
 
 clean:
 	rm -f $(EXECS) $(EXTRA_EXECS) $(SOLVER_EXECS) $(MISC_EXECS) $(PROGS) \
-		$(PIPELINE) $(PROSPECTUS) $(DEPS) $(FITS_UTILS) $(ALL_OBJ) \
+		$(PIPELINE) $(PROSPECTUS) $(DEPS) $(CFITS_UTILS) $(ALL_OBJ) \
 		$(NODEP_OBJS) fitsverify \
 		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
 		$(ENGINE_LIB) $(ENGINE_SO) \
