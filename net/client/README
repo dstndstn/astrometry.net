@@ -12,3 +12,17 @@ Example use:
 '''
 python3 client.py -u ../../demo/apod1.jpg -k XXXXXXXX --scale-lower 0.2 --scale-units degwidth --wcs apod1.wcs
 '''
+
+Example use as a library:
+
+```
+opts = ClientRunnerOptions(
+    upload="../../demo/apod2.jpg",
+    apikey="XXXXXXXX",
+    scale_lower=0.2,
+    scale_units="degwidth",
+    newfits="apod2wcs.jpg",
+)
+
+run_client(opts)
+```
