@@ -256,6 +256,21 @@ class Client(object):
         )
         return result
 
+class ClientRunnerOptions(object):
+    def __init__(self, **entries):
+        self.server = Client.default_url
+        self.public = 'y'
+        self.allow_mod = 'd'
+        self.allow_commercial = 'd'
+
+        self.__dict__.update(entries)
+
+    def __getattr__(self, name):
+        try:
+            return object.__getattr__(self, name)
+        except:
+            return None
+
 def run_client(opt):
     args = {}
     args['apiurl'] = opt.server
@@ -398,9 +413,9 @@ def run_client(opt):
         jobs = c.myjobs()
         print(jobs)
 
-if __name__ == '__main__':
-    print("Running with args %s"%sys.argv)
+def get_args():
     import optparse
+
     parser = optparse.OptionParser()
     parser.add_option('--server', dest='server', default=Client.default_url,
                       help='Set server base URL (eg, %default)')
@@ -467,6 +482,7 @@ if __name__ == '__main__':
         const='n',
         default='d',
         help='Select license to disallow commercial use of submission')
+
     opt,args = parser.parse_args()
 
     if opt.apikey is None:
@@ -477,5 +493,12 @@ if __name__ == '__main__':
         print()
         print('You must either specify --apikey or set AN_API_KEY')
         sys.exit(-1)
+
+    return opt
+
+if __name__ == '__main__':
+    print("Running with args %s"%sys.argv)
+
+    opt = get_args()
 
     run_client(opt)
