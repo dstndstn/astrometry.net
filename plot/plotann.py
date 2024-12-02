@@ -173,8 +173,8 @@ def get_annotations_for_wcs(wcs, opt):
         ok,x,y = wcs.radec2pixelxy(float(r),float(d))
         pixscale = wcs.pixel_scale()
         pixrad = (rad * 3600.) / pixscale
-        jobjs.append(dict(type=typ, names=names, pixelx=x, pixely=y,
-                          radius=pixrad))
+        jobjs.append(dict(type=typ, names=names, pixelx=float(x), pixely=float(y),
+                          radius=float(pixrad)))
 
     return jobjs
 
