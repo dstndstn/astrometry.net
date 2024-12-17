@@ -800,7 +800,7 @@ def job_callback(result):
 
 
 def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
-         solve_command, solve_locally):
+         solve_command, solve_locally, no_timeout):
 
     print('Tempdir:', tempfile.gettempdir())
     
@@ -873,7 +873,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
         print()
 
         t_now = time.time() - t_start
-        quitnow = (t_now > maxtime)
+        quitnow = False if no_timeout else (t_now > maxtime)
 
         #print('Checking for new Submissions')
         newsubs = Submission.objects.filter(processing_started__isnull=True)
@@ -1088,7 +1088,10 @@ if __name__ == '__main__':
     parser.add_option('--solve-locally',
                       help='Command to run astrometry-engine on this machine, not via ssh')
 
+    parser.add_option('--no-timeout', action='store_true', default=False,
+                      help='Do not exit after one day')
+
     opt,args = parser.parse_args()
 
     main(opt.jobthreads, opt.subthreads, opt.refreshrate, opt.maxsubretries,
-         opt.solve_command, opt.solve_locally)
+         opt.solve_command, opt.solve_locally, opt.no_timeout)
