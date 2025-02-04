@@ -2629,8 +2629,8 @@ def tan_t_addtoheader(self, hdr):
     hdr.add_record(dict(name='CD1_2', value=self.cd[1], comment='CD matrix'))
     hdr.add_record(dict(name='CD2_1', value=self.cd[2], comment='CD matrix'))
     hdr.add_record(dict(name='CD2_2', value=self.cd[3], comment='CD matrix'))
-    hdr.add_record(dict(name='IMAGEW', value=self.imagew, comment='Image width'))
-    hdr.add_record(dict(name='IMAGEH', value=self.imageh, comment='Image height'))
+    hdr.add_record(dict(name='IMAGEW', value=int(self.imagew), comment='Image width'))
+    hdr.add_record(dict(name='IMAGEH', value=int(self.imageh), comment='Image height'))
 tan_t.add_to_header = tan_t_addtoheader
 
 ## picklable?
