@@ -363,7 +363,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
                                             W, H, distractors,
                                             logodds_bail, LARGE_VAL,
                                             &besti, &odds, &theta, NULL,
-                                            NULL, &refperm);
+                                            &testperm, &refperm);
 
             logverb("Logodds: %g\n", logodds);
             verify_count_hits(theta, besti, &nmatch, &nconf, &ndist);
@@ -528,7 +528,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
                                         W, H, distractors,
                                         logodds_bail, LARGE_VAL,
                                         &besti, &odds, &theta, NULL,
-                                        NULL, &refperm);
+                                        &testperm, &refperm);
         logverb("Logodds: %g\n", logodds);
         verify_count_hits(theta, besti, &nmatch, &nconf, &ndist);
         logverb("%i matches, %i distractors, %i conflicts (at best log-odds); %i field sources, %i index sources\n", nmatch, ndist, nconf, Nfield, Nin);
