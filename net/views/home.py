@@ -225,7 +225,8 @@ def post_auth(*args, **kwargs):
 if __name__ == '__main__':
     from django.test import Client
     c = Client()
-    r = c.get('/login/twitter/')
+    #r = c.get('/login/twitter/')
+    r = c.get('/api_help')
     with open('out.html', 'wb') as f:
         for x in r:
             f.write(x)
