@@ -678,7 +678,14 @@ void fits_header_add_int(qfits_header* hdr, const char* key, int val,
 int fits_update_value(qfits_header* hdr, const char* key, const char* newvalue) {
     // update the FITS header value, keeping the key and comment constant
     char* comment = qfits_header_getcom(hdr, key);
+    // we have to make a temporary copy of "comment" because qfits_header_mod will
+    // free an existing comment -- the same memory we have in "comment".
+    // This bug existed for at least 8 years.  So much for our unit tests!
+    if (comment)
+        comment = strdup(comment);
     qfits_header_mod(hdr, key, newvalue, comment);
+    if (comment)
+        free(comment);
     return 0;
 }
 

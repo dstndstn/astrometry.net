@@ -256,86 +256,22 @@ class Client(object):
         )
         return result
 
-if __name__ == '__main__':
-    print("Running with args %s"%sys.argv)
-    import optparse
-    parser = optparse.OptionParser()
-    parser.add_option('--server', dest='server', default=Client.default_url,
-                      help='Set server base URL (eg, %default)')
-    parser.add_option('--apikey', '-k', dest='apikey',
-                      help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
-    parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
-    parser.add_option('--upload-xy', dest='upload_xy', help='Upload a FITS x,y table as JSON')
-    parser.add_option('--wait', '-w', dest='wait', action='store_true', help='After submitting, monitor job status')
-    parser.add_option('--wcs', dest='wcs', help='Download resulting wcs.fits file, saving to given filename; implies --wait if --urlupload or --upload')
-    parser.add_option('--newfits', dest='newfits', help='Download resulting new-image.fits file, saving to given filename; implies --wait if --urlupload or --upload')
-    parser.add_option('--corr', dest='corr', help='Download resulting corr.fits file, saving to given filename; implies --wait if --urlupload or --upload')
-    parser.add_option('--kmz', dest='kmz', help='Download resulting kmz file, saving to given filename; implies --wait if --urlupload or --upload')
-    parser.add_option('--annotate','-a',dest='annotate',help='store information about annotations in give file, JSON format; implies --wait if --urlupload or --upload')
-    parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
-    parser.add_option('--scale-units', dest='scale_units',
-                      choices=('arcsecperpix', 'arcminwidth', 'degwidth', 'focalmm'), help='Units for scale estimate ("arcsecperpix", "arcminwidth", "degwidth", or "focalmm")')
-    #parser.add_option('--scale-type', dest='scale_type',
-    #                  choices=('ul', 'ev'), help='Scale bounds: lower/upper or estimate/error')
-    parser.add_option('--scale-lower', dest='scale_lower', type=float, help='Scale lower-bound')
-    parser.add_option('--scale-upper', dest='scale_upper', type=float, help='Scale upper-bound')
-    parser.add_option('--scale-est', dest='scale_est', type=float, help='Scale estimate')
-    parser.add_option('--scale-err', dest='scale_err', type=float, help='Scale estimate error (in PERCENT), eg "10" if you estimate can be off by 10%')
-    parser.add_option('--ra', dest='center_ra', type=float, help='RA center')
-    parser.add_option('--dec', dest='center_dec', type=float, help='Dec center')
-    parser.add_option('--radius', dest='radius', type=float, help='Search radius around RA,Dec center')
-    parser.add_option('--downsample', dest='downsample_factor', type=int, help='Downsample image by this factor')
-    parser.add_option('--positional_error', dest='positional_error', type=float, help='How many pixels a star may be from where it should be.')
-    parser.add_option('--parity', dest='parity', choices=('0','1'), help='Parity (flip) of image')
-    parser.add_option('--tweak-order', dest='tweak_order', type=int, help='SIP distortion order (default: 2)')
-    parser.add_option('--crpix-center', dest='crpix_center', action='store_true', default=None, help='Set reference point to center of image?')
-    parser.add_option('--invert', action='store_true', default=None, help='Invert image before detecting sources -- for white-sky, black-stars images')
-    parser.add_option('--image-width', type=int, help='Set image width for x,y lists')
-    parser.add_option('--image-height', type=int, help='Set image height for x,y lists')
-    parser.add_option('--album', type=str, help='Add image to album with given title string')
-    parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
-    parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
-    parser.add_option('--jobid', '-i', dest='solved_id', type=int,help='retrieve result for jobId instead of submitting new image')
-    parser.add_option('--substatus', '-s', dest='sub_id', help='Get status of a submission')
-    parser.add_option('--jobstatus', '-j', dest='job_id', help='Get status of a job')
-    parser.add_option('--jobs', '-J', dest='myjobs', action='store_true', help='Get all my jobs')
-    parser.add_option('--jobsbyexacttag', '-T', dest='jobs_by_exact_tag', help='Get a list of jobs associated with a given tag--exact match')
-    parser.add_option('--jobsbytag', '-t', dest='jobs_by_tag', help='Get a list of jobs associated with a given tag')
-    parser.add_option( '--private', '-p',
-        dest='public',
-        action='store_const',
-        const='n',
-        default='y',
-        help='Hide this submission from other users')
-    parser.add_option('--allow_mod_sa','-m',
-        dest='allow_mod',
-        action='store_const',
-        const='sa',
-        default='d',
-        help='Select license to allow derivative works of submission, but only if shared under same conditions of original license')
-    parser.add_option('--no_mod','-M',
-        dest='allow_mod',
-        action='store_const',
-        const='n',
-        default='d',
-        help='Select license to disallow derivative works of submission')
-    parser.add_option('--no_commercial','-c',
-        dest='allow_commercial',
-        action='store_const',
-        const='n',
-        default='d',
-        help='Select license to disallow commercial use of submission')
-    opt,args = parser.parse_args()
+class ClientRunnerOptions(object):
+    def __init__(self, **entries):
+        self.server = Client.default_url
+        self.public = 'y'
+        self.allow_mod = 'd'
+        self.allow_commercial = 'd'
 
-    if opt.apikey is None:
-        # try the environment
-        opt.apikey = os.environ.get('AN_API_KEY', None)
-    if opt.apikey is None:
-        parser.print_help()
-        print()
-        print('You must either specify --apikey or set AN_API_KEY')
-        sys.exit(-1)
+        self.__dict__.update(entries)
 
+    def __getattr__(self, name):
+        try:
+            return object.__getattr__(self, name)
+        except:
+            return None
+
+def run_client(opt):
     args = {}
     args['apiurl'] = opt.server
     c = Client(**args)
@@ -477,4 +413,92 @@ if __name__ == '__main__':
         jobs = c.myjobs()
         print(jobs)
 
+def get_args():
+    import optparse
 
+    parser = optparse.OptionParser()
+    parser.add_option('--server', dest='server', default=Client.default_url,
+                      help='Set server base URL (eg, %default)')
+    parser.add_option('--apikey', '-k', dest='apikey',
+                      help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
+    parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
+    parser.add_option('--upload-xy', dest='upload_xy', help='Upload a FITS x,y table as JSON')
+    parser.add_option('--wait', '-w', dest='wait', action='store_true', help='After submitting, monitor job status')
+    parser.add_option('--wcs', dest='wcs', help='Download resulting wcs.fits file, saving to given filename; implies --wait if --urlupload or --upload')
+    parser.add_option('--newfits', dest='newfits', help='Download resulting new-image.fits file, saving to given filename; implies --wait if --urlupload or --upload')
+    parser.add_option('--corr', dest='corr', help='Download resulting corr.fits file, saving to given filename; implies --wait if --urlupload or --upload')
+    parser.add_option('--kmz', dest='kmz', help='Download resulting kmz file, saving to given filename; implies --wait if --urlupload or --upload')
+    parser.add_option('--annotate','-a',dest='annotate',help='store information about annotations in give file, JSON format; implies --wait if --urlupload or --upload')
+    parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
+    parser.add_option('--scale-units', dest='scale_units',
+                      choices=('arcsecperpix', 'arcminwidth', 'degwidth', 'focalmm'), help='Units for scale estimate ("arcsecperpix", "arcminwidth", "degwidth", or "focalmm")')
+    #parser.add_option('--scale-type', dest='scale_type',
+    #                  choices=('ul', 'ev'), help='Scale bounds: lower/upper or estimate/error')
+    parser.add_option('--scale-lower', dest='scale_lower', type=float, help='Scale lower-bound')
+    parser.add_option('--scale-upper', dest='scale_upper', type=float, help='Scale upper-bound')
+    parser.add_option('--scale-est', dest='scale_est', type=float, help='Scale estimate')
+    parser.add_option('--scale-err', dest='scale_err', type=float, help='Scale estimate error (in PERCENT), eg "10" if you estimate can be off by 10%')
+    parser.add_option('--ra', dest='center_ra', type=float, help='RA center')
+    parser.add_option('--dec', dest='center_dec', type=float, help='Dec center')
+    parser.add_option('--radius', dest='radius', type=float, help='Search radius around RA,Dec center')
+    parser.add_option('--downsample', dest='downsample_factor', type=int, help='Downsample image by this factor')
+    parser.add_option('--positional_error', dest='positional_error', type=float, help='How many pixels a star may be from where it should be.')
+    parser.add_option('--parity', dest='parity', choices=('0','1'), help='Parity (flip) of image')
+    parser.add_option('--tweak-order', dest='tweak_order', type=int, help='SIP distortion order (default: 2)')
+    parser.add_option('--crpix-center', dest='crpix_center', action='store_true', default=None, help='Set reference point to center of image?')
+    parser.add_option('--invert', action='store_true', default=None, help='Invert image before detecting sources -- for white-sky, black-stars images')
+    parser.add_option('--image-width', type=int, help='Set image width for x,y lists')
+    parser.add_option('--image-height', type=int, help='Set image height for x,y lists')
+    parser.add_option('--album', type=str, help='Add image to album with given title string')
+    parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
+    parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
+    parser.add_option('--jobid', '-i', dest='solved_id', type=int,help='retrieve result for jobId instead of submitting new image')
+    parser.add_option('--substatus', '-s', dest='sub_id', help='Get status of a submission')
+    parser.add_option('--jobstatus', '-j', dest='job_id', help='Get status of a job')
+    parser.add_option('--jobs', '-J', dest='myjobs', action='store_true', help='Get all my jobs')
+    parser.add_option('--jobsbyexacttag', '-T', dest='jobs_by_exact_tag', help='Get a list of jobs associated with a given tag--exact match')
+    parser.add_option('--jobsbytag', '-t', dest='jobs_by_tag', help='Get a list of jobs associated with a given tag')
+    parser.add_option( '--private', '-p',
+        dest='public',
+        action='store_const',
+        const='n',
+        default='y',
+        help='Hide this submission from other users')
+    parser.add_option('--allow_mod_sa','-m',
+        dest='allow_mod',
+        action='store_const',
+        const='sa',
+        default='d',
+        help='Select license to allow derivative works of submission, but only if shared under same conditions of original license')
+    parser.add_option('--no_mod','-M',
+        dest='allow_mod',
+        action='store_const',
+        const='n',
+        default='d',
+        help='Select license to disallow derivative works of submission')
+    parser.add_option('--no_commercial','-c',
+        dest='allow_commercial',
+        action='store_const',
+        const='n',
+        default='d',
+        help='Select license to disallow commercial use of submission')
+
+    opt,args = parser.parse_args()
+
+    if opt.apikey is None:
+        # try the environment
+        opt.apikey = os.environ.get('AN_API_KEY', None)
+    if opt.apikey is None:
+        parser.print_help()
+        print()
+        print('You must either specify --apikey or set AN_API_KEY')
+        sys.exit(-1)
+
+    return opt
+
+if __name__ == '__main__':
+    print("Running with args %s"%sys.argv)
+
+    opt = get_args()
+
+    run_client(opt)
