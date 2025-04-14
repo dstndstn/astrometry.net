@@ -1177,6 +1177,8 @@ class Submission(Hideable):
 
     invert = models.BooleanField(default=False)
 
+    n_objs = models.PositiveIntegerField(default=0)
+
     # NOTE, these are ONLY to hold user-set (via API) image width/height;
     # they OVERRIDE the actual size of the image.  ONLY valid for xylists.
     image_width  = models.IntegerField(blank=True, null=True, default=0)

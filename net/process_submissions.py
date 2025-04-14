@@ -1040,6 +1040,12 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
                     #print('Adding', n_anon, 'bonus copies of the anonymous user')
                     users.extend([anon_user] * n_anon)
 
+                # Bump astrobin's priority
+                for user,n in cusers.most_common():
+                    if user.id == 298:
+                        users.extend([user] * 2)
+                        break
+
                 iu = np.random.randint(len(users))
                 user = users[iu]
                 print('Selected user', user)

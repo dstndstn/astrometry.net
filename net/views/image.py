@@ -950,10 +950,16 @@ def axy_file(req, jobid=None):
 
 def image_rd_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
+
+    extra_args = ''
+    ui = job.user_image
+    sub = ui.submission
+    if sub.use_sextractor:
+        extra_args = ' -X X_IMAGE -Y Y_IMAGE'
     wcsfn = job.get_wcs_file()
     axyfn = job.get_axy_file()
     rdfn = get_temp_file(tempfiles=req.tempfiles)
-    cmd = 'wcs-xy2rd -w %s -i %s -o %s' % (wcsfn, axyfn, rdfn)
+    cmd = 'wcs-xy2rd -w %s -i %s -o %s' % (wcsfn, axyfn, rdfn) + extra_args
     logmsg('Running: ' + cmd)
     (rtn, out, err) = run_command(cmd)
     if rtn:
@@ -1250,7 +1256,8 @@ if __name__ == '__main__':
     #r = c.get('/sdss_image_display/4629768')
     #r = c.get('/user_images/1533706')
     #r = c.get('/kml_file/2646067?ignore=.kmz')
-    r = c.get('/new_fits_file/9797275')
+    #r = c.get('/new_fits_file/9797275')
+    r = c.get('/image_rd_file/2646067')
     #print(r)
     with open('out.html', 'wb') as f:
         for x in r:
