@@ -29,6 +29,7 @@ TimingPoolMeas, that records & reports the pool's worker CPU time.
 #       handle_tasks thread  ---> gets work from taskqueue
 #                            ---> puts work onto inqueue
 #       worker threads       ---> get work from inqueue
+#                            ---> does the work :)
 #                            ---> put results into outqueue
 #       handle_results thread --> gets results from outqueue
 #                             --> sets cache[]
@@ -183,13 +184,20 @@ class TimingConnection(Connection):
 ## Connection subclass.  Without this, the file descriptors don't
 ## get set correctly across the spawn call.
 from multiprocessing import reduction
-from multiprocessing.connection import reduce_connection
-reduction.register(TimingConnection, reduce_connection)
+# Copied from multiprocessing.connection : non-win32 platforms
+def rebuild_timingconnection(df, readable, writable):
+    fd = df.detach()
+    conn = TimingConnection(fd, readable, writable)
+    return conn
+def reduce_timingconnection(conn):
+    from multiprocessing.connection import reduce_connection
+    _,red = reduce_connection(conn)
+    return rebuild_timingconnection, red
+reduction.register(TimingConnection, reduce_timingconnection)
 
 def TimingPipe(track_input, track_output):
     '''
-    Creates a pipe composed of Connection or TimingConnection objects,
-    depending on what we want to record.
+    Creates a pipe composed of TimingConnection objects
     '''
     fd1, fd2 = os.pipe()
     r = TimingConnection(fd1, writable=False)
@@ -279,6 +287,8 @@ class TimingPool(Pool):
         self._real_quick_put = self._inqueue._writer.send
 
     def _quick_get_wrapper(self):
+        # This is called by the result_handler thread to receive results
+        # from the workers.
         # Peel off the timing results
         obj = self._real_quick_get()
         if obj is None:
@@ -290,6 +300,8 @@ class TimingPool(Pool):
         return job, i, (success, res)
 
     def _quick_put_wrapper(self, task):
+        # This is called by the task_handler thread, which transfers work from
+        # taskqueue to inqueue.
         # Wrap tasks with timing results
         if task is not None:
             job, i, func, args, kwds = task
@@ -477,8 +489,11 @@ def test_input_generator(n):
         yield (i,x)
 
 def test_sleep(x):
+    (i,a) = x
+    print('Starting', i, 'in pid', os.getpid())
     import time
     time.sleep(3.)
+    print('Done', i)
     return x
 
 def test_queue():
@@ -497,6 +512,6 @@ def test_queue():
 
 if __name__ == '__main__':
     #test_jumbo()
-    #test()
-    test_queue()
+    test()
+    #test_queue()
     sys.exit()
