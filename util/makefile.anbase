@@ -1,6 +1,16 @@
 # This file is part of the Astrometry.net suite.
 # Licensed under a 3-clause BSD style license - see LICENSE
 
+# Remove duplicate words from a list
+uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
+reverse = $(if $(wordlist 2,2,$(1)),$(call reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)),$(1))
+runiq = $(call reverse,$(call uniq,$(call reverse,$1)))
+
+#w := d c c a c
+#$(info $(call uniq,$w))
+#$(info $(call reverse,$w))
+#$(info $(call runiq,$w))
+
 ANBASE_DIR := $(BASEDIR)/util
 ANBASE_LIB_FILE ?= $(ANBASE_DIR)/libanbase.a
 
