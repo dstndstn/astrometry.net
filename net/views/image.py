@@ -1023,7 +1023,7 @@ def new_fits_file(req, jobid=None):
     return res
 
 def kml_file(req, jobid=None):
-    #return HttpResponse('KMZ requests are off for now.  Post at https://groups.google.com/forum/#!forum/astrometry for help.')
+    return HttpResponse('KMZ requests are off for now.  Post at https://groups.google.com/forum/#!forum/astrometry for help.')
     import tempfile
     import PIL.Image
     job = get_object_or_404(Job, pk=jobid)

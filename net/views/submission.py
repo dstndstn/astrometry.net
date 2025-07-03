@@ -370,7 +370,8 @@ def handle_file_upload(file, tempfiles=None):
 if __name__ == '__main__':
     from django.test import Client
     c = Client()
-    r = c.get('/joblog2/6606830')
+    #r = c.get('/joblog2/6606830')
+    r = c.get('/user_images/12343343')
     with open('out.html', 'wb') as f:
         for x in r:
             f.write(x)

@@ -13,7 +13,12 @@ export PATH=${PATH}:$BASE/util:$BASE/solver:$BASE/plot
 # echo $PATH
 # export PYTHONPATH=${PYTHONPATH}:${CONDA_PREFIX}
 
-uwsgi -s :3030 --wsgi-file wsgi.py --touch-reload wsgi.py --processes 16 --reload-on-rss 768 -d /data/nova/uwsgi.log --limit-post 500000000 --stats 127.0.0.1:1717 \
+uwsgi -s :3030 \
+      --wsgi-file wsgi.py --touch-reload wsgi.py \
+      --processes 16 --reload-on-rss 768 \
+      -d /data/nova/uwsgi.log \
+      --limit-post 500000000 \
+      --stats 127.0.0.1:1717 --stats-http \
       --log-format "[pid: %(pid)|worker: %(wid)|req: -/-] %(addr) [%(ctime)] %(method) %(uri) => generated %(rsize) bytes in %(msecs) msecs (%(proto) %(status)) %(headers) headers in %(hsize) bytes (%(switches) switches on core %(core))" \
       --show-config \
       --harakiri 600 \

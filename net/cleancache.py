@@ -230,8 +230,8 @@ def clean_resized_images():
 
 if __name__ == '__main__':
 
-    #clean_cache()
-    clean_resized_images()
+    clean_cache()
+    #clean_resized_images()
     
     sys.exit(0)
 

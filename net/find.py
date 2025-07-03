@@ -53,6 +53,27 @@ def bounce_try_dojob(X):
         import traceback
         traceback.print_exc()
 
+def print_sub(sub):
+    print('Submission', sub)
+    print('  submitted via API?', sub.via_api)
+    if sub.url is not None:
+        print('  URL', sub.url)
+    if sub.disk_file is None:
+        print('  no disk file')
+    else:
+        print('Path', sub.disk_file.get_path())
+        print('Is fits image:', sub.disk_file.is_fits_image())
+        print('Is fits image:', sub.disk_file.file_type)
+    print('User:', sub.user)
+    uis = sub.user_images.all()
+    print('UserImages:', len(uis))
+    for ui in uis:
+        print('  ', ui)
+        print('  user', ui.user)
+        print('  with Jobs:', len(ui.jobs.all()))
+        for j in ui.jobs.all():
+            print('    ', j)
+    
 def main():
     import optparse
     parser = optparse.OptionParser('%(prog)')
@@ -65,6 +86,7 @@ def main():
     parser.add_option('-U', '--userid', help='Find user with given numerical ID', type=int)
     parser.add_option('-i', '--image', type=int, dest='image', help='Image ID')
     parser.add_option('-d', '--disk-file', type=str, dest='df', help='DiskFile id')
+    parser.add_option('-f', '--filename', type=str, help='Original filename contains')
     parser.add_option('-r', '--rerun', dest='rerun', action='store_true',
                       help='Re-run this submission/job?')
     parser.add_option('--list-socials', default=False, action='store_true')
@@ -176,7 +198,7 @@ def main():
             delete_user(u)
         sys.exit(0)
         
-    if not (opt.sub or opt.job or opt.uimage or opt.image or opt.ssh or opt.empty or opt.df):
+    if not (opt.sub or opt.job or opt.uimage or opt.image or opt.ssh or opt.empty or opt.df or opt.filename):
         print('Must specify one of --sub, --job, or --userimage or --image (or --ssh or --empty)')
 
         parser.print_help()
@@ -186,6 +208,16 @@ def main():
         mp = multiproc(opt.threads)
     else:
         mp = None
+
+    if opt.filename:
+        subs = Submission.objects.all()
+        subs = subs.filter(original_filename__contains=opt.filename)
+        subs = subs.order_by('original_filename')
+        for sub in subs:
+            print_sub(sub)
+        #if opt.delete:
+        #    print('Deleting submission', sub)
+        #    sub.delete()
         
     if opt.ssh or opt.empty or opt.delextra:
         subs = Submission.objects.all()
@@ -294,25 +326,8 @@ def main():
                 
     if opt.sub:
         sub = Submission.objects.all().get(id=opt.sub)
-        print('Submission', sub)
-        print('  submitted via API?', sub.via_api)
-        if sub.url is not None:
-            print('  URL', sub.url)
-        if sub.disk_file is None:
-            print('  no disk file')
-        else:
-            print('Path', sub.disk_file.get_path())
-            print('Is fits image:', sub.disk_file.is_fits_image())
-            print('Is fits image:', sub.disk_file.file_type)
-        print('User:', sub.user)
+        print_sub(sub)
         uis = sub.user_images.all()
-        print('UserImages:', len(uis))
-        for ui in uis:
-            print('  ', ui)
-            print('  user', ui.user)
-            print('  with Jobs:', len(ui.jobs.all()))
-            for j in ui.jobs.all():
-                print('    ', j)
 
         if opt.chown:
             newuser = User.objects.all().get(id=opt.chown)
@@ -327,7 +342,18 @@ def main():
             print('Re-trying sub', sub.id)
             #try_dosub(sub, 1)
             dosub(sub)
-            
+
+        if opt.solve_locally:
+            from astrometry.net.process_submissions import try_dojob
+            ui = uis[0]
+            print('Creating new Job for UserImage', ui)
+            job = Job(user_image=ui)
+            job.set_queued_time()
+            job.save()
+            ui.has_job = True
+            ui.save()
+            try_dojob(job, ui, opt.solve_command, opt.solve_locally)
+
         if opt.delete:
             print('Deleting submission', sub)
             sub.delete()
