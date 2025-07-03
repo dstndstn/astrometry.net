@@ -28,6 +28,7 @@ ANFILES_LIB_FILE := libanfiles.a
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.anfiles
 include $(COMMON)/makefile.qfits
+include $(COMMON)/makefile.anutils
 
 SO=$(SHAREDLIB_SUFFIX)
 
@@ -95,6 +96,8 @@ CFLAGS += $(PNG_INC)
 CFLAGS += $(NETPBM_INC)
 CFLAGS += $(ANFILES_CFLAGS)
 CFLAGS += $(ANFILES_INC)
+CFLAGS += $(ANUTILS_CFLAGS)
+CFLAGS += $(ANUTILS_INC)
 CFLAGS += -I.
 
 %.o: %.c
@@ -104,6 +107,7 @@ LDFLAGS += $(LDFLAGS_DEF)
 
 LDLIBS := $(LDLIBS_DEF)
 LDLIBS += $(ANFILES_LIB)
+LDLIBS += $(ANUTILS_LIB)
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 

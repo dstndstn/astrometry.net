@@ -149,6 +149,7 @@ class Client(object):
                                 ('tweak_order', None, int),
                                 ('crpix_center', None, bool),
                                 ('invert', None, bool),
+                                ('use_sextractor', None, bool),
                                 ('image_width', None, int),
                                 ('image_height', None, int),
                                 ('x', None, list),
@@ -302,7 +303,7 @@ def run_client(opt):
 
         for key in ['scale_units', 'center_ra', 'center_dec', 'radius',
                     'downsample_factor', 'positional_error', 'tweak_order', 'crpix_center',
-                    'album']:
+                    'album', 'invert', 'use_sextractor']:
             if getattr(opt, key) is not None:
                 kwargs[key] = getattr(opt, key)
         if opt.parity is not None:
@@ -447,6 +448,7 @@ def get_args():
     parser.add_option('--tweak-order', dest='tweak_order', type=int, help='SIP distortion order (default: 2)')
     parser.add_option('--crpix-center', dest='crpix_center', action='store_true', default=None, help='Set reference point to center of image?')
     parser.add_option('--invert', action='store_true', default=None, help='Invert image before detecting sources -- for white-sky, black-stars images')
+    parser.add_option('--use-source-extractor', dest='use_sextractor', action='store_true', default=None, help='Use SourceExtractor for source detection?')
     parser.add_option('--image-width', type=int, help='Set image width for x,y lists')
     parser.add_option('--image-height', type=int, help='Set image height for x,y lists')
     parser.add_option('--album', type=str, help='Add image to album with given title string')

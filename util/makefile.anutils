@@ -58,3 +58,5 @@ ANUTILS_INC += $(GSL_INC) $(WCSLIB_INC)
 ANUTILS_SLIB += $(ANUTILS_LIB) $(GSL_SLIB) $(WCS_SLIB)
 ANUTILS_LIB += $(GSL_LIB) $(WCS_LIB) -lm
 
+# This "runiq" call is to drop duplicate "-lm" entries (keeping the last one)
+ANUTILS_LIB := $(call runiq,$(ANUTILS_LIB))

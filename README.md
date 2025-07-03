@@ -42,7 +42,7 @@ The web service is at http://nova.astrometry.net
 
 The documentation is at http://astrometry.net/doc
 
-There is a (google group) forum at http://astrometry.net/group
+There is a (google group) forum at https://groups.google.com/g/astrometry
 
 Additional stuff at http://astrometry.net
 

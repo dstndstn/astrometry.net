@@ -22,13 +22,13 @@ include $(COMMON)/makefile.anutils
 endif
 
 ifndef NO_KDTREE
+# libkd pulls in ANUTILS as prereqs
 ANFILES_INC += $(LIBKD_INC)
 ANFILES_LIB += $(LIBKD_LIB)
 ANFILES_SLIB += $(LIBKD_SLIB)
-endif
-
+else
 ANFILES_CFLAGS += $(ANUTILS_CFLAGS)
 ANFILES_INC += $(ANUTILS_INC)
 ANFILES_LIB += $(ANUTILS_LIB)
 ANFILES_SLIB += $(ANUTILS_SLIB)
-
+endif
