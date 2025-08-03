@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block menublock %}
+{% endblock %}
+
+{% block title %}
+Human check
+{% endblock %}
+
+{% block content %}
+<center>
+<p>
+  Sorry for the trouble, but the site is getting <i>hammered</i> by
+  web scrapers (who are looking for "ai" training data, damn them).
+</p>
+
+<p>
+  Don't fall for the "ai" hype bubble, folks.
+</p>
+
+<p>
+  Please click the button to proceed.
+  <form method="post" action="/am_human">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{next}}"/>
+    <button name="human" value="yup" class="bigbutton">I am a human</button>
+  </form>
+</p>
+
+<p></p>
+<p></p>
+<p></p>
+<p>
+  If you have any trouble, please contact <code>suppport@astrometry.net</code>
+</p>
+
+</center>
+{% endblock %}

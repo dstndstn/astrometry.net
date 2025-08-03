@@ -47,6 +47,8 @@ from astrometry.net.views.license import LicenseForm
 
 from astrometry.net.views.enhance import *
 
+from astrometry.net.views.human import human_required, human_or_ref_required
+
 import json
 
 # repeat this import to override somebody else's import of the datetime module
@@ -84,6 +86,7 @@ class UserImageForm(forms.ModelForm):
                 if user_image and user_image in album.user_images.all():
                     self.fields['album'].initial = album.id
 
+@human_required
 def user_image(req, user_image_id=None):
     uimage = get_object_or_404(UserImage, pk=user_image_id)
 
@@ -265,6 +268,7 @@ def edit(req, user_image_id=None):
     }
     return render(req, 'user_image/edit.html', context)
 
+@human_or_ref_required
 def serve_image(req, id=None, image=None):
     if image is None:
         image = get_object_or_404(Image, pk=id)
@@ -279,6 +283,7 @@ def serve_image(req, id=None, image=None):
     image.render(res, tempfiles=req.tempfiles)
     return res
 
+@human_or_ref_required
 def serve_thumbnail_image(req, id=None):
     image = get_object_or_404(Image, pk=id)
     thumb = image.get_thumbnail()
@@ -286,6 +291,7 @@ def serve_thumbnail_image(req, id=None):
         return HttpResponse('missing image file')
     return serve_image(req, image=thumb)
 
+@human_or_ref_required
 def grid_image(req, jobid=None, size='full'):
     from astrometry.plot.plotstuff import (Plotstuff,
                                            PLOTSTUFF_FORMAT_JPG,
@@ -361,6 +367,7 @@ def grid_image(req, jobid=None, size='full'):
     res['Content-Type'] = 'image/jpeg'
     return res
 
+@human_or_ref_required
 def annotated_image(req, jobid=None, size='full'):
     job = get_object_or_404(Job, pk=jobid)
     ui = job.user_image
@@ -444,6 +451,7 @@ def annotated_image(req, jobid=None, size='full'):
     res['Content-Type'] = 'image/jpeg'
     return res
 
+@human_or_ref_required
 def onthesky_image(req, zoom=None, calid=None):
     from astrometry.net.views.onthesky import plot_aitoff_wcs_outline
     from astrometry.net.views.onthesky import plot_wcs_outline
@@ -549,22 +557,27 @@ def legacysurvey_viewer_image(req, cal, size, layer):
     print('Redirecting to URL', url)
     return HttpResponseRedirect(url)
 
+@human_or_ref_required
 def sdss_image(req, calid=None, size='full'):
     cal = get_object_or_404(Calibration, pk=calid)
     return legacysurvey_viewer_image(req, cal, size, 'sdss')
 
+@human_or_ref_required
 def galex_image(req, calid=None, size='full'):
     cal = get_object_or_404(Calibration, pk=calid)
     return legacysurvey_viewer_image(req, cal, size, 'galex')
 
+@human_or_ref_required
 def unwise_image(req, calid=None, size='full'):
     cal = get_object_or_404(Calibration, pk=calid)
     return legacysurvey_viewer_image(req, cal, size, 'unwise-neo6')
 
+@human_or_ref_required
 def legacysurvey_image(req, calid=None, size='full'):
     cal = get_object_or_404(Calibration, pk=calid)
     return legacysurvey_viewer_image(req, cal, size, 'ls-dr9')
 
+@human_or_ref_required
 def red_green_image(req, job_id=None, size='full'):
     from astrometry.plot.plotstuff import (Plotstuff,
                                            PLOTSTUFF_FORMAT_PNG,
@@ -643,6 +656,7 @@ def red_green_image(req, job_id=None, size='full'):
     res['Content-Type'] = 'image/png'
     return res
 
+@human_or_ref_required
 def extraction_image(req, job_id=None, size='full'):
     from astrometry.plot.plotstuff import (Plotstuff,
                                            PLOTSTUFF_FORMAT_PNG,
@@ -743,6 +757,7 @@ class ShowImagesForm(forms.Form):
                                         attrs={'onClick':'this.form.submit();'}),
                                     initial=False, required=False)
 
+#@human_required
 def index(req, images=None,
           template_name='user_image/index.html', context={}):
     if images is None:
@@ -856,6 +871,7 @@ def index_location(req):
     }
     return index(req, images, 'user_image/index_location.html', context)
 
+@human_required
 def index_nearby(req, user_image_id=None):
     image = get_object_or_404(UserImage, pk=user_image_id)
     images = image.get_neighbouring_user_images()
@@ -979,6 +995,7 @@ def image_rd_file(req, jobid=None):
     res['Content-Disposition'] = 'attachment; filename=image-radec.fits'
     return res
 
+@human_or_ref_required
 def corr_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
     f = open(job.get_corr_file(), 'rb')
@@ -987,6 +1004,7 @@ def corr_file(req, jobid=None):
     res['Content-Disposition'] = 'attachment; filename=corr.fits'
     return res
 
+@human_or_ref_required
 def new_fits_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
     wcsfn = job.get_wcs_file()
