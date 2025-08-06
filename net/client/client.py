@@ -377,7 +377,7 @@ def run_client(opt):
 
         for url,fn in retrieveurls:
             print('Retrieving file from', url, 'to', fn)
-            with urlopen(url) as r:
+            with urlopen(Request(url, headers=dict(Referer=opt.server))) as r:
                 with open(fn, 'wb') as w:
                     shutil.copyfileobj(r, w)
             print('Wrote to', fn)
