@@ -11,11 +11,13 @@ import sys
 import time
 import base64
 import shutil
+import http.cookiejar
 
 try:
     # py3
     from urllib.parse import urlencode, quote
     from urllib.request import urlopen, Request
+    from urllib.request import HTTPCookieProcessor, build_opener, install_opener
     from urllib.error import HTTPError
 except ImportError:
     # py2
@@ -104,6 +106,7 @@ class Client(object):
         try:
             f = urlopen(request)
             print('Got reply HTTP status code:', f.status)
+            print('Got headers:', f.headers)
             txt = f.read()
             print('Got json:', txt)
             result = json2python(txt)
@@ -275,9 +278,17 @@ class ClientRunnerOptions(object):
 def run_client(opt):
     args = {}
     args['apiurl'] = opt.server
+
+    # Store cookies
+    cookie_jar = http.cookiejar.CookieJar()
+    cookie_processor = HTTPCookieProcessor(cookie_jar)
+    install_opener(build_opener(cookie_processor))
+
     c = Client(**args)
     c.login(opt.apikey)
 
+    print('After login: cookie jar:', cookie_jar)
+    
     if opt.upload or opt.upload_url or opt.upload_xy:
         if opt.wcs or opt.kmz or opt.newfits or opt.corr or opt.annotate:
             opt.wait = True
