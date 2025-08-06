@@ -15,7 +15,7 @@ export PATH=${PATH}:$BASE/util:$BASE/solver:$BASE/plot
 
 uwsgi -s :3030 \
       --wsgi-file wsgi.py --touch-reload wsgi.py \
-      --processes 16 --reload-on-rss 768 \
+      --processes 100 --reload-on-rss 768 \
       -d /data/nova/uwsgi.log \
       --limit-post 500000000 \
       --stats 127.0.0.1:1717 --stats-http \

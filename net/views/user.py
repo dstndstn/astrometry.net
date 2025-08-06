@@ -19,6 +19,8 @@ from astrometry.net.views.album import *
 from astrometry.net.views.license import LicenseForm
 from astrometry.net.util import NoBulletsRadioSelect
 
+from astrometry.net.views.human import human_required
+
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile

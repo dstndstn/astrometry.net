@@ -1048,8 +1048,12 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries,
 
                 iu = np.random.randint(len(users))
                 user = users[iu]
+                # 2025-07-27 - for AstroBin, reverse the order (stack vs queue) to address a backlog
+                newuis_iter = newuis
+                if user.id == 298:
+                    newuis_iter = reversed(newuis)
                 print('Selected user', user)
-                for ui in newuis[:]:
+                for ui in newuis_iter:
                     if ui.user == user:
                         print('Selected ui', ui)
                         newuis.remove(ui)

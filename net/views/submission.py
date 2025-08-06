@@ -33,6 +33,7 @@ from django.http import HttpResponseRedirect
 from astrometry.net.tmpfile import get_temp_file
 from astrometry.util.run_command import run_command
 
+from astrometry.net.views.human import human_required, human_or_ref_required
 
 def index(req, user_id):
     submitter = None
@@ -321,6 +322,7 @@ def job_log_file2(req, jobid=None):
     res['Content-type'] = 'text/plain'
     return res
 
+@human_or_ref_required
 def status(req, subid=None):
     sub = get_object_or_404(Submission, pk=subid)
 
