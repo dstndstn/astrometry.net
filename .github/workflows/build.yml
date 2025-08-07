@@ -1,0 +1,19 @@
+name: compile
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: deps
+      run: sudo apt-get install -y libcfitsio-dev
+    - name: make
+      run: make
