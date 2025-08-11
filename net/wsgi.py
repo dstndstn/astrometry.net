@@ -23,7 +23,7 @@ logfn = '/data/nova/nova.log'
 logfn = os.environ.get('WSGI_LOG_FILE', logfn)
 if len(logfn):
     print('Logging to', logfn, file=sys.stderr)
-    logging.basicConfig(filename=logfn, level=logging.DEBUG)
+    logging.basicConfig(filename=logfn, level=logging.INFO)
 else:
     logging.basicConfig(level=logging.DEBUG)
 
