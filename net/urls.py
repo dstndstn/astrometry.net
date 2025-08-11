@@ -57,7 +57,7 @@ imagepattern = r'[0-9-]+'
 idpattern = r'[0-9-]+'
 tagpattern = r'[\s|\S]+'
 
-from astrometry.net.views.human import ask_human, am_human, test_human, not_human, test_human_2
+from astrometry.net.views.human import ask_human, am_human, test_human, not_human, test_human_2, poison
 
 urlpatterns.extend([
     re_path(r'^ask_human$', ask_human),
@@ -65,6 +65,8 @@ urlpatterns.extend([
     re_path(r'^not_human$', not_human),
     re_path(r'^test$', test_human),
     re_path(r'^test2/(?P<user_image_id>' + idpattern + r')/?$', test_human_2),
+    re_path(r'^poison/(?P<depth>' + idpattern + r')/(?P<num>' + idpattern + r')/?$',
+            poison),
 ])
 
 from astrometry.net.views.submission import upload_file, status, job_log_file, job_log_file2, index
