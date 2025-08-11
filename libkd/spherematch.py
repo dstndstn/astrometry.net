@@ -41,7 +41,7 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
     indexlist : boolean
         If True, returns a list of length *len(ra1)*, containing *None*
         or a list of ints of matched points in *ra2,dec2*.
-        
+
 
     Returns
     -------
