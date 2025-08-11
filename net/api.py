@@ -344,8 +344,10 @@ def api_login(request):
 
     request.session = session
     auth.login(request, profile.user)
-    # so that django middleware doesnt' try to set cookies in response
-    del request.session
+    # so that django middleware doesn't try to set cookies in response
+    #del request.session
+    # robots are people too
+    session['human'] = True
     session.save()
 
     key = session.session_key
