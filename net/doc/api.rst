@@ -7,7 +7,7 @@ Nova.astrometry.net: API
 We provide a web-services API that uses JSON to encode the parameters
 and results.
 
-We have code-as-documentation in the `client.py <https://github.com/dstndstn/astrometry.net/blob/master/net/client/client.py>`_
+We have code-as-documentation in the `client.py <https://github.com/dstndstn/astrometry.net/blob/main/net/client/client.py>`_
 file, but will try to keep this documentation up to date as well.
 
 JSON encoding
@@ -30,13 +30,13 @@ API key.  The formatting steps are:
 
   * Send that to the "login" API URL as a POST request:
 
-       http://nova.astrometry.net/api/login
+       https://nova.astrometry.net/api/login
 
 Using the `requests` library, this looks like::
 
     import requests
     import json
-    R = requests.post('http://nova.astrometry.net/api/login', data={'request-json': json.dumps({"apikey": "XXXXXXXX"})})
+    R = requests.post('https://nova.astrometry.net/api/login', data={'request-json': json.dumps({"apikey": "XXXXXXXX"})})
     print(R.text)
     >> u'{"status": "success", "message": "authenticated user: ", "session": "0ps9ztf2kmplhc2gupfne2em5qfn0joy"}'
 
@@ -50,7 +50,7 @@ This form demonstrates how the request must be encoded, and what the result look
 
 .. raw:: html
 
-   <form action="http://nova.astrometry.net/api/login" method="POST">
+   <form action="https://nova.astrometry.net/api/login" method="POST">
    <input type="text" name="request-json" size=50 value="{&#34;apikey&#34;: &#34;XXXXXXXX&#34;}" />
    <input type="submit" value="Submit" />
    </form>
@@ -71,7 +71,7 @@ Submitting a URL
 
 API URL:
 
-    http://nova.astrometry.net/api/url_upload
+    https://nova.astrometry.net/api/url_upload
 
 Arguments:
 
@@ -91,7 +91,7 @@ Arguments:
   * ``radius``: float, in degrees.  Used with ``center_ra``,``center_dec`` to specify that you know roughly where your image is on the sky.
   * ``downsample_factor``: float, >1.  Downsample (bin) your image by this factor before performing source detection.  This often helps with saturated images, noisy images, and large images.  2 and 4 are commonly-useful values.
   * ``tweak_order``: int.  Polynomial degree (order) for distortion correction.  Default is 2.  Higher orders may produce totally bogus results (high-order polynomials are strange beasts).
-  * ``use_sextractor``: boolean.  Use the `SourceExtractor <http://www.astromatic.net/software/sextractor>`_ program to detect stars, not our built-in program.
+  * ``use_sextractor``: boolean.  Use the `SourceExtractor <https://www.astromatic.net/software/sextractor>`_ program to detect stars, not our built-in program.
   * ``crpix_center``: boolean.  Set the WCS reference position to be the center pixel in the image?  By default the center is the center of the quadrangle of stars used to identify the image.
   * ``parity``: int, 0, 1 or 2.  Default 2 means "try both".  0 means that the sign of the determinant of the WCS CD matrix is positive, 1 means negative.  The short answer is, "try both and see which one works" if you are interested in using this option.  It results in searching half as many matches so can be helpful speed-wise.
   * ``image_width``: int, only necessary if you are submitting an "x,y list" of source positions.
@@ -100,13 +100,13 @@ Arguments:
 
 Example:
 
-..   <input type="text" name="request-json1" size=50 value="{&#34;session&#34;: &#34;575d80cf44c0aba5491645a6818589c6&#34;, &#34;url&#34;: &#34;http://apod.nasa.gov/apod/image/1206/ldn673s_block1123.jpg&#34;, &#34;scale_units&#34;: &#34;degwidth&#34;, &#34;scale_lower&#34;: 0.5, &#34;scale_upper: 1.0, &#34;center_ra&#34;: 290, &#34;center_dec&#34;: 11, &#34;radius&#34;: 2.0 }" />
+..   <input type="text" name="request-json1" size=50 value="{&#34;session&#34;: &#34;575d80cf44c0aba5491645a6818589c6&#34;, &#34;url&#34;: &#34;https://apod.nasa.gov/apod/image/1206/ldn673s_block1123.jpg&#34;, &#34;scale_units&#34;: &#34;degwidth&#34;, &#34;scale_lower&#34;: 0.5, &#34;scale_upper: 1.0, &#34;center_ra&#34;: 290, &#34;center_dec&#34;: 11, &#34;radius&#34;: 2.0 }" />
 
 .. raw:: html
 
-   <form action="http://nova.astrometry.net/api/url_upload" method="POST">
+   <form action="https://nova.astrometry.net/api/url_upload" method="POST">
    <textarea name="request-json" rows=5 cols=80>
-   {"session": "####", "url": "http://apod.nasa.gov/apod/image/1206/ldn673s_block1123.jpg", "scale_units": "degwidth", "scale_lower": 0.5, "scale_upper": 1.0, "center_ra": 290, "center_dec": 11, "radius": 2.0 }
+   {"session": "####", "url": "https://apod.nasa.gov/apod/image/1206/ldn673s_block1123.jpg", "scale_units": "degwidth", "scale_lower": 0.5, "scale_upper": 1.0, "center_ra": 290, "center_dec": 11, "radius": 2.0 }
    </textarea>
    <input type="submit" value="Submit" />
    </form>
@@ -152,7 +152,7 @@ For example, uploading a file containing the text "Hello World", the data sent i
 
 API URL:
 
-    http://nova.astrometry.net/api/upload
+    https://nova.astrometry.net/api/upload
 
 Arguments:
 
@@ -170,11 +170,11 @@ program on your data.
 
 API URL:
 
-    http://nova.astrometry.net/api/submissions/SUBID
+    https://nova.astrometry.net/api/submissions/SUBID
 
 Example:
 
-    http://nova.astrometry.net/api/submissions/1019520
+    https://nova.astrometry.net/api/submissions/1019520
 
 Arguments:
 
@@ -195,11 +195,11 @@ Getting job status
 
 API URL:
 
-    http://nova.astrometry.net/api/jobs/JOBID
+    https://nova.astrometry.net/api/jobs/JOBID
 
 Example:
 
-    http://nova.astrometry.net/api/jobs/1493115
+    https://nova.astrometry.net/api/jobs/1493115
 
 Arguments:
 
@@ -215,11 +215,11 @@ Getting job results: calibration
 
 API URL:
 
-    http://nova.astrometry.net/api/jobs/JOBID/calibration/
+    https://nova.astrometry.net/api/jobs/JOBID/calibration/
 
 Example:
 
-    http://nova.astrometry.net/api/jobs/1493115/calibration/
+    https://nova.astrometry.net/api/jobs/1493115/calibration/
 
 Arguments:
 
@@ -241,13 +241,13 @@ field).
 
 API URL:
 
-* http://nova.astrometry.net/api/jobs/JOBID/tags/
-* http://nova.astrometry.net/api/jobs/JOBID/machine_tags/
+* https://nova.astrometry.net/api/jobs/JOBID/tags/
+* https://nova.astrometry.net/api/jobs/JOBID/machine_tags/
 
 Example:
 
-* http://nova.astrometry.net/api/jobs/1493115/tags/
-* http://nova.astrometry.net/api/jobs/1493115/machine_tags/
+* https://nova.astrometry.net/api/jobs/1493115/tags/
+* https://nova.astrometry.net/api/jobs/1493115/machine_tags/
 
 Arguments:
 
@@ -263,11 +263,11 @@ Getting job results: known objects in your image
 
 API URL:
 
-    http://nova.astrometry.net/api/jobs/JOBID/objects_in_field/
+    https://nova.astrometry.net/api/jobs/JOBID/objects_in_field/
 
 Example:
 
-    http://nova.astrometry.net/api/jobs/1493115/objects_in_field/
+    https://nova.astrometry.net/api/jobs/1493115/objects_in_field/
 
 Arguments:
 
@@ -283,11 +283,11 @@ Getting job results: known objects in your image, with coordinates
 
 API URL:
 
-    http://nova.astrometry.net/api/jobs/JOBID/annotations/
+    https://nova.astrometry.net/api/jobs/JOBID/annotations/
 
 Example:
 
-    http://nova.astrometry.net/api/jobs/1493115/annotations/
+    https://nova.astrometry.net/api/jobs/1493115/annotations/
 
 Arguments:
 
@@ -312,11 +312,11 @@ Getting job results
 
 API URL:
 
-    http://nova.astrometry.net/api/jobs/JOBID/info/
+    https://nova.astrometry.net/api/jobs/JOBID/info/
 
 Example:
 
-    http://nova.astrometry.net/api/jobs/1493115/info/
+    https://nova.astrometry.net/api/jobs/1493115/info/
 
 Arguments:
 
@@ -344,31 +344,36 @@ through the browser interface, so you can find the status or results
 pages and discover the URLs of various data products that we haven't
 documented here.
 
+Note that you _must_ set this HTTP header::
+
+    Referer: https://nova.astrometry.net/api/login
+
+
 URLs:
 
-* http://nova.astrometry.net/wcs_file/JOBID
-* http://nova.astrometry.net/new_fits_file/JOBID
-* http://nova.astrometry.net/rdls_file/JOBID
-* http://nova.astrometry.net/axy_file/JOBID
-* http://nova.astrometry.net/corr_file/JOBID
-* http://nova.astrometry.net/annotated_display/JOBID
-* http://nova.astrometry.net/red_green_image_display/JOBID
-* http://nova.astrometry.net/extraction_image_display/JOBID
+* https://nova.astrometry.net/wcs_file/JOBID
+* https://nova.astrometry.net/new_fits_file/JOBID
+* https://nova.astrometry.net/rdls_file/JOBID
+* https://nova.astrometry.net/axy_file/JOBID
+* https://nova.astrometry.net/corr_file/JOBID
+* https://nova.astrometry.net/annotated_display/JOBID
+* https://nova.astrometry.net/red_green_image_display/JOBID
+* https://nova.astrometry.net/extraction_image_display/JOBID
 
 Examples:
 
-* http://nova.astrometry.net/wcs_file/1493115
-* http://nova.astrometry.net/new_fits_file/1493115
-* http://nova.astrometry.net/rdls_file/1493115
-* http://nova.astrometry.net/axy_file/1493115
-* http://nova.astrometry.net/corr_file/1493115
-* http://nova.astrometry.net/annotated_display/1493115
-* http://nova.astrometry.net/red_green_image_display/1493115
-* http://nova.astrometry.net/extraction_image_display/1493115
+* https://nova.astrometry.net/wcs_file/1493115
+* https://nova.astrometry.net/new_fits_file/1493115
+* https://nova.astrometry.net/rdls_file/1493115
+* https://nova.astrometry.net/axy_file/1493115
+* https://nova.astrometry.net/corr_file/1493115
+* https://nova.astrometry.net/annotated_display/1493115
+* https://nova.astrometry.net/red_green_image_display/1493115
+* https://nova.astrometry.net/extraction_image_display/1493115
 
 Misc Notes
 ----------
 
 The API and other URLs are defined here:
 
-    https://github.com/dstndstn/astrometry.net/blob/master/net/urls.py#L146
+    httpss://github.com/dstndstn/astrometry.net/blob/main/net/urls.py#L146

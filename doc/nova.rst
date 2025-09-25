@@ -2,14 +2,14 @@ Setting up a copy of the web service nova.astrometry.net
 ========================================================
 
 These are instructions for how to set up a web service like our
-http://nova.astrometry.net .  This requires a bit of sysadmin savvy.
+https://nova.astrometry.net .  This requires a bit of sysadmin savvy.
 
 Roadmap
 -------
 
 The code for the web service lives in the "net" subdirectory of the
 git repository;
-https://github.com/dstndstn/astrometry.net/tree/master/net .  It is
+https://github.com/dstndstn/astrometry.net/tree/main/net .  It is
 *not* included in the source code releases, so you'll need to *git
 clone* the code.
 
@@ -23,7 +23,7 @@ The web service has several parts:
     asynchronous processing.  That is, the web-facing part of it
     queues submissions that are processed in a separate process,
     called `*process-submissions.py*
-    <https://github.com/dstndstn/astrometry.net/blob/master/net/process_submissions.py>`_.
+    <https://github.com/dstndstn/astrometry.net/blob/main/net/process_submissions.py>`_.
     On nova, we run this inside a *screen* process on the web server.
   * the solve server.  On nova, we have the web front-end running on
     one machine, and the "engine" running on another machine; the web
@@ -129,7 +129,7 @@ but that has not been implemented yet.
 
 When the web server wants to run the astrometry engine, it executes
 the following crazy code
-(https://github.com/dstndstn/astrometry.net/blob/master/net/process_submissions.py#L288)::
+(https://github.com/dstndstn/astrometry.net/blob/main/net/process_submissions.py#L288)::
 
     cmd = ('(echo %(jobid)s; '
            'tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
@@ -168,7 +168,7 @@ to log in::
     command="cd /home/solve/nova/solver; ../net/testscript-astro",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-rsa AAAA[.....] nova@webserver
 
 That script
-(https://github.com/dstndstn/astrometry.net/blob/master/net/testscript-astro)
+(https://github.com/dstndstn/astrometry.net/blob/main/net/testscript-astro)
 first reads the job id, creates a working directory for the job, uses
 *tar* to receive the input files, and then runs the
 *astrometry-engine* program to actually run the requested job.
