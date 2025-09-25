@@ -282,7 +282,7 @@ jobs:
             python3.7 -m pip install setuptools
             python3.7 -m pip install --upgrade pip
             python3.7 -m pip install numpy
-            python3.7 -m pip install fitsio
+            python3.7 -m pip install fitsio==1.2.6
       - checkout
       - run:
           name: Make
