@@ -274,11 +274,12 @@ jobs:
           name: Ubuntu packages
           command: |
             apt update && apt install -y apt-utils
-            DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends make gcc git openssh-client file pkg-config wget curl swig netpbm wcslib-dev wcslib-tools zlib1g-dev libbz2-dev libcairo2-dev libcfitsio-dev libcfitsio-bin libgsl-dev libjpeg-dev libnetpbm10-dev libpng-dev python3.7 python3.7-dev python3-pip python3-pil python3-tk python3-setuptools python3-wheel
+            DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends make gcc git openssh-client file pkg-config wget curl swig netpbm wcslib-dev wcslib-tools zlib1g-dev libbz2-dev libcairo2-dev libcfitsio-dev libcfitsio-bin libgsl-dev libjpeg-dev libnetpbm10-dev libpng-dev python3.7 python3.7-dev python3-pip python3-pil python3-tk python3-wheel
             apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
       - run:
           name: Python packages
           command: |
+            python3.7 -m pip install setuptools
             python3.7 -m pip install --upgrade pip
             python3.7 -m pip install numpy
             python3.7 -m pip install fitsio
