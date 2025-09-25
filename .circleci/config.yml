@@ -440,6 +440,7 @@ workflows:
       - "build-docker-ubuntu-22-py310"
       - "build-docker-ubuntu-20-py39"
       - "build-docker-ubuntu-18"
+      - "build-docker-ubuntu-18-py37"
       - "build-docker-rocky-85"
       #- "build-docker-centos-8"
       #- "build-arm-docker-ubuntu-20-py39"
