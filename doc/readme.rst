@@ -11,7 +11,7 @@ This code is accompanied by the paper:
 Lang, D., Hogg, D. W.; Mierle, K., Blanton, M., & Roweis, S., 2010,
 Astrometry.net: Blind astrometric calibration of arbitrary
 astronomical images, Astronomical Journal 137, 1782–1800.
-http://arxiv.org/abs/0910.2233
+https://arxiv.org/abs/0910.2233
 
 The original purpose of this code release was to back up the claims in
 the paper in the interest of scientific repeatability.  Over the
@@ -47,7 +47,7 @@ See :ref:`build`.
 Getting Index Files
 ===================
 
-See <http://data.astrometry.net/>_ for descriptions of the available
+See <https://data.astrometry.net/>_ for descriptions of the available
 index files.
 
 Each index file is designed to solve images within a narrow range of
@@ -81,8 +81,8 @@ arcmin fields); these are the same scale is the new 5202 files.
 The medium-angle index files are split into 12 "healpix" tiles; each
 one covers 1/12th of the sky.  The small-sized ones are split into 48
 healpixes.   See the maps here; you might not need all of them.
-https://github.com/dstndstn/astrometry.net/blob/master/util/hp.png
-https://github.com/dstndstn/astrometry.net/blob/master/util/hp2.png
+https://github.com/dstndstn/astrometry.net/blob/main/util/hp.png
+https://github.com/dstndstn/astrometry.net/blob/main/util/hp2.png
 
 +-----------------------+-----------------------------------------+
 | Index Filename        | Range of skymark diameters (arcminutes) |
@@ -224,7 +224,7 @@ Copyrights and credits for the demo images are listed in the file
 
 Note that you can also give solve-field a URL rather than a file as input::
 
-   $ solve-field --out apod1b --downsample 2 http://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg
+   $ solve-field --out apod1b --downsample 2 https://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg
 
 (this one will work with index file 4108).
 
@@ -292,8 +292,8 @@ Output files
 +--------------------+-------------------------------------------------------------+
 |   <base>.kmz       |  (optional) KMZ file for Google Sky-in-Earth.  You need     |
 |                    |  to have "wcs2kml" in your PATH.  See                       |
-|                    |  http://code.google.com/p/wcs2kml/downloads/list            |
-|                    |  http://code.google.com/p/google-gflags/downloads/list      |
+|                    |  https://code.google.com/p/wcs2kml/downloads/list           |
+|                    |  https://code.google.com/p/google-gflags/downloads/list     |
 +--------------------+-------------------------------------------------------------+
 
 
@@ -498,14 +498,14 @@ Here are some things you can do to make the code run faster:
       $ ARCH_FLAGS="-mtune=nocona" make
 
     You can find details in the gcc manual:
-      http://gcc.gnu.org/onlinedocs/
+      https://gcc.gnu.org/onlinedocs/
 
     You probably want to look in the section:
       "GCC Command Options"
          -> "Hardware Models and Configurations"
              -> "Intel 386 and AMD x86-64 Options"
 
-    http://gcc.gnu.org/onlinedocs/gcc-4.3.0/gcc/i386-and-x86_002d64-Options.html#i386-and-x86_002d64-Options
+    https://gcc.gnu.org/onlinedocs/gcc-4.3.0/gcc/i386-and-x86_002d64-Options.html#i386-and-x86_002d64-Options
 
 
 What are all these programs?
@@ -674,7 +674,7 @@ solve-field to use this config file::
 
 Source Extractor
 ----------------
-http://www.astromatic.net/software/sextractor
+https://www.astromatic.net/software/sextractor
 
 The "Source Extractor" program by Emmanuel Bertin can
 be used to do source extraction if you don't want to use our own
@@ -816,7 +816,7 @@ Contact
 =======
 
 You can post questions (or maybe even find the answer to your
-questions) at https://groups.google.com/u/1/g/astrometry .  If you
+questions) at https://groups.google.com/g/astrometry .  If you
 post there, it is often very useful to see an example image that
 you're working with, so if you are willing to, you could try
 submitting one to the https://nova.astrometry.net web service, and
