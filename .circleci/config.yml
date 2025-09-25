@@ -289,7 +289,7 @@ jobs:
           command: |
             ln -s /usr/include /usr/local/include/netpbm
             export PYTHON=python3.7
-            export PYTHOHN_CONFIG=python3.7-config
+            export PYTHON_CONFIG=python3.7-config
             make reconfig && grep "^HAVE_NETPBM := yes" util/makefile.os-features
             make
             make py
@@ -298,6 +298,8 @@ jobs:
       - run:
           name: Tests
           command: |
+            export PYTHON=python3.7
+            export PYTHON_CONFIG=python3.7-config
             (cd util && ./test)
             (cd libkd && ./test)
             (cd solver && ./test)
