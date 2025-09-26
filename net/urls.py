@@ -104,7 +104,7 @@ urlpatterns.extend([
 
 from astrometry.net.views.image import (
     index, index_tag, annotated_image, grid_image, index_location, index_nearby, index_recent, index_all, index_by_user,
-    index_user, index_album, hide, unhide, user_image, edit, search, serve_image, serve_thumbnail_image, image_set,
+    index_user, index_album, hide, unhide, user_image, edit, search, serve_image, wwt_serve_image, serve_thumbnail_image, image_set,
     onthesky_image, sdss_image, galex_image, unwise_image, legacysurvey_image, red_green_image, extraction_image, wcs_file, new_fits_file,
     kml_file, rdls_file, axy_file, image_rd_file, corr_file)
 urlpatterns.extend([

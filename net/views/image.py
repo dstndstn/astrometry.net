@@ -270,7 +270,6 @@ def edit(req, user_image_id=None):
     }
     return render(req, 'user_image/edit.html', context)
 
-@human_or_ref_required
 def serve_image_common(req, id=None, image=None):
     if image is None:
         image = get_object_or_404(Image, pk=id)
