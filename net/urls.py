@@ -125,6 +125,7 @@ urlpatterns.extend([
     re_path(r'^user_images/(?P<user_image_id>' + idpattern + r')/edit/?$', edit, name='image_edit'),
     re_path(r'^user_images/search/?$', search, name='image-search'),
     re_path(r'^image/(?P<id>' + imagepattern + r')/?$', serve_image, name='serve_image'),
+    re_path(r'^wwt_image/(?P<id>' + imagepattern + r')/?$', wwt_serve_image, name='wwt_serve_image'),
     re_path(r'^thumbnail_of_image/(?P<id>' + imagepattern + r')/?$', serve_thumbnail_image, name='serve_thumbnail_image'),
     re_path(r'^images/(?P<category>\w+)/(?P<id>' + idpattern + r')/?$', image_set),
     re_path(r'^sky_plot/zoom(?P<zoom>[0-3])/(?P<calid>' + idpattern + r')/?$', onthesky_image, name='onthesky_image'),
