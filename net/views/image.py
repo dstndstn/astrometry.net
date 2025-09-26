@@ -111,6 +111,8 @@ def user_image(req, user_image_id=None):
     dim = uimage.image.get_display_image(tempfiles=req.tempfiles)
     images['original_display'] = reverse('serve_image', kwargs={'id':dim.id})
     images['original'] = reverse('serve_image', kwargs={'id':uimage.image.id})
+    images['wwt_original_display'] = reverse('wwt_serve_image', kwargs={'id':dim.id})
+    images['wwt_original'] = reverse('wwt_serve_image', kwargs={'id':uimage.image.id})
     image_type = 'original'
     if job:
         if job.calibration:
@@ -158,8 +160,8 @@ def user_image(req, user_image_id=None):
         wcs = calib.raw_tan
         if calib.tweaked_tan is not None:
             wcs = calib.tweaked_tan
-        imgurl   = req.build_absolute_uri(images['original'])
-        thumburl = req.build_absolute_uri(images['original_display'])
+        wwt_imgurl   = req.build_absolute_uri(images['wwt_original'])
+        wwt_thumburl = req.build_absolute_uri(images['wwt_original_display'])
 
         fits = uimage.image.disk_file.is_fits_image()
         y = wcs.imageh - wcs.crpix2
@@ -170,7 +172,7 @@ def user_image(req, user_image_id=None):
         if parity:
             orient = 360. - orient
 
-        wwturl = 'http://www.worldwidetelescope.org/wwtweb/ShowImage.aspx?reverseparity=%s&scale=%.6f&name=%s&imageurl=%s&credits=Astrometry.net+User+(All+Rights+Reserved)&creditsUrl=&ra=%.6f&dec=%.6f&x=%.1f&y=%.1f&rotation=%.2f&thumb=%s' % (parity, wcs.get_pixscale(), uimage.original_file_name, imgurl, wcs.crval1, wcs.crval2, wcs.crpix1, y, orient, thumburl)
+        wwturl = 'http://www.worldwidetelescope.org/wwtweb/ShowImage.aspx?reverseparity=%s&scale=%.6f&name=%s&imageurl=%s&credits=Astrometry.net+User+(All+Rights+Reserved)&creditsUrl=&ra=%.6f&dec=%.6f&x=%.1f&y=%.1f&rotation=%.2f&thumb=%s' % (parity, wcs.get_pixscale(), uimage.original_file_name, wwt_imgurl, wcs.crval1, wcs.crval2, wcs.crpix1, y, orient, wwt_thumburl)
     else:
         wwturl = None
 
@@ -269,7 +271,7 @@ def edit(req, user_image_id=None):
     return render(req, 'user_image/edit.html', context)
 
 @human_or_ref_required
-def serve_image(req, id=None, image=None):
+def serve_image_common(req, id=None, image=None):
     if image is None:
         image = get_object_or_404(Image, pk=id)
     res = HttpResponse(content_type=image.get_mime_type())
@@ -282,6 +284,14 @@ def serve_image(req, id=None, image=None):
         res['Content-Disposition'] = 'filename=%s' % req.GET['filename']
     image.render(res, tempfiles=req.tempfiles)
     return res
+
+@human_or_ref_required
+def serve_image(req, **kwargs):
+    return serve_image_common(req, **kwargs)
+
+# Special URL for WWT that doesn't do the human check
+def wwt_serve_image(req, **kwargs):
+    return serve_image_common(req, **kwargs)
 
 @human_or_ref_required
 def serve_thumbnail_image(req, id=None):
