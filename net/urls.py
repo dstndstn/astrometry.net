@@ -57,7 +57,7 @@ imagepattern = r'[0-9-]+'
 idpattern = r'[0-9-]+'
 tagpattern = r'[\s|\S]+'
 
-from astrometry.net.views.human import ask_human, am_human, test_human, not_human, test_human_2
+from astrometry.net.views.human import ask_human, am_human, test_human, not_human, test_human_2, poison
 
 urlpatterns.extend([
     re_path(r'^ask_human$', ask_human),
@@ -65,6 +65,8 @@ urlpatterns.extend([
     re_path(r'^not_human$', not_human),
     re_path(r'^test$', test_human),
     re_path(r'^test2/(?P<user_image_id>' + idpattern + r')/?$', test_human_2),
+    re_path(r'^poison/(?P<depth>' + idpattern + r')/(?P<num>' + idpattern + r')/?$',
+            poison),
 ])
 
 from astrometry.net.views.submission import upload_file, status, job_log_file, job_log_file2, index
@@ -102,7 +104,7 @@ urlpatterns.extend([
 
 from astrometry.net.views.image import (
     index, index_tag, annotated_image, grid_image, index_location, index_nearby, index_recent, index_all, index_by_user,
-    index_user, index_album, hide, unhide, user_image, edit, search, serve_image, serve_thumbnail_image, image_set,
+    index_user, index_album, hide, unhide, user_image, edit, search, serve_image, wwt_serve_image, serve_thumbnail_image, image_set,
     onthesky_image, sdss_image, galex_image, unwise_image, legacysurvey_image, red_green_image, extraction_image, wcs_file, new_fits_file,
     kml_file, rdls_file, axy_file, image_rd_file, corr_file)
 urlpatterns.extend([

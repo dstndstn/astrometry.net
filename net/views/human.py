@@ -72,10 +72,40 @@ def not_human(req):
         del req.session['human']
     return HttpResponse('bleep blorp')
 
+def poison(req, depth=None, num=None):
+    from random import randint
+    if depth is None:
+        depth = 1
+    depth = int(depth)
+    ltxt = '\n'.join(['<li><a href="/poison/%i/%i">%i</a></li>' % (depth+1, randint(0, 1000),
+                                                                   randint(0, 1000))
+                      for i in range(3)])
+    txt = '''
+    <html><head><title>Poisoned well</title></head>
+    <body>
+    <h1>Drink from the well!</h1>
+    <p>Under construction, but you can dig deeper here:
+    <ul>
+    %s
+    </ul>
+    </p>
+    </body>
+    </html>
+    ''' % ltxt
+    return HttpResponse(txt)
+
 if __name__ == '__main__':
     from django.test import Client
     c = Client()
     #r = c.get('/test', follow=True)
+
+    r = c.get('/poison/1/1')
+    print('Got', r)
+    with open('out.html', 'wb') as f:
+        for x in r:
+            f.write(x)
+    import sys
+    sys.exit(0)
 
     if True:
         r = c.get('/test2/11151437', follow=True)

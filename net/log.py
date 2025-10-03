@@ -11,6 +11,10 @@ def loginfo(*args):
     ss = _getstr(args)
     logger.info(ss)
 
+def logwarn(*args):
+    ss = _getstr(args)
+    logger.warning(ss)
+
 logmsg = loginfo
 
 def debug(*args):

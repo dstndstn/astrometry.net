@@ -48,24 +48,33 @@ def create_session(key):
     # sess.session_key creates a new key if necessary.
     return sess
 
+
 # decorator for extracting JSON arguments from a POST.
-def requires_json_args(handler):
-    @wraps(handler)
-    def handle_request(request, *pargs, **kwargs):
-        #loginfo('POST: ' + str(request.POST))
-        json = request.POST.get('request-json')
-        loginfo('POST: JSON: "%s"' % json)
-        if not json:
-            loginfo('POST: keys: ', request.POST.keys())
-            loginfo('GET keys: ', request.GET.keys())
-            return HttpResponseErrorJson('no json')
-        args = json2python(json)
-        if args is None:
-            return HttpResponseErrorJson('failed to parse JSON: "%s"' % json)
-        request.json = args
-        #print 'json:', request.json
-        return handler(request, *pargs, **kwargs)
-    return handle_request
+def requires_json_args(verbose):
+    def decorate(handler):
+        def handle_request(request, *pargs, **kwargs):
+            if verbose:
+                log = loginfo
+            else:
+                log = logdebug
+            if verbose:
+                log('Client:', request.META.get('REMOTE_ADDR'))
+                log('Request body:', request.body[:300])
+            log('POST: ' + str(request.POST))
+            json = request.POST.get('request-json')
+            log('POST: JSON: "%s"' % json)
+            if not json:
+                log('POST: keys: ', request.POST.keys())
+                log('GET keys: ', request.GET.keys())
+                return HttpResponseErrorJson('no json')
+            args = json2python(json)
+            log('Args:', args)
+            if args is None:
+                return HttpResponseErrorJson('failed to parse JSON: "%s"' % json)
+            request.json = args
+            return handler(request, *pargs, **kwargs)
+        return handle_request
+    return decorate
 
 # decorator for retrieving the user's session based on a session key in JSON.
 # requires "request.json" to exist: you probably need to precede this decorator
@@ -104,7 +113,11 @@ def requires_json_login(handler):
 
 def upload_common(request, url=None, file=None):
     json = request.json
-    logmsg('upload: JSON', json)
+    logmsg('upload: JSON', str(json)[:100], '...')
+    try:
+        logmsg('upload: JSON keys:', json.keys())
+    except:
+        pass
     df = None
     original_filename = ''
     # Handle X,Y coordinate lists
@@ -195,7 +208,7 @@ def upload_common(request, url=None, file=None):
     return HttpResponseJson(rtn)
 
 @csrf_exempt
-@requires_json_args
+@requires_json_args(False)
 @requires_json_session
 @requires_json_login
 def url_upload(req):
@@ -222,7 +235,7 @@ def url_upload(req):
     return upload_common(req, url=url)
 
 @csrf_exempt
-@requires_json_args
+@requires_json_args(False)
 @requires_json_session
 @requires_json_login
 def api_upload(request):
@@ -247,7 +260,7 @@ def write_wcs_file(req, wcsfn):
 
 
 @csrf_exempt
-@requires_json_args
+@requires_json_args(False)
 @requires_json_session
 def api_sdss_image_for_wcs(req):
     from .sdss_image import plot_sdss_image
@@ -261,7 +274,7 @@ def api_sdss_image_for_wcs(req):
     return res
 
 @csrf_exempt
-@requires_json_args
+@requires_json_args(False)
 @requires_json_session
 def api_galex_image_for_wcs(req):
     from .galex_jpegs import plot_into_wcs
@@ -275,7 +288,7 @@ def api_galex_image_for_wcs(req):
     return res
 
 @csrf_exempt
-@requires_json_args
+@requires_json_args(False)
 @requires_json_session
 def api_submission_images(req):
     logmsg('request:' + str(req))
@@ -291,9 +304,10 @@ def api_submission_images(req):
                              'image_ids': image_ids})
 
 @csrf_exempt
-@requires_json_args
+@requires_json_args(True)
 def api_login(request):
     apikey = request.json.get('apikey')
+    logwarn('api_login: got apikey "%s"' % apikey)
     if apikey is None:
         return HttpResponseErrorJson('need "apikey"')
 
@@ -330,8 +344,10 @@ def api_login(request):
 
     request.session = session
     auth.login(request, profile.user)
-    # so that django middleware doesnt' try to set cookies in response
-    del request.session
+    # so that django middleware doesn't try to set cookies in response
+    #del request.session
+    # robots are people too
+    session['human'] = True
     session.save()
 
     key = session.session_key
@@ -342,7 +358,7 @@ def api_login(request):
                               })
 
 @csrf_exempt
-@requires_json_args
+@requires_json_args(False)
 @requires_json_session
 @requires_json_login
 def myjobs(request):
