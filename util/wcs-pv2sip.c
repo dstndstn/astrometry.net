@@ -6,6 +6,7 @@
 #include <assert.h>
 
 #include "os-features.h"
+#include "mathutil.h"
 #include "fitsioutils.h"
 #include "ioutils.h"
 #include "errors.h"
@@ -313,6 +314,113 @@ sip_t* wcs_pv2sip_header(qfits_header* hdr,
         if (log_get_level() >= LOG_VERB) {
             printf("Fit SIP:\n");
             sip_print(sip);
+        }
+
+        if (doshift) {
+            // Push the A_0_0 and B_0_0 terms -- pixel offsets -- into the CRVAL,
+            // indirectly, by evaluating the SIP at the CRPIX and setting CRVAL to that!
+            double ra, dec;
+            sip_t sip2;
+            double DPIX = 50;
+            double xi, eta, xi2, eta2;
+            double cd11, cd21, cd12, cd22;
+
+            x = sip->wcstan.crpix[0];
+            y = sip->wcstan.crpix[1];
+            sip_pixelxy2radec(sip, x, y, &ra, &dec);
+            logverb("CRPIX -> SIP -> RA,DEC (%.6f, %.6f)\n", ra, dec);
+            logverb("              vs CRVAL (%.6f, %.6f)\n", sip->wcstan.crval[0], sip->wcstan.crval[1]);
+            sip->wcstan.crval[0] = ra;
+            sip->wcstan.crval[1] = dec;
+            rtn = fit_sip_coefficients(starxyz, xy, NULL, Nxy,
+                                       &(sip->wcstan), order, order, sip);
+            assert(rtn == 0);
+            if (log_get_level() >= LOG_VERB) {
+                printf("Fit SIP after moving CRVAL:\n");
+                sip_print(sip);
+            }
+
+            // Push the A_1_0, A_0_1, B_1_0, B_0_1 terms into the CD matrix,
+            // indirectly, by zeroing out the other SIP terms and then evaluating at
+            // CRPIX +- 50 pixels!
+            sip_copy(&sip2, sip);
+            // zero out terms order 2 and above
+            for (int i=0; i<SIP_MAXORDER; i++) {
+                for (int j=0; j<SIP_MAXORDER; j++) {
+                    if (i + j < 2)
+                        continue;
+                    sip2.a[i][j] = 0.;
+                    sip2.b[i][j] = 0.;
+                }
+            }
+            // Evaluate CRPIX +- 50 pixels in X, in IWC -- which are what the CD matrix
+            // rotates into
+            x = sip->wcstan.crpix[0] - DPIX;
+            y = sip->wcstan.crpix[1];
+            sip_pixelxy2iwc(&sip2, x, y, &xi, &eta);
+            x = sip->wcstan.crpix[0] + DPIX;
+            sip_pixelxy2iwc(&sip2, x, y, &xi2, &eta2);
+            cd11 = (xi2  - xi ) / (2.*DPIX);
+            cd21 = (eta2 - eta) / (2.*DPIX);
+            logverb("Changing X: d_xi %g, d_eta %g\n", cd11, cd21);
+
+            x = sip->wcstan.crpix[0];
+            y = sip->wcstan.crpix[1] - DPIX;
+            sip_pixelxy2iwc(&sip2, x, y, &xi, &eta);
+            y = sip->wcstan.crpix[1] + DPIX;
+            sip_pixelxy2iwc(&sip2, x, y, &xi2, &eta2);
+            cd12 = (xi2  - xi ) / (2.*DPIX);
+            cd22 = (eta2 - eta) / (2.*DPIX);
+            logverb("Changing Y: d_xi %g, d_eta %g\n", cd12, cd22);
+            logverb("Updating CD from [%g, %g, %g, %g]\n",
+                    sip->wcstan.cd[0][0], sip->wcstan.cd[0][1],
+                    sip->wcstan.cd[1][0], sip->wcstan.cd[1][1]);
+            logverb("              to [%g, %g, %g, %g]\n", cd11, cd12, cd21, cd22);
+
+            sip->wcstan.cd[0][0] = cd11;
+            sip->wcstan.cd[0][1] = cd12;
+            sip->wcstan.cd[1][0] = cd21;
+            sip->wcstan.cd[1][1] = cd22;
+            rtn = fit_sip_coefficients(starxyz, xy, NULL, Nxy,
+                                       &(sip->wcstan), order, order, sip);
+            assert(rtn == 0);
+            if (log_get_level() >= LOG_VERB) {
+                printf("Fit SIP after changing CD:\n");
+                sip_print(sip);
+            }
+
+            if (log_get_level() >= LOG_VERB) {
+                double dist = 0.0;
+                for (int i=0; i<Nxy; i++) {
+                    double xyz[3];
+                    sip_pixelxy2xyzarr(sip, xy[2*i+0], xy[2*i+1], xyz);
+                    dist += sqrt(square(xyz[0] - starxyz[3*i+0]) +
+                                 square(xyz[1] - starxyz[3*i+1]) +
+                                 square(xyz[2] - starxyz[3*i+2]));
+                }
+                logverb("Fitting SIP: error is %g arcsec\n", rad2arcsec(dist / Nxy));
+            }
+
+            // Set the low-order terms to exactly zero, assuming that the above steps made
+            // them close enough!
+            sip->a[0][0] = 0.;
+            sip->a[0][1] = 0.;
+            sip->a[1][0] = 0.;
+            sip->b[0][0] = 0.;
+            sip->b[0][1] = 0.;
+            sip->b[1][0] = 0.;
+
+            if (log_get_level() >= LOG_VERB) {
+                double dist = 0.0;
+                for (int i=0; i<Nxy; i++) {
+                    double xyz[3];
+                    sip_pixelxy2xyzarr(sip, xy[2*i+0], xy[2*i+1], xyz);
+                    dist += sqrt(square(xyz[0] - starxyz[3*i+0]) +
+                                 square(xyz[1] - starxyz[3*i+1]) +
+                                 square(xyz[2] - starxyz[3*i+2]));
+                }
+                logverb("Zeroing out A,B terms below order 2: error is %g arcsec\n", rad2arcsec(dist / Nxy));
+            }
         }
 
         // FIXME? -- use xlo,xhi,ylo,yhi here??  Not clear.
