@@ -18,7 +18,7 @@
 #include "log.h"
 #include "os-features.h" // for HAVE_NETPBM.
 
-#define OPTIONS "hW:H:w:I:C:PRo:d:cm:s:b:v"
+#define OPTIONS "hW:H:w:I:C:PRo:d:cm:s:b:vp"
 
 static void printHelp(char* progname) {
     BOILERPLATE_HELP_HEADER(stdout);
