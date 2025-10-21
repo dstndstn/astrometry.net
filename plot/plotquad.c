@@ -29,7 +29,8 @@ static void printHelp(char* progname) {
            "  [-C <color>]      Color to plot in: (default: white)\n",
            progname);
     cairoutils_print_color_names("\n                 ");
-    printf("  [-b <color>]      Draw in <color> behind each line.\n"
+    printf("\n"
+	   "  [-b <color>]      Draw in <color> behind each line.\n"
            "  [-c]:            Also plot a circle at each vertex.\n"
            "  [-W <width> ]       Width of output image.\n"
            "  [-H <height>]       Height of output image.\n"
@@ -43,7 +44,6 @@ static void printHelp(char* progname) {
            " OR  <x1> <y1> <x2> <y2> <x3> <y3> <x4> <y4> [...])\n"
            "\n");
 }
-
 
 int main(int argc, char *args[]) {
     int argchar;
@@ -150,10 +150,12 @@ int main(int argc, char *args[]) {
 
     if (!fromstdin && ((argc - optind) % (2*dimquads))) {
         printHelp(progname);
+	printf("With quads of dimension %i (-d), expected %i command-line args, but got %i\n", dimquads, 2*dimquads, argc-optind);
         exit(-1);
     }
     if (!((W && H) || infn)) {
         printHelp(progname);
+	printf("Need either width and height, or input filename\n");
         exit(-1);
     }
     if (infn && (W || H)) {
