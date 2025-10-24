@@ -273,5 +273,27 @@ add_executable(astrometry-engine solver/engine-main.c)
 target_link_libraries(astrometry-engine astrometry anfiles anutils anbase qfits kd gsl openblas m)
 target_include_directories(astrometry-engine PUBLIC include include/astrometry util)
 
+# image2xy executable
+# Based on Makefile: image2xy: image2xy-main.o image2xy-files.o $(CFITSIO_SLIB) $(SLIB)
+add_executable(image2xy solver/image2xy-main.c
+                        solver/image2xy-files.c)
+target_include_directories(image2xy PUBLIC include include/astrometry util)
+target_link_libraries(image2xy
+                      catalogs
+                      astrometry
+                      anfiles
+                      anutils
+                      anbase
+                      qfits
+                      kd
+                      ${BZIP2_LIBRARIES}
+                      z
+                      jpeg
+                      cfitsio
+                      gsl
+                      openblas
+                      m)
+
 install(TARGETS solve-field DESTINATION /usr/bin)
 install(TARGETS astrometry-engine DESTINATION /usr/bin)
+install(TARGETS image2xy DESTINATION /usr/bin)
