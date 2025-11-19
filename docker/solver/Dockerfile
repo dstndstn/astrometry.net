@@ -8,14 +8,13 @@ RUN apt -y update && apt install -y apt-utils && \
     gcc \
     git \
     file \
-    patch \
-    gdb \
     less \
     pkg-config \
     wget \
     curl \
     swig \
     netpbm \
+    libnetpbm-dev \
     wcslib-dev \
     wcslib-tools \
     zlib1g-dev \
@@ -25,15 +24,14 @@ RUN apt -y update && apt install -y apt-utils && \
     libcfitsio-bin \
     libgsl-dev \
     libjpeg-dev \
-    libnetpbm10-dev \
     libpng-dev \
     python3 \
     python3-dev \
     python3-pip \
-     python3-setuptools \
+    python3-setuptools \
     python3-wheel \
     python3-pil \
-   python3-numpy \
+    python3-numpy \
     python3-scipy \
     python3-matplotlib \
     source-extractor \
@@ -73,3 +71,5 @@ RUN git clone http://github.com/dstndstn/astrometry.net.git astrometry \
   && make py -j \
   && make extra -j \
   && make install INSTALL_DIR=/usr/local
+
+RUN cd /usr/local/data && wget -nv https://data.astrometry.net/4100/index-4119.fits
