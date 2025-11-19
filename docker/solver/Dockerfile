@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt install -y apt-utils && \
@@ -8,6 +8,9 @@ RUN apt -y update && apt install -y apt-utils && \
     gcc \
     git \
     file \
+    patch \
+    gdb \
+    less \
     pkg-config \
     wget \
     curl \
