@@ -37,13 +37,13 @@
 #include "anqfits.h"
 #include "an-opts.h"
 #include "augment-xylist.h"
+#include "log.h"
 
 static void print_help(const char* progname, bl* opts) {
     printf("\nUsage: %s [options]\n", progname);
     augment_xylist_print_help(stdout);
     printf("\n\n");
 }
-
 
 int main(int argc, char** args) {
     int c;
@@ -109,6 +109,8 @@ int main(int argc, char** args) {
         exit(rtn);
     }
     bl_free(opts);
+
+    log_init(LOG_MSG + axy->verbosity);
 
     rtn = augment_xylist(axy, me);
 

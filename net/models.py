@@ -844,6 +844,21 @@ class Job(models.Model):
         jtxt = '%08i' % self.id
         return os.path.join(settings.JOBDIR, jtxt[:4], jtxt)
 
+    def n_stars_detected(self):
+        fn = self.get_axy_file()
+        if os.path.exists(fn):
+            import fitsio
+            F = fitsio.FITS(fn)
+            # Look for 'NPEAKS' in header
+            hdr = F[1].read_header()
+            n = hdr.get('NPEAKS')
+            if n is not None:
+                return n
+            # Else return size of table
+            return hdr.get('NAXIS2')
+            #return len(F[1].read())
+        return None
+
     def get_axy_file(self):
         return os.path.join(self.get_dir(), 'job.axy')
 

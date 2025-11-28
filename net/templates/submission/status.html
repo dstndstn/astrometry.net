@@ -196,6 +196,12 @@ Submission {{ sub.id }}
     {% if image.image.is_source_list %}
     {% else %}
 
+    {% with n=job.n_stars_detected %}
+    {% if n %}
+    Detected {{ n }} stars<br />
+    {% endif %}
+    {% endwith %}
+
     <a href="{% url 'extraction_image' job_id=job.id size='display' %}">Source extraction image</a> 
     <a href="{% url 'extraction_image' job_id=job.id size='full' %}">(fullsize)</a><br />
 

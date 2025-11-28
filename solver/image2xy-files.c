@@ -229,6 +229,7 @@ int image2xy_files(const char* infn, const char* outfn,
                        "Estimated source image variance", &status);
         CFITS_CHECK("Failed to write ESTSIGMA");
 
+	fits_write_key(ofptr, TINT, "NPEAKS", &(params->npeaks), "image2xy Number of peaks found", &status);
         fits_write_key(ofptr, TFLOAT, "DPSF", &(params->dpsf), "image2xy Assumed gaussian psf width", &status);
         fits_write_key(ofptr, TFLOAT, "PLIM", &(params->plim), "image2xy Significance to keep", &status);
         fits_write_key(ofptr, TFLOAT, "DLIM", &(params->dlim), "image2xy Closest two peaks can be", &status);
@@ -237,7 +238,6 @@ int image2xy_files(const char* infn, const char* outfn,
         fits_write_key(ofptr, TINT, "MAXPEAKS", &(params->maxnpeaks), "image2xy Max num of peaks total", &status);
         fits_write_key(ofptr, TINT, "MAXSIZE", &(params->maxsize), "image2xy Max size for extended objects", &status);
         fits_write_key(ofptr, TINT, "HALFBOX", &(params->halfbox), "image2xy Half-size for sliding sky window", &status);
-
 
         fits_write_comment(ofptr,
                            "The X and Y points are specified assuming 1,1 is "
