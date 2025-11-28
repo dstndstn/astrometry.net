@@ -48,6 +48,22 @@ Additional stuff at http://astrometry.net
 
 Code snapshots and releases are at http://astrometry.net/downloads
 
+Docker containers are available:
+```
+docker run --volume $(pwd):$(pwd) -w $(pwd) astrometrynet/solver:0.98 solve-field image.jpg
+```
+For example, to solve one of the example images, using an index file that is shipped with the
+Docker image, do
+```
+(cd /tmp; docker run --volume $(pwd):$(pwd) -w $(pwd) astrometrynet/solver:0.98 solve-field --dir . /src/astrometry/demo/apod5.jpg)
+```
+and you will see the results files in `/tmp/apod5*`.
+
+To use index files that you have downloaded with the Docker image, mount the directory containing your index files into the container at `/usr/local/data`, for example, if your index files are in the path `/data/index/4100`, then you can do
+```
+(cd /tmp; docker run --volume $(pwd):$(pwd) --volume /data/index/4100:/usr/local/data -w $(pwd) astrometrynet/solver:0.98 solve-field --dir . /src/astrometry/demo/apod4.jpg)
+```
+
 For academic use, please cite the paper:
 
 > Lang, D., Hogg, D.W., Mierle, K., Blanton, M., & Roweis, S.,

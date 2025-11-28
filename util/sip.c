@@ -15,6 +15,12 @@
 #include "starutil.h"
 #include "mathutil.h"
 
+// pixel value to put in arrays for TAN/SIP conversions very far from CRVAL where !ok is set.
+// double; could set this to inf/nan/0/....
+#define BAD_PIXEL_VAL -999.
+// same, but for intermediate world coords = eta,xi
+#define BAD_IWC_VAL -999.
+
 static anbool has_distortions(const sip_t* sip) {
     return (sip->a_order >= 0);
 }
@@ -119,7 +125,7 @@ void tan_pixelxy2radec(const tan_t* tan, double px, double py, double *ra, doubl
     xyzarr2radecdeg(xyz, ra,dec);
 }
 
-void   tan_pixelxy2radecarr(const tan_t* wcs_tan, double px, double py, double *radec) {
+void tan_pixelxy2radecarr(const tan_t* wcs_tan, double px, double py, double *radec) {
     tan_pixelxy2radec(wcs_tan, px, py, radec+0, radec+1);
 }
 
@@ -273,7 +279,7 @@ anbool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *
     // Subtract crpix, invert SIP distortion, add crpix.
     // Sanity check:
     if (sip->a_order != 0 && sip->ap_order == 0) {
-        fprintf(stderr, "suspicious inversion; no inversion SIP coeffs "
+        fprintf(stderr, "suspicious SIP WCS inversion; no inversion SIP coeffs "
                 "yet there are forward SIP coeffs\n");
     }
     U = *px - sip->wcstan.crpix[0];
@@ -282,8 +288,12 @@ anbool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *
     // Check that we're dealing with the right range of the polynomial by inverting it and
     // checking that we end up back in the right place.
     sip_calc_distortion(sip, u, v, &U2, &V2);
-    if (fabs(U2 - U) + fabs(V2 - V) > 10.0)
+    if (fabs(U2 - U) + fabs(V2 - V) > 10.0) {
+        fprintf(stderr, "suspicious SIP distortion: did not invert well: (%.1f, %.1f) -> (%.1f, %.1f) -> (%.1f, %.1f); set not-ok\n", U, V, u, v, U2, V2);
+        *px = BAD_PIXEL_VAL;
+        *py = BAD_PIXEL_VAL;
         return FALSE;
+    }
     *px = u + sip->wcstan.crpix[0];
     *py = v + sip->wcstan.crpix[1];
     return TRUE;
@@ -313,8 +323,11 @@ anbool tan_xyzarr2iwc(const tan_t* tan, const double* xyz,
     // Calculate intermediate world coordinates (x,y) on the tangent plane
     radecdeg2xyzarr(tan->crval[0], tan->crval[1], xyzcrval);
 
-    if (!star_coords(xyz, xyzcrval, !tan->sin, iwcx, iwcy))
+    if (!star_coords(xyz, xyzcrval, !tan->sin, iwcx, iwcy)) {
+        *iwcx = BAD_IWC_VAL;
+        *iwcy = BAD_IWC_VAL;
         return FALSE;
+    }
 
     *iwcx = rad2deg(*iwcx);
     *iwcy = rad2deg(*iwcy);
@@ -332,6 +345,8 @@ anbool tan_radec2iwc(const tan_t* tan, double ra, double dec,
 anbool tan_xyzarr2pixelxy(const tan_t* tan, const double* xyzpt, double *px, double *py) {
     double iwx=0, iwy=0;
     if (!tan_xyzarr2iwc(tan, xyzpt, &iwx, &iwy)) {
+        *px = BAD_PIXEL_VAL;
+        *py = BAD_PIXEL_VAL;
         return FALSE;
     }
     tan_iwc2pixelxy(tan, iwx, iwy, px, py);
