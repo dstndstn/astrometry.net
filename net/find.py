@@ -132,6 +132,10 @@ def main():
     
     opt,args = parser.parse_args()
 
+    print('Total users:', User.objects.count())
+    print('Total submissions:', Submission.objects.count())
+    print('Total images:', Image.objects.count())
+
     if opt.list_socials:
         #from social.apps.django_app.default.models import UserSocialAuth
         ## ????

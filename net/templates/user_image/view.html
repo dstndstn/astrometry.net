@@ -209,10 +209,12 @@ $(document).ready(function() {
           <td>Legacy Surveys sky browser:</td>
           <td><a href="{{ calib.legacysurvey_viewer_url }}">browse the sky</a></td>
         </tr>
+{% comment %}
         <tr>
             <td>KMZ (<a href="http://www.google.com/sky/">Google Sky</a>):</td>
             <td><a href="{% url 'kml-file' jobid=job.id %}?ignore=.kmz">image.kmz</a></td>
         </tr>
+{% endcomment %}
         <tr>
           <td>World Wide Telescope:</td>
           <td><a href="{{ wwt_url }}">view in WorldWideTelescope</a></td>

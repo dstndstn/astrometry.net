@@ -13,8 +13,8 @@ from log import *
 from django.contrib.auth.models import User
 
 #users = User.objects.filter(email__contains='')
-#users = User.objects.filter(id=x)
-#users = User.objects.filter(id__in=[x,y])
+#users = User.objects.filter(id=43788)
+users = User.objects.filter(id__in=[43788, 61843])
 #users = User.objects.filter(profile__apikey='xxx')
 
 #u = bestuser
