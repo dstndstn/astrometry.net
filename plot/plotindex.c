@@ -51,6 +51,9 @@ void plot_quad_xy(cairo_t* cairo, double* quadxy, int dimquads) {
     cx /= dimquads;
     cy /= dimquads;
 
+    // initialize to avoid compiler warning
+    for (k=0; k<DQMAX; k++)
+        theta[k] = 0.;
     for (k=0; k<dimquads; k++)
         theta[k] = atan2(quadxy[2*k+1] - cy, quadxy[2*k+0] - cx);
     perm = permuted_sort(theta, sizeof(double), compare_doubles_asc, NULL, dimquads);

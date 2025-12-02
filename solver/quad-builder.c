@@ -117,7 +117,7 @@ static void add_interior_stars(quadbuilder_t* qb,
         int iC = inbox[i];
         q->star[starnum] = qb->starinds[iC];
         // Did we just add the last star?
-        if (starnum == dimquads-1) {
+        if (starnum >= dimquads-1) {
             if (qb->check_full_quad &&
                 !qb->check_full_quad(qb, q->star, dimquads, qb->check_full_quad_token))
                 continue;
