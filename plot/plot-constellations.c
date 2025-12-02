@@ -561,9 +561,12 @@ int main(int argc, char** args) {
 
             uniqstars = constellations_get_unique_stars(c);
             inboundstars = il_new(16);
-
             Nunique = il_size(uniqstars);
-            debug("%s: %zu unique stars.\n", shortname, il_size(uniqstars));
+
+            shortname = constellations_get_shortname(c);
+            longname = constellations_get_longname(c);
+            assert(shortname && longname);
+            debug("%s: %zu unique stars.\n", shortname, Nunique);
 
             // Count the number of unique stars belonging to this contellation
             // that are within the image bounds
@@ -639,10 +642,6 @@ int main(int argc, char** args) {
 
             if (!sip_radec2pixelxy(&sip, ra, dec, &px, &py))
                 continue;
-
-            shortname = constellations_get_shortname(c);
-            longname = constellations_get_longname(c);
-            assert(shortname && longname);
 
             logverb("%s at (%g, %g)\n", longname, px, py);
 
