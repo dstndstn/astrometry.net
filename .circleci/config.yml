@@ -106,8 +106,8 @@ jobs:
             solve-field --config demo/cfg demo/apod5.jpg --continue --no-tweak --objs 60
             listhead demo/apod5.wcs
             solve-field --config demo/cfg demo/apod5.xyls --continue --no-tweak --objs 60
-	    $PYTHON --version
-	    $PYTHON -c "import numpy; print(numpy.__version__)"
+            $PYTHON --version
+            $PYTHON -c "import numpy; print(numpy.__version__)"
 
   build-docker-ubuntu-24-py312:
     docker:
