@@ -1477,7 +1477,7 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
     qsort(permute, N, sizeof(int), kdqsort_compare);
 
     // permute the data one dimension at a time...
-    tmparr = MALLOC(N * sizeof(dtype));
+    tmparr = MALLOC((size_t)N * sizeof(dtype));
     if (!tmparr) {
         SYSERROR("Failed to allocate temp permutation array");
         return -1;
@@ -1491,7 +1491,7 @@ static int kdtree_qsort(dtype *arr, unsigned int *parr, int l, int r, int D, int
             arr[(size_t)(l + i) * (size_t)D + (size_t)j] = tmparr[i];
     }
     FREE(tmparr);
-    tmpparr = MALLOC(N * sizeof(int));
+    tmpparr = MALLOC((size_t)N * sizeof(int));
     if (!tmpparr) {
         SYSERROR("Failed to allocate temp permutation array");
         return -1;
@@ -2030,8 +2030,8 @@ static void convert_data(kdtree_t* kd, etype* edata, int N, int D, int Nleaf) {
     int i, d;
 
     if (!kd->minval || !kd->maxval) {
-        kd->minval = MALLOC(D * sizeof(double));
-        kd->maxval = MALLOC(D * sizeof(double));
+        kd->minval = MALLOC((size_t)D * sizeof(double));
+        kd->maxval = MALLOC((size_t)D * sizeof(double));
         kd->scale = compute_scale_ext(edata, N, D, kd->minval, kd->maxval);
     } else {
         // limits were pre-set by the user.  just compute scale.
@@ -2211,8 +2211,8 @@ kdtree_t* MANGLE(kdtree_build_2)
         if (!kd->minval || !kd->maxval) {
             free(kd->minval);
             free(kd->maxval);
-            kd->minval = MALLOC(D * sizeof(double));
-            kd->maxval = MALLOC(D * sizeof(double));
+            kd->minval = MALLOC((size_t)D * sizeof(double));
+            kd->maxval = MALLOC((size_t)D * sizeof(double));
             assert(kd->minval);
             assert(kd->maxval);
             kd->scale = compute_scale(kd->data.any, N, D, kd->minval, kd->maxval);
@@ -2227,12 +2227,12 @@ kdtree_t* MANGLE(kdtree_build_2)
 
     /* perm stores the permutation indexes. This gets shuffled around during
      * sorts to keep track of the original index. */
-    kd->perm = MALLOC(sizeof(u32) * N);
+    kd->perm = MALLOC((size_t)N * sizeof(u32));
     assert(kd->perm);
     for (i = 0; i < N; i++)
         kd->perm[i] = i;
 
-    kd->lr = MALLOC(kd->nbottom * sizeof(int32_t));
+    kd->lr = MALLOC((size_t)kd->nbottom * sizeof(int32_t));
     assert(kd->lr);
 
     if (options & KD_BUILD_BBOX) {
@@ -2509,7 +2509,7 @@ void MANGLE(kdtree_fix_bounding_boxes)(kdtree_t* kd) {
     // bounding boxes up the levels of the tree...
     int i;
     int D = kd->ndim;
-    kd->bb.any = MALLOC(kd->nnodes * sizeof(ttype) * D * 2);
+    kd->bb.any = MALLOC((size_t)kd->nnodes * sizeof(ttype) * (size_t)(D * 2));
     assert(kd->bb.any);
     for (i=0; i<kd->nnodes; i++) {
         unsigned int left, right;
