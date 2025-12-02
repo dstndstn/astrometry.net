@@ -126,10 +126,10 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
      }
      */
     NHP = 12 * Nside * Nside;
-    logverb("Healpix Nside: %lli, # healpixes on the whole sky: %lli\n", Nside, NHP);
+    logverb("Healpix Nside: %lli, # healpixes on the whole sky: %lli\n", (long long)Nside, (long long)NHP);
     if (!allsky) {
         logverb("Creating index for healpix %i, nside %i\n", bighp, bignside);
-        logverb("Number of healpixes: %lli\n", ((Nside/bignside)*(Nside/bignside)));
+        logverb("Number of healpixes: %lli\n", (long long)((Nside/bignside)*(Nside/bignside)));
     }
     logverb("Healpix side length: %g arcmin.\n", healpix_side_length_arcmin(Nside));
 
@@ -223,7 +223,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
             hpl_append(seeds, healpix_compose_xyl(bigbighp, x0, yy, Nside));
             hpl_append(seeds, healpix_compose_xyl(bigbighp, x1, yy, Nside));
         }
-        logmsg("Number of boundary healpixes: %zu (Nside/bignside = %lli)\n", hpl_size(seeds), Nside/bignside);
+        logmsg("Number of boundary healpixes: %zu (Nside/bignside = %lli)\n", hpl_size(seeds), (long long)Nside/bignside);
 
         myhps = healpix_region_searchl(-1, seeds, Nside, NULL, NULL,
                                        outside_healpix, &token, nmargin);

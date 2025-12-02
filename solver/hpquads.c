@@ -293,7 +293,7 @@ static int build_quads(hpquads_t* me, hpint Nhptotry, hpl* hptotry, int R) {
             hp = hpl_get(hptotry, i);
         else
             hp = i;
-        logverb("Trying healpix %lli\n", hp);
+        logverb("Trying healpix %lli\n", (long long)hp);
         me->hp = hp;
         me->quad_created = FALSE;
         ok = find_stars(me, me->radius2, R);
@@ -380,7 +380,7 @@ int hpquads(startree_t* starkd,
     quadsize = sizeof(unsigned int) * dimquads;
 
     logmsg("Nside=%lli.  Nside^2=%lli.  Number of healpixes=%lli.  Healpix side length ~ %g arcmin.\n",
-           me->Nside, me->Nside*me->Nside, NHP, healpix_side_length_arcmin(me->Nside));
+           (long long)me->Nside, (long long)me->Nside*me->Nside, (long long)NHP, healpix_side_length_arcmin(me->Nside));
 
     me->sort_data = sort_data;
     me->sort_func = sort_func;
@@ -402,7 +402,7 @@ int hpquads(startree_t* starkd,
     sknside = qfits_header_getint(startree_header(me->starkd), "HPNSIDE", 1);
 
     if (sknside && Nside % sknside) {
-        logerr("Error: Nside (-n) must be a multiple of the star kdtree healpixelisation: %lli\n", sknside);
+        logerr("Error: Nside (-n) must be a multiple of the star kdtree healpixelisation: %lli\n", (long long)sknside);
         return -1;
     }
 
@@ -480,14 +480,14 @@ int hpquads(startree_t* starkd,
                     return -1;
                 }
                 logdebug("star %i: RA,Dec %g,%g; xyz %g,%g,%g; hp %lli\n",
-                         i, ra, dec, xyz[0], xyz[1], xyz[2], j);
+                         i, ra, dec, xyz[0], xyz[1], xyz[2], (long long)j);
             }
         }
         logmsg("Will check %zu healpixes.\n", hpl_size(hptotry));
         if (log_get_level() > LOG_VERB) {
             logdebug("Checking healpixes: [ ");
             for (i=0; i<hpl_size(hptotry); i++)
-                logdebug("%lli ", hpl_get(hptotry, i));
+                logdebug("%lli ", (long long)hpl_get(hptotry, i));
             logdebug("]\n");
         }
 
@@ -534,11 +534,11 @@ int hpquads(startree_t* starkd,
         int nthispass;
 
         logmsg("Pass %i of %i.\n", pass+1, passes);
-        logmsg("Trying %lli healpixes.\n", Nhptotry);
+        logmsg("Trying %lli healpixes.\n", (long long)Nhptotry);
 
         nthispass = build_quads(me, Nhptotry, hptotry, Nreuses);
 
-        logmsg("Made %i quads (out of %lli healpixes) this pass.\n", nthispass, Nhptotry);
+        logmsg("Made %i quads (out of %lli healpixes) this pass.\n", nthispass, (long long)Nhptotry);
         logmsg("Made %i quads so far.\n", (me->bigquadlist ? bt_size(me->bigquadlist) : 0) + (int)bl_size(me->quadlist));
 
         sprintf(key, "PASS%i", pass+1);
