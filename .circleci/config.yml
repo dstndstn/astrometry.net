@@ -72,7 +72,7 @@ jobs:
           name: Ubuntu packages
           command: |
             apt update && apt install -y apt-utils
-            DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends make gcc patch git openssh-client file pkg-config wget curl swig netpbm wcslib-dev wcslib-tools zlib1g-dev libbz2-dev libcairo2-dev libcfitsio-dev libcfitsio-bin libgsl-dev libjpeg-dev libnetpbm-dev libpng-dev python3.12-dev libpython3.12-dev ca-certificates python3-pip python3-numpy python3-fitsio gdb
+            DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends make gcc patch git openssh-client file pkg-config wget curl swig netpbm wcslib-dev wcslib-tools zlib1g-dev libbz2-dev libcairo2-dev libcfitsio-dev libcfitsio-bin libgsl-dev libjpeg-dev libnetpbm-dev libpng-dev python3.12-dev libpython3.12-dev ca-certificates python3-pip python3-numpy python3-fitsio
             apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
       - checkout
       - run:
@@ -120,7 +120,6 @@ jobs:
             apt update && apt install -y apt-utils
             DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends make gcc patch git openssh-client file pkg-config wget curl swig netpbm wcslib-dev wcslib-tools zlib1g-dev libbz2-dev libcairo2-dev libcfitsio-dev libcfitsio-bin libgsl-dev libjpeg-dev libnetpbm10-dev libpng-dev python3.10-dev libpython3.10-dev ca-certificates
             DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends python3-pip
-            DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends gdb
             apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
       - run:
           name: Python packages
