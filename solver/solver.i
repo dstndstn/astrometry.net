@@ -18,12 +18,18 @@
 
 #include "os-features.h"
 #include "verify.h"
+
+/* NumPy initializer helper — safe for SWIG_mod_exec(int) */
+static void *_an_import_array_fix(void) {
+    import_array();   /* sets Python exception on failure */
+    return NULL;
+}
 %}
 
 %init %{
-      // numpy
-      import_array();
+    _an_import_array_fix();
 %}
+
 
 %import "../util/util.i"
 

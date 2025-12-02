@@ -59,6 +59,16 @@ static void checkorder(int i, int j) {
     assert(j < SIP_MAXORDER);
 }
 
+
+/* --- NumPy initializer --- */
+/* Use a helper returning a pointer so NumPy's internal `return NULL;`
+ * is type-correct and does not upset the compiler. */
+static void *_an_import_array_fix(void) {
+    import_array();   /* sets Python exception on failure */
+    return NULL;
+}
+
+
 // From index.i:
 /**
 For returning single codes and quads as python lists, do something like this:
@@ -102,9 +112,9 @@ long qidxfile_addr(qidxfile* qf) {
 %}
 
 %init %{
-      // numpy
-      import_array();
+    _an_import_array_fix();
 %}
+
 
 // Things in keywords.h (used by healpix.h)
 #define Const

@@ -46,7 +46,14 @@
 
 #define true 1
 #define false 0
-    %}
+
+/* --- NumPy initializer wrapper for this module --- */
+/* Returns a pointer so NumPy's macro is type-correct in SWIG_mod_exec. */
+static void *_an_import_array_fix_plot(void) {
+    import_array();   /* sets Python exception on failure */
+    return NULL;
+}
+%}
 
 %apply double *OUTPUT { double *pramin, double *pramax, double *pdecmin, double *pdecmax };
 %apply double *OUTPUT { double *pra, double *pdec };
@@ -166,7 +173,7 @@ void free(void* ptr);
 %include "anwcs.h"
 
 %init %{
-    import_array();
+    _an_import_array_fix_plot();
 %}
 
 // HACK!
