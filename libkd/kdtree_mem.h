@@ -19,7 +19,8 @@ void  FREE(void* ptr);
 #else
 
 #define CALLOC calloc
-#define MALLOC malloc
+//#define MALLOC malloc
+#define MALLOC(x) ((x) < PTRDIFF_MAX ? malloc(x) : NULL)
 #define REALLOC realloc
 #define FREE free
 

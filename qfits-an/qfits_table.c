@@ -2299,7 +2299,7 @@ int qfits_table_interpret_type(
 /*----------------------------------------------------------------------------*/
 static char * qfits_build_format(const qfits_col * col)
 {
-    static char sval[10];
+    static char sval[14];
     int         nb;
         
     switch (col->atom_type) {

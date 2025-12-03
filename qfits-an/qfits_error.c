@@ -103,7 +103,7 @@ void qfits_warning(const char *fmt, ...)
     vsprintf(msg, fmt, ap);
     va_end(ap);
 
-    sprintf(all, "*** %s", msg);
+    sprintf(all, "*** %.*s", QFITS_ERR_MSGSIZE-5, msg);
     qfits_err_main_display(all);
     return;
 }
@@ -121,7 +121,7 @@ void qfits_error(const char *fmt, ...)
     vsprintf(msg, fmt, ap);
     va_end(ap);
 
-    sprintf(all, "error: %s", msg);
+    sprintf(all, "error: %.*s", QFITS_ERR_MSGSIZE-8, msg);
     qfits_err_main_display(all);
     return;
 }

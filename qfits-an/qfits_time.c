@@ -121,7 +121,7 @@ char * qfits_get_datetime_iso8601(void)
     curdate  = qfits_date_now();
     curtime  = qfits_time_now();
 
-    sprintf(date_iso8601, "%04d-%02d-%02dT%02d:%02d:%02d",
+    sprintf(date_iso8601, "%04u-%02u-%02uT%02u:%02u:%02u",
             GET_CCYEAR(curdate),
             GET_MONTH(curdate),
             GET_DAY(curdate),

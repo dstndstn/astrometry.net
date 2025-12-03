@@ -643,7 +643,6 @@ char * qfits_memory_falloc(
             if (qfits_memory_p_val[i]!=NULL)
                 nptrs++;
             if ((qfits_memory_p_val[i]!=NULL) &&
-                (qfits_memory_p_mm_filename[i] != NULL) &&
                 (qfits_memory_p_mm_hash[i] == mm_hash)) {
                 if (!strncmp(qfits_memory_p_mm_filename[i], name,
                              MAPFILENAMESZ)) {

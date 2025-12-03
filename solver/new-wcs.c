@@ -169,12 +169,12 @@ int new_wcs(const char* infn, int extension,
 
         if (key_matches(key, re1, exclude_input, NE1, &imatch)) {
             logverb("Regular expression matched: \"%s\", key \"%s\".\n", exclude_input[imatch], key);
-            snprintf(newkey, FITS_LINESZ, "Original key: \"%s\"", key);
+            snprintf(newkey, FITS_LINESZ+1, "Original key: \"%.64s\"", key);
             qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
             // Completely skip the END card, since _ND is not a valid line.
             if (streq(key, "END"))
                 continue;
-            snprintf(newkey, FITS_LINESZ, "_%.7s", key+1);
+            snprintf(newkey, FITS_LINESZ+1, "_%.7s", key+1);
             logverb("New key: \"%s\"\n", newkey);
             strcpy(key, newkey);
             line[0] = '_';
@@ -187,12 +187,12 @@ int new_wcs(const char* infn, int extension,
              qfits_header_getstr(outhdr, key))) {
             logverb("Key \"%s\" already exists; adding COMMENT cards for value and comment instead\n", key);
             if (!added_newkey) {
-                snprintf(newkey, FITS_LINESZ, "Original key: \"%s\"", key);
+                snprintf(newkey, FITS_LINESZ+1, "Original key: \"%s\"", key);
                 qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
             }
-            snprintf(newkey, FITS_LINESZ, " = %s", val);
+            snprintf(newkey, FITS_LINESZ+1, " = %.77s", val);
             qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
-            snprintf(newkey, FITS_LINESZ, " / %s", comment);
+            snprintf(newkey, FITS_LINESZ+1, " / %.77s", comment);
             qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
             continue;
         }

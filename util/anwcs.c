@@ -381,8 +381,8 @@ static int wcslib_write_to(const anwcslib_t* anwcslib, FILE* fid) {
     char* hdrstr;
     char line[81];
     char spaces[81];
-    char val[32];
-    const char* hdrformat = "%-8s= %20s /%s";
+    char val[20];
+    const char* hdrformat = "%-8s= %20s /%.48s";
     sl* lines = NULL;
     int npad;
 
@@ -413,7 +413,7 @@ static int wcslib_write_to(const anwcslib_t* anwcslib, FILE* fid) {
     sl_append(lines, line);
 
     sprintf(val, "%i", anwcslib->imagew);
-    snprintf(line, sizeof(line), hdrformat, "IMAGEW", val, spaces);
+    (void)snprintf(line, sizeof(line), hdrformat, "IMAGEW", val, spaces);
     sl_append(lines, line);
     sprintf(val, "%i", anwcslib->imageh);
     snprintf(line, sizeof(line), hdrformat, "IMAGEH", val, spaces);
