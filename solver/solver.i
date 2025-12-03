@@ -21,8 +21,14 @@
 %}
 
 %init %{
-      // numpy
-      import_array();
+    // start solver.i %init block
+    // init numpy
+#if SWIG_VERSION >= 0x040400
+    import_array1(-1);
+#else
+    import_array();
+#endif
+    // end solver.i %init block
 %}
 
 %import "../util/util.i"

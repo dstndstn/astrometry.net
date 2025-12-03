@@ -166,7 +166,14 @@ void free(void* ptr);
 %include "anwcs.h"
 
 %init %{
+    // start plotstuff.i %init block
+    // init numpy
+#if SWIG_VERSION >= 0x040400
+    import_array1(-1);
+#else
     import_array();
+#endif
+    // end plotstuff.i %init block
 %}
 
 // HACK!
