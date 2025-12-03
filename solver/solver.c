@@ -1101,7 +1101,7 @@ static void try_all_codes_2(const int* fieldstars, int dimquad,
                             anbool current_parity, double tol2) {
     int i;
     kdtree_qres_t* result = NULL;
-    int dimcode = (dimquad - 2) * 2;
+    int dimcode = (dimquad - NBACK) * 2;
     int stars[DQMAX];
     double flipcode[DCMAX];
 
@@ -1140,6 +1140,13 @@ static void try_all_codes_2(const int* fieldstars, int dimquad,
 /**
  This functions tries different permutations of the non-backbone
  stars C [, D [,E ] ]
+
+ origstars: [0] and [1] are the "backbone" stars
+
+ stars: only elements [0] and [1] are set; they will be equal to origstars [0],[1] or [1],[0].
+ code: may be NULL, in which case use a local variable
+ slot: 0 on initial call; incremented on recursive calls
+ 
  */
 static void try_permutations(const int* origstars, int dimquad,
                              const double* origcode,
@@ -1184,6 +1191,10 @@ static void try_permutations(const int* origstars, int dimquad,
 
     if (code == NULL)
         code = mycode;
+
+    // try to convince the compiler that this is okay
+    if (slot >= DCMAX/2)
+        return;
 
     // We try putting each star that hasn't already been placed in
     // this "slot".
