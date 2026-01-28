@@ -719,20 +719,20 @@ static int parse_header_block(const char* buf, qfits_header* hdr, int* found_it)
         key = qfits_getkey_r(line, getkey_buf);
         if (!key) {
             fprintf(stderr, "Skipping un-parseable header line: \"%.80s\"\n", line);
-            continue;
-        }
-        val = qfits_getvalue_r(line, getval_buf);
-        comment = qfits_getcomment_r(line, getcom_buf);
-        debug("Got key/value/comment \"%s\" / \"%s\" / \"%s\"\n", key, val, comment);
-        memcpy(line_buf, line, FITS_LINESZ);
-        line_buf[FITS_LINESZ] = '\0';
-        qfits_header_append(hdr, key, val, comment, line_buf);
+        } else {
+	    val = qfits_getvalue_r(line, getval_buf);
+	    comment = qfits_getcomment_r(line, getcom_buf);
+	    debug("Got key/value/comment \"%s\" / \"%s\" / \"%s\"\n", key, val, comment);
+	    memcpy(line_buf, line, FITS_LINESZ);
+	    line_buf[FITS_LINESZ] = '\0';
+	    qfits_header_append(hdr, key, val, comment, line_buf);
+	    if (!strcmp(key, "END")) {
+		debug("Found END!\n");
+		*found_it = 1;
+		break;
+	    }
+	}
         line += 80;
-        if (!strcmp(key, "END")) {
-            debug("Found END!\n");
-            *found_it = 1;
-            break;
-        }
     }
     return 0;
 }
