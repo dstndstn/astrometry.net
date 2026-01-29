@@ -77,3 +77,6 @@ For academic use, please cite the paper:
 | [AJ](http://iopscience.iop.org/1538-3881/139/5/1782/article)
 | [doi:10.1088/0004-6256/139/5/1782](http://dx.doi.org/10.1088/0004-6256/139/5/1782)
 
+
+What about $\sin$ and $\cos$ and $\Beta$?
+
