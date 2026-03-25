@@ -1,8 +1,8 @@
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update && apt install -y apt-utils && \
-    apt install -y --no-install-recommends \
+RUN apt-get -y update && apt-get install -y apt-utils && \
+    apt-get install -y --no-install-recommends \
     build-essential \
     make \
     gcc \
@@ -62,14 +62,8 @@ WORKDIR /src
 
 RUN git config --global --add safe.directory /src/astrometry
 
-# Build flag - don't optimize for the build computer's CPU
-ENV ARCH_FLAGS=-march=x86-64-v3
+RUN mkdir /usr/local/data && cd /usr/local/data \
+	&& for i in $(seq -w 7 19); do \
+    wget -nv https://data.astrometry.net/4100/index-41$i.fits; done
 
-RUN git clone http://github.com/dstndstn/astrometry.net.git astrometry \
-  && cd astrometry \
-  && make -j \
-  && make py -j \
-  && make extra -j \
-  && make install INSTALL_DIR=/usr/local
-
-RUN cd /usr/local/data && wget -nv https://data.astrometry.net/4100/index-4119.fits
+# Dockerfile.dev or Dockerfile.release, respectively, will be appended during the build process.

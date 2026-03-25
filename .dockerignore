@@ -1,0 +1,8 @@
+Changelog
+.circleci
+.github
+doc
+docker
+.gitignore
+
+# Contents of .gitignore will automatically be appended during the build process

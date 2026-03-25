@@ -5,7 +5,7 @@ Although it's entirely feasible to manually follow the instructions in the `net`
 However, it's important to note that these Docker files are primarily designed for quick trials and development.
 If you're planning to use them for production, they'll require further refinement, particularly in terms of security settings.
 
-This folder contains two Docker files.
+This folder contains two sub-folders.
 The first is for the solver, which provides the command line tools for Astrometry.net.
 The second is for the web service, which includes the Django-based web server and API server. 
 
@@ -29,11 +29,15 @@ See http://data.astrometry.net/ for details.
 Check out [this link](http://astrometry.net/doc/readme.html#getting-index-files) to understand whether it's possible to only download and use part of all the files.
 Otherwise, downloading all the files will also work.
 
-Optionally, you can build a local version of the Docker image:
+Optionally, you can build a local version of the Docker image, using one of the provided shell scripts:
 ```
-docker build -t astrometrynet/solver:latest -f docker/solver/Dockerfile .
+docker/solver/build-release.sh
 ```
-Again note the command should be executed in the repo root folder, not the current folder.
+or:
+```
+docker/solver/build-dev.sh
+```
+The difference between these scripts is that `build-release.sh` will clone the [remote git repository](https://github.com/dstndstn/astrometry.net), while `build-dev.sh` will use your local version and compile the solver from there, which is useful if you want to make quick edits to the code and test them locally. If you are unsure which one to use, you probably want `build-release.sh`.
 
 Then use this command to log into the container to use the command lines:
 ```
@@ -42,6 +46,10 @@ docker run -v ~/astrometry_indexes:/usr/local/data -it astrometrynet/solver /bin
 Here `~/astrometry_indexes` is the host folder holding the indexes downloaded from the first step.
 In the `solver` container, the command line tools are available for use.
 For example, `solve-field`.
+
+(At the moment, all 4100-series index files are automatically downloaded into the Docker images, so you don't actually need to download them manually nor mount any volumes.)
+
+If you are encoutering issues with the release image throwing `Illegal Instruction` when `solve-field` is being called, try changing the line `ENV ARCH_FLAGS=-march=x86-64-v2` in `Dockerfile.release` and downgrading the version.
 
 ## webservice
 
