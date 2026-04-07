@@ -49,7 +49,7 @@ For example, `solve-field`.
 
 (At the moment, all 4100-series index files are automatically downloaded into the Docker images, so you don't actually need to download them manually nor mount any volumes.)
 
-If you are encoutering issues with the release image throwing `Illegal Instruction` when `solve-field` is being called, try changing the line `ENV ARCH_FLAGS=-march=x86-64-v2` in `Dockerfile.release` and downgrading the version.
+If you are encoutering issues with the release image throwing `Illegal Instruction` when `solve-field` is being called, try changing the line `ENV ARCH_FLAGS=-march=x86-64-v2` in `release.dockerfile` and downgrading the version.
 
 ## webservice
 

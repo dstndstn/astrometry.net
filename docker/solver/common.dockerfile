@@ -66,4 +66,4 @@ RUN mkdir /usr/local/data && cd /usr/local/data \
 	&& for i in $(seq -w 7 19); do \
     wget -nv https://data.astrometry.net/4100/index-41$i.fits; done
 
-# Dockerfile.dev or Dockerfile.release, respectively, will be appended during the build process using the shell script.
+# dev.dockerfile or release.dockerfile, respectively, will be appended during the build process using the shell script.

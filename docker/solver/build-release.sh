@@ -6,7 +6,7 @@ cd "$scriptPath"
 cat Dockerfile.common Dockerfile.release > Dockerfile.tmp
 
 # cd to project root to include repo in build context
-# (although this is not used in Dockerfile.release)
+# (although this is not used in release.dockerfile)
 cd ../..
 
 cp .dockerignore .dockerignore.tmp
