@@ -3,7 +3,7 @@
 scriptPath="$(dirname "$(realpath "$0")")"
 cd "$scriptPath"
 
-cat Dockerfile.common Dockerfile.dev > Dockerfile.tmp
+cat common.dockerfile dev.dockerfile > tmp.dockerfile
 
 # cd to project root to include repo in build context
 cd ../..
@@ -11,9 +11,9 @@ cd ../..
 cp .dockerignore .dockerignore.tmp
 cat .gitignore >> .dockerignore
 
-docker build -t astrometrynet/solver:dev -f docker/solver/Dockerfile.tmp .
+docker build -t astrometrynet/solver:dev -f docker/solver/tmp.dockerfile .
 
 mv -f .dockerignore.tmp .dockerignore
 
 cd "$scriptPath"
-rm Dockerfile.tmp
+rm tmp.dockerfile
