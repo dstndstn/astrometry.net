@@ -1,11 +1,12 @@
 #! /bin/bash
 
 scriptPath="$(dirname "$(realpath "$0")")"
-cd "$scriptPath"
+cd "$scriptPath" || exit
 
 cat common.dockerfile dev.dockerfile > tmp.dockerfile
 
 # cd to project root to include repo in build context
+#
 cd ../..
 
 cp .dockerignore .dockerignore.tmp
