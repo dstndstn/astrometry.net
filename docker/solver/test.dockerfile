@@ -10,6 +10,6 @@ RUN cd astrometry \
   && make -j \
   && make py -j \
   && make extra -j \
-  && make install INSTALL_DIR=/usr/local \
+  && make install INSTALL_DIR=/usr/local
 
 RUN git clone https://github.com/ilretho/Astrometry-testing-data --depth 1
