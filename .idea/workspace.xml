@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="BackendCodeEditorMiscSettings">
+    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="3" type="long" />
+    <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
+  </component>
+  <component name="CMakeProjectFlavorService">
+    <option name="flavorId" value="CMakePlainProjectFlavor" />
+  </component>
+  <component name="CMakeRunConfigurationManager">
+    <generated>
+      <config projectName="astrometry.net" targetName="install" />
+      <config projectName="astrometry.net" targetName="libkd-spherematch" />
+      <config projectName="astrometry.net" targetName="release" />
+      <config projectName="astrometry.net" targetName="Makefile" />
+      <config projectName="astrometry.net" targetName="plot-extra" />
+      <config projectName="astrometry.net" targetName="pyutil" />
+      <config projectName="astrometry.net" targetName="version" />
+      <config projectName="astrometry.net" targetName="sdss" />
+      <config projectName="astrometry.net" targetName="pkgconfig" />
+      <config projectName="astrometry.net" targetName="tags" />
+      <config projectName="astrometry.net" targetName="qfits-an" />
+      <config projectName="astrometry.net" targetName="catalogs" />
+      <config projectName="astrometry.net" targetName="pysolver" />
+      <config projectName="astrometry.net" targetName="check" />
+      <config projectName="astrometry.net" targetName="gsl-an" />
+      <config projectName="astrometry.net" targetName="install-gsl" />
+      <config projectName="astrometry.net" targetName="test" />
+      <config projectName="astrometry.net" targetName="TAGS" />
+      <config projectName="astrometry.net" targetName="report" />
+      <config projectName="astrometry.net" targetName="tag-release" />
+      <config projectName="astrometry.net" targetName="snapshot-libkd" />
+      <config projectName="astrometry.net" targetName="subdirs" />
+      <config projectName="astrometry.net" targetName="install-cfitsio-utils" />
+      <config projectName="astrometry.net" targetName="all" />
+      <config projectName="astrometry.net" targetName="install-indexes" />
+      <config projectName="astrometry.net" targetName="solver" />
+      <config projectName="astrometry.net" targetName="cfitsio-utils" />
+      <config projectName="astrometry.net" targetName="config" />
+      <config projectName="astrometry.net" targetName="snapshot" />
+      <config projectName="astrometry.net" targetName="pyplotstuff" />
+      <config projectName="astrometry.net" targetName="retag-release" />
+      <config projectName="astrometry.net" targetName="py" />
+      <config projectName="astrometry.net" targetName="doc" />
+      <config projectName="astrometry.net" targetName="plot" />
+      <config projectName="astrometry.net" targetName="release-libkd" />
+      <config projectName="astrometry.net" targetName="extra" />
+      <config projectName="astrometry.net" targetName="libkd" />
+      <config projectName="astrometry.net" targetName="pyinstall" />
+      <config projectName="astrometry.net" targetName="realclean" />
+      <config projectName="astrometry.net" targetName="reconfig" />
+      <config projectName="astrometry.net" targetName="install-core" />
+      <config projectName="astrometry.net" targetName="cairoutils" />
+      <config projectName="astrometry.net" targetName="html" />
+      <config projectName="astrometry.net" targetName="util" />
+    </generated>
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="0b176e58-abf8-4be7-b8d6-620d18ffd322" name="Changes" comment="gitignor" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="MoBranch_from_dev_playing_playing_around" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "mohammadIbrahim97"
+  }
+}]]></component>
+  <component name="GithubProjectSettings">
+    <option name="branchProtectionPatterns">
+      <list>
+        <option value="main" />
+      </list>
+    </option>
+  </component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/mohammadIbrahim97/astrometry.net.git",
+    "accountId": "036f314f-e121-425b-9dbd-151e5382e968"
+  }
+}]]></component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/util/image2xy.c" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="RbCn8vZe" />
+  </component>
+  <component name="MakefileLocalSettings">
+    <option name="availableProjects">
+      <map>
+        <entry>
+          <key>
+            <ExternalProjectPojo>
+              <option name="name" value="astrometry.net" />
+              <option name="path" value="$PROJECT_DIR$" />
+            </ExternalProjectPojo>
+          </key>
+          <value>
+            <list>
+              <ExternalProjectPojo>
+                <option name="name" value="astrometry.net" />
+                <option name="path" value="$PROJECT_DIR$" />
+              </ExternalProjectPojo>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="projectSyncType">
+      <map>
+        <entry key="$PROJECT_DIR$" value="RE_IMPORT" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectApplicationVersion">
+    <option name="ide" value="CLion" />
+    <option name="majorVersion" value="2026" />
+    <option name="minorVersion" value="1" />
+    <option name="productBranch" value="Classic" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="3CUcDwzralQ5B77WyJFRMjM4EYo" />
+  <component name="ProjectStatusUIService">{
+  &quot;uiKindId&quot;: &quot;Widget&quot;
+}</component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.RadMigrateCodeStyle": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "dart.analysis.tool.window.visible": "false",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.first.attach.projects": "true",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager" selected="Native Application.all">
+    <configuration name="Makefile" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="Makefile" CONFIG_NAME="Makefile" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="Makefile">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="TAGS" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="TAGS" CONFIG_NAME="TAGS" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="TAGS">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="all" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="all" CONFIG_NAME="all" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="all">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="cairoutils" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="cairoutils" CONFIG_NAME="cairoutils" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="cairoutils">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="catalogs" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="catalogs" CONFIG_NAME="catalogs" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="catalogs">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="cfitsio-utils" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="cfitsio-utils" CONFIG_NAME="cfitsio-utils" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="cfitsio-utils">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="check" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="check" CONFIG_NAME="check" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="check">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="config" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="config" CONFIG_NAME="config" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="config">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="doc" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="doc" CONFIG_NAME="doc" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="doc">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="extra" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="extra" CONFIG_NAME="extra" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="extra">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="gsl-an" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="gsl-an" CONFIG_NAME="gsl-an" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="gsl-an">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="html" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="html" CONFIG_NAME="html" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="html">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="install-cfitsio-utils" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="install-cfitsio-utils" CONFIG_NAME="install-cfitsio-utils" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="install-cfitsio-utils">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="install-core" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="install-core" CONFIG_NAME="install-core" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="install-core">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="install-gsl" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="install-gsl" CONFIG_NAME="install-gsl" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="install-gsl">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="install-indexes" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="install-indexes" CONFIG_NAME="install-indexes" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="install-indexes">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="install" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="install" CONFIG_NAME="install" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="install">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="libkd-spherematch" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="libkd-spherematch" CONFIG_NAME="libkd-spherematch" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="libkd-spherematch">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="libkd" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="libkd" CONFIG_NAME="libkd" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="libkd">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="pkgconfig" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="pkgconfig" CONFIG_NAME="pkgconfig" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="pkgconfig">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="plot-extra" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="plot-extra" CONFIG_NAME="plot-extra" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="plot-extra">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="plot" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="plot" CONFIG_NAME="plot" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="plot">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="py" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="py" CONFIG_NAME="py" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="py">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="pyinstall" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="pyinstall" CONFIG_NAME="pyinstall" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="pyinstall">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="pyplotstuff" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="pyplotstuff" CONFIG_NAME="pyplotstuff" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="pyplotstuff">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="pysolver" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="pysolver" CONFIG_NAME="pysolver" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="pysolver">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="pyutil" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="pyutil" CONFIG_NAME="pyutil" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="pyutil">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="qfits-an" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="qfits-an" CONFIG_NAME="qfits-an" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="qfits-an">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="realclean" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="realclean" CONFIG_NAME="realclean" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="realclean">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="reconfig" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="reconfig" CONFIG_NAME="reconfig" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="reconfig">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="release-libkd" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="release-libkd" CONFIG_NAME="release-libkd" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="release-libkd">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="release" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="release" CONFIG_NAME="release" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="release">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="report" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="report" CONFIG_NAME="report" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="report">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="retag-release" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="retag-release" CONFIG_NAME="retag-release" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="retag-release">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="sdss" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="sdss" CONFIG_NAME="sdss" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="sdss">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="snapshot-libkd" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="snapshot-libkd" CONFIG_NAME="snapshot-libkd" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="snapshot-libkd">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="snapshot" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="snapshot" CONFIG_NAME="snapshot" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="snapshot">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="solver" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="solver" CONFIG_NAME="solver" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="solver">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="subdirs" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="subdirs" CONFIG_NAME="subdirs" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="subdirs">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="tag-release" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="tag-release" CONFIG_NAME="tag-release" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="tag-release">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="tags" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="tags" CONFIG_NAME="tags" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="tags">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="test" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="test" CONFIG_NAME="test" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="test">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="util" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="util" CONFIG_NAME="util" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="util">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="version" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="astrometry.net" TARGET_NAME="version" CONFIG_NAME="version" version="1" RUN_TARGET_PROJECT_NAME="astrometry.net" RUN_TARGET_NAME="version">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Native Application.all" />
+      <item itemvalue="Native Application.cairoutils" />
+      <item itemvalue="Native Application.catalogs" />
+      <item itemvalue="Native Application.check" />
+      <item itemvalue="Native Application.config" />
+      <item itemvalue="Native Application.doc" />
+      <item itemvalue="Native Application.extra" />
+      <item itemvalue="Native Application.gsl-an" />
+      <item itemvalue="Native Application.html" />
+      <item itemvalue="Native Application.install" />
+      <item itemvalue="Native Application.install-core" />
+      <item itemvalue="Native Application.install-gsl" />
+      <item itemvalue="Native Application.libkd" />
+      <item itemvalue="Native Application.libkd-spherematch" />
+      <item itemvalue="Native Application.pkgconfig" />
+      <item itemvalue="Native Application.plot" />
+      <item itemvalue="Native Application.plot-extra" />
+      <item itemvalue="Native Application.py" />
+      <item itemvalue="Native Application.pyplotstuff" />
+      <item itemvalue="Native Application.pysolver" />
+      <item itemvalue="Native Application.pyutil" />
+      <item itemvalue="Native Application.qfits-an" />
+      <item itemvalue="Native Application.realclean" />
+      <item itemvalue="Native Application.reconfig" />
+      <item itemvalue="Native Application.release-libkd" />
+      <item itemvalue="Native Application.report" />
+      <item itemvalue="Native Application.retag-release" />
+      <item itemvalue="Native Application.sdss" />
+      <item itemvalue="Native Application.snapshot" />
+      <item itemvalue="Native Application.snapshot-libkd" />
+      <item itemvalue="Native Application.solver" />
+      <item itemvalue="Native Application.subdirs" />
+      <item itemvalue="Native Application.tag-release" />
+      <item itemvalue="Native Application.test" />
+      <item itemvalue="Native Application.util" />
+      <item itemvalue="Native Application.version" />
+      <item itemvalue="Native Application.cfitsio-utils" />
+      <item itemvalue="Native Application.install-cfitsio-utils" />
+      <item itemvalue="Native Application.install-indexes" />
+      <item itemvalue="Native Application.Makefile" />
+      <item itemvalue="Native Application.pyinstall" />
+      <item itemvalue="Native Application.release" />
+      <item itemvalue="Native Application.TAGS" />
+      <item itemvalue="Native Application.tags" />
+    </list>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="0b176e58-abf8-4be7-b8d6-620d18ffd322" name="Changes" comment="" />
+      <created>1776443473612</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1776443473612</updated>
+      <workItem from="1776443475435" duration="3331000" />
+      <workItem from="1776450281386" duration="19012000" />
+      <workItem from="1776771504456" duration="12954000" />
+    </task>
+    <task id="LOCAL-00001" summary="gitignor">
+      <option name="closed" value="true" />
+      <created>1776778437505</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1776778437505</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="gitignor" />
+    <option name="LAST_COMMIT_MESSAGE" value="gitignor" />
+  </component>
+</project>
