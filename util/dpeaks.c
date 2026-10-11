@@ -152,6 +152,18 @@ int dpeaks(float *image,
     for (i = (*npeaks) - 1;i >= 0;i--) {
         keep[i] = 1;
 
+        /* Check against all brighter candidates, not just surviving peaks. */
+        for (j = i - 1;j >= 0;j--) {
+            dx = (float)(fullxcen[j] - fullxcen[i]);
+            dy = (float)(fullycen[j] - fullycen[i]);
+            if (dx*dx + dy*dy < dlim*dlim) {
+                keep[i] = 0;
+                break;
+            }
+        }
+        if (!keep[i] || i == 0)
+            continue;
+
         if (checkpeaks) {
             /* look for peaks joined by a high saddle to brighter peaks */
             level = (smooth[ fullxcen[i] + fullycen[i] * nx] - saddle * sigma);
@@ -169,14 +181,6 @@ int dpeaks(float *image,
                     object[ fullxcen[i] + fullycen[i]*nx] == -1 ) {
                     keep[i] = 0;
                 }
-        }
-
-        /* look for close peaks */
-        for (j = i - 1;j >= 0;j--) {
-            dx = (float)(fullxcen[j] - fullxcen[i]);
-            dy = (float)(fullycen[j] - fullycen[i]);
-            if (dx*dx + dy*dy < dlim*dlim)
-                keep[i] = 0;
         }
     }
 
