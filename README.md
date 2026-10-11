@@ -1,6 +1,12 @@
 Astrometry.net
 ==============
 
+NOTE
+----
+
+We are NOT accepting LLM-generated contributions (including PRs) at this time.
+
+
 Travis: [![Build Status](https://travis-ci.org/dstndstn/astrometry.net.png?branch=master)](https://travis-ci.org/dstndstn/astrometry.net)
 CircleCI: [![Build Status](https://img.shields.io/circleci/project/github/dstndstn/astrometry.net.svg)](https://circleci.com/gh/dstndstn/astrometry.net)
 [![Tag Version](https://img.shields.io/github/tag/dstndstn/astrometry.net.svg)](https://github.com/dstndstn/astrometry.net/tags)
@@ -22,7 +28,7 @@ Documentation: https://astrometrynet.readthedocs.io/en/latest/
 > archival disarray. We hope this will help organize, annotate and make
 > searchable all the world's astronomical information.
 
-Copyright 2006-2015 Michael Blanton, David W. Hogg, Dustin Lang, Keir
+Copyright 2006-2026 Michael Blanton, David W. Hogg, Dustin Lang, Keir
 Mierle and Sam Roweis (the Astrometry.net Team).
 
 Contributions from Sjoert van Velzen, Themos Tsikas, Andrew Hood,
