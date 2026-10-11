@@ -1,10 +1,9 @@
 Astrometry.net
 ==============
 
-NOTE
-----
+NOTE: We are NOT accepting LLM-generated PRs at this time.
+----------------------------------------------------------
 
-We are NOT accepting LLM-generated contributions (including PRs) at this time.
 
 
 Travis: [![Build Status](https://travis-ci.org/dstndstn/astrometry.net.png?branch=master)](https://travis-ci.org/dstndstn/astrometry.net)
