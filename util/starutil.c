@@ -47,8 +47,8 @@ void radecrange2xyzrange(double ralo, double declo, double rahi, double dechi,
     double minmult, maxmult;
     double uxlo, uxhi, uylo, uyhi;
     // Dec only affects z, and is monotonic (z = sin(dec))
-    minxyz[2] = radec2z(0, declo);
-    maxxyz[2] = radec2z(0, dechi);
+    minxyz[2] = radec2z(0, deg2rad(declo));
+    maxxyz[2] = radec2z(0, deg2rad(dechi));
 
     // min,max of cos(dec).  cos(dec) is concave down.
     minmult = MIN(cos(deg2rad(declo)), cos(deg2rad(dechi)));
@@ -68,7 +68,7 @@ void radecrange2xyzrange(double ralo, double declo, double rahi, double dechi,
         uylo = -1.0;
     uyhi = MAX(sin(deg2rad(ralo)), sin(deg2rad(rahi)));
     if (ralo < 90 && rahi > 90)
-        uyhi = -1.0;
+        uyhi = 1.0;
     minxyz[1] = MIN(uylo * minmult, uylo * maxmult);
     maxxyz[1] = MAX(uyhi * minmult, uyhi * maxmult);
 }

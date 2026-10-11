@@ -152,3 +152,65 @@ void test_xtodistsq(CuTest* tc) {
     x = distsq2arcsec(distsq);
     CuAssertDblEquals(tc, distsq, arcsec2distsq(x), 1e-8);
 }
+
+void test_radecrange2xyzrange_y_max(CuTest* tc) {
+    double lo[3], hi[3];
+    double xyz[3];
+    int axis;
+
+    radecrange2xyzrange(80.0, 0.0, 100.0, 10.0, lo, hi);
+    CuAssertDblEquals(tc, 1.0, hi[1], 1e-12);
+    radecdeg2xyzarr(90.0, 0.0, xyz);
+    for (axis = 0; axis < 3; axis++) {
+        CuAssertTrue(tc, lo[axis] <= hi[axis]);
+        CuAssertTrue(tc, lo[axis] <= xyz[axis] + 1e-12);
+        CuAssertTrue(tc, hi[axis] >= xyz[axis] - 1e-12);
+    }
+}
+
+void test_radecrange2xyzrange_z_degrees(CuTest* tc) {
+    double lo[3], hi[3];
+    double xyzlo[3], xyzhi[3];
+    double declo[] = {10.0, -20.0, -10.0, -90.0};
+    double dechi[] = {20.0, -10.0, 10.0, 90.0};
+    int i;
+
+    for (i = 0; i < sizeof(declo) / sizeof(double); i++) {
+        radecrange2xyzrange(0.0, declo[i], 30.0, dechi[i], lo, hi);
+        radecdeg2xyzarr(0.0, declo[i], xyzlo);
+        radecdeg2xyzarr(0.0, dechi[i], xyzhi);
+        CuAssertDblEquals(tc, xyzlo[2], lo[2], 1e-12);
+        CuAssertDblEquals(tc, xyzhi[2], hi[2], 1e-12);
+    }
+}
+
+void test_radecrange2xyzrange_contains_points(CuTest* tc) {
+    double ranges[][4] = {
+        {0.0, 10.0, 30.0, 20.0},
+        {80.0, 0.0, 100.0, 10.0},
+        {170.0, -10.0, 190.0, 10.0},
+        {260.0, -20.0, 280.0, -10.0},
+        {0.0, -90.0, 360.0, 90.0}
+    };
+    int i, r, d, axis;
+
+    for (i = 0; i < sizeof(ranges) / sizeof(ranges[0]); i++) {
+        double lo[3], hi[3];
+        double* range = ranges[i];
+        radecrange2xyzrange(range[0], range[1], range[2], range[3], lo, hi);
+        for (axis = 0; axis < 3; axis++)
+            CuAssertTrue(tc, lo[axis] <= hi[axis]);
+        for (r = 0; r <= 10; r++) {
+            for (d = 0; d <= 10; d++) {
+                double xyz[3];
+                double ra = range[0] + (range[2] - range[0]) * r / 10.0;
+                double dec = range[1] + (range[3] - range[1]) * d / 10.0;
+                radecdeg2xyzarr(ra, dec, xyz);
+                for (axis = 0; axis < 3; axis++) {
+                    CuAssertTrue(tc, lo[axis] <= xyz[axis] + 1e-12);
+                    CuAssertTrue(tc, hi[axis] >= xyz[axis] - 1e-12);
+                }
+            }
+        }
+    }
+}
