@@ -411,6 +411,7 @@ void fit_transform(double* star, double* field, int N, double* trans) {
 
     if (det == 0.0) {
         fprintf(stderr, "ERROR (fit_transform) -- determinant zero\n");
+        free(F);
         return;
     }
 
