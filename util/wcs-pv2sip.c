@@ -98,6 +98,11 @@ sip_t* wcs_pv2sip_header(qfits_header* hdr,
     double xstep, ystep;
     sip_t* sip = NULL;
 
+    if (!sip_order_is_valid(order)) {
+        ERROR("SIP fit order must be between 0 and %i", SIP_MAXORDER - 1);
+        return NULL;
+    }
+
     /**
      From http://iraf.noao.edu/projects/mosaic/tpv.html
 
@@ -478,6 +483,11 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
     qfits_header* hdr = NULL;
     sip_t* sip = NULL;
     int rtn = -1;
+
+    if (!sip_order_is_valid(order)) {
+        ERROR("SIP fit order must be between 0 and %i", SIP_MAXORDER - 1);
+        return -1;
+    }
 
     if (scamp_head_file) {
         size_t sz = 0;

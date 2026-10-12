@@ -9,6 +9,9 @@
 #include "astrometry/sip.h"
 #include "astrometry/starkd.h"
 
+/* Fitting orders must be in [0, SIP_MAXORDER). Invalid orders return -1
+ * before accessing input data or changing sipout. A forward order of zero
+ * retains the historical promotion to a linear fit. */
 int fit_sip_coefficients(const double* starxyz,
                          const double* fieldxy,
                          const double* weights,

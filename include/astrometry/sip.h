@@ -12,6 +12,11 @@
 
 #define SIP_MAXORDER 10
 
+/* SIP_MAXORDER is the array extent, not an inclusive polynomial order. */
+static inline anbool sip_order_is_valid(int order) {
+    return order >= 0 && order < SIP_MAXORDER;
+}
+
 // WCS TAN header.
 typedef struct {
 
@@ -116,6 +121,12 @@ typedef struct {
     double ap[SIP_MAXORDER][SIP_MAXORDER];
     double bp[SIP_MAXORDER][SIP_MAXORDER];
 } sip_t;
+
+static inline anbool sip_orders_are_valid(const sip_t* sip) {
+    return sip && sip_order_is_valid(sip->a_order) &&
+        sip_order_is_valid(sip->b_order) && sip_order_is_valid(sip->ap_order) &&
+        sip_order_is_valid(sip->bp_order);
+}
 
 sip_t* sip_create(void);
 void   sip_free(sip_t* sip);

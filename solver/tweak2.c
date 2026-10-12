@@ -226,6 +226,11 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
     int* refperm = NULL;
     double qc[2];
 
+    if (!sip_order_is_valid(sip_order) || !sip_order_is_valid(sip_invorder) ||
+        !sip_order_is_valid(startorder) || !startwcs || !sip_orders_are_valid(startwcs)) {
+        ERROR("SIP tweak orders must be between 0 and %i", SIP_MAXORDER - 1);
+        return NULL;
+    }
     memcpy(qc, quadcenter, 2*sizeof(double));
 
     if (destwcs)

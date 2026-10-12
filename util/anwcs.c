@@ -889,8 +889,13 @@ static anwcs_t* open_tansip(const char* filename, int ext, anbool forcetan) {
     if (sip->a_order >= 2 && sip->b_order >= 2 &&
         (sip->ap_order == 0 || sip->bp_order == 0)) {
         logverb("Computing inverse SIP polynomial terms...\n");
-        sip->ap_order = sip->bp_order = MAX(sip->a_order, sip->b_order) + 1;
-        sip_compute_inverse_polynomials(sip, 0, 0, 0, 0, 0, 0);
+        sip->ap_order = sip->bp_order =
+            MIN(MAX(sip->a_order, sip->b_order) + 1, SIP_MAXORDER - 1);
+        if (sip_compute_inverse_polynomials(sip, 0, 0, 0, 0, 0, 0)) {
+            ERROR("Failed to compute inverse SIP polynomial terms");
+            sip_free(sip);
+            return NULL;
+        }
     }
 
     anwcs = calloc(1, sizeof(anwcs_t));

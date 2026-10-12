@@ -2,6 +2,7 @@
  # This file is part of the Astrometry.net suite.
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "os-features.h"
@@ -40,9 +41,16 @@ int main(int argc, char** args) {
             break;
         case 'h':
             exit(0);
-        case 'o':
-            order = atoi(optarg);
+        case 'o': {
+            char* end;
+            long requested = strtol(optarg, &end, 10);
+            if (end == optarg || *end || requested < 0 || requested >= SIP_MAXORDER) {
+                ERROR("SIP order must be an integer between 0 and %i", SIP_MAXORDER - 1);
+                return EXIT_FAILURE;
+            }
+            order = (int)requested;
             break;
+        }
         case 'W':
             W = atoi(optarg);
             break;

@@ -54,6 +54,10 @@ sip_t* tweak_just_do_it(const tan_t* wcs, const starxy_t* imagexy,
     tweak_t* twee = NULL;
     sip_t* sip = NULL;
 
+    if (!sip_order_is_valid(order) || !sip_order_is_valid(inverse_order)) {
+        ERROR("SIP tweak orders must be between 0 and %i", SIP_MAXORDER - 1);
+        return NULL;
+    }
     twee = tweak_new();
     twee->jitter = jitter_arcsec;
     twee->sip->a_order  = twee->sip->b_order  = order;
@@ -192,6 +196,10 @@ void tweak_iterate_to_order(tweak_t* t, int maxorder, int iterations) {
     int order;
     int k;
 
+    if (!sip_order_is_valid(maxorder) || (t->sip && !sip_orders_are_valid(t->sip))) {
+        ERROR("SIP tweak orders must be between 0 and %i", SIP_MAXORDER - 1);
+        return;
+    }
     for (order=1; order<=maxorder; order++) {
         logverb("\n");
         logverb("--------------------------------\n");
@@ -644,6 +652,10 @@ static void do_sip_tweak(tweak_t* t) {
     }
 
 unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
+    if (t->sip && !sip_orders_are_valid(t->sip)) {
+        ERROR("SIP tweak orders must be between 0 and %i", SIP_MAXORDER - 1);
+        return 0;
+    }
     want(TWEAK_HAS_IMAGE_AD) {
         int jj;
         ensure(TWEAK_HAS_SIP);
@@ -779,6 +791,10 @@ void tweak_push_wcs_tan(tweak_t* t, const tan_t* wcs) {
 }
 
 void tweak_go_to(tweak_t* t, unsigned int dest_state) {
+    if (t->sip && !sip_orders_are_valid(t->sip)) {
+        ERROR("SIP tweak orders must be between 0 and %i", SIP_MAXORDER - 1);
+        return ;
+    }
     while (!(t->state & dest_state))
         tweak_advance_to(t, dest_state);
 }

@@ -2,6 +2,7 @@
  # This file is part of the Astrometry.net suite.
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
+#include <stdlib.h>
 #include "os-features.h"
 #include "starutil.h"
 #include "mathutil.h"
@@ -96,9 +97,16 @@ int main(int argc, char** args) {
             crpix_set = TRUE;
             crpix[1] = atof(optarg);
             break;
-        case 's':
-            siporder = atoi(optarg);
+        case 's': {
+            char* end;
+            long requested = strtol(optarg, &end, 10);
+            if (end == optarg || *end || requested < 0 || requested >= SIP_MAXORDER) {
+                ERROR("SIP order must be an integer between 0 and %i", SIP_MAXORDER - 1);
+                return EXIT_FAILURE;
+            }
+            siporder = (int)requested;
             break;
+        }
         case 'c':
             corrfn = optarg;
             break;
@@ -224,10 +232,13 @@ int main(int argc, char** args) {
         }
         logverb("Image size = %i x %i pix\n", W, H);
 
-        fit_sip_wcs_2(xyz, fieldxy, NULL, N,
-                      siporder, siporder+1, W, H,
+        if (fit_sip_wcs_2(xyz, fieldxy, NULL, N,
+                      siporder, MIN(siporder+1, SIP_MAXORDER-1), W, H,
                       crpix_center, crpix_set ? crpix : NULL,
-                      doshift, &wcs);
+                      doshift, &wcs)) {
+            ERROR("Failed to fit SIP WCS");
+            goto bailout;
+        }
     }
 
     if (siporder <= 1) {

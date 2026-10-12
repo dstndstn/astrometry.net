@@ -32,6 +32,10 @@ int fit_sip_wcs_2(const double* starxyz,
                   int doshift,
                   sip_t* sipout) {
     tan_t wcs;
+    if (!sip_order_is_valid(sip_order) || !sip_order_is_valid(inv_order)) {
+        ERROR("SIP fit orders must be between 0 and %i", SIP_MAXORDER - 1);
+        return -1;
+    }
     memset(&wcs, 0, sizeof(tan_t));
     // Start with a TAN
     if (fit_tan_wcs(starxyz, fieldxy, M, &wcs, NULL)) {
@@ -96,6 +100,10 @@ int fit_sip_wcs(const double* starxyz,
     tan_t tanin2;
     int ngood;
     const tan_t* tanin = &tanin2;
+    if (!sip_order_is_valid(sip_order) || !sip_order_is_valid(inv_order)) {
+        ERROR("SIP fit orders must be between 0 and %i", SIP_MAXORDER - 1);
+        return -1;
+    }
     // We need at least the linear terms to compute CD.
     if (sip_order < 1)
         sip_order = 1;
@@ -446,6 +454,10 @@ int fit_sip_coefficients(const double* starxyz,
     tan_t tanin2;
     int ngood;
     const tan_t* tanin = &tanin2;
+    if (!sip_order_is_valid(sip_order) || !sip_order_is_valid(inv_order)) {
+        ERROR("SIP fit orders must be between 0 and %i", SIP_MAXORDER - 1);
+        return -1;
+    }
     // We need at least the linear terms to compute CD.
     if (sip_order < 1)
         sip_order = 1;

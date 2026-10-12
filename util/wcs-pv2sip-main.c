@@ -7,6 +7,8 @@
 #include <math.h>
 
 #include "wcs-pv2sip.h"
+#include "sip.h"
+#include "errors.h"
 #include "boilerplate.h"
 #include "bl.h"
 #include "log.h"
@@ -66,9 +68,16 @@ int main(int argc, char** args) {
         case 't':
             forcetan = TRUE;
             break;
-        case 'o':
-            order = atoi(optarg);
+        case 'o': {
+            char* end;
+            long requested = strtol(optarg, &end, 10);
+            if (end == optarg || *end || requested < 0 || requested >= SIP_MAXORDER) {
+                ERROR("SIP order must be an integer between 0 and %i", SIP_MAXORDER - 1);
+                return EXIT_FAILURE;
+            }
+            order = (int)requested;
             break;
+        }
         case 'W':
             W = atoi(optarg);
             break;

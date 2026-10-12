@@ -39,11 +39,16 @@ void tan_rotate(const tan_t* tanin, tan_t* tanout, double angle) {
 }
 
 int sip_ensure_inverse_polynomials(sip_t* sip) {
+    if (!sip_orders_are_valid(sip)) {
+        ERROR("SIP orders must be between 0 and %i", SIP_MAXORDER - 1);
+        return -1;
+    }
+
     if ((sip->a_order == 0 && sip->b_order == 0) ||
         (sip->ap_order > 0  && sip->bp_order > 0)) {
         return 0;
     }
-    sip->ap_order = sip->bp_order = MAX(sip->a_order, sip->b_order) + 1;
+    sip->ap_order = sip->bp_order = MIN(MAX(sip->a_order, sip->b_order) + 1, SIP_MAXORDER - 1);
     return sip_compute_inverse_polynomials(sip, 0, 0, 0, 0, 0, 0);
 }
 
@@ -59,6 +64,10 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
     gsl_vector *b1, *b2, *x1, *x2;
     tan_t* tan;
 
+    if (!sip_orders_are_valid(sip)) {
+        ERROR("SIP orders must be between 0 and %i", SIP_MAXORDER - 1);
+        return -1;
+    }
     assert(sip->a_order == sip->b_order);
     assert(sip->ap_order == sip->bp_order);
     tan = &(sip->wcstan);

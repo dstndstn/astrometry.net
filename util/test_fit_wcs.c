@@ -3,6 +3,7 @@
  # Licensed under a 3-clause BSD style license - see LICENSE
  */
 #include <math.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -172,3 +173,24 @@ int main() {
     CuStringFree(output);
 }
 #endif
+
+void test_fit_sip_invalid_orders(CuTest* ct) {
+    int bad[] = {-1, SIP_MAXORDER, SIP_MAXORDER + 2, INT_MIN, INT_MAX};
+    sip_t out, saved;
+    int i, side;
+    memset(&out, 0x53, sizeof(out));
+    memcpy(&saved, &out, sizeof(out));
+    for (i = 0; i < sizeof(bad) / sizeof(bad[0]); i++) {
+        for (side = 0; side < 2; side++) {
+            int forward = side ? 2 : bad[i];
+            int inverse = side ? bad[i] : 2;
+            CuAssertIntEquals(ct, -1, fit_sip_coefficients(NULL, NULL, NULL, 0,
+                              NULL, forward, inverse, &out));
+            CuAssertIntEquals(ct, -1, fit_sip_wcs(NULL, NULL, NULL, 0,
+                              NULL, forward, inverse, 0, &out));
+            CuAssertIntEquals(ct, -1, fit_sip_wcs_2(NULL, NULL, NULL, 0,
+                              forward, inverse, 0, 0, 0, NULL, 0, &out));
+            CuAssertIntEquals(ct, 0, memcmp(&saved, &out, sizeof(out)));
+        }
+    }
+}
