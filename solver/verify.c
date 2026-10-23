@@ -1593,9 +1593,9 @@ double verify_star_lists(double* refxys, int NR,
         *p_besti = besti;
 
     if (p_testperm)
-        *p_testperm = v.testperm;
-    else
-        free(v.testperm);
+        memcpy(*p_testperm, v.testperm, NT * sizeof(int));
+
+    free(v.testperm);
 
     free(v.refperm);
     free(v.badguys);
@@ -1749,9 +1749,9 @@ double verify_star_lists_ror(double* refxys, int NR,
 
 
     if (p_testperm)
-        *p_testperm = v.testperm;
-    else
-        free(v.testperm);
+        memcpy(*p_testperm, v.testperm, NT * sizeof(int));
+
+    free(v.testperm);
 
 
     if (p_refperm)
