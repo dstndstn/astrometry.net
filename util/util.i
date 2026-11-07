@@ -1496,42 +1496,41 @@ def sip_t_addtoheader(self, hdr):
         hdr.add_record(dict(name=k, value=v, comment=c))
     for i in range(self.a_order + 1):
         for j in range(self.a_order + 1):
-            #if i + j < 1:
-            # drop linear (CD) terms
-            if i + j < 2:
-                continue
             if i + j > self.a_order:
                 continue
-            hdr.add_record(dict(name='A_%i_%i' % (i,j), value=self.get_a_term(i, j),
+            term = self.get_a_term(i, j)
+            if term == 0.:
+                continue
+            hdr.add_record(dict(name='A_%i_%i' % (i,j), value=term,
                                 comment='SIP polynomial term'))
     for i in range(self.b_order + 1):
         for j in range(self.b_order + 1):
-            #if i + j < 1:
-            # drop linear (CD) terms
-            if i + j < 2:
-                continue
             if i + j > self.b_order:
                 continue
-            hdr.add_record(dict(name='B_%i_%i' % (i,j), value=self.get_b_term(i, j),
+            term = self.get_b_term(i, j)
+            if term == 0.:
+                continue
+            hdr.add_record(dict(name='B_%i_%i' % (i,j), value=term,
                                 comment='SIP polynomial term'))
     for i in range(self.ap_order + 1):
         for j in range(self.ap_order + 1):
-            if i + j < 1:
-                continue
             if i + j > self.ap_order:
                 continue
-            hdr.add_record(dict(name='AP_%i_%i' % (i,j), value=self.get_ap_term(i, j),
+            term = self.get_ap_term(i, j)
+            if term == 0.:
+                continue
+            hdr.add_record(dict(name='AP_%i_%i' % (i,j), value=term,
                                 comment='SIP polynomial term'))
     for i in range(self.bp_order + 1):
         for j in range(self.bp_order + 1):
-            if i + j < 1:
-                continue
             if i + j > self.bp_order:
                 continue
-            hdr.add_record(dict(name='BP_%i_%i' % (i,j), value=self.get_bp_term(i, j),
+            term = self.get_bp_term(i, j)
+            if term == 0.:
+                continue
+            hdr.add_record(dict(name='BP_%i_%i' % (i,j), value=term,
                                 comment='SIP polynomial term'))
 sip_t.add_to_header = sip_t_addtoheader
-
 
 # def sip_t_get_subimage(self, x0, y0, w, h):
 #     wcs2 = sip_t(self)
