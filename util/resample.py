@@ -266,9 +266,8 @@ def resample_with_wcs(targetwcs, wcs, Limages=[], L=3, spline=True,
         # the lanczos3_interpolate function below requires int32!
         itype = np.int32
 
-    # (f + 0.5).astype(int) is often faster than round().astype(int) or rint!
-    ixi = (fxi + 0.5).astype(itype)
-    iyi = (fyi + 0.5).astype(itype)
+    ixi = np.round(fxi).astype(itype)
+    iyi = np.round(fyi).astype(itype)
 
     # Cut to in-bounds pixels.
     I,J = np.nonzero((ixi >= 0) * (ixi < w) * (iyi >= 0) * (iyi < h) * okpix)
