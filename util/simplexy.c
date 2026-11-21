@@ -331,6 +331,8 @@ int simplexy_run(simplexy_t* s) {
     mask = malloc((size_t)nx*(size_t)ny);
     if (!dmask(smoothed, nx, ny, limit, s->dpsf, mask)) {
         FREEVEC(smoothfree);
+        FREEVEC(bgfree);
+        FREEVEC(mask);
         return 0;
     }
     FREEVEC(smoothfree);

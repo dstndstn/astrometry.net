@@ -318,6 +318,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
                 free(fieldsigma2s);
                 free(indexpix);
                 free(indexin);
+                free(refperm);
                 return NULL;
             }
 
@@ -434,6 +435,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
                 free(fieldsigma2s);
                 free(indexpix);
                 free(indexin);
+                free(refperm);
                 return NULL;
             }
 
